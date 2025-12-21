@@ -11,15 +11,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import {
   Upload as UploadIcon,
   Plus,
   Trash2,
   Film,
-  Tv,
   Edit,
   Eye,
-  Link as LinkIcon,
+  FolderPlus,
 } from 'lucide-react';
 
 const genres = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports'];
@@ -32,12 +32,21 @@ interface Anime {
   created_at: string;
 }
 
+interface Season {
+  id: string;
+  season_number: number;
+  title: string | null;
+  anime_id: string;
+}
+
 export default function Upload() {
   const { user, isUploader } = useAuth();
   const navigate = useNavigate();
   const [myAnime, setMyAnime] = useState<Anime[]>([]);
+  const [allAnime, setAllAnime] = useState<Anime[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState('my-anime');
 
   // Form state for new anime
   const [title, setTitle] = useState('');
@@ -48,6 +57,17 @@ export default function Upload() {
   const [releaseYear, setReleaseYear] = useState('');
   const [type, setType] = useState('series');
   const [status, setStatus] = useState('ongoing');
+
+  // Existing upload state
+  const [selectedAnimeId, setSelectedAnimeId] = useState<string>('');
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string>('');
+  const [episodeTitle, setEpisodeTitle] = useState('');
+  const [episodeDescription, setEpisodeDescription] = useState('');
+  const [episodeVideoUrl, setEpisodeVideoUrl] = useState('');
+  const [episodeThumbnail, setEpisodeThumbnail] = useState('');
+  const [episodeDuration, setEpisodeDuration] = useState('');
+  const [isAddingEpisode, setIsAddingEpisode] = useState(false);
 
   useEffect(() => {
     // Check if user has code verification
@@ -64,11 +84,20 @@ export default function Upload() {
       return;
     }
 
-    fetchMyAnime();
+    fetchAnimeData();
   }, [user, isUploader]);
 
-  const fetchMyAnime = async () => {
-    // If user is logged in, fetch their anime; otherwise fetch all (for code-verified users)
+  useEffect(() => {
+    if (selectedAnimeId) {
+      fetchSeasons(selectedAnimeId);
+    } else {
+      setSeasons([]);
+      setSelectedSeasonId('');
+    }
+  }, [selectedAnimeId]);
+
+  const fetchAnimeData = async () => {
+    // Fetch user's anime if logged in
     if (user) {
       const { data } = await supabase
         .from('anime')
@@ -80,7 +109,33 @@ export default function Upload() {
         setMyAnime(data);
       }
     }
+
+    // Fetch all anime for "Existing Upload" option
+    const { data: allData } = await supabase
+      .from('anime')
+      .select('*')
+      .order('title');
+
+    if (allData) {
+      setAllAnime(allData);
+    }
+
     setIsLoading(false);
+  };
+
+  const fetchSeasons = async (animeId: string) => {
+    const { data } = await supabase
+      .from('seasons')
+      .select('*')
+      .eq('anime_id', animeId)
+      .order('season_number');
+
+    if (data) {
+      setSeasons(data);
+      if (data.length > 0) {
+        setSelectedSeasonId(data[0].id);
+      }
+    }
   };
 
   const toggleGenre = (genre: string) => {
@@ -129,12 +184,62 @@ export default function Upload() {
       setType('series');
       setStatus('ongoing');
       // Refresh list
-      fetchMyAnime();
+      fetchAnimeData();
       // Navigate to add episodes
       navigate(`/upload/anime/${data.id}`);
     }
 
     setIsSubmitting(false);
+  };
+
+  const handleAddEpisodeToExisting = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedSeasonId || !episodeTitle.trim()) {
+      toast.error('Please select a season and enter episode title');
+      return;
+    }
+
+    setIsAddingEpisode(true);
+
+    // Get next episode number
+    const { data: existingEpisodes } = await supabase
+      .from('episodes')
+      .select('episode_number')
+      .eq('season_id', selectedSeasonId)
+      .order('episode_number', { ascending: false })
+      .limit(1);
+
+    const nextEpisodeNumber = existingEpisodes && existingEpisodes.length > 0 
+      ? existingEpisodes[0].episode_number + 1 
+      : 1;
+
+    const { error } = await supabase
+      .from('episodes')
+      .insert({
+        season_id: selectedSeasonId,
+        episode_number: nextEpisodeNumber,
+        title: episodeTitle.trim(),
+        description: episodeDescription.trim() || null,
+        video_url: episodeVideoUrl.trim() || null,
+        thumbnail: episodeThumbnail.trim() || null,
+        duration: episodeDuration ? parseInt(episodeDuration) : null,
+      });
+
+    if (error) {
+      console.error('Error adding episode:', error);
+      toast.error('Failed to add episode');
+    } else {
+      toast.success(`Episode ${nextEpisodeNumber} added successfully!`);
+      // Reset form
+      setEpisodeTitle('');
+      setEpisodeDescription('');
+      setEpisodeVideoUrl('');
+      setEpisodeThumbnail('');
+      setEpisodeDuration('');
+    }
+
+    setIsAddingEpisode(false);
   };
 
   const handleDeleteAnime = async (animeId: string) => {
@@ -148,7 +253,7 @@ export default function Upload() {
       toast.error('Failed to delete anime');
     } else {
       toast.success('Anime deleted');
-      fetchMyAnime();
+      fetchAnimeData();
     }
   };
 
@@ -171,10 +276,14 @@ export default function Upload() {
         </div>
       </div>
 
-      <Tabs defaultValue="my-anime">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-8">
           <TabsTrigger value="my-anime">My Anime</TabsTrigger>
           <TabsTrigger value="new">Add New Anime</TabsTrigger>
+          <TabsTrigger value="existing">
+            <FolderPlus className="h-4 w-4 mr-2" />
+            Existing Upload
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="my-anime">
@@ -289,29 +398,23 @@ export default function Upload() {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="coverImage">Cover Image URL</Label>
-                    <Input
-                      id="coverImage"
-                      type="url"
-                      placeholder="https://example.com/cover.jpg"
-                      value={coverImage}
-                      onChange={(e) => setCoverImage(e.target.value)}
-                      className="bg-muted/50"
-                    />
-                  </div>
+                  <FileUploadInput
+                    label="Cover Image"
+                    accept="image"
+                    value={coverImage}
+                    onChange={setCoverImage}
+                    folder="covers"
+                    placeholder="https://example.com/cover.jpg"
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="bannerImage">Banner Image URL</Label>
-                    <Input
-                      id="bannerImage"
-                      type="url"
-                      placeholder="https://example.com/banner.jpg"
-                      value={bannerImage}
-                      onChange={(e) => setBannerImage(e.target.value)}
-                      className="bg-muted/50"
-                    />
-                  </div>
+                  <FileUploadInput
+                    label="Banner Image"
+                    accept="image"
+                    value={bannerImage}
+                    onChange={setBannerImage}
+                    folder="banners"
+                    placeholder="https://example.com/banner.jpg"
+                  />
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
@@ -366,6 +469,129 @@ export default function Upload() {
                 <Button type="submit" disabled={isSubmitting} className="anime-button">
                   {isSubmitting ? 'Creating...' : 'Create Anime & Add Episodes'}
                 </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="existing">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FolderPlus className="h-5 w-5" />
+                Add Episode to Existing Anime
+              </CardTitle>
+              <CardDescription>
+                Select an anime and season to add a new episode with video and thumbnail
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleAddEpisodeToExisting} className="space-y-6">
+                {/* Anime Selection */}
+                <div className="space-y-2">
+                  <Label>Select Anime *</Label>
+                  <Select value={selectedAnimeId} onValueChange={setSelectedAnimeId}>
+                    <SelectTrigger className="bg-muted/50">
+                      <SelectValue placeholder="Choose an anime..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allAnime.map((anime) => (
+                        <SelectItem key={anime.id} value={anime.id}>
+                          {anime.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Season Selection */}
+                {selectedAnimeId && (
+                  <div className="space-y-2">
+                    <Label>Select Season *</Label>
+                    {seasons.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        No seasons found. Please add a season first in the anime edit page.
+                      </p>
+                    ) : (
+                      <Select value={selectedSeasonId} onValueChange={setSelectedSeasonId}>
+                        <SelectTrigger className="bg-muted/50">
+                          <SelectValue placeholder="Choose a season..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {seasons.map((season) => (
+                            <SelectItem key={season.id} value={season.id}>
+                              Season {season.season_number} {season.title && `- ${season.title}`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                )}
+
+                {/* Episode Details */}
+                {selectedSeasonId && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="episodeTitle">Episode Title *</Label>
+                      <Input
+                        id="episodeTitle"
+                        placeholder="Episode title"
+                        value={episodeTitle}
+                        onChange={(e) => setEpisodeTitle(e.target.value)}
+                        required
+                        className="bg-muted/50"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="episodeDescription">Description</Label>
+                      <Textarea
+                        id="episodeDescription"
+                        placeholder="Brief description..."
+                        value={episodeDescription}
+                        onChange={(e) => setEpisodeDescription(e.target.value)}
+                        className="bg-muted/50"
+                      />
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <FileUploadInput
+                        label="Episode Video"
+                        accept="video"
+                        value={episodeVideoUrl}
+                        onChange={setEpisodeVideoUrl}
+                        folder="episodes"
+                        placeholder="https://example.com/video.mp4"
+                      />
+
+                      <FileUploadInput
+                        label="Episode Thumbnail"
+                        accept="image"
+                        value={episodeThumbnail}
+                        onChange={setEpisodeThumbnail}
+                        folder="thumbnails"
+                        placeholder="https://example.com/thumb.jpg"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="episodeDuration">Duration (minutes)</Label>
+                      <Input
+                        id="episodeDuration"
+                        type="number"
+                        placeholder="24"
+                        value={episodeDuration}
+                        onChange={(e) => setEpisodeDuration(e.target.value)}
+                        className="bg-muted/50 max-w-[200px]"
+                      />
+                    </div>
+
+                    <Button type="submit" disabled={isAddingEpisode} className="anime-button">
+                      {isAddingEpisode ? 'Adding Episode...' : 'Add Episode'}
+                    </Button>
+                  </>
+                )}
               </form>
             </CardContent>
           </Card>
