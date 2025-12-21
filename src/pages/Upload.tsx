@@ -50,12 +50,16 @@ export default function Upload() {
   const [status, setStatus] = useState('ongoing');
 
   useEffect(() => {
-    if (!user) {
+    // Check if user has code verification
+    const isCodeVerified = sessionStorage.getItem('upload_code_verified') === 'true';
+    
+    if (!user && !isCodeVerified) {
       navigate('/auth');
       return;
     }
 
-    if (!isUploader) {
+    // Allow access if code is verified OR user is an uploader
+    if (!isCodeVerified && !isUploader) {
       navigate('/apply-uploader');
       return;
     }
@@ -64,14 +68,17 @@ export default function Upload() {
   }, [user, isUploader]);
 
   const fetchMyAnime = async () => {
-    const { data } = await supabase
-      .from('anime')
-      .select('*')
-      .eq('uploader_id', user!.id)
-      .order('created_at', { ascending: false });
+    // If user is logged in, fetch their anime; otherwise fetch all (for code-verified users)
+    if (user) {
+      const { data } = await supabase
+        .from('anime')
+        .select('*')
+        .eq('uploader_id', user.id)
+        .order('created_at', { ascending: false });
 
-    if (data) {
-      setMyAnime(data);
+      if (data) {
+        setMyAnime(data);
+      }
     }
     setIsLoading(false);
   };
@@ -103,7 +110,7 @@ export default function Upload() {
         release_year: releaseYear ? parseInt(releaseYear) : null,
         type,
         status,
-        uploader_id: user!.id,
+        uploader_id: user?.id || null,
       })
       .select()
       .single();
