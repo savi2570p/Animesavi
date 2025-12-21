@@ -8,6 +8,14 @@ import { MainLayout } from "@/components/layout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Browse from "./pages/Browse";
+import AnimeDetail from "./pages/AnimeDetail";
+import Watch from "./pages/Watch";
+import Favorites from "./pages/Favorites";
+import History from "./pages/History";
+import ApplyUploader from "./pages/ApplyUploader";
+import Upload from "./pages/Upload";
+import UploadAnimeEdit from "./pages/UploadAnimeEdit";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +32,14 @@ const App = () => (
             <Route element={<MainLayout />}>
               <Route path="/" element={<Index />} />
               <Route path="/browse" element={<Browse />} />
+              <Route path="/anime/:id" element={<AnimeDetail />} />
+              <Route path="/watch/:episodeId" element={<Watch />} />
+              <Route path="/favorites" element={<Favorites />} />
+              <Route path="/history" element={<History />} />
+              <Route path="/apply-uploader" element={<ApplyUploader />} />
+              <Route path="/upload" element={<Upload />} />
+              <Route path="/upload/anime/:animeId" element={<UploadAnimeEdit />} />
+              <Route path="/admin" element={<Admin />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
