@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Plus, Trash2, Film, Tv, Save, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Film, Tv, ArrowLeft } from 'lucide-react';
+import { FileUploadInput } from '@/components/upload/FileUploadInput';
 
 interface Anime {
   id: string;
@@ -60,7 +61,16 @@ export default function UploadAnimeEdit() {
   const [newEpisodeDuration, setNewEpisodeDuration] = useState('');
 
   useEffect(() => {
-    if (!user || !isUploader) {
+    // Check if user has code verification
+    const isCodeVerified = sessionStorage.getItem('upload_code_verified') === 'true';
+    
+    if (!user && !isCodeVerified) {
+      navigate('/');
+      return;
+    }
+
+    // Allow access if code is verified OR user is an uploader
+    if (!isCodeVerified && !isUploader) {
       navigate('/');
       return;
     }
@@ -87,8 +97,9 @@ export default function UploadAnimeEdit() {
       return;
     }
 
-    // Check ownership
-    if (animeData.uploader_id !== user!.id && !isAdmin) {
+    // Check ownership or code verification
+    const isCodeVerified = sessionStorage.getItem('upload_code_verified') === 'true';
+    if (!isCodeVerified && animeData.uploader_id !== user?.id && !isAdmin) {
       toast.error('You do not have permission to edit this anime');
       navigate('/upload');
       return;
@@ -353,11 +364,20 @@ export default function UploadAnimeEdit() {
                         key={episode.id}
                         className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
                       >
-                        <div>
-                          <span className="text-sm text-muted-foreground">
-                            EP {episode.episode_number}:
-                          </span>
-                          <span className="ml-2 font-medium">{episode.title}</span>
+                        <div className="flex items-center gap-3">
+                          {episode.thumbnail && (
+                            <img 
+                              src={episode.thumbnail} 
+                              alt={episode.title}
+                              className="w-16 h-10 object-cover rounded"
+                            />
+                          )}
+                          <div>
+                            <span className="text-sm text-muted-foreground">
+                              EP {episode.episode_number}:
+                            </span>
+                            <span className="ml-2 font-medium">{episode.title}</span>
+                          </div>
                         </div>
                         <Button
                           variant="ghost"
@@ -382,7 +402,7 @@ export default function UploadAnimeEdit() {
                   Add Episode
                 </CardTitle>
                 <CardDescription>
-                  Add a direct video URL or external link
+                  Upload a video file or add external link
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -408,17 +428,14 @@ export default function UploadAnimeEdit() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="videoUrl">Video URL (Direct Link)</Label>
-                  <Input
-                    id="videoUrl"
-                    type="url"
-                    placeholder="https://example.com/video.mp4"
-                    value={newEpisodeVideoUrl}
-                    onChange={(e) => setNewEpisodeVideoUrl(e.target.value)}
-                    className="bg-muted/50"
-                  />
-                </div>
+                <FileUploadInput
+                  label="Episode Video"
+                  accept="video"
+                  value={newEpisodeVideoUrl}
+                  onChange={setNewEpisodeVideoUrl}
+                  folder={`anime/${animeId}/episodes`}
+                  placeholder="https://example.com/video.mp4"
+                />
 
                 <div className="space-y-2">
                   <Label htmlFor="externalUrl">External Link (Alternative)</Label>
@@ -433,17 +450,14 @@ export default function UploadAnimeEdit() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="thumbnail">Thumbnail URL</Label>
-                    <Input
-                      id="thumbnail"
-                      type="url"
-                      placeholder="https://..."
-                      value={newEpisodeThumbnail}
-                      onChange={(e) => setNewEpisodeThumbnail(e.target.value)}
-                      className="bg-muted/50"
-                    />
-                  </div>
+                  <FileUploadInput
+                    label="Thumbnail"
+                    accept="image"
+                    value={newEpisodeThumbnail}
+                    onChange={setNewEpisodeThumbnail}
+                    folder={`anime/${animeId}/thumbnails`}
+                    placeholder="https://..."
+                  />
                   <div className="space-y-2">
                     <Label htmlFor="duration">Duration (min)</Label>
                     <Input
