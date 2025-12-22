@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        heading: ['Space Grotesk', 'sans-serif'],
-        body: ['Outfit', 'sans-serif'],
+        heading: ['Montserrat', 'sans-serif'],
+        body: ['Lato', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -51,12 +51,14 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        anime: {
-          purple: "hsl(var(--anime-purple))",
-          pink: "hsl(var(--anime-pink))",
-          blue: "hsl(var(--anime-blue))",
-          cyan: "hsl(var(--anime-cyan))",
-          orange: "hsl(var(--anime-orange))",
+        cr: {
+          orange: "hsl(var(--cr-orange))",
+          "orange-light": "hsl(var(--cr-orange-light))",
+          "orange-dark": "hsl(var(--cr-orange-dark))",
+          black: "hsl(var(--cr-black))",
+          dark: "hsl(var(--cr-dark))",
+          gray: "hsl(var(--cr-gray))",
+          "light-gray": "hsl(var(--cr-light-gray))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -100,8 +102,8 @@ export default {
           to: { opacity: "1", transform: "scale(1)" },
         },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px hsl(280, 85%, 60%, 0.3)" },
-          "50%": { boxShadow: "0 0 40px hsl(280, 85%, 60%, 0.6)" },
+          "0%, 100%": { boxShadow: "0 0 20px hsl(24, 100%, 50%, 0.3)" },
+          "50%": { boxShadow: "0 0 40px hsl(24, 100%, 50%, 0.6)" },
         },
         shimmer: {
           from: { backgroundPosition: "200% 0" },
@@ -111,17 +113,17 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fade-in 0.5s ease-out forwards",
-        "fade-in-up": "fade-in-up 0.6s ease-out forwards",
-        "slide-in-right": "slide-in-right 0.5s ease-out forwards",
+        "fade-in": "fade-in 0.4s ease-out forwards",
+        "fade-in-up": "fade-in-up 0.5s ease-out forwards",
+        "slide-in-right": "slide-in-right 0.4s ease-out forwards",
         "scale-in": "scale-in 0.3s ease-out forwards",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
-        shimmer: "shimmer 3s ease-in-out infinite",
+        shimmer: "shimmer 2s ease-in-out infinite",
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-primary": "linear-gradient(135deg, hsl(280, 85%, 60%), hsl(330, 85%, 60%))",
-        "gradient-accent": "linear-gradient(135deg, hsl(220, 90%, 60%), hsl(185, 80%, 55%))",
+        "gradient-primary": "linear-gradient(135deg, hsl(24, 100%, 50%), hsl(28, 100%, 60%))",
+        "gradient-accent": "linear-gradient(135deg, hsl(24, 100%, 55%), hsl(35, 100%, 55%))",
       },
     },
   },

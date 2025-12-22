@@ -262,17 +262,16 @@ export default function Watch() {
       {/* Video Player */}
       <div className="relative bg-black">
         {episode.external_url ? (
-          // External URL - show iframe or link
-          <div className="aspect-video w-full max-h-[70vh] flex items-center justify-center bg-muted">
-            <div className="text-center space-y-4">
-              <p className="text-muted-foreground">This episode is hosted externally.</p>
-              <Button asChild className="anime-button">
-                <a href={episode.external_url} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-5 w-5 mr-2" />
-                  Watch on External Site
-                </a>
-              </Button>
-            </div>
+          // External URL - play in embedded iframe player
+          <div className="aspect-video w-full max-h-[70vh] bg-black">
+            <iframe
+              src={episode.external_url}
+              className="w-full h-full"
+              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              title={`${anime?.title} - Episode ${episode.episode_number}`}
+              style={{ border: 'none' }}
+            />
           </div>
         ) : episode.video_url ? (
           // Native video player
