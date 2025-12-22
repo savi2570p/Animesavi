@@ -20,8 +20,7 @@ import {
   Settings, 
   Shield,
   Heart,
-  History,
-  FileText
+  History
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -180,13 +179,6 @@ export function Header() {
                   <DropdownMenuItem asChild>
                     <Link to="/upload" className="flex items-center gap-2">
                       <Upload className="h-4 w-4" /> Upload Anime
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                {!isUploader && (
-                  <DropdownMenuItem asChild>
-                    <Link to="/apply-uploader" className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" /> Apply as Uploader
                     </Link>
                   </DropdownMenuItem>
                 )}

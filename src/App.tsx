@@ -12,10 +12,11 @@ import AnimeDetail from "./pages/AnimeDetail";
 import Watch from "./pages/Watch";
 import Favorites from "./pages/Favorites";
 import History from "./pages/History";
-import ApplyUploader from "./pages/ApplyUploader";
 import Upload from "./pages/Upload";
 import UploadAnimeEdit from "./pages/UploadAnimeEdit";
 import Admin from "./pages/Admin";
+import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,10 +37,11 @@ const App = () => (
               <Route path="/watch/:episodeId" element={<Watch />} />
               <Route path="/favorites" element={<Favorites />} />
               <Route path="/history" element={<History />} />
-              <Route path="/apply-uploader" element={<ApplyUploader />} />
               <Route path="/upload" element={<Upload />} />
               <Route path="/upload/anime/:animeId" element={<UploadAnimeEdit />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/profile" element={<Profile />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
