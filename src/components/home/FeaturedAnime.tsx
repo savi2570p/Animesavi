@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -18,10 +18,22 @@ interface Anime {
 export function FeaturedAnime() {
   const [featured, setFeatured] = useState<Anime[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     fetchFeatured();
   }, []);
+
+  // Auto-advance carousel
+  useEffect(() => {
+    if (featured.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      nextSlide();
+    }, 8000);
+
+    return () => clearInterval(interval);
+  }, [featured.length, currentIndex]);
 
   const fetchFeatured = async () => {
     const { data } = await supabase
@@ -33,7 +45,6 @@ export function FeaturedAnime() {
     if (data && data.length > 0) {
       setFeatured(data);
     } else {
-      // Fallback to most viewed
       const { data: popularData } = await supabase
         .from('anime')
         .select('*')
@@ -46,59 +57,91 @@ export function FeaturedAnime() {
     }
   };
 
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % featured.length);
-  };
+  const changeSlide = useCallback((newIndex: number) => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setCurrentIndex(newIndex);
+    setTimeout(() => setIsTransitioning(false), 500);
+  }, [isTransitioning]);
 
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + featured.length) % featured.length);
-  };
+  const nextSlide = useCallback(() => {
+    changeSlide((currentIndex + 1) % featured.length);
+  }, [changeSlide, currentIndex, featured.length]);
+
+  const prevSlide = useCallback(() => {
+    changeSlide((currentIndex - 1 + featured.length) % featured.length);
+  }, [changeSlide, currentIndex, featured.length]);
 
   if (featured.length === 0) return null;
 
   const current = featured[currentIndex];
 
   return (
-    <section className="relative h-[70vh] md:h-[80vh] overflow-hidden">
-      {/* Background */}
-      <div
-        className="absolute inset-0 bg-cover bg-center transition-all duration-500"
-        style={{
-          backgroundImage: `url(${current.banner_image || current.cover_image || '/placeholder.svg'})`,
-        }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+    <section className="relative h-[70vh] md:h-[85vh] overflow-hidden">
+      {/* Background with smooth transition */}
+      <div className="absolute inset-0">
+        {featured.map((anime, index) => (
+          <div
+            key={anime.id}
+            className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-700 ease-out ${
+              index === currentIndex ? 'opacity-100' : 'opacity-0'
+            }`}
+            style={{
+              backgroundImage: `url(${anime.banner_image || anime.cover_image || '/placeholder.svg'})`,
+            }}
+          />
+        ))}
+      </div>
+      
+      {/* Overlays for readability */}
+      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+      <div className="absolute inset-0 bg-background/30" />
 
       {/* Content */}
       <div className="relative h-full container flex items-center">
-        <div className="max-w-2xl space-y-6">
+        <div 
+          key={current.id}
+          className="max-w-2xl space-y-5 animate-fade-in"
+        >
+          {/* Genres */}
           <div className="flex flex-wrap gap-2">
-            {current.genres?.slice(0, 3).map((genre) => (
-              <Badge key={genre} variant="secondary" className="genre-badge">
+            {current.genres?.slice(0, 4).map((genre, i) => (
+              <Badge 
+                key={genre} 
+                className={`genre-badge stagger-${i + 1} opacity-0 animate-fade-in`}
+              >
                 {genre}
               </Badge>
             ))}
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-heading font-bold leading-tight">
+          {/* Title */}
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight tracking-tight">
             {current.title}
           </h1>
 
+          {/* Description */}
           {current.description && (
-            <p className="text-lg text-muted-foreground line-clamp-3 max-w-xl">
+            <p className="text-base md:text-lg text-foreground/80 line-clamp-3 max-w-xl leading-relaxed">
               {current.description}
             </p>
           )}
 
-          <div className="flex gap-4 pt-4">
-            <Button asChild size="lg" className="anime-button text-lg">
+          {/* CTA Buttons */}
+          <div className="flex gap-3 pt-3">
+            <Button asChild size="lg" className="anime-button text-base md:text-lg">
               <Link to={`/anime/${current.id}`}>
                 <Play className="h-5 w-5 mr-2 fill-current" />
                 Watch Now
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="text-lg border-border/50 bg-background/30 backdrop-blur-sm">
+            <Button 
+              asChild 
+              size="lg" 
+              variant="outline" 
+              className="text-base md:text-lg border-foreground/20 bg-background/40 backdrop-blur-sm hover:bg-background/60 transition-all duration-200"
+            >
               <Link to={`/anime/${current.id}`}>
                 <Info className="h-5 w-5 mr-2" />
                 More Info
@@ -108,34 +151,39 @@ export function FeaturedAnime() {
         </div>
       </div>
 
-      {/* Navigation */}
+      {/* Navigation Arrows */}
       {featured.length > 1 && (
         <>
           <Button
             variant="ghost"
             size="icon"
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/30 backdrop-blur-sm hover:bg-background/50"
+            className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 bg-background/30 backdrop-blur-sm hover:bg-background/50 transition-all duration-200 rounded-full"
             onClick={prevSlide}
+            disabled={isTransitioning}
           >
             <ChevronLeft className="h-6 w-6" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/30 backdrop-blur-sm hover:bg-background/50"
+            className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 bg-background/30 backdrop-blur-sm hover:bg-background/50 transition-all duration-200 rounded-full"
             onClick={nextSlide}
+            disabled={isTransitioning}
           >
             <ChevronRight className="h-6 w-6" />
           </Button>
 
-          {/* Indicators */}
+          {/* Progress Indicators */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
             {featured.map((_, i) => (
               <button
                 key={i}
-                onClick={() => setCurrentIndex(i)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  i === currentIndex ? 'w-8 bg-primary' : 'bg-white/30'
+                onClick={() => changeSlide(i)}
+                disabled={isTransitioning}
+                className={`h-1 rounded-full transition-all duration-300 ${
+                  i === currentIndex 
+                    ? 'w-10 bg-primary' 
+                    : 'w-2 bg-foreground/30 hover:bg-foreground/50'
                 }`}
               />
             ))}

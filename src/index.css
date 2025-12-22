@@ -2,106 +2,114 @@
 @tailwind components;
 @tailwind utilities;
 
-/* AnimeStreamHub Design System - Dark & Vibrant Theme (Crunchyroll-inspired) */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+/* AnimeStreamHub Design System - Crunchyroll-inspired Dark Theme */
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500;600;700;900&family=Montserrat:wght@400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
-    --font-heading: 'Space Grotesk', sans-serif;
-    --font-body: 'Outfit', sans-serif;
+    --font-heading: 'Montserrat', sans-serif;
+    --font-body: 'Lato', sans-serif;
 
-    /* Light mode (kept minimal, dark mode is default) */
-    --background: 240 10% 96%;
-    --foreground: 240 10% 10%;
+    /* Light mode */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 10%;
+    --card-foreground: 0 0% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 10%;
+    --popover-foreground: 0 0% 10%;
 
-    --primary: 280 85% 55%;
+    --primary: 24 100% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 240 10% 10%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 10%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 240 5% 45%;
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 330 85% 60%;
+    --accent: 24 100% 55%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 5% 85%;
-    --input: 240 5% 85%;
-    --ring: 280 85% 55%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 24 100% 50%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* Custom anime theme colors */
-    --anime-purple: 280 85% 55%;
-    --anime-pink: 330 85% 60%;
-    --anime-blue: 220 90% 55%;
-    --anime-cyan: 185 80% 50%;
-    --anime-orange: 25 95% 55%;
+    /* Crunchyroll theme colors */
+    --cr-orange: 24 100% 50%;
+    --cr-orange-light: 28 100% 60%;
+    --cr-orange-dark: 20 100% 45%;
+    --cr-black: 0 0% 8%;
+    --cr-dark: 0 0% 12%;
+    --cr-gray: 0 0% 20%;
+    --cr-light-gray: 0 0% 60%;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(280, 85%, 55%), hsl(330, 85%, 60%));
-    --gradient-accent: linear-gradient(135deg, hsl(220, 90%, 55%), hsl(185, 80%, 50%));
-    --gradient-hero: linear-gradient(180deg, transparent 0%, hsl(240, 15%, 8%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(24, 100%, 50%), hsl(28, 100%, 60%));
+    --gradient-accent: linear-gradient(135deg, hsl(24, 100%, 55%), hsl(35, 100%, 55%));
+    --gradient-hero: linear-gradient(180deg, transparent 0%, hsl(0, 0%, 8%) 100%);
+    --gradient-card: linear-gradient(180deg, transparent 0%, hsl(0, 0%, 0%, 0.9) 100%);
     
     /* Shadows */
-    --shadow-glow: 0 0 30px hsl(280, 85%, 55%, 0.3);
-    --shadow-card: 0 4px 20px hsl(0, 0%, 0%, 0.1);
+    --shadow-glow: 0 0 30px hsl(24, 100%, 50%, 0.4);
+    --shadow-card: 0 4px 20px hsl(0, 0%, 0%, 0.15);
+    --shadow-hover: 0 8px 30px hsl(0, 0%, 0%, 0.25);
   }
 
   .dark {
-    --background: 240 15% 6%;
+    --background: 0 0% 8%;
     --foreground: 0 0% 98%;
 
-    --card: 240 15% 10%;
+    --card: 0 0% 12%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 240 15% 8%;
+    --popover: 0 0% 10%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 280 85% 60%;
+    --primary: 24 100% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 15% 15%;
+    --secondary: 0 0% 16%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 240 10% 18%;
-    --muted-foreground: 240 5% 65%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 330 85% 60%;
+    --accent: 24 100% 55%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 10% 20%;
-    --input: 240 10% 18%;
-    --ring: 280 85% 60%;
+    --border: 0 0% 20%;
+    --input: 0 0% 18%;
+    --ring: 24 100% 50%;
 
-    /* Custom anime theme colors - dark mode */
-    --anime-purple: 280 85% 60%;
-    --anime-pink: 330 85% 60%;
-    --anime-blue: 220 90% 60%;
-    --anime-cyan: 185 80% 55%;
-    --anime-orange: 25 95% 55%;
+    /* Crunchyroll theme colors - dark mode */
+    --cr-orange: 24 100% 50%;
+    --cr-orange-light: 28 100% 60%;
+    --cr-orange-dark: 20 100% 45%;
+    --cr-black: 0 0% 6%;
+    --cr-dark: 0 0% 10%;
+    --cr-gray: 0 0% 18%;
+    --cr-light-gray: 0 0% 65%;
     
     /* Gradients - dark mode */
-    --gradient-primary: linear-gradient(135deg, hsl(280, 85%, 60%), hsl(330, 85%, 60%));
-    --gradient-accent: linear-gradient(135deg, hsl(220, 90%, 60%), hsl(185, 80%, 55%));
-    --gradient-hero: linear-gradient(180deg, transparent 0%, hsl(240, 15%, 6%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(24, 100%, 50%), hsl(28, 100%, 60%));
+    --gradient-accent: linear-gradient(135deg, hsl(24, 100%, 55%), hsl(35, 100%, 55%));
+    --gradient-hero: linear-gradient(180deg, transparent 0%, hsl(0, 0%, 6%) 100%);
+    --gradient-card: linear-gradient(180deg, transparent 0%, hsl(0, 0%, 0%, 0.95) 100%);
     
     /* Shadows - dark mode */
-    --shadow-glow: 0 0 40px hsl(280, 85%, 60%, 0.4);
-    --shadow-card: 0 4px 30px hsl(0, 0%, 0%, 0.3);
+    --shadow-glow: 0 0 40px hsl(24, 100%, 50%, 0.5);
+    --shadow-card: 0 4px 30px hsl(0, 0%, 0%, 0.4);
+    --shadow-hover: 0 12px 40px hsl(0, 0%, 0%, 0.5);
   }
 }
 
@@ -111,7 +119,7 @@
   }
 
   html {
-    @apply dark;
+    @apply dark scroll-smooth;
   }
 
   body {
@@ -134,27 +142,32 @@
   }
 
   .anime-card {
-    @apply relative overflow-hidden rounded-xl bg-card transition-all duration-300;
+    @apply relative overflow-hidden rounded-lg bg-card transition-all duration-300 ease-out;
     box-shadow: var(--shadow-card);
   }
 
   .anime-card:hover {
-    @apply scale-[1.02];
-    box-shadow: var(--shadow-glow);
+    @apply scale-[1.03] -translate-y-1;
+    box-shadow: var(--shadow-hover);
   }
 
   .anime-button {
     background: var(--gradient-primary);
-    @apply text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300;
+    @apply text-white font-semibold px-6 py-3 rounded-md transition-all duration-300 ease-out;
+    box-shadow: 0 4px 15px hsl(24 100% 50% / 0.3);
   }
 
   .anime-button:hover {
-    @apply opacity-90 scale-105;
+    @apply opacity-95 scale-[1.02] -translate-y-0.5;
     box-shadow: var(--shadow-glow);
   }
 
+  .anime-button:active {
+    @apply scale-[0.98] translate-y-0;
+  }
+
   .genre-badge {
-    @apply px-3 py-1 rounded-full text-sm font-medium bg-secondary text-secondary-foreground transition-colors;
+    @apply px-3 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide bg-secondary text-secondary-foreground transition-all duration-200;
   }
 
   .genre-badge:hover {
@@ -162,11 +175,53 @@
   }
 
   .glass-effect {
-    @apply bg-background/80 backdrop-blur-xl border border-border/50;
+    @apply bg-background/95 backdrop-blur-xl border-b border-border/50;
   }
 
   .hero-overlay {
     background: var(--gradient-hero);
+  }
+
+  .card-overlay {
+    background: var(--gradient-card);
+  }
+
+  /* Crunchyroll-style episode card */
+  .episode-card {
+    @apply relative overflow-hidden rounded-md bg-card transition-all duration-200 ease-out cursor-pointer;
+  }
+
+  .episode-card:hover {
+    @apply bg-muted;
+  }
+
+  .episode-card.active {
+    @apply bg-primary/20 border-l-4 border-l-primary;
+  }
+
+  /* Video player styling */
+  .video-player-container {
+    @apply relative bg-black overflow-hidden;
+  }
+
+  .video-controls {
+    @apply absolute inset-0 flex flex-col justify-end opacity-0 transition-opacity duration-300;
+    background: linear-gradient(to top, hsl(0, 0%, 0%, 0.85) 0%, transparent 50%);
+  }
+
+  .video-player-container:hover .video-controls {
+    @apply opacity-100;
+  }
+
+  /* Smooth page transitions */
+  .page-transition {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  /* Loading skeleton with shimmer */
+  .skeleton-shimmer {
+    @apply animate-pulse bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%];
+    animation: shimmer 1.5s infinite;
   }
 }
 
@@ -180,8 +235,31 @@
     display: none;
   }
 
+  /* Custom scrollbar for visible areas */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted)) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+
   .text-glow {
-    text-shadow: 0 0 20px hsl(var(--anime-purple) / 0.5);
+    text-shadow: 0 0 20px hsl(var(--cr-orange) / 0.5);
   }
 
   .animation-delay-200 {
@@ -191,4 +269,51 @@
   .animation-delay-400 {
     animation-delay: 400ms;
   }
+
+  /* Smooth transitions */
+  .smooth-transition {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  .hover-lift {
+    @apply transition-transform duration-200 ease-out hover:-translate-y-1;
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-200 ease-out hover:scale-105;
+  }
 }
+
+/* Shimmer animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Smooth fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Staggered animation delays */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }

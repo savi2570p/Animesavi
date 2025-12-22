@@ -80,7 +80,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full glass-effect">
+    <header className="sticky top-0 z-50 w-full glass-effect transition-all duration-300">
       <div className="container flex h-16 items-center justify-between gap-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 flex-shrink-0">

@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Play, ChevronRight, Star } from 'lucide-react';
+import { Sparkles, Play, ChevronRight, Eye } from 'lucide-react';
 
 interface Anime {
   id: string;
@@ -20,6 +20,7 @@ export function RecommendedAnime() {
   const { user } = useAuth();
   const [recommendations, setRecommendations] = useState<Anime[]>([]);
   const [topGenres, setTopGenres] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -30,7 +31,7 @@ export function RecommendedAnime() {
   }, [user]);
 
   const fetchRecommendations = async () => {
-    // Get user's top genres
+    setIsLoading(true);
     const { data: prefs } = await supabase
       .from('user_genre_preferences')
       .select('genre, watch_count')
@@ -42,7 +43,6 @@ export function RecommendedAnime() {
       const genres = prefs.map((p) => p.genre);
       setTopGenres(genres);
 
-      // Get watched anime IDs to exclude
       const { data: watchedData } = await supabase
         .from('watch_history')
         .select('anime_id')
@@ -50,7 +50,6 @@ export function RecommendedAnime() {
 
       const watchedIds = watchedData?.map((w) => w.anime_id) || [];
 
-      // Get recommendations based on genres
       let query = supabase
         .from('anime')
         .select('*')
@@ -69,9 +68,11 @@ export function RecommendedAnime() {
     } else {
       fetchPopular();
     }
+    setIsLoading(false);
   };
 
   const fetchPopular = async () => {
+    setIsLoading(true);
     const { data } = await supabase
       .from('anime')
       .select('*')
@@ -81,20 +82,44 @@ export function RecommendedAnime() {
     if (data) {
       setRecommendations(data);
     }
+    setIsLoading(false);
   };
+
+  const formatViewCount = (count: number | null) => {
+    if (!count) return '0';
+    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+    return count.toString();
+  };
+
+  if (isLoading) {
+    return (
+      <section className="py-12 bg-card/30">
+        <div className="container">
+          <div className="h-8 w-64 bg-muted animate-pulse rounded mb-6" />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="aspect-[3/4] bg-muted animate-pulse rounded-lg" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (recommendations.length === 0) return null;
 
   return (
     <section className="py-12 bg-card/30">
       <div className="container">
+        {/* Section Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-primary">
+            <div className="p-2.5 rounded-lg bg-gradient-primary shadow-lg">
               <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-heading font-bold">
+              <h2 className="text-xl md:text-2xl font-heading font-bold">
                 {user ? 'Recommended For You' : 'Popular Anime'}
               </h2>
               {topGenres.length > 0 && (
@@ -104,47 +129,56 @@ export function RecommendedAnime() {
               )}
             </div>
           </div>
-          <Button variant="ghost" asChild>
-            <Link to="/browse" className="text-muted-foreground hover:text-foreground">
+          <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
+            <Link to="/browse" className="flex items-center">
               View all <ChevronRight className="h-4 w-4 ml-1" />
             </Link>
           </Button>
         </div>
 
+        {/* Anime Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {recommendations.map((anime) => (
-            <Link key={anime.id} to={`/anime/${anime.id}`} className="anime-card group">
-              <div className="aspect-[3/4] relative overflow-hidden rounded-xl">
+          {recommendations.map((anime, index) => (
+            <Link 
+              key={anime.id} 
+              to={`/anime/${anime.id}`} 
+              className={`anime-card group stagger-${Math.min(index + 1, 6)} opacity-0 animate-fade-in`}
+            >
+              <div className="aspect-[3/4] relative overflow-hidden rounded-lg">
                 <img
                   src={anime.cover_image || '/placeholder.svg'}
                   alt={anime.title}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+                  loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <Button size="sm" className="w-full anime-button text-xs">
-                      <Play className="h-3 w-3 mr-1 fill-current" /> Watch
+                    <Button size="sm" className="w-full anime-button text-xs py-2">
+                      <Play className="h-3 w-3 mr-1.5 fill-current" /> Watch Now
                     </Button>
                   </div>
                 </div>
+                {/* Status Badge */}
                 {anime.status === 'ongoing' && (
-                  <Badge className="absolute top-2 left-2 bg-anime-orange text-xs">
+                  <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px] font-semibold uppercase tracking-wide">
                     Ongoing
                   </Badge>
                 )}
               </div>
-              <div className="p-2">
-                <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+              {/* Info */}
+              <div className="p-2.5">
+                <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors duration-200">
                   {anime.title}
                 </h3>
-                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
                   {anime.release_year && <span>{anime.release_year}</span>}
                   {anime.view_count !== null && anime.view_count > 0 && (
                     <>
                       <span>•</span>
-                      <span className="flex items-center gap-0.5">
-                        <Star className="h-3 w-3 fill-anime-orange text-anime-orange" />
-                        {anime.view_count}
+                      <span className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        {formatViewCount(anime.view_count)}
                       </span>
                     </>
                   )}
