@@ -29,8 +29,8 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <WelcomePopup />
         <BrowserRouter>
+          <WelcomePopup />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route element={<MainLayout />}>

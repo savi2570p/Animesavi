@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -10,24 +11,33 @@ import {
 import { Button } from '@/components/ui/button';
 
 export function WelcomePopup() {
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    // Check if user has seen the welcome popup
+    // Show only on the home page and only once.
+    if (location.pathname !== '/') return;
+
     const hasSeenWelcome = localStorage.getItem('has_seen_welcome');
-    
     if (!hasSeenWelcome) {
       setIsOpen(true);
     }
-  }, []);
+  }, [location.pathname]);
 
-  const handleOk = () => {
+  const markSeenAndClose = () => {
     localStorage.setItem('has_seen_welcome', 'true');
     setIsOpen(false);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        // If user closes via "X" or clicking outside, also mark as seen.
+        if (!open) localStorage.setItem('has_seen_welcome', 'true');
+        setIsOpen(open);
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-2xl font-heading text-center">
@@ -38,11 +48,7 @@ export function WelcomePopup() {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex-col sm:flex-row gap-2 pt-4">
-          <Button
-            variant="default"
-            className="anime-button flex-1"
-            onClick={handleOk}
-          >
+          <Button variant="default" className="anime-button flex-1" onClick={markSeenAndClose}>
             OK
           </Button>
         </DialogFooter>
@@ -50,3 +56,4 @@ export function WelcomePopup() {
     </Dialog>
   );
 }
+
