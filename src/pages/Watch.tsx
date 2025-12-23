@@ -16,6 +16,7 @@ import {
   Share2,
   Edit,
   Server,
+  X,
 } from 'lucide-react';
 
 interface Episode {
@@ -53,6 +54,8 @@ interface Comment {
   };
 }
 
+const TELEGRAM_POPUP_KEY = 'telegram_popup_last_shown';
+
 export default function Watch() {
   const { episodeId } = useParams<{ episodeId: string }>();
   const { user, isAdmin, isUploader } = useAuth();
@@ -66,6 +69,47 @@ export default function Watch() {
   const [isLoading, setIsLoading] = useState(true);
   const [watchHistoryId, setWatchHistoryId] = useState<string | null>(null);
   const [activeServer, setActiveServer] = useState<ServerType>('PLAY');
+  const [serverLoading, setServerLoading] = useState(false);
+  const [showTelegramPopup, setShowTelegramPopup] = useState(false);
+
+  // Check if Telegram popup should be shown (once per day)
+  useEffect(() => {
+    const lastShown = localStorage.getItem(TELEGRAM_POPUP_KEY);
+    const today = new Date().toDateString();
+    
+    if (lastShown !== today) {
+      // Show popup after a short delay when page loads
+      const timer = setTimeout(() => {
+        setShowTelegramPopup(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleTelegramJoin = () => {
+    window.open('https://t.me/AnimeSaviInhindiDUB', '_blank');
+    localStorage.setItem(TELEGRAM_POPUP_KEY, new Date().toDateString());
+    setShowTelegramPopup(false);
+  };
+
+  const handleTelegramDismiss = () => {
+    localStorage.setItem(TELEGRAM_POPUP_KEY, new Date().toDateString());
+    setShowTelegramPopup(false);
+  };
+
+  // Handle server change with loading
+  const handleServerChange = (server: ServerType) => {
+    if (server === activeServer) return;
+    
+    setServerLoading(true);
+    setActiveServer(server);
+    
+    // Simulate loading for 2-3 seconds
+    const loadTime = 2000 + Math.random() * 1000;
+    setTimeout(() => {
+      setServerLoading(false);
+    }, loadTime);
+  };
 
   useEffect(() => {
     if (episodeId) {
@@ -259,6 +303,41 @@ export default function Watch() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Telegram Popup */}
+      {showTelegramPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+          <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4 shadow-xl animate-scale-in">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-lg font-bold text-foreground">Join the Telegram Channel</h3>
+              <button 
+                onClick={handleTelegramDismiss}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="text-muted-foreground mb-6">
+              Get more updates, new anime releases, and exclusive content!
+            </p>
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleTelegramJoin}
+                className="flex-1 anime-button"
+              >
+                Join
+              </Button>
+              <Button 
+                onClick={handleTelegramDismiss}
+                variant="outline"
+                className="flex-1"
+              >
+                OK
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Video Player */}
       <VideoPlayer
         videoUrl={episode.video_url}
@@ -270,6 +349,7 @@ export default function Watch() {
         poster={anime?.cover_image || undefined}
         isMovie={isMovie}
         activeServer={activeServer}
+        isLoading={serverLoading}
         onTimeUpdate={updateWatchProgress}
       />
 
@@ -302,7 +382,8 @@ export default function Watch() {
                     key={server}
                     size="sm"
                     variant={activeServer === server ? 'default' : 'outline'}
-                    onClick={() => setActiveServer(server)}
+                    onClick={() => handleServerChange(server)}
+                    disabled={serverLoading}
                     className={activeServer === server ? 'anime-button' : ''}
                   >
                     {server}
@@ -329,7 +410,7 @@ export default function Watch() {
               <p className="text-muted-foreground mb-6">{episode.description}</p>
             )}
 
-            {/* Episode Navigation & Share */}
+            {/* Episode Navigation */}
             <div className="flex flex-wrap gap-4 mb-8">
               {prevEpisode && (
                 <Button variant="outline" asChild>
