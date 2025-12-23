@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Play,
@@ -10,6 +10,8 @@ import {
   Download,
   Settings,
   Loader2,
+  SkipForward,
+  SkipBack,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -39,17 +41,17 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
   PLAY: { 
     name: 'PLAY', 
     features: ['watch'],
-    playerStyle: 'basic' // Basic player - just play/pause, volume, fullscreen
+    playerStyle: 'basic'
   },
   SHORT: { 
     name: 'SHORT', 
     features: ['watch', 'quality'],
-    playerStyle: 'standard' // Standard player with quality options
+    playerStyle: 'standard'
   },
   Zex: { 
     name: 'Zex', 
     features: ['watch', 'quality', 'download'],
-    playerStyle: 'advanced' // Full-featured player
+    playerStyle: 'advanced'
   },
 };
 
@@ -79,7 +81,6 @@ export function VideoPlayer({
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
 
   const features = serverConfigs[activeServer].features;
-  const playerStyle = serverConfigs[activeServer].playerStyle;
 
   // Handle fullscreen changes
   useEffect(() => {
@@ -150,7 +151,7 @@ export function VideoPlayer({
     }
   };
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
@@ -159,7 +160,7 @@ export function VideoPlayer({
       }
       setIsPlaying(!isPlaying);
     }
-  };
+  }, [isPlaying]);
 
   const toggleMute = () => {
     if (videoRef.current) {
@@ -168,7 +169,7 @@ export function VideoPlayer({
     }
   };
 
-  const toggleFullscreen = async () => {
+  const toggleFullscreen = useCallback(async () => {
     if (!containerRef.current) return;
 
     try {
@@ -180,7 +181,51 @@ export function VideoPlayer({
     } catch (error) {
       console.error('Fullscreen error:', error);
     }
-  };
+  }, []);
+
+  const skipForward = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = Math.min(videoRef.current.currentTime + 10, videoRef.current.duration);
+    }
+  }, []);
+
+  const skipBackward = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = Math.max(videoRef.current.currentTime - 10, 0);
+    }
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle if not typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      switch (e.key.toLowerCase()) {
+        case ' ':
+          e.preventDefault();
+          togglePlay();
+          break;
+        case 'f':
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+        case 'arrowright':
+          e.preventDefault();
+          skipForward();
+          break;
+        case 'arrowleft':
+          e.preventDefault();
+          skipBackward();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [togglePlay, toggleFullscreen, skipForward, skipBackward]);
 
   const handleDownload = async () => {
     if (!videoUrl) {
@@ -200,6 +245,14 @@ export function VideoPlayer({
     } catch {
       toast.error('Failed to start download');
     }
+  };
+
+  const handleVideoClick = (e: React.MouseEvent) => {
+    // Prevent triggering when clicking on controls
+    if ((e.target as HTMLElement).closest('.video-controls')) {
+      return;
+    }
+    togglePlay();
   };
 
   // Loading state
@@ -223,8 +276,12 @@ export function VideoPlayer({
     return (
       <div 
         ref={containerRef} 
-        className="relative bg-black w-full"
-        style={{ aspectRatio: '16/9', maxHeight: isFullscreen ? '100vh' : '70vh' }}
+        className={`relative bg-black w-full ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}
+        style={{ 
+          aspectRatio: isFullscreen ? undefined : '16/9', 
+          maxHeight: isFullscreen ? '100vh' : '70vh',
+          height: isFullscreen ? '100vh' : undefined,
+        }}
       >
         <iframe
           src={`${externalUrl}${externalUrl.includes('?') ? '&' : '?'}autoplay=1`}
@@ -259,6 +316,7 @@ export function VideoPlayer({
         aspectRatio: isFullscreen ? undefined : '16/9', 
         maxHeight: isFullscreen ? '100vh' : '70vh',
         height: isFullscreen ? '100vh' : undefined,
+        width: isFullscreen ? '100vw' : undefined,
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => isPlaying && setShowControls(false)}
@@ -266,7 +324,7 @@ export function VideoPlayer({
       <video
         ref={videoRef}
         src={videoUrl || externalUrl || undefined}
-        className={`w-full h-full ${isFullscreen ? 'object-contain' : 'object-contain'}`}
+        className="w-full h-full object-contain"
         onTimeUpdate={handleTimeUpdate}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
@@ -278,19 +336,31 @@ export function VideoPlayer({
         poster={poster}
         autoPlay
         playsInline
-        onClick={togglePlay}
+        onClick={handleVideoClick}
       />
 
       {/* Custom Controls */}
       <div 
-        className={`absolute inset-0 flex flex-col justify-end transition-opacity duration-300 bg-gradient-to-t from-black/80 via-transparent to-transparent ${
-          showControls ? 'opacity-100' : 'opacity-0'
+        className={`video-controls absolute inset-0 flex flex-col justify-end transition-opacity duration-300 bg-gradient-to-t from-black/80 via-transparent to-transparent ${
+          showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
+        {/* Center Play/Pause Button on Click Overlay */}
+        <div 
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          style={{ bottom: '100px' }}
+        >
+          {!isPlaying && showControls && (
+            <div className="bg-black/50 rounded-full p-4">
+              <Play className="h-12 w-12 text-white fill-current" />
+            </div>
+          )}
+        </div>
+
         {/* Progress Bar with Time */}
         <div className="px-4 mb-2">
           <div className="flex items-center gap-2 text-white text-sm mb-1">
-            <span className="min-w-[50px] text-center">{formatTime(currentTime)}</span>
+            <span className="min-w-[60px] text-center font-mono">{formatTime(currentTime)}</span>
             <input
               type="range"
               min="0"
@@ -299,20 +369,43 @@ export function VideoPlayer({
               onChange={handleSeek}
               className="flex-1 h-1 bg-white/30 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full"
             />
-            <span className="min-w-[50px] text-center">{formatTime(duration)}</span>
+            <span className="min-w-[60px] text-center font-mono">{formatTime(duration)}</span>
           </div>
         </div>
 
         {/* Controls */}
         <div className="flex items-center justify-between px-4 pb-4">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            {/* Skip Backward */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={skipBackward}
+              className="text-white hover:bg-white/20"
+              title="Skip back 10 seconds (←)"
+            >
+              <SkipBack className="h-5 w-5" />
+            </Button>
+
             <Button
               variant="ghost"
               size="icon"
               onClick={togglePlay}
               className="text-white hover:bg-white/20"
+              title="Play/Pause (Space)"
             >
               {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 fill-current" />}
+            </Button>
+
+            {/* Skip Forward */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={skipForward}
+              className="text-white hover:bg-white/20"
+              title="Skip forward 10 seconds (→)"
+            >
+              <SkipForward className="h-5 w-5" />
             </Button>
 
             <Button
@@ -324,7 +417,7 @@ export function VideoPlayer({
               {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
             </Button>
 
-            <span className="text-white text-sm hidden sm:inline">
+            <span className="text-white text-sm hidden sm:inline ml-2">
               Episode {episodeNumber}: {title}
             </span>
           </div>
@@ -373,6 +466,7 @@ export function VideoPlayer({
               size="icon"
               onClick={toggleFullscreen}
               className="text-white hover:bg-white/20"
+              title="Fullscreen (F)"
             >
               {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
             </Button>
