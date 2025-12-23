@@ -76,7 +76,7 @@ export function VideoPlayer({
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [quality, setQuality] = useState<'auto' | '1080p' | '720p' | '480p' | '360p'>('auto');
+  const [quality, setQuality] = useState<'1080p' | '720p' | '480p' | '360p'>('1080p');
   const [showControls, setShowControls] = useState(true);
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -324,7 +324,11 @@ export function VideoPlayer({
       <video
         ref={videoRef}
         src={videoUrl || externalUrl || undefined}
-        className="w-full h-full object-contain"
+        className={`w-full h-full object-contain transition-all duration-300 ${
+          quality === '360p' ? 'blur-[2px]' : 
+          quality === '480p' ? 'blur-[1px]' : 
+          ''
+        }`}
         onTimeUpdate={handleTimeUpdate}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
@@ -441,13 +445,13 @@ export function VideoPlayer({
                   style={{ zIndex: 9999 }}
                   sideOffset={8}
                 >
-                  {(['auto', '1080p', '720p', '480p', '360p'] as const).map((q) => (
+                  {(['1080p', '720p', '480p', '360p'] as const).map((q) => (
                     <DropdownMenuItem
                       key={q}
                       onClick={() => setQuality(q)}
                       className={quality === q ? 'bg-primary/20' : ''}
                     >
-                      {q === 'auto' ? 'Auto' : q}
+                      {q} {q === '360p' && '(Low)'} {q === '480p' && '(Medium)'} {(q === '720p' || q === '1080p') && '(HD)'}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>

@@ -1,6 +1,15 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Github, Twitter, Mail } from 'lucide-react';
 import logo from '@/assets/logo.png';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 const footerLinks = {
   browse: [
@@ -16,12 +25,40 @@ const footerLinks = {
     { label: 'Fantasy', href: '/browse?genre=fantasy' },
   ],
   support: [
-    { label: 'Help Center', href: '/help' },
-    { label: 'Contact Us', href: '/contact' },
+    { label: 'Help Center', href: 'https://t.me/AnimeSaviInhindiDUB', external: true },
+    { label: 'Contact Us', href: 'https://t.me/AnimeSaviInhindiDUB', external: true },
     { label: 'Terms of Service', href: '/terms' },
-    { label: 'Privacy Policy', href: '/privacy' },
+    { label: 'Privacy Policy', href: '/privacy', isPrivacy: true },
   ],
 };
+
+function PrivacyPolicyButton() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left"
+      >
+        Privacy Policy
+      </button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Privacy Policy</DialogTitle>
+            <DialogDescription className="pt-4 text-foreground">
+              Anime.Savi.me does not store any files on own server, We only index links from internet which are hosted on third-party services. We Index Links Just Like Google.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end pt-4">
+            <Button onClick={() => setOpen(false)}>OK</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
 
 export function Footer() {
   return (
@@ -100,13 +137,26 @@ export function Footer() {
             <h3 className="font-heading font-semibold mb-4">Support</h3>
             <ul className="space-y-2">
               {footerLinks.support.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
+                <li key={link.label}>
+                  {link.external ? (
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  ) : link.isPrivacy ? (
+                    <PrivacyPolicyButton />
+                  ) : (
+                    <Link
+                      to={link.href}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -117,9 +167,6 @@ export function Footer() {
         <div className="border-t border-border/50 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} Anime.Savi.me. All rights reserved.
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Made with ❤️ for anime lovers
           </p>
         </div>
       </div>
