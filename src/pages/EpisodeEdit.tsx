@@ -7,9 +7,20 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { ArrowLeft, Save, Film } from 'lucide-react';
+import { ArrowLeft, Save, Film, Volume2 } from 'lucide-react';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
+
+const AUDIO_LANGUAGES = [
+  { value: 'original', label: 'Original (Japanese)' },
+  { value: 'Hindi', label: 'Hindi DUB' },
+  { value: 'English', label: 'English DUB' },
+  { value: 'Tamil', label: 'Tamil DUB' },
+  { value: 'Telugu', label: 'Telugu DUB' },
+  { value: 'Korean', label: 'Korean' },
+  { value: 'Chinese', label: 'Chinese' },
+];
 
 interface Episode {
   id: string;
@@ -21,6 +32,7 @@ interface Episode {
   thumbnail: string | null;
   duration: number | null;
   season_id: string;
+  audio_language: string | null;
 }
 
 interface Anime {
@@ -49,6 +61,7 @@ export default function EpisodeEdit() {
   const [thumbnail, setThumbnail] = useState('');
   const [duration, setDuration] = useState('');
   const [episodeNumber, setEpisodeNumber] = useState('');
+  const [audioLanguage, setAudioLanguage] = useState('original');
 
   useEffect(() => {
     if (!isAuthReady) return;
@@ -113,6 +126,7 @@ export default function EpisodeEdit() {
     setThumbnail(episodeData.thumbnail || '');
     setDuration(episodeData.duration?.toString() || '');
     setEpisodeNumber(episodeData.episode_number.toString());
+    setAudioLanguage(episodeData.audio_language || 'original');
 
     setIsLoading(false);
   };
@@ -135,6 +149,7 @@ export default function EpisodeEdit() {
         thumbnail: thumbnail.trim() || null,
         duration: duration ? parseInt(duration) : null,
         episode_number: parseInt(episodeNumber),
+        audio_language: audioLanguage || 'original',
       })
       .eq('id', episodeId);
 
@@ -183,7 +198,7 @@ export default function EpisodeEdit() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="episodeNumber">Episode Number *</Label>
               <Input
@@ -205,6 +220,29 @@ export default function EpisodeEdit() {
                 className="bg-muted/50"
               />
             </div>
+          </div>
+
+          {/* Audio Language Selection - Important for DUB */}
+          <div className="space-y-2">
+            <Label htmlFor="audioLanguage" className="flex items-center gap-2">
+              <Volume2 className="h-4 w-4 text-primary" />
+              Audio Language / DUB *
+            </Label>
+            <Select value={audioLanguage} onValueChange={setAudioLanguage}>
+              <SelectTrigger className="bg-muted/50">
+                <SelectValue placeholder="Select audio language" />
+              </SelectTrigger>
+              <SelectContent>
+                {AUDIO_LANGUAGES.map((lang) => (
+                  <SelectItem key={lang.value} value={lang.value}>
+                    {lang.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Important: Select the actual audio language of the video file you're uploading
+            </p>
           </div>
 
           <div className="space-y-2">

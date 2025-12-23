@@ -120,6 +120,7 @@ export type Database = {
       }
       episodes: {
         Row: {
+          audio_language: string | null
           created_at: string
           description: string | null
           duration: number | null
@@ -132,6 +133,7 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          audio_language?: string | null
           created_at?: string
           description?: string | null
           duration?: number | null
@@ -144,6 +146,7 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          audio_language?: string | null
           created_at?: string
           description?: string | null
           duration?: number | null
