@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  isRolesLoaded: boolean;
   roles: UserRole[];
   isUploader: boolean;
   isAdmin: boolean;
@@ -23,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [roles, setRoles] = useState<UserRole[]>([]);
+  const [rolesLoaded, setRolesLoaded] = useState(false);
 
   const fetchUserRoles = async (userId: string) => {
     const { data, error } = await supabase
@@ -33,32 +35,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!error && data) {
       setRoles(data.map(r => r.role as UserRole));
     }
+    setRolesLoaded(true);
   };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          setTimeout(() => {
-            fetchUserRoles(session.user.id);
-          }, 0);
+          await fetchUserRoles(session.user.id);
         } else {
           setRoles([]);
+          setRolesLoaded(true);
         }
         
         setIsLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchUserRoles(session.user.id);
+        await fetchUserRoles(session.user.id);
+      } else {
+        setRolesLoaded(true);
       }
       
       setIsLoading(false);
@@ -98,8 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRoles([]);
   };
 
-  const isUploader = roles.includes('uploader') || roles.includes('admin');
-  const isAdmin = roles.includes('admin');
+  const isUploader = rolesLoaded && (roles.includes('uploader') || roles.includes('admin'));
+  const isAdmin = rolesLoaded && roles.includes('admin');
+  const isRolesLoaded = rolesLoaded;
 
   return (
     <AuthContext.Provider
@@ -107,6 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         session,
         isLoading,
+        isRolesLoaded,
         roles,
         isUploader,
         isAdmin,

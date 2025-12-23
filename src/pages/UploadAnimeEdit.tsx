@@ -40,7 +40,7 @@ interface Episode {
 
 export default function UploadAnimeEdit() {
   const { animeId } = useParams<{ animeId: string }>();
-  const { user, isUploader, isAdmin } = useAuth();
+  const { user, isUploader, isAdmin, isRolesLoaded } = useAuth();
   const navigate = useNavigate();
 
   const [anime, setAnime] = useState<Anime | null>(null);
@@ -61,6 +61,9 @@ export default function UploadAnimeEdit() {
   const [newEpisodeDuration, setNewEpisodeDuration] = useState('');
 
   useEffect(() => {
+    // Wait for roles to be loaded before checking permissions
+    if (!isRolesLoaded) return;
+
     // Check if user has code verification
     const isCodeVerified = sessionStorage.getItem('upload_code_verified') === 'true';
     
@@ -76,7 +79,7 @@ export default function UploadAnimeEdit() {
     }
 
     fetchAnimeData();
-  }, [user, isUploader, animeId]);
+  }, [user, isUploader, isRolesLoaded, animeId]);
 
   useEffect(() => {
     if (selectedSeason) {
