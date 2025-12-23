@@ -1,8 +1,8 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload, X, FileVideo, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Upload, X, FileVideo, Image as ImageIcon, Check, Loader2 } from 'lucide-react';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { cn } from '@/lib/utils';
 
@@ -31,13 +31,14 @@ export function FileUploadInput({
 }: FileUploadInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string>('');
 
   const bucket = accept === 'video' ? 'anime-videos' : 'anime-thumbnails';
   
   // Determine max size based on content type
   const effectiveMaxSize = maxSizeGB ?? (contentType === 'movie' ? 100 : contentType === 'episode' ? 50 : accept === 'image' ? 1 : 50);
   
-  const { uploadFile, isUploading, progress, SIZE_LIMITS } = useFileUpload({ 
+  const { uploadFile, isUploading, progress } = useFileUpload({ 
     bucket, 
     folder,
     maxSizeGB: effectiveMaxSize 
@@ -53,6 +54,8 @@ export function FileUploadInput({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setFileName(file.name);
+
     // Create preview for images
     if (accept === 'image') {
       const reader = new FileReader();
@@ -60,9 +63,13 @@ export function FileUploadInput({
       reader.readAsDataURL(file);
     }
 
+    // Start upload immediately in background
     const result = await uploadFile(file);
     if (result) {
       onChange(result.url);
+    } else {
+      setFileName('');
+      setPreview(null);
     }
 
     // Reset input
@@ -74,6 +81,7 @@ export function FileUploadInput({
   const handleClear = () => {
     onChange('');
     setPreview(null);
+    setFileName('');
     if (inputRef.current) {
       inputRef.current.value = '';
     }
@@ -95,7 +103,6 @@ export function FileUploadInput({
         accept={acceptTypes}
         onChange={handleFileSelect}
         className="hidden"
-        // Mobile devices will open gallery/file picker automatically based on accept type
       />
 
       {value ? (
@@ -120,8 +127,8 @@ export function FileUploadInput({
           )}
           {accept === 'video' && (
             <div className="flex items-center gap-2 p-3 rounded-lg border border-border bg-muted/50">
-              <FileVideo className="h-5 w-5 text-primary" />
-              <span className="text-sm truncate flex-1">Video uploaded</span>
+              <Check className="h-5 w-5 text-green-500" />
+              <span className="text-sm truncate flex-1">{fileName || 'Video uploaded'}</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -134,37 +141,37 @@ export function FileUploadInput({
             </div>
           )}
         </div>
+      ) : isUploading ? (
+        <div className="flex items-center gap-3 p-3 rounded-lg border border-primary/50 bg-primary/5">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm font-medium truncate max-w-[150px]">{fileName}</span>
+              <span className="text-xs text-muted-foreground">{progress}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-200 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        </div>
       ) : (
         <div className="space-y-2">
           <Button
             type="button"
             variant="outline"
             onClick={triggerFileSelect}
-            disabled={isUploading}
-            className="w-full h-28 border-dashed flex flex-col gap-2"
+            className="w-full h-20 border-dashed flex flex-col gap-1"
           >
-            {isUploading ? (
-              <>
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                <span className="text-sm font-medium">Uploading... {progress}%</span>
-                <div className="w-full max-w-[200px] h-2 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-primary transition-all duration-300 ease-out"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                <Icon className="h-6 w-6" />
-                <span className="text-sm">
-                  {accept === 'video' ? 'Select Video File' : 'Select Image'}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  Max size: {maxSizeLabel}
-                </span>
-              </>
-            )}
+            <Icon className="h-5 w-5" />
+            <span className="text-sm">
+              {accept === 'video' ? 'Select Video' : 'Select Image'}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              Max: {maxSizeLabel}
+            </span>
           </Button>
           
           <div className="relative">
