@@ -432,7 +432,7 @@ export default function Watch() {
                 variant="outline"
                 onClick={() => {
                   const shareUrl = `${window.location.origin}/watch/${episode.id}`;
-                  const shareText = `Watch "${anime?.title}" - Episode ${episode.episode_number}: ${episode.title} on AnimeStreamHub!`;
+                  const shareText = `Watch "${anime?.title}" - Episode ${episode.episode_number}: ${episode.title} on Anime.Savi.me!`;
 
                   if (navigator.share) {
                     navigator.share({

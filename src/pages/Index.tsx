@@ -24,7 +24,7 @@ export default function Index() {
       <section className="py-16 md:py-20">
         <div className="container">
           <h2 className="text-2xl md:text-3xl lg:text-4xl font-heading font-bold text-center mb-10 md:mb-12">
-            Why Choose <span className="anime-gradient-text">AnimeStreamHub</span>?
+            Why Choose <span className="anime-gradient-text">Anime.Savi.me</span>?
           </h2>
 
           <div className="grid md:grid-cols-3 gap-6">
