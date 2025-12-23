@@ -14,6 +14,7 @@ import Favorites from "./pages/Favorites";
 import History from "./pages/History";
 import Upload from "./pages/Upload";
 import UploadAnimeEdit from "./pages/UploadAnimeEdit";
+import EpisodeEdit from "./pages/EpisodeEdit";
 import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/history" element={<History />} />
               <Route path="/upload" element={<Upload />} />
               <Route path="/upload/anime/:animeId" element={<UploadAnimeEdit />} />
+              <Route path="/upload/anime/:animeId/episode/:episodeId/edit" element={<EpisodeEdit />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/profile" element={<Profile />} />

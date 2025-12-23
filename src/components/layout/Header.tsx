@@ -25,13 +25,6 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
 const genres = [
@@ -49,9 +42,6 @@ export function Header() {
   const { user, isUploader, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [showCodeDialog, setShowCodeDialog] = useState(false);
-  const [uploadCode, setUploadCode] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,80 +72,7 @@ export function Header() {
       return;
     }
 
-    // Check if already verified in this session
-    const isVerified = sessionStorage.getItem('upload_code_verified') === 'true';
-    if (isVerified) {
-      navigate('/upload');
-    } else {
-      setShowCodeDialog(true);
-    }
-  };
-
-  const handleCodeSubmit = async () => {
-    if (!user) {
-      toast.error('Please sign in first');
-      return;
-    }
-
-    if (!canUpload()) {
-      toast.error('You are not authorized to upload');
-      setShowCodeDialog(false);
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // Check if code exists and is not used
-      const { data: codeData, error: codeError } = await supabase
-        .from('upload_codes')
-        .select('*')
-        .eq('code', uploadCode)
-        .is('used_by', null)
-        .single();
-
-      if (codeError || !codeData) {
-        toast.error('Invalid or already used code. Please try again.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Mark code as used
-      await supabase
-        .from('upload_codes')
-        .update({ 
-          used_by: user.id, 
-          used_at: new Date().toISOString() 
-        })
-        .eq('id', codeData.id);
-
-      // Grant uploader role if not already present
-      const { data: existingRole } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('role', 'uploader')
-        .maybeSingle();
-
-      if (!existingRole) {
-        await supabase
-          .from('user_roles')
-          .insert({ user_id: user.id, role: 'uploader' });
-      }
-
-      sessionStorage.setItem('upload_code_verified', 'true');
-      toast.success('Upload access granted! You can now upload anime.');
-      setShowCodeDialog(false);
-      setUploadCode('');
-      navigate('/upload');
-      
-      // Reload to update auth context with new role
-      window.location.reload();
-    } catch (error) {
-      toast.error('Something went wrong. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    navigate('/upload');
   };
 
   return (
@@ -193,15 +110,17 @@ export function Header() {
               My List
             </Link>
           )}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleUploadClick}
-            className="flex items-center gap-2 border-primary/50 hover:bg-primary/10"
-          >
-            <Upload className="h-4 w-4" />
-            Upload
-          </Button>
+          {canUpload() && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleUploadClick}
+              className="flex items-center gap-2 border-primary/50 hover:bg-primary/10"
+            >
+              <Upload className="h-4 w-4" />
+              Upload
+            </Button>
+          )}
         </nav>
 
         {/* Search */}
@@ -254,7 +173,7 @@ export function Header() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                {isUploader && (
+                {(isUploader || canUpload()) && (
                   <DropdownMenuItem asChild>
                     <Link to="/upload" className="flex items-center gap-2">
                       <Upload className="h-4 w-4" /> Upload Anime
@@ -318,14 +237,16 @@ export function Header() {
                   <Link to="/browse" className="text-lg font-medium hover:text-primary transition-colors">
                     Browse All
                   </Link>
-                  <Button 
-                    variant="outline" 
-                    onClick={handleUploadClick}
-                    className="flex items-center gap-2 justify-start border-primary/50 hover:bg-primary/10"
-                  >
-                    <Upload className="h-4 w-4" />
-                    Upload Anime
-                  </Button>
+                  {canUpload() && (
+                    <Button 
+                      variant="outline" 
+                      onClick={handleUploadClick}
+                      className="flex items-center gap-2 justify-start border-primary/50 hover:bg-primary/10"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Upload Anime
+                    </Button>
+                  )}
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Genres</p>
                     <div className="grid grid-cols-2 gap-2">
@@ -346,43 +267,6 @@ export function Header() {
           </Sheet>
         </div>
       </div>
-
-      {/* Upload Code Dialog */}
-      <Dialog open={showCodeDialog} onOpenChange={setShowCodeDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5 text-primary" />
-              Enter the code to upload
-            </DialogTitle>
-            <DialogDescription>
-              Please enter the upload code to access the upload dashboard.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 pt-4">
-            <Input
-              type="text"
-              placeholder="Enter code..."
-              value={uploadCode}
-              onChange={(e) => setUploadCode(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !isSubmitting && handleCodeSubmit()}
-              className="bg-muted/50"
-              disabled={isSubmitting}
-            />
-            <p className="text-xs text-muted-foreground">
-              Note: Each code can only be used once.
-            </p>
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setShowCodeDialog(false)} disabled={isSubmitting}>
-                Cancel
-              </Button>
-              <Button onClick={handleCodeSubmit} className="anime-button" disabled={isSubmitting}>
-                {isSubmitting ? 'Verifying...' : 'Submit'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </header>
   );
 }
