@@ -45,14 +45,52 @@ export default function History() {
   }, [user]);
 
   const fetchHistory = async () => {
-    const { data } = await supabase
-      .from('watch_history')
-      .select('*, anime:anime_id(*), episode:episode_id(*)')
-      .eq('user_id', user!.id)
-      .order('watched_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('watch_history')
+        .select(`
+          id,
+          watched_at,
+          progress,
+          completed,
+          anime_id,
+          episode_id
+        `)
+        .eq('user_id', user!.id)
+        .order('watched_at', { ascending: false });
 
-    if (data) {
-      setHistory(data as WatchHistoryItem[]);
+      if (error) {
+        console.error('Error fetching watch history:', error);
+        setIsLoading(false);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        // Fetch anime data separately
+        const animeIds = [...new Set(data.map(h => h.anime_id))];
+        const episodeIds = [...new Set(data.map(h => h.episode_id))];
+
+        const [animeResponse, episodeResponse] = await Promise.all([
+          supabase.from('anime').select('id, title, cover_image').in('id', animeIds),
+          supabase.from('episodes').select('id, title, episode_number').in('id', episodeIds)
+        ]);
+
+        const animeMap = new Map(animeResponse.data?.map(a => [a.id, a]) || []);
+        const episodeMap = new Map(episodeResponse.data?.map(e => [e.id, e]) || []);
+
+        const historyWithDetails = data.map(h => ({
+          id: h.id,
+          watched_at: h.watched_at,
+          progress: h.progress,
+          completed: h.completed,
+          anime: animeMap.get(h.anime_id) || { id: h.anime_id, title: 'Unknown', cover_image: null },
+          episode: episodeMap.get(h.episode_id) || { id: h.episode_id, title: 'Unknown', episode_number: 0 }
+        }));
+
+        setHistory(historyWithDetails as WatchHistoryItem[]);
+      }
+    } catch (error) {
+      console.error('Error fetching history:', error);
     }
     setIsLoading(false);
   };

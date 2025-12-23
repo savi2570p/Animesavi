@@ -425,7 +425,7 @@ export function VideoPlayer({
           <div className="flex items-center gap-2">
             {/* Quality Control (SHORT and Zex only) */}
             {features.includes('quality') && (
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
@@ -435,7 +435,12 @@ export function VideoPlayer({
                     <Settings className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-background">
+                <DropdownMenuContent 
+                  align="end" 
+                  className="bg-background z-[9999]"
+                  style={{ zIndex: 9999 }}
+                  sideOffset={8}
+                >
                   {(['auto', '1080p', '720p', '480p', '360p'] as const).map((q) => (
                     <DropdownMenuItem
                       key={q}

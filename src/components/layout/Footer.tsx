@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Play, Github, Twitter, Mail } from 'lucide-react';
+import { Github, Twitter, Mail } from 'lucide-react';
+import logo from '@/assets/logo.png';
 
 const footerLinks = {
   browse: [
@@ -30,11 +31,9 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="p-1.5 rounded-lg bg-gradient-primary">
-                <Play className="h-5 w-5 text-white fill-white" />
-              </div>
+              <img src={logo} alt="Anime.Savi.me" className="h-10 w-10 rounded-lg object-contain" />
               <span className="text-xl font-heading font-bold anime-gradient-text">
-                AnimeStreamHub
+                Anime.Savi.me
               </span>
             </Link>
             <p className="text-sm text-muted-foreground mb-4">
@@ -117,7 +116,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="border-t border-border/50 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} AnimeStreamHub. All rights reserved.
+            © {new Date().getFullYear()} Anime.Savi.me. All rights reserved.
           </p>
           <p className="text-xs text-muted-foreground">
             Made with ❤️ for anime lovers

@@ -12,7 +12,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { 
-  Play, 
   Search, 
   Menu, 
   User, 
@@ -26,6 +25,7 @@ import {
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { toast } from 'sonner';
+import logo from '@/assets/logo.png';
 
 const genres = [
   'Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 
@@ -80,11 +80,9 @@ export function Header() {
       <div className="container flex h-16 items-center justify-between gap-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-          <div className="p-1.5 rounded-lg bg-gradient-primary">
-            <Play className="h-5 w-5 text-white fill-white" />
-          </div>
+          <img src={logo} alt="Anime.Savi.me" className="h-10 w-10 rounded-lg object-contain" />
           <span className="hidden sm:inline-block text-xl font-heading font-bold anime-gradient-text">
-            AnimeStreamHub
+            Anime.Savi.me
           </span>
         </Link>
 
