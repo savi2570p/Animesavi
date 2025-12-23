@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -40,7 +40,7 @@ interface Season {
 }
 
 export default function Upload() {
-  const { user, isUploader, isRolesLoaded } = useAuth();
+  const { user, isUploader, isRolesLoaded, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
   const [myAnime, setMyAnime] = useState<Anime[]>([]);
   const [allAnime, setAllAnime] = useState<Anime[]>([]);
@@ -80,9 +80,10 @@ export default function Upload() {
     return ALLOWED_UPLOADER_EMAILS.includes(user.email.toLowerCase());
   };
 
+  const isAuthReady = !isAuthLoading && isRolesLoaded;
+
   useEffect(() => {
-    // Wait for roles to be loaded before checking permissions
-    if (!isRolesLoaded) return;
+    if (!isAuthReady) return;
 
     if (!user) {
       navigate('/auth');
@@ -96,7 +97,7 @@ export default function Upload() {
     }
 
     fetchAnimeData();
-  }, [user, isUploader, isRolesLoaded]);
+  }, [isAuthReady, user, isUploader, navigate]);
 
   useEffect(() => {
     if (selectedAnimeId) {
@@ -108,30 +109,42 @@ export default function Upload() {
   }, [selectedAnimeId]);
 
   const fetchAnimeData = async () => {
-    // Fetch user's anime if logged in
-    if (user) {
-      const { data } = await supabase
+    setIsLoading(true);
+    try {
+      // Fetch user's anime if logged in
+      if (user) {
+        const { data, error } = await supabase
+          .from('anime')
+          .select('*')
+          .eq('uploader_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching my anime:', error);
+          toast.error('Failed to load your uploads');
+        } else if (data) {
+          setMyAnime(data);
+        }
+      }
+
+      // Fetch all anime for "Existing Upload" option
+      const { data: allData, error: allError } = await supabase
         .from('anime')
         .select('*')
-        .eq('uploader_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('title');
 
-      if (data) {
-        setMyAnime(data);
+      if (allError) {
+        console.error('Error fetching all anime:', allError);
+        toast.error('Failed to load anime list');
+      } else if (allData) {
+        setAllAnime(allData);
       }
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to load upload dashboard');
+    } finally {
+      setIsLoading(false);
     }
-
-    // Fetch all anime for "Existing Upload" option
-    const { data: allData } = await supabase
-      .from('anime')
-      .select('*')
-      .order('title');
-
-    if (allData) {
-      setAllAnime(allData);
-    }
-
-    setIsLoading(false);
   };
 
   const fetchSeasons = async (animeId: string) => {
@@ -158,6 +171,19 @@ export default function Upload() {
   const handleSubmitAnime = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!isAuthReady) return;
+
+    if (!user) {
+      toast.error('Please sign in first');
+      navigate('/auth');
+      return;
+    }
+
+    if (!canUpload() && !isUploader) {
+      toast.error('You are not authorized to upload.');
+      return;
+    }
+
     if (!title.trim()) {
       toast.error('Title is required');
       return;
@@ -176,12 +202,13 @@ export default function Upload() {
         release_year: releaseYear ? parseInt(releaseYear) : null,
         type,
         status,
-        uploader_id: user?.id || null,
+        uploader_id: user.id,
       })
       .select()
       .single();
 
     if (error) {
+      console.error('Error creating anime:', error);
       toast.error('Failed to create anime');
     } else {
       toast.success('Anime created successfully!');
