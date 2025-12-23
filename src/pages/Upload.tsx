@@ -69,18 +69,26 @@ export default function Upload() {
   const [episodeDuration, setEpisodeDuration] = useState('');
   const [isAddingEpisode, setIsAddingEpisode] = useState(false);
 
+  // Allowed uploader emails
+  const ALLOWED_UPLOADER_EMAILS = [
+    'savi2570p@gmail.com',
+    'savipanjeta2@gmail.com'
+  ];
+
+  const canUpload = () => {
+    if (!user?.email) return false;
+    return ALLOWED_UPLOADER_EMAILS.includes(user.email.toLowerCase());
+  };
+
   useEffect(() => {
-    // Check if user has code verification
-    const isCodeVerified = sessionStorage.getItem('upload_code_verified') === 'true';
-    
-    if (!user && !isCodeVerified) {
+    if (!user) {
       navigate('/auth');
       return;
     }
 
-    // Allow access if code is verified OR user is an uploader
-    if (!isCodeVerified && !isUploader) {
-      navigate('/apply-uploader');
+    if (!canUpload() && !isUploader) {
+      toast.error('You are not authorized to upload. Only specific accounts can upload anime.');
+      navigate('/');
       return;
     }
 
