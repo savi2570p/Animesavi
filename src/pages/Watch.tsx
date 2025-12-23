@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { VideoPlayer } from '@/components/video/VideoPlayer';
+import { VideoPlayer, ServerType } from '@/components/video/VideoPlayer';
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,6 +15,7 @@ import {
   Send,
   Share2,
   Edit,
+  Server,
 } from 'lucide-react';
 
 interface Episode {
@@ -64,6 +65,7 @@ export default function Watch() {
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [watchHistoryId, setWatchHistoryId] = useState<string | null>(null);
+  const [activeServer, setActiveServer] = useState<ServerType>('PLAY');
 
   useEffect(() => {
     if (episodeId) {
@@ -267,6 +269,7 @@ export default function Watch() {
         episodeId={episode.id}
         poster={anime?.cover_image || undefined}
         isMovie={isMovie}
+        activeServer={activeServer}
         onTimeUpdate={updateWatchProgress}
       />
 
@@ -284,12 +287,32 @@ export default function Watch() {
               <span>Episode {episode.episode_number}</span>
             </div>
 
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl md:text-3xl font-heading font-bold">
-                {episode.title}
-              </h1>
+            {/* Anime Title */}
+            <h1 className="text-2xl md:text-3xl font-heading font-bold mb-4">
+              {episode.title}
+            </h1>
 
-              {/* Edit Episode (Admin/Uploader only) */}
+            {/* Server Selection - Below Title */}
+            <div className="flex items-center gap-3 mb-6">
+              <Server className="h-5 w-5 text-muted-foreground" />
+              <span className="text-muted-foreground font-medium">Server:</span>
+              <div className="flex gap-2">
+                {(['PLAY', 'SHORT', 'Zex'] as ServerType[]).map((server) => (
+                  <Button
+                    key={server}
+                    size="sm"
+                    variant={activeServer === server ? 'default' : 'outline'}
+                    onClick={() => setActiveServer(server)}
+                    className={activeServer === server ? 'anime-button' : ''}
+                  >
+                    {server}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Edit Episode (Admin/Uploader only) */}
+            <div className="flex items-center gap-4 mb-4">
               {(isAdmin || isUploader) && anime && (
                 <Button
                   variant="outline"

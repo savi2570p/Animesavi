@@ -8,7 +8,6 @@ import {
   Maximize,
   Download,
   Settings,
-  Share2,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -18,7 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 
-type ServerType = 'PLAY' | 'SHORT' | 'Zex';
+export type ServerType = 'PLAY' | 'SHORT' | 'Zex';
 
 interface VideoPlayerProps {
   videoUrl: string | null;
@@ -29,13 +28,14 @@ interface VideoPlayerProps {
   episodeId: string;
   poster?: string;
   isMovie?: boolean;
+  activeServer: ServerType;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
 }
 
 const serverConfigs: Record<ServerType, { name: string; features: string[] }> = {
-  PLAY: { name: 'PLAY', features: ['watch', 'share'] },
-  SHORT: { name: 'SHORT', features: ['watch', 'quality', 'share'] },
-  Zex: { name: 'Zex', features: ['watch', 'quality', 'download', 'share'] },
+  PLAY: { name: 'PLAY', features: ['watch'] },
+  SHORT: { name: 'SHORT', features: ['watch', 'quality'] },
+  Zex: { name: 'Zex', features: ['watch', 'quality', 'download'] },
 };
 
 export function VideoPlayer({
@@ -47,10 +47,11 @@ export function VideoPlayer({
   episodeId,
   poster,
   isMovie = false,
+  activeServer,
   onTimeUpdate,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [activeServer, setActiveServer] = useState<ServerType>('PLAY');
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -112,31 +113,12 @@ export function VideoPlayer({
   };
 
   const toggleFullscreen = () => {
-    if (videoRef.current) {
+    if (containerRef.current) {
       if (document.fullscreenElement) {
         document.exitFullscreen();
       } else {
-        videoRef.current.requestFullscreen();
+        containerRef.current.requestFullscreen();
       }
-    }
-  };
-
-  const handleShare = () => {
-    const shareUrl = `${window.location.origin}/watch/${episodeId}`;
-    const shareText = `Watch "${animeTitle}" - Episode ${episodeNumber}: ${title}`;
-
-    if (navigator.share) {
-      navigator.share({
-        title: `${animeTitle} - Episode ${episodeNumber}`,
-        text: shareText,
-        url: shareUrl,
-      }).catch(() => {
-        navigator.clipboard.writeText(shareUrl);
-        toast.success('Link copied to clipboard!');
-      });
-    } else {
-      navigator.clipboard.writeText(shareUrl);
-      toast.success('Link copied to clipboard!');
     }
   };
 
@@ -163,22 +145,7 @@ export function VideoPlayer({
   // External URL player with autoplay
   if (externalUrl && activeServer === 'PLAY') {
     return (
-      <div className="relative bg-black">
-        {/* Server Selection */}
-        <div className="absolute top-4 right-4 z-10 flex gap-2">
-          {(Object.keys(serverConfigs) as ServerType[]).map((server) => (
-            <Button
-              key={server}
-              size="sm"
-              variant={activeServer === server ? 'default' : 'outline'}
-              onClick={() => setActiveServer(server)}
-              className={activeServer === server ? 'anime-button' : 'bg-black/50 text-white border-white/30 hover:bg-white/20'}
-            >
-              {serverConfigs[server].name}
-            </Button>
-          ))}
-        </div>
-
+      <div ref={containerRef} className="relative bg-black group">
         <div className="aspect-video w-full max-h-[70vh] bg-black">
           <iframe
             src={`${externalUrl}${externalUrl.includes('?') ? '&' : '?'}autoplay=1`}
@@ -188,19 +155,6 @@ export function VideoPlayer({
             title={`${animeTitle} - Episode ${episodeNumber}`}
             style={{ border: 'none' }}
           />
-        </div>
-
-        {/* Share button for external videos */}
-        <div className="absolute bottom-4 right-4 z-10">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleShare}
-            className="bg-black/50 text-white border-white/30 hover:bg-white/20"
-          >
-            <Share2 className="h-4 w-4 mr-1" />
-            Share
-          </Button>
         </div>
       </div>
     );
@@ -217,23 +171,8 @@ export function VideoPlayer({
 
   // Native video player for all servers
   return (
-    <div className="relative bg-black">
-      {/* Server Selection */}
-      <div className="absolute top-4 right-4 z-10 flex gap-2">
-        {(Object.keys(serverConfigs) as ServerType[]).map((server) => (
-          <Button
-            key={server}
-            size="sm"
-            variant={activeServer === server ? 'default' : 'outline'}
-            onClick={() => setActiveServer(server)}
-            className={activeServer === server ? 'anime-button' : 'bg-black/50 text-white border-white/30 hover:bg-white/20'}
-          >
-            {serverConfigs[server].name}
-          </Button>
-        ))}
-      </div>
-
-      <div className="relative aspect-video w-full max-h-[70vh] group">
+    <div ref={containerRef} className="relative bg-black group">
+      <div className="relative aspect-video w-full max-h-[70vh]">
         <video
           ref={videoRef}
           src={videoUrl || externalUrl || undefined}
@@ -251,7 +190,7 @@ export function VideoPlayer({
           playsInline
         />
 
-        {/* Custom Controls */}
+        {/* Custom Controls - Always visible in fullscreen, hover to show otherwise */}
         <div className="absolute inset-0 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-t from-black/80 via-transparent to-transparent">
           {/* Progress Bar with Time */}
           <div className="px-4 mb-2">
@@ -333,16 +272,6 @@ export function VideoPlayer({
                   <Download className="h-5 w-5" />
                 </Button>
               )}
-
-              {/* Share (all servers) */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleShare}
-                className="text-white hover:bg-white/20"
-              >
-                <Share2 className="h-5 w-5" />
-              </Button>
 
               <Button
                 variant="ghost"

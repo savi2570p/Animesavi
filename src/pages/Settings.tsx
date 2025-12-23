@@ -5,33 +5,44 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-import { Settings as SettingsIcon, Moon, Sun, Monitor, Bell, Shield, Globe } from 'lucide-react';
+import { Settings as SettingsIcon, Moon, Sun, Monitor, Bell, Shield, Globe, Lock } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Settings() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('dark');
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system' | null>(null);
   const [notifications, setNotifications] = useState(true);
   const [autoplay, setAutoplay] = useState(true);
+  const [isThemeLocked, setIsThemeLocked] = useState(false);
 
   useEffect(() => {
     if (!user) {
       navigate('/auth');
       return;
     }
-    // Load saved theme preference
+    // Load saved theme preference and lock status
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' | null;
+    const themeLocked = localStorage.getItem('theme_locked') === 'true';
+    
     if (savedTheme) {
       setTheme(savedTheme);
     }
+    setIsThemeLocked(themeLocked);
   }, [user, navigate]);
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
+    if (isThemeLocked) {
+      toast.error('Theme is locked. You cannot change it anymore.');
+      return;
+    }
+    
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
+    localStorage.setItem('theme_locked', 'true');
+    setIsThemeLocked(true);
     
-    // Apply theme
+    // Apply theme immediately
     const root = document.documentElement;
     if (newTheme === 'system') {
       const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -39,6 +50,8 @@ export default function Settings() {
     } else {
       root.classList.toggle('dark', newTheme === 'dark');
     }
+    
+    toast.success(`Theme set to ${newTheme}. This cannot be changed.`);
   };
 
   if (!user) return null;
@@ -60,40 +73,56 @@ export default function Settings() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Sun className="h-5 w-5" />
+              {isThemeLocked ? <Lock className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
               Appearance
+              {isThemeLocked && (
+                <span className="text-xs text-muted-foreground ml-2">(Locked)</span>
+              )}
             </CardTitle>
             <CardDescription>
-              Customize how the app looks on your device
+              {isThemeLocked 
+                ? `Theme is locked to "${theme}". This setting cannot be changed.`
+                : 'Choose your preferred theme. Once selected, it cannot be changed.'
+              }
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
-              <Button
-                variant={theme === 'light' ? 'default' : 'outline'}
-                onClick={() => handleThemeChange('light')}
-                className="flex flex-col gap-2 h-auto py-4"
-              >
-                <Sun className="h-5 w-5" />
-                <span className="text-xs">Light</span>
-              </Button>
-              <Button
-                variant={theme === 'dark' ? 'default' : 'outline'}
-                onClick={() => handleThemeChange('dark')}
-                className="flex flex-col gap-2 h-auto py-4"
-              >
-                <Moon className="h-5 w-5" />
-                <span className="text-xs">Dark</span>
-              </Button>
-              <Button
-                variant={theme === 'system' ? 'default' : 'outline'}
-                onClick={() => handleThemeChange('system')}
-                className="flex flex-col gap-2 h-auto py-4"
-              >
-                <Monitor className="h-5 w-5" />
-                <span className="text-xs">System</span>
-              </Button>
-            </div>
+            {isThemeLocked ? (
+              <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+                <Lock className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="font-medium capitalize">{theme} Theme</p>
+                  <p className="text-sm text-muted-foreground">Your theme preference is locked.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-3">
+                <Button
+                  variant={theme === 'light' ? 'default' : 'outline'}
+                  onClick={() => handleThemeChange('light')}
+                  className="flex flex-col gap-2 h-auto py-4"
+                >
+                  <Sun className="h-5 w-5" />
+                  <span className="text-xs">Light</span>
+                </Button>
+                <Button
+                  variant={theme === 'dark' ? 'default' : 'outline'}
+                  onClick={() => handleThemeChange('dark')}
+                  className="flex flex-col gap-2 h-auto py-4"
+                >
+                  <Moon className="h-5 w-5" />
+                  <span className="text-xs">Dark</span>
+                </Button>
+                <Button
+                  variant={theme === 'system' ? 'default' : 'outline'}
+                  onClick={() => handleThemeChange('system')}
+                  className="flex flex-col gap-2 h-auto py-4"
+                >
+                  <Monitor className="h-5 w-5" />
+                  <span className="text-xs">System</span>
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
