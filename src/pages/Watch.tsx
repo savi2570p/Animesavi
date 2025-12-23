@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,21 +7,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
+import { VideoPlayer } from '@/components/video/VideoPlayer';
 import {
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Maximize,
-  SkipBack,
-  SkipForward,
   ChevronLeft,
   ChevronRight,
   MessageSquare,
   Send,
-  Settings,
-  ExternalLink,
   Share2,
+  Edit,
 } from 'lucide-react';
 
 interface Episode {
@@ -45,6 +38,7 @@ interface Anime {
   id: string;
   title: string;
   cover_image: string | null;
+  type: string | null;
 }
 
 interface Comment {
@@ -60,9 +54,8 @@ interface Comment {
 
 export default function Watch() {
   const { episodeId } = useParams<{ episodeId: string }>();
-  const { user } = useAuth();
+  const { user, isAdmin, isUploader } = useAuth();
   const navigate = useNavigate();
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   const [episode, setEpisode] = useState<Episode | null>(null);
   const [anime, setAnime] = useState<Anime | null>(null);
@@ -70,12 +63,7 @@ export default function Watch() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-
-  // Video player state
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [volume, setVolume] = useState(1);
+  const [watchHistoryId, setWatchHistoryId] = useState<string | null>(null);
 
   useEffect(() => {
     if (episodeId) {
@@ -83,6 +71,28 @@ export default function Watch() {
       fetchComments();
     }
   }, [episodeId]);
+
+  const updateWatchProgress = useCallback(async (currentTime: number, duration: number) => {
+    if (!user || !episodeId || !anime) return;
+
+    const progressPercent = Math.floor((currentTime / duration) * 100);
+    const completed = progressPercent >= 90;
+
+    try {
+      if (watchHistoryId) {
+        await supabase
+          .from('watch_history')
+          .update({ 
+            progress: progressPercent,
+            completed,
+            watched_at: new Date().toISOString()
+          })
+          .eq('id', watchHistoryId);
+      }
+    } catch (error) {
+      console.error('Error updating watch progress:', error);
+    }
+  }, [user, episodeId, anime, watchHistoryId]);
 
   const fetchEpisodeData = async () => {
     setIsLoading(true);
@@ -122,10 +132,10 @@ export default function Watch() {
         setAllEpisodes(episodesData);
       }
 
-      // Record watch history
+      // Record watch history immediately
       if (user && seasonData.anime) {
         const animeId = (seasonData.anime as Anime).id;
-        
+
         // Check if record exists
         const { data: existingHistory } = await supabase
           .from('watch_history')
@@ -138,21 +148,27 @@ export default function Watch() {
           // Update existing record
           await supabase
             .from('watch_history')
-            .update({ 
+            .update({
               watched_at: new Date().toISOString(),
-              progress: 0 
             })
             .eq('id', existingHistory.id);
+          setWatchHistoryId(existingHistory.id);
         } else {
           // Insert new record
-          await supabase
+          const { data: newHistory } = await supabase
             .from('watch_history')
             .insert({
               user_id: user.id,
               anime_id: animeId,
               episode_id: episodeId,
               progress: 0,
-            });
+            })
+            .select('id')
+            .single();
+
+          if (newHistory) {
+            setWatchHistoryId(newHistory.id);
+          }
         }
       }
     }
@@ -176,7 +192,7 @@ export default function Watch() {
         .in('id', userIds);
 
       const profileMap = new Map(profiles?.map((p) => [p.id, p]));
-      
+
       setComments(
         data.map((c) => ({
           ...c,
@@ -209,53 +225,12 @@ export default function Watch() {
     }
   };
 
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
-
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      const progress = (videoRef.current.currentTime / videoRef.current.duration) * 100;
-      setProgress(progress);
-    }
-  };
-
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (videoRef.current) {
-      const time = (parseFloat(e.target.value) / 100) * videoRef.current.duration;
-      videoRef.current.currentTime = time;
-      setProgress(parseFloat(e.target.value));
-    }
-  };
-
-  const toggleFullscreen = () => {
-    if (videoRef.current) {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else {
-        videoRef.current.requestFullscreen();
-      }
-    }
-  };
-
   const getCurrentEpisodeIndex = () => allEpisodes.findIndex((ep) => ep.id === episodeId);
 
   const prevEpisode = allEpisodes[getCurrentEpisodeIndex() - 1];
   const nextEpisode = allEpisodes[getCurrentEpisodeIndex() + 1];
+
+  const isMovie = anime?.type?.toLowerCase() === 'movie';
 
   if (isLoading) {
     return (
@@ -283,94 +258,17 @@ export default function Watch() {
   return (
     <div className="min-h-screen bg-background">
       {/* Video Player */}
-      <div className="relative bg-black">
-        {episode.external_url ? (
-          // External URL - play in embedded iframe player with autoplay
-          <div className="aspect-video w-full max-h-[70vh] bg-black">
-            <iframe
-              src={`${episode.external_url}${episode.external_url.includes('?') ? '&' : '?'}autoplay=1`}
-              className="w-full h-full"
-              allowFullScreen
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              title={`${anime?.title} - Episode ${episode.episode_number}`}
-              style={{ border: 'none' }}
-            />
-          </div>
-        ) : episode.video_url ? (
-          // Native video player
-          <div className="relative aspect-video w-full max-h-[70vh] group">
-            <video
-              ref={videoRef}
-              src={episode.video_url}
-              className="w-full h-full"
-              onTimeUpdate={handleTimeUpdate}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              poster={anime?.cover_image || undefined}
-              autoPlay
-              playsInline
-            />
-
-            {/* Custom Controls */}
-            <div className="absolute inset-0 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-t from-black/80 via-transparent to-transparent">
-              {/* Progress Bar */}
-              <div className="px-4 mb-2">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={progress}
-                  onChange={handleSeek}
-                  className="w-full h-1 bg-white/30 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full"
-                />
-              </div>
-
-              {/* Controls */}
-              <div className="flex items-center justify-between px-4 pb-4">
-                <div className="flex items-center gap-4">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={togglePlay}
-                    className="text-white hover:bg-white/20"
-                  >
-                    {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 fill-current" />}
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={toggleMute}
-                    className="text-white hover:bg-white/20"
-                  >
-                    {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-                  </Button>
-
-                  <span className="text-white text-sm">
-                    Episode {episode.episode_number}: {episode.title}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={toggleFullscreen}
-                    className="text-white hover:bg-white/20"
-                  >
-                    <Maximize className="h-5 w-5" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          // No video available
-          <div className="aspect-video w-full max-h-[70vh] flex items-center justify-center bg-muted">
-            <p className="text-muted-foreground">Video not available</p>
-          </div>
-        )}
-      </div>
+      <VideoPlayer
+        videoUrl={episode.video_url}
+        externalUrl={episode.external_url}
+        title={episode.title}
+        animeTitle={anime?.title || ''}
+        episodeNumber={episode.episode_number}
+        episodeId={episode.id}
+        poster={anime?.cover_image || undefined}
+        isMovie={isMovie}
+        onTimeUpdate={updateWatchProgress}
+      />
 
       {/* Episode Info & Navigation */}
       <div className="container py-6">
@@ -386,9 +284,23 @@ export default function Watch() {
               <span>Episode {episode.episode_number}</span>
             </div>
 
-            <h1 className="text-2xl md:text-3xl font-heading font-bold mb-4">
-              {episode.title}
-            </h1>
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-2xl md:text-3xl font-heading font-bold">
+                {episode.title}
+              </h1>
+
+              {/* Edit Episode (Admin/Uploader only) */}
+              {(isAdmin || isUploader) && anime && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/upload/anime/${anime.id}/episode/${episode.id}/edit`)}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Episode
+                </Button>
+              )}
+            </div>
 
             {episode.description && (
               <p className="text-muted-foreground mb-6">{episode.description}</p>
@@ -412,12 +324,12 @@ export default function Watch() {
                   </Link>
                 </Button>
               )}
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => {
                   const shareUrl = `${window.location.origin}/watch/${episode.id}`;
                   const shareText = `Watch "${anime?.title}" - Episode ${episode.episode_number}: ${episode.title} on AnimeStreamHub!`;
-                  
+
                   if (navigator.share) {
                     navigator.share({
                       title: `${anime?.title} - Episode ${episode.episode_number}`,
@@ -501,28 +413,30 @@ export default function Watch() {
             </div>
           </div>
 
-          {/* Episode List Sidebar */}
-          <div className="w-full lg:w-80 flex-shrink-0">
-            <h3 className="text-lg font-semibold mb-4">All Episodes</h3>
-            <div className="space-y-2 max-h-[500px] overflow-y-auto scrollbar-hide">
-              {allEpisodes.map((ep) => (
-                <Link
-                  key={ep.id}
-                  to={`/watch/${ep.id}`}
-                  className={`block p-3 rounded-lg transition-colors ${
-                    ep.id === episodeId
-                      ? 'bg-primary/20 border border-primary'
-                      : 'bg-muted/50 hover:bg-muted'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-muted-foreground">
-                      EP {ep.episode_number}
-                    </span>
-                    <span className="font-medium line-clamp-1">{ep.title}</span>
-                  </div>
-                </Link>
-              ))}
+          {/* Sidebar - Episode List */}
+          <div className="lg:w-80">
+            <div className="sticky top-20">
+              <h3 className="font-heading font-bold mb-4">Episodes</h3>
+              <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                {allEpisodes.map((ep) => (
+                  <Link
+                    key={ep.id}
+                    to={`/watch/${ep.id}`}
+                    className={`block p-3 rounded-lg transition-colors ${
+                      ep.id === episodeId
+                        ? 'bg-primary/20 border border-primary/50'
+                        : 'bg-muted/50 hover:bg-muted'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">
+                        EP {ep.episode_number}
+                      </span>
+                      <span className="text-sm font-medium truncate">{ep.title}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </div>

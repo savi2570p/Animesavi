@@ -4,7 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { History as HistoryIcon, Play, Clock } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { History as HistoryIcon, Play, Clock, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Anime {
   id: string;
@@ -55,6 +57,39 @@ export default function History() {
     setIsLoading(false);
   };
 
+  const deleteHistoryItem = async (historyId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const { error } = await supabase
+      .from('watch_history')
+      .delete()
+      .eq('id', historyId);
+
+    if (error) {
+      toast.error('Failed to delete history item');
+    } else {
+      setHistory(history.filter((item) => item.id !== historyId));
+      toast.success('Removed from history');
+    }
+  };
+
+  const clearAllHistory = async () => {
+    if (!confirm('Are you sure you want to clear all watch history?')) return;
+
+    const { error } = await supabase
+      .from('watch_history')
+      .delete()
+      .eq('user_id', user!.id);
+
+    if (error) {
+      toast.error('Failed to clear history');
+    } else {
+      setHistory([]);
+      toast.success('Watch history cleared');
+    }
+  };
+
   const formatTimeAgo = (date: string) => {
     const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
     const intervals = [
@@ -89,11 +124,20 @@ export default function History() {
 
   return (
     <div className="container py-8">
-      <div className="flex items-center gap-3 mb-8">
-        <HistoryIcon className="h-8 w-8 text-primary" />
-        <h1 className="text-3xl font-heading font-bold">
-          Watch <span className="anime-gradient-text">History</span>
-        </h1>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <HistoryIcon className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl font-heading font-bold">
+            Watch <span className="anime-gradient-text">History</span>
+          </h1>
+        </div>
+
+        {history.length > 0 && (
+          <Button variant="outline" onClick={clearAllHistory} className="text-destructive hover:text-destructive">
+            <Trash2 className="h-4 w-4 mr-2" />
+            Clear All
+          </Button>
+        )}
       </div>
 
       {history.length === 0 ? (
@@ -124,6 +168,12 @@ export default function History() {
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Play className="h-8 w-8 text-white fill-current" />
                 </div>
+                {/* Progress overlay */}
+                {item.progress !== null && item.progress > 0 && (
+                  <div className="absolute bottom-0 left-0 right-0">
+                    <Progress value={item.progress} className="h-1 rounded-none" />
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold group-hover:text-primary transition-colors">
@@ -132,15 +182,32 @@ export default function History() {
                 <p className="text-sm text-muted-foreground">
                   Episode {item.episode.episode_number}: {item.episode.title}
                 </p>
-                <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                  <Clock className="h-3 w-3" />
-                  {formatTimeAgo(item.watched_at)}
+                <div className="flex items-center gap-4 mt-2">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    {formatTimeAgo(item.watched_at)}
+                  </div>
+                  {item.progress !== null && item.progress > 0 && (
+                    <span className="text-sm text-muted-foreground">
+                      {item.completed ? 'Completed' : `${item.progress}% watched`}
+                    </span>
+                  )}
                 </div>
               </div>
-              <Button size="sm" variant="outline" className="self-center">
-                <Play className="h-4 w-4 mr-1 fill-current" />
-                Continue
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-muted-foreground hover:text-destructive"
+                  onClick={(e) => deleteHistoryItem(item.id, e)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="outline" className="self-center">
+                  <Play className="h-4 w-4 mr-1 fill-current" />
+                  Continue
+                </Button>
+              </div>
             </Link>
           ))}
         </div>
