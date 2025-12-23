@@ -81,8 +81,9 @@ export default function AnimeDetail() {
   const fetchAnimeDetails = async () => {
     setIsLoading(true);
     
+    // Use anime_public view to avoid exposing uploader_id
     const { data: animeData, error: animeError } = await supabase
-      .from('anime')
+      .from('anime_public')
       .select('*')
       .eq('id', id)
       .single();
@@ -109,8 +110,9 @@ export default function AnimeDetail() {
 
     // Fetch recommendations based on genres
     if (animeData.genres && animeData.genres.length > 0) {
+      // Use anime_public view to avoid exposing uploader_id
       const { data: recData } = await supabase
-        .from('anime')
+        .from('anime_public')
         .select('*')
         .neq('id', id)
         .overlaps('genres', animeData.genres)

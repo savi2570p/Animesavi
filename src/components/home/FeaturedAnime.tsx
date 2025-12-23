@@ -36,8 +36,9 @@ export function FeaturedAnime() {
   }, [featured.length, currentIndex]);
 
   const fetchFeatured = async () => {
+    // Use anime_public view to avoid exposing uploader_id
     const { data } = await supabase
-      .from('anime')
+      .from('anime_public')
       .select('*')
       .eq('is_featured', true)
       .limit(5);
@@ -46,7 +47,7 @@ export function FeaturedAnime() {
       setFeatured(data);
     } else {
       const { data: popularData } = await supabase
-        .from('anime')
+        .from('anime_public')
         .select('*')
         .order('view_count', { ascending: false })
         .limit(5);

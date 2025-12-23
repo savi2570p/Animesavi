@@ -201,6 +201,13 @@ export type Database = {
             referencedRelation: "anime"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "seasons_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "anime_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       uploader_applications: {
@@ -261,6 +268,13 @@ export type Database = {
             columns: ["anime_id"]
             isOneToOne: false
             referencedRelation: "anime"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_favorites_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "anime_public"
             referencedColumns: ["id"]
           },
         ]
@@ -347,6 +361,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "watch_history_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "anime_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "watch_history_episode_id_fkey"
             columns: ["episode_id"]
             isOneToOne: false
@@ -357,7 +378,57 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      anime_public: {
+        Row: {
+          banner_image: string | null
+          cover_image: string | null
+          created_at: string | null
+          description: string | null
+          genres: string[] | null
+          id: string | null
+          is_featured: boolean | null
+          like_count: number | null
+          release_year: number | null
+          status: string | null
+          title: string | null
+          type: string | null
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          banner_image?: string | null
+          cover_image?: string | null
+          created_at?: string | null
+          description?: string | null
+          genres?: string[] | null
+          id?: string | null
+          is_featured?: boolean | null
+          like_count?: number | null
+          release_year?: number | null
+          status?: string | null
+          title?: string | null
+          type?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          banner_image?: string | null
+          cover_image?: string | null
+          created_at?: string | null
+          description?: string | null
+          genres?: string[] | null
+          id?: string | null
+          is_featured?: boolean | null
+          like_count?: number | null
+          release_year?: number | null
+          status?: string | null
+          title?: string | null
+          type?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
