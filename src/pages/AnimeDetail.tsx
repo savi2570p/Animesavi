@@ -299,7 +299,28 @@ export default function AnimeDetail() {
                 <Heart className={`h-5 w-5 mr-2 ${isFavorite ? 'fill-current' : ''}`} />
                 {isFavorite ? 'In Favorites' : 'Add to Favorites'}
               </Button>
-              <Button size="lg" variant="outline">
+              <Button 
+                size="lg" 
+                variant="outline"
+                onClick={() => {
+                  const shareUrl = `${window.location.origin}/anime/${anime.id}`;
+                  const shareText = `Check out "${anime.title}" on AnimeStreamHub!`;
+                  
+                  if (navigator.share) {
+                    navigator.share({
+                      title: anime.title,
+                      text: shareText,
+                      url: shareUrl,
+                    }).catch(() => {
+                      navigator.clipboard.writeText(shareUrl);
+                      toast.success('Link copied to clipboard!');
+                    });
+                  } else {
+                    navigator.clipboard.writeText(shareUrl);
+                    toast.success('Link copied to clipboard!');
+                  }
+                }}
+              >
                 <Share2 className="h-5 w-5 mr-2" />
                 Share
               </Button>
