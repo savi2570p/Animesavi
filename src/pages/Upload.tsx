@@ -40,7 +40,7 @@ interface Season {
 }
 
 export default function Upload() {
-  const { user, isUploader } = useAuth();
+  const { user, isUploader, isRolesLoaded } = useAuth();
   const navigate = useNavigate();
   const [myAnime, setMyAnime] = useState<Anime[]>([]);
   const [allAnime, setAllAnime] = useState<Anime[]>([]);
@@ -81,6 +81,9 @@ export default function Upload() {
   };
 
   useEffect(() => {
+    // Wait for roles to be loaded before checking permissions
+    if (!isRolesLoaded) return;
+
     if (!user) {
       navigate('/auth');
       return;
@@ -93,7 +96,7 @@ export default function Upload() {
     }
 
     fetchAnimeData();
-  }, [user, isUploader]);
+  }, [user, isUploader, isRolesLoaded]);
 
   useEffect(() => {
     if (selectedAnimeId) {
