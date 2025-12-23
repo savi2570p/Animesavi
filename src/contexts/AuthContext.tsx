@@ -27,53 +27,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [rolesLoaded, setRolesLoaded] = useState(false);
 
   const fetchUserRoles = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId);
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
 
-    if (!error && data) {
-      setRoles(data.map(r => r.role as UserRole));
+      if (error) {
+        console.error('Error fetching user roles:', error);
+        setRoles([]);
+        return;
+      }
+
+      setRoles((data ?? []).map((r) => r.role as UserRole));
+    } catch (e) {
+      console.error('Error fetching user roles:', e);
+      setRoles([]);
+    } finally {
+      setRolesLoaded(true);
     }
-    setRolesLoaded(true);
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await fetchUserRoles(session.user.id);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      // IMPORTANT: keep this callback synchronous to avoid auth deadlocks.
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+
+      if (nextSession?.user) {
+        setRolesLoaded(false);
+        // Defer any extra backend calls.
+        setTimeout(() => {
+          void fetchUserRoles(nextSession.user.id);
+        }, 0);
+      } else {
+        setRoles([]);
+        setRolesLoaded(true);
+      }
+
+      setIsLoading(false);
+    });
+
+    // Initial session fetch
+    supabase.auth.getSession()
+      .then(({ data: { session: initialSession } }) => {
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+
+        if (initialSession?.user) {
+          setRolesLoaded(false);
+          void fetchUserRoles(initialSession.user.id);
         } else {
           setRoles([]);
           setRolesLoaded(true);
         }
-        
+      })
+      .finally(() => {
         setIsLoading(false);
-      }
-    );
-
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        await fetchUserRoles(session.user.id);
-      } else {
-        setRolesLoaded(true);
-      }
-      
-      setIsLoading(false);
-    });
+      });
 
     return () => subscription.unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string, username?: string) => {
     const redirectUrl = `${window.location.origin}/`;
-    
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -84,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       },
     });
-    
+
     return { error: error as Error | null };
   };
 
@@ -93,13 +111,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
     });
-    
+
     return { error: error as Error | null };
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
     setRoles([]);
+    setRolesLoaded(true);
   };
 
   const isUploader = rolesLoaded && (roles.includes('uploader') || roles.includes('admin'));
