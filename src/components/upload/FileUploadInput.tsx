@@ -14,6 +14,8 @@ interface FileUploadInputProps {
   folder?: string;
   placeholder?: string;
   className?: string;
+  maxSizeGB?: number;
+  contentType?: 'movie' | 'episode' | 'thumbnail';
 }
 
 export function FileUploadInput({
@@ -24,16 +26,28 @@ export function FileUploadInput({
   folder = '',
   placeholder,
   className,
+  maxSizeGB,
+  contentType,
 }: FileUploadInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
   const bucket = accept === 'video' ? 'anime-videos' : 'anime-thumbnails';
-  const { uploadFile, isUploading, progress } = useFileUpload({ bucket, folder });
+  
+  // Determine max size based on content type
+  const effectiveMaxSize = maxSizeGB ?? (contentType === 'movie' ? 100 : contentType === 'episode' ? 50 : accept === 'image' ? 1 : 50);
+  
+  const { uploadFile, isUploading, progress, SIZE_LIMITS } = useFileUpload({ 
+    bucket, 
+    folder,
+    maxSizeGB: effectiveMaxSize 
+  });
 
   const acceptTypes = accept === 'video' 
     ? 'video/mp4,video/webm,video/mkv,video/avi,video/mov,video/x-matroska' 
     : 'image/jpeg,image/png,image/webp,image/gif';
+  
+  const maxSizeLabel = effectiveMaxSize >= 1 ? `${effectiveMaxSize}GB` : `${effectiveMaxSize * 1024}MB`;
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -127,18 +141,27 @@ export function FileUploadInput({
             variant="outline"
             onClick={triggerFileSelect}
             disabled={isUploading}
-            className="w-full h-24 border-dashed flex flex-col gap-2"
+            className="w-full h-28 border-dashed flex flex-col gap-2"
           >
             {isUploading ? (
               <>
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <span className="text-sm">Uploading... {progress}%</span>
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <span className="text-sm font-medium">Uploading... {progress}%</span>
+                <div className="w-full max-w-[200px] h-2 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary transition-all duration-300 ease-out"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
               </>
             ) : (
               <>
                 <Icon className="h-6 w-6" />
                 <span className="text-sm">
                   {accept === 'video' ? 'Select Video File' : 'Select Image'}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  Max size: {maxSizeLabel}
                 </span>
               </>
             )}
