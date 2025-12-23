@@ -12,11 +12,7 @@ import {
   Heart,
   Share2,
   Calendar,
-  Clock,
-  Star,
   ChevronRight,
-  BookmarkPlus,
-  Eye,
 } from 'lucide-react';
 
 interface Anime {
@@ -267,12 +263,6 @@ export default function AnimeDetail() {
                 <Badge className={anime.status === 'ongoing' ? 'bg-anime-orange' : 'bg-primary'}>
                   {anime.status}
                 </Badge>
-              )}
-              {anime.view_count !== null && (
-                <span className="flex items-center gap-1">
-                  <Eye className="h-4 w-4" />
-                  {anime.view_count.toLocaleString()} views
-                </span>
               )}
             </div>
 
