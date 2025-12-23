@@ -21,6 +21,7 @@ import {
   Send,
   Settings,
   ExternalLink,
+  Share2,
 } from 'lucide-react';
 
 interface Episode {
@@ -123,14 +124,36 @@ export default function Watch() {
 
       // Record watch history
       if (user && seasonData.anime) {
-        await supabase.from('watch_history').upsert({
-          user_id: user.id,
-          anime_id: (seasonData.anime as Anime).id,
-          episode_id: episodeId,
-          progress: 0,
-        }, {
-          onConflict: 'user_id,episode_id',
-        });
+        const animeId = (seasonData.anime as Anime).id;
+        
+        // Check if record exists
+        const { data: existingHistory } = await supabase
+          .from('watch_history')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('episode_id', episodeId)
+          .maybeSingle();
+
+        if (existingHistory) {
+          // Update existing record
+          await supabase
+            .from('watch_history')
+            .update({ 
+              watched_at: new Date().toISOString(),
+              progress: 0 
+            })
+            .eq('id', existingHistory.id);
+        } else {
+          // Insert new record
+          await supabase
+            .from('watch_history')
+            .insert({
+              user_id: user.id,
+              anime_id: animeId,
+              episode_id: episodeId,
+              progress: 0,
+            });
+        }
       }
     }
 
@@ -262,10 +285,10 @@ export default function Watch() {
       {/* Video Player */}
       <div className="relative bg-black">
         {episode.external_url ? (
-          // External URL - play in embedded iframe player
+          // External URL - play in embedded iframe player with autoplay
           <div className="aspect-video w-full max-h-[70vh] bg-black">
             <iframe
-              src={episode.external_url}
+              src={`${episode.external_url}${episode.external_url.includes('?') ? '&' : '?'}autoplay=1`}
               className="w-full h-full"
               allowFullScreen
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -284,6 +307,8 @@ export default function Watch() {
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
               poster={anime?.cover_image || undefined}
+              autoPlay
+              playsInline
             />
 
             {/* Custom Controls */}
@@ -369,8 +394,8 @@ export default function Watch() {
               <p className="text-muted-foreground mb-6">{episode.description}</p>
             )}
 
-            {/* Episode Navigation */}
-            <div className="flex gap-4 mb-8">
+            {/* Episode Navigation & Share */}
+            <div className="flex flex-wrap gap-4 mb-8">
               {prevEpisode && (
                 <Button variant="outline" asChild>
                   <Link to={`/watch/${prevEpisode.id}`}>
@@ -387,6 +412,30 @@ export default function Watch() {
                   </Link>
                 </Button>
               )}
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  const shareUrl = `${window.location.origin}/watch/${episode.id}`;
+                  const shareText = `Watch "${anime?.title}" - Episode ${episode.episode_number}: ${episode.title} on AnimeStreamHub!`;
+                  
+                  if (navigator.share) {
+                    navigator.share({
+                      title: `${anime?.title} - Episode ${episode.episode_number}`,
+                      text: shareText,
+                      url: shareUrl,
+                    }).catch(() => {
+                      navigator.clipboard.writeText(shareUrl);
+                      toast.success('Link copied to clipboard!');
+                    });
+                  } else {
+                    navigator.clipboard.writeText(shareUrl);
+                    toast.success('Link copied to clipboard!');
+                  }
+                }}
+              >
+                <Share2 className="h-4 w-4 mr-2" />
+                Share Episode
+              </Button>
             </div>
 
             {/* Comments */}

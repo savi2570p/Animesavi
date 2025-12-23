@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -38,12 +39,19 @@ const genres = [
   'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports'
 ];
 
+// Allowed uploader emails
+const ALLOWED_UPLOADER_EMAILS = [
+  'savi2570p@gmail.com',
+  'savipanjeta2@gmail.com'
+];
+
 export function Header() {
   const { user, isUploader, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [showCodeDialog, setShowCodeDialog] = useState(false);
   const [uploadCode, setUploadCode] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,8 +65,24 @@ export function Header() {
     navigate('/');
   };
 
+  const canUpload = () => {
+    if (!user?.email) return false;
+    return ALLOWED_UPLOADER_EMAILS.includes(user.email.toLowerCase());
+  };
+
   const handleUploadClick = () => {
-    // Check if already verified
+    if (!user) {
+      toast.error('Please sign in first');
+      navigate('/auth');
+      return;
+    }
+
+    if (!canUpload()) {
+      toast.error('You are not authorized to upload. Only specific accounts can upload anime.');
+      return;
+    }
+
+    // Check if already verified in this session
     const isVerified = sessionStorage.getItem('upload_code_verified') === 'true';
     if (isVerified) {
       navigate('/upload');
@@ -67,15 +91,70 @@ export function Header() {
     }
   };
 
-  const handleCodeSubmit = () => {
-    if (uploadCode === 'AniPro') {
+  const handleCodeSubmit = async () => {
+    if (!user) {
+      toast.error('Please sign in first');
+      return;
+    }
+
+    if (!canUpload()) {
+      toast.error('You are not authorized to upload');
+      setShowCodeDialog(false);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Check if code exists and is not used
+      const { data: codeData, error: codeError } = await supabase
+        .from('upload_codes')
+        .select('*')
+        .eq('code', uploadCode)
+        .is('used_by', null)
+        .single();
+
+      if (codeError || !codeData) {
+        toast.error('Invalid or already used code. Please try again.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Mark code as used
+      await supabase
+        .from('upload_codes')
+        .update({ 
+          used_by: user.id, 
+          used_at: new Date().toISOString() 
+        })
+        .eq('id', codeData.id);
+
+      // Grant uploader role if not already present
+      const { data: existingRole } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('role', 'uploader')
+        .maybeSingle();
+
+      if (!existingRole) {
+        await supabase
+          .from('user_roles')
+          .insert({ user_id: user.id, role: 'uploader' });
+      }
+
       sessionStorage.setItem('upload_code_verified', 'true');
-      toast.success('Now you can Upload');
+      toast.success('Upload access granted! You can now upload anime.');
       setShowCodeDialog(false);
       setUploadCode('');
       navigate('/upload');
-    } else {
-      toast.error('Invalid code. Please try again.');
+      
+      // Reload to update auth context with new role
+      window.location.reload();
+    } catch (error) {
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -286,15 +365,19 @@ export function Header() {
               placeholder="Enter code..."
               value={uploadCode}
               onChange={(e) => setUploadCode(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleCodeSubmit()}
+              onKeyDown={(e) => e.key === 'Enter' && !isSubmitting && handleCodeSubmit()}
               className="bg-muted/50"
+              disabled={isSubmitting}
             />
+            <p className="text-xs text-muted-foreground">
+              Note: Each code can only be used once.
+            </p>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setShowCodeDialog(false)}>
+              <Button variant="outline" onClick={() => setShowCodeDialog(false)} disabled={isSubmitting}>
                 Cancel
               </Button>
-              <Button onClick={handleCodeSubmit} className="anime-button">
-                Submit
+              <Button onClick={handleCodeSubmit} className="anime-button" disabled={isSubmitting}>
+                {isSubmitting ? 'Verifying...' : 'Submit'}
               </Button>
             </div>
           </div>
