@@ -31,13 +31,15 @@ interface Anime {
 
 export default function EpisodeEdit() {
   const { animeId, episodeId } = useParams<{ animeId: string; episodeId: string }>();
-  const { user, isAdmin, isUploader } = useAuth();
+  const { user, isAdmin, isUploader, isRolesLoaded, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
 
   const [anime, setAnime] = useState<Anime | null>(null);
   const [episode, setEpisode] = useState<Episode | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  const isAuthReady = !isAuthLoading && isRolesLoaded;
 
   // Form state
   const [title, setTitle] = useState('');
@@ -49,6 +51,8 @@ export default function EpisodeEdit() {
   const [episodeNumber, setEpisodeNumber] = useState('');
 
   useEffect(() => {
+    if (!isAuthReady) return;
+
     if (!user) {
       navigate('/auth');
       return;
@@ -61,7 +65,7 @@ export default function EpisodeEdit() {
     }
 
     fetchData();
-  }, [user, isAdmin, isUploader, animeId, episodeId]);
+  }, [isAuthReady, user, isAdmin, isUploader, animeId, episodeId, navigate]);
 
   const fetchData = async () => {
     // Fetch anime
@@ -144,7 +148,7 @@ export default function EpisodeEdit() {
     setIsSaving(false);
   };
 
-  if (isLoading) {
+  if (!isAuthReady || isLoading) {
     return (
       <div className="container py-12 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />

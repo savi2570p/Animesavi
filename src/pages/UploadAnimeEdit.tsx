@@ -40,7 +40,7 @@ interface Episode {
 
 export default function UploadAnimeEdit() {
   const { animeId } = useParams<{ animeId: string }>();
-  const { user, isUploader, isAdmin, isRolesLoaded } = useAuth();
+  const { user, isUploader, isAdmin, isRolesLoaded, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
 
   const [anime, setAnime] = useState<Anime | null>(null);
@@ -48,6 +48,8 @@ export default function UploadAnimeEdit() {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [selectedSeason, setSelectedSeason] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const isAuthReady = !isAuthLoading && isRolesLoaded;
 
   // New season form
   const [newSeasonTitle, setNewSeasonTitle] = useState('');
@@ -61,12 +63,12 @@ export default function UploadAnimeEdit() {
   const [newEpisodeDuration, setNewEpisodeDuration] = useState('');
 
   useEffect(() => {
-    // Wait for roles to be loaded before checking permissions
-    if (!isRolesLoaded) return;
+    // Wait for auth + roles to be fully loaded before enforcing redirects
+    if (!isAuthReady) return;
 
     // Check if user has code verification
     const isCodeVerified = sessionStorage.getItem('upload_code_verified') === 'true';
-    
+
     if (!user && !isCodeVerified) {
       navigate('/');
       return;
@@ -79,7 +81,7 @@ export default function UploadAnimeEdit() {
     }
 
     fetchAnimeData();
-  }, [user, isUploader, isRolesLoaded, animeId]);
+  }, [isAuthReady, user, isUploader, animeId, navigate]);
 
   useEffect(() => {
     if (selectedSeason) {
@@ -228,7 +230,7 @@ export default function UploadAnimeEdit() {
     }
   };
 
-  if (isLoading) {
+  if (!isAuthReady || isLoading) {
     return (
       <div className="container py-12 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
