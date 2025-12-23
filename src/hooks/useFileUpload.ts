@@ -55,25 +55,22 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     setIsUploading(true);
     setProgress(0);
 
-    // Show initial progress immediately
-    toast.info(`Starting upload: ${file.name}`);
-
     try {
       // Generate unique filename
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = folder ? `${folder}/${fileName}` : fileName;
 
-      // Start simulated progress for better UX
+      // Fast progress simulation - completes in ~10 seconds
+      let currentProgress = 0;
       const progressInterval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return prev;
-          }
-          return prev + Math.random() * 10;
-        });
-      }, 500);
+        currentProgress += Math.random() * 15 + 5; // Faster increments
+        if (currentProgress >= 95) {
+          currentProgress = 95;
+          clearInterval(progressInterval);
+        }
+        setProgress(currentProgress);
+      }, 400); // Update every 400ms
 
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
