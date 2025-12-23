@@ -28,6 +28,7 @@ interface Episode {
   external_url: string | null;
   duration: number | null;
   season_id: string;
+  audio_language: string | null;
 }
 
 interface Season {
@@ -350,6 +351,7 @@ export default function Watch() {
         isMovie={isMovie}
         activeServer={activeServer}
         isLoading={serverLoading}
+        audioLanguage={episode.audio_language || undefined}
         onTimeUpdate={updateWatchProgress}
       />
 

@@ -34,6 +34,7 @@ interface VideoPlayerProps {
   isMovie?: boolean;
   activeServer: ServerType;
   isLoading?: boolean;
+  audioLanguage?: string;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
 }
 
@@ -66,6 +67,7 @@ export function VideoPlayer({
   isMovie = false,
   activeServer,
   isLoading = false,
+  audioLanguage,
   onTimeUpdate,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -311,7 +313,7 @@ export function VideoPlayer({
   return (
     <div 
       ref={containerRef} 
-      className={`relative bg-black w-full ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}
+      className={`relative bg-black w-full touch-manipulation ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}
       style={{ 
         aspectRatio: isFullscreen ? undefined : '16/9', 
         maxHeight: isFullscreen ? '100vh' : '70vh',
@@ -319,8 +321,16 @@ export function VideoPlayer({
         width: isFullscreen ? '100vw' : undefined,
       }}
       onMouseMove={handleMouseMove}
+      onTouchStart={() => setShowControls(true)}
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
+      {/* Audio Language Badge */}
+      {audioLanguage && audioLanguage !== 'original' && (
+        <div className="absolute top-3 left-3 z-10 px-2 py-1 bg-primary/90 text-primary-foreground text-xs font-semibold rounded-md uppercase tracking-wide">
+          {audioLanguage} DUB
+        </div>
+      )}
+      
       <video
         ref={videoRef}
         src={videoUrl || externalUrl || undefined}
@@ -340,6 +350,7 @@ export function VideoPlayer({
         poster={poster}
         autoPlay
         playsInline
+        webkit-playsinline="true"
         onClick={handleVideoClick}
       />
 
@@ -378,27 +389,27 @@ export function VideoPlayer({
         </div>
 
         {/* Controls */}
-        <div className="flex items-center justify-between px-4 pb-4">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between px-2 sm:px-4 pb-3 sm:pb-4">
+          <div className="flex items-center gap-1 sm:gap-2">
             {/* Skip Backward */}
             <Button
               variant="ghost"
               size="icon"
               onClick={skipBackward}
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 h-10 w-10 sm:h-9 sm:w-9 touch-manipulation active:scale-95 transition-transform"
               title="Skip back 10 seconds (←)"
             >
-              <SkipBack className="h-5 w-5" />
+              <SkipBack className="h-5 w-5 sm:h-5 sm:w-5" />
             </Button>
 
             <Button
               variant="ghost"
               size="icon"
               onClick={togglePlay}
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 h-12 w-12 sm:h-9 sm:w-9 touch-manipulation active:scale-95 transition-transform"
               title="Play/Pause (Space)"
             >
-              {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 fill-current" />}
+              {isPlaying ? <Pause className="h-7 w-7 sm:h-6 sm:w-6" /> : <Play className="h-7 w-7 sm:h-6 sm:w-6 fill-current" />}
             </Button>
 
             {/* Skip Forward */}
@@ -406,27 +417,27 @@ export function VideoPlayer({
               variant="ghost"
               size="icon"
               onClick={skipForward}
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 h-10 w-10 sm:h-9 sm:w-9 touch-manipulation active:scale-95 transition-transform"
               title="Skip forward 10 seconds (→)"
             >
-              <SkipForward className="h-5 w-5" />
+              <SkipForward className="h-5 w-5 sm:h-5 sm:w-5" />
             </Button>
 
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleMute}
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 h-10 w-10 sm:h-9 sm:w-9 touch-manipulation active:scale-95 transition-transform"
             >
               {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
             </Button>
 
-            <span className="text-white text-sm hidden sm:inline ml-2">
+            <span className="text-white text-xs sm:text-sm hidden md:inline ml-2 truncate max-w-[150px] lg:max-w-none">
               Episode {episodeNumber}: {title}
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             {/* Quality Control (SHORT and Zex only) */}
             {features.includes('quality') && (
               <DropdownMenu modal={false}>
@@ -434,7 +445,7 @@ export function VideoPlayer({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-white hover:bg-white/20"
+                    className="text-white hover:bg-white/20 h-10 w-10 sm:h-9 sm:w-9 touch-manipulation"
                   >
                     <Settings className="h-5 w-5" />
                   </Button>
@@ -449,7 +460,7 @@ export function VideoPlayer({
                     <DropdownMenuItem
                       key={q}
                       onClick={() => setQuality(q)}
-                      className={quality === q ? 'bg-primary/20' : ''}
+                      className={`${quality === q ? 'bg-primary/20' : ''} touch-manipulation py-3`}
                     >
                       {q} {q === '360p' && '(Low)'} {q === '480p' && '(Medium)'} {(q === '720p' || q === '1080p') && '(HD)'}
                     </DropdownMenuItem>
@@ -464,7 +475,7 @@ export function VideoPlayer({
                 variant="ghost"
                 size="icon"
                 onClick={handleDownload}
-                className="text-white hover:bg-white/20"
+                className="text-white hover:bg-white/20 h-10 w-10 sm:h-9 sm:w-9 touch-manipulation active:scale-95 transition-transform"
               >
                 <Download className="h-5 w-5" />
               </Button>
@@ -474,7 +485,7 @@ export function VideoPlayer({
               variant="ghost"
               size="icon"
               onClick={toggleFullscreen}
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 h-10 w-10 sm:h-9 sm:w-9 touch-manipulation active:scale-95 transition-transform"
               title="Fullscreen (F)"
             >
               {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
