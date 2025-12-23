@@ -32,7 +32,8 @@ export default function Browse() {
 
   const fetchAnime = async () => {
     setIsLoading(true);
-    let query = supabase.from('anime').select('*').order('created_at', { ascending: false });
+    // Use anime_public view to avoid exposing uploader_id
+    let query = supabase.from('anime_public').select('*').order('created_at', { ascending: false });
 
     const q = searchParams.get('q');
     const genre = searchParams.get('genre');

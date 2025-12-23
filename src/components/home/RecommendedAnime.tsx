@@ -50,8 +50,9 @@ export function RecommendedAnime() {
 
       const watchedIds = watchedData?.map((w) => w.anime_id) || [];
 
+      // Use anime_public view to avoid exposing uploader_id
       let query = supabase
-        .from('anime')
+        .from('anime_public')
         .select('*')
         .overlaps('genres', genres)
         .order('view_count', { ascending: false })
@@ -73,8 +74,9 @@ export function RecommendedAnime() {
 
   const fetchPopular = async () => {
     setIsLoading(true);
+    // Use anime_public view to avoid exposing uploader_id
     const { data } = await supabase
-      .from('anime')
+      .from('anime_public')
       .select('*')
       .order('view_count', { ascending: false })
       .limit(12);
