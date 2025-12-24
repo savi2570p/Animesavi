@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -65,8 +65,10 @@ const TELEGRAM_POPUP_KEY = 'telegram_popup_last_shown';
 
 export default function Watch() {
   const { episodeId } = useParams<{ episodeId: string }>();
+  const [searchParams] = useSearchParams();
   const { user, isAdmin, isUploader } = useAuth();
   const navigate = useNavigate();
+  const resumeProgress = searchParams.get('t');
 
   const [episode, setEpisode] = useState<Episode | null>(null);
   const [anime, setAnime] = useState<Anime | null>(null);
@@ -78,6 +80,7 @@ export default function Watch() {
   const [activeServer, setActiveServer] = useState<ServerType>('PLAY');
   const [serverLoading, setServerLoading] = useState(false);
   const [showTelegramPopup, setShowTelegramPopup] = useState(false);
+  const [initialSeekDone, setInitialSeekDone] = useState(false);
 
   // Check if Telegram popup should be shown (once per day)
   useEffect(() => {
@@ -128,6 +131,20 @@ export default function Watch() {
   const updateWatchProgress = useCallback(async (currentTime: number, duration: number) => {
     if (!user || !episodeId || !anime) return;
 
+    // Handle initial seek from resume progress
+    if (!initialSeekDone && resumeProgress && duration > 0) {
+      const progressPercent = parseInt(resumeProgress, 10);
+      if (!isNaN(progressPercent) && progressPercent > 0 && progressPercent < 95) {
+        const seekTime = (progressPercent / 100) * duration;
+        // Find video element and seek
+        const videoElement = document.querySelector('video');
+        if (videoElement && Math.abs(videoElement.currentTime - seekTime) > 5) {
+          videoElement.currentTime = seekTime;
+        }
+      }
+      setInitialSeekDone(true);
+    }
+
     const progressPercent = Math.floor((currentTime / duration) * 100);
     const completed = progressPercent >= 90;
 
@@ -145,7 +162,7 @@ export default function Watch() {
     } catch (error) {
       console.error('Error updating watch progress:', error);
     }
-  }, [user, episodeId, anime, watchHistoryId]);
+  }, [user, episodeId, anime, watchHistoryId, resumeProgress, initialSeekDone]);
 
   const fetchEpisodeData = async () => {
     setIsLoading(true);

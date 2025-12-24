@@ -14,7 +14,6 @@ import {
   SkipBack,
   PictureInPicture2,
   Check,
-  Subtitles,
   MonitorPlay,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -42,17 +41,17 @@ interface PremiumVideoPlayerProps {
 const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
   PLAY: { 
     name: 'PLAY', 
-    features: ['watch', 'captions'],
+    features: ['watch'],
     playerStyle: 'basic'
   },
   SHORT: { 
     name: 'SHORT', 
-    features: ['watch', 'quality', 'captions'],
+    features: ['watch', 'quality'],
     playerStyle: 'standard'
   },
   Zex: { 
     name: 'Zex', 
-    features: ['watch', 'quality', 'download', 'captions'],
+    features: ['watch', 'quality', 'download'],
     playerStyle: 'advanced'
   },
 };
@@ -115,8 +114,6 @@ export function PremiumVideoPlayer({
   const [hoverTime, setHoverTime] = useState<number | null>(null);
   const [hoverPosition, setHoverPosition] = useState(0);
   
-  // Captions state
-  const [captionsEnabled, setCaptionsEnabled] = useState(true); // Always start with captions enabled
   
   // Download verification dialog state
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
@@ -137,15 +134,6 @@ export function PremiumVideoPlayer({
     setUseIframeFallback(false);
   }, [videoUrl, externalUrl]);
 
-  // Handle text track visibility based on captionsEnabled state
-  useEffect(() => {
-    const video = videoRef.current;
-    if (video && video.textTracks.length > 0) {
-      for (let i = 0; i < video.textTracks.length; i++) {
-        video.textTracks[i].mode = captionsEnabled ? 'showing' : 'hidden';
-      }
-    }
-  }, [captionsEnabled]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -516,13 +504,6 @@ export function PremiumVideoPlayer({
         </div>
       )}
 
-      {/* Captions indicator */}
-      {captionsEnabled && (
-        <div className="absolute top-4 right-4 z-10 px-2.5 py-1.5 bg-black/70 backdrop-blur-sm text-white text-xs font-bold rounded-lg flex items-center gap-1.5 animate-fade-in">
-          <Subtitles className="w-3.5 h-3.5" />
-          CC
-        </div>
-      )}
       
       <video
         ref={videoRef}
@@ -538,7 +519,6 @@ export function PremiumVideoPlayer({
           if (videoRef.current) {
             setDuration(videoRef.current.duration);
             setVideoError(false);
-            setCaptionsEnabled(true);
           }
         }}
         onCanPlay={() => setVideoError(false)}
@@ -552,18 +532,7 @@ export function PremiumVideoPlayer({
         autoPlay
         playsInline
         crossOrigin="anonymous"
-      >
-        {/* Caption track */}
-        {captionsUrl && (
-          <track
-            kind="subtitles"
-            src={captionsUrl}
-            srcLang="en"
-            label="English"
-            default={captionsEnabled}
-          />
-        )}
-      </video>
+      />
       
       {/* Error modal */}
       {videoError && (
@@ -703,18 +672,6 @@ export function PremiumVideoPlayer({
             </div>
 
             <div className="flex items-center gap-1">
-              {/* Captions toggle */}
-              <button 
-                className={cn("player-btn w-10 h-10", captionsEnabled ? "text-primary" : "text-white")}
-                onClick={() => {
-                  setCaptionsEnabled(!captionsEnabled);
-                  toast.success(captionsEnabled ? 'Captions disabled' : 'Captions enabled');
-                }}
-                title="Toggle Captions (C)"
-              >
-                <Subtitles className="w-5 h-5" />
-              </button>
-
               {/* Quality selector */}
               {features.includes('quality') && (
                 <div className="relative">
