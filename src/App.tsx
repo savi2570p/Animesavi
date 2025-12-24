@@ -20,6 +20,7 @@ import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import ExternalPlayer from "./pages/ExternalPlayer";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
           <WelcomePopup />
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/external-player" element={<ExternalPlayer />} />
             <Route element={<MainLayout />}>
               <Route path="/" element={<Index />} />
               <Route path="/browse" element={<Browse />} />

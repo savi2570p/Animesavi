@@ -520,39 +520,57 @@ export function VideoPlayer({
         webkit-playsinline="true"
       />
       
-      {/* Video Error - Show retry/fallback options */}
+      {/* Video Error - Show as popup modal */}
       {videoError && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 gap-4 p-4">
-          <p className="text-white text-center">Video couldn't be played directly</p>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button
-              onClick={() => {
-                setVideoError(false);
-                if (videoRef.current) {
-                  videoRef.current.load();
-                  videoRef.current.play().catch(() => {});
-                }
-              }}
-              variant="outline"
-              className="text-white border-white/50 hover:bg-white/20"
-            >
-              Retry
-            </Button>
-            <Button
-              onClick={() => setUseIframeFallback(true)}
-              className="anime-button"
-            >
-              Try Embed Player
-            </Button>
-            {anyVideoUrl && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-20">
+          <div className="bg-card border border-border rounded-xl p-5 max-w-xs mx-4 shadow-2xl animate-scale-in">
+            <h3 className="text-foreground font-semibold text-center mb-2">Video Playback Issue</h3>
+            <p className="text-muted-foreground text-sm text-center mb-4">
+              This video couldn't be played directly. Try one of the options below:
+            </p>
+            <div className="flex flex-col gap-2">
               <Button
-                onClick={() => window.open(anyVideoUrl, '_blank')}
+                onClick={() => {
+                  setVideoError(false);
+                  if (videoRef.current) {
+                    videoRef.current.load();
+                    videoRef.current.play().catch(() => {});
+                  }
+                }}
                 variant="outline"
-                className="text-white border-white/50 hover:bg-white/20"
+                className="w-full"
               >
-                Open in New Tab
+                Retry Playback
               </Button>
-            )}
+              <Button
+                onClick={() => setUseIframeFallback(true)}
+                className="anime-button w-full"
+              >
+                Try Embed Player
+              </Button>
+              {anyVideoUrl && (
+                <Button
+                  onClick={() => {
+                    // Open external player page with video URL
+                    const params = new URLSearchParams({
+                      url: anyVideoUrl,
+                      title: `${animeTitle} - Episode ${episodeNumber}: ${title}`,
+                    });
+                    window.open(`/external-player?${params.toString()}`, '_blank');
+                  }}
+                  variant="secondary"
+                  className="w-full"
+                >
+                  Open External Player
+                </Button>
+              )}
+            </div>
+            <button
+              onClick={() => setVideoError(false)}
+              className="mt-3 text-xs text-muted-foreground hover:text-foreground w-full text-center"
+            >
+              Dismiss
+            </button>
           </div>
         </div>
       )}
