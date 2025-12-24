@@ -41,6 +41,16 @@
 
     --radius: 0.5rem;
 
+    /* Sidebar variables */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 24 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 24 100% 55%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 24 100% 50%;
+
     /* Crunchyroll theme colors */
     --cr-orange: 24 100% 50%;
     --cr-orange-light: 28 100% 60%;
@@ -90,6 +100,16 @@
     --border: 0 0% 20%;
     --input: 0 0% 18%;
     --ring: 24 100% 50%;
+
+    /* Sidebar variables - dark mode */
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 24 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 24 100% 55%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 24 100% 50%;
 
     /* Crunchyroll theme colors - dark mode */
     --cr-orange: 24 100% 50%;
