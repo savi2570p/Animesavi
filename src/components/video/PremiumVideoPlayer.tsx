@@ -17,6 +17,7 @@ import {
   Check,
   Subtitles,
   MonitorPlay,
+  Languages,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -35,23 +36,24 @@ interface PremiumVideoPlayerProps {
   activeServer: ServerType;
   isLoading?: boolean;
   audioLanguage?: string;
+  captionsUrl?: string | null;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
 }
 
 const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
   PLAY: { 
     name: 'PLAY', 
-    features: ['watch'],
+    features: ['watch', 'captions', 'language'],
     playerStyle: 'basic'
   },
   SHORT: { 
     name: 'SHORT', 
-    features: ['watch', 'quality'],
+    features: ['watch', 'quality', 'captions', 'language'],
     playerStyle: 'standard'
   },
   Zex: { 
     name: 'Zex', 
-    features: ['watch', 'quality', 'download'],
+    features: ['watch', 'quality', 'download', 'captions', 'language'],
     playerStyle: 'advanced'
   },
 };
@@ -76,7 +78,15 @@ const qualityOptions = [
   { value: '360p', label: '360p', badge: null },
 ] as const;
 
+const languageOptions = [
+  { value: 'original', label: 'Original (Japanese)', code: 'JP' },
+  { value: 'english', label: 'English Dub', code: 'EN' },
+  { value: 'spanish', label: 'Spanish Dub', code: 'ES' },
+  { value: 'portuguese', label: 'Portuguese Dub', code: 'PT' },
+] as const;
+
 type QualityType = typeof qualityOptions[number]['value'];
+type LanguageType = typeof languageOptions[number]['value'];
 
 export function PremiumVideoPlayer({
   videoUrl,
@@ -89,7 +99,8 @@ export function PremiumVideoPlayer({
   isMovie = false,
   activeServer,
   isLoading = false,
-  audioLanguage,
+  audioLanguage = 'original',
+  captionsUrl,
   onTimeUpdate,
 }: PremiumVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -110,8 +121,13 @@ export function PremiumVideoPlayer({
   const [useIframeFallback, setUseIframeFallback] = useState(false);
   const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [hoverTime, setHoverTime] = useState<number | null>(null);
   const [hoverPosition, setHoverPosition] = useState(0);
+  
+  // Language and captions state
+  const [selectedLanguage, setSelectedLanguage] = useState<LanguageType>(audioLanguage as LanguageType || 'original');
+  const [captionsEnabled, setCaptionsEnabled] = useState(audioLanguage === 'original' || audioLanguage === 'japanese');
 
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -410,9 +426,17 @@ export function PremiumVideoPlayer({
       }}
     >
       {/* Audio Language Badge */}
-      {audioLanguage && audioLanguage !== 'original' && (
+      {selectedLanguage !== 'original' && (
         <div className="absolute top-4 left-4 z-10 px-3 py-1.5 bg-primary/90 text-primary-foreground text-xs font-bold rounded-lg uppercase tracking-wider animate-fade-in">
-          {audioLanguage} DUB
+          {languageOptions.find(l => l.value === selectedLanguage)?.code || selectedLanguage} DUB
+        </div>
+      )}
+
+      {/* Captions indicator */}
+      {captionsEnabled && (
+        <div className="absolute top-4 right-4 z-10 px-2.5 py-1.5 bg-black/70 backdrop-blur-sm text-white text-xs font-bold rounded-lg flex items-center gap-1.5 animate-fade-in">
+          <Subtitles className="w-3.5 h-3.5" />
+          CC
         </div>
       )}
       
@@ -430,6 +454,10 @@ export function PremiumVideoPlayer({
           if (videoRef.current) {
             setDuration(videoRef.current.duration);
             setVideoError(false);
+            // Enable captions by default for Japanese audio
+            if (selectedLanguage === 'original') {
+              setCaptionsEnabled(true);
+            }
           }
         }}
         onCanPlay={() => setVideoError(false)}
@@ -442,7 +470,19 @@ export function PremiumVideoPlayer({
         poster={poster}
         autoPlay
         playsInline
-      />
+        crossOrigin="anonymous"
+      >
+        {/* Caption track */}
+        {captionsUrl && (
+          <track
+            kind="subtitles"
+            src={captionsUrl}
+            srcLang="en"
+            label="English"
+            default={captionsEnabled}
+          />
+        )}
+      </video>
       
       {/* Error modal */}
       {videoError && (
@@ -582,12 +622,75 @@ export function PremiumVideoPlayer({
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Captions toggle */}
+              <button 
+                className={cn("player-btn w-10 h-10", captionsEnabled ? "text-primary" : "text-white")}
+                onClick={() => {
+                  setCaptionsEnabled(!captionsEnabled);
+                  toast.success(captionsEnabled ? 'Captions disabled' : 'Captions enabled');
+                }}
+                title="Toggle Captions (C)"
+              >
+                <Subtitles className="w-5 h-5" />
+              </button>
+
+              {/* Language selector */}
+              <div className="relative">
+                <button 
+                  className="player-btn w-10 h-10 text-white"
+                  onClick={() => {
+                    setShowLanguageMenu(!showLanguageMenu);
+                    setShowQualityMenu(false);
+                  }}
+                  title="Audio Language"
+                >
+                  <Languages className="w-5 h-5" />
+                </button>
+                
+                {showLanguageMenu && (
+                  <div className="quality-menu absolute bottom-full right-0 mb-2 w-48">
+                    <div className="px-3 py-2 text-xs text-muted-foreground font-semibold border-b border-border/50">
+                      Audio Language
+                    </div>
+                    {languageOptions.map((opt) => (
+                      <div
+                        key={opt.value}
+                        className={cn("quality-option", selectedLanguage === opt.value && "active")}
+                        onClick={() => {
+                          setSelectedLanguage(opt.value);
+                          setShowLanguageMenu(false);
+                          // Auto-enable captions for Japanese
+                          if (opt.value === 'original') {
+                            setCaptionsEnabled(true);
+                            toast.success('Switched to Japanese - Captions enabled');
+                          } else {
+                            setCaptionsEnabled(false);
+                            toast.success(`Switched to ${opt.label}`);
+                          }
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-5 flex items-center justify-center bg-primary/20 text-primary text-[10px] font-bold rounded">
+                            {opt.code}
+                          </span>
+                          <span className="text-sm font-medium">{opt.label}</span>
+                        </div>
+                        {selectedLanguage === opt.value && <Check className="w-4 h-4 text-primary" />}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Quality selector */}
               {features.includes('quality') && (
                 <div className="relative">
                   <button 
                     className="player-btn w-10 h-10 text-white"
-                    onClick={() => setShowQualityMenu(!showQualityMenu)}
+                    onClick={() => {
+                      setShowQualityMenu(!showQualityMenu);
+                      setShowLanguageMenu(false);
+                    }}
                   >
                     <Settings className="w-5 h-5" />
                   </button>

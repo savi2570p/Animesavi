@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Play, ChevronRight, Eye } from 'lucide-react';
+import { Sparkles, Play, ChevronRight } from 'lucide-react';
 
 interface Anime {
   id: string;
@@ -87,12 +87,6 @@ export function RecommendedAnime() {
     setIsLoading(false);
   };
 
-  const formatViewCount = (count: number | null) => {
-    if (!count) return '0';
-    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
-    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
-    return count.toString();
-  };
 
   if (isLoading) {
     return (
@@ -175,13 +169,10 @@ export function RecommendedAnime() {
                 </h3>
                 <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
                   {anime.release_year && <span>{anime.release_year}</span>}
-                  {anime.view_count !== null && anime.view_count > 0 && (
+                  {anime.genres && anime.genres.length > 0 && (
                     <>
-                      <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <Eye className="h-3 w-3" />
-                        {formatViewCount(anime.view_count)}
-                      </span>
+                      {anime.release_year && <span>•</span>}
+                      <span className="text-primary/80">{anime.genres[0]}</span>
                     </>
                   )}
                 </div>

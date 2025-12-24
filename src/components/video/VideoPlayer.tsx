@@ -13,12 +13,17 @@ import {
   SkipForward,
   SkipBack,
   PictureInPicture2,
+  Subtitles,
+  Languages,
+  Check,
 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 
@@ -36,26 +41,36 @@ interface VideoPlayerProps {
   activeServer: ServerType;
   isLoading?: boolean;
   audioLanguage?: string;
+  captionsUrl?: string | null;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
 }
 
 const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
   PLAY: { 
     name: 'PLAY', 
-    features: ['watch'],
+    features: ['watch', 'captions', 'language'],
     playerStyle: 'basic'
   },
   SHORT: { 
     name: 'SHORT', 
-    features: ['watch', 'quality'],
+    features: ['watch', 'quality', 'captions', 'language'],
     playerStyle: 'standard'
   },
   Zex: { 
     name: 'Zex', 
-    features: ['watch', 'quality', 'download'],
+    features: ['watch', 'quality', 'download', 'captions', 'language'],
     playerStyle: 'advanced'
   },
 };
+
+const languageOptions = [
+  { value: 'original', label: 'Original (Japanese)', code: 'JP' },
+  { value: 'english', label: 'English Dub', code: 'EN' },
+  { value: 'spanish', label: 'Spanish Dub', code: 'ES' },
+  { value: 'portuguese', label: 'Portuguese Dub', code: 'PT' },
+] as const;
+
+type LanguageType = typeof languageOptions[number]['value'];
 
 // Helper to detect if URL is an embeddable/external URL (not a direct video file)
 const isEmbeddableUrl = (url: string | null): boolean => {
@@ -139,7 +154,8 @@ export function VideoPlayer({
   isMovie = false,
   activeServer,
   isLoading = false,
-  audioLanguage,
+  audioLanguage = 'original',
+  captionsUrl,
   onTimeUpdate,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -155,6 +171,10 @@ export function VideoPlayer({
   const [videoError, setVideoError] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   const [useIframeFallback, setUseIframeFallback] = useState(false);
+  
+  // Language and captions state
+  const [selectedLanguage, setSelectedLanguage] = useState<LanguageType>(audioLanguage as LanguageType || 'original');
+  const [captionsEnabled, setCaptionsEnabled] = useState(audioLanguage === 'original' || audioLanguage === 'japanese');
 
   const features = serverConfigs[activeServer].features;
   
@@ -508,9 +528,17 @@ export function VideoPlayer({
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
       {/* Audio Language Badge */}
-      {audioLanguage && audioLanguage !== 'original' && (
+      {selectedLanguage !== 'original' && (
         <div className="absolute top-3 left-3 z-10 px-2 py-1 bg-primary/90 text-primary-foreground text-xs font-semibold rounded-md uppercase tracking-wide">
-          {audioLanguage} DUB
+          {languageOptions.find(l => l.value === selectedLanguage)?.code || selectedLanguage} DUB
+        </div>
+      )}
+
+      {/* Captions indicator */}
+      {captionsEnabled && (
+        <div className="absolute top-3 right-3 z-10 px-2 py-1 bg-black/70 backdrop-blur-sm text-white text-xs font-bold rounded-md flex items-center gap-1">
+          <Subtitles className="w-3 h-3" />
+          CC
         </div>
       )}
       
@@ -529,12 +557,15 @@ export function VideoPlayer({
           if (videoRef.current) {
             setDuration(videoRef.current.duration);
             setVideoError(false);
+            // Auto-enable captions for Japanese
+            if (selectedLanguage === 'original') {
+              setCaptionsEnabled(true);
+            }
           }
         }}
         onCanPlay={() => setVideoError(false)}
         onError={(e) => {
           const video = e.currentTarget;
-          // Only set error if we actually tried to load something
           if (video.src && video.networkState === 3) {
             console.error('Video failed to load:', video.src);
             setVideoError(true);
@@ -544,7 +575,19 @@ export function VideoPlayer({
         autoPlay
         playsInline
         webkit-playsinline="true"
-      />
+        crossOrigin="anonymous"
+      >
+        {/* Caption track */}
+        {captionsUrl && (
+          <track
+            kind="subtitles"
+            src={captionsUrl}
+            srcLang="en"
+            label="English"
+            default={captionsEnabled}
+          />
+        )}
+      </video>
       
       {/* Video Error - Show as popup modal */}
       {videoError && (
@@ -685,6 +728,65 @@ export function VideoPlayer({
           </div>
 
           <div className="flex items-center gap-1 sm:gap-2">
+            {/* Captions toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setCaptionsEnabled(!captionsEnabled);
+                toast.success(captionsEnabled ? 'Captions disabled' : 'Captions enabled');
+              }}
+              className={`hover:bg-white/20 h-10 w-10 sm:h-9 sm:w-9 touch-manipulation active:scale-95 transition-transform ${captionsEnabled ? 'text-primary' : 'text-white'}`}
+              title="Toggle Captions (C)"
+            >
+              <Subtitles className="h-5 w-5" />
+            </Button>
+
+            {/* Language selector */}
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-white/20 h-10 w-10 sm:h-9 sm:w-9 touch-manipulation"
+                  title="Audio Language"
+                >
+                  <Languages className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="end" 
+                className="bg-background z-[9999]"
+                style={{ zIndex: 9999 }}
+                sideOffset={8}
+              >
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Audio Language</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {languageOptions.map((opt) => (
+                  <DropdownMenuItem
+                    key={opt.value}
+                    onClick={() => {
+                      setSelectedLanguage(opt.value);
+                      if (opt.value === 'original') {
+                        setCaptionsEnabled(true);
+                        toast.success('Switched to Japanese - Captions enabled');
+                      } else {
+                        setCaptionsEnabled(false);
+                        toast.success(`Switched to ${opt.label}`);
+                      }
+                    }}
+                    className={`${selectedLanguage === opt.value ? 'bg-primary/20' : ''} touch-manipulation py-3 flex items-center justify-between`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="w-6 text-center text-primary font-bold text-xs">{opt.code}</span>
+                      {opt.label}
+                    </span>
+                    {selectedLanguage === opt.value && <Check className="h-4 w-4 text-primary" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {/* Quality Control (SHORT and Zex only) */}
             {features.includes('quality') && (
               <DropdownMenu modal={false}>
@@ -703,13 +805,18 @@ export function VideoPlayer({
                   style={{ zIndex: 9999 }}
                   sideOffset={8}
                 >
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Video Quality</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
                   {(['1080p', '720p', '480p', '360p'] as const).map((q) => (
                     <DropdownMenuItem
                       key={q}
                       onClick={() => setQuality(q)}
-                      className={`${quality === q ? 'bg-primary/20' : ''} touch-manipulation py-3`}
+                      className={`${quality === q ? 'bg-primary/20' : ''} touch-manipulation py-3 flex items-center justify-between`}
                     >
-                      {q} {q === '360p' && '(Low)'} {q === '480p' && '(Medium)'} {(q === '720p' || q === '1080p') && '(HD)'}
+                      <span>{q}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {q === '360p' && 'Low'} {q === '480p' && 'Medium'} {(q === '720p' || q === '1080p') && 'HD'}
+                      </span>
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>

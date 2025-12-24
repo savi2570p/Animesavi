@@ -125,7 +125,7 @@ export function ContinueWatching() {
           {history.map((item, index) => (
             <Link
               key={item.id}
-              to={`/watch/${item.episode.id}`}
+              to={`/anime/${item.anime.id}?episode=${item.episode.id}`}
               className="group relative"
               style={{ animationDelay: `${index * 100}ms` }}
             >
