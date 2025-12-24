@@ -38,7 +38,7 @@ export function FileUploadInput({
   // Determine max size based on content type
   const effectiveMaxSize = maxSizeGB ?? (contentType === 'movie' ? 100 : contentType === 'episode' ? 50 : accept === 'image' ? 1 : 50);
   
-  const { uploadFile, isUploading, progress } = useFileUpload({ 
+  const { uploadFile, isUploading } = useFileUpload({ 
     bucket, 
     folder,
     maxSizeGB: effectiveMaxSize 
@@ -144,18 +144,7 @@ export function FileUploadInput({
       ) : isUploading ? (
         <div className="flex items-center gap-3 p-3 rounded-lg border border-primary/50 bg-primary/5">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium truncate max-w-[150px]">{fileName}</span>
-              <span className="text-xs text-muted-foreground">{progress}%</span>
-            </div>
-            <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary transition-all duration-200 ease-out"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
+          <span className="text-sm font-medium truncate">{fileName || 'Uploading...'}</span>
         </div>
       ) : (
         <div className="space-y-2">
