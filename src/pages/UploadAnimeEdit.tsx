@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Plus, Trash2, Film, Tv, ArrowLeft } from 'lucide-react';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
+import { BatchEpisodeUpload } from '@/components/upload/BatchEpisodeUpload';
 
 interface Anime {
   id: string;
@@ -348,6 +349,18 @@ export default function UploadAnimeEdit() {
             </div>
           )}
 
+          {/* Batch Upload Section */}
+          {selectedSeason && (
+            <div className="mb-8">
+              <BatchEpisodeUpload
+                animeId={animeId!}
+                seasonId={selectedSeason}
+                currentEpisodeCount={episodes.length}
+                onEpisodesAdded={() => fetchEpisodes(selectedSeason)}
+              />
+            </div>
+          )}
+
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Existing Episodes */}
             <Card>
@@ -360,7 +373,7 @@ export default function UploadAnimeEdit() {
               <CardContent>
                 {episodes.length === 0 ? (
                   <p className="text-muted-foreground text-center py-4">
-                    No episodes yet. Add one below.
+                    No episodes yet. Add one using the batch uploader above.
                   </p>
                 ) : (
                   <div className="space-y-2 max-h-[500px] overflow-y-auto">
