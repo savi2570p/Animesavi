@@ -8,6 +8,27 @@ import { cn } from '@/lib/utils';
 
 const ALLOWED_GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports'] as const;
 const MAX_SEARCH_LENGTH = 100;
+// Allowed characters: alphanumeric, spaces, hyphens, apostrophes, and common punctuation
+const SEARCH_PATTERN = /^[a-zA-Z0-9\s\-'.,!?:]+$/;
+
+// Sanitize search input to prevent ILIKE pattern abuse
+const sanitizeSearchQuery = (query: string): string => {
+  // Trim and limit length
+  let sanitized = query.trim().slice(0, MAX_SEARCH_LENGTH);
+  
+  // Remove characters that aren't allowed
+  if (!SEARCH_PATTERN.test(sanitized)) {
+    sanitized = sanitized.replace(/[^a-zA-Z0-9\s\-'.,!?:]/g, '');
+  }
+  
+  // Escape special LIKE/ILIKE characters (%, _, \)
+  sanitized = sanitized
+    .replace(/\\/g, '\\\\')
+    .replace(/%/g, '\\%')
+    .replace(/_/g, '\\_');
+  
+  return sanitized;
+};
 
 type SortOption = 'newest' | 'popular' | 'trending';
 
@@ -54,8 +75,8 @@ export default function Browse() {
     const genre = searchParams.get('genre');
 
     if (q) {
-      const sanitizedQuery = q.slice(0, MAX_SEARCH_LENGTH).trim();
-      if (sanitizedQuery) {
+      const sanitizedQuery = sanitizeSearchQuery(q);
+      if (sanitizedQuery && sanitizedQuery.length > 0) {
         query = query.ilike('title', `%${sanitizedQuery}%`);
       }
     }
