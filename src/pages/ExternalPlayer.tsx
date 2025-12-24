@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
+import { DownloadVerificationDialog } from '@/components/video/DownloadVerificationDialog';
 
 export default function ExternalPlayer() {
   const [searchParams] = useSearchParams();
@@ -41,6 +42,7 @@ export default function ExternalPlayer() {
   const [showControls, setShowControls] = useState(true);
   const [useIframe, setUseIframe] = useState(false);
   const [videoError, setVideoError] = useState(false);
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false);
   
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -183,13 +185,31 @@ export default function ExternalPlayer() {
     const video = videoRef.current;
     if (!video) return;
 
+    // Detect platform
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+
     try {
       if (document.pictureInPictureElement) {
         await document.exitPictureInPicture();
         toast.success('Exited Picture-in-Picture');
-      } else if (document.pictureInPictureEnabled) {
-        await video.requestPictureInPicture();
-        toast.success('Now playing in Picture-in-Picture mode');
+      } else if (isIOS) {
+        // iOS Safari uses webkitSetPresentationMode
+        if ((video as any).webkitSupportsPresentationMode && 
+            typeof (video as any).webkitSetPresentationMode === 'function') {
+          (video as any).webkitSetPresentationMode('picture-in-picture');
+          toast.success('Now playing in Picture-in-Picture mode');
+        } else {
+          toast.error('Picture-in-Picture is not supported on this iOS device');
+        }
+      } else if (isAndroid || document.pictureInPictureEnabled) {
+        // Android and desktop use standard API
+        if (video.requestPictureInPicture) {
+          await video.requestPictureInPicture();
+          toast.success('Now playing in Picture-in-Picture mode');
+        } else {
+          toast.error('Picture-in-Picture is not supported on this device');
+        }
       } else {
         toast.error('Picture-in-Picture is not supported');
       }
@@ -204,18 +224,7 @@ export default function ExternalPlayer() {
       toast.error('No video available for download');
       return;
     }
-    try {
-      const link = document.createElement('a');
-      link.href = videoUrl;
-      link.download = `${title}.mp4`;
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success('Download started!');
-    } catch {
-      toast.error('Failed to start download');
-    }
+    setShowDownloadDialog(true);
   };
 
   const handleVideoClick = () => {
@@ -413,6 +422,14 @@ export default function ExternalPlayer() {
           </div>
         )}
       </div>
+      
+      {/* Download Verification Dialog */}
+      <DownloadVerificationDialog
+        open={showDownloadDialog}
+        onOpenChange={setShowDownloadDialog}
+        videoUrl={videoUrl || ''}
+        fileName={`${title}.mp4`}
+      />
     </div>
   );
 }
