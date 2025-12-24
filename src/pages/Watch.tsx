@@ -207,25 +207,35 @@ export default function Watch() {
         const animeId = (seasonData.anime as Anime).id;
 
         // Check if record exists
-        const { data: existingHistory } = await supabase
+        const { data: existingHistory, error: checkError } = await supabase
           .from('watch_history')
           .select('id')
           .eq('user_id', user.id)
           .eq('episode_id', episodeId)
           .maybeSingle();
 
+        if (checkError) {
+          console.error('Error checking watch history:', checkError);
+        }
+
         if (existingHistory) {
           // Update existing record
-          await supabase
+          const { error: updateError } = await supabase
             .from('watch_history')
             .update({
               watched_at: new Date().toISOString(),
             })
             .eq('id', existingHistory.id);
+          
+          if (updateError) {
+            console.error('Error updating watch history:', updateError);
+          } else {
+            console.log('Watch history updated:', existingHistory.id);
+          }
           setWatchHistoryId(existingHistory.id);
         } else {
           // Insert new record
-          const { data: newHistory } = await supabase
+          const { data: newHistory, error: insertError } = await supabase
             .from('watch_history')
             .insert({
               user_id: user.id,
@@ -236,10 +246,15 @@ export default function Watch() {
             .select('id')
             .single();
 
-          if (newHistory) {
+          if (insertError) {
+            console.error('Error inserting watch history:', insertError);
+          } else if (newHistory) {
+            console.log('Watch history created:', newHistory.id);
             setWatchHistoryId(newHistory.id);
           }
         }
+      } else {
+        console.log('Watch history not recorded - user:', !!user, 'anime:', !!seasonData?.anime);
       }
     }
 
