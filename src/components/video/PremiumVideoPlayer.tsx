@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { DownloadVerificationDialog } from './DownloadVerificationDialog';
 
 export type ServerType = 'PLAY' | 'SHORT' | 'Zex';
 
@@ -116,7 +117,9 @@ export function PremiumVideoPlayer({
   
   // Captions state
   const [captionsEnabled, setCaptionsEnabled] = useState(true); // Always start with captions enabled
-
+  
+  // Download verification dialog state
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
 
   const features = serverConfigs[activeServer].features;
@@ -285,32 +288,47 @@ export function PremiumVideoPlayer({
   const togglePiP = useCallback(async () => {
     const video = videoRef.current;
     if (!video) return;
+    
+    // Detect platform
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    
     try {
       if (document.pictureInPictureElement) {
         await document.exitPictureInPicture();
         toast.success('Exited Picture-in-Picture');
-      } else if (document.pictureInPictureEnabled) {
-        await video.requestPictureInPicture();
-        toast.success('Now playing in Picture-in-Picture mode');
+      } else if (isIOS) {
+        // iOS Safari uses webkitSetPresentationMode
+        if ((video as any).webkitSupportsPresentationMode && 
+            typeof (video as any).webkitSetPresentationMode === 'function') {
+          (video as any).webkitSetPresentationMode('picture-in-picture');
+          toast.success('Now playing in Picture-in-Picture mode');
+        } else {
+          toast.error('Picture-in-Picture is not supported on this iOS device');
+        }
+      } else if (isAndroid || document.pictureInPictureEnabled) {
+        // Android and desktop use standard API
+        if (video.requestPictureInPicture) {
+          await video.requestPictureInPicture();
+          toast.success('Now playing in Picture-in-Picture mode');
+        } else {
+          toast.error('Picture-in-Picture is not supported on this device');
+        }
+      } else {
+        toast.error('Picture-in-Picture is not supported');
       }
     } catch (error) {
-      toast.error('Picture-in-Picture not supported');
+      console.error('PiP error:', error);
+      toast.error('Failed to enter Picture-in-Picture mode');
     }
   }, []);
 
-  const handleDownload = async () => {
+  const handleDownload = () => {
     if (!effectiveVideoUrl) {
       toast.error('No video available for download');
       return;
     }
-    const link = document.createElement('a');
-    link.href = effectiveVideoUrl;
-    link.download = `${animeTitle} - Episode ${episodeNumber}.mp4`;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success('Download started!');
+    setShowDownloadDialog(true);
   };
 
   const handleVideoClick = useCallback((e: React.MouseEvent) => {
@@ -678,6 +696,14 @@ export function PremiumVideoPlayer({
           </div>
         </div>
       </div>
+      
+      {/* Download Verification Dialog */}
+      <DownloadVerificationDialog
+        open={showDownloadDialog}
+        onOpenChange={setShowDownloadDialog}
+        videoUrl={effectiveVideoUrl || ''}
+        fileName={`${animeTitle} - Episode ${episodeNumber}.mp4`}
+      />
     </div>
   );
 }
