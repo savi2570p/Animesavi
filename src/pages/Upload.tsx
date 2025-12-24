@@ -298,21 +298,25 @@ export default function Upload() {
   }
 
   return (
-    <div className="container py-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="container py-10">
+      <div className="flex items-center justify-between mb-10">
         <div>
-          <h1 className="text-3xl font-heading font-bold">
+          <h1 className="text-3xl md:text-4xl font-heading font-bold mb-2">
             <span className="anime-gradient-text">Upload</span> Dashboard
           </h1>
-          <p className="text-muted-foreground">Manage your anime uploads</p>
+          <p className="text-muted-foreground">Manage and upload your anime content</p>
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-8">
-          <TabsTrigger value="my-anime">My Anime</TabsTrigger>
-          <TabsTrigger value="new">Add New Anime</TabsTrigger>
-          <TabsTrigger value="existing">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+        <TabsList className="bg-secondary/50 p-1 rounded-xl">
+          <TabsTrigger value="my-anime" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
+            My Anime
+          </TabsTrigger>
+          <TabsTrigger value="new" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
+            Add New Anime
+          </TabsTrigger>
+          <TabsTrigger value="existing" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
             <FolderPlus className="h-4 w-4 mr-2" />
             Existing Upload
           </TabsTrigger>

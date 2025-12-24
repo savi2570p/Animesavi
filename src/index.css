@@ -2,134 +2,139 @@
 @tailwind components;
 @tailwind utilities;
 
-/* AnimeStreamHub Design System - Crunchyroll-inspired Dark Theme */
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;500;600;700;900&family=Montserrat:wght@400;500;600;700;800&display=swap');
+/* Crunchyroll-Inspired Design System - Premium Dark Theme */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
-    --font-heading: 'Montserrat', sans-serif;
-    --font-body: 'Lato', sans-serif;
+    --font-heading: 'Outfit', sans-serif;
+    --font-body: 'Inter', sans-serif;
 
-    /* Light mode */
+    /* Light mode (rarely used - dark by default) */
     --background: 0 0% 98%;
-    --foreground: 0 0% 10%;
+    --foreground: 220 15% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 220 15% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 220 15% 15%;
 
-    --primary: 24 100% 50%;
+    --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 15% 15%;
 
-    --muted: 0 0% 94%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 220 14% 94%;
+    --muted-foreground: 220 10% 45%;
 
-    --accent: 24 100% 55%;
+    --accent: 25 100% 58%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 24 100% 50%;
+    --border: 220 14% 90%;
+    --input: 220 14% 90%;
+    --ring: 25 95% 53%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
+    /* Crunchyroll Colors */
+    --cr-orange: 25 95% 53%;
+    --cr-orange-light: 30 100% 60%;
+    --cr-orange-dark: 20 100% 45%;
+    --cr-black: 220 20% 6%;
+    --cr-dark: 220 18% 10%;
+    --cr-gray: 220 15% 18%;
+    --cr-light-gray: 220 10% 60%;
+    --cr-surface: 220 18% 12%;
 
     /* Sidebar variables */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 10%;
-    --sidebar-primary: 24 100% 50%;
+    --sidebar-foreground: 220 15% 15%;
+    --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 24 100% 55%;
+    --sidebar-accent: 25 100% 58%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 24 100% 50%;
+    --sidebar-border: 220 14% 90%;
+    --sidebar-ring: 25 95% 53%;
 
-    /* Crunchyroll theme colors */
-    --cr-orange: 24 100% 50%;
-    --cr-orange-light: 28 100% 60%;
-    --cr-orange-dark: 20 100% 45%;
-    --cr-black: 0 0% 8%;
-    --cr-dark: 0 0% 12%;
-    --cr-gray: 0 0% 20%;
-    --cr-light-gray: 0 0% 60%;
-    
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(24, 100%, 50%), hsl(28, 100%, 60%));
-    --gradient-accent: linear-gradient(135deg, hsl(24, 100%, 55%), hsl(35, 100%, 55%));
-    --gradient-hero: linear-gradient(180deg, transparent 0%, hsl(0, 0%, 8%) 100%);
-    --gradient-card: linear-gradient(180deg, transparent 0%, hsl(0, 0%, 0%, 0.9) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(25, 95%, 53%), hsl(30, 100%, 60%));
+    --gradient-accent: linear-gradient(135deg, hsl(25, 100%, 58%), hsl(35, 100%, 55%));
+    --gradient-hero: linear-gradient(180deg, transparent 0%, hsl(220, 20%, 6%) 100%);
+    --gradient-card: linear-gradient(180deg, transparent 0%, hsl(0, 0%, 0%, 0.95) 100%);
+    --gradient-shine: linear-gradient(135deg, transparent 20%, hsl(0, 0%, 100%, 0.1) 50%, transparent 80%);
     
     /* Shadows */
-    --shadow-glow: 0 0 30px hsl(24, 100%, 50%, 0.4);
-    --shadow-card: 0 4px 20px hsl(0, 0%, 0%, 0.15);
-    --shadow-hover: 0 8px 30px hsl(0, 0%, 0%, 0.25);
+    --shadow-glow: 0 0 40px hsl(25, 95%, 53%, 0.4);
+    --shadow-card: 0 4px 24px hsl(0, 0%, 0%, 0.15);
+    --shadow-hover: 0 12px 40px hsl(0, 0%, 0%, 0.25);
+    --shadow-float: 0 20px 50px hsl(0, 0%, 0%, 0.3);
   }
 
   .dark {
-    --background: 0 0% 8%;
+    --background: 220 20% 6%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 12%;
+    --card: 220 18% 10%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 10%;
+    --popover: 220 18% 8%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 24 100% 50%;
+    --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 16%;
+    --secondary: 220 15% 14%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 0 0% 18%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 220 15% 16%;
+    --muted-foreground: 220 10% 60%;
 
-    --accent: 24 100% 55%;
+    --accent: 25 100% 58%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 18%;
-    --ring: 24 100% 50%;
+    --border: 220 15% 18%;
+    --input: 220 15% 14%;
+    --ring: 25 95% 53%;
 
     /* Sidebar variables - dark mode */
-    --sidebar-background: 0 0% 10%;
+    --sidebar-background: 220 18% 8%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 24 100% 50%;
+    --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 24 100% 55%;
+    --sidebar-accent: 25 100% 58%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 24 100% 50%;
+    --sidebar-border: 220 15% 18%;
+    --sidebar-ring: 25 95% 53%;
 
     /* Crunchyroll theme colors - dark mode */
-    --cr-orange: 24 100% 50%;
-    --cr-orange-light: 28 100% 60%;
+    --cr-orange: 25 95% 53%;
+    --cr-orange-light: 30 100% 60%;
     --cr-orange-dark: 20 100% 45%;
-    --cr-black: 0 0% 6%;
-    --cr-dark: 0 0% 10%;
-    --cr-gray: 0 0% 18%;
-    --cr-light-gray: 0 0% 65%;
+    --cr-black: 220 20% 4%;
+    --cr-dark: 220 18% 8%;
+    --cr-gray: 220 15% 16%;
+    --cr-light-gray: 220 10% 65%;
+    --cr-surface: 220 18% 10%;
     
     /* Gradients - dark mode */
-    --gradient-primary: linear-gradient(135deg, hsl(24, 100%, 50%), hsl(28, 100%, 60%));
-    --gradient-accent: linear-gradient(135deg, hsl(24, 100%, 55%), hsl(35, 100%, 55%));
-    --gradient-hero: linear-gradient(180deg, transparent 0%, hsl(0, 0%, 6%) 100%);
-    --gradient-card: linear-gradient(180deg, transparent 0%, hsl(0, 0%, 0%, 0.95) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(25, 95%, 53%), hsl(30, 100%, 60%));
+    --gradient-accent: linear-gradient(135deg, hsl(25, 100%, 58%), hsl(35, 100%, 55%));
+    --gradient-hero: linear-gradient(180deg, transparent 0%, hsl(220, 20%, 4%) 100%);
+    --gradient-card: linear-gradient(180deg, transparent 0%, hsl(0, 0%, 0%, 0.98) 100%);
     
     /* Shadows - dark mode */
-    --shadow-glow: 0 0 40px hsl(24, 100%, 50%, 0.5);
-    --shadow-card: 0 4px 30px hsl(0, 0%, 0%, 0.4);
-    --shadow-hover: 0 12px 40px hsl(0, 0%, 0%, 0.5);
+    --shadow-glow: 0 0 50px hsl(25, 95%, 53%, 0.5);
+    --shadow-card: 0 4px 30px hsl(0, 0%, 0%, 0.5);
+    --shadow-hover: 0 16px 50px hsl(0, 0%, 0%, 0.6);
+    --shadow-float: 0 25px 60px hsl(0, 0%, 0%, 0.7);
   }
 }
 
@@ -161,9 +166,16 @@
     @apply touch-manipulation;
     -webkit-touch-callout: none;
   }
+
+  /* Selection color */
+  ::selection {
+    background: hsl(25, 95%, 53%);
+    color: white;
+  }
 }
 
 @layer components {
+  /* Premium gradient text */
   .anime-gradient-text {
     background: var(--gradient-primary);
     -webkit-background-clip: text;
@@ -171,43 +183,81 @@
     background-clip: text;
   }
 
+  /* Glass morphism effect */
+  .glass-effect {
+    @apply bg-background/80 backdrop-blur-2xl border-b border-border/30;
+  }
+
+  .glass-card {
+    @apply bg-card/60 backdrop-blur-xl border border-border/30;
+  }
+
+  /* Premium anime card */
   .anime-card {
-    @apply relative overflow-hidden rounded-lg bg-card transition-all duration-300 ease-out;
+    @apply relative overflow-hidden rounded-xl bg-card border border-border/30 transition-all duration-500 ease-out;
     box-shadow: var(--shadow-card);
   }
 
+  .anime-card::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-500;
+    background: var(--gradient-shine);
+  }
+
   .anime-card:hover {
-    @apply scale-[1.03] -translate-y-1;
+    @apply scale-[1.04] -translate-y-2;
     box-shadow: var(--shadow-hover);
   }
 
+  .anime-card:hover::before {
+    @apply opacity-100;
+    animation: shine 1.5s ease-in-out;
+  }
+
+  /* Premium button */
   .anime-button {
+    @apply relative overflow-hidden text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 ease-out;
     background: var(--gradient-primary);
-    @apply text-white font-semibold px-6 py-3 rounded-md transition-all duration-300 ease-out;
-    box-shadow: 0 4px 15px hsl(24 100% 50% / 0.3);
+    box-shadow: 0 4px 20px hsl(25 95% 53% / 0.35);
+  }
+
+  .anime-button::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+    background: linear-gradient(135deg, hsl(30, 100%, 60%), hsl(35, 100%, 55%));
   }
 
   .anime-button:hover {
-    @apply opacity-95 scale-[1.02] -translate-y-0.5;
+    @apply scale-[1.03] -translate-y-0.5;
     box-shadow: var(--shadow-glow);
+  }
+
+  .anime-button:hover::before {
+    @apply opacity-100;
   }
 
   .anime-button:active {
     @apply scale-[0.98] translate-y-0;
   }
 
+  .anime-button > * {
+    @apply relative z-10;
+  }
+
+  /* Ghost button with glow */
+  .ghost-button {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-300;
+    @apply hover:bg-primary/10 hover:text-primary;
+  }
+
+  /* Genre badge */
   .genre-badge {
-    @apply px-3 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wide bg-secondary text-secondary-foreground transition-all duration-200;
+    @apply px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide;
+    @apply bg-secondary/80 text-secondary-foreground border border-border/30;
+    @apply transition-all duration-300 hover:bg-primary hover:text-primary-foreground hover:border-primary/50;
   }
 
-  .genre-badge:hover {
-    @apply bg-primary text-primary-foreground;
-  }
-
-  .glass-effect {
-    @apply bg-background/95 backdrop-blur-xl border-b border-border/50;
-  }
-
+  /* Hero overlay */
   .hero-overlay {
     background: var(--gradient-hero);
   }
@@ -216,42 +266,65 @@
     background: var(--gradient-card);
   }
 
-  /* Crunchyroll-style episode card */
-  .episode-card {
-    @apply relative overflow-hidden rounded-md bg-card transition-all duration-200 ease-out cursor-pointer;
-  }
-
-  .episode-card:hover {
-    @apply bg-muted;
-  }
-
-  .episode-card.active {
-    @apply bg-primary/20 border-l-4 border-l-primary;
-  }
-
-  /* Video player styling */
+  /* Premium video player */
   .video-player-container {
-    @apply relative bg-black overflow-hidden;
+    @apply relative bg-black overflow-hidden rounded-xl;
   }
 
   .video-controls {
     @apply absolute inset-0 flex flex-col justify-end opacity-0 transition-opacity duration-300;
-    background: linear-gradient(to top, hsl(0, 0%, 0%, 0.85) 0%, transparent 50%);
+    background: linear-gradient(to top, hsl(0, 0%, 0%, 0.9) 0%, transparent 60%);
   }
 
   .video-player-container:hover .video-controls {
     @apply opacity-100;
   }
 
-  /* Smooth page transitions */
-  .page-transition {
-    @apply transition-all duration-300 ease-out;
+  /* Episode card - Crunchyroll style */
+  .episode-card {
+    @apply relative overflow-hidden rounded-lg bg-card/50 border border-border/20;
+    @apply transition-all duration-300 ease-out cursor-pointer;
   }
 
-  /* Loading skeleton with shimmer */
+  .episode-card:hover {
+    @apply bg-card border-primary/30;
+    box-shadow: 0 4px 20px hsl(25, 95%, 53%, 0.15);
+  }
+
+  .episode-card.active {
+    @apply bg-primary/15 border-l-4 border-l-primary;
+  }
+
+  /* Upload section styling */
+  .upload-zone {
+    @apply relative overflow-hidden rounded-xl border-2 border-dashed border-border/50;
+    @apply bg-card/30 transition-all duration-300;
+    @apply hover:border-primary/50 hover:bg-primary/5;
+  }
+
+  .upload-zone.active {
+    @apply border-primary bg-primary/10;
+  }
+
+  /* Tab styling */
+  .premium-tabs [data-state="active"] {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  /* Skeleton shimmer */
   .skeleton-shimmer {
-    @apply animate-pulse bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%];
+    @apply bg-gradient-to-r from-muted via-muted/50 to-muted bg-[length:200%_100%];
     animation: shimmer 1.5s infinite;
+  }
+
+  /* Pulse glow effect */
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  /* Floating animation */
+  .float {
+    animation: float 6s ease-in-out infinite;
   }
 }
 
@@ -265,14 +338,15 @@
     display: none;
   }
 
-  /* Custom scrollbar for visible areas */
+  /* Custom scrollbar */
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted)) transparent;
+    scrollbar-color: hsl(var(--primary) / 0.3) transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-track {
@@ -280,24 +354,20 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted));
+    background: hsl(var(--primary) / 0.3);
     border-radius: 3px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground));
+    background: hsl(var(--primary) / 0.5);
   }
 
   .text-glow {
-    text-shadow: 0 0 20px hsl(var(--cr-orange) / 0.5);
+    text-shadow: 0 0 30px hsl(var(--cr-orange) / 0.6);
   }
 
-  .animation-delay-200 {
-    animation-delay: 200ms;
-  }
-
-  .animation-delay-400 {
-    animation-delay: 400ms;
+  .text-shadow-lg {
+    text-shadow: 0 4px 20px hsl(0, 0%, 0%, 0.5);
   }
 
   /* Smooth transitions */
@@ -306,62 +376,114 @@
   }
 
   .hover-lift {
-    @apply transition-transform duration-200 ease-out hover:-translate-y-1;
+    @apply transition-transform duration-300 ease-out hover:-translate-y-1;
   }
 
   .hover-scale {
-    @apply transition-transform duration-200 ease-out hover:scale-105;
+    @apply transition-transform duration-300 ease-out hover:scale-105;
   }
 
-  /* GPU acceleration for smooth animations */
+  .hover-glow {
+    @apply transition-all duration-300;
+  }
+
+  .hover-glow:hover {
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.4);
+  }
+
+  /* GPU acceleration */
   .gpu-accelerated {
     transform: translateZ(0);
     will-change: transform;
   }
 
-  /* Safe area padding for mobile notches */
+  /* Safe area padding */
   .safe-area-padding {
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  /* Mobile-first responsive utilities */
-  .container-mobile {
-    @apply px-3 sm:px-4 md:px-6 lg:px-8;
-  }
+  /* Animation delays */
+  .animation-delay-100 { animation-delay: 100ms; }
+  .animation-delay-200 { animation-delay: 200ms; }
+  .animation-delay-300 { animation-delay: 300ms; }
+  .animation-delay-400 { animation-delay: 400ms; }
+  .animation-delay-500 { animation-delay: 500ms; }
 }
 
-/* Shimmer animation */
+/* Keyframe Animations */
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
-/* Smooth fade in animation */
+@keyframes shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px hsl(25, 95%, 53%, 0.3); }
+  50% { box-shadow: 0 0 50px hsl(25, 95%, 53%, 0.6); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
 }
+
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.3); }
+  50% { transform: scale(1.05); }
+  70% { transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+.animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
+.animate-fade-in-left { animation: fadeInLeft 0.5s ease-out forwards; }
+.animate-fade-in-right { animation: fadeInRight 0.5s ease-out forwards; }
+.animate-scale-in { animation: scaleIn 0.4s ease-out forwards; }
+.animate-slide-down { animation: slideDown 0.4s ease-out forwards; }
+.animate-bounce-in { animation: bounceIn 0.6s ease-out forwards; }
 
 /* Staggered animation delays */
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
-.stagger-5 { animation-delay: 0.25s; }
-.stagger-6 { animation-delay: 0.3s; }
+.stagger-1 { animation-delay: 0.05s; opacity: 0; }
+.stagger-2 { animation-delay: 0.1s; opacity: 0; }
+.stagger-3 { animation-delay: 0.15s; opacity: 0; }
+.stagger-4 { animation-delay: 0.2s; opacity: 0; }
+.stagger-5 { animation-delay: 0.25s; opacity: 0; }
+.stagger-6 { animation-delay: 0.3s; opacity: 0; }
+.stagger-7 { animation-delay: 0.35s; opacity: 0; }
+.stagger-8 { animation-delay: 0.4s; opacity: 0; }
