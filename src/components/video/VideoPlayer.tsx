@@ -12,6 +12,7 @@ import {
   Loader2,
   SkipForward,
   SkipBack,
+  PictureInPicture2,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -337,6 +338,27 @@ export function VideoPlayer({
     }
   }, []);
 
+  // Picture-in-Picture toggle
+  const togglePiP = useCallback(async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+        toast.success('Exited Picture-in-Picture');
+      } else if (document.pictureInPictureEnabled) {
+        await video.requestPictureInPicture();
+        toast.success('Now playing in Picture-in-Picture mode');
+      } else {
+        toast.error('Picture-in-Picture is not supported');
+      }
+    } catch (error) {
+      console.error('PiP error:', error);
+      toast.error('Failed to enter Picture-in-Picture mode');
+    }
+  }, []);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -354,6 +376,10 @@ export function VideoPlayer({
           e.preventDefault();
           toggleFullscreen();
           break;
+        case 'p':
+          e.preventDefault();
+          togglePiP();
+          break;
         case 'arrowright':
           e.preventDefault();
           skipForward();
@@ -367,7 +393,7 @@ export function VideoPlayer({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [togglePlay, toggleFullscreen, skipForward, skipBackward]);
+  }, [togglePlay, toggleFullscreen, togglePiP, skipForward, skipBackward]);
 
   const handleDownload = async () => {
     if (!effectiveVideoUrl) {
@@ -697,10 +723,22 @@ export function VideoPlayer({
                 size="icon"
                 onClick={handleDownload}
                 className="text-white hover:bg-white/20 h-10 w-10 sm:h-9 sm:w-9 touch-manipulation active:scale-95 transition-transform"
+                title="Download"
               >
                 <Download className="h-5 w-5" />
               </Button>
             )}
+
+            {/* Picture-in-Picture */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={togglePiP}
+              className="text-white hover:bg-white/20 h-10 w-10 sm:h-9 sm:w-9 touch-manipulation active:scale-95 transition-transform"
+              title="Picture-in-Picture (P)"
+            >
+              <PictureInPicture2 className="h-5 w-5" />
+            </Button>
 
             <Button
               variant="ghost"

@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   SkipForward,
   SkipBack,
+  PictureInPicture2,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -175,6 +176,26 @@ export default function ExternalPlayer() {
   const skipBackward = () => {
     if (videoRef.current) {
       videoRef.current.currentTime = Math.max(videoRef.current.currentTime - 10, 0);
+    }
+  };
+
+  const togglePiP = async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+        toast.success('Exited Picture-in-Picture');
+      } else if (document.pictureInPictureEnabled) {
+        await video.requestPictureInPicture();
+        toast.success('Now playing in Picture-in-Picture mode');
+      } else {
+        toast.error('Picture-in-Picture is not supported');
+      }
+    } catch (error) {
+      console.error('PiP error:', error);
+      toast.error('Failed to enter Picture-in-Picture mode');
     }
   };
 
@@ -369,8 +390,13 @@ export default function ExternalPlayer() {
                 </DropdownMenu>
 
                 {/* Download */}
-                <Button variant="ghost" size="icon" onClick={handleDownload} className="text-white hover:bg-white/20 h-10 w-10">
+                <Button variant="ghost" size="icon" onClick={handleDownload} className="text-white hover:bg-white/20 h-10 w-10" title="Download">
                   <Download className="h-5 w-5" />
+                </Button>
+
+                {/* Picture-in-Picture */}
+                <Button variant="ghost" size="icon" onClick={togglePiP} className="text-white hover:bg-white/20 h-10 w-10" title="Picture-in-Picture">
+                  <PictureInPicture2 className="h-5 w-5" />
                 </Button>
 
                 {/* Embed Player Toggle */}
@@ -379,7 +405,7 @@ export default function ExternalPlayer() {
                 </Button>
 
                 {/* Fullscreen */}
-                <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="text-white hover:bg-white/20 h-10 w-10">
+                <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="text-white hover:bg-white/20 h-10 w-10" title="Fullscreen">
                   {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
                 </Button>
               </div>
