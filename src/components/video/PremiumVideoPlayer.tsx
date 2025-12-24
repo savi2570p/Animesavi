@@ -10,14 +10,12 @@ import {
   Minimize,
   Download,
   Settings,
-  Loader2,
   SkipForward,
   SkipBack,
   PictureInPicture2,
   Check,
   Subtitles,
   MonitorPlay,
-  Languages,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -43,17 +41,17 @@ interface PremiumVideoPlayerProps {
 const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
   PLAY: { 
     name: 'PLAY', 
-    features: ['watch', 'captions', 'language'],
+    features: ['watch', 'captions'],
     playerStyle: 'basic'
   },
   SHORT: { 
     name: 'SHORT', 
-    features: ['watch', 'quality', 'captions', 'language'],
+    features: ['watch', 'quality', 'captions'],
     playerStyle: 'standard'
   },
   Zex: { 
     name: 'Zex', 
-    features: ['watch', 'quality', 'download', 'captions', 'language'],
+    features: ['watch', 'quality', 'download', 'captions'],
     playerStyle: 'advanced'
   },
 };
@@ -78,14 +76,7 @@ const qualityOptions = [
   { value: '360p', label: '360p', badge: null },
 ] as const;
 
-const languageOptions = [
-  { value: 'japanese', label: 'Japanese', code: 'JP' },
-  { value: 'english', label: 'English', code: 'EN' },
-  { value: 'hindi', label: 'Hindi', code: 'HI' },
-] as const;
-
 type QualityType = typeof qualityOptions[number]['value'];
-type LanguageType = typeof languageOptions[number]['value'];
 
 export function PremiumVideoPlayer({
   videoUrl,
@@ -120,13 +111,11 @@ export function PremiumVideoPlayer({
   const [useIframeFallback, setUseIframeFallback] = useState(false);
   const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
-  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [hoverTime, setHoverTime] = useState<number | null>(null);
   const [hoverPosition, setHoverPosition] = useState(0);
   
-  // Language and captions state
-  const [selectedLanguage, setSelectedLanguage] = useState<LanguageType>((audioLanguage === 'original' ? 'japanese' : audioLanguage) as LanguageType || 'japanese');
-  const [captionsEnabled, setCaptionsEnabled] = useState(true); // Always start with captions enabled for Japanese
+  // Captions state
+  const [captionsEnabled, setCaptionsEnabled] = useState(true); // Always start with captions enabled
 
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -434,13 +423,6 @@ export function PremiumVideoPlayer({
         setShowVolumeSlider(false);
       }}
     >
-      {/* Audio Language Badge */}
-      {selectedLanguage !== 'japanese' && (
-        <div className="absolute top-4 left-4 z-10 px-3 py-1.5 bg-primary/90 text-primary-foreground text-xs font-bold rounded-lg uppercase tracking-wider animate-fade-in">
-          {languageOptions.find(l => l.value === selectedLanguage)?.code || selectedLanguage} DUB
-        </div>
-      )}
-
       {/* Captions indicator */}
       {captionsEnabled && (
         <div className="absolute top-4 right-4 z-10 px-2.5 py-1.5 bg-black/70 backdrop-blur-sm text-white text-xs font-bold rounded-lg flex items-center gap-1.5 animate-fade-in">
@@ -463,10 +445,7 @@ export function PremiumVideoPlayer({
           if (videoRef.current) {
             setDuration(videoRef.current.duration);
             setVideoError(false);
-            // Enable captions by default for Japanese audio
-            if (selectedLanguage === 'japanese') {
-              setCaptionsEnabled(true);
-            }
+            setCaptionsEnabled(true);
           }
         }}
         onCanPlay={() => setVideoError(false)}
@@ -643,63 +622,12 @@ export function PremiumVideoPlayer({
                 <Subtitles className="w-5 h-5" />
               </button>
 
-              {/* Language selector */}
-              <div className="relative">
-                <button 
-                  className="player-btn w-10 h-10 text-white"
-                  onClick={() => {
-                    setShowLanguageMenu(!showLanguageMenu);
-                    setShowQualityMenu(false);
-                  }}
-                  title="Audio Language"
-                >
-                  <Languages className="w-5 h-5" />
-                </button>
-                
-                {showLanguageMenu && (
-                  <div className="quality-menu absolute bottom-full right-0 mb-2 w-48">
-                    <div className="px-3 py-2 text-xs text-muted-foreground font-semibold border-b border-border/50">
-                      Audio Language
-                    </div>
-                    {languageOptions.map((opt) => (
-                      <div
-                        key={opt.value}
-                        className={cn("quality-option", selectedLanguage === opt.value && "active")}
-                        onClick={() => {
-                          setSelectedLanguage(opt.value);
-                          setShowLanguageMenu(false);
-                          // Auto-enable captions for Japanese
-                          if (opt.value === 'japanese') {
-                            setCaptionsEnabled(true);
-                            toast.success('Switched to Japanese - Captions enabled');
-                          } else {
-                            setCaptionsEnabled(false);
-                            toast.success(`Switched to ${opt.label}`);
-                          }
-                        }}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="w-6 h-5 flex items-center justify-center bg-primary/20 text-primary text-[10px] font-bold rounded">
-                            {opt.code}
-                          </span>
-                          <span className="text-sm font-medium">{opt.label}</span>
-                        </div>
-                        {selectedLanguage === opt.value && <Check className="w-4 h-4 text-primary" />}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               {/* Quality selector */}
               {features.includes('quality') && (
                 <div className="relative">
                   <button 
                     className="player-btn w-10 h-10 text-white"
-                    onClick={() => {
-                      setShowQualityMenu(!showQualityMenu);
-                      setShowLanguageMenu(false);
-                    }}
+                    onClick={() => setShowQualityMenu(!showQualityMenu)}
                   >
                     <Settings className="w-5 h-5" />
                   </button>

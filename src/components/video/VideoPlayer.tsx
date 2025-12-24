@@ -14,7 +14,6 @@ import {
   SkipBack,
   PictureInPicture2,
   Subtitles,
-  Languages,
   Check,
 } from 'lucide-react';
 import {
@@ -48,28 +47,20 @@ interface VideoPlayerProps {
 const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
   PLAY: { 
     name: 'PLAY', 
-    features: ['watch', 'captions', 'language'],
+    features: ['watch', 'captions'],
     playerStyle: 'basic'
   },
   SHORT: { 
     name: 'SHORT', 
-    features: ['watch', 'quality', 'captions', 'language'],
+    features: ['watch', 'quality', 'captions'],
     playerStyle: 'standard'
   },
   Zex: { 
     name: 'Zex', 
-    features: ['watch', 'quality', 'download', 'captions', 'language'],
+    features: ['watch', 'quality', 'download', 'captions'],
     playerStyle: 'advanced'
   },
 };
-
-const languageOptions = [
-  { value: 'japanese', label: 'Japanese', code: 'JP' },
-  { value: 'english', label: 'English', code: 'EN' },
-  { value: 'hindi', label: 'Hindi', code: 'HI' },
-] as const;
-
-type LanguageType = typeof languageOptions[number]['value'];
 
 // Helper to detect if URL is an embeddable/external URL (not a direct video file)
 const isEmbeddableUrl = (url: string | null): boolean => {
@@ -171,8 +162,7 @@ export function VideoPlayer({
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   const [useIframeFallback, setUseIframeFallback] = useState(false);
   
-  // Language and captions state
-  const [selectedLanguage, setSelectedLanguage] = useState<LanguageType>((audioLanguage === 'original' ? 'japanese' : audioLanguage) as LanguageType || 'japanese');
+  // Captions state
   const [captionsEnabled, setCaptionsEnabled] = useState(true); // Always start with captions enabled
 
   const features = serverConfigs[activeServer].features;
@@ -536,13 +526,6 @@ export function VideoPlayer({
       onTouchStart={() => setShowControls(true)}
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
-      {/* Audio Language Badge */}
-      {selectedLanguage !== 'japanese' && (
-        <div className="absolute top-3 left-3 z-10 px-2 py-1 bg-primary/90 text-primary-foreground text-xs font-semibold rounded-md uppercase tracking-wide">
-          {languageOptions.find(l => l.value === selectedLanguage)?.code || selectedLanguage} DUB
-        </div>
-      )}
-
       {/* Captions indicator */}
       {captionsEnabled && (
         <div className="absolute top-3 right-3 z-10 px-2 py-1 bg-black/70 backdrop-blur-sm text-white text-xs font-bold rounded-md flex items-center gap-1">
@@ -566,10 +549,7 @@ export function VideoPlayer({
           if (videoRef.current) {
             setDuration(videoRef.current.duration);
             setVideoError(false);
-            // Auto-enable captions for Japanese
-            if (selectedLanguage === 'japanese') {
-              setCaptionsEnabled(true);
-            }
+            setCaptionsEnabled(true);
           }
         }}
         onCanPlay={() => setVideoError(false)}
@@ -750,51 +730,6 @@ export function VideoPlayer({
             >
               <Subtitles className="h-5 w-5" />
             </Button>
-
-            {/* Language selector */}
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-white hover:bg-white/20 h-10 w-10 sm:h-9 sm:w-9 touch-manipulation"
-                  title="Audio Language"
-                >
-                  <Languages className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                align="end" 
-                className="bg-background z-[9999]"
-                style={{ zIndex: 9999 }}
-                sideOffset={8}
-              >
-                <DropdownMenuLabel className="text-xs text-muted-foreground">Audio Language</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {languageOptions.map((opt) => (
-                  <DropdownMenuItem
-                    key={opt.value}
-                    onClick={() => {
-                      setSelectedLanguage(opt.value);
-                      if (opt.value === 'japanese') {
-                        setCaptionsEnabled(true);
-                        toast.success('Switched to Japanese - Captions enabled');
-                      } else {
-                        setCaptionsEnabled(false);
-                        toast.success(`Switched to ${opt.label}`);
-                      }
-                    }}
-                    className={`${selectedLanguage === opt.value ? 'bg-primary/20' : ''} touch-manipulation py-3 flex items-center justify-between`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="w-6 text-center text-primary font-bold text-xs">{opt.code}</span>
-                      {opt.label}
-                    </span>
-                    {selectedLanguage === opt.value && <Check className="h-4 w-4 text-primary" />}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
 
             {/* Quality Control (SHORT and Zex only) */}
             {features.includes('quality') && (
