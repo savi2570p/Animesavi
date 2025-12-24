@@ -70,26 +70,61 @@ const isEmbeddableUrl = (url: string | null): boolean => {
     /streamable\.com/i,
     /ok\.ru/i,
     /rutube\.ru/i,
+    /mega\.nz/i,
+    /mediafire\.com/i,
+    /streamtape/i,
+    /doodstream/i,
+    /filemoon/i,
+    /vidoza/i,
+    /mixdrop/i,
+    /upstream/i,
+    /fembed/i,
     /iframe/i,
     /embed/i,
     /player/i,
+    /watch\?/i,
+    /\/e\//i,
+    /\/v\//i,
   ];
   return embedPatterns.some(pattern => pattern.test(url));
 };
 
-// Helper to detect direct video file URLs
+// Helper to detect direct video file URLs that can be played natively
 const isDirectVideoUrl = (url: string | null): boolean => {
   if (!url) return false;
-  const videoExtensions = /\.(mp4|webm|mkv|avi|mov|m4v|ogg|ogv)(\?.*)?$/i;
-  // Also check for storage URLs that typically serve video files
-  const storagePatterns = [
+  
+  // Direct video file extensions
+  const videoExtensions = /\.(mp4|webm|mkv|avi|mov|m4v|ogg|ogv|m3u8|mpd)(\?.*)?$/i;
+  
+  // Known video hosting CDNs that serve direct video files
+  const directVideoPatterns = [
     /supabase.*storage/i,
     /blob\.core\.windows\.net/i,
     /s3\.amazonaws\.com/i,
-    /cloudfront\.net/i,
-    /cdn\./i,
+    /s3\.[a-z-]+\.amazonaws\.com/i,
+    /cloudfront\.net.*\.(mp4|webm|m3u8)/i,
+    /cdn\..*\.(mp4|webm|m3u8)/i,
+    /akamaihd\.net/i,
+    /fastly\.net/i,
+    /bunnycdn/i,
+    /cloudflare.*video/i,
+    /r2\.cloudflarestorage/i,
+    /storage\.googleapis\.com/i,
+    /firebasestorage\.googleapis\.com/i,
   ];
-  return videoExtensions.test(url) || storagePatterns.some(pattern => pattern.test(url));
+  
+  // Check for video extensions first
+  if (videoExtensions.test(url)) return true;
+  
+  // Check for known CDN patterns
+  return directVideoPatterns.some(pattern => pattern.test(url));
+};
+
+// Helper to check if URL might work as direct video (for fallback attempts)
+const couldBeDirectVideo = (url: string | null): boolean => {
+  if (!url) return false;
+  // If it's not clearly an embed URL, try it as direct first
+  return !isEmbeddableUrl(url) || isDirectVideoUrl(url);
 };
 
 export function VideoPlayer({
@@ -118,17 +153,36 @@ export function VideoPlayer({
   const [showControls, setShowControls] = useState(true);
   const [videoError, setVideoError] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
+  const [useIframeFallback, setUseIframeFallback] = useState(false);
 
   const features = serverConfigs[activeServer].features;
+  
+  // Get any available URL for playback
+  const anyVideoUrl = videoUrl || externalUrl;
   
   // Determine the effective URLs based on content analysis
   // If videoUrl is an embeddable URL, treat it as external
   const effectiveExternalUrl = externalUrl || (isEmbeddableUrl(videoUrl) ? videoUrl : null);
-  const effectiveVideoUrl = isDirectVideoUrl(videoUrl) ? videoUrl : null;
   
-  // Determine if we should use iframe (for PLAY server or when we have embed URL)
-  const shouldUseIframe = (activeServer === 'PLAY' && effectiveExternalUrl) || 
-                          (!effectiveVideoUrl && effectiveExternalUrl);
+  // Try direct video if it looks like a direct URL OR if we haven't tried iframe fallback yet
+  const effectiveVideoUrl = isDirectVideoUrl(videoUrl) ? videoUrl : 
+                            (couldBeDirectVideo(videoUrl) && !useIframeFallback ? videoUrl : null);
+  
+  // Use iframe when:
+  // 1. PLAY server is selected and we have an external URL
+  // 2. No direct video URL but we have an external/embed URL
+  // 3. Direct video failed (videoError) and we have a fallback URL
+  // 4. User triggered iframe fallback
+  const shouldUseIframe = useIframeFallback ||
+                          (activeServer === 'PLAY' && effectiveExternalUrl) || 
+                          (!effectiveVideoUrl && effectiveExternalUrl) ||
+                          (videoError && anyVideoUrl);
+  
+  // Reset error state when URLs change
+  useEffect(() => {
+    setVideoError(false);
+    setUseIframeFallback(false);
+  }, [videoUrl, externalUrl]);
 
   // Handle fullscreen changes
   useEffect(() => {
@@ -319,8 +373,9 @@ export function VideoPlayer({
     );
   }
 
-  // External URL player (iframe) - for PLAY server or embeddable URLs
-  if (shouldUseIframe && effectiveExternalUrl) {
+  // External URL player (iframe) - for PLAY server, embeddable URLs, or fallback
+  if (shouldUseIframe && (effectiveExternalUrl || anyVideoUrl)) {
+    const iframeSrc = effectiveExternalUrl || anyVideoUrl;
     return (
       <div 
         ref={containerRef} 
@@ -332,19 +387,20 @@ export function VideoPlayer({
         }}
       >
         <iframe
-          src={`${effectiveExternalUrl}${effectiveExternalUrl.includes('?') ? '&' : '?'}autoplay=1`}
+          src={`${iframeSrc}${iframeSrc?.includes('?') ? '&' : '?'}autoplay=1`}
           className="w-full h-full"
           allowFullScreen
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
           title={`${animeTitle} - Episode ${episodeNumber}`}
           style={{ border: 'none' }}
+          sandbox="allow-scripts allow-same-origin allow-presentation allow-fullscreen"
         />
       </div>
     );
   }
 
-  // No video available
-  if (!effectiveVideoUrl && !effectiveExternalUrl) {
+  // No video available at all
+  if (!anyVideoUrl) {
     return (
       <div 
         className="w-full flex items-center justify-center bg-muted"
@@ -379,12 +435,12 @@ export function VideoPlayer({
       
       <video
         ref={videoRef}
-        src={effectiveVideoUrl || undefined}
+        src={effectiveVideoUrl || anyVideoUrl || undefined}
         className={`w-full h-full object-contain transition-all duration-300 ${
           quality === '360p' ? 'blur-[2px]' : 
           quality === '480p' ? 'blur-[1px]' : 
           ''
-        }`}
+        } ${videoError ? 'hidden' : ''}`}
         onTimeUpdate={handleTimeUpdate}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
@@ -394,29 +450,56 @@ export function VideoPlayer({
             setVideoError(false);
           }
         }}
-        onError={() => {
-          console.error('Video failed to load:', effectiveVideoUrl);
-          setVideoError(true);
+        onCanPlay={() => setVideoError(false)}
+        onError={(e) => {
+          const video = e.currentTarget;
+          // Only set error if we actually tried to load something
+          if (video.src && video.networkState === 3) {
+            console.error('Video failed to load:', video.src);
+            setVideoError(true);
+          }
         }}
         poster={poster}
         autoPlay
         playsInline
         webkit-playsinline="true"
         onClick={handleVideoClick}
-        crossOrigin="anonymous"
       />
       
-      {/* Video Error Fallback - try iframe */}
-      {videoError && effectiveExternalUrl && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black">
-          <iframe
-            src={`${effectiveExternalUrl}${effectiveExternalUrl.includes('?') ? '&' : '?'}autoplay=1`}
-            className="w-full h-full"
-            allowFullScreen
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-            title={`${animeTitle} - Episode ${episodeNumber}`}
-            style={{ border: 'none' }}
-          />
+      {/* Video Error - Show retry/fallback options */}
+      {videoError && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 gap-4 p-4">
+          <p className="text-white text-center">Video couldn't be played directly</p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              onClick={() => {
+                setVideoError(false);
+                if (videoRef.current) {
+                  videoRef.current.load();
+                  videoRef.current.play().catch(() => {});
+                }
+              }}
+              variant="outline"
+              className="text-white border-white/50 hover:bg-white/20"
+            >
+              Retry
+            </Button>
+            <Button
+              onClick={() => setUseIframeFallback(true)}
+              className="anime-button"
+            >
+              Try Embed Player
+            </Button>
+            {anyVideoUrl && (
+              <Button
+                onClick={() => window.open(anyVideoUrl, '_blank')}
+                variant="outline"
+                className="text-white border-white/50 hover:bg-white/20"
+              >
+                Open in New Tab
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
