@@ -121,6 +121,7 @@ export type Database = {
       episodes: {
         Row: {
           audio_language: string | null
+          captions_url: string | null
           created_at: string
           description: string | null
           duration: number | null
@@ -134,6 +135,7 @@ export type Database = {
         }
         Insert: {
           audio_language?: string | null
+          captions_url?: string | null
           created_at?: string
           description?: string | null
           duration?: number | null
@@ -147,6 +149,7 @@ export type Database = {
         }
         Update: {
           audio_language?: string | null
+          captions_url?: string | null
           created_at?: string
           description?: string | null
           duration?: number | null
