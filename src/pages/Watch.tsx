@@ -463,8 +463,12 @@ export default function Watch() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  const shareUrl = `${window.location.origin}/watch/${episode.id}`;
-                  const shareText = `Watch "${anime?.title}" - Episode ${episode.episode_number}: ${episode.title} on Anime.Savi.me!`;
+                  // Create clean URL with anime name and episode number
+                  const animeSlug = anime?.title
+                    ? anime.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+                    : '';
+                  const shareUrl = `${window.location.origin}/${animeSlug}/episode-${episode.episode_number}`;
+                  const shareText = `Watch "${anime?.title}" - Episode ${episode.episode_number}: ${episode.title} on AnimeSavi!`;
 
                   if (navigator.share) {
                     navigator.share({

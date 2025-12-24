@@ -21,6 +21,7 @@ import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import ExternalPlayer from "./pages/ExternalPlayer";
+import AnimeSlugRedirect from "./pages/AnimeSlugRedirect";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,9 @@ const App = () => (
               <Route path="/admin" element={<Admin />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/profile" element={<Profile />} />
+              {/* Clean URL routes for sharing */}
+              <Route path="/:animeSlug/:episodeSlug" element={<AnimeSlugRedirect />} />
+              <Route path="/:animeSlug" element={<AnimeSlugRedirect />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

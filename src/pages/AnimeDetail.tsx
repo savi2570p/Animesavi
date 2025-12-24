@@ -399,11 +399,16 @@ export default function AnimeDetail() {
                 variant="outline"
                 className="h-14 px-6 border-2"
                 onClick={() => {
-                  const shareUrl = `${window.location.origin}/anime/${anime.id}`;
+                  // Create clean URL with anime name only
+                  const animeSlug = anime.title
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/(^-|-$)/g, '');
+                  const shareUrl = `${window.location.origin}/${animeSlug}`;
                   if (navigator.share) {
                     navigator.share({
                       title: anime.title,
-                      text: `Check out "${anime.title}"!`,
+                      text: `Check out "${anime.title}" on AnimeSavi!`,
                       url: shareUrl,
                     }).catch(() => {
                       navigator.clipboard.writeText(shareUrl);
