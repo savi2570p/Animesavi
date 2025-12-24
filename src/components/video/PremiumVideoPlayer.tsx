@@ -120,6 +120,11 @@ export function PremiumVideoPlayer({
   
   // Download verification dialog state
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
+  
+  // Double-tap state for mobile seek
+  const lastTapRef = useRef<{ time: number; x: number }>({ time: 0, x: 0 });
+  const [doubleTapSide, setDoubleTapSide] = useState<'left' | 'right' | null>(null);
+  
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
 
   const features = serverConfigs[activeServer].features;
@@ -255,23 +260,37 @@ export function PremiumVideoPlayer({
   };
 
   const toggleFullscreen = useCallback(async () => {
-    const video = videoRef.current;
     const container = containerRef.current;
-    if (!container && !video) return;
+    if (!container) return;
 
     try {
-      const isCurrentlyFullscreen = !!document.fullscreenElement;
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
       if (isCurrentlyFullscreen) {
-        await document.exitFullscreen();
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          (document as any).webkitExitFullscreen();
+        }
       } else {
-        if (container?.requestFullscreen) {
+        // Always use container fullscreen to show our custom controls
+        if (container.requestFullscreen) {
           await container.requestFullscreen();
+        } else if ((container as any).webkitRequestFullscreen) {
+          (container as any).webkitRequestFullscreen();
+        } else {
+          setIsFullscreen(true);
         }
       }
     } catch (error) {
       console.error('Fullscreen error:', error);
+      setIsFullscreen(!isFullscreen);
     }
-  }, []);
+  }, [isFullscreen]);
 
   const skipForward = useCallback(() => {
     if (videoRef.current) {
@@ -330,6 +349,40 @@ export function PremiumVideoPlayer({
     }
     setShowDownloadDialog(true);
   };
+
+  // Double-tap handler for mobile seek
+  const handleDoubleTap = useCallback((e: React.TouchEvent) => {
+    const now = Date.now();
+    const touch = e.touches[0] || e.changedTouches[0];
+    const x = touch.clientX;
+    const containerWidth = containerRef.current?.clientWidth || window.innerWidth;
+    
+    const timeSinceLastTap = now - lastTapRef.current.time;
+    const distanceFromLastTap = Math.abs(x - lastTapRef.current.x);
+    
+    if (timeSinceLastTap < 300 && distanceFromLastTap < 50) {
+      // Double tap detected
+      e.preventDefault();
+      const side = x < containerWidth / 2 ? 'left' : 'right';
+      
+      if (side === 'left') {
+        skipBackward();
+        setDoubleTapSide('left');
+      } else {
+        skipForward();
+        setDoubleTapSide('right');
+      }
+      
+      // Clear the animation after showing
+      setTimeout(() => setDoubleTapSide(null), 500);
+      
+      // Reset last tap
+      lastTapRef.current = { time: 0, x: 0 };
+    } else {
+      // Single tap - record it
+      lastTapRef.current = { time: now, x };
+    }
+  }, [skipForward, skipBackward]);
 
   const handleVideoClick = useCallback((e: React.MouseEvent) => {
     if (videoError) return;
@@ -435,12 +488,34 @@ export function PremiumVideoPlayer({
       )}
       onClick={handleVideoClick}
       onMouseMove={handleMouseMove}
+      onTouchStart={(e) => {
+        setShowControls(true);
+        handleDoubleTap(e);
+      }}
       onMouseLeave={() => {
         if (isPlaying) setShowControls(false);
         setShowQualityMenu(false);
         setShowVolumeSlider(false);
       }}
     >
+      {/* Double-tap seek indicators */}
+      {doubleTapSide === 'left' && (
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 z-30 pointer-events-none animate-fade-in">
+          <div className="bg-black/60 backdrop-blur-sm rounded-full p-4 flex items-center gap-2">
+            <SkipBack className="w-8 h-8 text-white" />
+            <span className="text-white font-bold text-lg">10s</span>
+          </div>
+        </div>
+      )}
+      {doubleTapSide === 'right' && (
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 z-30 pointer-events-none animate-fade-in">
+          <div className="bg-black/60 backdrop-blur-sm rounded-full p-4 flex items-center gap-2">
+            <span className="text-white font-bold text-lg">10s</span>
+            <SkipForward className="w-8 h-8 text-white" />
+          </div>
+        </div>
+      )}
+
       {/* Captions indicator */}
       {captionsEnabled && (
         <div className="absolute top-4 right-4 z-10 px-2.5 py-1.5 bg-black/70 backdrop-blur-sm text-white text-xs font-bold rounded-lg flex items-center gap-1.5 animate-fade-in">
