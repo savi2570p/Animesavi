@@ -4,6 +4,9 @@
 
 /* Crunchyroll-Inspired Design System - Premium Dark Theme */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&display=swap");
 
 @layer base {
   :root {
@@ -11,33 +14,33 @@
     --font-body: 'Inter', sans-serif;
 
     /* Light mode (rarely used - dark by default) */
-    --background: 0 0% 98%;
-    --foreground: 220 15% 15%;
+    --background: 0 0% 96%;
+    --foreground: 0 0% 9%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 15% 15%;
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 9%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 15%;
+    --popover: 0 0% 89%;
+    --popover-foreground: 0 0% 9%;
 
-    --primary: 25 95% 53%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 161 93% 30%;
+    --primary-foreground: 151 80% 95%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 15% 15%;
+    --secondary: 0 0% 32%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 220 14% 94%;
-    --muted-foreground: 220 10% 45%;
+    --muted: 0 0% 63%;
+    --muted-foreground: 0 0% 9%;
 
-    --accent: 25 100% 58%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 166 76% 96%;
+    --accent-foreground: 173 80% 40%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 85% 97%;
 
-    --border: 220 14% 90%;
-    --input: 220 14% 90%;
-    --ring: 25 95% 53%;
+    --border: 0 0% 83%;
+    --input: 0 0% 83%;
+    --ring: 161 93% 30%;
 
     --radius: 0.75rem;
 
@@ -53,13 +56,13 @@
 
     /* Sidebar variables */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 15% 15%;
-    --sidebar-primary: 25 95% 53%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 25 100% 58%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 220 14% 90%;
-    --sidebar-ring: 25 95% 53%;
+    --sidebar-foreground: 0 0% 9%;
+    --sidebar-primary: 161 93% 30%;
+    --sidebar-primary-foreground: 151 80% 95%;
+    --sidebar-accent: 0 0% 32%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 83%;
+    --sidebar-ring: 161 93% 30%;
 
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(25, 95%, 53%), hsl(30, 100%, 60%));
@@ -67,52 +70,71 @@
     --gradient-hero: linear-gradient(180deg, transparent 0%, hsl(220, 20%, 6%) 100%);
     --gradient-card: linear-gradient(180deg, transparent 0%, hsl(0, 0%, 0%, 0.95) 100%);
     --gradient-shine: linear-gradient(135deg, transparent 20%, hsl(0, 0%, 100%, 0.1) 50%, transparent 80%);
-    
+
     /* Shadows */
     --shadow-glow: 0 0 40px hsl(25, 95%, 53%, 0.4);
     --shadow-card: 0 4px 24px hsl(0, 0%, 0%, 0.15);
     --shadow-hover: 0 12px 40px hsl(0, 0%, 0%, 0.25);
     --shadow-float: 0 20px 50px hsl(0, 0%, 0%, 0.3);
+    --chart-1: 158 64% 51%;
+    --chart-2: 141 69% 58%;
+    --chart-3: 172 66% 50%;
+    --chart-4: 82 77% 55%;
+    --chart-5: 0 0% 45%;
+    --sidebar: 0 0% 98%;
+    --font-sans: 'Work Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    --font-serif: 'Lora', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+    --font-mono: 'Inconsolata', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
+    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+    --tracking-normal: 0em;
+    --spacing: 0.25rem;
   }
 
   .dark {
-    --background: 220 20% 6%;
+    --background: 0 0% 9%;
     --foreground: 0 0% 98%;
 
-    --card: 220 18% 10%;
+    --card: 0 0% 14%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 220 18% 8%;
+    --popover: 0 0% 25%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 25 95% 53%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 158 64% 51%;
+    --primary-foreground: 165 91% 9%;
 
-    --secondary: 220 15% 14%;
+    --secondary: 0 0% 45%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 220 15% 16%;
-    --muted-foreground: 220 10% 60%;
+    --muted: 0 0% 45%;
+    --muted-foreground: 0 0% 98%;
 
-    --accent: 25 100% 58%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 178 84% 10%;
+    --accent-foreground: 172 66% 50%;
 
-    --destructive: 0 70% 50%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 85% 97%;
 
-    --border: 220 15% 18%;
-    --input: 220 15% 14%;
-    --ring: 25 95% 53%;
+    --border: 0 0% 32%;
+    --input: 0 0% 32%;
+    --ring: 158 64% 51%;
 
     /* Sidebar variables - dark mode */
     --sidebar-background: 220 18% 8%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 25 95% 53%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 25 100% 58%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 220 15% 18%;
-    --sidebar-ring: 25 95% 53%;
+    --sidebar-primary: 158 64% 51%;
+    --sidebar-primary-foreground: 165 91% 9%;
+    --sidebar-accent: 172 66% 50%;
+    --sidebar-accent-foreground: 178 84% 10%;
+    --sidebar-border: 0 0% 32%;
+    --sidebar-ring: 158 64% 51%;
 
     /* Crunchyroll theme colors - dark mode */
     --cr-orange: 25 95% 53%;
@@ -123,18 +145,32 @@
     --cr-gray: 220 15% 16%;
     --cr-light-gray: 220 10% 65%;
     --cr-surface: 220 18% 10%;
-    
+
     /* Gradients - dark mode */
     --gradient-primary: linear-gradient(135deg, hsl(25, 95%, 53%), hsl(30, 100%, 60%));
     --gradient-accent: linear-gradient(135deg, hsl(25, 100%, 58%), hsl(35, 100%, 55%));
     --gradient-hero: linear-gradient(180deg, transparent 0%, hsl(220, 20%, 4%) 100%);
     --gradient-card: linear-gradient(180deg, transparent 0%, hsl(0, 0%, 0%, 0.98) 100%);
-    
+
     /* Shadows - dark mode */
     --shadow-glow: 0 0 50px hsl(25, 95%, 53%, 0.5);
     --shadow-card: 0 4px 30px hsl(0, 0%, 0%, 0.5);
     --shadow-hover: 0 16px 50px hsl(0, 0%, 0%, 0.6);
     --shadow-float: 0 25px 60px hsl(0, 0%, 0%, 0.7);
+    --chart-1: 156 71% 66%;
+    --chart-2: 141 76% 73%;
+    --chart-3: 170 76% 64%;
+    --chart-4: 81 84% 67%;
+    --chart-5: 0 0% 45%;
+    --sidebar: 0 0% 14%;
+    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
+    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
   }
 }
 
@@ -482,7 +518,7 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
