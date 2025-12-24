@@ -142,8 +142,12 @@ export default function ExternalPlayer() {
 
   const toggleFullscreen = async () => {
     const container = containerRef.current;
+    const video = videoRef.current;
     
     if (!container) return;
+
+    // Detect iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
     try {
       const isCurrentlyFullscreen = !!(
@@ -158,7 +162,18 @@ export default function ExternalPlayer() {
           (document as any).webkitExitFullscreen();
         }
       } else {
-        // Always use container fullscreen to show our custom controls
+        // For iOS, use native video fullscreen (triggers iOS's built-in player)
+        if (isIOS && video) {
+          if ((video as any).webkitEnterFullscreen) {
+            (video as any).webkitEnterFullscreen();
+            return;
+          } else if ((video as any).webkitRequestFullscreen) {
+            (video as any).webkitRequestFullscreen();
+            return;
+          }
+        }
+        
+        // For non-iOS, use container fullscreen to show our custom controls
         if (container.requestFullscreen) {
           await container.requestFullscreen();
         } else if ((container as any).webkitRequestFullscreen) {
