@@ -56,6 +56,42 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
   },
 };
 
+// Helper to detect if URL is an embeddable/external URL (not a direct video file)
+const isEmbeddableUrl = (url: string | null): boolean => {
+  if (!url) return false;
+  const embedPatterns = [
+    /youtube\.com/i,
+    /youtu\.be/i,
+    /vimeo\.com/i,
+    /dailymotion\.com/i,
+    /drive\.google\.com/i,
+    /docs\.google\.com/i,
+    /dropbox\.com/i,
+    /streamable\.com/i,
+    /ok\.ru/i,
+    /rutube\.ru/i,
+    /iframe/i,
+    /embed/i,
+    /player/i,
+  ];
+  return embedPatterns.some(pattern => pattern.test(url));
+};
+
+// Helper to detect direct video file URLs
+const isDirectVideoUrl = (url: string | null): boolean => {
+  if (!url) return false;
+  const videoExtensions = /\.(mp4|webm|mkv|avi|mov|m4v|ogg|ogv)(\?.*)?$/i;
+  // Also check for storage URLs that typically serve video files
+  const storagePatterns = [
+    /supabase.*storage/i,
+    /blob\.core\.windows\.net/i,
+    /s3\.amazonaws\.com/i,
+    /cloudfront\.net/i,
+    /cdn\./i,
+  ];
+  return videoExtensions.test(url) || storagePatterns.some(pattern => pattern.test(url));
+};
+
 export function VideoPlayer({
   videoUrl,
   externalUrl,
@@ -80,9 +116,19 @@ export function VideoPlayer({
   const [duration, setDuration] = useState(0);
   const [quality, setQuality] = useState<'1080p' | '720p' | '480p' | '360p'>('1080p');
   const [showControls, setShowControls] = useState(true);
+  const [videoError, setVideoError] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
 
   const features = serverConfigs[activeServer].features;
+  
+  // Determine the effective URLs based on content analysis
+  // If videoUrl is an embeddable URL, treat it as external
+  const effectiveExternalUrl = externalUrl || (isEmbeddableUrl(videoUrl) ? videoUrl : null);
+  const effectiveVideoUrl = isDirectVideoUrl(videoUrl) ? videoUrl : null;
+  
+  // Determine if we should use iframe (for PLAY server or when we have embed URL)
+  const shouldUseIframe = (activeServer === 'PLAY' && effectiveExternalUrl) || 
+                          (!effectiveVideoUrl && effectiveExternalUrl);
 
   // Handle fullscreen changes
   useEffect(() => {
@@ -230,14 +276,14 @@ export function VideoPlayer({
   }, [togglePlay, toggleFullscreen, skipForward, skipBackward]);
 
   const handleDownload = async () => {
-    if (!videoUrl) {
+    if (!effectiveVideoUrl) {
       toast.error('No video available for download');
       return;
     }
 
     try {
       const link = document.createElement('a');
-      link.href = videoUrl;
+      link.href = effectiveVideoUrl;
       link.download = `${animeTitle} - Episode ${episodeNumber}.mp4`;
       link.target = '_blank';
       document.body.appendChild(link);
@@ -273,8 +319,8 @@ export function VideoPlayer({
     );
   }
 
-  // External URL player (iframe) for PLAY server
-  if (externalUrl && activeServer === 'PLAY') {
+  // External URL player (iframe) - for PLAY server or embeddable URLs
+  if (shouldUseIframe && effectiveExternalUrl) {
     return (
       <div 
         ref={containerRef} 
@@ -286,7 +332,7 @@ export function VideoPlayer({
         }}
       >
         <iframe
-          src={`${externalUrl}${externalUrl.includes('?') ? '&' : '?'}autoplay=1`}
+          src={`${effectiveExternalUrl}${effectiveExternalUrl.includes('?') ? '&' : '?'}autoplay=1`}
           className="w-full h-full"
           allowFullScreen
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
@@ -298,7 +344,7 @@ export function VideoPlayer({
   }
 
   // No video available
-  if (!videoUrl && !externalUrl) {
+  if (!effectiveVideoUrl && !effectiveExternalUrl) {
     return (
       <div 
         className="w-full flex items-center justify-center bg-muted"
@@ -333,7 +379,7 @@ export function VideoPlayer({
       
       <video
         ref={videoRef}
-        src={videoUrl || externalUrl || undefined}
+        src={effectiveVideoUrl || undefined}
         className={`w-full h-full object-contain transition-all duration-300 ${
           quality === '360p' ? 'blur-[2px]' : 
           quality === '480p' ? 'blur-[1px]' : 
@@ -345,14 +391,34 @@ export function VideoPlayer({
         onLoadedMetadata={() => {
           if (videoRef.current) {
             setDuration(videoRef.current.duration);
+            setVideoError(false);
           }
+        }}
+        onError={() => {
+          console.error('Video failed to load:', effectiveVideoUrl);
+          setVideoError(true);
         }}
         poster={poster}
         autoPlay
         playsInline
         webkit-playsinline="true"
         onClick={handleVideoClick}
+        crossOrigin="anonymous"
       />
+      
+      {/* Video Error Fallback - try iframe */}
+      {videoError && effectiveExternalUrl && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black">
+          <iframe
+            src={`${effectiveExternalUrl}${effectiveExternalUrl.includes('?') ? '&' : '?'}autoplay=1`}
+            className="w-full h-full"
+            allowFullScreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            title={`${animeTitle} - Episode ${episodeNumber}`}
+            style={{ border: 'none' }}
+          />
+        </div>
+      )}
 
       {/* Custom Controls */}
       <div 
