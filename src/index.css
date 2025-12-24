@@ -266,18 +266,106 @@
     background: var(--gradient-card);
   }
 
-  /* Premium video player */
+  /* Premium video player - Crunchyroll style */
   .video-player-container {
     @apply relative bg-black overflow-hidden rounded-xl;
+    box-shadow: 0 8px 40px hsl(0 0% 0% / 0.8);
+  }
+
+  .video-player-container::before {
+    content: '';
+    @apply absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-500;
+    background: linear-gradient(135deg, hsl(25, 95%, 53%, 0.1), transparent 50%);
+  }
+
+  .video-player-container:hover::before {
+    @apply opacity-100;
   }
 
   .video-controls {
     @apply absolute inset-0 flex flex-col justify-end opacity-0 transition-opacity duration-300;
-    background: linear-gradient(to top, hsl(0, 0%, 0%, 0.9) 0%, transparent 60%);
+    background: linear-gradient(to top, hsl(0, 0%, 0%, 0.95) 0%, hsl(0, 0%, 0%, 0.5) 30%, transparent 60%);
   }
 
   .video-player-container:hover .video-controls {
     @apply opacity-100;
+  }
+
+  /* Premium progress bar */
+  .premium-progress-track {
+    @apply relative h-1.5 bg-white/20 rounded-full overflow-hidden cursor-pointer;
+    @apply transition-all duration-200;
+  }
+
+  .premium-progress-track:hover {
+    @apply h-2.5;
+  }
+
+  .premium-progress-fill {
+    @apply absolute left-0 top-0 h-full rounded-full;
+    background: var(--gradient-primary);
+    box-shadow: 0 0 10px hsl(25, 95%, 53%, 0.6);
+  }
+
+  .premium-progress-buffer {
+    @apply absolute left-0 top-0 h-full bg-white/30 rounded-full;
+  }
+
+  .premium-progress-thumb {
+    @apply absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white;
+    @apply opacity-0 transition-all duration-200 scale-75;
+    box-shadow: 0 2px 8px hsl(0, 0%, 0%, 0.5);
+  }
+
+  .premium-progress-track:hover .premium-progress-thumb {
+    @apply opacity-100 scale-100;
+  }
+
+  /* Player control button */
+  .player-btn {
+    @apply flex items-center justify-center rounded-lg transition-all duration-200;
+    @apply hover:bg-white/15 active:scale-90;
+  }
+
+  .player-btn-primary {
+    @apply w-14 h-14 bg-primary/90 rounded-full;
+    @apply hover:bg-primary hover:scale-110;
+    box-shadow: 0 0 30px hsl(25, 95%, 53%, 0.4);
+  }
+
+  /* Quality menu */
+  .quality-menu {
+    @apply bg-background/95 backdrop-blur-xl rounded-xl border border-border/50 overflow-hidden;
+    box-shadow: 0 8px 32px hsl(0, 0%, 0%, 0.5);
+  }
+
+  .quality-option {
+    @apply px-4 py-3 flex items-center justify-between cursor-pointer transition-colors;
+    @apply hover:bg-primary/20;
+  }
+
+  .quality-option.active {
+    @apply bg-primary/30;
+  }
+
+  .quality-badge {
+    @apply px-2 py-0.5 text-xs font-bold rounded bg-primary text-primary-foreground;
+  }
+
+  /* Volume slider */
+  .volume-slider-container {
+    @apply absolute bottom-full left-1/2 -translate-x-1/2 mb-2;
+    @apply bg-background/95 backdrop-blur-xl rounded-lg p-3 border border-border/50;
+    @apply opacity-0 invisible transition-all duration-200;
+    box-shadow: 0 4px 20px hsl(0, 0%, 0%, 0.5);
+  }
+
+  .player-btn:hover .volume-slider-container {
+    @apply opacity-100 visible;
+  }
+
+  .volume-slider {
+    @apply w-24 h-1.5 bg-white/30 rounded-full overflow-hidden cursor-pointer;
   }
 
   /* Episode card - Crunchyroll style */
@@ -293,6 +381,54 @@
 
   .episode-card.active {
     @apply bg-primary/15 border-l-4 border-l-primary;
+  }
+
+  /* Premium anime browse card */
+  .browse-card {
+    @apply relative overflow-hidden rounded-xl bg-card border border-border/20;
+    @apply transition-all duration-500 ease-out;
+    box-shadow: var(--shadow-card);
+  }
+
+  .browse-card:hover {
+    @apply scale-[1.03] -translate-y-2 border-primary/40;
+    box-shadow: 0 20px 50px hsl(0, 0%, 0%, 0.5), 0 0 30px hsl(25, 95%, 53%, 0.2);
+  }
+
+  .browse-card-image {
+    @apply w-full h-full object-cover transition-all duration-700 ease-out;
+  }
+
+  .browse-card:hover .browse-card-image {
+    @apply scale-110;
+  }
+
+  .browse-card-overlay {
+    @apply absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent;
+    @apply opacity-0 transition-opacity duration-300;
+  }
+
+  .browse-card:hover .browse-card-overlay {
+    @apply opacity-100;
+  }
+
+  .browse-card-content {
+    @apply absolute bottom-0 left-0 right-0 p-4 translate-y-full;
+    @apply transition-transform duration-300 ease-out;
+  }
+
+  .browse-card:hover .browse-card-content {
+    @apply translate-y-0;
+  }
+
+  .browse-card-rating {
+    @apply absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-lg;
+    @apply bg-black/60 backdrop-blur-sm text-sm font-semibold;
+  }
+
+  .browse-card-badge {
+    @apply absolute top-3 left-3 px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wide;
+    background: var(--gradient-primary);
   }
 
   /* Upload section styling */
@@ -325,6 +461,19 @@
   /* Floating animation */
   .float {
     animation: float 6s ease-in-out infinite;
+  }
+
+  /* Premium filter button */
+  .filter-btn {
+    @apply px-4 py-2 rounded-full text-sm font-medium transition-all duration-300;
+    @apply bg-secondary/80 border border-border/30 hover:border-primary/50;
+    @apply hover:bg-primary/20 hover:text-primary;
+  }
+
+  .filter-btn.active {
+    background: var(--gradient-primary);
+    @apply text-white border-transparent;
+    box-shadow: 0 4px 15px hsl(25, 95%, 53%, 0.3);
   }
 }
 
