@@ -157,26 +157,15 @@ export function VideoPlayer({
 
   const features = serverConfigs[activeServer].features;
   
-  // Get any available URL for playback
+  // Get any available URL for playback - prefer videoUrl, fallback to externalUrl
   const anyVideoUrl = videoUrl || externalUrl;
   
-  // Determine the effective URLs based on content analysis
-  // If videoUrl is an embeddable URL, treat it as external
-  const effectiveExternalUrl = externalUrl || (isEmbeddableUrl(videoUrl) ? videoUrl : null);
+  // ALWAYS try native video player first for all URLs
+  // Only fall back to iframe if user explicitly requests it via the fallback button
+  const effectiveVideoUrl = anyVideoUrl;
   
-  // Try direct video if it looks like a direct URL OR if we haven't tried iframe fallback yet
-  const effectiveVideoUrl = isDirectVideoUrl(videoUrl) ? videoUrl : 
-                            (couldBeDirectVideo(videoUrl) && !useIframeFallback ? videoUrl : null);
-  
-  // Use iframe when:
-  // 1. PLAY server is selected and we have an external URL
-  // 2. No direct video URL but we have an external/embed URL
-  // 3. Direct video failed (videoError) and we have a fallback URL
-  // 4. User triggered iframe fallback
-  const shouldUseIframe = useIframeFallback ||
-                          (activeServer === 'PLAY' && effectiveExternalUrl) || 
-                          (!effectiveVideoUrl && effectiveExternalUrl) ||
-                          (videoError && anyVideoUrl);
+  // Only use iframe when user explicitly triggers fallback
+  const shouldUseIframe = useIframeFallback;
   
   // Reset error state when URLs change
   useEffect(() => {
@@ -184,14 +173,29 @@ export function VideoPlayer({
     setUseIframeFallback(false);
   }, [videoUrl, externalUrl]);
 
-  // Handle fullscreen changes
+  // Handle fullscreen changes (including webkit for iOS)
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const isFS = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+      setIsFullscreen(isFS);
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
   }, []);
 
   // Auto-hide controls
@@ -272,18 +276,54 @@ export function VideoPlayer({
   };
 
   const toggleFullscreen = useCallback(async () => {
-    if (!containerRef.current) return;
+    const video = videoRef.current;
+    const container = containerRef.current;
+    
+    if (!container && !video) return;
 
     try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
+      // Check if already in fullscreen
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+
+      if (isCurrentlyFullscreen) {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          (document as any).webkitExitFullscreen();
+        } else if ((document as any).mozCancelFullScreen) {
+          (document as any).mozCancelFullScreen();
+        } else if ((document as any).msExitFullscreen) {
+          (document as any).msExitFullscreen();
+        }
       } else {
-        await containerRef.current.requestFullscreen();
+        // Enter fullscreen - try video element first for mobile (iOS Safari)
+        if (video && (video as any).webkitEnterFullscreen) {
+          // iOS Safari video fullscreen
+          (video as any).webkitEnterFullscreen();
+        } else if (video && (video as any).webkitRequestFullScreen) {
+          (video as any).webkitRequestFullScreen();
+        } else if (container?.requestFullscreen) {
+          await container.requestFullscreen();
+        } else if ((container as any)?.webkitRequestFullscreen) {
+          (container as any).webkitRequestFullscreen();
+        } else if ((container as any)?.mozRequestFullScreen) {
+          (container as any).mozRequestFullScreen();
+        } else if ((container as any)?.msRequestFullscreen) {
+          (container as any).msRequestFullscreen();
+        }
       }
     } catch (error) {
       console.error('Fullscreen error:', error);
+      // Fallback: manually toggle fullscreen state for CSS-based fullscreen
+      setIsFullscreen(!isFullscreen);
     }
-  }, []);
+  }, [isFullscreen]);
 
   const skipForward = useCallback(() => {
     if (videoRef.current) {
@@ -373,9 +413,8 @@ export function VideoPlayer({
     );
   }
 
-  // External URL player (iframe) - for PLAY server, embeddable URLs, or fallback
-  if (shouldUseIframe && (effectiveExternalUrl || anyVideoUrl)) {
-    const iframeSrc = effectiveExternalUrl || anyVideoUrl;
+  // External URL player (iframe) - only when user explicitly triggers fallback
+  if (shouldUseIframe && anyVideoUrl) {
     return (
       <div 
         ref={containerRef} 
@@ -387,7 +426,7 @@ export function VideoPlayer({
         }}
       >
         <iframe
-          src={`${iframeSrc}${iframeSrc?.includes('?') ? '&' : '?'}autoplay=1`}
+          src={`${anyVideoUrl}${anyVideoUrl.includes('?') ? '&' : '?'}autoplay=1`}
           className="w-full h-full"
           allowFullScreen
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
@@ -415,12 +454,20 @@ export function VideoPlayer({
   return (
     <div 
       ref={containerRef} 
-      className={`relative bg-black w-full touch-manipulation ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}
+      className={`relative bg-black w-full touch-manipulation ${
+        isFullscreen 
+          ? 'fixed inset-0 z-[9999]' 
+          : ''
+      }`}
       style={{ 
         aspectRatio: isFullscreen ? undefined : '16/9', 
-        maxHeight: isFullscreen ? '100vh' : '70vh',
-        height: isFullscreen ? '100vh' : undefined,
+        maxHeight: isFullscreen ? '100dvh' : '70vh',
+        height: isFullscreen ? '100dvh' : undefined,
         width: isFullscreen ? '100vw' : undefined,
+        paddingTop: isFullscreen ? 'env(safe-area-inset-top)' : undefined,
+        paddingBottom: isFullscreen ? 'env(safe-area-inset-bottom)' : undefined,
+        paddingLeft: isFullscreen ? 'env(safe-area-inset-left)' : undefined,
+        paddingRight: isFullscreen ? 'env(safe-area-inset-right)' : undefined,
       }}
       onMouseMove={handleMouseMove}
       onTouchStart={() => setShowControls(true)}
