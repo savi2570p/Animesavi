@@ -185,11 +185,16 @@ export function FileUploadInput({
           
           <Input
             type="url"
-            placeholder={placeholder || `Paste ${accept} URL...`}
+            placeholder={placeholder || `Paste ${accept} URL (direct link or embed)...`}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             className="bg-muted/50"
           />
+          {accept === 'video' && (
+            <p className="text-xs text-muted-foreground">
+              Supports: Direct video links (.mp4, .webm) or embed URLs (Google Drive, YouTube, etc.)
+            </p>
+          )}
         </div>
       )}
     </div>
