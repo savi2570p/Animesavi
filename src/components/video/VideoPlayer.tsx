@@ -13,7 +13,6 @@ import {
   SkipForward,
   SkipBack,
   PictureInPicture2,
-  Subtitles,
   Check,
 } from 'lucide-react';
 import {
@@ -48,17 +47,17 @@ interface VideoPlayerProps {
 const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
   PLAY: { 
     name: 'PLAY', 
-    features: ['watch', 'captions'],
+    features: ['watch'],
     playerStyle: 'basic'
   },
   SHORT: { 
     name: 'SHORT', 
-    features: ['watch', 'quality', 'captions'],
+    features: ['watch', 'quality'],
     playerStyle: 'standard'
   },
   Zex: { 
     name: 'Zex', 
-    features: ['watch', 'quality', 'download', 'captions'],
+    features: ['watch', 'quality', 'download'],
     playerStyle: 'advanced'
   },
 };
@@ -163,8 +162,6 @@ export function VideoPlayer({
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   const [useIframeFallback, setUseIframeFallback] = useState(false);
   
-  // Captions state
-  const [captionsEnabled, setCaptionsEnabled] = useState(true); // Always start with captions enabled
   
   // Download verification dialog state
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
@@ -191,15 +188,6 @@ export function VideoPlayer({
     setUseIframeFallback(false);
   }, [videoUrl, externalUrl]);
 
-  // Handle text track visibility based on captionsEnabled state
-  useEffect(() => {
-    const video = videoRef.current;
-    if (video && video.textTracks.length > 0) {
-      for (let i = 0; i < video.textTracks.length; i++) {
-        video.textTracks[i].mode = captionsEnabled ? 'showing' : 'hidden';
-      }
-    }
-  }, [captionsEnabled]);
 
   // Handle fullscreen changes (including webkit for iOS)
   useEffect(() => {
@@ -592,13 +580,6 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Captions indicator */}
-      {captionsEnabled && (
-        <div className="absolute top-3 right-3 z-10 px-2 py-1 bg-black/70 backdrop-blur-sm text-white text-xs font-bold rounded-md flex items-center gap-1">
-          <Subtitles className="w-3 h-3" />
-          CC
-        </div>
-      )}
       
       <video
         ref={videoRef}
@@ -615,7 +596,6 @@ export function VideoPlayer({
           if (videoRef.current) {
             setDuration(videoRef.current.duration);
             setVideoError(false);
-            setCaptionsEnabled(true);
           }
         }}
         onCanPlay={() => setVideoError(false)}
@@ -631,18 +611,7 @@ export function VideoPlayer({
         playsInline
         webkit-playsinline="true"
         crossOrigin="anonymous"
-      >
-        {/* Caption track */}
-        {captionsUrl && (
-          <track
-            kind="subtitles"
-            src={captionsUrl}
-            srcLang="en"
-            label="English"
-            default={captionsEnabled}
-          />
-        )}
-      </video>
+      />
       
       {/* Video Error - Show as popup modal */}
       {videoError && (
@@ -773,18 +742,6 @@ export function VideoPlayer({
             </div>
 
             <div className="flex items-center gap-1">
-              {/* Captions toggle */}
-              <button 
-                className={`player-btn w-10 h-10 ${captionsEnabled ? 'text-primary' : 'text-white'}`}
-                onClick={() => {
-                  setCaptionsEnabled(!captionsEnabled);
-                  toast.success(captionsEnabled ? 'Captions disabled' : 'Captions enabled');
-                }}
-                title="Toggle Captions (C)"
-              >
-                <Subtitles className="w-5 h-5" />
-              </button>
-
               {/* Quality selector */}
               {features.includes('quality') && (
                 <DropdownMenu modal={false}>

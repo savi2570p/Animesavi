@@ -18,6 +18,7 @@ interface Episode {
   id: string;
   title: string;
   episode_number: number;
+  duration: number | null;
 }
 
 interface WatchHistoryItem {
@@ -72,7 +73,7 @@ export default function History() {
 
         const [animeResponse, episodeResponse] = await Promise.all([
           supabase.from('anime').select('id, title, cover_image').in('id', animeIds),
-          supabase.from('episodes').select('id, title, episode_number').in('id', episodeIds)
+          supabase.from('episodes').select('id, title, episode_number, duration').in('id', episodeIds)
         ]);
 
         const animeMap = new Map(animeResponse.data?.map(a => [a.id, a]) || []);
@@ -84,7 +85,7 @@ export default function History() {
           progress: h.progress,
           completed: h.completed,
           anime: animeMap.get(h.anime_id) || { id: h.anime_id, title: 'Unknown', cover_image: null },
-          episode: episodeMap.get(h.episode_id) || { id: h.episode_id, title: 'Unknown', episode_number: 0 }
+          episode: episodeMap.get(h.episode_id) || { id: h.episode_id, title: 'Unknown', episode_number: 0, duration: null }
         }));
 
         setHistory(historyWithDetails as WatchHistoryItem[]);
@@ -147,6 +148,19 @@ export default function History() {
     return 'Just now';
   };
 
+  const formatWatchedTime = (progress: number | null, duration: number | null) => {
+    if (!progress || !duration) return null;
+    const watchedSeconds = (progress / 100) * duration;
+    const minutes = Math.floor(watchedSeconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${remainingMinutes}m watched`;
+    }
+    return `${minutes}m watched`;
+  };
+
   if (isLoading) {
     return (
       <div className="container py-8">
@@ -194,7 +208,7 @@ export default function History() {
           {history.map((item) => (
             <Link
               key={item.id}
-              to={`/watch/${item.episode.id}`}
+              to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
               className="anime-card flex gap-4 p-4 hover:bg-muted/50 transition-colors group"
             >
               <div className="relative flex-shrink-0 w-32 aspect-video rounded-lg overflow-hidden bg-muted">
@@ -205,6 +219,10 @@ export default function History() {
                 />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Play className="h-8 w-8 text-white fill-current" />
+                </div>
+                {/* Episode number badge */}
+                <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
+                  EP {item.episode.episode_number}
                 </div>
                 {/* Progress overlay */}
                 {item.progress !== null && item.progress > 0 && (
@@ -220,7 +238,7 @@ export default function History() {
                 <p className="text-sm text-muted-foreground">
                   Episode {item.episode.episode_number}: {item.episode.title}
                 </p>
-                <div className="flex items-center gap-4 mt-2">
+                <div className="flex items-center flex-wrap gap-4 mt-2">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Clock className="h-3 w-3" />
                     {formatTimeAgo(item.watched_at)}
@@ -228,6 +246,11 @@ export default function History() {
                   {item.progress !== null && item.progress > 0 && (
                     <span className="text-sm text-muted-foreground">
                       {item.completed ? 'Completed' : `${item.progress}% watched`}
+                    </span>
+                  )}
+                  {formatWatchedTime(item.progress, item.episode.duration) && (
+                    <span className="text-sm text-primary font-medium">
+                      {formatWatchedTime(item.progress, item.episode.duration)}
                     </span>
                   )}
                 </div>
