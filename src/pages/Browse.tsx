@@ -3,7 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, Play, Star, Eye, Sparkles, TrendingUp, Clock } from 'lucide-react';
+import { Search, Filter, Play, Star, Sparkles, TrendingUp, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ALLOWED_GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports'] as const;
@@ -227,14 +227,6 @@ export default function Browse() {
                     </div>
                   )}
 
-                  {/* Rating/Views badge */}
-                  {anime.view_count !== null && anime.view_count > 0 && (
-                    <div className="browse-card-rating">
-                      <Eye className="w-3.5 h-3.5 text-primary" />
-                      <span>{anime.view_count.toLocaleString()}</span>
-                    </div>
-                  )}
-                  
                   {/* Hover overlay */}
                   <div className="browse-card-overlay" />
                   
