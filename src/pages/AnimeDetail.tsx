@@ -7,11 +7,17 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import {
   Play,
   Heart,
   Share2,
   Calendar,
+  Clock,
+  Eye,
+  Star,
+  Sparkles,
+  CheckCircle2,
   ChevronRight,
 } from 'lucide-react';
 
@@ -48,6 +54,12 @@ interface Episode {
   season_id: string;
 }
 
+interface WatchProgress {
+  episode_id: string;
+  progress: number;
+  completed: boolean;
+}
+
 export default function AnimeDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -58,12 +70,14 @@ export default function AnimeDetail() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [recommendations, setRecommendations] = useState<Anime[]>([]);
+  const [watchProgress, setWatchProgress] = useState<Map<string, WatchProgress>>(new Map());
 
   useEffect(() => {
     if (id) {
       fetchAnimeDetails();
       if (user) {
         checkFavorite();
+        fetchWatchProgress();
       }
     }
   }, [id, user]);
@@ -77,7 +91,6 @@ export default function AnimeDetail() {
   const fetchAnimeDetails = async () => {
     setIsLoading(true);
     
-    // Use anime_public view to avoid exposing uploader_id
     const { data: animeData, error: animeError } = await supabase
       .from('anime_public')
       .select('*')
@@ -92,7 +105,6 @@ export default function AnimeDetail() {
 
     setAnime(animeData);
 
-    // Fetch seasons
     const { data: seasonsData } = await supabase
       .from('seasons')
       .select('*')
@@ -104,9 +116,7 @@ export default function AnimeDetail() {
       setSelectedSeason(seasonsData[0].id);
     }
 
-    // Fetch recommendations based on genres
     if (animeData.genres && animeData.genres.length > 0) {
-      // Use anime_public view to avoid exposing uploader_id
       const { data: recData } = await supabase
         .from('anime_public')
         .select('*')
@@ -119,7 +129,6 @@ export default function AnimeDetail() {
       }
     }
 
-    // Increment view count
     await supabase
       .from('anime')
       .update({ view_count: (animeData.view_count || 0) + 1 })
@@ -137,6 +146,28 @@ export default function AnimeDetail() {
 
     if (data) {
       setEpisodes(data);
+    }
+  };
+
+  const fetchWatchProgress = async () => {
+    if (!user || !id) return;
+
+    const { data } = await supabase
+      .from('watch_history')
+      .select('episode_id, progress, completed')
+      .eq('user_id', user.id)
+      .eq('anime_id', id);
+
+    if (data) {
+      const progressMap = new Map<string, WatchProgress>();
+      data.forEach(item => {
+        progressMap.set(item.episode_id, {
+          episode_id: item.episode_id,
+          progress: item.progress || 0,
+          completed: item.completed || false,
+        });
+      });
+      setWatchProgress(progressMap);
     }
   };
 
@@ -179,16 +210,35 @@ export default function AnimeDetail() {
     return `${minutes} min`;
   };
 
+  const getEpisodeProgress = (episodeId: string): number => {
+    const progress = watchProgress.get(episodeId);
+    return progress?.progress || 0;
+  };
+
+  const isEpisodeCompleted = (episodeId: string): boolean => {
+    const progress = watchProgress.get(episodeId);
+    return progress?.completed || false;
+  };
+
+  const getFirstUnwatchedEpisode = (): Episode | null => {
+    for (const ep of episodes) {
+      if (!isEpisodeCompleted(ep.id)) {
+        return ep;
+      }
+    }
+    return episodes[0] || null;
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen">
-        <Skeleton className="h-[50vh] w-full" />
+        <div className="h-[60vh] skeleton-shimmer" />
         <div className="container py-8">
           <Skeleton className="h-10 w-64 mb-4" />
           <Skeleton className="h-24 w-full mb-8" />
-          <div className="grid gap-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 w-full" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="aspect-video rounded-xl" />
             ))}
           </div>
         </div>
@@ -199,84 +249,134 @@ export default function AnimeDetail() {
   if (!anime) {
     return (
       <div className="container py-20 text-center">
-        <h1 className="text-2xl font-bold mb-4">Anime not found</h1>
-        <Button asChild>
+        <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
+          <Play className="w-10 h-10 text-muted-foreground" />
+        </div>
+        <h1 className="text-3xl font-bold mb-4">Anime not found</h1>
+        <p className="text-muted-foreground mb-6">The anime you're looking for doesn't exist or has been removed.</p>
+        <Button asChild className="anime-button">
           <Link to="/browse">Browse Anime</Link>
         </Button>
       </div>
     );
   }
 
+  const nextEpisode = getFirstUnwatchedEpisode();
+
   return (
     <div className="min-h-screen">
       {/* Hero Banner */}
-      <div className="relative h-[50vh] md:h-[60vh]">
+      <div className="relative h-[70vh] md:h-[80vh] overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-0 bg-cover bg-center scale-105 animate-[float_20s_ease-in-out_infinite]"
           style={{
             backgroundImage: `url(${anime.banner_image || anime.cover_image || '/placeholder.svg'})`,
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-transparent to-transparent" />
+        {/* Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-transparent to-transparent h-32" />
+        
+        {/* Floating particles effect */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-primary/30 rounded-full animate-float" />
+          <div className="absolute top-1/3 right-1/3 w-3 h-3 bg-primary/20 rounded-full animate-float animation-delay-200" />
+          <div className="absolute bottom-1/3 left-1/2 w-2 h-2 bg-accent/30 rounded-full animate-float animation-delay-400" />
+        </div>
       </div>
 
       {/* Content */}
-      <div className="container relative -mt-64 z-10">
-        <div className="flex flex-col md:flex-row gap-8">
+      <div className="container relative -mt-[45vh] md:-mt-[50vh] z-10 pb-12">
+        <div className="flex flex-col lg:flex-row gap-8">
           {/* Poster */}
-          <div className="flex-shrink-0">
-            <img
-              src={anime.cover_image || '/placeholder.svg'}
-              alt={anime.title}
-              className="w-48 md:w-64 rounded-xl shadow-2xl"
-            />
+          <div className="flex-shrink-0 animate-fade-in">
+            <div className="relative group">
+              <img
+                src={anime.cover_image || '/placeholder.svg'}
+                alt={anime.title}
+                className="w-48 md:w-72 rounded-2xl shadow-2xl border border-border/30 transition-transform duration-500 group-hover:scale-[1.02]"
+              />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              
+              {/* Quick play button on poster */}
+              {nextEpisode && (
+                <Link 
+                  to={`/watch/${nextEpisode.id}`}
+                  className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
+                >
+                  <div className="w-16 h-16 rounded-full bg-primary/90 flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+                    <Play className="w-7 h-7 text-white fill-current ml-1" />
+                  </div>
+                </Link>
+              )}
+            </div>
           </div>
 
           {/* Info */}
-          <div className="flex-1 space-y-4">
+          <div className="flex-1 space-y-5 animate-fade-in-up">
+            {/* Genres */}
             <div className="flex flex-wrap gap-2">
-              {anime.genres?.map((genre) => (
-                <Badge key={genre} variant="secondary" className="genre-badge">
+              {anime.genres?.map((genre, i) => (
+                <Badge 
+                  key={genre} 
+                  className="genre-badge animate-fade-in"
+                  style={{ animationDelay: `${i * 50}ms` }}
+                >
                   {genre}
                 </Badge>
               ))}
             </div>
 
-            <h1 className="text-3xl md:text-5xl font-heading font-bold">
+            {/* Title */}
+            <h1 className="text-4xl md:text-6xl font-heading font-bold leading-tight text-shadow-lg">
               {anime.title}
             </h1>
 
+            {/* Meta info */}
             <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
               {anime.release_year && (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1.5 bg-secondary/50 px-3 py-1.5 rounded-lg">
                   <Calendar className="h-4 w-4" />
                   {anime.release_year}
                 </span>
               )}
               {anime.type && (
-                <Badge variant="outline" className="capitalize">
+                <Badge variant="outline" className="capitalize px-3 py-1.5">
                   {anime.type}
                 </Badge>
               )}
               {anime.status && (
-                <Badge className={anime.status === 'ongoing' ? 'bg-anime-orange' : 'bg-primary'}>
+                <Badge className={cn(
+                  "px-3 py-1.5",
+                  anime.status === 'ongoing' 
+                    ? 'bg-anime-orange text-white' 
+                    : 'bg-primary text-primary-foreground'
+                )}>
+                  <Sparkles className="w-3 h-3 mr-1" />
                   {anime.status}
                 </Badge>
               )}
+              {anime.view_count && anime.view_count > 0 && (
+                <span className="flex items-center gap-1.5">
+                  <Eye className="h-4 w-4" />
+                  {anime.view_count.toLocaleString()} views
+                </span>
+              )}
             </div>
 
-            <p className="text-muted-foreground leading-relaxed max-w-3xl">
+            {/* Description */}
+            <p className="text-foreground/80 leading-relaxed text-lg max-w-3xl">
               {anime.description}
             </p>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap gap-3 pt-4">
-              {episodes.length > 0 && (
-                <Button asChild size="lg" className="anime-button">
-                  <Link to={`/watch/${episodes[0].id}`}>
+            <div className="flex flex-wrap gap-4 pt-4">
+              {nextEpisode && (
+                <Button asChild size="lg" className="anime-button h-14 px-8 text-lg">
+                  <Link to={`/watch/${nextEpisode.id}`}>
                     <Play className="h-5 w-5 mr-2 fill-current" />
-                    Watch Now
+                    {watchProgress.size > 0 ? 'Continue Watching' : 'Start Watching'}
                   </Link>
                 </Button>
               )}
@@ -284,30 +384,34 @@ export default function AnimeDetail() {
                 size="lg"
                 variant="outline"
                 onClick={toggleFavorite}
-                className={isFavorite ? 'text-anime-pink border-anime-pink' : ''}
+                className={cn(
+                  "h-14 px-6 border-2 transition-all duration-300",
+                  isFavorite 
+                    ? 'text-anime-pink border-anime-pink bg-anime-pink/10 hover:bg-anime-pink/20' 
+                    : 'hover:border-anime-pink hover:text-anime-pink'
+                )}
               >
-                <Heart className={`h-5 w-5 mr-2 ${isFavorite ? 'fill-current' : ''}`} />
+                <Heart className={cn("h-5 w-5 mr-2", isFavorite && 'fill-current')} />
                 {isFavorite ? 'In Favorites' : 'Add to Favorites'}
               </Button>
               <Button 
                 size="lg" 
                 variant="outline"
+                className="h-14 px-6 border-2"
                 onClick={() => {
                   const shareUrl = `${window.location.origin}/anime/${anime.id}`;
-                  const shareText = `Check out "${anime.title}" on AnimeStreamHub!`;
-                  
                   if (navigator.share) {
                     navigator.share({
                       title: anime.title,
-                      text: shareText,
+                      text: `Check out "${anime.title}"!`,
                       url: shareUrl,
                     }).catch(() => {
                       navigator.clipboard.writeText(shareUrl);
-                      toast.success('Link copied to clipboard!');
+                      toast.success('Link copied!');
                     });
                   } else {
                     navigator.clipboard.writeText(shareUrl);
-                    toast.success('Link copied to clipboard!');
+                    toast.success('Link copied!');
                   }
                 }}
               >
@@ -318,15 +422,22 @@ export default function AnimeDetail() {
           </div>
         </div>
 
-        {/* Episodes */}
-        <div className="mt-12">
+        {/* Episodes Section */}
+        <div className="mt-16">
           <Tabs value={selectedSeason || undefined} onValueChange={setSelectedSeason}>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-heading font-bold">Episodes</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+              <h2 className="text-3xl font-heading font-bold flex items-center gap-3">
+                <span className="w-1.5 h-8 bg-primary rounded-full" />
+                Episodes
+              </h2>
               {seasons.length > 1 && (
-                <TabsList>
+                <TabsList className="bg-secondary/50 p-1.5 rounded-xl">
                   {seasons.map((season) => (
-                    <TabsTrigger key={season.id} value={season.id}>
+                    <TabsTrigger 
+                      key={season.id} 
+                      value={season.id}
+                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg px-4 py-2"
+                    >
                       {season.title || `Season ${season.season_number}`}
                     </TabsTrigger>
                   ))}
@@ -335,52 +446,86 @@ export default function AnimeDetail() {
             </div>
 
             {seasons.map((season) => (
-              <TabsContent key={season.id} value={season.id}>
+              <TabsContent key={season.id} value={season.id} className="mt-0">
                 {episodes.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    No episodes available yet.
+                  <div className="text-center py-16 bg-card/50 rounded-2xl border border-border/30">
+                    <Clock className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                    <p className="text-muted-foreground text-lg">No episodes available yet.</p>
+                    <p className="text-muted-foreground/70 text-sm mt-2">Check back soon for new episodes!</p>
                   </div>
                 ) : (
-                  <div className="grid gap-4">
-                    {episodes.map((episode) => (
-                      <Link
-                        key={episode.id}
-                        to={`/watch/${episode.id}`}
-                        className="anime-card flex gap-4 p-4 hover:bg-muted/50 transition-colors group"
-                      >
-                        <div className="relative flex-shrink-0 w-40 aspect-video rounded-lg overflow-hidden bg-muted">
-                          <img
-                            src={episode.thumbnail || anime.cover_image || '/placeholder.svg'}
-                            alt={episode.title}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Play className="h-8 w-8 text-white fill-current" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                    {episodes.map((episode, index) => {
+                      const progress = getEpisodeProgress(episode.id);
+                      const completed = isEpisodeCompleted(episode.id);
+                      
+                      return (
+                        <Link
+                          key={episode.id}
+                          to={`/watch/${episode.id}`}
+                          className="episode-card group animate-fade-in"
+                          style={{ animationDelay: `${index * 50}ms` }}
+                        >
+                          {/* Thumbnail */}
+                          <div className="relative aspect-video overflow-hidden rounded-t-lg">
+                            <img
+                              src={episode.thumbnail || anime.cover_image || '/placeholder.svg'}
+                              alt={episode.title}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                              loading="lazy"
+                            />
+                            
+                            {/* Play overlay */}
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                              <div className="w-14 h-14 rounded-full bg-primary/90 flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                                <Play className="w-6 h-6 text-white fill-current ml-0.5" />
+                              </div>
+                            </div>
+                            
+                            {/* Duration badge */}
+                            {episode.duration && (
+                              <span className="absolute bottom-2 right-2 px-2 py-1 text-xs font-medium bg-black/80 text-white rounded-md backdrop-blur-sm">
+                                {formatDuration(episode.duration)}
+                              </span>
+                            )}
+                            
+                            {/* Completed badge */}
+                            {completed && (
+                              <div className="absolute top-2 right-2 p-1.5 bg-green-500/90 rounded-full">
+                                <CheckCircle2 className="w-4 h-4 text-white" />
+                              </div>
+                            )}
+                            
+                            {/* Progress bar */}
+                            {progress > 0 && !completed && (
+                              <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/50">
+                                <div 
+                                  className="h-full bg-primary transition-all duration-300"
+                                  style={{ width: `${Math.min(progress, 100)}%` }}
+                                />
+                              </div>
+                            )}
                           </div>
-                          {episode.duration && (
-                            <span className="absolute bottom-1 right-1 px-1.5 py-0.5 text-xs bg-black/80 rounded">
-                              {formatDuration(episode.duration)}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm text-muted-foreground">
-                              Episode {episode.episode_number}
-                            </span>
+                          
+                          {/* Info */}
+                          <div className="p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                                EP {episode.episode_number}
+                              </span>
+                              {progress > 0 && !completed && (
+                                <span className="text-xs text-muted-foreground">
+                                  {Math.round(progress)}% watched
+                                </span>
+                              )}
+                            </div>
+                            <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                              {episode.title}
+                            </h3>
                           </div>
-                          <h3 className="font-semibold group-hover:text-primary transition-colors">
-                            {episode.title}
-                          </h3>
-                          {episode.description && (
-                            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                              {episode.description}
-                            </p>
-                          )}
-                        </div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground self-center" />
-                      </Link>
-                    ))}
+                        </Link>
+                      );
+                    })}
                   </div>
                 )}
               </TabsContent>
@@ -390,24 +535,41 @@ export default function AnimeDetail() {
 
         {/* Recommendations */}
         {recommendations.length > 0 && (
-          <div className="mt-12 pb-12">
-            <h2 className="text-2xl font-heading font-bold mb-6">
+          <div className="mt-16">
+            <h2 className="text-3xl font-heading font-bold mb-8 flex items-center gap-3">
+              <span className="w-1.5 h-8 bg-accent rounded-full" />
               You Might Also Like
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {recommendations.map((rec) => (
-                <Link key={rec.id} to={`/anime/${rec.id}`} className="anime-card group">
-                  <div className="aspect-[3/4] relative overflow-hidden rounded-xl">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
+              {recommendations.map((rec, index) => (
+                <Link 
+                  key={rec.id} 
+                  to={`/anime/${rec.id}`} 
+                  className="browse-card animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="aspect-[3/4] relative overflow-hidden rounded-t-xl">
                     <img
                       src={rec.cover_image || '/placeholder.svg'}
                       alt={rec.title}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      className="browse-card-image"
+                      loading="lazy"
                     />
+                    <div className="browse-card-overlay" />
+                    <div className="browse-card-content">
+                      <Button size="sm" className="anime-button w-full">
+                        <Play className="h-4 w-4 mr-2 fill-current" />
+                        Watch
+                      </Button>
+                    </div>
                   </div>
-                  <div className="p-3">
-                    <h3 className="font-semibold line-clamp-2 text-sm group-hover:text-primary transition-colors">
+                  <div className="p-4">
+                    <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
                       {rec.title}
                     </h3>
+                    {rec.release_year && (
+                      <p className="text-xs text-muted-foreground mt-1">{rec.release_year}</p>
+                    )}
                   </div>
                 </Link>
               ))}
