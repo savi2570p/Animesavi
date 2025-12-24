@@ -10,6 +10,29 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { User, Mail, Lock, Palette, Camera } from 'lucide-react';
+import { z } from 'zod';
+
+// Input validation schemas
+const usernameSchema = z.string()
+  .min(3, 'Username must be at least 3 characters')
+  .max(30, 'Username must be at most 30 characters')
+  .regex(/^[a-zA-Z0-9_-]*$/, 'Username can only contain letters, numbers, underscores, and hyphens')
+  .optional()
+  .or(z.literal(''));
+
+const avatarUrlSchema = z.string()
+  .url('Please enter a valid URL')
+  .max(500, 'URL is too long')
+  .refine((url) => {
+    try {
+      const parsed = new URL(url);
+      return ['http:', 'https:'].includes(parsed.protocol);
+    } catch {
+      return false;
+    }
+  }, 'Only HTTP/HTTPS URLs are allowed')
+  .optional()
+  .or(z.literal(''));
 
 export default function Profile() {
   const { user } = useAuth();
@@ -59,12 +82,28 @@ export default function Profile() {
   const handleUpdateProfile = async () => {
     if (!user) return;
     
+    // Validate username
+    const usernameResult = usernameSchema.safeParse(username.trim());
+    if (!usernameResult.success) {
+      toast.error(usernameResult.error.errors[0]?.message || 'Invalid username');
+      return;
+    }
+    
+    // Validate avatar URL if provided
+    if (avatarUrl.trim()) {
+      const avatarResult = avatarUrlSchema.safeParse(avatarUrl.trim());
+      if (!avatarResult.success) {
+        toast.error(avatarResult.error.errors[0]?.message || 'Invalid avatar URL');
+        return;
+      }
+    }
+    
     setIsUpdatingProfile(true);
     
     const { error } = await supabase
       .from('profiles')
       .update({ 
-        username: username.trim(),
+        username: username.trim() || null,
         avatar_url: avatarUrl.trim() || null 
       })
       .eq('id', user.id);
