@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { VideoPlayer, ServerType } from '@/components/video/VideoPlayer';
+import { z } from 'zod';
 import {
   ChevronLeft,
   ChevronRight,
@@ -18,6 +19,11 @@ import {
   Server,
   X,
 } from 'lucide-react';
+
+// Comment validation schema
+const commentSchema = z.string()
+  .min(1, 'Comment cannot be empty')
+  .max(1000, 'Comment must be at most 1000 characters');
 
 interface Episode {
   id: string;
@@ -255,12 +261,19 @@ export default function Watch() {
       return;
     }
 
-    if (!newComment.trim()) return;
+    const trimmedComment = newComment.trim();
+    
+    // Validate comment
+    const commentResult = commentSchema.safeParse(trimmedComment);
+    if (!commentResult.success) {
+      toast.error(commentResult.error.errors[0]?.message || 'Invalid comment');
+      return;
+    }
 
     const { error } = await supabase.from('comments').insert({
       user_id: user.id,
       episode_id: episodeId,
-      content: newComment.trim(),
+      content: trimmedComment,
     });
 
     if (error) {
