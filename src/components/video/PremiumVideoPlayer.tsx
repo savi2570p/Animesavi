@@ -79,10 +79,9 @@ const qualityOptions = [
 ] as const;
 
 const languageOptions = [
-  { value: 'original', label: 'Original (Japanese)', code: 'JP' },
-  { value: 'english', label: 'English Dub', code: 'EN' },
-  { value: 'spanish', label: 'Spanish Dub', code: 'ES' },
-  { value: 'portuguese', label: 'Portuguese Dub', code: 'PT' },
+  { value: 'japanese', label: 'Japanese', code: 'JP' },
+  { value: 'english', label: 'English', code: 'EN' },
+  { value: 'hindi', label: 'Hindi', code: 'HI' },
 ] as const;
 
 type QualityType = typeof qualityOptions[number]['value'];
@@ -126,8 +125,8 @@ export function PremiumVideoPlayer({
   const [hoverPosition, setHoverPosition] = useState(0);
   
   // Language and captions state
-  const [selectedLanguage, setSelectedLanguage] = useState<LanguageType>(audioLanguage as LanguageType || 'original');
-  const [captionsEnabled, setCaptionsEnabled] = useState(audioLanguage === 'original' || audioLanguage === 'japanese');
+  const [selectedLanguage, setSelectedLanguage] = useState<LanguageType>((audioLanguage === 'original' ? 'japanese' : audioLanguage) as LanguageType || 'japanese');
+  const [captionsEnabled, setCaptionsEnabled] = useState(true); // Always start with captions enabled for Japanese
 
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -140,6 +139,16 @@ export function PremiumVideoPlayer({
     setVideoError(false);
     setUseIframeFallback(false);
   }, [videoUrl, externalUrl]);
+
+  // Handle text track visibility based on captionsEnabled state
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video && video.textTracks.length > 0) {
+      for (let i = 0; i < video.textTracks.length; i++) {
+        video.textTracks[i].mode = captionsEnabled ? 'showing' : 'hidden';
+      }
+    }
+  }, [captionsEnabled]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -426,7 +435,7 @@ export function PremiumVideoPlayer({
       }}
     >
       {/* Audio Language Badge */}
-      {selectedLanguage !== 'original' && (
+      {selectedLanguage !== 'japanese' && (
         <div className="absolute top-4 left-4 z-10 px-3 py-1.5 bg-primary/90 text-primary-foreground text-xs font-bold rounded-lg uppercase tracking-wider animate-fade-in">
           {languageOptions.find(l => l.value === selectedLanguage)?.code || selectedLanguage} DUB
         </div>
@@ -455,7 +464,7 @@ export function PremiumVideoPlayer({
             setDuration(videoRef.current.duration);
             setVideoError(false);
             // Enable captions by default for Japanese audio
-            if (selectedLanguage === 'original') {
+            if (selectedLanguage === 'japanese') {
               setCaptionsEnabled(true);
             }
           }
@@ -660,7 +669,7 @@ export function PremiumVideoPlayer({
                           setSelectedLanguage(opt.value);
                           setShowLanguageMenu(false);
                           // Auto-enable captions for Japanese
-                          if (opt.value === 'original') {
+                          if (opt.value === 'japanese') {
                             setCaptionsEnabled(true);
                             toast.success('Switched to Japanese - Captions enabled');
                           } else {
