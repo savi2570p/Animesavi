@@ -389,13 +389,20 @@ export function VideoPlayer({
     }
   };
 
-  const handleVideoClick = (e: React.MouseEvent) => {
-    // Prevent triggering when clicking on controls
-    if ((e.target as HTMLElement).closest('.video-controls')) {
-      return;
-    }
+  const handleVideoClick = useCallback((e: React.MouseEvent) => {
+    if (videoError) return;
+
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+
+    // Don't toggle when user interacts with controls/inputs/menus
+    const interactiveSelector =
+      'button, a, input, textarea, select, [role="menuitem"], [role="option"], [data-radix-collection-item]';
+
+    if (target.closest(interactiveSelector)) return;
+
     togglePlay();
-  };
+  }, [togglePlay, videoError]);
 
   // Loading state
   if (isLoading) {
@@ -469,6 +476,7 @@ export function VideoPlayer({
         paddingLeft: isFullscreen ? 'env(safe-area-inset-left)' : undefined,
         paddingRight: isFullscreen ? 'env(safe-area-inset-right)' : undefined,
       }}
+      onClickCapture={handleVideoClick}
       onMouseMove={handleMouseMove}
       onTouchStart={() => setShowControls(true)}
       onMouseLeave={() => isPlaying && setShowControls(false)}
@@ -510,7 +518,6 @@ export function VideoPlayer({
         autoPlay
         playsInline
         webkit-playsinline="true"
-        onClick={handleVideoClick}
       />
       
       {/* Video Error - Show retry/fallback options */}
