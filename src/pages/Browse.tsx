@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter, Play, Star } from 'lucide-react';
 
-const genres = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports'];
+const ALLOWED_GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports'] as const;
+const MAX_SEARCH_LENGTH = 100;
 
 interface Anime {
   id: string;
@@ -38,12 +39,22 @@ export default function Browse() {
     const q = searchParams.get('q');
     const genre = searchParams.get('genre');
 
+    // Validate and sanitize search query
     if (q) {
-      query = query.ilike('title', `%${q}%`);
+      // Limit search query length to prevent abuse
+      const sanitizedQuery = q.slice(0, MAX_SEARCH_LENGTH).trim();
+      if (sanitizedQuery) {
+        query = query.ilike('title', `%${sanitizedQuery}%`);
+      }
     }
 
+    // Validate genre against allowed list
     if (genre) {
-      query = query.contains('genres', [genre.charAt(0).toUpperCase() + genre.slice(1)]);
+      const normalizedGenre = genre.charAt(0).toUpperCase() + genre.slice(1).toLowerCase();
+      const isValidGenre = ALLOWED_GENRES.some(g => g.toLowerCase() === genre.toLowerCase());
+      if (isValidGenre) {
+        query = query.contains('genres', [normalizedGenre]);
+      }
     }
 
     const { data, error } = await query;
@@ -101,7 +112,7 @@ export default function Browse() {
 
         <div className="flex flex-wrap gap-2">
           <Filter className="h-5 w-5 text-muted-foreground" />
-          {genres.map((genre) => (
+          {ALLOWED_GENRES.map((genre) => (
             <Button
               key={genre}
               variant="outline"

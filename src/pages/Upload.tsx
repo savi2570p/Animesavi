@@ -40,7 +40,7 @@ interface Season {
 }
 
 export default function Upload() {
-  const { user, isUploader, isRolesLoaded, isLoading: isAuthLoading } = useAuth();
+  const { user, isUploader, isAdmin, isRolesLoaded, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
   const [myAnime, setMyAnime] = useState<Anime[]>([]);
   const [allAnime, setAllAnime] = useState<Anime[]>([]);
@@ -69,15 +69,9 @@ export default function Upload() {
   const [episodeDuration, setEpisodeDuration] = useState('');
   const [isAddingEpisode, setIsAddingEpisode] = useState(false);
 
-  // Allowed uploader emails
-  const ALLOWED_UPLOADER_EMAILS = [
-    'savi2570p@gmail.com',
-    'savipanjeta2@gmail.com'
-  ];
-
+  // Check if user can upload based on server-validated roles
   const canUpload = () => {
-    if (!user?.email) return false;
-    return ALLOWED_UPLOADER_EMAILS.includes(user.email.toLowerCase());
+    return isUploader || isAdmin;
   };
 
   const isAuthReady = !isAuthLoading && isRolesLoaded;
