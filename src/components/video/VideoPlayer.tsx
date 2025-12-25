@@ -698,24 +698,32 @@ export function VideoPlayer({
 
       {/* Custom Controls - Same as PremiumVideoPlayer */}
       <div 
-        className={`absolute inset-0 flex flex-col justify-between transition-opacity duration-300 ${
-          showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        className={`absolute inset-0 flex flex-col justify-between transition-opacity duration-300 z-20 ${
+          showControls ? 'opacity-100' : 'opacity-0'
         }`}
+        style={{ pointerEvents: showControls ? 'auto' : 'none' }}
       >
-        {/* Top gradient */}
-        <div className="h-24 bg-gradient-to-b from-black/70 to-transparent" />
+        {/* Top gradient - allow click through */}
+        <div className="h-24 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
 
         {/* Center Play/Pause Button */}
         {!isPlaying && showControls && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="player-btn-primary pointer-events-auto cursor-pointer" onClick={togglePlay}>
+            <div 
+              className="player-btn-primary cursor-pointer" 
+              onClick={togglePlay}
+              style={{ pointerEvents: 'auto' }}
+            >
               <Play className="w-8 h-8 text-white fill-current ml-1" />
             </div>
           </div>
         )}
 
         {/* Bottom controls */}
-        <div className="bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 pb-4 px-4">
+        <div 
+          className="bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 pb-4 px-4"
+          style={{ pointerEvents: 'auto' }}
+        >
           {/* Progress bar */}
           <div className="mb-4 relative">
             <div className="flex items-center gap-3">
@@ -732,7 +740,8 @@ export function VideoPlayer({
                     [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg
                     [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-110"
                   style={{
-                    background: `linear-gradient(to right, hsl(var(--primary)) ${progress}%, rgba(255,255,255,0.3) ${progress}%)`
+                    background: `linear-gradient(to right, hsl(var(--primary)) ${progress}%, rgba(255,255,255,0.3) ${progress}%)`,
+                    touchAction: 'none',
                   }}
                 />
               </div>
@@ -744,22 +753,36 @@ export function VideoPlayer({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {/* Skip back */}
-              <button className="player-btn w-10 h-10 text-white" onClick={skipBackward} title="Skip back 10s">
+              <button 
+                className="player-btn w-10 h-10 text-white" 
+                onClick={(e) => { e.stopPropagation(); skipBackward(); }} 
+                title="Skip back 10s"
+              >
                 <SkipBack className="w-5 h-5" />
               </button>
 
               {/* Play/Pause */}
-              <button className="player-btn w-12 h-12 text-white" onClick={togglePlay}>
+              <button 
+                className="player-btn w-12 h-12 text-white" 
+                onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+              >
                 {isPlaying ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 fill-current ml-0.5" />}
               </button>
 
               {/* Skip forward */}
-              <button className="player-btn w-10 h-10 text-white" onClick={skipForward} title="Skip forward 10s">
+              <button 
+                className="player-btn w-10 h-10 text-white" 
+                onClick={(e) => { e.stopPropagation(); skipForward(); }} 
+                title="Skip forward 10s"
+              >
                 <SkipForward className="w-5 h-5" />
               </button>
 
               {/* Volume */}
-              <button className="player-btn w-10 h-10 text-white" onClick={toggleMute}>
+              <button 
+                className="player-btn w-10 h-10 text-white" 
+                onClick={(e) => { e.stopPropagation(); toggleMute(); }}
+              >
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </button>
 
@@ -774,13 +797,16 @@ export function VideoPlayer({
               {features.includes('quality') && (
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
-                    <button className="player-btn w-10 h-10 text-white">
+                    <button 
+                      className="player-btn w-10 h-10 text-white"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Settings className="w-5 h-5" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
                     align="end" 
-                    className="bg-background/95 backdrop-blur-xl border-border/50 z-[9999]"
+                    className="bg-background/95 backdrop-blur-xl border-border/50 z-[99999]"
                     sideOffset={8}
                   >
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Quality</DropdownMenuLabel>
@@ -806,18 +832,30 @@ export function VideoPlayer({
 
               {/* Download */}
               {features.includes('download') && (
-                <button className="player-btn w-10 h-10 text-white" onClick={handleDownload} title="Download">
+                <button 
+                  className="player-btn w-10 h-10 text-white" 
+                  onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
+                  title="Download"
+                >
                   <Download className="w-5 h-5" />
                 </button>
               )}
 
               {/* PiP */}
-              <button className="player-btn w-10 h-10 text-white" onClick={togglePiP} title="Picture-in-Picture">
+              <button 
+                className="player-btn w-10 h-10 text-white" 
+                onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
+                title="Picture-in-Picture"
+              >
                 <PictureInPicture2 className="w-5 h-5" />
               </button>
 
               {/* Fullscreen */}
-              <button className="player-btn w-10 h-10 text-white" onClick={toggleFullscreen} title="Fullscreen">
+              <button 
+                className="player-btn w-10 h-10 text-white" 
+                onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
+                title="Fullscreen"
+              >
                 {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
               </button>
             </div>
