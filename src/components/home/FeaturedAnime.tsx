@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -19,18 +19,23 @@ export function FeaturedAnime() {
   const [featured, setFeatured] = useState<Anime[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // Touch handling refs
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
+  const containerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     fetchFeatured();
   }, []);
 
-  // Auto-advance carousel
+  // Auto-advance carousel every 6 seconds
   useEffect(() => {
     if (featured.length <= 1) return;
     
     const interval = setInterval(() => {
       nextSlide();
-    }, 8000);
+    }, 6000);
 
     return () => clearInterval(interval);
   }, [featured.length, currentIndex]);
@@ -73,12 +78,41 @@ export function FeaturedAnime() {
     changeSlide((currentIndex - 1 + featured.length) % featured.length);
   }, [changeSlide, currentIndex, featured.length]);
 
+  // Touch handlers for mobile swipe
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = e.touches[0].clientX;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    const diff = touchStartX.current - touchEndX.current;
+    const threshold = 50; // Minimum swipe distance
+    
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0) {
+        nextSlide(); // Swipe left = next
+      } else {
+        prevSlide(); // Swipe right = previous
+      }
+    }
+  }, [nextSlide, prevSlide]);
+
   if (featured.length === 0) return null;
 
   const current = featured[currentIndex];
 
   return (
-    <section className="relative h-[70vh] md:h-[85vh] overflow-hidden">
+    <section 
+      ref={containerRef}
+      className="relative h-[70vh] md:h-[85vh] overflow-hidden touch-pan-y"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Background with smooth transition - HD quality */}
       <div className="absolute inset-0">
         {featured.map((anime, index) => (
