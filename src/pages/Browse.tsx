@@ -3,7 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, Play, Star, Sparkles, TrendingUp, Clock } from 'lucide-react';
+import { Search, Filter, Play, Star, Sparkles, TrendingUp, Clock, Film, Tv } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ALLOWED_GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports'] as const;
@@ -31,6 +31,7 @@ const sanitizeSearchQuery = (query: string): string => {
 };
 
 type SortOption = 'newest' | 'popular' | 'trending';
+type TypeFilter = 'all' | 'series' | 'movie';
 
 interface Anime {
   id: string;
@@ -41,6 +42,8 @@ interface Anime {
   release_year: number | null;
   status: string | null;
   view_count: number | null;
+  type: string | null;
+  created_at: string | null;
 }
 
 export default function Browse() {
@@ -50,8 +53,13 @@ export default function Browse() {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedGenre, setSelectedGenre] = useState(searchParams.get('genre') || '');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>((searchParams.get('type') as TypeFilter) || 'all');
 
   useEffect(() => {
+    const urlType = searchParams.get('type') as TypeFilter;
+    if (urlType && ['all', 'series', 'movie'].includes(urlType)) {
+      setTypeFilter(urlType);
+    }
     fetchAnime();
   }, [searchParams, sortBy]);
 
@@ -73,6 +81,7 @@ export default function Browse() {
 
     const q = searchParams.get('q');
     const genre = searchParams.get('genre');
+    const type = searchParams.get('type');
 
     if (q) {
       const sanitizedQuery = sanitizeSearchQuery(q);
@@ -87,6 +96,11 @@ export default function Browse() {
       if (isValidGenre) {
         query = query.contains('genres', [normalizedGenre]);
       }
+    }
+
+    // Filter by type (series or movie)
+    if (type && type !== 'all') {
+      query = query.eq('type', type);
     }
 
     const { data, error } = await query;
@@ -119,6 +133,32 @@ export default function Browse() {
     }
     setSearchParams(params);
   };
+
+  const handleTypeFilter = (type: TypeFilter) => {
+    const params = new URLSearchParams(searchParams);
+    if (type === 'all') {
+      params.delete('type');
+    } else {
+      params.set('type', type);
+    }
+    setTypeFilter(type);
+    setSearchParams(params);
+  };
+
+  const isNew = (dateString: string | null) => {
+    if (!dateString) return false;
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const hours = diff / (1000 * 60 * 60);
+    return hours <= 24;
+  };
+
+  const typeOptions: { value: TypeFilter; label: string }[] = [
+    { value: 'all', label: 'All' },
+    { value: 'series', label: 'Series' },
+    { value: 'movie', label: 'Movies' },
+  ];
 
   const sortOptions = [
     { value: 'newest' as const, label: 'New Releases', icon: Clock },
@@ -165,8 +205,24 @@ export default function Browse() {
             </Button>
           </form>
 
-          {/* Sort options */}
+          {/* Type filter */}
           <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-2">
+            <span className="text-sm text-muted-foreground font-medium">Type:</span>
+            {typeOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleTypeFilter(option.value)}
+                className={cn("filter-btn flex items-center gap-2", typeFilter === option.value && "active")}
+              >
+                {option.value === 'movie' && <Film className="h-4 w-4" />}
+                {option.value === 'series' && <Tv className="h-4 w-4" />}
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Sort options */}
+          <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-3">
             <span className="text-sm text-muted-foreground font-medium">Sort by:</span>
             {sortOptions.map((option) => (
               <button
@@ -181,7 +237,7 @@ export default function Browse() {
           </div>
 
           {/* Genre filters */}
-          <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-3">
+          <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
               <Filter className="h-4 w-4" />
               Genres:
@@ -245,6 +301,21 @@ export default function Browse() {
                     <div className="browse-card-badge">
                       <Sparkles className="w-3 h-3 mr-1 inline" />
                       Ongoing
+                    </div>
+                  )}
+
+                  {/* NEW badge for content uploaded in last 24 hours */}
+                  {isNew(anime.created_at) && (
+                    <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-md animate-pulse z-10">
+                      NEW
+                    </div>
+                  )}
+
+                  {/* Type badge */}
+                  {anime.type === 'movie' && (
+                    <div className="absolute bottom-2 left-2 px-2 py-1 text-xs font-bold bg-accent text-accent-foreground rounded-md flex items-center gap-1 z-10">
+                      <Film className="h-3 w-3" />
+                      Movie
                     </div>
                   )}
 
