@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Play, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Play, Clock, ChevronRight } from 'lucide-react';
 
 interface LatestEpisode {
   id: string;
@@ -17,6 +18,7 @@ interface LatestEpisode {
       id: string;
       title: string;
       cover_image: string | null;
+      type: string | null;
     };
   };
 }
@@ -45,21 +47,23 @@ export function LatestEpisodes() {
             anime:anime_id (
               id,
               title,
-              cover_image
+              cover_image,
+              type
             )
           )
         `)
         .order('created_at', { ascending: false })
-        .limit(12);
+        .limit(24);
 
       if (error) throw error;
       
-      // Filter out episodes where anime type is 'movie'
+      // Filter out episodes from movies - only show series episodes
       const filteredEpisodes = (data || []).filter((ep: any) => {
-        return ep.season?.anime;
+        return ep.season?.anime && ep.season.anime.type !== 'movie';
       });
       
-      setEpisodes(filteredEpisodes as unknown as LatestEpisode[]);
+      // Take only first 12 after filtering
+      setEpisodes(filteredEpisodes.slice(0, 12) as unknown as LatestEpisode[]);
     } catch (error) {
       console.error('Error fetching latest episodes:', error);
     } finally {
@@ -83,6 +87,14 @@ export function LatestEpisodes() {
     if (days > 0) return `${days}d ago`;
     if (hours > 0) return `${hours}h ago`;
     return 'Just now';
+  };
+
+  const isNew = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const hours = diff / (1000 * 60 * 60);
+    return hours <= 24;
   };
 
   if (loading) {
@@ -114,14 +126,22 @@ export function LatestEpisodes() {
   return (
     <section className="py-10 md:py-14">
       <div className="container">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Play className="h-5 w-5 text-primary" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Play className="h-5 w-5 text-primary" />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-heading font-bold">Latest Episodes</h2>
+            <span className="px-2 py-1 text-xs font-medium bg-primary/20 text-primary rounded-full">
+              New
+            </span>
           </div>
-          <h2 className="text-2xl md:text-3xl font-heading font-bold">Latest Episodes</h2>
-          <span className="px-2 py-1 text-xs font-medium bg-primary/20 text-primary rounded-full">
-            New
-          </span>
+          <Button asChild variant="ghost" className="group">
+            <Link to="/browse?type=series" className="flex items-center gap-1">
+              See All
+              <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </Button>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -158,6 +178,13 @@ export function LatestEpisodes() {
                 <div className="absolute top-2 left-2 px-1.5 py-0.5 text-xs font-bold bg-primary text-primary-foreground rounded">
                   EP {episode.episode_number}
                 </div>
+
+                {/* NEW badge for content uploaded in last 24 hours */}
+                {isNew(episode.created_at) && (
+                  <div className="absolute top-2 right-2 px-1.5 py-0.5 text-xs font-bold bg-green-500 text-white rounded animate-pulse">
+                    NEW
+                  </div>
+                )}
               </div>
 
               {/* Info */}

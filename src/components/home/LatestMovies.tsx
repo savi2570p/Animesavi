@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Film, Clock, Star } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Film, Clock, Star, ChevronRight } from 'lucide-react';
 
 interface Movie {
   id: string;
@@ -53,6 +54,14 @@ export function LatestMovies() {
     return 'Just now';
   };
 
+  const isNew = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const hours = diff / (1000 * 60 * 60);
+    return hours <= 24;
+  };
+
   if (loading) {
     return (
       <section className="py-10 md:py-14 bg-card/30">
@@ -82,14 +91,22 @@ export function LatestMovies() {
   return (
     <section className="py-10 md:py-14 bg-card/30">
       <div className="container">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-2 rounded-lg bg-accent/10">
-            <Film className="h-5 w-5 text-accent" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-accent/10">
+              <Film className="h-5 w-5 text-accent" />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-heading font-bold">Latest Movies</h2>
+            <span className="px-2 py-1 text-xs font-medium bg-accent/20 text-accent rounded-full">
+              New
+            </span>
           </div>
-          <h2 className="text-2xl md:text-3xl font-heading font-bold">Latest Movies</h2>
-          <span className="px-2 py-1 text-xs font-medium bg-accent/20 text-accent rounded-full">
-            New
-          </span>
+          <Button asChild variant="ghost" className="group">
+            <Link to="/browse?type=movie" className="flex items-center gap-1">
+              See All
+              <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </Button>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
@@ -117,10 +134,12 @@ export function LatestMovies() {
                   Movie
                 </div>
 
-                {/* New badge */}
-                <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-md">
-                  NEW
-                </div>
+                {/* NEW badge for content uploaded in last 24 hours */}
+                {isNew(movie.created_at) && (
+                  <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-md animate-pulse">
+                    NEW
+                  </div>
+                )}
 
                 {/* Info on hover */}
                 <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
