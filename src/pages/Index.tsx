@@ -5,6 +5,8 @@ import { Play, Tv, TrendingUp, Users, Zap, Star, Clock, Award, Sparkles } from '
 import { FeaturedAnime } from '@/components/home/FeaturedAnime';
 import { ContinueWatching } from '@/components/home/ContinueWatching';
 import { RecommendedAnime } from '@/components/home/RecommendedAnime';
+import { LatestEpisodes } from '@/components/home/LatestEpisodes';
+import { LatestMovies } from '@/components/home/LatestMovies';
 
 export default function Index() {
   const { user } = useAuth();
@@ -63,6 +65,12 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {/* Latest Episodes */}
+      <LatestEpisodes />
+
+      {/* Latest Movies */}
+      <LatestMovies />
 
       {/* Continue Watching */}
       <ContinueWatching />
