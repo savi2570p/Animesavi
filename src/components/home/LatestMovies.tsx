@@ -14,6 +14,7 @@ interface Movie {
   genres: string[] | null;
   created_at: string;
   view_count: number | null;
+  firstEpisodeId?: string | null;
 }
 
 export function LatestMovies() {
@@ -34,7 +35,38 @@ export function LatestMovies() {
         .limit(8);
 
       if (error) throw error;
-      setMovies(data || []);
+      
+      // Fetch first episode for each movie
+      const moviesWithEpisodes = await Promise.all(
+        (data || []).map(async (movie) => {
+          // Get the first season for this movie
+          const { data: seasons } = await supabase
+            .from('seasons')
+            .select('id')
+            .eq('anime_id', movie.id)
+            .order('season_number')
+            .limit(1);
+          
+          if (seasons && seasons.length > 0) {
+            // Get the first episode from the first season
+            const { data: episodes } = await supabase
+              .from('episodes')
+              .select('id')
+              .eq('season_id', seasons[0].id)
+              .order('episode_number')
+              .limit(1);
+            
+            return {
+              ...movie,
+              firstEpisodeId: episodes && episodes.length > 0 ? episodes[0].id : null
+            };
+          }
+          
+          return { ...movie, firstEpisodeId: null };
+        })
+      );
+      
+      setMovies(moviesWithEpisodes);
     } catch (error) {
       console.error('Error fetching latest movies:', error);
     } finally {
@@ -113,7 +145,7 @@ export function LatestMovies() {
           {movies.map((movie, index) => (
             <Link
               key={movie.id}
-              to={`/anime/${movie.id}`}
+              to={movie.firstEpisodeId ? `/watch/${movie.firstEpisodeId}` : `/anime/${movie.id}`}
               className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in`}
             >
               {/* Poster */}

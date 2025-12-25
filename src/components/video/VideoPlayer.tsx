@@ -51,7 +51,7 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
     playerStyle: 'basic'
   },
   SHORT: { 
-    name: 'SHORT', 
+    name: 'SAVI.IN', 
     features: ['watch', 'quality'],
     playerStyle: 'standard'
   },
