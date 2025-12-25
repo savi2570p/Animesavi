@@ -79,18 +79,27 @@ export function FeaturedAnime() {
 
   return (
     <section className="relative h-[70vh] md:h-[85vh] overflow-hidden">
-      {/* Background with smooth transition */}
+      {/* Background with smooth transition - HD quality */}
       <div className="absolute inset-0">
         {featured.map((anime, index) => (
           <div
             key={anime.id}
-            className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-700 ease-out ${
+            className={`absolute inset-0 transition-opacity duration-700 ease-out ${
               index === currentIndex ? 'opacity-100' : 'opacity-0'
             }`}
-            style={{
-              backgroundImage: `url(${anime.banner_image || anime.cover_image || '/placeholder.svg'})`,
-            }}
-          />
+          >
+            <img
+              src={anime.banner_image || anime.cover_image || '/placeholder.svg'}
+              alt={anime.title || 'Featured anime'}
+              className="w-full h-full object-cover object-center"
+              style={{
+                imageRendering: 'auto',
+              }}
+              loading={index === 0 ? 'eager' : 'lazy'}
+              decoding="async"
+              fetchPriority={index === 0 ? 'high' : 'auto'}
+            />
+          </div>
         ))}
       </div>
       

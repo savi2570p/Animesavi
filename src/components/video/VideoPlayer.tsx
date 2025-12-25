@@ -188,6 +188,19 @@ export function VideoPlayer({
     setUseIframeFallback(false);
   }, [videoUrl, externalUrl]);
 
+  // CRITICAL: Cleanup video on unmount to stop audio when navigating away
+  useEffect(() => {
+    const video = videoRef.current;
+    
+    return () => {
+      if (video) {
+        video.pause();
+        video.src = '';
+        video.load();
+      }
+    };
+  }, []);
+
 
   // Handle fullscreen changes (including webkit for iOS)
   useEffect(() => {
