@@ -68,6 +68,19 @@ export default function ExternalPlayer() {
     };
   }, []);
 
+  // CRITICAL: Cleanup video on unmount to stop audio when navigating away
+  useEffect(() => {
+    const video = videoRef.current;
+    
+    return () => {
+      if (video) {
+        video.pause();
+        video.src = '';
+        video.load();
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (isPlaying) {
       controlsTimeoutRef.current = setTimeout(() => {
