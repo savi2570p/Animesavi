@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -81,6 +81,7 @@ export default function Watch() {
   const [serverLoading, setServerLoading] = useState(false);
   const [showTelegramPopup, setShowTelegramPopup] = useState(false);
   const [initialSeekDone, setInitialSeekDone] = useState(false);
+  const ensureHistoryInFlightRef = useRef(false);
 
   // Check if Telegram popup should be shown (once per day)
   useEffect(() => {
@@ -127,6 +128,62 @@ export default function Watch() {
       fetchComments();
     }
   }, [episodeId]);
+
+  // Ensure watch history gets created even if auth loads AFTER the episode data
+  useEffect(() => {
+    if (!user || !episodeId || !anime?.id) return;
+    if (watchHistoryId || ensureHistoryInFlightRef.current) return;
+
+    ensureHistoryInFlightRef.current = true;
+
+    (async () => {
+      try {
+        const { data: existingHistory, error: checkError } = await supabase
+          .from('watch_history')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('episode_id', episodeId)
+          .maybeSingle();
+
+        if (checkError) {
+          console.error('Error checking watch history:', checkError);
+          return;
+        }
+
+        if (existingHistory?.id) {
+          setWatchHistoryId(existingHistory.id);
+          await supabase
+            .from('watch_history')
+            .update({ watched_at: new Date().toISOString() })
+            .eq('id', existingHistory.id);
+          return;
+        }
+
+        const { data: newHistory, error: insertError } = await supabase
+          .from('watch_history')
+          .insert({
+            user_id: user.id,
+            anime_id: anime.id,
+            episode_id: episodeId,
+            progress: 0,
+          })
+          .select('id')
+          .maybeSingle();
+
+        if (insertError) {
+          console.error('Error inserting watch history:', insertError);
+          toast.error('Could not save watch history');
+          return;
+        }
+
+        if (newHistory?.id) {
+          setWatchHistoryId(newHistory.id);
+        }
+      } finally {
+        ensureHistoryInFlightRef.current = false;
+      }
+    })();
+  }, [user, episodeId, anime?.id, watchHistoryId]);
 
   const updateWatchProgress = useCallback(async (currentTime: number, duration: number) => {
     if (!user || !episodeId || !anime) return;
