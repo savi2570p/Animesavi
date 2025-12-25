@@ -62,8 +62,8 @@ export function LatestEpisodes() {
         return ep.season?.anime && ep.season.anime.type !== 'movie';
       });
       
-      // Take only first 12 after filtering
-      setEpisodes(filteredEpisodes.slice(0, 12) as unknown as LatestEpisode[]);
+      // Take only first 4 after filtering
+      setEpisodes(filteredEpisodes.slice(0, 4) as unknown as LatestEpisode[]);
     } catch (error) {
       console.error('Error fetching latest episodes:', error);
     } finally {
@@ -107,8 +107,8 @@ export function LatestEpisodes() {
             </div>
             <h2 className="text-2xl md:text-3xl font-heading font-bold">Latest Episodes</h2>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {Array(6).fill(0).map((_, i) => (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Array(4).fill(0).map((_, i) => (
               <div key={i} className="space-y-2">
                 <Skeleton className="aspect-video rounded-lg" />
                 <Skeleton className="h-4 w-3/4" />
@@ -144,7 +144,7 @@ export function LatestEpisodes() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {episodes.map((episode, index) => (
             <Link
               key={episode.id}
