@@ -154,20 +154,27 @@ export function PremiumVideoPlayer({
     };
   }, []);
 
+  // Auto-hide controls and cursor when playing
   useEffect(() => {
+    if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    
     if (isPlaying) {
-      controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000);
+      controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 2000);
+    } else {
+      // Always show controls when paused
+      setShowControls(true);
     }
+    
     return () => {
       if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
     };
-  }, [isPlaying, showControls]);
+  }, [isPlaying]);
 
   const handleMouseMove = useCallback(() => {
     setShowControls(true);
     if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
     if (isPlaying) {
-      controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000);
+      controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 2000);
     }
   }, [isPlaying]);
 
@@ -440,7 +447,7 @@ export function PremiumVideoPlayer({
               <MonitorPlay className="w-6 h-6 text-primary" />
             </div>
           </div>
-          <p className="text-foreground/80 font-medium">Loading {activeServer} server...</p>
+          <p className="text-foreground/80 font-medium">Loading {activeServer === 'SHORT' ? 'SAVI.IN' : activeServer} server...</p>
         </div>
       </div>
     );
@@ -487,7 +494,8 @@ export function PremiumVideoPlayer({
       ref={containerRef}
       className={cn(
         "video-player-container",
-        isFullscreen ? "fixed inset-0 z-[9999] rounded-none" : "aspect-video max-h-[70vh]"
+        isFullscreen ? "fixed inset-0 z-[9999] rounded-none" : "aspect-video max-h-[70vh]",
+        !showControls && "cursor-none"
       )}
       onClick={handleVideoClick}
       onMouseMove={handleMouseMove}
