@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Play, Clock, ChevronRight } from 'lucide-react';
+import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 
 interface LatestEpisode {
   id: string;
@@ -146,60 +147,66 @@ export function LatestEpisodes() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {episodes.map((episode, index) => (
-            <Link
+            <AnimeCardContextMenu
               key={episode.id}
-              to={`/watch/${episode.id}`}
-              className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in`}
+              animeTitle={episode.season?.anime?.title || episode.title}
+              animeUrl={`/watch/${episode.id}`}
+              coverImage={episode.thumbnail || episode.season?.anime?.cover_image}
             >
-              {/* Thumbnail */}
-              <div className="relative aspect-video rounded-lg overflow-hidden bg-muted mb-2">
-                <img
-                  src={episode.thumbnail || episode.season?.anime?.cover_image || '/placeholder.svg'}
-                  alt={episode.title}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  loading="lazy"
-                />
-                
-                {/* Play overlay */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                  <div className="p-3 rounded-full bg-primary/90">
-                    <Play className="h-5 w-5 text-primary-foreground fill-current" />
+              <Link
+                to={`/watch/${episode.id}`}
+                className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in`}
+              >
+                {/* Thumbnail */}
+                <div className="relative aspect-video rounded-lg overflow-hidden bg-muted mb-2">
+                  <img
+                    src={episode.thumbnail || episode.season?.anime?.cover_image || '/placeholder.svg'}
+                    alt={episode.title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                  
+                  {/* Play overlay */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <div className="p-3 rounded-full bg-primary/90">
+                      <Play className="h-5 w-5 text-primary-foreground fill-current" />
+                    </div>
                   </div>
+
+                  {/* Duration badge */}
+                  {episode.duration && (
+                    <div className="absolute bottom-2 right-2 px-1.5 py-0.5 text-xs font-medium bg-black/80 text-white rounded">
+                      {formatDuration(episode.duration)}
+                    </div>
+                  )}
+
+                  {/* Episode badge */}
+                  <div className="absolute top-2 left-2 px-1.5 py-0.5 text-xs font-bold bg-primary text-primary-foreground rounded">
+                    EP {episode.episode_number}
+                  </div>
+
+                  {/* NEW badge for content uploaded in last 24 hours */}
+                  {isNew(episode.created_at) && (
+                    <div className="absolute top-2 right-2 px-1.5 py-0.5 text-xs font-bold bg-green-500 text-white rounded animate-pulse">
+                      NEW
+                    </div>
+                  )}
                 </div>
 
-                {/* Duration badge */}
-                {episode.duration && (
-                  <div className="absolute bottom-2 right-2 px-1.5 py-0.5 text-xs font-medium bg-black/80 text-white rounded">
-                    {formatDuration(episode.duration)}
+                {/* Info */}
+                <h3 className="text-sm font-medium line-clamp-1 group-hover:text-primary transition-colors">
+                  {episode.season?.anime?.title}
+                </h3>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                  <span>S{episode.season?.season_number} E{episode.episode_number}</span>
+                  <span>•</span>
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {formatTimeAgo(episode.created_at)}
                   </div>
-                )}
-
-                {/* Episode badge */}
-                <div className="absolute top-2 left-2 px-1.5 py-0.5 text-xs font-bold bg-primary text-primary-foreground rounded">
-                  EP {episode.episode_number}
                 </div>
-
-                {/* NEW badge for content uploaded in last 24 hours */}
-                {isNew(episode.created_at) && (
-                  <div className="absolute top-2 right-2 px-1.5 py-0.5 text-xs font-bold bg-green-500 text-white rounded animate-pulse">
-                    NEW
-                  </div>
-                )}
-              </div>
-
-              {/* Info */}
-              <h3 className="text-sm font-medium line-clamp-1 group-hover:text-primary transition-colors">
-                {episode.season?.anime?.title}
-              </h3>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                <span>S{episode.season?.season_number} E{episode.episode_number}</span>
-                <span>•</span>
-                <div className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {formatTimeAgo(episode.created_at)}
-                </div>
-              </div>
-            </Link>
+              </Link>
+            </AnimeCardContextMenu>
           ))}
         </div>
       </div>

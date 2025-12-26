@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, Play, ChevronRight } from 'lucide-react';
+import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 
 interface Anime {
   id: string;
@@ -135,49 +136,55 @@ export function RecommendedAnime() {
         {/* Anime Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {recommendations.map((anime, index) => (
-            <Link 
-              key={anime.id} 
-              to={`/anime/${anime.id}`} 
-              className={`anime-card group stagger-${Math.min(index + 1, 6)} opacity-0 animate-fade-in`}
+            <AnimeCardContextMenu
+              key={anime.id}
+              animeTitle={anime.title || ''}
+              animeUrl={`/anime/${anime.id}`}
+              coverImage={anime.cover_image}
             >
-              <div className="aspect-[3/4] relative overflow-hidden rounded-lg">
-                <img
-                  src={anime.cover_image || '/placeholder.svg'}
-                  alt={anime.title}
-                  className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
-                  loading="lazy"
-                />
-                {/* Overlay on hover */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <Button size="sm" className="w-full anime-button text-xs py-2">
-                      <Play className="h-3 w-3 mr-1.5 fill-current" /> Watch Now
-                    </Button>
+              <Link 
+                to={`/anime/${anime.id}`} 
+                className={`anime-card group stagger-${Math.min(index + 1, 6)} opacity-0 animate-fade-in`}
+              >
+                <div className="aspect-[3/4] relative overflow-hidden rounded-lg">
+                  <img
+                    src={anime.cover_image || '/placeholder.svg'}
+                    alt={anime.title || ''}
+                    className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+                    loading="lazy"
+                  />
+                  {/* Overlay on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <Button size="sm" className="w-full anime-button text-xs py-2">
+                        <Play className="h-3 w-3 mr-1.5 fill-current" /> Watch Now
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                {/* Status Badge */}
-                {anime.status === 'ongoing' && (
-                  <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px] font-semibold uppercase tracking-wide">
-                    Ongoing
-                  </Badge>
-                )}
-              </div>
-              {/* Info */}
-              <div className="p-2.5">
-                <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors duration-200">
-                  {anime.title}
-                </h3>
-                <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
-                  {anime.release_year && <span>{anime.release_year}</span>}
-                  {anime.genres && anime.genres.length > 0 && (
-                    <>
-                      {anime.release_year && <span>•</span>}
-                      <span className="text-primary/80">{anime.genres[0]}</span>
-                    </>
+                  {/* Status Badge */}
+                  {anime.status === 'ongoing' && (
+                    <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px] font-semibold uppercase tracking-wide">
+                      Ongoing
+                    </Badge>
                   )}
                 </div>
-              </div>
-            </Link>
+                {/* Info */}
+                <div className="p-2.5">
+                  <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors duration-200">
+                    {anime.title}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
+                    {anime.release_year && <span>{anime.release_year}</span>}
+                    {anime.genres && anime.genres.length > 0 && (
+                      <>
+                        {anime.release_year && <span>•</span>}
+                        <span className="text-primary/80">{anime.genres[0]}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            </AnimeCardContextMenu>
           ))}
         </div>
       </div>
