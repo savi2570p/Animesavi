@@ -227,21 +227,29 @@ export function VideoPlayer({
     };
   }, []);
 
-  // Auto-hide controls
+  // Auto-hide controls and cursor when playing
   useEffect(() => {
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+    
     if (isPlaying) {
       controlsTimeoutRef.current = setTimeout(() => {
         setShowControls(false);
-      }, 3000);
+      }, 2000);
+    } else {
+      // Always show controls when paused
+      setShowControls(true);
     }
+    
     return () => {
       if (controlsTimeoutRef.current) {
         clearTimeout(controlsTimeoutRef.current);
       }
     };
-  }, [isPlaying, showControls]);
+  }, [isPlaying]);
 
-  const handleMouseMove = () => {
+  const handleMouseMove = useCallback(() => {
     setShowControls(true);
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
@@ -249,9 +257,9 @@ export function VideoPlayer({
     if (isPlaying) {
       controlsTimeoutRef.current = setTimeout(() => {
         setShowControls(false);
-      }, 3000);
+      }, 2000);
     }
-  };
+  }, [isPlaying]);
 
   const formatTime = (seconds: number) => {
     if (isNaN(seconds)) return isMovie ? '0:00:00' : '0:00';
@@ -520,7 +528,7 @@ export function VideoPlayer({
       >
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="text-white text-lg">Loading {activeServer} server...</p>
+          <p className="text-white text-lg">Loading {activeServer === 'SHORT' ? 'SAVI.IN' : activeServer} server...</p>
         </div>
       </div>
     );
@@ -571,7 +579,7 @@ export function VideoPlayer({
         isFullscreen 
           ? 'fixed inset-0 z-[9999]' 
           : ''
-      }`}
+      } ${!showControls ? 'cursor-none' : ''}`}
       style={{ 
         aspectRatio: isFullscreen ? undefined : '16/9', 
         maxHeight: isFullscreen ? '100dvh' : '70vh',
