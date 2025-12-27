@@ -271,6 +271,24 @@ export function Header() {
                   >
                     Browse All
                   </Link>
+                  {user && (
+                    <>
+                      <Link 
+                        to="/favorites" 
+                        className="flex items-center gap-3 text-lg font-medium hover:text-primary transition-colors py-2 px-3 rounded-lg hover:bg-primary/10"
+                      >
+                        <Heart className="h-5 w-5" />
+                        Favorites
+                      </Link>
+                      <Link 
+                        to="/history" 
+                        className="flex items-center gap-3 text-lg font-medium hover:text-primary transition-colors py-2 px-3 rounded-lg hover:bg-primary/10"
+                      >
+                        <History className="h-5 w-5" />
+                        Watch History
+                      </Link>
+                    </>
+                  )}
                   {canUpload() && (
                     <Button 
                       variant="outline" 

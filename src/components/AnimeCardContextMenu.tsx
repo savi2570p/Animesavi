@@ -5,7 +5,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { Download, Share2 } from 'lucide-react';
+import { Download, Share2, Link } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AnimeCardContextMenuProps {
@@ -54,6 +54,23 @@ export function AnimeCardContextMenu({
       toast({
         title: "No Image Available",
         description: "This anime doesn't have a cover image to download.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCopyLink = async () => {
+    const shareUrl = `${window.location.origin}${animeUrl}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Link Copied!",
+        description: "Anime link has been copied to clipboard.",
+      });
+    } catch (error) {
+      toast({
+        title: "Copy Failed",
+        description: "Could not copy the link.",
         variant: "destructive",
       });
     }
@@ -142,6 +159,10 @@ export function AnimeCardContextMenu({
         <ContextMenuItem onClick={handleDownload} className="flex items-center gap-2 cursor-pointer">
           <Download className="h-4 w-4" />
           <span>Download</span>
+        </ContextMenuItem>
+        <ContextMenuItem onClick={handleCopyLink} className="flex items-center gap-2 cursor-pointer">
+          <Link className="h-4 w-4" />
+          <span>Copy Link</span>
         </ContextMenuItem>
         <ContextMenuItem onClick={handleShare} className="flex items-center gap-2 cursor-pointer">
           <Share2 className="h-4 w-4" />
