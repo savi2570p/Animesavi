@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Play, Sparkles } from 'lucide-react';
+import { Play, Sparkles, ArrowLeft } from 'lucide-react';
 import { z } from 'zod';
 
 const authSchema = z.object({
@@ -24,6 +25,7 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; username?: string }>({});
 
@@ -61,6 +63,14 @@ export default function Auth() {
     if (!validateForm(false)) return;
     
     setIsLoading(true);
+    
+    // If remember me is checked, we'll store a flag in localStorage
+    if (rememberMe) {
+      localStorage.setItem('anime_remember_me', 'true');
+    } else {
+      localStorage.removeItem('anime_remember_me');
+    }
+    
     const { error } = await signIn(email, password);
     setIsLoading(false);
 
@@ -108,8 +118,22 @@ export default function Auth() {
     }
   };
 
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
+      {/* Back Button */}
+      <Button
+        variant="ghost"
+        onClick={handleGoBack}
+        className="absolute top-4 left-4 z-20 flex items-center gap-2 text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </Button>
+
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-anime-purple/20 rounded-full blur-3xl animate-pulse" />
@@ -178,6 +202,19 @@ export default function Auth() {
                     {errors.password && (
                       <p className="text-sm text-destructive">{errors.password}</p>
                     )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="remember-me" 
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                    />
+                    <Label 
+                      htmlFor="remember-me" 
+                      className="text-sm font-normal text-muted-foreground cursor-pointer"
+                    >
+                      Remember me for 30 days
+                    </Label>
                   </div>
                   <Button
                     type="submit"
