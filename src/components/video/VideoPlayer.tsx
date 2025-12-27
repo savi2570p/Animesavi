@@ -14,6 +14,7 @@ import {
   SkipBack,
   PictureInPicture2,
   Check,
+  Headphones,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -22,9 +23,19 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
   DropdownMenuLabel,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { DownloadVerificationDialog } from './DownloadVerificationDialog';
+
+interface AudioTrackInfo {
+  id: string;
+  label: string;
+  language: string;
+  enabled: boolean;
+}
 
 export type ServerType = 'PLAY' | 'SHORT' | 'Zex';
 
@@ -161,6 +172,8 @@ export function VideoPlayer({
   const [videoError, setVideoError] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   const [useIframeFallback, setUseIframeFallback] = useState(false);
+  const [audioTracks, setAudioTracks] = useState<AudioTrackInfo[]>([]);
+  const [currentAudioTrack, setCurrentAudioTrack] = useState<string>('');
   
   
   // Download verification dialog state
@@ -182,11 +195,65 @@ export function VideoPlayer({
   // Only use iframe when user explicitly triggers fallback
   const shouldUseIframe = useIframeFallback;
   
-  // Reset error state when URLs change
   useEffect(() => {
     setVideoError(false);
     setUseIframeFallback(false);
+    setAudioTracks([]);
+    setCurrentAudioTrack('');
   }, [videoUrl, externalUrl]);
+
+  // Audio tracks detection
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const detectAudioTracks = () => {
+      const tracks: AudioTrackInfo[] = [];
+      
+      // Check HTML5 audioTracks API
+      const htmlAudioTracks = (video as any).audioTracks;
+      if (htmlAudioTracks && htmlAudioTracks.length > 0) {
+        for (let i = 0; i < htmlAudioTracks.length; i++) {
+          const track = htmlAudioTracks[i];
+          tracks.push({
+            id: track.id || `track-${i}`,
+            label: track.label || `Audio ${i + 1}`,
+            language: track.language || 'Unknown',
+            enabled: track.enabled,
+          });
+          if (track.enabled) {
+            setCurrentAudioTrack(track.id || `track-${i}`);
+          }
+        }
+      }
+      
+      setAudioTracks(tracks);
+    };
+
+    video.addEventListener('loadedmetadata', detectAudioTracks);
+    video.addEventListener('canplay', detectAudioTracks);
+
+    return () => {
+      video.removeEventListener('loadedmetadata', detectAudioTracks);
+      video.removeEventListener('canplay', detectAudioTracks);
+    };
+  }, [effectiveVideoUrl]);
+
+  const switchAudioTrack = (trackId: string) => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const htmlAudioTracks = (video as any).audioTracks;
+    if (htmlAudioTracks) {
+      for (let i = 0; i < htmlAudioTracks.length; i++) {
+        const track = htmlAudioTracks[i];
+        const id = track.id || `track-${i}`;
+        track.enabled = id === trackId;
+      }
+      setCurrentAudioTrack(trackId);
+      toast.success('Audio track changed');
+    }
+  };
 
   // CRITICAL: Cleanup video on unmount to stop audio when navigating away
   useEffect(() => {
