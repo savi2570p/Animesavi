@@ -15,10 +15,18 @@ import {
   PictureInPicture2,
   Check,
   MonitorPlay,
+  Headphones,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { DownloadVerificationDialog } from './DownloadVerificationDialog';
+
+interface AudioTrackInfo {
+  id: string;
+  label: string;
+  language: string;
+  enabled: boolean;
+}
 
 export type ServerType = 'PLAY' | 'SHORT' | 'Zex';
 
@@ -113,6 +121,9 @@ export function PremiumVideoPlayer({
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [hoverTime, setHoverTime] = useState<number | null>(null);
   const [hoverPosition, setHoverPosition] = useState(0);
+  const [audioTracks, setAudioTracks] = useState<AudioTrackInfo[]>([]);
+  const [showAudioMenu, setShowAudioMenu] = useState(false);
+  const [currentAudioTrack, setCurrentAudioTrack] = useState<string>('');
   
   
   // Download verification dialog state
@@ -132,7 +143,65 @@ export function PremiumVideoPlayer({
   useEffect(() => {
     setVideoError(false);
     setUseIframeFallback(false);
+    setAudioTracks([]);
+    setCurrentAudioTrack('');
   }, [videoUrl, externalUrl]);
+
+  // Audio tracks detection
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const detectAudioTracks = () => {
+      const tracks: AudioTrackInfo[] = [];
+      
+      // Check HTML5 audioTracks API
+      const htmlAudioTracks = (video as any).audioTracks;
+      if (htmlAudioTracks && htmlAudioTracks.length > 0) {
+        for (let i = 0; i < htmlAudioTracks.length; i++) {
+          const track = htmlAudioTracks[i];
+          tracks.push({
+            id: track.id || `track-${i}`,
+            label: track.label || `Audio ${i + 1}`,
+            language: track.language || 'Unknown',
+            enabled: track.enabled,
+          });
+          if (track.enabled) {
+            setCurrentAudioTrack(track.id || `track-${i}`);
+          }
+        }
+      }
+      
+      setAudioTracks(tracks);
+    };
+
+    // Detect on load
+    video.addEventListener('loadedmetadata', detectAudioTracks);
+    video.addEventListener('canplay', detectAudioTracks);
+
+    // Clean up
+    return () => {
+      video.removeEventListener('loadedmetadata', detectAudioTracks);
+      video.removeEventListener('canplay', detectAudioTracks);
+    };
+  }, [effectiveVideoUrl]);
+
+  const switchAudioTrack = (trackId: string) => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const htmlAudioTracks = (video as any).audioTracks;
+    if (htmlAudioTracks) {
+      for (let i = 0; i < htmlAudioTracks.length; i++) {
+        const track = htmlAudioTracks[i];
+        const id = track.id || `track-${i}`;
+        track.enabled = id === trackId;
+      }
+      setCurrentAudioTrack(trackId);
+      toast.success('Audio track changed');
+    }
+    setShowAudioMenu(false);
+  };
 
 
   useEffect(() => {
@@ -724,6 +793,43 @@ export function PremiumVideoPlayer({
                             {opt.badge && <span className="quality-badge">{opt.badge}</span>}
                             {quality === opt.value && <Check className="w-4 h-4 text-primary" />}
                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Audio Track Selector */}
+              {audioTracks.length > 1 && (
+                <div className="relative">
+                  <button 
+                    className="player-btn w-10 h-10 text-white"
+                    onClick={() => setShowAudioMenu(!showAudioMenu)}
+                    title="Audio Track"
+                  >
+                    <Headphones className="w-5 h-5" />
+                  </button>
+                  
+                  {showAudioMenu && (
+                    <div className="quality-menu absolute bottom-full right-0 mb-2 w-48">
+                      <div className="px-3 py-2 text-xs text-muted-foreground font-semibold border-b border-border/50 flex items-center gap-2">
+                        <Headphones className="w-3 h-3" />
+                        Audio Track
+                      </div>
+                      {audioTracks.map((track) => (
+                        <div
+                          key={track.id}
+                          className={cn("quality-option", currentAudioTrack === track.id && "active")}
+                          onClick={() => switchAudioTrack(track.id)}
+                        >
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">{track.label}</span>
+                            {track.language !== 'Unknown' && (
+                              <span className="text-xs text-muted-foreground">{track.language}</span>
+                            )}
+                          </div>
+                          {currentAudioTrack === track.id && <Check className="w-4 h-4 text-primary" />}
                         </div>
                       ))}
                     </div>
