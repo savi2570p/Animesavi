@@ -231,74 +231,123 @@ export default function History() {
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
-          {history.map((item) => (
-            <Link
-              key={item.id}
-              to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
-              className="anime-card flex gap-4 p-4 hover:bg-muted/50 transition-colors group"
-            >
-              <div className="relative flex-shrink-0 w-32 aspect-video rounded-lg overflow-hidden bg-muted">
-                <img
-                  src={item.anime.cover_image || '/placeholder.svg'}
-                  alt={item.anime.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Play className="h-8 w-8 text-white fill-current" />
-                </div>
-                {/* Episode number badge */}
-                <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
-                  EP {item.episode.episode_number}
-                </div>
-                {/* Progress overlay */}
-                {item.progress !== null && item.progress > 0 && (
-                  <div className="absolute bottom-0 left-0 right-0">
-                    <Progress value={item.progress} className="h-1 rounded-none" />
+        <>
+          {/* Desktop View */}
+          <div className="hidden md:block space-y-4">
+            {history.map((item) => (
+              <Link
+                key={item.id}
+                to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
+                className="anime-card flex gap-4 p-4 hover:bg-muted/50 transition-colors group"
+              >
+                <div className="relative flex-shrink-0 w-32 aspect-video rounded-lg overflow-hidden bg-muted">
+                  <img
+                    src={item.anime.cover_image || '/placeholder.svg'}
+                    alt={item.anime.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Play className="h-8 w-8 text-white fill-current" />
                   </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold group-hover:text-primary transition-colors">
-                  {item.anime.title}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Episode {item.episode.episode_number}: {item.episode.title}
-                </p>
-                <div className="flex items-center flex-wrap gap-4 mt-2">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    {formatTimeAgo(item.watched_at)}
+                  {/* Episode number badge */}
+                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
+                    EP {item.episode.episode_number}
                   </div>
+                  {/* Progress overlay */}
                   {item.progress !== null && item.progress > 0 && (
-                    <span className="text-sm text-muted-foreground">
-                      {item.completed ? 'Completed' : `${item.progress}% watched`}
-                    </span>
-                  )}
-                  {formatWatchedTime(item.progress, item.episode.duration) && (
-                    <span className="text-sm text-primary font-medium">
-                      {formatWatchedTime(item.progress, item.episode.duration)}
-                    </span>
+                    <div className="absolute bottom-0 left-0 right-0">
+                      <Progress value={item.progress} className="h-1 rounded-none" />
+                    </div>
                   )}
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-muted-foreground hover:text-destructive"
-                  onClick={(e) => deleteHistoryItem(item.id, e)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-                <Button size="sm" variant="outline" className="self-center">
-                  <Play className="h-4 w-4 mr-1 fill-current" />
-                  Continue
-                </Button>
-              </div>
-            </Link>
-          ))}
-        </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold group-hover:text-primary transition-colors">
+                    {item.anime.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Episode {item.episode.episode_number}: {item.episode.title}
+                  </p>
+                  <div className="flex items-center flex-wrap gap-4 mt-2">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      {formatTimeAgo(item.watched_at)}
+                    </div>
+                    {item.progress !== null && item.progress > 0 && (
+                      <span className="text-sm text-muted-foreground">
+                        {item.completed ? 'Completed' : `${item.progress}% watched`}
+                      </span>
+                    )}
+                    {formatWatchedTime(item.progress, item.episode.duration) && (
+                      <span className="text-sm text-primary font-medium">
+                        {formatWatchedTime(item.progress, item.episode.duration)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="text-muted-foreground hover:text-destructive"
+                    onClick={(e) => deleteHistoryItem(item.id, e)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="outline" className="self-center">
+                    <Play className="h-4 w-4 mr-1 fill-current" />
+                    Continue
+                  </Button>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Mobile View - Compact grid with thumbnail and progress only */}
+          <div className="md:hidden grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {history.map((item) => (
+              <Link
+                key={item.id}
+                to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
+                className="relative group"
+              >
+                <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+                  <img
+                    src={item.anime.cover_image || '/placeholder.svg'}
+                    alt={item.anime.title}
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Play overlay on hover/tap */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-active:opacity-100 transition-opacity">
+                    <Play className="h-8 w-8 text-white fill-current" />
+                  </div>
+                  {/* Episode badge */}
+                  <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
+                    EP {item.episode.episode_number}
+                  </div>
+                  {/* Delete button */}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="absolute top-1 right-1 h-6 w-6 text-white/80 hover:text-destructive bg-black/40 hover:bg-black/60"
+                    onClick={(e) => deleteHistoryItem(item.id, e)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                  {/* Progress bar at bottom */}
+                  {item.progress !== null && item.progress > 0 && (
+                    <div className="absolute bottom-0 left-0 right-0">
+                      <Progress value={item.progress} className="h-1.5 rounded-none" />
+                    </div>
+                  )}
+                </div>
+                {/* Title below thumbnail - 2 lines max */}
+                <p className="mt-1.5 text-xs font-medium line-clamp-2 leading-tight">
+                  {item.anime.title}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

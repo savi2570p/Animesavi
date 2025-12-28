@@ -51,6 +51,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
   const uploadVideoResumable = async (file: File, filePath: string): Promise<UploadResult | null> => {
     if (!RESUMABLE_UPLOAD_ENDPOINT || !SUPABASE_PUBLISHABLE_KEY) {
       toast.error('Upload service is not configured');
+      setIsUploading(false);
       return null;
     }
 
@@ -59,6 +60,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
 
     if (!accessToken) {
       toast.error('Please sign in to upload');
+      setIsUploading(false);
       return null;
     }
 
@@ -100,10 +102,12 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
 
       const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(filePath);
       toast.success('File uploaded successfully!');
+      setIsUploading(false);
       return { url: urlData.publicUrl, path: filePath };
     } catch (err: unknown) {
       console.error('Resumable upload error:', err);
       toast.error('Failed to upload video');
+      setIsUploading(false);
       return null;
     }
   };
