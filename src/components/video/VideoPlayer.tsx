@@ -570,7 +570,8 @@ export function VideoPlayer({
     }
   }, [skipForward, skipBackward]);
 
-  const handleVideoClick = useCallback((e: React.MouseEvent) => {
+  // Universal click/tap handler for play/pause - works on all platforms
+  const handleVideoAreaClick = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (videoError) return;
 
     const target = e.target as HTMLElement | null;
@@ -582,8 +583,56 @@ export function VideoPlayer({
 
     if (target.closest(interactiveSelector)) return;
 
+    // Prevent default to avoid double-firing on touch devices
+    e.preventDefault();
     togglePlay();
   }, [togglePlay, videoError]);
+
+  // Separate touch handler for double-tap detection
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    const now = Date.now();
+    const touch = e.changedTouches[0];
+    const x = touch.clientX;
+    const containerWidth = containerRef.current?.clientWidth || window.innerWidth;
+    
+    const timeSinceLastTap = now - lastTapRef.current.time;
+    const distanceFromLastTap = Math.abs(x - lastTapRef.current.x);
+    
+    if (timeSinceLastTap < 300 && distanceFromLastTap < 50) {
+      // Double tap detected
+      e.preventDefault();
+      const side = x < containerWidth / 2 ? 'left' : 'right';
+      
+      if (side === 'left') {
+        skipBackward();
+        setDoubleTapSide('left');
+      } else {
+        skipForward();
+        setDoubleTapSide('right');
+      }
+      
+      // Clear the animation after showing
+      setTimeout(() => setDoubleTapSide(null), 500);
+      
+      // Reset last tap
+      lastTapRef.current = { time: 0, x: 0 };
+    } else {
+      // Single tap - record it and toggle play after short delay to check for double tap
+      lastTapRef.current = { time: now, x };
+      
+      // Only toggle play if it's a single tap (not part of double tap)
+      setTimeout(() => {
+        if (lastTapRef.current.time === now) {
+          // Still the same tap, means no double tap followed
+          const target = e.target as HTMLElement;
+          const interactiveSelector = 'button, a, input, textarea, select, [role="menuitem"]';
+          if (!target.closest(interactiveSelector)) {
+            togglePlay();
+          }
+        }
+      }, 300);
+    }
+  }, [skipForward, skipBackward, togglePlay]);
 
   // Loading state
   if (isLoading) {
@@ -657,12 +706,10 @@ export function VideoPlayer({
         paddingLeft: isFullscreen ? 'env(safe-area-inset-left)' : undefined,
         paddingRight: isFullscreen ? 'env(safe-area-inset-right)' : undefined,
       }}
-      onClickCapture={handleVideoClick}
+      onClick={handleVideoAreaClick}
       onMouseMove={handleMouseMove}
-      onTouchStart={(e) => {
-        setShowControls(true);
-        handleDoubleTap(e);
-      }}
+      onTouchEnd={handleTouchEnd}
+      onTouchStart={() => setShowControls(true)}
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
       {/* Double-tap seek indicators */}

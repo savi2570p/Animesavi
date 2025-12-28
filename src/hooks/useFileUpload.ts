@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import * as tus from 'tus-js-client';
@@ -28,8 +28,45 @@ const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/upl
 // 6MB chunks keeps memory stable and bypasses typical single-request body limits
 const VIDEO_CHUNK_SIZE = 6 * 1024 * 1024;
 
+// Hook to track online/offline status
+function useOnlineStatus() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      toast.success('Back online! Resuming uploads...');
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      toast.warning('You are offline. Uploads paused.');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return isOnline;
+}
+
 export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadOptions) {
   const [isUploading, setIsUploading] = useState(false);
+  const isOnline = useOnlineStatus();
+  const activeUploadRef = useRef<tus.Upload | null>(null);
+  const pendingFileRef = useRef<{ file: File; filePath: string } | null>(null);
+
+  // Auto-resume upload when coming back online
+  useEffect(() => {
+    if (isOnline && activeUploadRef.current && pendingFileRef.current) {
+      toast.info('Resuming upload...');
+      activeUploadRef.current.start();
+    }
+  }, [isOnline]);
 
   // Determine default max size based on bucket
   const getMaxSize = () => {
@@ -64,6 +101,13 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
       return null;
     }
 
+    // Check if offline before starting
+    if (!navigator.onLine) {
+      toast.warning('You are offline. Upload will start when you reconnect.');
+      pendingFileRef.current = { file, filePath };
+      return null;
+    }
+
     try {
       await new Promise<void>((resolve, reject) => {
         const upload = new tus.Upload(file, {
@@ -82,9 +126,21 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             contentType: file.type || 'application/octet-stream',
             cacheControl: '3600',
           },
-          onError: (err) => reject(err),
-          onSuccess: () => resolve(),
+          onError: (err) => {
+            activeUploadRef.current = null;
+            pendingFileRef.current = null;
+            reject(err);
+          },
+          onSuccess: () => {
+            activeUploadRef.current = null;
+            pendingFileRef.current = null;
+            resolve();
+          },
         });
+
+        // Store reference for pause/resume
+        activeUploadRef.current = upload;
+        pendingFileRef.current = { file, filePath };
 
         // Resume if possible (prevents restarting after refresh / connection drops)
         upload
