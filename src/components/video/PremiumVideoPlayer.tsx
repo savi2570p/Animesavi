@@ -800,24 +800,24 @@ export function PremiumVideoPlayer({
                 </div>
               )}
 
-              {/* Audio Track Selector */}
-              {audioTracks.length > 1 && (
-                <div className="relative">
-                  <button 
-                    className="player-btn w-10 h-10 text-white"
-                    onClick={() => setShowAudioMenu(!showAudioMenu)}
-                    title="Audio Track"
-                  >
-                    <Headphones className="w-5 h-5" />
-                  </button>
-                  
-                  {showAudioMenu && (
-                    <div className="quality-menu absolute bottom-full right-0 mb-2 w-48">
-                      <div className="px-3 py-2 text-xs text-muted-foreground font-semibold border-b border-border/50 flex items-center gap-2">
-                        <Headphones className="w-3 h-3" />
-                        Audio Track
-                      </div>
-                      {audioTracks.map((track) => (
+              {/* Audio Track Selector - always visible */}
+              <div className="relative">
+                <button 
+                  className="player-btn w-10 h-10 text-white"
+                  onClick={() => setShowAudioMenu(!showAudioMenu)}
+                  title="Audio Track"
+                >
+                  <Headphones className="w-5 h-5" />
+                </button>
+                
+                {showAudioMenu && (
+                  <div className="quality-menu absolute bottom-full right-0 mb-2 w-48">
+                    <div className="px-3 py-2 text-xs text-muted-foreground font-semibold border-b border-border/50 flex items-center gap-2">
+                      <Headphones className="w-3 h-3" />
+                      Audio Track
+                    </div>
+                    {audioTracks.length > 0 ? (
+                      audioTracks.map((track) => (
                         <div
                           key={track.id}
                           className={cn("quality-option", currentAudioTrack === track.id && "active")}
@@ -831,11 +831,15 @@ export function PremiumVideoPlayer({
                           </div>
                           {currentAudioTrack === track.id && <Check className="w-4 h-4 text-primary" />}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+                      ))
+                    ) : (
+                      <div className="px-3 py-3 text-sm text-muted-foreground text-center">
+                        No multiple audio tracks detected
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Download */}
               {features.includes('download') && (
