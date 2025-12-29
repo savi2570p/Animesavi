@@ -175,6 +175,10 @@ export function VideoPlayer({
   const [audioTracks, setAudioTracks] = useState<AudioTrackInfo[]>([]);
   const [currentAudioTrack, setCurrentAudioTrack] = useState<string>('');
   
+  // Video processing state for SAVI.IN server
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingTimeLeft, setProcessingTimeLeft] = useState(180); // 3 minutes in seconds
+  const processingTimerRef = useRef<NodeJS.Timeout>();
   
   // Download verification dialog state
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
@@ -200,7 +204,43 @@ export function VideoPlayer({
     setUseIframeFallback(false);
     setAudioTracks([]);
     setCurrentAudioTrack('');
+    setIsProcessing(false);
+    setProcessingTimeLeft(180);
+    if (processingTimerRef.current) {
+      clearInterval(processingTimerRef.current);
+    }
   }, [videoUrl, externalUrl]);
+
+  // Handle SAVI.IN processing simulation
+  useEffect(() => {
+    if (activeServer === 'SHORT' && videoError && !isProcessing) {
+      setIsProcessing(true);
+      setProcessingTimeLeft(180);
+      
+      processingTimerRef.current = setInterval(() => {
+        setProcessingTimeLeft(prev => {
+          if (prev <= 1) {
+            clearInterval(processingTimerRef.current);
+            setIsProcessing(false);
+            setVideoError(false);
+            // Try to reload video
+            if (videoRef.current) {
+              videoRef.current.load();
+              videoRef.current.play().catch(() => {});
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    
+    return () => {
+      if (processingTimerRef.current) {
+        clearInterval(processingTimerRef.current);
+      }
+    };
+  }, [activeServer, videoError, isProcessing]);
 
   // Audio tracks detection
   useEffect(() => {
@@ -763,8 +803,35 @@ export function VideoPlayer({
         crossOrigin="anonymous"
       />
       
+      {/* Video Processing State for SAVI.IN */}
+      {isProcessing && activeServer === 'SHORT' && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20">
+          <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4 shadow-2xl animate-scale-in text-center">
+            <div className="mb-4">
+              <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+            </div>
+            <h3 className="text-foreground font-semibold text-lg mb-2">Video is Processing</h3>
+            <p className="text-muted-foreground text-sm mb-4">
+              Please come back after the processing is done
+            </p>
+            <div className="bg-muted rounded-full h-2 mb-3 overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-1000"
+                style={{ width: `${((180 - processingTimeLeft) / 180) * 100}%` }}
+              />
+            </div>
+            <p className="text-primary font-mono text-xl font-bold">
+              {Math.floor(processingTimeLeft / 60)}:{(processingTimeLeft % 60).toString().padStart(2, '0')}
+            </p>
+            <p className="text-muted-foreground text-xs mt-2">
+              Time remaining
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Video Error - Show as popup modal */}
-      {videoError && (
+      {videoError && !isProcessing && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-20">
           <div className="bg-card border border-border rounded-xl p-5 max-w-xs mx-4 shadow-2xl animate-scale-in">
             <h3 className="text-foreground font-semibold text-center mb-2">Video Playback Issue</h3>
@@ -915,7 +982,7 @@ export function VideoPlayer({
             </div>
 
             <div className="flex items-center gap-1">
-              {/* Audio Track Selector - always visible icon */}
+              {/* Audio Track Selector - Hindi, English, Japanese */}
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <button 
@@ -953,9 +1020,31 @@ export function VideoPlayer({
                       </DropdownMenuItem>
                     ))
                   ) : (
-                    <DropdownMenuItem disabled className="text-muted-foreground text-sm">
-                      No multiple audio tracks detected
-                    </DropdownMenuItem>
+                    <>
+                      {/* Default audio language options when no tracks detected */}
+                      {['Hindi', 'English', 'Japanese'].map((lang) => (
+                        <DropdownMenuItem
+                          key={lang}
+                          onClick={() => {
+                            setCurrentAudioTrack(lang.toLowerCase());
+                            toast.info(`Audio: ${lang} - Switch requires multi-audio file`);
+                          }}
+                          className={`${currentAudioTrack === lang.toLowerCase() ? 'bg-primary/20' : ''} flex items-center justify-between gap-4`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">
+                              {lang === 'Hindi' ? '🇮🇳' : lang === 'English' ? '🇬🇧' : '🇯🇵'}
+                            </span>
+                            <span className="text-sm font-medium">{lang}</span>
+                          </div>
+                          {currentAudioTrack === lang.toLowerCase() && <Check className="w-4 h-4 text-primary" />}
+                        </DropdownMenuItem>
+                      ))}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem disabled className="text-muted-foreground text-xs">
+                        Multi-audio requires dual audio file
+                      </DropdownMenuItem>
+                    </>
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>

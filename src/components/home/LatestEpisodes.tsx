@@ -145,7 +145,7 @@ export function LatestEpisodes() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           {episodes.map((episode, index) => (
             <AnimeCardContextMenu
               key={episode.id}
@@ -157,54 +157,42 @@ export function LatestEpisodes() {
                 to={`/watch/${episode.id}`}
                 className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in`}
               >
-                {/* Thumbnail */}
-                <div className="relative aspect-video rounded-lg overflow-hidden bg-muted mb-2">
+                {/* Thumbnail with hover effects */}
+                <div className="relative aspect-video rounded-xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl transition-all duration-500">
                   <img
                     src={episode.thumbnail || episode.season?.anime?.cover_image || '/placeholder.svg'}
-                    alt={episode.title}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    alt={episode.season?.anime?.title || episode.title}
+                    className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
                     loading="lazy"
                   />
                   
+                  {/* Gradient overlay on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                  
                   {/* Play overlay */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <div className="p-3 rounded-full bg-primary/90">
-                      <Play className="h-5 w-5 text-primary-foreground fill-current" />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    <div className="p-4 rounded-full bg-primary/90 shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                      <Play className="h-6 w-6 text-primary-foreground fill-current" />
                     </div>
                   </div>
 
-                  {/* Duration badge */}
-                  {episode.duration && (
-                    <div className="absolute bottom-2 right-2 px-1.5 py-0.5 text-xs font-medium bg-black/80 text-white rounded">
-                      {formatDuration(episode.duration)}
-                    </div>
-                  )}
-
-                  {/* Episode badge */}
-                  <div className="absolute top-2 left-2 px-1.5 py-0.5 text-xs font-bold bg-primary text-primary-foreground rounded">
-                    EP {episode.episode_number}
+                  {/* Season & Episode badge */}
+                  <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-lg shadow-md">
+                    S{episode.season?.season_number} E{episode.episode_number}
                   </div>
 
-                  {/* NEW badge for content uploaded in last 24 hours */}
+                  {/* NEW badge */}
                   {isNew(episode.created_at) && (
-                    <div className="absolute top-2 right-2 px-1.5 py-0.5 text-xs font-bold bg-green-500 text-white rounded animate-pulse">
+                    <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-lg shadow-md animate-pulse">
                       NEW
                     </div>
                   )}
                 </div>
 
-                {/* Info */}
-                <h3 className="text-sm font-medium line-clamp-1 group-hover:text-primary transition-colors">
+                {/* Anime Title only - simplified */}
+                <h3 className="text-sm md:text-base font-semibold mt-3 line-clamp-2 group-hover:text-primary transition-colors duration-300">
                   {episode.season?.anime?.title}
                 </h3>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                  <span>S{episode.season?.season_number} E{episode.episode_number}</span>
-                  <span>•</span>
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {formatTimeAgo(episode.created_at)}
-                  </div>
-                </div>
               </Link>
             </AnimeCardContextMenu>
           ))}

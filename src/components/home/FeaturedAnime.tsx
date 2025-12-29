@@ -108,7 +108,7 @@ export function FeaturedAnime() {
   return (
     <section 
       ref={containerRef}
-      className="relative h-[70vh] md:h-[85vh] overflow-hidden touch-pan-y"
+      className="relative h-[70vh] md:h-[85vh] overflow-hidden touch-pan-y gpu-accelerate"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -118,8 +118,8 @@ export function FeaturedAnime() {
         {featured.map((anime, index) => (
           <div
             key={anime.id}
-            className={`absolute inset-0 transition-opacity duration-700 ease-out ${
-              index === currentIndex ? 'opacity-100' : 'opacity-0'
+            className={`absolute inset-0 transition-all duration-700 ease-out gpu-accelerate ${
+              index === currentIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
             }`}
           >
             <img
@@ -137,46 +137,53 @@ export function FeaturedAnime() {
         ))}
       </div>
       
+      {/* Animated overlay particles effect */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-40 right-20 w-48 h-48 bg-accent/10 rounded-full blur-3xl animate-pulse animation-delay-500" />
+        <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-primary/5 rounded-full blur-2xl float" />
+      </div>
+      
       {/* Overlays for readability */}
       <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
       <div className="absolute inset-0 bg-background/30" />
 
-      {/* Content */}
+      {/* Content with enhanced animations */}
       <div className="relative h-full container flex items-center">
         <div 
           key={current.id}
-          className="max-w-2xl space-y-5 animate-fade-in"
+          className="max-w-2xl space-y-5"
         >
-          {/* Genres */}
+          {/* Genres with staggered animation */}
           <div className="flex flex-wrap gap-2">
             {current.genres?.slice(0, 4).map((genre, i) => (
               <Badge 
                 key={genre} 
-                className={`genre-badge stagger-${i + 1} opacity-0 animate-fade-in`}
+                className={`genre-badge stagger-${i + 1} animate-fade-in-up hover:scale-105 transition-transform duration-200`}
               >
                 {genre}
               </Badge>
             ))}
           </div>
 
-          {/* Title */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight tracking-tight">
+          {/* Title with slide animation */}
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight tracking-tight animate-fade-in-left">
             {current.title}
           </h1>
 
-          {/* Description */}
+          {/* Description with fade animation */}
           {current.description && (
-            <p className="text-base md:text-lg text-foreground/80 line-clamp-3 max-w-xl leading-relaxed">
+            <p className="text-base md:text-lg text-foreground/80 line-clamp-3 max-w-xl leading-relaxed animate-fade-in animation-delay-200">
               {current.description}
             </p>
           )}
 
-          {/* CTA Buttons */}
-          <div className="flex gap-3 pt-3">
-            <Button asChild size="lg" className="anime-button text-base md:text-lg">
+          {/* CTA Buttons with bounce animation */}
+          <div className="flex gap-3 pt-3 animate-fade-in-up animation-delay-300">
+            <Button asChild size="lg" className="anime-button text-base md:text-lg group">
               <Link to={`/anime/${current.id}`}>
-                <Play className="h-5 w-5 mr-2 fill-current" />
+                <Play className="h-5 w-5 mr-2 fill-current group-hover:scale-110 transition-transform duration-200" />
                 Watch Now
               </Link>
             </Button>
@@ -184,7 +191,7 @@ export function FeaturedAnime() {
               asChild 
               size="lg" 
               variant="outline" 
-              className="text-base md:text-lg border-foreground/20 bg-background/40 backdrop-blur-sm hover:bg-background/60 transition-all duration-200"
+              className="text-base md:text-lg border-foreground/20 bg-background/40 backdrop-blur-sm hover:bg-background/60 transition-all duration-200 hover:scale-105"
             >
               <Link to={`/anime/${current.id}`}>
                 <Info className="h-5 w-5 mr-2" />
