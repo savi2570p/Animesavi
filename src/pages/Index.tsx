@@ -44,20 +44,28 @@ export default function Index() {
       {/* Featured Anime Hero */}
       <FeaturedAnime />
 
-      {/* Stats Bar */}
-      <section className="py-8 border-y border-border/30 bg-card/30">
-        <div className="container">
+      {/* Stats Bar with enhanced animation */}
+      <section className="py-8 border-y border-border/30 bg-card/30 relative overflow-hidden">
+        {/* Animated background pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'radial-gradient(circle at 25% 25%, hsl(var(--primary)) 2px, transparent 2px)',
+            backgroundSize: '50px 50px'
+          }} />
+        </div>
+        
+        <div className="container relative">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
               <div 
                 key={stat.label}
-                className={`flex items-center gap-4 justify-center stagger-${index + 1} animate-fade-in`}
+                className={`flex items-center gap-4 justify-center stagger-${index + 1} animate-fade-in group cursor-default`}
               >
-                <div className="p-3 rounded-xl bg-primary/10">
+                <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg">
                   <stat.icon className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-xl md:text-2xl font-heading font-bold">{stat.value}</p>
+                  <p className="text-xl md:text-2xl font-heading font-bold group-hover:text-primary transition-colors duration-300">{stat.value}</p>
                   <p className="text-xs text-muted-foreground">{stat.label}</p>
                 </div>
               </div>

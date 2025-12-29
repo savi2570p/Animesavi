@@ -152,81 +152,83 @@ export function LatestMovies() {
             >
               <Link
                 to={movie.firstEpisodeId ? `/watch/${movie.firstEpisodeId}` : `/anime/${movie.id}`}
-                className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in`}
+                className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in gpu-accelerate`}
               >
-                {/* Poster */}
-                <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted mb-3 shadow-lg">
+                {/* Poster with enhanced hover */}
+                <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted mb-3 shadow-lg transition-all duration-500 group-hover:shadow-2xl group-hover:scale-[1.03] group-hover:-translate-y-2">
                   <img
                     src={movie.cover_image || '/placeholder.svg'}
                     alt={movie.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     loading="lazy"
                   />
                   
-                  {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  {/* Enhanced gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
+
+                  {/* Play button with animation */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    <div className="p-4 rounded-full bg-primary/90 shadow-lg transform scale-0 group-hover:scale-100 transition-transform duration-300 delay-100">
+                      <Film className="h-6 w-6 text-primary-foreground" />
+                    </div>
+                  </div>
 
                   {/* Movie badge */}
-                  <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-accent text-accent-foreground rounded-md flex items-center gap-1">
+                  <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-accent text-accent-foreground rounded-md flex items-center gap-1 shadow-md">
                     <Film className="h-3 w-3" />
                     Movie
                   </div>
 
-                  {/* NEW badge for content uploaded in last 24 hours */}
+                  {/* NEW badge */}
                   {isNew(movie.created_at) && (
-                    <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-md animate-pulse">
+                    <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-md animate-pulse shadow-md">
                       NEW
                     </div>
                   )}
 
-                  {/* Info on hover */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <p className="text-white text-xs line-clamp-2">
-                      {movie.description}
+                  {/* Detailed info on hover - slides up from bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
+                    {/* Description */}
+                    <p className="text-white/90 text-xs line-clamp-3 mb-2">
+                      {movie.description || 'No description available'}
                     </p>
+                    
+                    {/* Meta info */}
+                    <div className="flex items-center gap-2 text-white/80 text-xs">
+                      {movie.release_year && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {movie.release_year}
+                        </span>
+                      )}
+                      {movie.view_count && movie.view_count > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Star className="h-3 w-3" />
+                          {movie.view_count} views
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Genres */}
+                    {movie.genres && movie.genres.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {movie.genres.slice(0, 3).map(genre => (
+                          <span 
+                            key={genre}
+                            className="px-2 py-0.5 text-xs bg-white/20 rounded-full text-white/90"
+                          >
+                            {genre}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Info */}
-                <h3 className="text-sm md:text-base font-semibold line-clamp-2 group-hover:text-primary transition-colors mb-1">
+                {/* Title only - simplified */}
+                <h3 className="text-sm md:text-base font-semibold line-clamp-2 group-hover:text-primary transition-colors duration-300">
                   {movie.title}
                 </h3>
-                
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  {movie.release_year && (
-                    <>
-                      <span>{movie.release_year}</span>
-                      <span>•</span>
-                    </>
-                  )}
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {formatTimeAgo(movie.created_at)}
-                  </div>
-                  {movie.view_count && movie.view_count > 0 && (
-                    <>
-                      <span>•</span>
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3 w-3" />
-                        {movie.view_count} views
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* Genres */}
-                {movie.genres && movie.genres.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {movie.genres.slice(0, 2).map(genre => (
-                      <span 
-                        key={genre}
-                        className="px-1.5 py-0.5 text-xs bg-muted rounded text-muted-foreground"
-                      >
-                        {genre}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </Link>
             </AnimeCardContextMenu>
           ))}
