@@ -915,6 +915,51 @@ export function VideoPlayer({
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Audio Track Selector - always visible icon */}
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
+                  <button 
+                    className="player-btn w-10 h-10 text-white"
+                    onClick={(e) => e.stopPropagation()}
+                    title="Audio Track"
+                  >
+                    <Headphones className="w-5 h-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent 
+                  align="end" 
+                  className="bg-background/95 backdrop-blur-xl border-border/50 z-[99999]"
+                  sideOffset={8}
+                >
+                  <DropdownMenuLabel className="text-xs text-muted-foreground flex items-center gap-2">
+                    <Headphones className="w-3 h-3" />
+                    Audio Track
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {audioTracks.length > 0 ? (
+                    audioTracks.map((track) => (
+                      <DropdownMenuItem
+                        key={track.id}
+                        onClick={() => switchAudioTrack(track.id)}
+                        className={`${currentAudioTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">{track.label}</span>
+                          {track.language !== 'Unknown' && (
+                            <span className="text-xs text-muted-foreground">{track.language}</span>
+                          )}
+                        </div>
+                        {currentAudioTrack === track.id && <Check className="w-4 h-4 text-primary" />}
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <DropdownMenuItem disabled className="text-muted-foreground text-sm">
+                      No multiple audio tracks detected
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               {/* Quality selector */}
               {features.includes('quality') && (
                 <DropdownMenu modal={false}>

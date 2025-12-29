@@ -45,7 +45,7 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
   const effectiveMaxSize =
     maxSizeGB ?? (contentType === 'movie' ? 100 : contentType === 'episode' ? 50 : accept === 'image' ? 1 : 50);
 
-  const { uploadFile, isUploading } = useFileUpload({
+  const { uploadFile, isUploading, progress } = useFileUpload({
     bucket,
     folder,
     maxSizeGB: effectiveMaxSize,
@@ -171,9 +171,22 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
           )}
         </div>
       ) : isUploading ? (
-        <div className="flex items-center gap-3 p-3 rounded-lg border border-primary/50 bg-primary/5">
-          <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          <span className="text-sm font-medium truncate">{fileName || 'Uploading...'}</span>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 p-3 rounded-lg border border-primary/50 bg-primary/5">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-medium truncate">{fileName || 'Uploading...'}</span>
+                <span className="text-sm font-bold text-primary">{progress}%</span>
+              </div>
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-primary rounded-full transition-all duration-300 ease-out"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       ) : uploadError ? (
         <div className="flex items-center gap-3 p-3 rounded-lg border border-destructive/50 bg-destructive/5">

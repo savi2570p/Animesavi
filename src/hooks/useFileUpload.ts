@@ -56,6 +56,7 @@ function useOnlineStatus() {
 
 export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadOptions) {
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const isOnline = useOnlineStatus();
   const activeUploadRef = useRef<tus.Upload | null>(null);
   const pendingFileRef = useRef<{ file: File; filePath: string } | null>(null);
@@ -109,6 +110,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     }
 
     try {
+      setUploadProgress(0);
       await new Promise<void>((resolve, reject) => {
         const upload = new tus.Upload(file, {
           endpoint: RESUMABLE_UPLOAD_ENDPOINT,
@@ -126,14 +128,20 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             contentType: file.type || 'application/octet-stream',
             cacheControl: '3600',
           },
+          onProgress: (bytesUploaded, bytesTotal) => {
+            const percentage = Math.round((bytesUploaded / bytesTotal) * 100);
+            setUploadProgress(percentage);
+          },
           onError: (err) => {
             activeUploadRef.current = null;
             pendingFileRef.current = null;
+            setUploadProgress(0);
             reject(err);
           },
           onSuccess: () => {
             activeUploadRef.current = null;
             pendingFileRef.current = null;
+            setUploadProgress(100);
             resolve();
           },
         });
@@ -220,7 +228,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
   return {
     uploadFile,
     isUploading,
-    progress: 0, // intentionally not displayed
+    progress: uploadProgress,
     SIZE_LIMITS,
   };
 }
