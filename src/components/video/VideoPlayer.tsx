@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import {
   Play,
@@ -242,7 +243,7 @@ export function VideoPlayer({
     };
   }, [activeServer, videoError, isProcessing]);
 
-  // Audio tracks detection
+  // Audio tracks detection - Enhanced for multi-audio files
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -250,17 +251,36 @@ export function VideoPlayer({
     const detectAudioTracks = () => {
       const tracks: AudioTrackInfo[] = [];
       
-      // Check HTML5 audioTracks API
+      // Check HTML5 audioTracks API (works for MKV, MP4 with multiple audio streams)
       const htmlAudioTracks = (video as any).audioTracks;
       if (htmlAudioTracks && htmlAudioTracks.length > 0) {
+        console.log('Detected audio tracks:', htmlAudioTracks.length);
         for (let i = 0; i < htmlAudioTracks.length; i++) {
           const track = htmlAudioTracks[i];
+          const lang = track.language?.toLowerCase() || '';
+          
+          // Map language codes to readable names with flags
+          let label = track.label || `Audio ${i + 1}`;
+          let displayLang = track.language || 'Unknown';
+          
+          if (lang.includes('hin') || lang === 'hi') {
+            label = '🇮🇳 Hindi';
+            displayLang = 'Hindi';
+          } else if (lang.includes('eng') || lang === 'en') {
+            label = '🇬🇧 English';
+            displayLang = 'English';
+          } else if (lang.includes('jpn') || lang === 'ja' || lang.includes('jap')) {
+            label = '🇯🇵 Japanese';
+            displayLang = 'Japanese';
+          }
+          
           tracks.push({
             id: track.id || `track-${i}`,
-            label: track.label || `Audio ${i + 1}`,
-            language: track.language || 'Unknown',
+            label: label,
+            language: displayLang,
             enabled: track.enabled,
           });
+          
           if (track.enabled) {
             setCurrentAudioTrack(track.id || `track-${i}`);
           }
@@ -268,32 +288,61 @@ export function VideoPlayer({
       }
       
       setAudioTracks(tracks);
+      
+      // Log for debugging
+      if (tracks.length > 0) {
+        console.log('Audio tracks available:', tracks);
+      }
+    };
+
+    // Listen for audio track changes
+    const handleAudioTrackChange = () => {
+      detectAudioTracks();
     };
 
     video.addEventListener('loadedmetadata', detectAudioTracks);
     video.addEventListener('canplay', detectAudioTracks);
+    video.addEventListener('loadeddata', detectAudioTracks);
+    
+    // Also check audioTracks for change event
+    const htmlAudioTracks = (video as any).audioTracks;
+    if (htmlAudioTracks) {
+      htmlAudioTracks.addEventListener('change', handleAudioTrackChange);
+    }
 
     return () => {
       video.removeEventListener('loadedmetadata', detectAudioTracks);
       video.removeEventListener('canplay', detectAudioTracks);
+      video.removeEventListener('loadeddata', detectAudioTracks);
+      if (htmlAudioTracks) {
+        htmlAudioTracks.removeEventListener('change', handleAudioTrackChange);
+      }
     };
   }, [effectiveVideoUrl]);
 
-  const switchAudioTrack = (trackId: string) => {
+  const switchAudioTrack = useCallback((trackId: string) => {
     const video = videoRef.current;
     if (!video) return;
 
     const htmlAudioTracks = (video as any).audioTracks;
-    if (htmlAudioTracks) {
+    if (htmlAudioTracks && htmlAudioTracks.length > 0) {
       for (let i = 0; i < htmlAudioTracks.length; i++) {
         const track = htmlAudioTracks[i];
         const id = track.id || `track-${i}`;
+        const wasEnabled = track.enabled;
         track.enabled = id === trackId;
+        
+        if (track.enabled && !wasEnabled) {
+          console.log('Switched to audio track:', track.label || id);
+          toast.success(`Audio: ${track.label || `Track ${i + 1}`}`);
+        }
       }
       setCurrentAudioTrack(trackId);
-      toast.success('Audio track changed');
+    } else {
+      // No actual tracks available - show info message
+      toast.info('This video has a single audio track');
     }
-  };
+  }, []);
 
   // CRITICAL: Cleanup video on unmount to stop audio when navigating away
   useEffect(() => {
@@ -983,111 +1032,113 @@ export function VideoPlayer({
 
             <div className="flex items-center gap-1">
               {/* Audio Track Selector - Hindi, English, Japanese */}
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <button 
-                    className="player-btn w-10 h-10 text-white relative z-[100]"
+                    className="player-btn w-10 h-10 text-white relative"
                     onClick={(e) => e.stopPropagation()}
                     title="Audio Track"
                   >
                     <Headphones className="w-5 h-5" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  align="end" 
-                  className="bg-background/95 backdrop-blur-xl border-border/50"
-                  sideOffset={8}
-                  style={{ zIndex: 2147483647 }}
-                  forceMount
-                >
-                  <DropdownMenuLabel className="text-xs text-muted-foreground flex items-center gap-2">
-                    <Headphones className="w-3 h-3" />
-                    Audio Track
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {audioTracks.length > 0 ? (
-                    audioTracks.map((track) => (
-                      <DropdownMenuItem
-                        key={track.id}
-                        onClick={(e) => { e.stopPropagation(); switchAudioTrack(track.id); }}
-                        className={`${currentAudioTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
-                      >
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium">{track.label}</span>
-                          {track.language !== 'Unknown' && (
-                            <span className="text-xs text-muted-foreground">{track.language}</span>
-                          )}
-                        </div>
-                        {currentAudioTrack === track.id && <Check className="w-4 h-4 text-primary" />}
-                      </DropdownMenuItem>
-                    ))
-                  ) : (
-                    <>
-                      {/* Default audio language options when no tracks detected */}
-                      {['Hindi', 'English', 'Japanese'].map((lang) => (
+                {createPortal(
+                  <DropdownMenuContent 
+                    align="end" 
+                    className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[180px]"
+                    sideOffset={8}
+                    style={{ zIndex: 2147483647 }}
+                  >
+                    <DropdownMenuLabel className="text-xs text-muted-foreground flex items-center gap-2">
+                      <Headphones className="w-3 h-3" />
+                      Audio Track
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {audioTracks.length > 0 ? (
+                      audioTracks.map((track) => (
                         <DropdownMenuItem
-                          key={lang}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setCurrentAudioTrack(lang.toLowerCase());
-                            toast.info(`Audio: ${lang} - Switch requires multi-audio file`);
-                          }}
-                          className={`${currentAudioTrack === lang.toLowerCase() ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+                          key={track.id}
+                          onClick={(e) => { e.stopPropagation(); switchAudioTrack(track.id); }}
+                          className={`${currentAudioTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
                         >
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">
-                              {lang === 'Hindi' ? '🇮🇳' : lang === 'English' ? '🇬🇧' : '🇯🇵'}
-                            </span>
-                            <span className="text-sm font-medium">{lang}</span>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">{track.label}</span>
+                            {track.language !== 'Unknown' && (
+                              <span className="text-xs text-muted-foreground">{track.language}</span>
+                            )}
                           </div>
-                          {currentAudioTrack === lang.toLowerCase() && <Check className="w-4 h-4 text-primary" />}
+                          {currentAudioTrack === track.id && <Check className="w-4 h-4 text-primary" />}
                         </DropdownMenuItem>
-                      ))}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem disabled className="text-muted-foreground text-xs">
-                        Multi-audio requires dual audio file
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
+                      ))
+                    ) : (
+                      <>
+                        {/* Default audio language options when no tracks detected */}
+                        {['Hindi', 'English', 'Japanese'].map((lang) => (
+                          <DropdownMenuItem
+                            key={lang}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toast.info(`Upload a multi-audio file to switch to ${lang}`);
+                            }}
+                            className="flex items-center justify-between gap-4 cursor-pointer opacity-60"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">
+                                {lang === 'Hindi' ? '🇮🇳' : lang === 'English' ? '🇬🇧' : '🇯🇵'}
+                              </span>
+                              <span className="text-sm font-medium">{lang}</span>
+                            </div>
+                          </DropdownMenuItem>
+                        ))}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem disabled className="text-muted-foreground text-xs">
+                          Multi-audio requires dual audio file
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>,
+                  document.body
+                )}
               </DropdownMenu>
 
               {/* Quality selector */}
               {features.includes('quality') && (
-                <DropdownMenu>
+                <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <button 
-                      className="player-btn w-10 h-10 text-white relative z-[100]"
+                      className="player-btn w-10 h-10 text-white relative"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Settings className="w-5 h-5" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent 
-                    align="end" 
-                    className="bg-background/95 backdrop-blur-xl border-border/50"
-                    sideOffset={8}
-                    style={{ zIndex: 2147483647 }}
-                    forceMount
-                  >
-                    <DropdownMenuLabel className="text-xs text-muted-foreground">Quality</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {(['1080p', '720p', '480p', '360p'] as const).map((q) => (
-                      <DropdownMenuItem
-                        key={q}
-                        onClick={(e) => { e.stopPropagation(); setQuality(q); }}
-                        className={`${quality === q ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
-                      >
-                        <span className="text-sm font-medium">{q}</span>
-                        <div className="flex items-center gap-2">
-                          {(q === '720p' || q === '1080p') && (
-                            <span className="text-[10px] font-bold bg-primary/20 text-primary px-1.5 py-0.5 rounded">HD</span>
-                          )}
-                          {quality === q && <Check className="w-4 h-4 text-primary" />}
-                        </div>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
+                  {createPortal(
+                    <DropdownMenuContent 
+                      align="end" 
+                      className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[120px]"
+                      sideOffset={8}
+                      style={{ zIndex: 2147483647 }}
+                    >
+                      <DropdownMenuLabel className="text-xs text-muted-foreground">Quality</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {(['1080p', '720p', '480p', '360p'] as const).map((q) => (
+                        <DropdownMenuItem
+                          key={q}
+                          onClick={(e) => { e.stopPropagation(); setQuality(q); }}
+                          className={`${quality === q ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+                        >
+                          <span className="text-sm font-medium">{q}</span>
+                          <div className="flex items-center gap-2">
+                            {(q === '720p' || q === '1080p') && (
+                              <span className="text-[10px] font-bold bg-primary/20 text-primary px-1.5 py-0.5 rounded">HD</span>
+                            )}
+                            {quality === q && <Check className="w-4 h-4 text-primary" />}
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>,
+                    document.body
+                  )}
                 </DropdownMenu>
               )}
 

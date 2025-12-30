@@ -585,7 +585,7 @@ export default function Upload() {
           </Card>
         </TabsContent>
 
-        {/* Add New Movie Tab */}
+        {/* Add New Movie Tab - Only Movie, Thumbnail, Banner, Description */}
         <TabsContent value="new-movie">
           <Card>
             <CardHeader>
@@ -594,18 +594,11 @@ export default function Upload() {
                 Add New Movie
               </CardTitle>
               <CardDescription>
-                Fill in the details to add a new anime movie to the platform
+                Upload a movie with cover image, banner and description (no episodes needed)
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                // Force type to movie for this form
-                const originalType = type;
-                setType('movie');
-                handleSubmitAnime(e);
-                setType(originalType);
-              }} className="space-y-6">
+              <form className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="movie-title">Movie Title *</Label>
@@ -645,9 +638,20 @@ export default function Upload() {
                   />
                 </div>
 
+                {/* Movie Video Upload */}
+                <FileUploadInput
+                  label="Movie Video *"
+                  accept="video"
+                  value={episodeVideoUrl}
+                  onChange={setEpisodeVideoUrl}
+                  folder="movies"
+                  placeholder="https://example.com/movie.mp4"
+                  contentType="movie"
+                />
+
                 <div className="grid md:grid-cols-2 gap-6">
                   <FileUploadInput
-                    label="Cover Image"
+                    label="Cover Image (Thumbnail)"
                     accept="image"
                     value={coverImage}
                     onChange={setCoverImage}
@@ -663,19 +667,6 @@ export default function Upload() {
                     folder="banners"
                     placeholder="https://example.com/banner.jpg"
                   />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select value={status} onValueChange={setStatus}>
-                    <SelectTrigger className="bg-muted/50 max-w-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="upcoming">Upcoming</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
 
                 <div className="space-y-2">
@@ -707,7 +698,9 @@ export default function Upload() {
                       return;
                     }
                     setIsSubmitting(true);
-                    const { data, error } = await supabase
+                    
+                    // Create movie entry
+                    const { data: movieData, error: movieError } = await supabase
                       .from('anime')
                       .insert({
                         title: title.trim(),
@@ -717,30 +710,67 @@ export default function Upload() {
                         genres: selectedGenres.length > 0 ? selectedGenres : null,
                         release_year: releaseYear ? parseInt(releaseYear) : null,
                         type: 'movie',
-                        status,
+                        status: 'completed',
                         uploader_id: user?.id,
                       })
                       .select()
                       .single();
                     
-                    if (error) {
+                    if (movieError) {
                       toast.error('Failed to create movie');
-                    } else {
-                      toast.success('Movie created successfully!');
-                      setTitle('');
-                      setDescription('');
-                      setCoverImage('');
-                      setBannerImage('');
-                      setSelectedGenres([]);
-                      setReleaseYear('');
-                      setStatus('completed');
-                      fetchAnimeData();
-                      navigate(`/upload/anime/${data.id}`);
+                      setIsSubmitting(false);
+                      return;
                     }
+                    
+                    // Create a default season for the movie
+                    const { data: seasonData, error: seasonError } = await supabase
+                      .from('seasons')
+                      .insert({
+                        anime_id: movieData.id,
+                        season_number: 1,
+                        title: 'Movie',
+                      })
+                      .select()
+                      .single();
+                    
+                    if (seasonError) {
+                      toast.error('Failed to create movie season');
+                      setIsSubmitting(false);
+                      return;
+                    }
+                    
+                    // Create the movie episode with uploaded video
+                    if (episodeVideoUrl) {
+                      const { error: episodeError } = await supabase
+                        .from('episodes')
+                        .insert({
+                          season_id: seasonData.id,
+                          episode_number: 1,
+                          title: title.trim(),
+                          description: description.trim() || null,
+                          video_url: episodeVideoUrl.trim(),
+                          thumbnail: coverImage.trim() || null,
+                        });
+                      
+                      if (episodeError) {
+                        toast.error('Movie created but video upload failed');
+                      }
+                    }
+                    
+                    toast.success('Movie created successfully!');
+                    // Reset form
+                    setTitle('');
+                    setDescription('');
+                    setCoverImage('');
+                    setBannerImage('');
+                    setSelectedGenres([]);
+                    setReleaseYear('');
+                    setEpisodeVideoUrl('');
+                    fetchAnimeData();
                     setIsSubmitting(false);
                   }}
                 >
-                  {isSubmitting ? 'Creating...' : 'Create Movie & Add Video'}
+                  {isSubmitting ? 'Creating Movie...' : 'Create Movie'}
                 </Button>
               </form>
             </CardContent>

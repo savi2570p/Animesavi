@@ -57,9 +57,11 @@ function useOnlineStatus() {
 export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadOptions) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadSpeed, setUploadSpeed] = useState<number>(0); // bytes per second
   const isOnline = useOnlineStatus();
   const activeUploadRef = useRef<tus.Upload | null>(null);
   const pendingFileRef = useRef<{ file: File; filePath: string } | null>(null);
+  const lastProgressRef = useRef<{ bytes: number; time: number }>({ bytes: 0, time: Date.now() });
 
   // Auto-resume upload when coming back online
   useEffect(() => {
@@ -131,6 +133,17 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
           onProgress: (bytesUploaded, bytesTotal) => {
             const percentage = Math.round((bytesUploaded / bytesTotal) * 100);
             setUploadProgress(percentage);
+            
+            // Calculate upload speed (bytes per second)
+            const now = Date.now();
+            const timeDiff = (now - lastProgressRef.current.time) / 1000; // seconds
+            const bytesDiff = bytesUploaded - lastProgressRef.current.bytes;
+            
+            if (timeDiff > 0.5) { // Update speed every 500ms for smoother display
+              const speed = bytesDiff / timeDiff;
+              setUploadSpeed(speed);
+              lastProgressRef.current = { bytes: bytesUploaded, time: now };
+            }
           },
           onError: (err) => {
             activeUploadRef.current = null;
@@ -225,10 +238,23 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     }
   };
 
+  // Format speed for display
+  const formatSpeed = (bytesPerSecond: number): string => {
+    if (bytesPerSecond >= 1024 * 1024) {
+      return `${(bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`;
+    }
+    if (bytesPerSecond >= 1024) {
+      return `${(bytesPerSecond / 1024).toFixed(1)} KB/s`;
+    }
+    return `${bytesPerSecond.toFixed(0)} B/s`;
+  };
+
   return {
     uploadFile,
     isUploading,
     progress: uploadProgress,
+    uploadSpeed,
+    formattedSpeed: formatSpeed(uploadSpeed),
     SIZE_LIMITS,
   };
 }

@@ -45,7 +45,7 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
   const effectiveMaxSize =
     maxSizeGB ?? (contentType === 'movie' ? 100 : contentType === 'episode' ? 50 : accept === 'image' ? 1 : 50);
 
-  const { uploadFile, isUploading, progress } = useFileUpload({
+  const { uploadFile, isUploading, progress, formattedSpeed } = useFileUpload({
     bucket,
     folder,
     maxSizeGB: effectiveMaxSize,
@@ -177,7 +177,10 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-medium truncate">{fileName || 'Uploading...'}</span>
-                <span className="text-sm font-bold text-primary">{progress}%</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{formattedSpeed}</span>
+                  <span className="text-sm font-bold text-primary">{progress}%</span>
+                </div>
               </div>
               <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                 <div 
