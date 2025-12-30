@@ -830,11 +830,11 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Video Error - Show as popup modal */}
+      {/* Video Error - Show as popup modal CENTERED ON SCREEN */}
       {videoError && !isProcessing && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-20">
-          <div className="bg-card border border-border rounded-xl p-5 max-w-xs mx-4 shadow-2xl animate-scale-in">
-            <h3 className="text-foreground font-semibold text-center mb-2">Video Playback Issue</h3>
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999]">
+          <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4 shadow-2xl animate-scale-in">
+            <h3 className="text-foreground font-semibold text-center text-lg mb-2">Video Playback Issue</h3>
             <p className="text-muted-foreground text-sm text-center mb-4">
               This video couldn't be played directly. Try one of the options below:
             </p>
@@ -983,10 +983,10 @@ export function VideoPlayer({
 
             <div className="flex items-center gap-1">
               {/* Audio Track Selector - Hindi, English, Japanese */}
-              <DropdownMenu modal={false}>
+              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button 
-                    className="player-btn w-10 h-10 text-white"
+                    className="player-btn w-10 h-10 text-white relative z-[100]"
                     onClick={(e) => e.stopPropagation()}
                     title="Audio Track"
                   >
@@ -995,8 +995,10 @@ export function VideoPlayer({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
                   align="end" 
-                  className="bg-background/95 backdrop-blur-xl border-border/50 z-[99999]"
+                  className="bg-background/95 backdrop-blur-xl border-border/50"
                   sideOffset={8}
+                  style={{ zIndex: 2147483647 }}
+                  forceMount
                 >
                   <DropdownMenuLabel className="text-xs text-muted-foreground flex items-center gap-2">
                     <Headphones className="w-3 h-3" />
@@ -1007,8 +1009,8 @@ export function VideoPlayer({
                     audioTracks.map((track) => (
                       <DropdownMenuItem
                         key={track.id}
-                        onClick={() => switchAudioTrack(track.id)}
-                        className={`${currentAudioTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4`}
+                        onClick={(e) => { e.stopPropagation(); switchAudioTrack(track.id); }}
+                        className={`${currentAudioTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
                       >
                         <div className="flex flex-col">
                           <span className="text-sm font-medium">{track.label}</span>
@@ -1025,11 +1027,12 @@ export function VideoPlayer({
                       {['Hindi', 'English', 'Japanese'].map((lang) => (
                         <DropdownMenuItem
                           key={lang}
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setCurrentAudioTrack(lang.toLowerCase());
                             toast.info(`Audio: ${lang} - Switch requires multi-audio file`);
                           }}
-                          className={`${currentAudioTrack === lang.toLowerCase() ? 'bg-primary/20' : ''} flex items-center justify-between gap-4`}
+                          className={`${currentAudioTrack === lang.toLowerCase() ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-lg">
@@ -1051,10 +1054,10 @@ export function VideoPlayer({
 
               {/* Quality selector */}
               {features.includes('quality') && (
-                <DropdownMenu modal={false}>
+                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button 
-                      className="player-btn w-10 h-10 text-white"
+                      className="player-btn w-10 h-10 text-white relative z-[100]"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Settings className="w-5 h-5" />
@@ -1062,16 +1065,18 @@ export function VideoPlayer({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
                     align="end" 
-                    className="bg-background/95 backdrop-blur-xl border-border/50 z-[99999]"
+                    className="bg-background/95 backdrop-blur-xl border-border/50"
                     sideOffset={8}
+                    style={{ zIndex: 2147483647 }}
+                    forceMount
                   >
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Quality</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {(['1080p', '720p', '480p', '360p'] as const).map((q) => (
                       <DropdownMenuItem
                         key={q}
-                        onClick={() => setQuality(q)}
-                        className={`${quality === q ? 'bg-primary/20' : ''} flex items-center justify-between gap-4`}
+                        onClick={(e) => { e.stopPropagation(); setQuality(q); }}
+                        className={`${quality === q ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
                       >
                         <span className="text-sm font-medium">{q}</span>
                         <div className="flex items-center gap-2">

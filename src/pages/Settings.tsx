@@ -15,24 +15,23 @@ export default function Settings() {
   const [notifications, setNotifications] = useState(true);
   const [autoplay, setAutoplay] = useState(true);
 
+  // Load saved theme on mount - works for all users, not just logged in
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+      applyTheme(savedTheme);
+    }
+  }, []);
+
+  // Redirect to auth if not logged in (optional - can be removed to allow theme changes without login)
   useEffect(() => {
     if (!user) {
       navigate('/auth');
-      return;
-    }
-    // Load saved theme preference
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' | null;
-    
-    if (savedTheme) {
-      setTheme(savedTheme);
     }
   }, [user, navigate]);
 
-  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    
-    // Apply theme immediately
+  const applyTheme = (newTheme: 'light' | 'dark' | 'system') => {
     const root = document.documentElement;
     if (newTheme === 'system') {
       const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -40,7 +39,12 @@ export default function Settings() {
     } else {
       root.classList.toggle('dark', newTheme === 'dark');
     }
-    
+  };
+
+  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    applyTheme(newTheme);
     toast.success(`Theme changed to ${newTheme}`);
   };
 

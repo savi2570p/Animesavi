@@ -22,6 +22,8 @@ export function LatestMovies() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [showAll, setShowAll] = useState(false);
+
   useEffect(() => {
     fetchLatestMovies();
   }, []);
@@ -134,16 +136,20 @@ export function LatestMovies() {
               New
             </span>
           </div>
-          <Button asChild variant="ghost" className="group">
-            <Link to="/browse?type=movie" className="flex items-center gap-1">
-              See All
-              <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
+          <Button 
+            variant="ghost" 
+            className="group"
+            onClick={() => setShowAll(!showAll)}
+          >
+            <span className="flex items-center gap-1">
+              {showAll ? 'Show Less' : 'See All'}
+              <ChevronRight className={`h-4 w-4 transition-transform ${showAll ? 'rotate-90' : 'group-hover:translate-x-1'}`} />
+            </span>
           </Button>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-          {movies.map((movie, index) => (
+          {(showAll ? movies : movies.slice(0, 4)).map((movie, index) => (
             <AnimeCardContextMenu
               key={movie.id}
               animeTitle={movie.title}

@@ -394,22 +394,28 @@ export default function ExternalPlayer() {
           playsInline
         />
 
-        {/* Video Error */}
+        {/* Video Error - Centered on screen */}
         {videoError && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="bg-card border border-border rounded-xl p-5 max-w-xs mx-4 shadow-2xl">
-              <h3 className="text-foreground font-semibold text-center mb-2">Playback Error</h3>
+          <div className="fixed inset-0 flex items-center justify-center bg-black/80 z-[9999]">
+            <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4 shadow-2xl animate-scale-in">
+              <h3 className="text-foreground font-semibold text-center text-lg mb-2">Playback Error</h3>
               <p className="text-muted-foreground text-sm text-center mb-4">
-                Video couldn't be played. Try the embed player instead.
+                This video couldn't be played directly. Try using the embed player instead.
               </p>
               <div className="flex flex-col gap-2">
                 <Button onClick={() => { setVideoError(false); videoRef.current?.load(); }} variant="outline" className="w-full">
-                  Retry
+                  Retry Playback
                 </Button>
                 <Button onClick={() => setUseIframe(true)} className="anime-button w-full">
                   Use Embed Player
                 </Button>
               </div>
+              <button
+                onClick={() => setVideoError(false)}
+                className="mt-3 text-xs text-muted-foreground hover:text-foreground w-full text-center"
+              >
+                Dismiss
+              </button>
             </div>
           </div>
         )}

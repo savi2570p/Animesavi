@@ -29,6 +29,7 @@ interface Anime {
   title: string;
   cover_image: string | null;
   status: string | null;
+  type: string | null;
   created_at: string;
 }
 
@@ -309,12 +310,19 @@ export default function Upload() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-        <TabsList className="bg-secondary/50 p-1 rounded-xl">
+        <TabsList className="bg-secondary/50 p-1 rounded-xl flex-wrap">
           <TabsTrigger value="my-anime" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
-            My Anime
+            My Anime Series
+          </TabsTrigger>
+          <TabsTrigger value="my-movies" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
+            My Movies
           </TabsTrigger>
           <TabsTrigger value="new" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
-            Add New Anime
+            Add New Series
+          </TabsTrigger>
+          <TabsTrigger value="new-movie" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
+            <Film className="h-4 w-4 mr-2" />
+            Add New Movie
           </TabsTrigger>
           <TabsTrigger value="existing" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
             <FolderPlus className="h-4 w-4 mr-2" />
@@ -323,17 +331,17 @@ export default function Upload() {
         </TabsList>
 
         <TabsContent value="my-anime">
-          {myAnime.length === 0 ? (
+          {myAnime.filter(a => a.type !== 'movie').length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <UploadIcon className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No uploads yet</h3>
-                <p className="text-muted-foreground mb-4">Start by adding your first anime</p>
+                <h3 className="text-lg font-semibold mb-2">No anime series yet</h3>
+                <p className="text-muted-foreground mb-4">Start by adding your first anime series</p>
               </CardContent>
             </Card>
           ) : (
             <div className="grid gap-4">
-              {myAnime.map((anime) => (
+              {myAnime.filter(a => a.type !== 'movie').map((anime) => (
                 <Card key={anime.id}>
                   <CardContent className="flex items-center gap-4 p-4">
                     <img
@@ -381,15 +389,82 @@ export default function Upload() {
           )}
         </TabsContent>
 
+        {/* My Movies Tab */}
+        <TabsContent value="my-movies">
+          {myAnime.filter(a => a.type === 'movie').length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Film className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No movies yet</h3>
+                <p className="text-muted-foreground mb-4">Start by adding your first movie</p>
+                <Button onClick={() => setActiveTab('new-movie')} className="anime-button">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add New Movie
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {myAnime.filter(a => a.type === 'movie').map((anime) => (
+                <Card key={anime.id}>
+                  <CardContent className="flex items-center gap-4 p-4">
+                    <img
+                      src={anime.cover_image || '/placeholder.svg'}
+                      alt={anime.title}
+                      className="w-20 h-28 object-cover rounded-lg"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-lg">{anime.title}</h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge className="bg-accent text-accent-foreground">
+                          Movie
+                        </Badge>
+                        <Badge variant="outline" className="capitalize">
+                          {anime.status}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(anime.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={`/anime/${anime.id}`} target="_blank" rel="noopener">
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </a>
+                      </Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={`/upload/anime/${anime.id}`}>
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </a>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteAnime(anime.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
         <TabsContent value="new">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Film className="h-5 w-5" />
-                Add New Anime
+                Add New Anime Series
               </CardTitle>
               <CardDescription>
-                Fill in the details to add a new anime to the platform
+                Fill in the details to add a new anime series to the platform
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -504,6 +579,168 @@ export default function Upload() {
 
                 <Button type="submit" disabled={isSubmitting} className="anime-button">
                   {isSubmitting ? 'Creating...' : 'Create Anime & Add Episodes'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Add New Movie Tab */}
+        <TabsContent value="new-movie">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Film className="h-5 w-5" />
+                Add New Movie
+              </CardTitle>
+              <CardDescription>
+                Fill in the details to add a new anime movie to the platform
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                // Force type to movie for this form
+                const originalType = type;
+                setType('movie');
+                handleSubmitAnime(e);
+                setType(originalType);
+              }} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="movie-title">Movie Title *</Label>
+                    <Input
+                      id="movie-title"
+                      placeholder="Movie title"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      required
+                      className="bg-muted/50"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="movie-releaseYear">Release Year</Label>
+                    <Input
+                      id="movie-releaseYear"
+                      type="number"
+                      placeholder="2024"
+                      value={releaseYear}
+                      onChange={(e) => setReleaseYear(e.target.value)}
+                      min="1900"
+                      max="2099"
+                      className="bg-muted/50"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="movie-description">Description</Label>
+                  <Textarea
+                    id="movie-description"
+                    placeholder="A brief description of the movie..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="min-h-[100px] bg-muted/50"
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <FileUploadInput
+                    label="Cover Image"
+                    accept="image"
+                    value={coverImage}
+                    onChange={setCoverImage}
+                    folder="covers"
+                    placeholder="https://example.com/cover.jpg"
+                  />
+
+                  <FileUploadInput
+                    label="Banner Image"
+                    accept="image"
+                    value={bannerImage}
+                    onChange={setBannerImage}
+                    folder="banners"
+                    placeholder="https://example.com/banner.jpg"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select value={status} onValueChange={setStatus}>
+                    <SelectTrigger className="bg-muted/50 max-w-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="upcoming">Upcoming</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Genres</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {genres.map((genre) => (
+                      <Button
+                        key={genre}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleGenre(genre)}
+                        className={selectedGenres.includes(genre) ? 'bg-primary text-primary-foreground' : ''}
+                      >
+                        {genre}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <Button 
+                  type="button" 
+                  disabled={isSubmitting} 
+                  className="anime-button"
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    if (!title.trim()) {
+                      toast.error('Title is required');
+                      return;
+                    }
+                    setIsSubmitting(true);
+                    const { data, error } = await supabase
+                      .from('anime')
+                      .insert({
+                        title: title.trim(),
+                        description: description.trim() || null,
+                        cover_image: coverImage.trim() || null,
+                        banner_image: bannerImage.trim() || null,
+                        genres: selectedGenres.length > 0 ? selectedGenres : null,
+                        release_year: releaseYear ? parseInt(releaseYear) : null,
+                        type: 'movie',
+                        status,
+                        uploader_id: user?.id,
+                      })
+                      .select()
+                      .single();
+                    
+                    if (error) {
+                      toast.error('Failed to create movie');
+                    } else {
+                      toast.success('Movie created successfully!');
+                      setTitle('');
+                      setDescription('');
+                      setCoverImage('');
+                      setBannerImage('');
+                      setSelectedGenres([]);
+                      setReleaseYear('');
+                      setStatus('completed');
+                      fetchAnimeData();
+                      navigate(`/upload/anime/${data.id}`);
+                    }
+                    setIsSubmitting(false);
+                  }}
+                >
+                  {isSubmitting ? 'Creating...' : 'Create Movie & Add Video'}
                 </Button>
               </form>
             </CardContent>
