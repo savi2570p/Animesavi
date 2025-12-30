@@ -74,6 +74,9 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Recommended Anime - Moved to top */}
+      <RecommendedAnime />
+
       {/* Latest Episodes */}
       <LatestEpisodes />
 
@@ -82,9 +85,6 @@ export default function Index() {
 
       {/* Continue Watching */}
       <ContinueWatching />
-
-      {/* Recommended Anime */}
-      <RecommendedAnime />
 
       {/* Features Section */}
       <section className="py-20 md:py-28 relative overflow-hidden">
