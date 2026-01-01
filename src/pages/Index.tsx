@@ -8,6 +8,7 @@ import { RecommendedAnime } from '@/components/home/RecommendedAnime';
 import { LatestEpisodes } from '@/components/home/LatestEpisodes';
 import { LatestMovies } from '@/components/home/LatestMovies';
 import { LatestSeries } from '@/components/home/LatestSeries';
+import { RecentlyCompleted } from '@/components/home/RecentlyCompleted';
 
 export default function Index() {
   const { user } = useAuth();
@@ -86,6 +87,9 @@ export default function Index() {
 
       {/* Latest Movies */}
       <LatestMovies />
+
+      {/* Recently Completed */}
+      <RecentlyCompleted />
 
       {/* Continue Watching */}
       <ContinueWatching />
