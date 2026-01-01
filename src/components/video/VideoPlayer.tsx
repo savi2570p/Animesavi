@@ -380,10 +380,6 @@ export function VideoPlayer({
       if (switched) {
         setCurrentAudioTrack(trackId);
       }
-    } else {
-      // For browsers that don't support audioTracks API (Chrome, Firefox on desktop)
-      // Show helpful message
-      toast.info('Audio track switching requires Safari or a compatible browser. Try using the embed player for multi-audio support.');
     }
   }, []);
 

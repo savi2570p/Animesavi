@@ -664,55 +664,59 @@ export default function Watch() {
           </div>
 
           {/* Sidebar - Season & Episode List */}
-          <div className="lg:w-80">
+          <div className="lg:w-80 order-first lg:order-last">
             <div className="sticky top-20">
-              {/* Season Switcher */}
-              {allSeasons.length > 1 && (
-                <div className="mb-4">
-                  <h3 className="font-heading font-bold mb-2">Season</h3>
-                  <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col lg:flex-row gap-4">
+                {/* Season Switcher - Left Side */}
+                {allSeasons.length > 1 && (
+                  <div className="lg:w-16 flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
+                    <h3 className="font-heading font-bold text-sm mb-1 hidden lg:block">Season</h3>
                     {allSeasons.map((season) => (
                       <Button
                         key={season.id}
                         size="sm"
                         variant={currentSeason?.id === season.id ? 'default' : 'outline'}
                         onClick={() => handleSeasonChange(season.id)}
-                        className={currentSeason?.id === season.id ? 'anime-button' : ''}
+                        className={`shrink-0 lg:w-full ${currentSeason?.id === season.id ? 'anime-button' : ''}`}
+                        title={season.title || `Season ${season.season_number}`}
                       >
-                        {season.title || `Season ${season.season_number}`}
+                        S{season.season_number}
                       </Button>
                     ))}
                   </div>
-                </div>
-              )}
-              
-              <h3 className="font-heading font-bold mb-4">
-                Episodes
-                {currentSeason && allSeasons.length > 1 && (
-                  <span className="text-sm font-normal text-muted-foreground ml-2">
-                    ({currentSeason.title || `Season ${currentSeason.season_number}`})
-                  </span>
                 )}
-              </h3>
-              <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                {allEpisodes.map((ep) => (
-                  <Link
-                    key={ep.id}
-                    to={`/watch/${ep.id}`}
-                    className={`block p-3 rounded-lg transition-colors ${
-                      ep.id === episodeId
-                        ? 'bg-primary/20 border border-primary/50'
-                        : 'bg-muted/50 hover:bg-muted'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">
-                        EP {ep.episode_number}
+
+                {/* Episode List - Right Side */}
+                <div className="flex-1">
+                  <h3 className="font-heading font-bold mb-4">
+                    Episodes
+                    {currentSeason && allSeasons.length > 1 && (
+                      <span className="text-sm font-normal text-muted-foreground ml-2">
+                        ({currentSeason.title || `Season ${currentSeason.season_number}`})
                       </span>
-                      <span className="text-sm font-medium truncate">{ep.title}</span>
-                    </div>
-                  </Link>
-                ))}
+                    )}
+                  </h3>
+                  <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                    {allEpisodes.map((ep) => (
+                      <Link
+                        key={ep.id}
+                        to={`/watch/${ep.id}`}
+                        className={`block p-3 rounded-lg transition-colors ${
+                          ep.id === episodeId
+                            ? 'bg-primary/20 border border-primary/50'
+                            : 'bg-muted/50 hover:bg-muted'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-muted-foreground">
+                            EP {ep.episode_number}
+                          </span>
+                          <span className="text-sm font-medium truncate">{ep.title}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
