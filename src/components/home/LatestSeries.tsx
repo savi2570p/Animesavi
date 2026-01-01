@@ -36,7 +36,7 @@ export function LatestSeries() {
         `)
         .eq('type', 'series')
         .order('created_at', { ascending: false })
-        .limit(8);
+        .limit(4);
 
       if (animeError) throw animeError;
 
@@ -93,9 +93,9 @@ export function LatestSeries() {
             <h2 className="text-2xl md:text-3xl font-heading font-bold">Latest Series</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Array(8).fill(0).map((_, i) => (
+            {Array(4).fill(0).map((_, i) => (
               <div key={i} className="space-y-2">
-                <Skeleton className="aspect-[2/3] rounded-lg" />
+                <Skeleton className="aspect-[3/4] rounded-lg" />
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />
               </div>
@@ -129,7 +129,7 @@ export function LatestSeries() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
           {series.map((anime, index) => (
             <AnimeCardContextMenu
               key={anime.id}
@@ -139,10 +139,10 @@ export function LatestSeries() {
             >
               <Link
                 to={`/anime/${anime.id}`}
-                className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in`}
+                className={`group relative block stagger-${Math.min(index + 1, 4)} animate-fade-in`}
               >
-                {/* Cover Image */}
-                <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl transition-all duration-500">
+                {/* Cover Image - Smaller */}
+                <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-muted shadow-md group-hover:shadow-xl transition-all duration-500">
                   <img
                     src={anime.cover_image || '/placeholder.svg'}
                     alt={anime.title}

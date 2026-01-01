@@ -14,7 +14,7 @@ import {
   Share2,
   Calendar,
   Clock,
-  Eye,
+  
   Star,
   Sparkles,
   CheckCircle2,
@@ -356,12 +356,6 @@ export default function AnimeDetail() {
                   <Sparkles className="w-3 h-3 mr-1" />
                   {anime.status}
                 </Badge>
-              )}
-              {anime.view_count && anime.view_count > 0 && (
-                <span className="flex items-center gap-1.5">
-                  <Eye className="h-4 w-4" />
-                  {anime.view_count.toLocaleString()} views
-                </span>
               )}
             </div>
 

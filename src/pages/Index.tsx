@@ -78,11 +78,11 @@ export default function Index() {
       {/* Recommended Anime - Moved to top */}
       <RecommendedAnime />
 
+      {/* Latest Series - 2nd position */}
+      <LatestSeries />
+
       {/* Latest Episodes */}
       <LatestEpisodes />
-
-      {/* Latest Series */}
-      <LatestSeries />
 
       {/* Latest Movies */}
       <LatestMovies />

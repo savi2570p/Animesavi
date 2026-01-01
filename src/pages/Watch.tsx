@@ -41,6 +41,7 @@ interface Season {
   id: string;
   anime_id: string;
   season_number: number;
+  title: string | null;
 }
 
 interface Anime {
@@ -73,6 +74,8 @@ export default function Watch() {
   const [episode, setEpisode] = useState<Episode | null>(null);
   const [anime, setAnime] = useState<Anime | null>(null);
   const [allEpisodes, setAllEpisodes] = useState<Episode[]>([]);
+  const [allSeasons, setAllSeasons] = useState<Season[]>([]);
+  const [currentSeason, setCurrentSeason] = useState<Season | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -247,6 +250,18 @@ export default function Watch() {
 
     if (seasonData) {
       setAnime(seasonData.anime as Anime);
+      setCurrentSeason(seasonData as Season);
+
+      // Fetch all seasons for this anime
+      const { data: seasonsData } = await supabase
+        .from('seasons')
+        .select('*')
+        .eq('anime_id', (seasonData.anime as Anime).id)
+        .order('season_number');
+
+      if (seasonsData) {
+        setAllSeasons(seasonsData);
+      }
 
       // Fetch all episodes in this season
       const { data: episodesData } = await supabase
@@ -371,6 +386,26 @@ export default function Watch() {
       setNewComment('');
       fetchComments();
       toast.success('Comment added');
+    }
+  };
+
+  // Handle season change - fetch episodes for the new season
+  const handleSeasonChange = async (seasonId: string) => {
+    const newSeason = allSeasons.find(s => s.id === seasonId);
+    if (!newSeason || newSeason.id === currentSeason?.id) return;
+
+    // Fetch first episode of the new season
+    const { data: episodesData } = await supabase
+      .from('episodes')
+      .select('*')
+      .eq('season_id', seasonId)
+      .order('episode_number')
+      .limit(1);
+
+    if (episodesData && episodesData.length > 0) {
+      navigate(`/watch/${episodesData[0].id}`);
+    } else {
+      toast.error('No episodes found in this season');
     }
   };
 
@@ -628,10 +663,37 @@ export default function Watch() {
             </div>
           </div>
 
-          {/* Sidebar - Episode List */}
+          {/* Sidebar - Season & Episode List */}
           <div className="lg:w-80">
             <div className="sticky top-20">
-              <h3 className="font-heading font-bold mb-4">Episodes</h3>
+              {/* Season Switcher */}
+              {allSeasons.length > 1 && (
+                <div className="mb-4">
+                  <h3 className="font-heading font-bold mb-2">Season</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {allSeasons.map((season) => (
+                      <Button
+                        key={season.id}
+                        size="sm"
+                        variant={currentSeason?.id === season.id ? 'default' : 'outline'}
+                        onClick={() => handleSeasonChange(season.id)}
+                        className={currentSeason?.id === season.id ? 'anime-button' : ''}
+                      >
+                        {season.title || `Season ${season.season_number}`}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <h3 className="font-heading font-bold mb-4">
+                Episodes
+                {currentSeason && allSeasons.length > 1 && (
+                  <span className="text-sm font-normal text-muted-foreground ml-2">
+                    ({currentSeason.title || `Season ${currentSeason.season_number}`})
+                  </span>
+                )}
+              </h3>
               <div className="space-y-2 max-h-[500px] overflow-y-auto">
                 {allEpisodes.map((ep) => (
                   <Link
