@@ -253,6 +253,12 @@ export default function History() {
                   <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
                     EP {item.episode.episode_number}
                   </div>
+                  {/* Complete watermark for finished anime */}
+                  {item.completed && (
+                    <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-green-500/90 text-[10px] font-bold text-white">
+                      COMPLETE
+                    </div>
+                  )}
                   {/* Progress overlay */}
                   {item.progress !== null && item.progress > 0 && (
                     <div className="absolute bottom-0 left-0 right-0">
@@ -324,17 +330,25 @@ export default function History() {
                   <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
                     EP {item.episode.episode_number}
                   </div>
-                  {/* Delete button */}
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="absolute top-1 right-1 h-6 w-6 text-white/80 hover:text-destructive bg-black/40 hover:bg-black/60"
-                    onClick={(e) => deleteHistoryItem(item.id, e)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+                  {/* Complete watermark for finished anime */}
+                  {item.completed && (
+                    <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded bg-green-500/90 text-[8px] font-bold text-white">
+                      COMPLETE
+                    </div>
+                  )}
+                  {/* Delete button - moved to bottom right when not completed */}
+                  {!item.completed && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="absolute top-1 right-1 h-6 w-6 text-white/80 hover:text-destructive bg-black/40 hover:bg-black/60"
+                      onClick={(e) => deleteHistoryItem(item.id, e)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
                   {/* Progress bar at bottom */}
-                  {item.progress !== null && item.progress > 0 && (
+                  {item.progress !== null && item.progress > 0 && !item.completed && (
                     <div className="absolute bottom-0 left-0 right-0">
                       <Progress value={item.progress} className="h-1.5 rounded-none" />
                     </div>
