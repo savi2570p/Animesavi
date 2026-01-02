@@ -491,7 +491,7 @@ export default function Upload() {
                       value={releaseYear}
                       onChange={(e) => setReleaseYear(e.target.value)}
                       min="1900"
-                      max="2099"
+                      max={status === 'upcoming' ? 2099 : new Date().getFullYear()}
                       className="bg-muted/50"
                     />
                   </div>
@@ -621,7 +621,7 @@ export default function Upload() {
                       value={releaseYear}
                       onChange={(e) => setReleaseYear(e.target.value)}
                       min="1900"
-                      max="2099"
+                      max={2099}
                       className="bg-muted/50"
                     />
                   </div>

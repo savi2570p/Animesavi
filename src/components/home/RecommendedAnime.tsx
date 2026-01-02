@@ -133,8 +133,8 @@ export function RecommendedAnime() {
           </Button>
         </div>
 
-        {/* Anime Grid - Horizontal scroll on mobile */}
-        <div className="flex md:grid md:grid-cols-3 lg:grid-cols-6 gap-4 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
+        {/* Anime Row - Horizontal scroll on all devices */}
+        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
           {recommendations.map((anime, index) => (
             <AnimeCardContextMenu
               key={anime.id}
@@ -144,7 +144,7 @@ export function RecommendedAnime() {
             >
               <Link 
                 to={`/anime/${anime.id}`} 
-                className={`anime-card group stagger-${Math.min(index + 1, 6)} opacity-0 animate-fade-in w-[120px] md:w-auto shrink-0`}
+                className={`anime-card group stagger-${Math.min(index + 1, 6)} opacity-0 animate-fade-in w-[120px] md:w-[140px] shrink-0`}
               >
                 <div className="aspect-[3/4] relative overflow-hidden rounded-lg">
                   <img
