@@ -698,9 +698,12 @@ export function VideoPlayer({
     }
   }, [skipForward, skipBackward]);
 
-  // Universal click/tap handler for play/pause - works on all platforms
-  const handleVideoAreaClick = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+  // Click handler for desktop only - single click toggles play/pause
+  const handleVideoAreaClick = useCallback((e: React.MouseEvent) => {
     if (videoError) return;
+    
+    // Skip on touch devices - handled by handleTouchEnd
+    if ('ontouchstart' in window) return;
 
     const target = e.target as HTMLElement | null;
     if (!target) return;
@@ -711,12 +714,12 @@ export function VideoPlayer({
 
     if (target.closest(interactiveSelector)) return;
 
-    // Prevent default to avoid double-firing on touch devices
     e.preventDefault();
     togglePlay();
   }, [togglePlay, videoError]);
 
-  // Separate touch handler for double-tap detection
+  // Separate touch handler for double-tap detection on mobile
+  // Single tap does nothing, double tap toggles play/pause
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     const now = Date.now();
     const touch = e.changedTouches[0];
@@ -726,39 +729,39 @@ export function VideoPlayer({
     const timeSinceLastTap = now - lastTapRef.current.time;
     const distanceFromLastTap = Math.abs(x - lastTapRef.current.x);
     
+    // Check if this is a double tap
     if (timeSinceLastTap < 300 && distanceFromLastTap < 50) {
-      // Double tap detected
       e.preventDefault();
       const side = x < containerWidth / 2 ? 'left' : 'right';
+      const center = containerWidth / 3;
       
-      if (side === 'left') {
+      // Center area (middle third) - toggle play/pause on double tap
+      if (x > center && x < containerWidth - center) {
+        togglePlay();
+      } else if (side === 'left') {
+        // Left side - skip backward
         skipBackward();
         setDoubleTapSide('left');
+        setTimeout(() => setDoubleTapSide(null), 500);
       } else {
+        // Right side - skip forward
         skipForward();
         setDoubleTapSide('right');
+        setTimeout(() => setDoubleTapSide(null), 500);
       }
-      
-      // Clear the animation after showing
-      setTimeout(() => setDoubleTapSide(null), 500);
       
       // Reset last tap
       lastTapRef.current = { time: 0, x: 0 };
     } else {
-      // Single tap - record it and toggle play after short delay to check for double tap
+      // Single tap - just record it, don't toggle play
       lastTapRef.current = { time: now, x };
       
-      // Only toggle play if it's a single tap (not part of double tap)
-      setTimeout(() => {
-        if (lastTapRef.current.time === now) {
-          // Still the same tap, means no double tap followed
-          const target = e.target as HTMLElement;
-          const interactiveSelector = 'button, a, input, textarea, select, [role="menuitem"]';
-          if (!target.closest(interactiveSelector)) {
-            togglePlay();
-          }
-        }
-      }, 300);
+      // Show controls on single tap
+      const target = e.target as HTMLElement;
+      const interactiveSelector = 'button, a, input, textarea, select, [role="menuitem"]';
+      if (!target.closest(interactiveSelector)) {
+        setShowControls(true);
+      }
     }
   }, [skipForward, skipBackward, togglePlay]);
 
