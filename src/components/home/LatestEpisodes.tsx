@@ -145,7 +145,7 @@ export function LatestEpisodes() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        <div className="flex md:grid md:grid-cols-4 gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
           {episodes.map((episode, index) => (
             <AnimeCardContextMenu
               key={episode.id}
@@ -155,7 +155,7 @@ export function LatestEpisodes() {
             >
               <Link
                 to={`/watch/${episode.id}`}
-                className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in`}
+                className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in w-[200px] md:w-auto shrink-0`}
               >
                 {/* Thumbnail with hover effects */}
                 <div className="relative aspect-video rounded-xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl transition-all duration-500">

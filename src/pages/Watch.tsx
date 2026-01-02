@@ -42,6 +42,7 @@ interface Season {
   anime_id: string;
   season_number: number;
   title: string | null;
+  episode_count?: number;
 }
 
 interface Anime {
@@ -252,7 +253,7 @@ export default function Watch() {
       setAnime(seasonData.anime as Anime);
       setCurrentSeason(seasonData as Season);
 
-      // Fetch all seasons for this anime
+      // Fetch all seasons for this anime with episode counts
       const { data: seasonsData } = await supabase
         .from('seasons')
         .select('*')
@@ -260,7 +261,17 @@ export default function Watch() {
         .order('season_number');
 
       if (seasonsData) {
-        setAllSeasons(seasonsData);
+        // Fetch episode counts for each season
+        const seasonsWithCounts = await Promise.all(
+          seasonsData.map(async (season) => {
+            const { count } = await supabase
+              .from('episodes')
+              .select('id', { count: 'exact', head: true })
+              .eq('season_id', season.id);
+            return { ...season, episode_count: count || 0 };
+          })
+        );
+        setAllSeasons(seasonsWithCounts);
       }
 
       // Fetch all episodes in this season
@@ -669,7 +680,7 @@ export default function Watch() {
               <div className="flex flex-col lg:flex-row gap-4">
                 {/* Season Switcher - Left Side */}
                 {allSeasons.length > 1 && (
-                  <div className="lg:w-16 flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
+                  <div className="lg:w-auto flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
                     <h3 className="font-heading font-bold text-sm mb-1 hidden lg:block">Season</h3>
                     {allSeasons.map((season) => (
                       <Button
@@ -677,10 +688,13 @@ export default function Watch() {
                         size="sm"
                         variant={currentSeason?.id === season.id ? 'default' : 'outline'}
                         onClick={() => handleSeasonChange(season.id)}
-                        className={`shrink-0 lg:w-full ${currentSeason?.id === season.id ? 'anime-button' : ''}`}
+                        className={`shrink-0 lg:w-full flex flex-col items-center gap-0.5 py-2 px-3 h-auto ${currentSeason?.id === season.id ? 'anime-button' : ''}`}
                         title={season.title || `Season ${season.season_number}`}
                       >
-                        S{season.season_number}
+                        <span className="text-sm font-bold">S{season.season_number}</span>
+                        {season.episode_count !== undefined && (
+                          <span className="text-[10px] opacity-70">{season.episode_count} EP</span>
+                        )}
                       </Button>
                     ))}
                   </div>

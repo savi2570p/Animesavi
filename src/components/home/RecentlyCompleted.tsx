@@ -90,10 +90,10 @@ export function RecentlyCompleted() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="flex md:grid md:grid-cols-4 gap-4 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="space-y-2">
+              <div key={i} className="space-y-2 w-[140px] md:w-auto shrink-0">
                 <Skeleton className="aspect-[2/3] rounded-lg" />
                 <Skeleton className="h-4 w-3/4" />
               </div>
@@ -103,7 +103,7 @@ export function RecentlyCompleted() {
               <Link
                 key={anime.id}
                 to={`/anime/${anime.id}`}
-                className="group relative"
+                className="group relative w-[140px] md:w-auto shrink-0"
               >
                 <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-muted">
                   {anime.cover_image ? (
