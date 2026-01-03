@@ -3,7 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, Play, Star, Sparkles, TrendingUp, Clock, Film, Tv } from 'lucide-react';
+import { Search, Filter, Play, Star, Sparkles, TrendingUp, Clock, Film, Tv, CheckCircle2, Timer, CalendarClock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ALLOWED_GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports'] as const;
@@ -32,6 +32,7 @@ const sanitizeSearchQuery = (query: string): string => {
 
 type SortOption = 'newest' | 'popular' | 'trending';
 type TypeFilter = 'all' | 'series' | 'movie';
+type StatusFilter = 'all' | 'ongoing' | 'completed' | 'upcoming';
 
 interface Anime {
   id: string;
@@ -54,11 +55,16 @@ export default function Browse() {
   const [selectedGenre, setSelectedGenre] = useState(searchParams.get('genre') || '');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>((searchParams.get('type') as TypeFilter) || 'all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>((searchParams.get('status') as StatusFilter) || 'all');
 
   useEffect(() => {
     const urlType = searchParams.get('type') as TypeFilter;
     if (urlType && ['all', 'series', 'movie'].includes(urlType)) {
       setTypeFilter(urlType);
+    }
+    const urlStatus = searchParams.get('status') as StatusFilter;
+    if (urlStatus && ['all', 'ongoing', 'completed', 'upcoming'].includes(urlStatus)) {
+      setStatusFilter(urlStatus);
     }
     fetchAnime();
   }, [searchParams, sortBy]);
@@ -103,6 +109,12 @@ export default function Browse() {
       query = query.eq('type', type);
     }
 
+    // Filter by status (ongoing, completed, upcoming)
+    const status = searchParams.get('status');
+    if (status && status !== 'all') {
+      query = query.eq('status', status);
+    }
+
     const { data, error } = await query;
 
     if (!error && data) {
@@ -145,6 +157,17 @@ export default function Browse() {
     setSearchParams(params);
   };
 
+  const handleStatusFilter = (status: StatusFilter) => {
+    const params = new URLSearchParams(searchParams);
+    if (status === 'all') {
+      params.delete('status');
+    } else {
+      params.set('status', status);
+    }
+    setStatusFilter(status);
+    setSearchParams(params);
+  };
+
   const isNew = (dateString: string | null) => {
     if (!dateString) return false;
     const date = new Date(dateString);
@@ -164,6 +187,13 @@ export default function Browse() {
     { value: 'newest' as const, label: 'New Releases', icon: Clock },
     { value: 'popular' as const, label: 'Most Popular', icon: TrendingUp },
     { value: 'trending' as const, label: 'Trending', icon: Sparkles },
+  ];
+
+  const statusOptions: { value: StatusFilter; label: string; icon: typeof Timer }[] = [
+    { value: 'all', label: 'All', icon: Filter },
+    { value: 'ongoing', label: 'Ongoing', icon: Timer },
+    { value: 'completed', label: 'Completed', icon: CheckCircle2 },
+    { value: 'upcoming', label: 'Upcoming', icon: CalendarClock },
   ];
 
   return (
@@ -236,10 +266,25 @@ export default function Browse() {
             ))}
           </div>
 
-          {/* Genre filters */}
+          {/* Status filter */}
           <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-4">
+            <span className="text-sm text-muted-foreground font-medium">Status:</span>
+            {statusOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleStatusFilter(option.value)}
+                className={cn("filter-btn flex items-center gap-2", statusFilter === option.value && "active")}
+              >
+                <option.icon className="h-4 w-4" />
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Genre filters */}
+          <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-5">
             <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
-              <Filter className="h-4 w-4" />
+              <Sparkles className="h-4 w-4" />
               Genres:
             </div>
             {ALLOWED_GENRES.map((genre) => (
@@ -301,6 +346,22 @@ export default function Browse() {
                     <div className="browse-card-badge">
                       <Sparkles className="w-3 h-3 mr-1 inline" />
                       Ongoing
+                    </div>
+                  )}
+                  
+                  {/* Upcoming/Coming Soon badge */}
+                  {anime.status === 'upcoming' && (
+                    <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-orange-500 text-white rounded-md flex items-center gap-1 z-10 animate-pulse">
+                      <CalendarClock className="w-3 h-3" />
+                      Coming Soon
+                    </div>
+                  )}
+                  
+                  {/* Completed badge */}
+                  {anime.status === 'completed' && (
+                    <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-green-600 text-white rounded-md flex items-center gap-1 z-10">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Completed
                     </div>
                   )}
 

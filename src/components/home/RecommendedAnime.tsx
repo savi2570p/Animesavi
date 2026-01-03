@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Play, ChevronRight } from 'lucide-react';
+import { Sparkles, Play, ChevronRight, CalendarClock } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 
 interface Anime {
@@ -165,6 +165,13 @@ export function RecommendedAnime() {
                   {anime.status === 'ongoing' && (
                     <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px] font-semibold uppercase tracking-wide">
                       Ongoing
+                    </Badge>
+                  )}
+                  {/* Coming Soon Badge for upcoming */}
+                  {anime.status === 'upcoming' && (
+                    <Badge className="absolute top-2 left-2 bg-orange-500 text-white text-[10px] font-semibold uppercase tracking-wide flex items-center gap-1 animate-pulse">
+                      <CalendarClock className="h-3 w-3" />
+                      Coming Soon
                     </Badge>
                   )}
                 </div>

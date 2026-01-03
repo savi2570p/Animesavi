@@ -515,6 +515,9 @@ export function VideoPlayer({
 
     // Detect iOS
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    
+    // Check if SAVI.IN server (SHORT) - use iOS-like native player on fullscreen
+    const useiOSPlayer = isIOS || activeServer === 'SHORT';
 
     try {
       // Check if already in fullscreen
@@ -537,8 +540,8 @@ export function VideoPlayer({
           (document as any).msExitFullscreen();
         }
       } else {
-        // For iOS, use native video fullscreen (triggers iOS's built-in player)
-        if (isIOS && video) {
+        // For iOS or SAVI.IN server, use native video fullscreen (triggers iOS's built-in player)
+        if (useiOSPlayer && video) {
           if ((video as any).webkitEnterFullscreen) {
             (video as any).webkitEnterFullscreen();
             return;
@@ -567,7 +570,7 @@ export function VideoPlayer({
       // Fallback: manually toggle fullscreen state for CSS-based fullscreen
       setIsFullscreen(!isFullscreen);
     }
-  }, [isFullscreen]);
+  }, [isFullscreen, activeServer]);
 
   const skipForward = useCallback(() => {
     if (videoRef.current) {
@@ -1114,27 +1117,19 @@ export function VideoPlayer({
                       ))
                     ) : (
                       <>
-                        {/* Default audio language options when no tracks detected */}
-                        {['Hindi', 'English', 'Japanese'].map((lang) => (
-                          <DropdownMenuItem
-                            key={lang}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toast.info(`Upload a multi-audio file to switch to ${lang}`);
-                            }}
-                            className="flex items-center justify-between gap-4 cursor-pointer opacity-60"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">
-                                {lang === 'Hindi' ? '🇮🇳' : lang === 'English' ? '🇬🇧' : '🇯🇵'}
-                              </span>
-                              <span className="text-sm font-medium">{lang}</span>
-                            </div>
-                          </DropdownMenuItem>
-                        ))}
+                        {/* Show message that audio switching needs multi-audio source */}
+                        <DropdownMenuItem
+                          disabled
+                          className="text-muted-foreground text-xs"
+                        >
+                          Audio tracks not available for this video
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem disabled className="text-muted-foreground text-xs">
-                          Multi-audio requires dual audio file
+                        <DropdownMenuItem
+                          disabled
+                          className="text-muted-foreground text-xs"
+                        >
+                          Try switching servers for multi-audio
                         </DropdownMenuItem>
                       </>
                     )}

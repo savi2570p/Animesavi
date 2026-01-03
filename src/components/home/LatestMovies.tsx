@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Film, Clock, Star, ChevronRight } from 'lucide-react';
+import { Film, Clock, Star, ChevronRight, CalendarClock } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 
 interface Movie {
@@ -15,6 +15,7 @@ interface Movie {
   genres: string[] | null;
   created_at: string;
   view_count: number | null;
+  status: string | null;
   firstEpisodeId?: string | null;
 }
 
@@ -189,6 +190,14 @@ export function LatestMovies() {
                   {isNew(movie.created_at) && (
                     <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-md animate-pulse shadow-md">
                       NEW
+                    </div>
+                  )}
+
+                  {/* Coming Soon badge for upcoming */}
+                  {movie.status === 'upcoming' && (
+                    <div className="absolute top-10 left-2 px-2 py-1 text-xs font-bold bg-orange-500 text-white rounded-md animate-pulse shadow-md flex items-center gap-1">
+                      <CalendarClock className="h-3 w-3" />
+                      Coming Soon
                     </div>
                   )}
 
