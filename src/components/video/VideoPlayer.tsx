@@ -513,11 +513,11 @@ export function VideoPlayer({
     
     if (!container) return;
 
-    // Detect iOS
+    // Detect iOS/iPadOS
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     
-    // Check if SAVI.IN server (SHORT) - use iOS-like native player on fullscreen
-    const useiOSPlayer = isIOS || activeServer === 'SHORT';
+    // Check if SAVI.IN server (SHORT) - use native video fullscreen for iOS-like experience
+    const useNativeVideoFullscreen = activeServer === 'SHORT';
 
     try {
       // Check if already in fullscreen
@@ -528,9 +528,17 @@ export function VideoPlayer({
         (document as any).msFullscreenElement
       );
 
-      if (isCurrentlyFullscreen) {
+      // Check if video is in native fullscreen mode
+      const isVideoInNativeFullscreen = video && (
+        (video as any).webkitDisplayingFullscreen === true ||
+        (video as any).webkitPresentationMode === 'fullscreen'
+      );
+
+      if (isCurrentlyFullscreen || isVideoInNativeFullscreen) {
         // Exit fullscreen
-        if (document.exitFullscreen) {
+        if (isVideoInNativeFullscreen && (video as any).webkitExitFullscreen) {
+          (video as any).webkitExitFullscreen();
+        } else if (document.exitFullscreen) {
           await document.exitFullscreen();
         } else if ((document as any).webkitExitFullscreen) {
           (document as any).webkitExitFullscreen();
@@ -540,10 +548,22 @@ export function VideoPlayer({
           (document as any).msExitFullscreen();
         }
       } else {
-        // For iOS or SAVI.IN server, use native video fullscreen (triggers iOS's built-in player)
-        if (useiOSPlayer && video) {
+        // For SAVI.IN server, use native video element fullscreen for iOS-style experience
+        if (useNativeVideoFullscreen && video) {
+          // Try iOS native video fullscreen first (best experience on iOS/Safari)
           if ((video as any).webkitEnterFullscreen) {
             (video as any).webkitEnterFullscreen();
+            return;
+          }
+          // Try webkit presentation mode (Safari macOS/iOS)
+          if ((video as any).webkitSupportsPresentationMode && 
+              typeof (video as any).webkitSetPresentationMode === 'function') {
+            (video as any).webkitSetPresentationMode('fullscreen');
+            return;
+          }
+          // For other browsers, use video element's requestFullscreen for native controls
+          if ((video as any).requestFullscreen) {
+            await (video as any).requestFullscreen();
             return;
           } else if ((video as any).webkitRequestFullscreen) {
             (video as any).webkitRequestFullscreen();
@@ -551,7 +571,15 @@ export function VideoPlayer({
           }
         }
         
-        // For non-iOS, use container fullscreen to show our custom controls
+        // For iOS devices on other servers, also prefer native video fullscreen
+        if (isIOS && video) {
+          if ((video as any).webkitEnterFullscreen) {
+            (video as any).webkitEnterFullscreen();
+            return;
+          }
+        }
+        
+        // For other servers/browsers, use container fullscreen to show our custom controls
         if (container.requestFullscreen) {
           await container.requestFullscreen();
         } else if ((container as any).webkitRequestFullscreen) {
@@ -1116,22 +1144,20 @@ export function VideoPlayer({
                         </DropdownMenuItem>
                       ))
                     ) : (
-                      <>
-                        {/* Show message that audio switching needs multi-audio source */}
-                        <DropdownMenuItem
-                          disabled
-                          className="text-muted-foreground text-xs"
-                        >
-                          Audio tracks not available for this video
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          disabled
-                          className="text-muted-foreground text-xs"
-                        >
-                          Try switching servers for multi-audio
-                        </DropdownMenuItem>
-                      </>
+                      <div className="px-2 py-3 space-y-2">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Headphones className="w-4 h-4" />
+                          <span className="text-sm font-medium">Audio Switching</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Audio track switching is only supported in Safari browser for videos with multiple audio tracks.
+                        </p>
+                        <div className="pt-1 border-t border-border/50">
+                          <p className="text-xs text-muted-foreground/70">
+                            💡 Tip: Use Safari or try different servers for multi-audio options.
+                          </p>
+                        </div>
+                      </div>
                     )}
                   </DropdownMenuContent>,
                   document.body
