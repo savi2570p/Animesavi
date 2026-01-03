@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Tv, ChevronRight, Play } from 'lucide-react';
+import { Tv, ChevronRight, Play, CalendarClock } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 
 interface AnimeSeries {
@@ -12,6 +12,7 @@ interface AnimeSeries {
   cover_image: string | null;
   created_at: string;
   episode_count: number;
+  status: string | null;
 }
 
 export function LatestSeries() {
@@ -32,7 +33,8 @@ export function LatestSeries() {
           title,
           cover_image,
           created_at,
-          type
+          type,
+          status
         `)
         .eq('type', 'series')
         .order('created_at', { ascending: false })
@@ -169,6 +171,14 @@ export function LatestSeries() {
                   {isNew(anime.created_at) && (
                     <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-lg shadow-md animate-pulse">
                       NEW
+                    </div>
+                  )}
+
+                  {/* Coming Soon badge for upcoming */}
+                  {anime.status === 'upcoming' && (
+                    <div className="absolute top-10 left-2 px-2 py-1 text-xs font-bold bg-orange-500 text-white rounded-lg shadow-md animate-pulse flex items-center gap-1">
+                      <CalendarClock className="h-3 w-3" />
+                      Coming Soon
                     </div>
                   )}
 
