@@ -36,6 +36,14 @@ interface AudioTrackInfo {
   enabled: boolean;
 }
 
+interface QualityLevel {
+  id: number;
+  height: number;
+  width: number;
+  bitrate: number;
+  label: string;
+}
+
 export type ServerType = 'PLAY' | 'SHORT' | 'Zex';
 
 interface VideoPlayerProps {
@@ -167,13 +175,17 @@ export function VideoPlayer({
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [quality, setQuality] = useState<'1080p' | '720p' | '480p' | '360p'>('1080p');
   const [showControls, setShowControls] = useState(true);
   const [videoError, setVideoError] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   const [useIframeFallback, setUseIframeFallback] = useState(false);
   const [audioTracks, setAudioTracks] = useState<AudioTrackInfo[]>([]);
   const [currentAudioTrack, setCurrentAudioTrack] = useState<number>(0);
+  
+  // HLS Quality levels
+  const [qualityLevels, setQualityLevels] = useState<QualityLevel[]>([]);
+  const [currentQualityLevel, setCurrentQualityLevel] = useState<number>(-1); // -1 = Auto
+  const [isAutoQuality, setIsAutoQuality] = useState(true);
   
   // Video processing state for SAVI.IN server
   const [isProcessing, setIsProcessing] = useState(false);
@@ -200,6 +212,9 @@ export function VideoPlayer({
     setUseIframeFallback(false);
     setAudioTracks([]);
     setCurrentAudioTrack(0);
+    setQualityLevels([]);
+    setCurrentQualityLevel(-1);
+    setIsAutoQuality(true);
     setIsProcessing(false);
     setProcessingTimeLeft(180);
     
@@ -269,9 +284,11 @@ export function VideoPlayer({
           hls.loadSource(effectiveVideoUrl);
           hls.attachMedia(video);
 
-          // Listen for manifest parsed to get audio tracks
+          // Listen for manifest parsed to get audio tracks and quality levels
           hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
-            console.log('HLS manifest parsed, audio tracks:', data.audioTracks);
+            console.log('HLS manifest parsed, audio tracks:', data.audioTracks, 'levels:', data.levels);
+            
+            // Audio tracks
             if (data.audioTracks && data.audioTracks.length > 0) {
               const tracks: AudioTrackInfo[] = data.audioTracks.map((track, index) => ({
                 id: track.id,
@@ -283,6 +300,21 @@ export function VideoPlayer({
               setCurrentAudioTrack(hls.audioTrack);
             }
             
+            // Quality levels
+            if (data.levels && data.levels.length > 0) {
+              const levels: QualityLevel[] = data.levels.map((level, index) => ({
+                id: index,
+                height: level.height,
+                width: level.width,
+                bitrate: level.bitrate,
+                label: getQualityLabel(level.height, level.bitrate),
+              }));
+              // Sort by height descending (highest quality first)
+              levels.sort((a, b) => b.height - a.height);
+              setQualityLevels(levels);
+              console.log('Quality levels detected:', levels);
+            }
+            
             // Auto play
             video.play().catch(() => {});
           });
@@ -291,6 +323,14 @@ export function VideoPlayer({
           hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (event, data) => {
             console.log('Audio track switched to:', data.id);
             setCurrentAudioTrack(data.id);
+          });
+          
+          // Listen for level changes
+          hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
+            console.log('Quality level switched to:', data.level);
+            if (!isAutoQuality) {
+              setCurrentQualityLevel(data.level);
+            }
           });
 
           hls.on(Hls.Events.ERROR, (event, data) => {
@@ -372,6 +412,41 @@ export function VideoPlayer({
     
     return `Audio ${index + 1}`;
   };
+
+  // Helper to get readable quality labels
+  const getQualityLabel = (height: number, bitrate: number): string => {
+    const bitrateKbps = Math.round(bitrate / 1000);
+    const bitrateMbps = (bitrate / 1000000).toFixed(1);
+    
+    if (height >= 2160) return `4K (${bitrateMbps} Mbps)`;
+    if (height >= 1440) return `1440p (${bitrateMbps} Mbps)`;
+    if (height >= 1080) return `1080p (${bitrateMbps} Mbps)`;
+    if (height >= 720) return `720p (${bitrateKbps} kbps)`;
+    if (height >= 480) return `480p (${bitrateKbps} kbps)`;
+    if (height >= 360) return `360p (${bitrateKbps} kbps)`;
+    if (height >= 240) return `240p (${bitrateKbps} kbps)`;
+    return `${height}p (${bitrateKbps} kbps)`;
+  };
+
+  // Switch quality level - HLS.js only
+  const switchQualityLevel = useCallback((levelId: number) => {
+    if (hlsRef.current) {
+      if (levelId === -1) {
+        // Auto quality
+        hlsRef.current.currentLevel = -1;
+        setIsAutoQuality(true);
+        setCurrentQualityLevel(-1);
+        toast.success('Quality: Auto');
+      } else {
+        // Specific quality
+        hlsRef.current.currentLevel = levelId;
+        setIsAutoQuality(false);
+        setCurrentQualityLevel(levelId);
+        const level = qualityLevels.find(l => l.id === levelId);
+        toast.success(`Quality: ${level?.label || `Level ${levelId}`}`);
+      }
+    }
+  }, [qualityLevels]);
 
   // Switch audio track - works with both HLS.js and native
   const switchAudioTrack = useCallback((trackId: number) => {
@@ -945,11 +1020,7 @@ export function VideoPlayer({
 
       <video
         ref={videoRef}
-        className={`w-full h-full object-contain transition-all duration-300 ${
-          quality === '360p' ? 'blur-[2px]' : 
-          quality === '480p' ? 'blur-[1px]' : 
-          ''
-        } ${videoError ? 'hidden' : ''}`}
+        className={`w-full h-full object-contain transition-all duration-300 ${videoError ? 'hidden' : ''}`}
         onTimeUpdate={handleTimeUpdate}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
@@ -1212,46 +1283,98 @@ export function VideoPlayer({
                 )}
               </DropdownMenu>
 
-              {/* Quality selector */}
-              {features.includes('quality') && (
-                <DropdownMenu modal={false}>
-                  <DropdownMenuTrigger asChild>
-                    <button 
-                      className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Settings className="w-5 h-5" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  {createPortal(
-                    <DropdownMenuContent 
-                      align="end" 
-                      className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[120px]"
-                      sideOffset={8}
-                      style={{ zIndex: 2147483647 }}
-                    >
-                      <DropdownMenuLabel className="text-xs text-muted-foreground">Quality</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {(['1080p', '720p', '480p', '360p'] as const).map((q) => (
+              {/* Quality selector - HLS dynamic or static fallback */}
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
+                  <button 
+                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
+                    onClick={(e) => e.stopPropagation()}
+                    title="Quality"
+                  >
+                    <Settings className="w-5 h-5" />
+                    {qualityLevels.length > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full text-[10px] flex items-center justify-center font-bold">
+                        {isAutoQuality ? 'A' : qualityLevels.find(l => l.id === currentQualityLevel)?.height || ''}
+                      </span>
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                {createPortal(
+                  <DropdownMenuContent 
+                    align="end" 
+                    className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[180px] max-h-[300px] overflow-y-auto"
+                    sideOffset={8}
+                    style={{ zIndex: 2147483647 }}
+                  >
+                    <DropdownMenuLabel className="text-xs text-muted-foreground flex items-center gap-2">
+                      <Settings className="w-3 h-3" />
+                      Quality
+                      {qualityLevels.length > 0 && (
+                        <span className="ml-auto text-primary">({qualityLevels.length} levels)</span>
+                      )}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    
+                    {qualityLevels.length > 0 ? (
+                      <>
+                        {/* Auto quality option */}
                         <DropdownMenuItem
-                          key={q}
-                          onClick={(e) => { e.stopPropagation(); setQuality(q); }}
-                          className={`${quality === q ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+                          onClick={(e) => { e.stopPropagation(); switchQualityLevel(-1); }}
+                          className={`${isAutoQuality ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
                         >
-                          <span className="text-sm font-medium">{q}</span>
-                          <div className="flex items-center gap-2">
-                            {(q === '720p' || q === '1080p') && (
-                              <span className="text-[10px] font-bold bg-primary/20 text-primary px-1.5 py-0.5 rounded">HD</span>
-                            )}
-                            {quality === q && <Check className="w-4 h-4 text-primary" />}
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">Auto</span>
+                            <span className="text-xs text-muted-foreground">Adapts to network speed</span>
                           </div>
+                          {isAutoQuality && <Check className="w-4 h-4 text-primary" />}
                         </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>,
-                    document.body
-                  )}
-                </DropdownMenu>
-              )}
+                        <DropdownMenuSeparator />
+                        
+                        {/* Individual quality levels */}
+                        {qualityLevels.map((level) => (
+                          <DropdownMenuItem
+                            key={level.id}
+                            onClick={(e) => { e.stopPropagation(); switchQualityLevel(level.id); }}
+                            className={`${!isAutoQuality && currentQualityLevel === level.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+                          >
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">{level.height}p</span>
+                              <span className="text-xs text-muted-foreground">
+                                {level.width}×{level.height} • {(level.bitrate / 1000000).toFixed(1)} Mbps
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {level.height >= 1080 && (
+                                <span className="text-[10px] font-bold bg-primary/20 text-primary px-1.5 py-0.5 rounded">HD</span>
+                              )}
+                              {level.height >= 2160 && (
+                                <span className="text-[10px] font-bold bg-yellow-500/20 text-yellow-500 px-1.5 py-0.5 rounded">4K</span>
+                              )}
+                              {!isAutoQuality && currentQualityLevel === level.id && <Check className="w-4 h-4 text-primary" />}
+                            </div>
+                          </DropdownMenuItem>
+                        ))}
+                      </>
+                    ) : (
+                      <div className="px-2 py-3 space-y-2">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Settings className="w-4 h-4" />
+                          <span className="text-sm font-medium">Quality Selection</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Automatic quality selection is active. Quality levels are only available for HLS streams (.m3u8).
+                        </p>
+                        <div className="pt-1 border-t border-border/50">
+                          <p className="text-xs text-muted-foreground/70">
+                            💡 The player will automatically adjust quality based on your network speed.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </DropdownMenuContent>,
+                  document.body
+                )}
+              </DropdownMenu>
 
               {/* Download */}
               {features.includes('download') && (
