@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
+import Hls from 'hls.js';
 import {
   Play,
   Pause,
@@ -24,15 +25,12 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
   DropdownMenuLabel,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { DownloadVerificationDialog } from './DownloadVerificationDialog';
 
 interface AudioTrackInfo {
-  id: string;
+  id: number;
   label: string;
   language: string;
   enabled: boolean;
@@ -107,12 +105,18 @@ const isEmbeddableUrl = (url: string | null): boolean => {
   return embedPatterns.some(pattern => pattern.test(url));
 };
 
+// Helper to detect HLS streams
+const isHlsUrl = (url: string | null): boolean => {
+  if (!url) return false;
+  return /\.m3u8(\?.*)?$/i.test(url) || url.includes('.m3u8');
+};
+
 // Helper to detect direct video file URLs that can be played natively
 const isDirectVideoUrl = (url: string | null): boolean => {
   if (!url) return false;
   
   // Direct video file extensions
-  const videoExtensions = /\.(mp4|webm|mkv|avi|mov|m4v|ogg|ogv|m3u8|mpd)(\?.*)?$/i;
+  const videoExtensions = /\.(mp4|webm|mkv|avi|mov|m4v|ogg|ogv|mpd)(\?.*)?$/i;
   
   // Known video hosting CDNs that serve direct video files
   const directVideoPatterns = [
@@ -138,13 +142,6 @@ const isDirectVideoUrl = (url: string | null): boolean => {
   return directVideoPatterns.some(pattern => pattern.test(url));
 };
 
-// Helper to check if URL might work as direct video (for fallback attempts)
-const couldBeDirectVideo = (url: string | null): boolean => {
-  if (!url) return false;
-  // If it's not clearly an embed URL, try it as direct first
-  return !isEmbeddableUrl(url) || isDirectVideoUrl(url);
-};
-
 export function VideoPlayer({
   videoUrl,
   externalUrl,
@@ -162,6 +159,8 @@ export function VideoPlayer({
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
+  
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -174,11 +173,11 @@ export function VideoPlayer({
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   const [useIframeFallback, setUseIframeFallback] = useState(false);
   const [audioTracks, setAudioTracks] = useState<AudioTrackInfo[]>([]);
-  const [currentAudioTrack, setCurrentAudioTrack] = useState<string>('');
+  const [currentAudioTrack, setCurrentAudioTrack] = useState<number>(0);
   
   // Video processing state for SAVI.IN server
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processingTimeLeft, setProcessingTimeLeft] = useState(180); // 3 minutes in seconds
+  const [processingTimeLeft, setProcessingTimeLeft] = useState(180);
   const processingTimerRef = useRef<NodeJS.Timeout>();
   
   // Download verification dialog state
@@ -190,27 +189,216 @@ export function VideoPlayer({
   
   const features = serverConfigs[activeServer].features;
   
-  // Get any available URL for playback - prefer videoUrl, fallback to externalUrl
+  // Get any available URL for playback
   const anyVideoUrl = videoUrl || externalUrl;
-  
-  // ALWAYS try native video player first for all URLs
-  // Only fall back to iframe if user explicitly requests it via the fallback button
   const effectiveVideoUrl = anyVideoUrl;
-  
-  // Only use iframe when user explicitly triggers fallback
   const shouldUseIframe = useIframeFallback;
   
+  // Reset state when video URL changes
   useEffect(() => {
     setVideoError(false);
     setUseIframeFallback(false);
     setAudioTracks([]);
-    setCurrentAudioTrack('');
+    setCurrentAudioTrack(0);
     setIsProcessing(false);
     setProcessingTimeLeft(180);
+    
     if (processingTimerRef.current) {
       clearInterval(processingTimerRef.current);
     }
+    
+    // Cleanup HLS instance
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
   }, [videoUrl, externalUrl]);
+
+  // HLS.js initialization for multi-audio support
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !effectiveVideoUrl) return;
+
+    const setupHls = () => {
+      // Check if it's an HLS stream
+      if (isHlsUrl(effectiveVideoUrl)) {
+        // Destroy existing HLS instance
+        if (hlsRef.current) {
+          hlsRef.current.destroy();
+          hlsRef.current = null;
+        }
+
+        // Check if browser natively supports HLS (Safari)
+        if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          console.log('Using native HLS support (Safari)');
+          video.src = effectiveVideoUrl;
+          
+          // For Safari, use native audioTracks API
+          const detectNativeAudioTracks = () => {
+            const nativeAudioTracks = (video as any).audioTracks;
+            if (nativeAudioTracks && nativeAudioTracks.length > 0) {
+              const tracks: AudioTrackInfo[] = [];
+              for (let i = 0; i < nativeAudioTracks.length; i++) {
+                const track = nativeAudioTracks[i];
+                tracks.push({
+                  id: i,
+                  label: getAudioLabel(track.label, track.language, i),
+                  language: track.language || 'Unknown',
+                  enabled: track.enabled,
+                });
+                if (track.enabled) setCurrentAudioTrack(i);
+              }
+              setAudioTracks(tracks);
+            }
+          };
+          
+          video.addEventListener('loadedmetadata', detectNativeAudioTracks);
+          return () => video.removeEventListener('loadedmetadata', detectNativeAudioTracks);
+        }
+
+        // Use HLS.js for other browsers
+        if (Hls.isSupported()) {
+          console.log('Using HLS.js for multi-audio support');
+          const hls = new Hls({
+            enableWorker: true,
+            lowLatencyMode: false,
+            backBufferLength: 90,
+          });
+          
+          hlsRef.current = hls;
+          hls.loadSource(effectiveVideoUrl);
+          hls.attachMedia(video);
+
+          // Listen for manifest parsed to get audio tracks
+          hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+            console.log('HLS manifest parsed, audio tracks:', data.audioTracks);
+            if (data.audioTracks && data.audioTracks.length > 0) {
+              const tracks: AudioTrackInfo[] = data.audioTracks.map((track, index) => ({
+                id: track.id,
+                label: getAudioLabel(track.name, track.lang, index),
+                language: track.lang || 'Unknown',
+                enabled: index === hls.audioTrack,
+              }));
+              setAudioTracks(tracks);
+              setCurrentAudioTrack(hls.audioTrack);
+            }
+            
+            // Auto play
+            video.play().catch(() => {});
+          });
+
+          // Listen for audio track changes
+          hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (event, data) => {
+            console.log('Audio track switched to:', data.id);
+            setCurrentAudioTrack(data.id);
+          });
+
+          hls.on(Hls.Events.ERROR, (event, data) => {
+            console.error('HLS error:', data);
+            if (data.fatal) {
+              switch (data.type) {
+                case Hls.ErrorTypes.NETWORK_ERROR:
+                  hls.startLoad();
+                  break;
+                case Hls.ErrorTypes.MEDIA_ERROR:
+                  hls.recoverMediaError();
+                  break;
+                default:
+                  setVideoError(true);
+                  break;
+              }
+            }
+          });
+        }
+      } else {
+        // Non-HLS video - use native playback
+        video.src = effectiveVideoUrl;
+        
+        // Try to detect audio tracks for MP4/MKV with multiple audio streams
+        const detectNativeAudioTracks = () => {
+          const nativeAudioTracks = (video as any).audioTracks;
+          if (nativeAudioTracks && nativeAudioTracks.length > 0) {
+            const tracks: AudioTrackInfo[] = [];
+            for (let i = 0; i < nativeAudioTracks.length; i++) {
+              const track = nativeAudioTracks[i];
+              tracks.push({
+                id: i,
+                label: getAudioLabel(track.label, track.language, i),
+                language: track.language || 'Unknown',
+                enabled: track.enabled,
+              });
+              if (track.enabled) setCurrentAudioTrack(i);
+            }
+            setAudioTracks(tracks);
+          }
+        };
+        
+        video.addEventListener('loadedmetadata', detectNativeAudioTracks);
+        video.addEventListener('canplay', detectNativeAudioTracks);
+        
+        return () => {
+          video.removeEventListener('loadedmetadata', detectNativeAudioTracks);
+          video.removeEventListener('canplay', detectNativeAudioTracks);
+        };
+      }
+    };
+
+    setupHls();
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [effectiveVideoUrl]);
+
+  // Helper to get readable audio labels
+  const getAudioLabel = (label: string | undefined, lang: string | undefined, index: number): string => {
+    const language = (lang || '').toLowerCase();
+    
+    if (label && label.trim()) return label;
+    
+    if (language.includes('hin') || language === 'hi') return '🇮🇳 Hindi';
+    if (language.includes('eng') || language === 'en') return '🇬🇧 English';
+    if (language.includes('jpn') || language === 'ja' || language.includes('jap')) return '🇯🇵 Japanese';
+    if (language.includes('spa') || language === 'es') return '🇪🇸 Spanish';
+    if (language.includes('fra') || language === 'fr') return '🇫🇷 French';
+    if (language.includes('ger') || language === 'de') return '🇩🇪 German';
+    if (language.includes('ita') || language === 'it') return '🇮🇹 Italian';
+    if (language.includes('por') || language === 'pt') return '🇧🇷 Portuguese';
+    if (language.includes('kor') || language === 'ko') return '🇰🇷 Korean';
+    if (language.includes('chi') || language === 'zh') return '🇨🇳 Chinese';
+    
+    return `Audio ${index + 1}`;
+  };
+
+  // Switch audio track - works with both HLS.js and native
+  const switchAudioTrack = useCallback((trackId: number) => {
+    const video = videoRef.current;
+    
+    // Try HLS.js first
+    if (hlsRef.current && hlsRef.current.audioTracks.length > 0) {
+      hlsRef.current.audioTrack = trackId;
+      const track = hlsRef.current.audioTracks[trackId];
+      toast.success(`Audio: ${track?.name || `Track ${trackId + 1}`}`);
+      setCurrentAudioTrack(trackId);
+      return;
+    }
+    
+    // Fallback to native audioTracks API
+    if (video) {
+      const nativeAudioTracks = (video as any).audioTracks;
+      if (nativeAudioTracks && nativeAudioTracks.length > 0) {
+        for (let i = 0; i < nativeAudioTracks.length; i++) {
+          nativeAudioTracks[i].enabled = i === trackId;
+        }
+        const track = nativeAudioTracks[trackId];
+        toast.success(`Audio: ${track?.label || `Track ${trackId + 1}`}`);
+        setCurrentAudioTrack(trackId);
+      }
+    }
+  }, []);
 
   // Handle SAVI.IN processing simulation
   useEffect(() => {
@@ -224,7 +412,6 @@ export function VideoPlayer({
             clearInterval(processingTimerRef.current);
             setIsProcessing(false);
             setVideoError(false);
-            // Try to reload video
             if (videoRef.current) {
               videoRef.current.load();
               videoRef.current.play().catch(() => {});
@@ -243,147 +430,7 @@ export function VideoPlayer({
     };
   }, [activeServer, videoError, isProcessing]);
 
-  // Audio tracks detection - Enhanced for multi-audio files with better desktop support
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const detectAudioTracks = () => {
-      const tracks: AudioTrackInfo[] = [];
-      
-      // Method 1: Check HTML5 audioTracks API (Safari, some other browsers)
-      const htmlAudioTracks = (video as any).audioTracks;
-      if (htmlAudioTracks && htmlAudioTracks.length > 0) {
-        console.log('Detected audio tracks via audioTracks API:', htmlAudioTracks.length);
-        for (let i = 0; i < htmlAudioTracks.length; i++) {
-          const track = htmlAudioTracks[i];
-          const lang = track.language?.toLowerCase() || '';
-          
-          // Map language codes to readable names with flags
-          let label = track.label || `Audio ${i + 1}`;
-          let displayLang = track.language || 'Unknown';
-          
-          if (lang.includes('hin') || lang === 'hi') {
-            label = '🇮🇳 Hindi';
-            displayLang = 'Hindi';
-          } else if (lang.includes('eng') || lang === 'en') {
-            label = '🇬🇧 English';
-            displayLang = 'English';
-          } else if (lang.includes('jpn') || lang === 'ja' || lang.includes('jap')) {
-            label = '🇯🇵 Japanese';
-            displayLang = 'Japanese';
-          }
-          
-          tracks.push({
-            id: track.id || `track-${i}`,
-            label: label,
-            language: displayLang,
-            enabled: track.enabled,
-          });
-          
-          if (track.enabled) {
-            setCurrentAudioTrack(track.id || `track-${i}`);
-          }
-        }
-        setAudioTracks(tracks);
-        return;
-      }
-      
-      // Method 2: Check for MediaSource extensions (for DASH/HLS streams)
-      const mediaSource = (video as any).mediaSource || (window as any).MediaSource;
-      if (mediaSource && video.src && (video.src.includes('.mpd') || video.src.includes('.m3u8'))) {
-        console.log('Video appears to be adaptive streaming, audio tracks may be available through player');
-      }
-      
-      // Method 3: For MKV/MP4 with multiple audio streams, try using the video element's textTracks 
-      // as a proxy indicator (browsers that support multi-audio often expose them similarly)
-      if ((video as any).mozHasAudio !== undefined || (video as any).webkitAudioDecodedByteCount !== undefined) {
-        // Firefox or WebKit - check if there might be multiple tracks
-        console.log('Browser supports advanced audio detection');
-      }
-      
-      // If no tracks found via API but video has audio, check if file name suggests multi-audio
-      if (tracks.length === 0 && effectiveVideoUrl) {
-        const url = effectiveVideoUrl.toLowerCase();
-        const hasMultiAudioHint = url.includes('dual') || url.includes('multi') || 
-                                   url.includes('hindi') || url.includes('english') ||
-                                   url.includes('japanese') || url.includes('dub');
-        
-        if (hasMultiAudioHint) {
-          console.log('Video URL suggests multi-audio content');
-          // Show info about potential audio tracks
-        }
-      }
-      
-      setAudioTracks(tracks);
-      
-      // Log for debugging
-      if (tracks.length > 0) {
-        console.log('Audio tracks available:', tracks);
-      }
-    };
-
-    // Listen for audio track changes with retry mechanism
-    const handleAudioTrackChange = () => {
-      detectAudioTracks();
-    };
-
-    // Initial detection after a short delay to ensure video is loaded
-    const initialDetectTimeout = setTimeout(() => {
-      detectAudioTracks();
-    }, 500);
-
-    video.addEventListener('loadedmetadata', detectAudioTracks);
-    video.addEventListener('canplay', detectAudioTracks);
-    video.addEventListener('loadeddata', detectAudioTracks);
-    
-    // Also check audioTracks for change event
-    const htmlAudioTracks = (video as any).audioTracks;
-    if (htmlAudioTracks) {
-      htmlAudioTracks.addEventListener('change', handleAudioTrackChange);
-      htmlAudioTracks.addEventListener('addtrack', handleAudioTrackChange);
-      htmlAudioTracks.addEventListener('removetrack', handleAudioTrackChange);
-    }
-
-    return () => {
-      clearTimeout(initialDetectTimeout);
-      video.removeEventListener('loadedmetadata', detectAudioTracks);
-      video.removeEventListener('canplay', detectAudioTracks);
-      video.removeEventListener('loadeddata', detectAudioTracks);
-      if (htmlAudioTracks) {
-        htmlAudioTracks.removeEventListener('change', handleAudioTrackChange);
-        htmlAudioTracks.removeEventListener('addtrack', handleAudioTrackChange);
-        htmlAudioTracks.removeEventListener('removetrack', handleAudioTrackChange);
-      }
-    };
-  }, [effectiveVideoUrl]);
-
-  const switchAudioTrack = useCallback((trackId: string) => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const htmlAudioTracks = (video as any).audioTracks;
-    if (htmlAudioTracks && htmlAudioTracks.length > 0) {
-      let switched = false;
-      for (let i = 0; i < htmlAudioTracks.length; i++) {
-        const track = htmlAudioTracks[i];
-        const id = track.id || `track-${i}`;
-        const wasEnabled = track.enabled;
-        track.enabled = id === trackId;
-        
-        if (track.enabled && !wasEnabled) {
-          console.log('Switched to audio track:', track.label || id);
-          toast.success(`Audio: ${track.label || `Track ${i + 1}`}`);
-          switched = true;
-        }
-      }
-      if (switched) {
-        setCurrentAudioTrack(trackId);
-      }
-    }
-  }, []);
-
-  // CRITICAL: Cleanup video on unmount to stop audio when navigating away
+  // CRITICAL: Cleanup video on unmount
   useEffect(() => {
     const video = videoRef.current;
     
@@ -393,11 +440,14 @@ export function VideoPlayer({
         video.src = '';
         video.load();
       }
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
     };
   }, []);
 
-
-  // Handle fullscreen changes (including webkit for iOS)
+  // Handle fullscreen changes - COMPREHENSIVE FIX
   useEffect(() => {
     const handleFullscreenChange = () => {
       const isFS = !!(
@@ -407,32 +457,49 @@ export function VideoPlayer({
         (document as any).msFullscreenElement
       );
       setIsFullscreen(isFS);
+      
+      // CRITICAL: Ensure controls are shown when entering fullscreen
+      if (isFS) {
+        setShowControls(true);
+      }
     };
 
+    // Listen to all fullscreen events
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
     document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    
+    // Also listen for video element specific events (iOS)
+    const video = videoRef.current;
+    if (video) {
+      video.addEventListener('webkitbeginfullscreen', () => setIsFullscreen(true));
+      video.addEventListener('webkitendfullscreen', () => setIsFullscreen(false));
+    }
     
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
       document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
       document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+      if (video) {
+        video.removeEventListener('webkitbeginfullscreen', () => setIsFullscreen(true));
+        video.removeEventListener('webkitendfullscreen', () => setIsFullscreen(false));
+      }
     };
   }, []);
 
-  // Auto-hide controls and cursor when playing
+  // Auto-hide controls with IMPROVED logic
   useEffect(() => {
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
     }
     
-    if (isPlaying) {
+    if (isPlaying && showControls) {
       controlsTimeoutRef.current = setTimeout(() => {
         setShowControls(false);
-      }, 2000);
-    } else {
+      }, 3000); // Increased to 3 seconds
+    } else if (!isPlaying) {
       // Always show controls when paused
       setShowControls(true);
     }
@@ -442,17 +509,35 @@ export function VideoPlayer({
         clearTimeout(controlsTimeoutRef.current);
       }
     };
-  }, [isPlaying]);
+  }, [isPlaying, showControls]);
 
+  // Mouse/touch movement handler - ENHANCED for fullscreen
   const handleMouseMove = useCallback(() => {
     setShowControls(true);
+    
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
     }
+    
     if (isPlaying) {
       controlsTimeoutRef.current = setTimeout(() => {
         setShowControls(false);
-      }, 2000);
+      }, 3000);
+    }
+  }, [isPlaying]);
+
+  // Touch handler for mobile - ENHANCED
+  const handleTouchStart = useCallback(() => {
+    setShowControls(true);
+    
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+    
+    if (isPlaying) {
+      controlsTimeoutRef.current = setTimeout(() => {
+        setShowControls(false);
+      }, 4000); // Longer timeout for touch
     }
   }, [isPlaying]);
 
@@ -507,20 +592,18 @@ export function VideoPlayer({
     }
   };
 
+  // ENHANCED Fullscreen toggle - fixes all control issues
   const toggleFullscreen = useCallback(async () => {
     const container = containerRef.current;
     const video = videoRef.current;
     
     if (!container) return;
 
-    // Detect iOS/iPadOS
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    
-    // Check if SAVI.IN server (SHORT) - use native video fullscreen for iOS-like experience
-    const useNativeVideoFullscreen = activeServer === 'SHORT';
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
     try {
-      // Check if already in fullscreen
+      // Check current fullscreen state
       const isCurrentlyFullscreen = !!(
         document.fullscreenElement ||
         (document as any).webkitFullscreenElement ||
@@ -528,14 +611,13 @@ export function VideoPlayer({
         (document as any).msFullscreenElement
       );
 
-      // Check if video is in native fullscreen mode
       const isVideoInNativeFullscreen = video && (
         (video as any).webkitDisplayingFullscreen === true ||
         (video as any).webkitPresentationMode === 'fullscreen'
       );
 
       if (isCurrentlyFullscreen || isVideoInNativeFullscreen) {
-        // Exit fullscreen
+        // EXIT FULLSCREEN
         if (isVideoInNativeFullscreen && (video as any).webkitExitFullscreen) {
           (video as any).webkitExitFullscreen();
         } else if (document.exitFullscreen) {
@@ -547,39 +629,24 @@ export function VideoPlayer({
         } else if ((document as any).msExitFullscreen) {
           (document as any).msExitFullscreen();
         }
+        setIsFullscreen(false);
       } else {
-        // For SAVI.IN server, use native video element fullscreen for iOS-style experience
-        if (useNativeVideoFullscreen && video) {
-          // Try iOS native video fullscreen first (best experience on iOS/Safari)
-          if ((video as any).webkitEnterFullscreen) {
-            (video as any).webkitEnterFullscreen();
-            return;
-          }
-          // Try webkit presentation mode (Safari macOS/iOS)
-          if ((video as any).webkitSupportsPresentationMode && 
-              typeof (video as any).webkitSetPresentationMode === 'function') {
-            (video as any).webkitSetPresentationMode('fullscreen');
-            return;
-          }
-          // For other browsers, use video element's requestFullscreen for native controls
-          if ((video as any).requestFullscreen) {
-            await (video as any).requestFullscreen();
-            return;
-          } else if ((video as any).webkitRequestFullscreen) {
-            (video as any).webkitRequestFullscreen();
-            return;
-          }
-        }
-        
-        // For iOS devices on other servers, also prefer native video fullscreen
+        // ENTER FULLSCREEN
+        // For iOS, use native video fullscreen
         if (isIOS && video) {
           if ((video as any).webkitEnterFullscreen) {
             (video as any).webkitEnterFullscreen();
+            setIsFullscreen(true);
+            return;
+          }
+          if ((video as any).webkitSupportsPresentationMode) {
+            (video as any).webkitSetPresentationMode('fullscreen');
+            setIsFullscreen(true);
             return;
           }
         }
-        
-        // For other servers/browsers, use container fullscreen to show our custom controls
+
+        // For all other browsers - use CONTAINER fullscreen to keep custom controls
         if (container.requestFullscreen) {
           await container.requestFullscreen();
         } else if ((container as any).webkitRequestFullscreen) {
@@ -588,17 +655,16 @@ export function VideoPlayer({
           (container as any).mozRequestFullScreen();
         } else if ((container as any).msRequestFullscreen) {
           (container as any).msRequestFullscreen();
-        } else {
-          // Fallback: manually toggle fullscreen state for CSS-based fullscreen
-          setIsFullscreen(true);
         }
+        
+        setIsFullscreen(true);
+        setShowControls(true);
       }
     } catch (error) {
       console.error('Fullscreen error:', error);
-      // Fallback: manually toggle fullscreen state for CSS-based fullscreen
       setIsFullscreen(!isFullscreen);
     }
-  }, [isFullscreen, activeServer]);
+  }, [isFullscreen]);
 
   const skipForward = useCallback(() => {
     if (videoRef.current) {
@@ -612,21 +678,18 @@ export function VideoPlayer({
     }
   }, []);
 
-  // Picture-in-Picture toggle with iOS/Android support
+  // Picture-in-Picture toggle
   const togglePiP = useCallback(async () => {
     const video = videoRef.current;
     if (!video) return;
 
-    // Detect platform
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isAndroid = /Android/.test(navigator.userAgent);
 
     try {
       if (document.pictureInPictureElement) {
         await document.exitPictureInPicture();
         toast.success('Exited Picture-in-Picture');
       } else if (isIOS) {
-        // iOS Safari uses webkitSetPresentationMode
         if ((video as any).webkitSupportsPresentationMode && 
             typeof (video as any).webkitSetPresentationMode === 'function') {
           (video as any).webkitSetPresentationMode('picture-in-picture');
@@ -634,8 +697,7 @@ export function VideoPlayer({
         } else {
           toast.error('Picture-in-Picture is not supported on this iOS device');
         }
-      } else if (isAndroid || document.pictureInPictureEnabled) {
-        // Android and desktop use standard API
+      } else if (document.pictureInPictureEnabled) {
         if (video.requestPictureInPicture) {
           await video.requestPictureInPicture();
           toast.success('Now playing in Picture-in-Picture mode');
@@ -654,7 +716,6 @@ export function VideoPlayer({
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Only handle if not typing in an input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
       }
@@ -680,12 +741,18 @@ export function VideoPlayer({
           e.preventDefault();
           skipBackward();
           break;
+        case 'escape':
+          if (isFullscreen) {
+            e.preventDefault();
+            toggleFullscreen();
+          }
+          break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [togglePlay, toggleFullscreen, togglePiP, skipForward, skipBackward]);
+  }, [togglePlay, toggleFullscreen, togglePiP, skipForward, skipBackward, isFullscreen]);
 
   const handleDownload = () => {
     if (!effectiveVideoUrl) {
@@ -706,7 +773,6 @@ export function VideoPlayer({
     const distanceFromLastTap = Math.abs(x - lastTapRef.current.x);
     
     if (timeSinceLastTap < 300 && distanceFromLastTap < 50) {
-      // Double tap detected
       e.preventDefault();
       const side = x < containerWidth / 2 ? 'left' : 'right';
       
@@ -718,28 +784,21 @@ export function VideoPlayer({
         setDoubleTapSide('right');
       }
       
-      // Clear the animation after showing
       setTimeout(() => setDoubleTapSide(null), 500);
-      
-      // Reset last tap
       lastTapRef.current = { time: 0, x: 0 };
     } else {
-      // Single tap - record it
       lastTapRef.current = { time: now, x };
     }
   }, [skipForward, skipBackward]);
 
-  // Click handler for desktop only - single click toggles play/pause
+  // Click handler for desktop
   const handleVideoAreaClick = useCallback((e: React.MouseEvent) => {
     if (videoError) return;
-    
-    // Skip on touch devices - handled by handleTouchEnd
     if ('ontouchstart' in window) return;
 
     const target = e.target as HTMLElement | null;
     if (!target) return;
 
-    // Don't toggle when user interacts with controls/inputs/menus
     const interactiveSelector =
       'button, a, input, textarea, select, [role="menuitem"], [role="option"], [data-radix-collection-item]';
 
@@ -749,8 +808,7 @@ export function VideoPlayer({
     togglePlay();
   }, [togglePlay, videoError]);
 
-  // Separate touch handler for double-tap detection on mobile
-  // Single tap does nothing, double tap toggles play/pause
+  // Touch end handler for mobile
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     const now = Date.now();
     const touch = e.changedTouches[0];
@@ -760,34 +818,27 @@ export function VideoPlayer({
     const timeSinceLastTap = now - lastTapRef.current.time;
     const distanceFromLastTap = Math.abs(x - lastTapRef.current.x);
     
-    // Check if this is a double tap
     if (timeSinceLastTap < 300 && distanceFromLastTap < 50) {
       e.preventDefault();
       const side = x < containerWidth / 2 ? 'left' : 'right';
       const center = containerWidth / 3;
       
-      // Center area (middle third) - toggle play/pause on double tap
       if (x > center && x < containerWidth - center) {
         togglePlay();
       } else if (side === 'left') {
-        // Left side - skip backward
         skipBackward();
         setDoubleTapSide('left');
         setTimeout(() => setDoubleTapSide(null), 500);
       } else {
-        // Right side - skip forward
         skipForward();
         setDoubleTapSide('right');
         setTimeout(() => setDoubleTapSide(null), 500);
       }
       
-      // Reset last tap
       lastTapRef.current = { time: 0, x: 0 };
     } else {
-      // Single tap - just record it, don't toggle play
       lastTapRef.current = { time: now, x };
       
-      // Show controls on single tap
       const target = e.target as HTMLElement;
       const interactiveSelector = 'button, a, input, textarea, select, [role="menuitem"]';
       if (!target.closest(interactiveSelector)) {
@@ -812,12 +863,12 @@ export function VideoPlayer({
     );
   }
 
-  // External URL player (iframe) - only when user explicitly triggers fallback
+  // External URL player (iframe)
   if (shouldUseIframe && anyVideoUrl) {
     return (
       <div 
         ref={containerRef} 
-        className={`relative bg-black w-full ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}
+        className={`relative bg-black w-full ${isFullscreen ? 'fixed inset-0 z-[9999]' : ''}`}
         style={{ 
           aspectRatio: isFullscreen ? undefined : '16/9', 
           maxHeight: isFullscreen ? '100vh' : '70vh',
@@ -837,7 +888,7 @@ export function VideoPlayer({
     );
   }
 
-  // No video available at all
+  // No video available
   if (!anyVideoUrl) {
     return (
       <div 
@@ -849,15 +900,15 @@ export function VideoPlayer({
     );
   }
 
-  // Native video player for all servers
+  // Native video player with HLS.js support
   return (
     <div 
       ref={containerRef} 
-      className={`relative bg-black w-full touch-manipulation ${
+      className={`relative bg-black w-full touch-manipulation select-none ${
         isFullscreen 
           ? 'fixed inset-0 z-[9999]' 
           : ''
-      } ${!showControls ? 'cursor-none' : ''}`}
+      } ${!showControls && isPlaying ? 'cursor-none' : ''}`}
       style={{ 
         aspectRatio: isFullscreen ? undefined : '16/9', 
         maxHeight: isFullscreen ? '100dvh' : '70vh',
@@ -870,13 +921,13 @@ export function VideoPlayer({
       }}
       onClick={handleVideoAreaClick}
       onMouseMove={handleMouseMove}
+      onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      onTouchStart={() => setShowControls(true)}
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
       {/* Double-tap seek indicators */}
       {doubleTapSide === 'left' && (
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 z-30 pointer-events-none animate-fade-in">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 z-[100] pointer-events-none animate-fade-in">
           <div className="bg-black/60 backdrop-blur-sm rounded-full p-4 flex items-center gap-2">
             <SkipBack className="w-8 h-8 text-white" />
             <span className="text-white font-bold text-lg">10s</span>
@@ -884,7 +935,7 @@ export function VideoPlayer({
         </div>
       )}
       {doubleTapSide === 'right' && (
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 z-30 pointer-events-none animate-fade-in">
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 z-[100] pointer-events-none animate-fade-in">
           <div className="bg-black/60 backdrop-blur-sm rounded-full p-4 flex items-center gap-2">
             <span className="text-white font-bold text-lg">10s</span>
             <SkipForward className="w-8 h-8 text-white" />
@@ -892,10 +943,8 @@ export function VideoPlayer({
         </div>
       )}
 
-      
       <video
         ref={videoRef}
-        src={effectiveVideoUrl || anyVideoUrl || undefined}
         className={`w-full h-full object-contain transition-all duration-300 ${
           quality === '360p' ? 'blur-[2px]' : 
           quality === '480p' ? 'blur-[1px]' : 
@@ -927,7 +976,7 @@ export function VideoPlayer({
       
       {/* Video Processing State for SAVI.IN */}
       {isProcessing && activeServer === 'SHORT' && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-[50]">
           <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4 shadow-2xl animate-scale-in text-center">
             <div className="mb-4">
               <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
@@ -952,7 +1001,7 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Video Error - Show as popup modal CENTERED ON SCREEN */}
+      {/* Video Error Modal */}
       {videoError && !isProcessing && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999]">
           <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4 shadow-2xl animate-scale-in">
@@ -969,33 +1018,18 @@ export function VideoPlayer({
                     videoRef.current.play().catch(() => {});
                   }
                 }}
-                variant="outline"
+                variant="default"
                 className="w-full"
               >
                 Retry Playback
               </Button>
               <Button
                 onClick={() => setUseIframeFallback(true)}
-                className="anime-button w-full"
+                variant="outline"
+                className="w-full"
               >
-                Try Embed Player
+                Use Embed Player
               </Button>
-              {anyVideoUrl && (
-                <Button
-                  onClick={() => {
-                    // Open external player page with video URL
-                    const params = new URLSearchParams({
-                      url: anyVideoUrl,
-                      title: `${animeTitle} - Episode ${episodeNumber}: ${title}`,
-                    });
-                    window.open(`/external-player?${params.toString()}`, '_blank');
-                  }}
-                  variant="secondary"
-                  className="w-full"
-                >
-                  Open External Player
-                </Button>
-              )}
             </div>
             <button
               onClick={() => setVideoError(false)}
@@ -1007,25 +1041,28 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Custom Controls - Same as PremiumVideoPlayer */}
+      {/* CUSTOM CONTROLS - FIXED for fullscreen */}
       <div 
-        className={`absolute inset-0 flex flex-col justify-between transition-opacity duration-300 z-20 ${
-          showControls ? 'opacity-100' : 'opacity-0'
+        className={`absolute inset-0 flex flex-col justify-between transition-opacity duration-300 ${
+          showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
-        style={{ pointerEvents: showControls ? 'auto' : 'none' }}
+        style={{ 
+          zIndex: 50,
+          pointerEvents: showControls ? 'auto' : 'none',
+        }}
       >
-        {/* Top gradient - allow click through */}
+        {/* Top gradient */}
         <div className="h-24 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
 
         {/* Center Play/Pause Button */}
         {!isPlaying && showControls && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[60]">
             <div 
-              className="player-btn-primary cursor-pointer" 
-              onClick={togglePlay}
+              className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
+              onClick={(e) => { e.stopPropagation(); togglePlay(); }}
               style={{ pointerEvents: 'auto' }}
             >
-              <Play className="w-8 h-8 text-white fill-current ml-1" />
+              <Play className="w-10 h-10 text-white fill-current ml-1" />
             </div>
           </div>
         )}
@@ -1033,7 +1070,7 @@ export function VideoPlayer({
         {/* Bottom controls */}
         <div 
           className="bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 pb-4 px-4"
-          style={{ pointerEvents: 'auto' }}
+          style={{ pointerEvents: 'auto', zIndex: 60 }}
         >
           {/* Progress bar */}
           <div className="mb-4 relative">
@@ -1046,14 +1083,17 @@ export function VideoPlayer({
                   max="100"
                   value={progress}
                   onChange={handleSeek}
-                  className="w-full h-1.5 bg-white/30 rounded-full appearance-none cursor-pointer 
-                    [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
+                  className="w-full h-2 bg-white/30 rounded-full appearance-none cursor-pointer 
+                    [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 
                     [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg
-                    [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-110"
+                    [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125
+                    [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:bg-primary 
+                    [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"
                   style={{
                     background: `linear-gradient(to right, hsl(var(--primary)) ${progress}%, rgba(255,255,255,0.3) ${progress}%)`,
                     touchAction: 'none',
                   }}
+                  onClick={(e) => e.stopPropagation()}
                 />
               </div>
               <span className="text-white/90 text-sm font-mono min-w-[50px]">{formatTime(duration)}</span>
@@ -1065,7 +1105,7 @@ export function VideoPlayer({
             <div className="flex items-center gap-2">
               {/* Skip back */}
               <button 
-                className="player-btn w-10 h-10 text-white" 
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); skipBackward(); }} 
                 title="Skip back 10s"
               >
@@ -1074,7 +1114,7 @@ export function VideoPlayer({
 
               {/* Play/Pause */}
               <button 
-                className="player-btn w-12 h-12 text-white" 
+                className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); togglePlay(); }}
               >
                 {isPlaying ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 fill-current ml-0.5" />}
@@ -1082,7 +1122,7 @@ export function VideoPlayer({
 
               {/* Skip forward */}
               <button 
-                className="player-btn w-10 h-10 text-white" 
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); skipForward(); }} 
                 title="Skip forward 10s"
               >
@@ -1091,7 +1131,7 @@ export function VideoPlayer({
 
               {/* Volume */}
               <button 
-                className="player-btn w-10 h-10 text-white" 
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); toggleMute(); }}
               >
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
@@ -1104,27 +1144,35 @@ export function VideoPlayer({
             </div>
 
             <div className="flex items-center gap-1">
-              {/* Audio Track Selector - Hindi, English, Japanese */}
+              {/* Audio Track Selector with HLS.js support */}
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <button 
-                    className="player-btn w-10 h-10 text-white relative"
+                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
                     onClick={(e) => e.stopPropagation()}
                     title="Audio Track"
                   >
                     <Headphones className="w-5 h-5" />
+                    {audioTracks.length > 1 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full text-[10px] flex items-center justify-center font-bold">
+                        {audioTracks.length}
+                      </span>
+                    )}
                   </button>
                 </DropdownMenuTrigger>
                 {createPortal(
                   <DropdownMenuContent 
                     align="end" 
-                    className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[180px]"
+                    className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px]"
                     sideOffset={8}
                     style={{ zIndex: 2147483647 }}
                   >
                     <DropdownMenuLabel className="text-xs text-muted-foreground flex items-center gap-2">
                       <Headphones className="w-3 h-3" />
                       Audio Track
+                      {audioTracks.length > 0 && (
+                        <span className="ml-auto text-primary">({audioTracks.length} available)</span>
+                      )}
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {audioTracks.length > 0 ? (
@@ -1147,14 +1195,14 @@ export function VideoPlayer({
                       <div className="px-2 py-3 space-y-2">
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Headphones className="w-4 h-4" />
-                          <span className="text-sm font-medium">Audio Switching</span>
+                          <span className="text-sm font-medium">Single Audio Track</span>
                         </div>
                         <p className="text-xs text-muted-foreground leading-relaxed">
-                          Audio track switching is only supported in Safari browser for videos with multiple audio tracks.
+                          This video has only one audio track. Multi-audio videos (like dual audio anime) will show available languages here.
                         </p>
                         <div className="pt-1 border-t border-border/50">
                           <p className="text-xs text-muted-foreground/70">
-                            💡 Tip: Use Safari or try different servers for multi-audio options.
+                            💡 HLS streams (.m3u8) with multiple audio tracks are fully supported in all browsers.
                           </p>
                         </div>
                       </div>
@@ -1169,7 +1217,7 @@ export function VideoPlayer({
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <button 
-                      className="player-btn w-10 h-10 text-white relative"
+                      className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Settings className="w-5 h-5" />
@@ -1208,7 +1256,7 @@ export function VideoPlayer({
               {/* Download */}
               {features.includes('download') && (
                 <button 
-                  className="player-btn w-10 h-10 text-white" 
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
                   title="Download"
                 >
@@ -1218,18 +1266,18 @@ export function VideoPlayer({
 
               {/* PiP */}
               <button 
-                className="player-btn w-10 h-10 text-white" 
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                 title="Picture-in-Picture"
               >
                 <PictureInPicture2 className="w-5 h-5" />
               </button>
 
-              {/* Fullscreen */}
+              {/* Fullscreen - ALWAYS VISIBLE AND CLICKABLE */}
               <button 
-                className="player-btn w-10 h-10 text-white" 
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
-                title="Fullscreen"
+                title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
               >
                 {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
               </button>
