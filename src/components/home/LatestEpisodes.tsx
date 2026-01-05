@@ -34,6 +34,7 @@ export function LatestEpisodes() {
 
   const fetchLatestEpisodes = async () => {
     try {
+      // Fetch episodes ordered by created_at (most recent first)
       const { data, error } = await supabase
         .from('episodes')
         .select(`
@@ -49,7 +50,8 @@ export function LatestEpisodes() {
               id,
               title,
               cover_image,
-              type
+              type,
+              updated_at
             )
           )
         `)

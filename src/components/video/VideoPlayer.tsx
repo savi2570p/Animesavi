@@ -17,6 +17,9 @@ import {
   PictureInPicture2,
   Check,
   Headphones,
+  Subtitles,
+  ChevronRight,
+  ChevronLeft,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -30,6 +33,13 @@ import { toast } from 'sonner';
 import { DownloadVerificationDialog } from './DownloadVerificationDialog';
 
 interface AudioTrackInfo {
+  id: number;
+  label: string;
+  language: string;
+  enabled: boolean;
+}
+
+interface SubtitleTrackInfo {
   id: number;
   label: string;
   language: string;
@@ -150,6 +160,8 @@ const isDirectVideoUrl = (url: string | null): boolean => {
   return directVideoPatterns.some(pattern => pattern.test(url));
 };
 
+type SettingsMenu = 'main' | 'quality' | 'audio' | 'subtitles';
+
 export function VideoPlayer({
   videoUrl,
   externalUrl,
@@ -173,6 +185,7 @@ export function VideoPlayer({
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [buffered, setBuffered] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
@@ -182,10 +195,17 @@ export function VideoPlayer({
   const [audioTracks, setAudioTracks] = useState<AudioTrackInfo[]>([]);
   const [currentAudioTrack, setCurrentAudioTrack] = useState<number>(0);
   
+  // Subtitle tracks
+  const [subtitleTracks, setSubtitleTracks] = useState<SubtitleTrackInfo[]>([]);
+  const [currentSubtitleTrack, setCurrentSubtitleTrack] = useState<number>(-1); // -1 = off
+  
   // HLS Quality levels
   const [qualityLevels, setQualityLevels] = useState<QualityLevel[]>([]);
   const [currentQualityLevel, setCurrentQualityLevel] = useState<number>(-1); // -1 = Auto
   const [isAutoQuality, setIsAutoQuality] = useState(true);
+  
+  // Settings menu state
+  const [settingsMenu, setSettingsMenu] = useState<SettingsMenu>('main');
   
   // Video processing state for SAVI.IN server
   const [isProcessing, setIsProcessing] = useState(false);
@@ -212,11 +232,15 @@ export function VideoPlayer({
     setUseIframeFallback(false);
     setAudioTracks([]);
     setCurrentAudioTrack(0);
+    setSubtitleTracks([]);
+    setCurrentSubtitleTrack(-1);
     setQualityLevels([]);
     setCurrentQualityLevel(-1);
     setIsAutoQuality(true);
     setIsProcessing(false);
     setProcessingTimeLeft(180);
+    setBuffered(0);
+    setSettingsMenu('main');
     
     if (processingTimerRef.current) {
       clearInterval(processingTimerRef.current);
@@ -229,7 +253,7 @@ export function VideoPlayer({
     }
   }, [videoUrl, externalUrl]);
 
-  // HLS.js initialization for multi-audio support
+  // HLS.js initialization for multi-audio and subtitle support
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !effectiveVideoUrl) return;
@@ -248,8 +272,9 @@ export function VideoPlayer({
           console.log('Using native HLS support (Safari)');
           video.src = effectiveVideoUrl;
           
-          // For Safari, use native audioTracks API
-          const detectNativeAudioTracks = () => {
+          // For Safari, use native audioTracks and textTracks API
+          const detectNativeTracks = () => {
+            // Audio tracks
             const nativeAudioTracks = (video as any).audioTracks;
             if (nativeAudioTracks && nativeAudioTracks.length > 0) {
               const tracks: AudioTrackInfo[] = [];
@@ -265,15 +290,34 @@ export function VideoPlayer({
               }
               setAudioTracks(tracks);
             }
+            
+            // Subtitle tracks
+            const nativeTextTracks = video.textTracks;
+            if (nativeTextTracks && nativeTextTracks.length > 0) {
+              const subs: SubtitleTrackInfo[] = [];
+              for (let i = 0; i < nativeTextTracks.length; i++) {
+                const track = nativeTextTracks[i];
+                if (track.kind === 'subtitles' || track.kind === 'captions') {
+                  subs.push({
+                    id: i,
+                    label: getSubtitleLabel(track.label, track.language, i),
+                    language: track.language || 'Unknown',
+                    enabled: track.mode === 'showing',
+                  });
+                  if (track.mode === 'showing') setCurrentSubtitleTrack(i);
+                }
+              }
+              setSubtitleTracks(subs);
+            }
           };
           
-          video.addEventListener('loadedmetadata', detectNativeAudioTracks);
-          return () => video.removeEventListener('loadedmetadata', detectNativeAudioTracks);
+          video.addEventListener('loadedmetadata', detectNativeTracks);
+          return () => video.removeEventListener('loadedmetadata', detectNativeTracks);
         }
 
         // Use HLS.js for other browsers
         if (Hls.isSupported()) {
-          console.log('Using HLS.js for multi-audio support');
+          console.log('Using HLS.js for multi-audio and subtitle support');
           const hls = new Hls({
             enableWorker: true,
             lowLatencyMode: false,
@@ -284,9 +328,13 @@ export function VideoPlayer({
           hls.loadSource(effectiveVideoUrl);
           hls.attachMedia(video);
 
-          // Listen for manifest parsed to get audio tracks and quality levels
+          // Listen for manifest parsed to get audio tracks, subtitles, and quality levels
           hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
-            console.log('HLS manifest parsed, audio tracks:', data.audioTracks, 'levels:', data.levels);
+            console.log('HLS manifest parsed:', {
+              audioTracks: data.audioTracks,
+              subtitleTracks: hls.subtitleTracks,
+              levels: data.levels
+            });
             
             // Audio tracks
             if (data.audioTracks && data.audioTracks.length > 0) {
@@ -298,6 +346,18 @@ export function VideoPlayer({
               }));
               setAudioTracks(tracks);
               setCurrentAudioTrack(hls.audioTrack);
+            }
+            
+            // Subtitle tracks
+            if (hls.subtitleTracks && hls.subtitleTracks.length > 0) {
+              const subs: SubtitleTrackInfo[] = hls.subtitleTracks.map((track, index) => ({
+                id: index,
+                label: getSubtitleLabel(track.name, track.lang, index),
+                language: track.lang || 'Unknown',
+                enabled: index === hls.subtitleTrack,
+              }));
+              setSubtitleTracks(subs);
+              setCurrentSubtitleTrack(hls.subtitleTrack);
             }
             
             // Quality levels
@@ -323,6 +383,12 @@ export function VideoPlayer({
           hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (event, data) => {
             console.log('Audio track switched to:', data.id);
             setCurrentAudioTrack(data.id);
+          });
+          
+          // Listen for subtitle track changes
+          hls.on(Hls.Events.SUBTITLE_TRACK_SWITCH, (event, data) => {
+            console.log('Subtitle track switched to:', data.id);
+            setCurrentSubtitleTrack(data.id);
           });
           
           // Listen for level changes
@@ -355,7 +421,8 @@ export function VideoPlayer({
         video.src = effectiveVideoUrl;
         
         // Try to detect audio tracks for MP4/MKV with multiple audio streams
-        const detectNativeAudioTracks = () => {
+        const detectNativeTracks = () => {
+          // Audio tracks
           const nativeAudioTracks = (video as any).audioTracks;
           if (nativeAudioTracks && nativeAudioTracks.length > 0) {
             const tracks: AudioTrackInfo[] = [];
@@ -371,14 +438,33 @@ export function VideoPlayer({
             }
             setAudioTracks(tracks);
           }
+          
+          // Subtitle tracks
+          const nativeTextTracks = video.textTracks;
+          if (nativeTextTracks && nativeTextTracks.length > 0) {
+            const subs: SubtitleTrackInfo[] = [];
+            for (let i = 0; i < nativeTextTracks.length; i++) {
+              const track = nativeTextTracks[i];
+              if (track.kind === 'subtitles' || track.kind === 'captions') {
+                subs.push({
+                  id: i,
+                  label: getSubtitleLabel(track.label, track.language, i),
+                  language: track.language || 'Unknown',
+                  enabled: track.mode === 'showing',
+                });
+                if (track.mode === 'showing') setCurrentSubtitleTrack(i);
+              }
+            }
+            setSubtitleTracks(subs);
+          }
         };
         
-        video.addEventListener('loadedmetadata', detectNativeAudioTracks);
-        video.addEventListener('canplay', detectNativeAudioTracks);
+        video.addEventListener('loadedmetadata', detectNativeTracks);
+        video.addEventListener('canplay', detectNativeTracks);
         
         return () => {
-          video.removeEventListener('loadedmetadata', detectNativeAudioTracks);
-          video.removeEventListener('canplay', detectNativeAudioTracks);
+          video.removeEventListener('loadedmetadata', detectNativeTracks);
+          video.removeEventListener('canplay', detectNativeTracks);
         };
       }
     };
@@ -411,6 +497,26 @@ export function VideoPlayer({
     if (language.includes('chi') || language === 'zh') return '🇨🇳 Chinese';
     
     return `Audio ${index + 1}`;
+  };
+
+  // Helper to get readable subtitle labels
+  const getSubtitleLabel = (label: string | undefined, lang: string | undefined, index: number): string => {
+    const language = (lang || '').toLowerCase();
+    
+    if (label && label.trim()) return label;
+    
+    if (language.includes('hin') || language === 'hi') return '🇮🇳 Hindi';
+    if (language.includes('eng') || language === 'en') return '🇬🇧 English';
+    if (language.includes('jpn') || language === 'ja' || language.includes('jap')) return '🇯🇵 Japanese';
+    if (language.includes('spa') || language === 'es') return '🇪🇸 Spanish';
+    if (language.includes('fra') || language === 'fr') return '🇫🇷 French';
+    if (language.includes('ger') || language === 'de') return '🇩🇪 German';
+    if (language.includes('ita') || language === 'it') return '🇮🇹 Italian';
+    if (language.includes('por') || language === 'pt') return '🇧🇷 Portuguese';
+    if (language.includes('kor') || language === 'ko') return '🇰🇷 Korean';
+    if (language.includes('chi') || language === 'zh') return '🇨🇳 Chinese';
+    
+    return `Subtitle ${index + 1}`;
   };
 
   // Helper to get readable quality labels
@@ -471,6 +577,44 @@ export function VideoPlayer({
         const track = nativeAudioTracks[trackId];
         toast.success(`Audio: ${track?.label || `Track ${trackId + 1}`}`);
         setCurrentAudioTrack(trackId);
+      }
+    }
+  }, []);
+
+  // Switch subtitle track - works with both HLS.js and native
+  const switchSubtitleTrack = useCallback((trackId: number) => {
+    const video = videoRef.current;
+    
+    // Try HLS.js first
+    if (hlsRef.current) {
+      hlsRef.current.subtitleTrack = trackId;
+      if (trackId === -1) {
+        toast.success('Subtitles: Off');
+      } else {
+        const track = hlsRef.current.subtitleTracks[trackId];
+        toast.success(`Subtitles: ${track?.name || `Track ${trackId + 1}`}`);
+      }
+      setCurrentSubtitleTrack(trackId);
+      return;
+    }
+    
+    // Fallback to native textTracks API
+    if (video) {
+      const nativeTextTracks = video.textTracks;
+      if (nativeTextTracks && nativeTextTracks.length > 0) {
+        for (let i = 0; i < nativeTextTracks.length; i++) {
+          const track = nativeTextTracks[i];
+          if (track.kind === 'subtitles' || track.kind === 'captions') {
+            track.mode = i === trackId ? 'showing' : 'hidden';
+          }
+        }
+        if (trackId === -1) {
+          toast.success('Subtitles: Off');
+        } else {
+          const track = nativeTextTracks[trackId];
+          toast.success(`Subtitles: ${track?.label || `Track ${trackId + 1}`}`);
+        }
+        setCurrentSubtitleTrack(trackId);
       }
     }
   }, []);
@@ -638,6 +782,13 @@ export function VideoPlayer({
       setCurrentTime(current);
       setDuration(dur);
       onTimeUpdate?.(current, dur);
+      
+      // Update buffered progress
+      if (videoRef.current.buffered.length > 0) {
+        const bufferedEnd = videoRef.current.buffered.end(videoRef.current.buffered.length - 1);
+        const bufferedProgress = (bufferedEnd / dur) * 100;
+        setBuffered(bufferedProgress);
+      }
     }
   };
 
@@ -922,6 +1073,24 @@ export function VideoPlayer({
     }
   }, [skipForward, skipBackward, togglePlay]);
 
+  // Get current quality/audio/subtitle labels for display
+  const getCurrentQualityLabel = () => {
+    if (isAutoQuality) return 'Auto';
+    const level = qualityLevels.find(l => l.id === currentQualityLevel);
+    return level ? `${level.height}p` : 'Auto';
+  };
+
+  const getCurrentAudioLabel = () => {
+    const track = audioTracks.find(t => t.id === currentAudioTrack);
+    return track?.label || 'Default';
+  };
+
+  const getCurrentSubtitleLabel = () => {
+    if (currentSubtitleTrack === -1) return 'Off';
+    const track = subtitleTracks.find(t => t.id === currentSubtitleTrack);
+    return track?.label || 'Off';
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -974,6 +1143,181 @@ export function VideoPlayer({
       </div>
     );
   }
+
+  // Render settings menu content
+  const renderSettingsContent = () => {
+    switch (settingsMenu) {
+      case 'quality':
+        return (
+          <>
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); setSettingsMenu('main'); }}
+              className="flex items-center gap-2 cursor-pointer text-muted-foreground"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="text-sm">Back</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs text-muted-foreground">Quality</DropdownMenuLabel>
+            {qualityLevels.length > 0 ? (
+              <>
+                <DropdownMenuItem
+                  onClick={(e) => { e.stopPropagation(); switchQualityLevel(-1); }}
+                  className={`${isAutoQuality ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+                >
+                  <span className="text-sm">Auto</span>
+                  {isAutoQuality && <Check className="w-4 h-4 text-primary" />}
+                </DropdownMenuItem>
+                {qualityLevels.map((level) => (
+                  <DropdownMenuItem
+                    key={level.id}
+                    onClick={(e) => { e.stopPropagation(); switchQualityLevel(level.id); }}
+                    className={`${!isAutoQuality && currentQualityLevel === level.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">{level.height}p</span>
+                      {level.height >= 1080 && (
+                        <span className="text-[10px] font-bold bg-primary/20 text-primary px-1 py-0.5 rounded">HD</span>
+                      )}
+                    </div>
+                    {!isAutoQuality && currentQualityLevel === level.id && <Check className="w-4 h-4 text-primary" />}
+                  </DropdownMenuItem>
+                ))}
+              </>
+            ) : (
+              <div className="px-2 py-2 text-xs text-muted-foreground">
+                Auto quality active
+              </div>
+            )}
+          </>
+        );
+      
+      case 'audio':
+        return (
+          <>
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); setSettingsMenu('main'); }}
+              className="flex items-center gap-2 cursor-pointer text-muted-foreground"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="text-sm">Back</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs text-muted-foreground">Audio Track</DropdownMenuLabel>
+            {audioTracks.length > 0 ? (
+              audioTracks.map((track) => (
+                <DropdownMenuItem
+                  key={track.id}
+                  onClick={(e) => { e.stopPropagation(); switchAudioTrack(track.id); }}
+                  className={`${currentAudioTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+                >
+                  <span className="text-sm">{track.label}</span>
+                  {currentAudioTrack === track.id && <Check className="w-4 h-4 text-primary" />}
+                </DropdownMenuItem>
+              ))
+            ) : (
+              <div className="px-2 py-2 text-xs text-muted-foreground">
+                Single audio track
+              </div>
+            )}
+          </>
+        );
+      
+      case 'subtitles':
+        return (
+          <>
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); setSettingsMenu('main'); }}
+              className="flex items-center gap-2 cursor-pointer text-muted-foreground"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="text-sm">Back</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs text-muted-foreground">Subtitles</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); switchSubtitleTrack(-1); }}
+              className={`${currentSubtitleTrack === -1 ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+            >
+              <span className="text-sm">Off</span>
+              {currentSubtitleTrack === -1 && <Check className="w-4 h-4 text-primary" />}
+            </DropdownMenuItem>
+            {subtitleTracks.length > 0 ? (
+              subtitleTracks.map((track) => (
+                <DropdownMenuItem
+                  key={track.id}
+                  onClick={(e) => { e.stopPropagation(); switchSubtitleTrack(track.id); }}
+                  className={`${currentSubtitleTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+                >
+                  <span className="text-sm">{track.label}</span>
+                  {currentSubtitleTrack === track.id && <Check className="w-4 h-4 text-primary" />}
+                </DropdownMenuItem>
+              ))
+            ) : (
+              <div className="px-2 py-2 text-xs text-muted-foreground">
+                No subtitles available
+              </div>
+            )}
+          </>
+        );
+      
+      default: // main menu
+        return (
+          <>
+            <DropdownMenuLabel className="text-xs text-muted-foreground flex items-center gap-2">
+              <Settings className="w-3 h-3" />
+              Settings
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            
+            {/* Quality option */}
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); setSettingsMenu('quality'); }}
+              className="flex items-center justify-between gap-4 cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                <span className="text-sm">Quality</span>
+              </div>
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <span className="text-xs">{getCurrentQualityLabel()}</span>
+                <ChevronRight className="w-4 h-4" />
+              </div>
+            </DropdownMenuItem>
+            
+            {/* Audio option */}
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); setSettingsMenu('audio'); }}
+              className="flex items-center justify-between gap-4 cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <Headphones className="w-4 h-4" />
+                <span className="text-sm">Audio</span>
+              </div>
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <span className="text-xs truncate max-w-[80px]">{getCurrentAudioLabel()}</span>
+                <ChevronRight className="w-4 h-4" />
+              </div>
+            </DropdownMenuItem>
+            
+            {/* Subtitles option */}
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); setSettingsMenu('subtitles'); }}
+              className="flex items-center justify-between gap-4 cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <Subtitles className="w-4 h-4" />
+                <span className="text-sm">Subtitles</span>
+              </div>
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <span className="text-xs truncate max-w-[80px]">{getCurrentSubtitleLabel()}</span>
+                <ChevronRight className="w-4 h-4" />
+              </div>
+            </DropdownMenuItem>
+          </>
+        );
+    }
+  };
 
   // Native video player with HLS.js support
   return (
@@ -1031,6 +1375,13 @@ export function VideoPlayer({
           }
         }}
         onCanPlay={() => setVideoError(false)}
+        onProgress={() => {
+          if (videoRef.current && videoRef.current.buffered.length > 0) {
+            const bufferedEnd = videoRef.current.buffered.end(videoRef.current.buffered.length - 1);
+            const bufferedProgress = (bufferedEnd / videoRef.current.duration) * 100;
+            setBuffered(bufferedProgress);
+          }
+        }}
         onError={(e) => {
           const video = e.currentTarget;
           if (video.src && video.networkState === 3) {
@@ -1143,25 +1494,36 @@ export function VideoPlayer({
           className="bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 pb-4 px-4"
           style={{ pointerEvents: 'auto', zIndex: 60 }}
         >
-          {/* Progress bar */}
+          {/* Progress bar with buffer indicator */}
           <div className="mb-4 relative">
             <div className="flex items-center gap-3">
               <span className="text-white/90 text-sm font-mono min-w-[50px]">{formatTime(currentTime)}</span>
-              <div className="flex-1 relative">
+              <div className="flex-1 relative h-2">
+                {/* Buffer progress (background) */}
+                <div 
+                  className="absolute inset-0 bg-white/20 rounded-full"
+                />
+                <div 
+                  className="absolute top-0 left-0 h-full bg-white/40 rounded-full transition-all duration-300"
+                  style={{ width: `${buffered}%` }}
+                />
+                {/* Playback progress (foreground) */}
                 <input
                   type="range"
                   min="0"
                   max="100"
                   value={progress}
                   onChange={handleSeek}
-                  className="w-full h-2 bg-white/30 rounded-full appearance-none cursor-pointer 
+                  className="absolute inset-0 w-full h-full bg-transparent rounded-full appearance-none cursor-pointer 
                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 
                     [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg
                     [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125
                     [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:bg-primary 
-                    [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0"
+                    [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0
+                    [&::-webkit-slider-runnable-track]:bg-transparent
+                    [&::-moz-range-track]:bg-transparent"
                   style={{
-                    background: `linear-gradient(to right, hsl(var(--primary)) ${progress}%, rgba(255,255,255,0.3) ${progress}%)`,
+                    background: `linear-gradient(to right, hsl(var(--primary)) ${progress}%, transparent ${progress}%)`,
                     touchAction: 'none',
                   }}
                   onClick={(e) => e.stopPropagation()}
@@ -1171,7 +1533,7 @@ export function VideoPlayer({
             </div>
           </div>
 
-          {/* Control buttons */}
+          {/* Control buttons - Simplified */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {/* Skip back */}
@@ -1215,162 +1577,25 @@ export function VideoPlayer({
             </div>
 
             <div className="flex items-center gap-1">
-              {/* Audio Track Selector with HLS.js support */}
-              <DropdownMenu modal={false}>
+              {/* Settings Menu - Contains Quality, Audio, Subtitles */}
+              <DropdownMenu modal={false} onOpenChange={(open) => { if (!open) setSettingsMenu('main'); }}>
                 <DropdownMenuTrigger asChild>
                   <button 
                     className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
                     onClick={(e) => e.stopPropagation()}
-                    title="Audio Track"
-                  >
-                    <Headphones className="w-5 h-5" />
-                    {audioTracks.length > 1 && (
-                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full text-[10px] flex items-center justify-center font-bold">
-                        {audioTracks.length}
-                      </span>
-                    )}
-                  </button>
-                </DropdownMenuTrigger>
-                {createPortal(
-                  <DropdownMenuContent 
-                    align="end" 
-                    className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px]"
-                    sideOffset={8}
-                    style={{ zIndex: 2147483647 }}
-                  >
-                    <DropdownMenuLabel className="text-xs text-muted-foreground flex items-center gap-2">
-                      <Headphones className="w-3 h-3" />
-                      Audio Track
-                      {audioTracks.length > 0 && (
-                        <span className="ml-auto text-primary">({audioTracks.length} available)</span>
-                      )}
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {audioTracks.length > 0 ? (
-                      audioTracks.map((track) => (
-                        <DropdownMenuItem
-                          key={track.id}
-                          onClick={(e) => { e.stopPropagation(); switchAudioTrack(track.id); }}
-                          className={`${currentAudioTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
-                        >
-                          <div className="flex flex-col">
-                            <span className="text-sm font-medium">{track.label}</span>
-                            {track.language !== 'Unknown' && (
-                              <span className="text-xs text-muted-foreground">{track.language}</span>
-                            )}
-                          </div>
-                          {currentAudioTrack === track.id && <Check className="w-4 h-4 text-primary" />}
-                        </DropdownMenuItem>
-                      ))
-                    ) : (
-                      <div className="px-2 py-3 space-y-2">
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Headphones className="w-4 h-4" />
-                          <span className="text-sm font-medium">Single Audio Track</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          This video has only one audio track. Multi-audio videos (like dual audio anime) will show available languages here.
-                        </p>
-                        <div className="pt-1 border-t border-border/50">
-                          <p className="text-xs text-muted-foreground/70">
-                            💡 HLS streams (.m3u8) with multiple audio tracks are fully supported in all browsers.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </DropdownMenuContent>,
-                  document.body
-                )}
-              </DropdownMenu>
-
-              {/* Quality selector - HLS dynamic or static fallback */}
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <button 
-                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
-                    onClick={(e) => e.stopPropagation()}
-                    title="Quality"
+                    title="Settings"
                   >
                     <Settings className="w-5 h-5" />
-                    {qualityLevels.length > 0 && (
-                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full text-[10px] flex items-center justify-center font-bold">
-                        {isAutoQuality ? 'A' : qualityLevels.find(l => l.id === currentQualityLevel)?.height || ''}
-                      </span>
-                    )}
                   </button>
                 </DropdownMenuTrigger>
                 {createPortal(
                   <DropdownMenuContent 
                     align="end" 
-                    className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[180px] max-h-[300px] overflow-y-auto"
+                    className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] max-h-[300px] overflow-y-auto"
                     sideOffset={8}
                     style={{ zIndex: 2147483647 }}
                   >
-                    <DropdownMenuLabel className="text-xs text-muted-foreground flex items-center gap-2">
-                      <Settings className="w-3 h-3" />
-                      Quality
-                      {qualityLevels.length > 0 && (
-                        <span className="ml-auto text-primary">({qualityLevels.length} levels)</span>
-                      )}
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    
-                    {qualityLevels.length > 0 ? (
-                      <>
-                        {/* Auto quality option */}
-                        <DropdownMenuItem
-                          onClick={(e) => { e.stopPropagation(); switchQualityLevel(-1); }}
-                          className={`${isAutoQuality ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
-                        >
-                          <div className="flex flex-col">
-                            <span className="text-sm font-medium">Auto</span>
-                            <span className="text-xs text-muted-foreground">Adapts to network speed</span>
-                          </div>
-                          {isAutoQuality && <Check className="w-4 h-4 text-primary" />}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        
-                        {/* Individual quality levels */}
-                        {qualityLevels.map((level) => (
-                          <DropdownMenuItem
-                            key={level.id}
-                            onClick={(e) => { e.stopPropagation(); switchQualityLevel(level.id); }}
-                            className={`${!isAutoQuality && currentQualityLevel === level.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
-                          >
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium">{level.height}p</span>
-                              <span className="text-xs text-muted-foreground">
-                                {level.width}×{level.height} • {(level.bitrate / 1000000).toFixed(1)} Mbps
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {level.height >= 1080 && (
-                                <span className="text-[10px] font-bold bg-primary/20 text-primary px-1.5 py-0.5 rounded">HD</span>
-                              )}
-                              {level.height >= 2160 && (
-                                <span className="text-[10px] font-bold bg-yellow-500/20 text-yellow-500 px-1.5 py-0.5 rounded">4K</span>
-                              )}
-                              {!isAutoQuality && currentQualityLevel === level.id && <Check className="w-4 h-4 text-primary" />}
-                            </div>
-                          </DropdownMenuItem>
-                        ))}
-                      </>
-                    ) : (
-                      <div className="px-2 py-3 space-y-2">
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Settings className="w-4 h-4" />
-                          <span className="text-sm font-medium">Quality Selection</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          Automatic quality selection is active. Quality levels are only available for HLS streams (.m3u8).
-                        </p>
-                        <div className="pt-1 border-t border-border/50">
-                          <p className="text-xs text-muted-foreground/70">
-                            💡 The player will automatically adjust quality based on your network speed.
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                    {renderSettingsContent()}
                   </DropdownMenuContent>,
                   document.body
                 )}
