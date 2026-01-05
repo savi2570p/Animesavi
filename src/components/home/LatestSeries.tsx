@@ -25,7 +25,7 @@ export function LatestSeries() {
 
   const fetchLatestSeries = async () => {
     try {
-      // Fetch anime series with episode counts
+      // Fetch anime series ordered by updated_at to show recently updated content first
       const { data: animeData, error: animeError } = await supabase
         .from('anime')
         .select(`
@@ -33,11 +33,12 @@ export function LatestSeries() {
           title,
           cover_image,
           created_at,
+          updated_at,
           type,
           status
         `)
         .eq('type', 'series')
-        .order('created_at', { ascending: false })
+        .order('updated_at', { ascending: false })
         .limit(4);
 
       if (animeError) throw animeError;
