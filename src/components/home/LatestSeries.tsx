@@ -11,8 +11,10 @@ interface AnimeSeries {
   title: string;
   cover_image: string | null;
   created_at: string;
+  updated_at: string;
   episode_count: number;
   status: string | null;
+  latest_episode_date: string | null;
 }
 
 export function LatestSeries() {
@@ -25,7 +27,7 @@ export function LatestSeries() {
 
   const fetchLatestSeries = async () => {
     try {
-      // Fetch anime series ordered by updated_at to show recently updated content first
+      // Fetch anime series 
       const { data: animeData, error: animeError } = await supabase
         .from('anime')
         .select(`
@@ -38,13 +40,12 @@ export function LatestSeries() {
           status
         `)
         .eq('type', 'series')
-        .order('updated_at', { ascending: false })
-        .limit(4);
+        .limit(20);
 
       if (animeError) throw animeError;
 
-      // Fetch episode counts for each series
-      const seriesWithCounts = await Promise.all(
+      // Fetch episode counts and latest episode date for each series
+      const seriesWithData = await Promise.all(
         (animeData || []).map(async (anime) => {
           // Get seasons for this anime
           const { data: seasons } = await supabase
@@ -53,23 +54,49 @@ export function LatestSeries() {
             .eq('anime_id', anime.id);
 
           let episodeCount = 0;
+          let latestEpisodeDate: string | null = null;
+          
           if (seasons && seasons.length > 0) {
             const seasonIds = seasons.map(s => s.id);
+            
+            // Get episode count
             const { count: epCount } = await supabase
               .from('episodes')
               .select('id', { count: 'exact', head: true })
               .in('season_id', seasonIds);
             episodeCount = epCount || 0;
+            
+            // Get latest episode date
+            const { data: latestEp } = await supabase
+              .from('episodes')
+              .select('created_at')
+              .in('season_id', seasonIds)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single();
+            
+            if (latestEp) {
+              latestEpisodeDate = latestEp.created_at;
+            }
           }
 
           return {
             ...anime,
-            episode_count: episodeCount
+            episode_count: episodeCount,
+            latest_episode_date: latestEpisodeDate
           };
         })
       );
 
-      setSeries(seriesWithCounts);
+      // Sort by latest episode date OR updated_at (whichever is more recent)
+      seriesWithData.sort((a, b) => {
+        const aDate = a.latest_episode_date || a.updated_at;
+        const bDate = b.latest_episode_date || b.updated_at;
+        return new Date(bDate).getTime() - new Date(aDate).getTime();
+      });
+
+      // Take only first 4
+      setSeries(seriesWithData.slice(0, 4));
     } catch (error) {
       console.error('Error fetching latest series:', error);
     } finally {
@@ -77,8 +104,10 @@ export function LatestSeries() {
     }
   };
 
-  const isNew = (dateString: string) => {
-    const date = new Date(dateString);
+  const isNew = (anime: AnimeSeries) => {
+    // Check if the latest episode or the anime itself was created/updated within last 7 days
+    const dateToCheck = anime.latest_episode_date || anime.updated_at || anime.created_at;
+    const date = new Date(dateToCheck);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const days = diff / (1000 * 60 * 60 * 24);
@@ -169,7 +198,7 @@ export function LatestSeries() {
                   </div>
 
                   {/* NEW badge */}
-                  {isNew(anime.created_at) && (
+                  {isNew(anime) && (
                     <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-lg shadow-md animate-pulse">
                       NEW
                     </div>

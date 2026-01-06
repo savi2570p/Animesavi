@@ -501,6 +501,8 @@ export default function Watch() {
         isLoading={serverLoading}
         audioLanguage={episode.audio_language || undefined}
         onTimeUpdate={updateWatchProgress}
+        hasNextEpisode={!!nextEpisode}
+        onNextEpisode={nextEpisode ? () => navigate(`/watch/${nextEpisode.id}`) : undefined}
       />
 
       {/* Episode Info & Navigation */}
@@ -584,16 +586,17 @@ export default function Watch() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  // Create clean URL with anime name and episode number
+                  // Create clean URL with anime name, season, and episode number
                   const animeSlug = anime?.title
                     ? anime.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
                     : '';
-                  const shareUrl = `${window.location.origin}/${animeSlug}/episode-${episode.episode_number}`;
-                  const shareText = `Watch "${anime?.title}" - Episode ${episode.episode_number}: ${episode.title} on AnimeSavi!`;
+                  const seasonNum = currentSeason?.season_number || 1;
+                  const shareUrl = `${window.location.origin}/${animeSlug}/season-${seasonNum}-episode-${episode.episode_number}`;
+                  const shareText = `Watch "${anime?.title}" - S${seasonNum} E${episode.episode_number}: ${episode.title} on AnimeSavi!`;
 
                   if (navigator.share) {
                     navigator.share({
-                      title: `${anime?.title} - Episode ${episode.episode_number}`,
+                      title: `${anime?.title} - S${seasonNum} E${episode.episode_number}`,
                       text: shareText,
                       url: shareUrl,
                     }).catch(() => {
