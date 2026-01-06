@@ -20,6 +20,8 @@ import {
   Subtitles,
   ChevronRight,
   ChevronLeft,
+  Gauge,
+  FastForward,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -70,6 +72,8 @@ interface VideoPlayerProps {
   audioLanguage?: string;
   captionsUrl?: string | null;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
+  onNextEpisode?: () => void;
+  hasNextEpisode?: boolean;
 }
 
 const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
@@ -89,6 +93,9 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
     playerStyle: 'advanced'
   },
 };
+
+// Playback speed options
+const PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
 // Helper to detect if URL is an embeddable/external URL (not a direct video file)
 const isEmbeddableUrl = (url: string | null): boolean => {
@@ -160,7 +167,7 @@ const isDirectVideoUrl = (url: string | null): boolean => {
   return directVideoPatterns.some(pattern => pattern.test(url));
 };
 
-type SettingsMenu = 'main' | 'quality' | 'audio' | 'subtitles';
+type SettingsMenu = 'main' | 'quality' | 'audio' | 'subtitles' | 'speed';
 
 export function VideoPlayer({
   videoUrl,
@@ -176,6 +183,8 @@ export function VideoPlayer({
   audioLanguage = 'original',
   captionsUrl,
   onTimeUpdate,
+  onNextEpisode,
+  hasNextEpisode = false,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -204,8 +213,20 @@ export function VideoPlayer({
   const [currentQualityLevel, setCurrentQualityLevel] = useState<number>(-1); // -1 = Auto
   const [isAutoQuality, setIsAutoQuality] = useState(true);
   
+  // Playback speed
+  const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
+  
   // Settings menu state
   const [settingsMenu, setSettingsMenu] = useState<SettingsMenu>('main');
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  
+  // Skip intro state
+  const [showSkipIntro, setShowSkipIntro] = useState(false);
+  const INTRO_START = 0;
+  const INTRO_END = 90; // Intro typically ends around 1:30
+  
+  // Next episode button state
+  const [showNextEpisode, setShowNextEpisode] = useState(false);
   
   // Video processing state for SAVI.IN server
   const [isProcessing, setIsProcessing] = useState(false);
@@ -241,6 +262,9 @@ export function VideoPlayer({
     setProcessingTimeLeft(180);
     setBuffered(0);
     setSettingsMenu('main');
+    setPlaybackSpeed(1);
+    setShowSkipIntro(false);
+    setShowNextEpisode(false);
     
     if (processingTimerRef.current) {
       clearInterval(processingTimerRef.current);
@@ -278,17 +302,30 @@ export function VideoPlayer({
             const nativeAudioTracks = (video as any).audioTracks;
             if (nativeAudioTracks && nativeAudioTracks.length > 0) {
               const tracks: AudioTrackInfo[] = [];
+              let hindiTrackIndex = -1;
               for (let i = 0; i < nativeAudioTracks.length; i++) {
                 const track = nativeAudioTracks[i];
+                const label = getAudioLabel(track.label, track.language, i);
                 tracks.push({
                   id: i,
-                  label: getAudioLabel(track.label, track.language, i),
+                  label,
                   language: track.language || 'Unknown',
                   enabled: track.enabled,
                 });
                 if (track.enabled) setCurrentAudioTrack(i);
+                // Check for Hindi track
+                if (label.toLowerCase().includes('hindi') || track.language?.toLowerCase().includes('hin') || track.language === 'hi') {
+                  hindiTrackIndex = i;
+                }
               }
               setAudioTracks(tracks);
+              // Default to Hindi if available
+              if (hindiTrackIndex >= 0 && nativeAudioTracks[hindiTrackIndex]) {
+                for (let i = 0; i < nativeAudioTracks.length; i++) {
+                  nativeAudioTracks[i].enabled = i === hindiTrackIndex;
+                }
+                setCurrentAudioTrack(hindiTrackIndex);
+              }
             }
             
             // Subtitle tracks
@@ -338,14 +375,29 @@ export function VideoPlayer({
             
             // Audio tracks
             if (data.audioTracks && data.audioTracks.length > 0) {
-              const tracks: AudioTrackInfo[] = data.audioTracks.map((track, index) => ({
-                id: track.id,
-                label: getAudioLabel(track.name, track.lang, index),
-                language: track.lang || 'Unknown',
-                enabled: index === hls.audioTrack,
-              }));
+              let hindiTrackIndex = -1;
+              const tracks: AudioTrackInfo[] = data.audioTracks.map((track, index) => {
+                const label = getAudioLabel(track.name, track.lang, index);
+                // Check for Hindi track
+                if (label.toLowerCase().includes('hindi') || track.lang?.toLowerCase().includes('hin') || track.lang === 'hi') {
+                  hindiTrackIndex = index;
+                }
+                return {
+                  id: track.id,
+                  label,
+                  language: track.lang || 'Unknown',
+                  enabled: index === hls.audioTrack,
+                };
+              });
               setAudioTracks(tracks);
-              setCurrentAudioTrack(hls.audioTrack);
+              
+              // Default to Hindi if available
+              if (hindiTrackIndex >= 0) {
+                hls.audioTrack = hindiTrackIndex;
+                setCurrentAudioTrack(hindiTrackIndex);
+              } else {
+                setCurrentAudioTrack(hls.audioTrack);
+              }
             }
             
             // Subtitle tracks
@@ -373,6 +425,12 @@ export function VideoPlayer({
               levels.sort((a, b) => b.height - a.height);
               setQualityLevels(levels);
               console.log('Quality levels detected:', levels);
+              
+              // Auto defaults to highest quality (1080p if available)
+              const highest1080 = levels.find(l => l.height >= 1080);
+              if (highest1080) {
+                hls.currentLevel = highest1080.id;
+              }
             }
             
             // Auto play
@@ -426,17 +484,29 @@ export function VideoPlayer({
           const nativeAudioTracks = (video as any).audioTracks;
           if (nativeAudioTracks && nativeAudioTracks.length > 0) {
             const tracks: AudioTrackInfo[] = [];
+            let hindiTrackIndex = -1;
             for (let i = 0; i < nativeAudioTracks.length; i++) {
               const track = nativeAudioTracks[i];
+              const label = getAudioLabel(track.label, track.language, i);
               tracks.push({
                 id: i,
-                label: getAudioLabel(track.label, track.language, i),
+                label,
                 language: track.language || 'Unknown',
                 enabled: track.enabled,
               });
               if (track.enabled) setCurrentAudioTrack(i);
+              if (label.toLowerCase().includes('hindi') || track.language?.toLowerCase().includes('hin') || track.language === 'hi') {
+                hindiTrackIndex = i;
+              }
             }
             setAudioTracks(tracks);
+            // Default to Hindi if available
+            if (hindiTrackIndex >= 0) {
+              for (let i = 0; i < nativeAudioTracks.length; i++) {
+                nativeAudioTracks[i].enabled = i === hindiTrackIndex;
+              }
+              setCurrentAudioTrack(hindiTrackIndex);
+            }
           }
           
           // Subtitle tracks
@@ -538,20 +608,21 @@ export function VideoPlayer({
   const switchQualityLevel = useCallback((levelId: number) => {
     if (hlsRef.current) {
       if (levelId === -1) {
-        // Auto quality
+        // Auto quality - set to highest available (1080p preference)
         hlsRef.current.currentLevel = -1;
         setIsAutoQuality(true);
         setCurrentQualityLevel(-1);
-        toast.success('Quality: Auto');
+        toast.success('Quality: Auto (1080p)');
       } else {
         // Specific quality
         hlsRef.current.currentLevel = levelId;
         setIsAutoQuality(false);
         setCurrentQualityLevel(levelId);
         const level = qualityLevels.find(l => l.id === levelId);
-        toast.success(`Quality: ${level?.label || `Level ${levelId}`}`);
+        toast.success(`Quality: ${level?.height || levelId}p`);
       }
     }
+    setSettingsOpen(false);
   }, [qualityLevels]);
 
   // Switch audio track - works with both HLS.js and native
@@ -564,6 +635,7 @@ export function VideoPlayer({
       const track = hlsRef.current.audioTracks[trackId];
       toast.success(`Audio: ${track?.name || `Track ${trackId + 1}`}`);
       setCurrentAudioTrack(trackId);
+      setSettingsOpen(false);
       return;
     }
     
@@ -579,6 +651,7 @@ export function VideoPlayer({
         setCurrentAudioTrack(trackId);
       }
     }
+    setSettingsOpen(false);
   }, []);
 
   // Switch subtitle track - works with both HLS.js and native
@@ -595,6 +668,7 @@ export function VideoPlayer({
         toast.success(`Subtitles: ${track?.name || `Track ${trackId + 1}`}`);
       }
       setCurrentSubtitleTrack(trackId);
+      setSettingsOpen(false);
       return;
     }
     
@@ -616,6 +690,26 @@ export function VideoPlayer({
         }
         setCurrentSubtitleTrack(trackId);
       }
+    }
+    setSettingsOpen(false);
+  }, []);
+
+  // Change playback speed
+  const changePlaybackSpeed = useCallback((speed: number) => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = speed;
+      setPlaybackSpeed(speed);
+      toast.success(`Speed: ${speed}x`);
+    }
+    setSettingsOpen(false);
+  }, []);
+
+  // Skip intro handler
+  const handleSkipIntro = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = INTRO_END;
+      setShowSkipIntro(false);
+      toast.success('Skipped intro');
     }
   }, []);
 
@@ -714,7 +808,7 @@ export function VideoPlayer({
       clearTimeout(controlsTimeoutRef.current);
     }
     
-    if (isPlaying && showControls) {
+    if (isPlaying && showControls && !settingsOpen) {
       controlsTimeoutRef.current = setTimeout(() => {
         setShowControls(false);
       }, 3000); // Increased to 3 seconds
@@ -728,7 +822,7 @@ export function VideoPlayer({
         clearTimeout(controlsTimeoutRef.current);
       }
     };
-  }, [isPlaying, showControls]);
+  }, [isPlaying, showControls, settingsOpen]);
 
   // Mouse/touch movement handler - ENHANCED for fullscreen
   const handleMouseMove = useCallback(() => {
@@ -738,12 +832,12 @@ export function VideoPlayer({
       clearTimeout(controlsTimeoutRef.current);
     }
     
-    if (isPlaying) {
+    if (isPlaying && !settingsOpen) {
       controlsTimeoutRef.current = setTimeout(() => {
         setShowControls(false);
       }, 3000);
     }
-  }, [isPlaying]);
+  }, [isPlaying, settingsOpen]);
 
   // Touch handler for mobile - ENHANCED
   const handleTouchStart = useCallback(() => {
@@ -753,12 +847,12 @@ export function VideoPlayer({
       clearTimeout(controlsTimeoutRef.current);
     }
     
-    if (isPlaying) {
+    if (isPlaying && !settingsOpen) {
       controlsTimeoutRef.current = setTimeout(() => {
         setShowControls(false);
       }, 4000); // Longer timeout for touch
     }
-  }, [isPlaying]);
+  }, [isPlaying, settingsOpen]);
 
   const formatTime = (seconds: number) => {
     if (isNaN(seconds)) return isMovie ? '0:00:00' : '0:00';
@@ -788,6 +882,21 @@ export function VideoPlayer({
         const bufferedEnd = videoRef.current.buffered.end(videoRef.current.buffered.length - 1);
         const bufferedProgress = (bufferedEnd / dur) * 100;
         setBuffered(bufferedProgress);
+      }
+      
+      // Show skip intro button during intro (first 90 seconds)
+      if (current >= INTRO_START && current < INTRO_END && !isMovie) {
+        setShowSkipIntro(true);
+      } else {
+        setShowSkipIntro(false);
+      }
+      
+      // Show next episode button when near the end (last 30 seconds or 90%)
+      const nearEnd = dur > 0 && (current >= dur - 30 || prog >= 90);
+      if (nearEnd && hasNextEpisode && !isMovie) {
+        setShowNextEpisode(true);
+      } else {
+        setShowNextEpisode(false);
       }
     }
   };
@@ -1075,14 +1184,14 @@ export function VideoPlayer({
 
   // Get current quality/audio/subtitle labels for display
   const getCurrentQualityLabel = () => {
-    if (isAutoQuality) return 'Auto';
+    if (isAutoQuality) return 'Auto (1080p)';
     const level = qualityLevels.find(l => l.id === currentQualityLevel);
     return level ? `${level.height}p` : 'Auto';
   };
 
   const getCurrentAudioLabel = () => {
     const track = audioTracks.find(t => t.id === currentAudioTrack);
-    return track?.label || 'Default';
+    return track?.label || '🇮🇳 Hindi';
   };
 
   const getCurrentSubtitleLabel = () => {
@@ -1151,7 +1260,7 @@ export function VideoPlayer({
         return (
           <>
             <DropdownMenuItem
-              onClick={(e) => { e.stopPropagation(); setSettingsMenu('main'); }}
+              onSelect={(e) => { e.preventDefault(); setSettingsMenu('main'); }}
               className="flex items-center gap-2 cursor-pointer text-muted-foreground"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -1159,31 +1268,29 @@ export function VideoPlayer({
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground">Quality</DropdownMenuLabel>
+            <DropdownMenuItem
+              onSelect={(e) => { e.preventDefault(); switchQualityLevel(-1); }}
+              className={`${isAutoQuality ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+            >
+              <span className="text-sm">Auto (1080p)</span>
+              {isAutoQuality && <Check className="w-4 h-4 text-primary" />}
+            </DropdownMenuItem>
             {qualityLevels.length > 0 ? (
-              <>
+              qualityLevels.map((level) => (
                 <DropdownMenuItem
-                  onClick={(e) => { e.stopPropagation(); switchQualityLevel(-1); }}
-                  className={`${isAutoQuality ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+                  key={level.id}
+                  onSelect={(e) => { e.preventDefault(); switchQualityLevel(level.id); }}
+                  className={`${!isAutoQuality && currentQualityLevel === level.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
                 >
-                  <span className="text-sm">Auto</span>
-                  {isAutoQuality && <Check className="w-4 h-4 text-primary" />}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">{level.height}p</span>
+                    {level.height >= 1080 && (
+                      <span className="text-[10px] font-bold bg-primary/20 text-primary px-1 py-0.5 rounded">HD</span>
+                    )}
+                  </div>
+                  {!isAutoQuality && currentQualityLevel === level.id && <Check className="w-4 h-4 text-primary" />}
                 </DropdownMenuItem>
-                {qualityLevels.map((level) => (
-                  <DropdownMenuItem
-                    key={level.id}
-                    onClick={(e) => { e.stopPropagation(); switchQualityLevel(level.id); }}
-                    className={`${!isAutoQuality && currentQualityLevel === level.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm">{level.height}p</span>
-                      {level.height >= 1080 && (
-                        <span className="text-[10px] font-bold bg-primary/20 text-primary px-1 py-0.5 rounded">HD</span>
-                      )}
-                    </div>
-                    {!isAutoQuality && currentQualityLevel === level.id && <Check className="w-4 h-4 text-primary" />}
-                  </DropdownMenuItem>
-                ))}
-              </>
+              ))
             ) : (
               <div className="px-2 py-2 text-xs text-muted-foreground">
                 Auto quality active
@@ -1196,7 +1303,7 @@ export function VideoPlayer({
         return (
           <>
             <DropdownMenuItem
-              onClick={(e) => { e.stopPropagation(); setSettingsMenu('main'); }}
+              onSelect={(e) => { e.preventDefault(); setSettingsMenu('main'); }}
               className="flex items-center gap-2 cursor-pointer text-muted-foreground"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -1208,7 +1315,7 @@ export function VideoPlayer({
               audioTracks.map((track) => (
                 <DropdownMenuItem
                   key={track.id}
-                  onClick={(e) => { e.stopPropagation(); switchAudioTrack(track.id); }}
+                  onSelect={(e) => { e.preventDefault(); switchAudioTrack(track.id); }}
                   className={`${currentAudioTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
                 >
                   <span className="text-sm">{track.label}</span>
@@ -1216,9 +1323,13 @@ export function VideoPlayer({
                 </DropdownMenuItem>
               ))
             ) : (
-              <div className="px-2 py-2 text-xs text-muted-foreground">
-                Single audio track
-              </div>
+              <DropdownMenuItem
+                onSelect={(e) => e.preventDefault()}
+                className="flex items-center justify-between gap-4 cursor-pointer bg-primary/20"
+              >
+                <span className="text-sm">🇮🇳 Hindi</span>
+                <Check className="w-4 h-4 text-primary" />
+              </DropdownMenuItem>
             )}
           </>
         );
@@ -1227,7 +1338,7 @@ export function VideoPlayer({
         return (
           <>
             <DropdownMenuItem
-              onClick={(e) => { e.stopPropagation(); setSettingsMenu('main'); }}
+              onSelect={(e) => { e.preventDefault(); setSettingsMenu('main'); }}
               className="flex items-center gap-2 cursor-pointer text-muted-foreground"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -1236,7 +1347,7 @@ export function VideoPlayer({
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground">Subtitles</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={(e) => { e.stopPropagation(); switchSubtitleTrack(-1); }}
+              onSelect={(e) => { e.preventDefault(); switchSubtitleTrack(-1); }}
               className={`${currentSubtitleTrack === -1 ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
             >
               <span className="text-sm">Off</span>
@@ -1246,7 +1357,7 @@ export function VideoPlayer({
               subtitleTracks.map((track) => (
                 <DropdownMenuItem
                   key={track.id}
-                  onClick={(e) => { e.stopPropagation(); switchSubtitleTrack(track.id); }}
+                  onSelect={(e) => { e.preventDefault(); switchSubtitleTrack(track.id); }}
                   className={`${currentSubtitleTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
                 >
                   <span className="text-sm">{track.label}</span>
@@ -1261,6 +1372,31 @@ export function VideoPlayer({
           </>
         );
       
+      case 'speed':
+        return (
+          <>
+            <DropdownMenuItem
+              onSelect={(e) => { e.preventDefault(); setSettingsMenu('main'); }}
+              className="flex items-center gap-2 cursor-pointer text-muted-foreground"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="text-sm">Back</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs text-muted-foreground">Playback Speed</DropdownMenuLabel>
+            {PLAYBACK_SPEEDS.map((speed) => (
+              <DropdownMenuItem
+                key={speed}
+                onSelect={(e) => { e.preventDefault(); changePlaybackSpeed(speed); }}
+                className={`${playbackSpeed === speed ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+              >
+                <span className="text-sm">{speed}x</span>
+                {playbackSpeed === speed && <Check className="w-4 h-4 text-primary" />}
+              </DropdownMenuItem>
+            ))}
+          </>
+        );
+      
       default: // main menu
         return (
           <>
@@ -1270,9 +1406,24 @@ export function VideoPlayer({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             
+            {/* Speed option */}
+            <DropdownMenuItem
+              onSelect={(e) => { e.preventDefault(); setSettingsMenu('speed'); }}
+              className="flex items-center justify-between gap-4 cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <Gauge className="w-4 h-4" />
+                <span className="text-sm">Speed</span>
+              </div>
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <span className="text-xs">{playbackSpeed}x</span>
+                <ChevronRight className="w-4 h-4" />
+              </div>
+            </DropdownMenuItem>
+            
             {/* Quality option */}
             <DropdownMenuItem
-              onClick={(e) => { e.stopPropagation(); setSettingsMenu('quality'); }}
+              onSelect={(e) => { e.preventDefault(); setSettingsMenu('quality'); }}
               className="flex items-center justify-between gap-4 cursor-pointer"
             >
               <div className="flex items-center gap-2">
@@ -1287,7 +1438,7 @@ export function VideoPlayer({
             
             {/* Audio option */}
             <DropdownMenuItem
-              onClick={(e) => { e.stopPropagation(); setSettingsMenu('audio'); }}
+              onSelect={(e) => { e.preventDefault(); setSettingsMenu('audio'); }}
               className="flex items-center justify-between gap-4 cursor-pointer"
             >
               <div className="flex items-center gap-2">
@@ -1302,7 +1453,7 @@ export function VideoPlayer({
             
             {/* Subtitles option */}
             <DropdownMenuItem
-              onClick={(e) => { e.stopPropagation(); setSettingsMenu('subtitles'); }}
+              onSelect={(e) => { e.preventDefault(); setSettingsMenu('subtitles'); }}
               className="flex items-center justify-between gap-4 cursor-pointer"
             >
               <div className="flex items-center gap-2">
@@ -1342,7 +1493,7 @@ export function VideoPlayer({
       onMouseMove={handleMouseMove}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      onMouseLeave={() => isPlaying && setShowControls(false)}
+      onMouseLeave={() => isPlaying && !settingsOpen && setShowControls(false)}
     >
       {/* Double-tap seek indicators */}
       {doubleTapSide === 'left' && (
@@ -1360,6 +1511,28 @@ export function VideoPlayer({
             <SkipForward className="w-8 h-8 text-white" />
           </div>
         </div>
+      )}
+
+      {/* Skip Intro Button */}
+      {showSkipIntro && showControls && (
+        <button
+          onClick={(e) => { e.stopPropagation(); handleSkipIntro(); }}
+          className="absolute bottom-24 right-4 z-[100] px-6 py-3 bg-white/90 hover:bg-white text-black font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center gap-2"
+        >
+          <FastForward className="w-5 h-5" />
+          Skip Intro
+        </button>
+      )}
+
+      {/* Next Episode Button */}
+      {showNextEpisode && hasNextEpisode && onNextEpisode && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onNextEpisode(); }}
+          className="absolute bottom-24 right-4 z-[100] px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center gap-2 animate-fade-in"
+        >
+          Next Episode
+          <ChevronRight className="w-5 h-5" />
+        </button>
       )}
 
       <video
@@ -1577,8 +1750,15 @@ export function VideoPlayer({
             </div>
 
             <div className="flex items-center gap-1">
-              {/* Settings Menu - Contains Quality, Audio, Subtitles */}
-              <DropdownMenu modal={false} onOpenChange={(open) => { if (!open) setSettingsMenu('main'); }}>
+              {/* Settings Menu - Contains Speed, Quality, Audio, Subtitles */}
+              <DropdownMenu 
+                modal={false} 
+                open={settingsOpen}
+                onOpenChange={(open) => { 
+                  setSettingsOpen(open);
+                  if (!open) setSettingsMenu('main'); 
+                }}
+              >
                 <DropdownMenuTrigger asChild>
                   <button 
                     className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
@@ -1591,9 +1771,10 @@ export function VideoPlayer({
                 {createPortal(
                   <DropdownMenuContent 
                     align="end" 
-                    className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] max-h-[300px] overflow-y-auto"
+                    className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[220px] max-h-[350px] overflow-y-auto"
                     sideOffset={8}
                     style={{ zIndex: 2147483647 }}
+                    onCloseAutoFocus={(e) => e.preventDefault()}
                   >
                     {renderSettingsContent()}
                   </DropdownMenuContent>,

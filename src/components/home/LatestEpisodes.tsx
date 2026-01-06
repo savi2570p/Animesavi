@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Play, Clock, ChevronRight } from 'lucide-react';
+import { Play, ChevronRight } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 
 interface LatestEpisode {
@@ -74,30 +74,19 @@ export function LatestEpisodes() {
     }
   };
 
-  const formatDuration = (seconds: number | null) => {
-    if (!seconds) return '';
-    const mins = Math.floor(seconds / 60);
-    return `${mins}m`;
-  };
-
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(hours / 24);
-    
-    if (days > 0) return `${days}d ago`;
-    if (hours > 0) return `${hours}h ago`;
-    return 'Just now';
-  };
-
   const isNew = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const hours = diff / (1000 * 60 * 60);
     return hours <= 24;
+  };
+
+  // Check if thumbnail is 16:9 aspect ratio (or close to it)
+  const is16by9Ratio = (thumbnail: string | null): boolean => {
+    // For now, assume episode thumbnails are typically 16:9
+    // Actual ratio detection would require loading the image
+    return !!thumbnail;
   };
 
   if (loading) {
@@ -148,56 +137,74 @@ export function LatestEpisodes() {
         </div>
 
         <div className="flex md:grid md:grid-cols-4 gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
-          {episodes.map((episode, index) => (
-            <AnimeCardContextMenu
-              key={episode.id}
-              animeTitle={episode.season?.anime?.title || episode.title}
-              animeUrl={`/watch/${episode.id}`}
-              coverImage={episode.thumbnail || episode.season?.anime?.cover_image}
-            >
-              <Link
-                to={`/watch/${episode.id}`}
-                className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in w-[200px] md:w-auto shrink-0`}
+          {episodes.map((episode, index) => {
+            const hasThumbnail = is16by9Ratio(episode.thumbnail);
+            
+            return (
+              <AnimeCardContextMenu
+                key={episode.id}
+                animeTitle={episode.season?.anime?.title || episode.title}
+                animeUrl={`/watch/${episode.id}`}
+                coverImage={episode.thumbnail || episode.season?.anime?.cover_image}
               >
-                {/* Thumbnail with hover effects */}
-                <div className="relative aspect-video rounded-xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl transition-all duration-500">
-                  <img
-                    src={episode.thumbnail || episode.season?.anime?.cover_image || '/placeholder.svg'}
-                    alt={episode.season?.anime?.title || episode.title}
-                    className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
-                    loading="lazy"
-                  />
-                  
-                  {/* Gradient overlay on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                  
-                  {/* Play overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <div className="p-4 rounded-full bg-primary/90 shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300">
-                      <Play className="h-6 w-6 text-primary-foreground fill-current" />
+                <Link
+                  to={`/watch/${episode.id}`}
+                  className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in w-[200px] md:w-auto shrink-0`}
+                >
+                  {/* Thumbnail with hover effects */}
+                  <div className="relative aspect-video rounded-xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl transition-all duration-500">
+                    <img
+                      src={episode.thumbnail || episode.season?.anime?.cover_image || '/placeholder.svg'}
+                      alt={episode.season?.anime?.title || episode.title}
+                      className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
+                      loading="lazy"
+                    />
+                    
+                    {/* Gradient overlay on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                    
+                    {/* Play overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      <div className="p-4 rounded-full bg-primary/90 shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                        <Play className="h-6 w-6 text-primary-foreground fill-current" />
+                      </div>
                     </div>
+
+                    {/* Season & Episode badge */}
+                    <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-lg shadow-md">
+                      S{episode.season?.season_number} E{episode.episode_number}
+                    </div>
+
+                    {/* NEW badge */}
+                    {isNew(episode.created_at) && (
+                      <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-lg shadow-md animate-pulse">
+                        NEW
+                      </div>
+                    )}
+
+                    {/* Title overlay for 16:9 thumbnails */}
+                    {hasThumbnail && (
+                      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent">
+                        <h3 className="text-sm font-semibold text-white line-clamp-1 drop-shadow-lg">
+                          {episode.season?.anime?.title}
+                        </h3>
+                        <p className="text-xs text-white/70 mt-0.5">
+                          Episode {episode.episode_number}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Season & Episode badge */}
-                  <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-lg shadow-md">
-                    S{episode.season?.season_number} E{episode.episode_number}
-                  </div>
-
-                  {/* NEW badge */}
-                  {isNew(episode.created_at) && (
-                    <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-lg shadow-md animate-pulse">
-                      NEW
-                    </div>
+                  {/* Anime Title below (only if no overlay title) */}
+                  {!hasThumbnail && (
+                    <h3 className="text-sm md:text-base font-semibold mt-3 line-clamp-2 group-hover:text-primary transition-colors duration-300">
+                      {episode.season?.anime?.title}
+                    </h3>
                   )}
-                </div>
-
-                {/* Anime Title only - simplified */}
-                <h3 className="text-sm md:text-base font-semibold mt-3 line-clamp-2 group-hover:text-primary transition-colors duration-300">
-                  {episode.season?.anime?.title}
-                </h3>
-              </Link>
-            </AnimeCardContextMenu>
-          ))}
+                </Link>
+              </AnimeCardContextMenu>
+            );
+          })}
         </div>
       </div>
     </section>
