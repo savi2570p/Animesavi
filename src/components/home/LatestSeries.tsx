@@ -193,12 +193,20 @@ export function LatestSeries() {
                   </div>
 
                   {/* Episode count badge */}
-                  <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-lg shadow-md">
-                    {anime.episode_count} EP{anime.episode_count !== 1 ? 'S' : ''}
-                  </div>
+                  {anime.episode_count > 0 ? (
+                    <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-lg shadow-md">
+                      {anime.episode_count} EP{anime.episode_count !== 1 ? 'S' : ''}
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <div className="bg-orange-500/90 text-white px-3 py-2 rounded-lg text-xs font-bold text-center animate-pulse">
+                        Episodes Under Progress
+                      </div>
+                    </div>
+                  )}
 
                   {/* NEW badge */}
-                  {isNew(anime) && (
+                  {isNew(anime) && anime.episode_count > 0 && (
                     <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-lg shadow-md animate-pulse">
                       NEW
                     </div>
@@ -217,9 +225,11 @@ export function LatestSeries() {
                     <h3 className="text-sm md:text-base font-semibold text-white line-clamp-2 drop-shadow-lg">
                       {anime.title}
                     </h3>
-                    <p className="text-xs text-white/70 mt-1">
-                      {anime.episode_count} Episode{anime.episode_count !== 1 ? 's' : ''}
-                    </p>
+                    {anime.episode_count > 0 && (
+                      <p className="text-xs text-white/70 mt-1">
+                        {anime.episode_count} Episode{anime.episode_count !== 1 ? 's' : ''}
+                      </p>
+                    )}
                   </div>
                 </div>
               </Link>

@@ -128,6 +128,10 @@ export type Database = {
           episode_number: number
           external_url: string | null
           id: string
+          intro_end_time: number | null
+          intro_start_time: number | null
+          outro_end_time: number | null
+          outro_start_time: number | null
           season_id: string
           thumbnail: string | null
           title: string
@@ -142,6 +146,10 @@ export type Database = {
           episode_number: number
           external_url?: string | null
           id?: string
+          intro_end_time?: number | null
+          intro_start_time?: number | null
+          outro_end_time?: number | null
+          outro_start_time?: number | null
           season_id: string
           thumbnail?: string | null
           title: string
@@ -156,6 +164,10 @@ export type Database = {
           episode_number?: number
           external_url?: string | null
           id?: string
+          intro_end_time?: number | null
+          intro_start_time?: number | null
+          outro_end_time?: number | null
+          outro_start_time?: number | null
           season_id?: string
           thumbnail?: string | null
           title?: string

@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { VideoPlayer, ServerType } from '@/components/video/VideoPlayer';
+import { EpisodeList } from '@/components/video/EpisodeList';
 import { z } from 'zod';
 import {
   ChevronLeft,
@@ -35,6 +36,10 @@ interface Episode {
   duration: number | null;
   season_id: string;
   audio_language: string | null;
+  intro_start_time: number | null;
+  intro_end_time: number | null;
+  outro_start_time: number | null;
+  outro_end_time: number | null;
 }
 
 interface Season {
@@ -487,23 +492,41 @@ export default function Watch() {
         </div>
       )}
 
-      {/* Video Player */}
-      <VideoPlayer
-        videoUrl={episode.video_url}
-        externalUrl={episode.external_url}
-        title={episode.title}
-        animeTitle={anime?.title || ''}
-        episodeNumber={episode.episode_number}
-        episodeId={episode.id}
-        poster={anime?.cover_image || undefined}
-        isMovie={isMovie}
-        activeServer={activeServer}
-        isLoading={serverLoading}
-        audioLanguage={episode.audio_language || undefined}
-        onTimeUpdate={updateWatchProgress}
-        hasNextEpisode={!!nextEpisode}
-        onNextEpisode={nextEpisode ? () => navigate(`/watch/${nextEpisode.id}`) : undefined}
-      />
+      {/* Main Watch Area - Video + Episode List */}
+      <div className="flex">
+        {/* Episode List - Desktop Left Sidebar */}
+        <div className="hidden lg:block w-72 shrink-0 border-r border-border/50 bg-card/30">
+          <EpisodeList
+            episodes={allEpisodes}
+            currentEpisodeId={episodeId || ''}
+            className="h-[calc(100vh-4rem)] sticky top-16"
+          />
+        </div>
+
+        {/* Video Player */}
+        <div className="flex-1">
+          <VideoPlayer
+            videoUrl={episode.video_url}
+            externalUrl={episode.external_url}
+            title={episode.title}
+            animeTitle={anime?.title || ''}
+            episodeNumber={episode.episode_number}
+            episodeId={episode.id}
+            poster={anime?.cover_image || undefined}
+            isMovie={isMovie}
+            activeServer={activeServer}
+            isLoading={serverLoading}
+            audioLanguage={episode.audio_language || undefined}
+            onTimeUpdate={updateWatchProgress}
+            hasNextEpisode={!!nextEpisode}
+            onNextEpisode={nextEpisode ? () => navigate(`/watch/${nextEpisode.id}`) : undefined}
+            introStartTime={episode.intro_start_time}
+            introEndTime={episode.intro_end_time}
+            outroStartTime={episode.outro_start_time}
+            outroEndTime={episode.outro_end_time}
+          />
+        </div>
+      </div>
 
       {/* Episode Info & Navigation */}
       <div className="container py-6">
