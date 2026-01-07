@@ -74,6 +74,10 @@ interface VideoPlayerProps {
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   onNextEpisode?: () => void;
   hasNextEpisode?: boolean;
+  introStartTime?: number | null;
+  introEndTime?: number | null;
+  outroStartTime?: number | null;
+  outroEndTime?: number | null;
 }
 
 const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
@@ -185,6 +189,10 @@ export function VideoPlayer({
   onTimeUpdate,
   onNextEpisode,
   hasNextEpisode = false,
+  introStartTime = null,
+  introEndTime = null,
+  outroStartTime = null,
+  outroEndTime = null,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -220,13 +228,17 @@ export function VideoPlayer({
   const [settingsMenu, setSettingsMenu] = useState<SettingsMenu>('main');
   const [settingsOpen, setSettingsOpen] = useState(false);
   
-  // Skip intro state
+  // Skip intro/outro state - Use props if available, otherwise defaults
   const [showSkipIntro, setShowSkipIntro] = useState(false);
-  const INTRO_START = 0;
-  const INTRO_END = 90; // Intro typically ends around 1:30
+  const [showSkipOutro, setShowSkipOutro] = useState(false);
+  const INTRO_START = introStartTime ?? 0;
+  const INTRO_END = introEndTime ?? 90;
+  const OUTRO_START = outroStartTime; // Can be null
+  const OUTRO_END = outroEndTime; // Can be null
   
-  // Next episode button state
+  // Next episode button state with auto-hide
   const [showNextEpisode, setShowNextEpisode] = useState(false);
+  const nextEpisodeTimeoutRef = useRef<NodeJS.Timeout>();
   
   // Video processing state for SAVI.IN server
   const [isProcessing, setIsProcessing] = useState(false);
@@ -706,12 +718,23 @@ export function VideoPlayer({
 
   // Skip intro handler
   const handleSkipIntro = useCallback(() => {
-    if (videoRef.current) {
+    if (videoRef.current && INTRO_END) {
       videoRef.current.currentTime = INTRO_END;
       setShowSkipIntro(false);
       toast.success('Skipped intro');
     }
-  }, []);
+  }, [INTRO_END]);
+
+  // Skip outro handler
+  const handleSkipOutro = useCallback(() => {
+    if (videoRef.current && OUTRO_END) {
+      videoRef.current.currentTime = OUTRO_END;
+      setShowSkipOutro(false);
+      toast.success('Skipped outro');
+    } else if (onNextEpisode) {
+      onNextEpisode();
+    }
+  }, [OUTRO_END, onNextEpisode]);
 
   // Handle SAVI.IN processing simulation
   useEffect(() => {
@@ -884,22 +907,55 @@ export function VideoPlayer({
         setBuffered(bufferedProgress);
       }
       
-      // Show skip intro button during intro (first 90 seconds)
-      if (current >= INTRO_START && current < INTRO_END && !isMovie) {
+      // Show skip intro button during intro (only if intro times are set)
+      if (INTRO_END && current >= INTRO_START && current < INTRO_END && !isMovie) {
         setShowSkipIntro(true);
       } else {
         setShowSkipIntro(false);
       }
       
-      // Show next episode button when near the end (last 30 seconds or 90%)
-      const nearEnd = dur > 0 && (current >= dur - 30 || prog >= 90);
-      if (nearEnd && hasNextEpisode && !isMovie) {
-        setShowNextEpisode(true);
+      // Show skip outro button during outro (only if outro times are set)
+      if (OUTRO_START && current >= OUTRO_START && (!OUTRO_END || current < OUTRO_END) && !isMovie) {
+        setShowSkipOutro(true);
       } else {
-        setShowNextEpisode(false);
+        setShowSkipOutro(false);
+      }
+      
+      // Show next episode button when 20 seconds left
+      const secondsLeft = dur - current;
+      const nearEnd = dur > 0 && secondsLeft <= 20;
+      if (nearEnd && hasNextEpisode && !isMovie) {
+        if (!showNextEpisode) {
+          setShowNextEpisode(true);
+          // Auto-hide after 2 seconds if not interacted
+          if (nextEpisodeTimeoutRef.current) {
+            clearTimeout(nextEpisodeTimeoutRef.current);
+          }
+          nextEpisodeTimeoutRef.current = setTimeout(() => {
+            setShowNextEpisode(false);
+          }, 2000);
+        }
       }
     }
   };
+
+  // Reset next episode visibility on mouse move
+  useEffect(() => {
+    if (showControls && duration > 0 && duration - currentTime <= 20 && hasNextEpisode && !isMovie) {
+      setShowNextEpisode(true);
+      if (nextEpisodeTimeoutRef.current) {
+        clearTimeout(nextEpisodeTimeoutRef.current);
+      }
+      nextEpisodeTimeoutRef.current = setTimeout(() => {
+        setShowNextEpisode(false);
+      }, 2000);
+    }
+    return () => {
+      if (nextEpisodeTimeoutRef.current) {
+        clearTimeout(nextEpisodeTimeoutRef.current);
+      }
+    };
+  }, [showControls, duration, currentTime, hasNextEpisode, isMovie]);
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (videoRef.current) {
@@ -1514,13 +1570,24 @@ export function VideoPlayer({
       )}
 
       {/* Skip Intro Button */}
-      {showSkipIntro && showControls && (
+      {showSkipIntro && (
         <button
           onClick={(e) => { e.stopPropagation(); handleSkipIntro(); }}
-          className="absolute bottom-24 right-4 z-[100] px-6 py-3 bg-white/90 hover:bg-white text-black font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center gap-2"
+          className="absolute bottom-28 right-4 z-[100] px-6 py-3 bg-white/90 hover:bg-white text-black font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center gap-2"
         >
           <FastForward className="w-5 h-5" />
           Skip Intro
+        </button>
+      )}
+
+      {/* Skip Outro Button */}
+      {showSkipOutro && !showNextEpisode && (
+        <button
+          onClick={(e) => { e.stopPropagation(); handleSkipOutro(); }}
+          className="absolute bottom-28 right-4 z-[100] px-6 py-3 bg-white/90 hover:bg-white text-black font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center gap-2"
+        >
+          <FastForward className="w-5 h-5" />
+          Skip Outro
         </button>
       )}
 
@@ -1528,7 +1595,7 @@ export function VideoPlayer({
       {showNextEpisode && hasNextEpisode && onNextEpisode && (
         <button
           onClick={(e) => { e.stopPropagation(); onNextEpisode(); }}
-          className="absolute bottom-24 right-4 z-[100] px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center gap-2 animate-fade-in"
+          className="absolute bottom-28 right-4 z-[100] px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center gap-2 animate-fade-in"
         >
           Next Episode
           <ChevronRight className="w-5 h-5" />
@@ -1771,8 +1838,9 @@ export function VideoPlayer({
                 {createPortal(
                   <DropdownMenuContent 
                     align="end" 
+                    side="top"
                     className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[220px] max-h-[350px] overflow-y-auto"
-                    sideOffset={8}
+                    sideOffset={12}
                     style={{ zIndex: 2147483647 }}
                     onCloseAutoFocus={(e) => e.preventDefault()}
                   >

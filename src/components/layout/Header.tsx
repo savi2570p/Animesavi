@@ -240,6 +240,20 @@ export function Header() {
             </div>
           )}
 
+          {/* Mobile Search Button */}
+          <form onSubmit={handleSearch} className="md:hidden">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-32 pl-9 pr-2 h-9 bg-secondary/50 border-border/50 focus:w-40 transition-all duration-300 rounded-xl text-sm"
+              />
+            </div>
+          </form>
+
           {/* Mobile Menu */}
           <Sheet>
             <SheetTrigger asChild className="lg:hidden">

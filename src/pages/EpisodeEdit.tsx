@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { ArrowLeft, Save, Film, Volume2 } from 'lucide-react';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
+import { IntroOutroEditor } from '@/components/upload/IntroOutroEditor';
 
 const AUDIO_LANGUAGES = [
   { value: 'original', label: 'Original (Japanese)' },
@@ -33,6 +34,10 @@ interface Episode {
   duration: number | null;
   season_id: string;
   audio_language: string | null;
+  intro_start_time: number | null;
+  intro_end_time: number | null;
+  outro_start_time: number | null;
+  outro_end_time: number | null;
 }
 
 interface Anime {
@@ -62,6 +67,10 @@ export default function EpisodeEdit() {
   const [duration, setDuration] = useState('');
   const [episodeNumber, setEpisodeNumber] = useState('');
   const [audioLanguage, setAudioLanguage] = useState('original');
+  const [introStartTime, setIntroStartTime] = useState<number | null>(null);
+  const [introEndTime, setIntroEndTime] = useState<number | null>(null);
+  const [outroStartTime, setOutroStartTime] = useState<number | null>(null);
+  const [outroEndTime, setOutroEndTime] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isAuthReady) return;
@@ -127,6 +136,10 @@ export default function EpisodeEdit() {
     setDuration(episodeData.duration?.toString() || '');
     setEpisodeNumber(episodeData.episode_number.toString());
     setAudioLanguage(episodeData.audio_language || 'original');
+    setIntroStartTime(episodeData.intro_start_time);
+    setIntroEndTime(episodeData.intro_end_time);
+    setOutroStartTime(episodeData.outro_start_time);
+    setOutroEndTime(episodeData.outro_end_time);
 
     setIsLoading(false);
   };
@@ -150,6 +163,10 @@ export default function EpisodeEdit() {
         duration: duration ? parseInt(duration) : null,
         episode_number: parseInt(episodeNumber),
         audio_language: audioLanguage || 'original',
+        intro_start_time: introStartTime,
+        intro_end_time: introEndTime,
+        outro_start_time: outroStartTime,
+        outro_end_time: outroEndTime,
       })
       .eq('id', episodeId);
 
@@ -316,6 +333,24 @@ export default function EpisodeEdit() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Intro/Outro Editor */}
+      <div className="mt-8">
+        <IntroOutroEditor
+          videoUrl={videoUrl || externalUrl}
+          introStartTime={introStartTime}
+          introEndTime={introEndTime}
+          outroStartTime={outroStartTime}
+          outroEndTime={outroEndTime}
+          onSave={(data) => {
+            setIntroStartTime(data.introStartTime);
+            setIntroEndTime(data.introEndTime);
+            setOutroStartTime(data.outroStartTime);
+            setOutroEndTime(data.outroEndTime);
+            toast.success('Timestamps updated! Click "Save Changes" to save.');
+          }}
+        />
+      </div>
     </div>
   );
 }
