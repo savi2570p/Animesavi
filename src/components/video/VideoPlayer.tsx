@@ -369,7 +369,19 @@ export function VideoPlayer({
           console.log('Using HLS.js for multi-audio and subtitle support');
           const hls = new Hls({
             enableWorker: true,
-            lowLatencyMode: false,
+            lowLatencyMode: true,
+            // Optimize for faster loading
+            maxBufferLength: 30,
+            maxMaxBufferLength: 60,
+            maxBufferSize: 60 * 1000 * 1000,
+            maxBufferHole: 0.5,
+            // Faster startup
+            startLevel: -1, // Auto select best quality
+            autoStartLoad: true,
+            // Better ABR
+            abrEwmaDefaultEstimate: 5000000, // 5 Mbps default estimate
+            abrBandWidthFactor: 0.95,
+            abrBandWidthUpFactor: 0.7,
             backBufferLength: 90,
           });
           
@@ -1309,34 +1321,37 @@ export function VideoPlayer({
     );
   }
 
-  // Render settings menu content
+  // Render settings menu content - Fixed click handling
   const renderSettingsContent = () => {
     switch (settingsMenu) {
       case 'quality':
         return (
-          <>
-            <DropdownMenuItem
-              onSelect={(e) => { e.preventDefault(); setSettingsMenu('main'); }}
-              className="flex items-center gap-2 cursor-pointer text-muted-foreground"
+          <div className="py-1">
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('main'); }}
+              className="flex items-center gap-2 cursor-pointer text-muted-foreground w-full px-2 py-2 hover:bg-accent rounded-sm"
             >
               <ChevronLeft className="w-4 h-4" />
               <span className="text-sm">Back</span>
-            </DropdownMenuItem>
+            </button>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground">Quality</DropdownMenuLabel>
-            <DropdownMenuItem
-              onSelect={(e) => { e.preventDefault(); switchQualityLevel(-1); }}
-              className={`${isAutoQuality ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); switchQualityLevel(-1); }}
+              className={`${isAutoQuality ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm`}
             >
               <span className="text-sm">Auto (1080p)</span>
               {isAutoQuality && <Check className="w-4 h-4 text-primary" />}
-            </DropdownMenuItem>
+            </button>
             {qualityLevels.length > 0 ? (
               qualityLevels.map((level) => (
-                <DropdownMenuItem
+                <button
                   key={level.id}
-                  onSelect={(e) => { e.preventDefault(); switchQualityLevel(level.id); }}
-                  className={`${!isAutoQuality && currentQualityLevel === level.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); switchQualityLevel(level.id); }}
+                  className={`${!isAutoQuality && currentQualityLevel === level.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm`}
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-sm">{level.height}p</span>
@@ -1345,117 +1360,121 @@ export function VideoPlayer({
                     )}
                   </div>
                   {!isAutoQuality && currentQualityLevel === level.id && <Check className="w-4 h-4 text-primary" />}
-                </DropdownMenuItem>
+                </button>
               ))
             ) : (
               <div className="px-2 py-2 text-xs text-muted-foreground">
                 Auto quality active
               </div>
             )}
-          </>
+          </div>
         );
       
       case 'audio':
         return (
-          <>
-            <DropdownMenuItem
-              onSelect={(e) => { e.preventDefault(); setSettingsMenu('main'); }}
-              className="flex items-center gap-2 cursor-pointer text-muted-foreground"
+          <div className="py-1">
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('main'); }}
+              className="flex items-center gap-2 cursor-pointer text-muted-foreground w-full px-2 py-2 hover:bg-accent rounded-sm"
             >
               <ChevronLeft className="w-4 h-4" />
               <span className="text-sm">Back</span>
-            </DropdownMenuItem>
+            </button>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground">Audio Track</DropdownMenuLabel>
             {audioTracks.length > 0 ? (
               audioTracks.map((track) => (
-                <DropdownMenuItem
+                <button
                   key={track.id}
-                  onSelect={(e) => { e.preventDefault(); switchAudioTrack(track.id); }}
-                  className={`${currentAudioTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); switchAudioTrack(track.id); }}
+                  className={`${currentAudioTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm`}
                 >
                   <span className="text-sm">{track.label}</span>
                   {currentAudioTrack === track.id && <Check className="w-4 h-4 text-primary" />}
-                </DropdownMenuItem>
+                </button>
               ))
             ) : (
-              <DropdownMenuItem
-                onSelect={(e) => e.preventDefault()}
-                className="flex items-center justify-between gap-4 cursor-pointer bg-primary/20"
-              >
+              <div className="flex items-center justify-between gap-4 w-full px-2 py-2 bg-primary/20 rounded-sm">
                 <span className="text-sm">🇮🇳 Hindi</span>
                 <Check className="w-4 h-4 text-primary" />
-              </DropdownMenuItem>
+              </div>
             )}
-          </>
+          </div>
         );
       
       case 'subtitles':
         return (
-          <>
-            <DropdownMenuItem
-              onSelect={(e) => { e.preventDefault(); setSettingsMenu('main'); }}
-              className="flex items-center gap-2 cursor-pointer text-muted-foreground"
+          <div className="py-1">
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('main'); }}
+              className="flex items-center gap-2 cursor-pointer text-muted-foreground w-full px-2 py-2 hover:bg-accent rounded-sm"
             >
               <ChevronLeft className="w-4 h-4" />
               <span className="text-sm">Back</span>
-            </DropdownMenuItem>
+            </button>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground">Subtitles</DropdownMenuLabel>
-            <DropdownMenuItem
-              onSelect={(e) => { e.preventDefault(); switchSubtitleTrack(-1); }}
-              className={`${currentSubtitleTrack === -1 ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); switchSubtitleTrack(-1); }}
+              className={`${currentSubtitleTrack === -1 ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm`}
             >
               <span className="text-sm">Off</span>
               {currentSubtitleTrack === -1 && <Check className="w-4 h-4 text-primary" />}
-            </DropdownMenuItem>
+            </button>
             {subtitleTracks.length > 0 ? (
               subtitleTracks.map((track) => (
-                <DropdownMenuItem
+                <button
                   key={track.id}
-                  onSelect={(e) => { e.preventDefault(); switchSubtitleTrack(track.id); }}
-                  className={`${currentSubtitleTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); switchSubtitleTrack(track.id); }}
+                  className={`${currentSubtitleTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm`}
                 >
                   <span className="text-sm">{track.label}</span>
                   {currentSubtitleTrack === track.id && <Check className="w-4 h-4 text-primary" />}
-                </DropdownMenuItem>
+                </button>
               ))
             ) : (
               <div className="px-2 py-2 text-xs text-muted-foreground">
                 No subtitles available
               </div>
             )}
-          </>
+          </div>
         );
       
       case 'speed':
         return (
-          <>
-            <DropdownMenuItem
-              onSelect={(e) => { e.preventDefault(); setSettingsMenu('main'); }}
-              className="flex items-center gap-2 cursor-pointer text-muted-foreground"
+          <div className="py-1">
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('main'); }}
+              className="flex items-center gap-2 cursor-pointer text-muted-foreground w-full px-2 py-2 hover:bg-accent rounded-sm"
             >
               <ChevronLeft className="w-4 h-4" />
               <span className="text-sm">Back</span>
-            </DropdownMenuItem>
+            </button>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground">Playback Speed</DropdownMenuLabel>
             {PLAYBACK_SPEEDS.map((speed) => (
-              <DropdownMenuItem
+              <button
                 key={speed}
-                onSelect={(e) => { e.preventDefault(); changePlaybackSpeed(speed); }}
-                className={`${playbackSpeed === speed ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer`}
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); changePlaybackSpeed(speed); }}
+                className={`${playbackSpeed === speed ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm`}
               >
                 <span className="text-sm">{speed}x</span>
                 {playbackSpeed === speed && <Check className="w-4 h-4 text-primary" />}
-              </DropdownMenuItem>
+              </button>
             ))}
-          </>
+          </div>
         );
       
       default: // main menu
         return (
-          <>
+          <div className="py-1">
             <DropdownMenuLabel className="text-xs text-muted-foreground flex items-center gap-2">
               <Settings className="w-3 h-3" />
               Settings
@@ -1463,9 +1482,10 @@ export function VideoPlayer({
             <DropdownMenuSeparator />
             
             {/* Speed option */}
-            <DropdownMenuItem
-              onSelect={(e) => { e.preventDefault(); setSettingsMenu('speed'); }}
-              className="flex items-center justify-between gap-4 cursor-pointer"
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('speed'); }}
+              className="flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm"
             >
               <div className="flex items-center gap-2">
                 <Gauge className="w-4 h-4" />
@@ -1475,12 +1495,13 @@ export function VideoPlayer({
                 <span className="text-xs">{playbackSpeed}x</span>
                 <ChevronRight className="w-4 h-4" />
               </div>
-            </DropdownMenuItem>
+            </button>
             
             {/* Quality option */}
-            <DropdownMenuItem
-              onSelect={(e) => { e.preventDefault(); setSettingsMenu('quality'); }}
-              className="flex items-center justify-between gap-4 cursor-pointer"
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('quality'); }}
+              className="flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm"
             >
               <div className="flex items-center gap-2">
                 <Settings className="w-4 h-4" />
@@ -1490,12 +1511,13 @@ export function VideoPlayer({
                 <span className="text-xs">{getCurrentQualityLabel()}</span>
                 <ChevronRight className="w-4 h-4" />
               </div>
-            </DropdownMenuItem>
+            </button>
             
             {/* Audio option */}
-            <DropdownMenuItem
-              onSelect={(e) => { e.preventDefault(); setSettingsMenu('audio'); }}
-              className="flex items-center justify-between gap-4 cursor-pointer"
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('audio'); }}
+              className="flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm"
             >
               <div className="flex items-center gap-2">
                 <Headphones className="w-4 h-4" />
@@ -1505,12 +1527,13 @@ export function VideoPlayer({
                 <span className="text-xs truncate max-w-[80px]">{getCurrentAudioLabel()}</span>
                 <ChevronRight className="w-4 h-4" />
               </div>
-            </DropdownMenuItem>
+            </button>
             
             {/* Subtitles option */}
-            <DropdownMenuItem
-              onSelect={(e) => { e.preventDefault(); setSettingsMenu('subtitles'); }}
-              className="flex items-center justify-between gap-4 cursor-pointer"
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('subtitles'); }}
+              className="flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm"
             >
               <div className="flex items-center gap-2">
                 <Subtitles className="w-4 h-4" />
@@ -1520,8 +1543,8 @@ export function VideoPlayer({
                 <span className="text-xs truncate max-w-[80px]">{getCurrentSubtitleLabel()}</span>
                 <ChevronRight className="w-4 h-4" />
               </div>
-            </DropdownMenuItem>
-          </>
+            </button>
+          </div>
         );
     }
   };

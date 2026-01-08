@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, Play, Star, Sparkles, TrendingUp, Clock, Film, Tv, CheckCircle2, Timer, CalendarClock } from 'lucide-react';
+import { Search, Filter, Play, Star, Sparkles, TrendingUp, Clock, Film, Tv, CheckCircle2, Timer, CalendarClock, X, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ALLOWED_GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports'] as const;
@@ -45,10 +45,46 @@ interface Anime {
   view_count: number | null;
   type: string | null;
   created_at: string | null;
+  episode_count?: number;
+}
+
+interface NoEpisodesPopupProps {
+  isOpen: boolean;
+  onClose: () => void;
+  animeTitle: string;
+}
+
+function NoEpisodesPopup({ isOpen, onClose, animeTitle }: NoEpisodesPopupProps) {
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+      <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4 shadow-xl animate-scale-in">
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">
+              <AlertCircle className="h-6 w-6 text-orange-500" />
+            </div>
+            <h3 className="text-lg font-bold text-foreground">Episodes Coming Soon</h3>
+          </div>
+        </div>
+        <p className="text-muted-foreground mb-6">
+          The episodes for "<span className="text-foreground font-medium">{animeTitle}</span>" are currently under progress. Please check back later!
+        </p>
+        <Button 
+          onClick={onClose}
+          className="w-full anime-button"
+        >
+          OK, Got It!
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 export default function Browse() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [animeList, setAnimeList] = useState<Anime[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
@@ -56,6 +92,12 @@ export default function Browse() {
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>((searchParams.get('type') as TypeFilter) || 'all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>((searchParams.get('status') as StatusFilter) || 'all');
+  
+  // No episodes popup state
+  const [noEpisodesPopup, setNoEpisodesPopup] = useState<{ isOpen: boolean; animeTitle: string }>({
+    isOpen: false,
+    animeTitle: '',
+  });
 
   useEffect(() => {
     const urlType = searchParams.get('type') as TypeFilter;
@@ -118,7 +160,29 @@ export default function Browse() {
     const { data, error } = await query;
 
     if (!error && data) {
-      setAnimeList(data);
+      // Fetch episode counts for each anime
+      const animeWithCounts = await Promise.all(
+        data.map(async (anime) => {
+          const { data: seasons } = await supabase
+            .from('seasons')
+            .select('id')
+            .eq('anime_id', anime.id);
+          
+          let totalEpisodes = 0;
+          if (seasons && seasons.length > 0) {
+            for (const season of seasons) {
+              const { count } = await supabase
+                .from('episodes')
+                .select('id', { count: 'exact', head: true })
+                .eq('season_id', season.id);
+              totalEpisodes += count || 0;
+            }
+          }
+          
+          return { ...anime, episode_count: totalEpisodes };
+        })
+      );
+      setAnimeList(animeWithCounts);
     }
     setIsLoading(false);
   };
@@ -168,6 +232,13 @@ export default function Browse() {
     setSearchParams(params);
   };
 
+  const handleAnimeClick = (anime: Anime, e: React.MouseEvent) => {
+    if (anime.episode_count === 0) {
+      e.preventDefault();
+      setNoEpisodesPopup({ isOpen: true, animeTitle: anime.title });
+    }
+  };
+
   const isNew = (dateString: string | null) => {
     if (!dateString) return false;
     const date = new Date(dateString);
@@ -198,6 +269,12 @@ export default function Browse() {
 
   return (
     <div className="min-h-screen">
+      {/* No Episodes Popup */}
+      <NoEpisodesPopup
+        isOpen={noEpisodesPopup.isOpen}
+        onClose={() => setNoEpisodesPopup({ isOpen: false, animeTitle: '' })}
+        animeTitle={noEpisodesPopup.animeTitle}
+      />
       {/* Hero header */}
       <div className="relative py-16 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
@@ -332,6 +409,7 @@ export default function Browse() {
                 to={`/anime/${anime.id}`} 
                 className="browse-card animate-fade-in-up"
                 style={{ animationDelay: `${index * 50}ms` }}
+                onClick={(e) => handleAnimeClick(anime, e)}
               >
                 <div className="aspect-[3/4] relative overflow-hidden rounded-t-xl">
                   <img
@@ -380,8 +458,17 @@ export default function Browse() {
                     </div>
                   )}
 
+                  {/* Episodes Under Progress overlay */}
+                  {anime.episode_count === 0 && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20">
+                      <div className="bg-orange-500/90 text-white px-3 py-2 rounded-lg text-center">
+                        <AlertCircle className="h-5 w-5 mx-auto mb-1" />
+                        <span className="text-xs font-bold">Episodes Under Progress</span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Hover overlay */}
-                  <div className="browse-card-overlay" />
                   
                   {/* Hover content */}
                   <div className="browse-card-content">
