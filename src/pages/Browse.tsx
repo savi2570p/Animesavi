@@ -33,6 +33,7 @@ const sanitizeSearchQuery = (query: string): string => {
 type SortOption = 'newest' | 'popular' | 'trending';
 type TypeFilter = 'all' | 'series' | 'movie';
 type StatusFilter = 'all' | 'ongoing' | 'completed' | 'upcoming';
+type EpisodeFilter = 'all' | 'no-episodes';
 
 interface Anime {
   id: string;
@@ -92,6 +93,7 @@ export default function Browse() {
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>((searchParams.get('type') as TypeFilter) || 'all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>((searchParams.get('status') as StatusFilter) || 'all');
+  const [episodeFilter, setEpisodeFilter] = useState<EpisodeFilter>((searchParams.get('episodes') as EpisodeFilter) || 'all');
   
   // No episodes popup state
   const [noEpisodesPopup, setNoEpisodesPopup] = useState<{ isOpen: boolean; animeTitle: string }>({
@@ -107,6 +109,10 @@ export default function Browse() {
     const urlStatus = searchParams.get('status') as StatusFilter;
     if (urlStatus && ['all', 'ongoing', 'completed', 'upcoming'].includes(urlStatus)) {
       setStatusFilter(urlStatus);
+    }
+    const urlEpisodes = searchParams.get('episodes') as EpisodeFilter;
+    if (urlEpisodes && ['all', 'no-episodes'].includes(urlEpisodes)) {
+      setEpisodeFilter(urlEpisodes);
     }
     fetchAnime();
   }, [searchParams, sortBy]);
@@ -182,7 +188,15 @@ export default function Browse() {
           return { ...anime, episode_count: totalEpisodes };
         })
       );
-      setAnimeList(animeWithCounts);
+      
+      // Apply episode filter
+      const episodeFilterValue = searchParams.get('episodes');
+      let filteredList = animeWithCounts;
+      if (episodeFilterValue === 'no-episodes') {
+        filteredList = animeWithCounts.filter(anime => anime.episode_count === 0);
+      }
+      
+      setAnimeList(filteredList);
     }
     setIsLoading(false);
   };
@@ -232,6 +246,17 @@ export default function Browse() {
     setSearchParams(params);
   };
 
+  const handleEpisodeFilter = (filter: EpisodeFilter) => {
+    const params = new URLSearchParams(searchParams);
+    if (filter === 'all') {
+      params.delete('episodes');
+    } else {
+      params.set('episodes', filter);
+    }
+    setEpisodeFilter(filter);
+    setSearchParams(params);
+  };
+
   const handleAnimeClick = (anime: Anime, e: React.MouseEvent) => {
     if (anime.episode_count === 0) {
       e.preventDefault();
@@ -265,6 +290,11 @@ export default function Browse() {
     { value: 'ongoing', label: 'Ongoing', icon: Timer },
     { value: 'completed', label: 'Completed', icon: CheckCircle2 },
     { value: 'upcoming', label: 'Upcoming', icon: CalendarClock },
+  ];
+
+  const episodeOptions: { value: EpisodeFilter; label: string }[] = [
+    { value: 'all', label: 'All' },
+    { value: 'no-episodes', label: 'Episode Progress' },
   ];
 
   return (
@@ -353,6 +383,20 @@ export default function Browse() {
                 className={cn("filter-btn flex items-center gap-2", statusFilter === option.value && "active")}
               >
                 <option.icon className="h-4 w-4" />
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Episode filter */}
+          <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-5">
+            <span className="text-sm text-muted-foreground font-medium">Episodes:</span>
+            {episodeOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleEpisodeFilter(option.value)}
+                className={cn("filter-btn flex items-center gap-2", episodeFilter === option.value && "active")}
+              >
                 {option.label}
               </button>
             ))}
