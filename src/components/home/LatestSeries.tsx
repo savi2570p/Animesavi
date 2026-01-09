@@ -88,15 +88,18 @@ export function LatestSeries() {
         })
       );
 
+      // Filter out anime with 0 episodes
+      const seriesWithEpisodes = seriesWithData.filter(anime => anime.episode_count > 0);
+      
       // Sort by latest episode date OR updated_at (whichever is more recent)
-      seriesWithData.sort((a, b) => {
+      seriesWithEpisodes.sort((a, b) => {
         const aDate = a.latest_episode_date || a.updated_at;
         const bDate = b.latest_episode_date || b.updated_at;
         return new Date(bDate).getTime() - new Date(aDate).getTime();
       });
 
       // Take only first 4
-      setSeries(seriesWithData.slice(0, 4));
+      setSeries(seriesWithEpisodes.slice(0, 4));
     } catch (error) {
       console.error('Error fetching latest series:', error);
     } finally {
@@ -193,17 +196,9 @@ export function LatestSeries() {
                   </div>
 
                   {/* Episode count badge */}
-                  {anime.episode_count > 0 ? (
-                    <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-lg shadow-md">
-                      {anime.episode_count} EP{anime.episode_count !== 1 ? 'S' : ''}
-                    </div>
-                  ) : (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                      <div className="bg-orange-500/90 text-white px-3 py-2 rounded-lg text-xs font-bold text-center animate-pulse">
-                        Episodes Under Progress
-                      </div>
-                    </div>
-                  )}
+                  <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-lg shadow-md">
+                    {anime.episode_count} EP{anime.episode_count !== 1 ? 'S' : ''}
+                  </div>
 
                   {/* NEW badge */}
                   {isNew(anime) && anime.episode_count > 0 && (

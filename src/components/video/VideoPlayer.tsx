@@ -1596,16 +1596,7 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Skip Intro Button */}
-      {showSkipIntro && (
-        <button
-          onClick={(e) => { e.stopPropagation(); handleSkipIntro(); }}
-          className="absolute bottom-28 right-4 z-[100] px-6 py-3 bg-white/90 hover:bg-white text-black font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center gap-2"
-        >
-          <FastForward className="w-5 h-5" />
-          Skip Intro
-        </button>
-      )}
+      {/* Skip Intro Button - REMOVED per user request */}
 
       {/* Skip Outro Button */}
       {showSkipOutro && !showNextEpisode && (
