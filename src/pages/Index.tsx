@@ -9,6 +9,7 @@ import { LatestEpisodes } from '@/components/home/LatestEpisodes';
 import { LatestMovies } from '@/components/home/LatestMovies';
 import { LatestSeries } from '@/components/home/LatestSeries';
 import { RecentlyCompleted } from '@/components/home/RecentlyCompleted';
+import { EpisodeProgress } from '@/components/home/EpisodeProgress';
 
 export default function Index() {
   const { user } = useAuth();
@@ -76,23 +77,26 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Recommended Anime - Moved to top */}
+      {/* Continue Watching - Top Priority for logged in users */}
+      <ContinueWatching />
+
+      {/* Recommended Anime */}
       <RecommendedAnime />
 
-      {/* Latest Series - 2nd position */}
+      {/* Latest Series */}
       <LatestSeries />
 
       {/* Latest Episodes */}
       <LatestEpisodes />
+
+      {/* Episode Progress - Anime with no episodes yet */}
+      <EpisodeProgress />
 
       {/* Latest Movies */}
       <LatestMovies />
 
       {/* Recently Completed */}
       <RecentlyCompleted />
-
-      {/* Continue Watching */}
-      <ContinueWatching />
 
       {/* Features Section */}
       <section className="py-20 md:py-28 relative overflow-hidden">

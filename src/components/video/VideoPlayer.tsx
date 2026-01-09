@@ -1132,6 +1132,10 @@ export function VideoPlayer({
           e.preventDefault();
           toggleFullscreen();
           break;
+        case 'm':
+          e.preventDefault();
+          toggleMute();
+          break;
         case 'p':
           e.preventDefault();
           togglePiP();
@@ -1155,7 +1159,7 @@ export function VideoPlayer({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [togglePlay, toggleFullscreen, togglePiP, skipForward, skipBackward, isFullscreen]);
+  }, [togglePlay, toggleFullscreen, togglePiP, skipForward, skipBackward, isFullscreen, toggleMute]);
 
   const handleDownload = () => {
     if (!effectiveVideoUrl) {
