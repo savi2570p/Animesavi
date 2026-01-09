@@ -528,236 +528,201 @@ export default function Watch() {
         </div>
       </div>
 
-      {/* Episode Info & Navigation */}
-      <div className="container py-6">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Main Content */}
-          <div className="flex-1">
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-              <Link to={`/anime/${anime?.id}`} className="hover:text-primary">
-                {anime?.title}
-              </Link>
-              <ChevronRight className="h-4 w-4" />
-              <span>Episode {episode.episode_number}</span>
-            </div>
-
-            {/* Anime Title */}
-            <h1 className="text-2xl md:text-3xl font-heading font-bold mb-4">
-              {episode.title}
-            </h1>
-
-            {/* Server Selection - Below Title */}
-            <div className="flex items-center gap-3 mb-6">
-              <Server className="h-5 w-5 text-muted-foreground" />
-              <span className="text-muted-foreground font-medium">Server:</span>
-              <div className="flex gap-2">
-                {(['PLAY', 'SHORT', 'Zex'] as ServerType[]).map((server) => {
-                  const displayName = server === 'SHORT' ? 'SAVI.IN' : server;
-                  return (
-                    <Button
-                      key={server}
-                      size="sm"
-                      variant={activeServer === server ? 'default' : 'outline'}
-                      onClick={() => handleServerChange(server)}
-                      disabled={serverLoading}
-                      className={activeServer === server ? 'anime-button' : ''}
-                    >
-                      {displayName}
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Edit Episode (Admin/Uploader only) */}
-            <div className="flex items-center gap-4 mb-4">
-              {(isAdmin || isUploader) && anime && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate(`/upload/anime/${anime.id}/episode/${episode.id}/edit`)}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Episode
-                </Button>
-              )}
-            </div>
-
-            {episode.description && (
-              <p className="text-muted-foreground mb-6">{episode.description}</p>
-            )}
-
-            {/* Episode Navigation */}
-            <div className="flex flex-wrap gap-4 mb-8">
-              {prevEpisode && (
-                <Button variant="outline" asChild>
-                  <Link to={`/watch/${prevEpisode.id}`}>
-                    <ChevronLeft className="h-4 w-4 mr-2" />
-                    Previous Episode
-                  </Link>
-                </Button>
-              )}
-              {nextEpisode && (
-                <Button asChild className="anime-button">
-                  <Link to={`/watch/${nextEpisode.id}`}>
-                    Next Episode
-                    <ChevronRight className="h-4 w-4 ml-2" />
-                  </Link>
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                onClick={() => {
-                  // Create clean URL with anime name, season, and episode number
-                  const animeSlug = anime?.title
-                    ? anime.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-                    : '';
-                  const seasonNum = currentSeason?.season_number || 1;
-                  const shareUrl = `${window.location.origin}/${animeSlug}/season-${seasonNum}-episode-${episode.episode_number}`;
-                  const shareText = `Watch "${anime?.title}" - S${seasonNum} E${episode.episode_number}: ${episode.title} on AnimeSavi!`;
-
-                  if (navigator.share) {
-                    navigator.share({
-                      title: `${anime?.title} - S${seasonNum} E${episode.episode_number}`,
-                      text: shareText,
-                      url: shareUrl,
-                    }).catch(() => {
-                      navigator.clipboard.writeText(shareUrl);
-                      toast.success('Link copied to clipboard!');
-                    });
-                  } else {
-                    navigator.clipboard.writeText(shareUrl);
-                    toast.success('Link copied to clipboard!');
-                  }
-                }}
-              >
-                <Share2 className="h-4 w-4 mr-2" />
-                Share Episode
-              </Button>
-            </div>
-
-            {/* Comments */}
-            <div className="space-y-6">
-              <h2 className="text-xl font-heading font-bold flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Comments ({comments.length})
-              </h2>
-
-              {/* Add Comment */}
-              {user ? (
-                <div className="flex gap-4">
-                  <Avatar>
-                    <AvatarFallback className="bg-gradient-primary text-white">
-                      {user.email?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 space-y-2">
-                    <Textarea
-                      placeholder="Add a comment..."
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      className="bg-muted/50"
-                    />
-                    <Button onClick={handleAddComment} className="anime-button">
-                      <Send className="h-4 w-4 mr-2" />
-                      Post Comment
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-muted/50 rounded-lg p-4 text-center">
-                  <p className="text-muted-foreground mb-2">Sign in to leave a comment</p>
-                  <Button asChild variant="outline">
-                    <Link to="/auth">Sign In</Link>
+      {/* Below Player - Server Selection & Season Switcher */}
+      <div className="container py-4 border-b border-border/30">
+        <div className="flex flex-wrap items-center gap-4">
+          {/* Server Selection */}
+          <div className="flex items-center gap-3">
+            <Server className="h-5 w-5 text-muted-foreground" />
+            <span className="text-muted-foreground font-medium">Server:</span>
+            <div className="flex gap-2">
+              {(['PLAY', 'SHORT', 'Zex'] as ServerType[]).map((server) => {
+                const displayName = server === 'SHORT' ? 'SAVI.IN' : server;
+                return (
+                  <Button
+                    key={server}
+                    size="sm"
+                    variant={activeServer === server ? 'default' : 'outline'}
+                    onClick={() => handleServerChange(server)}
+                    disabled={serverLoading}
+                    className={activeServer === server ? 'anime-button' : ''}
+                  >
+                    {displayName}
                   </Button>
-                </div>
-              )}
-
-              {/* Comments List */}
-              <div className="space-y-4">
-                {comments.map((comment) => (
-                  <div key={comment.id} className="flex gap-4">
-                    <Avatar>
-                      <AvatarFallback className="bg-secondary">
-                        {comment.profile?.username?.charAt(0).toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium">
-                          {comment.profile?.username || 'Anonymous'}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(comment.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="text-muted-foreground">{comment.content}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* Sidebar - Season & Episode List */}
-          <div className="lg:w-80 order-first lg:order-last">
-            <div className="sticky top-20">
-              <div className="flex flex-col lg:flex-row gap-4">
-                {/* Season Switcher - Left Side */}
-                {allSeasons.length > 1 && (
-                  <div className="lg:w-auto flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
-                    <h3 className="font-heading font-bold text-sm mb-1 hidden lg:block">Season</h3>
-                    {allSeasons.map((season) => (
-                      <Button
-                        key={season.id}
-                        size="sm"
-                        variant={currentSeason?.id === season.id ? 'default' : 'outline'}
-                        onClick={() => handleSeasonChange(season.id)}
-                        className={`shrink-0 lg:w-full flex flex-col items-center gap-0.5 py-2 px-3 h-auto ${currentSeason?.id === season.id ? 'anime-button' : ''}`}
-                        title={season.title || `Season ${season.season_number}`}
-                      >
-                        <span className="text-sm font-bold">S{season.season_number}</span>
-                        {season.episode_count !== undefined && (
-                          <span className="text-[10px] opacity-70">{season.episode_count} EP</span>
-                        )}
-                      </Button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Episode List - Right Side */}
-                <div className="flex-1">
-                  <h3 className="font-heading font-bold mb-4">
-                    Episodes
-                    {currentSeason && allSeasons.length > 1 && (
-                      <span className="text-sm font-normal text-muted-foreground ml-2">
-                        ({currentSeason.title || `Season ${currentSeason.season_number}`})
-                      </span>
+          {/* Season Switcher */}
+          {allSeasons.length > 1 && (
+            <div className="flex items-center gap-3 ml-auto">
+              <span className="text-muted-foreground font-medium">Season:</span>
+              <div className="flex gap-2 overflow-x-auto">
+                {allSeasons.map((season) => (
+                  <Button
+                    key={season.id}
+                    size="sm"
+                    variant={currentSeason?.id === season.id ? 'default' : 'outline'}
+                    onClick={() => handleSeasonChange(season.id)}
+                    className={`shrink-0 ${currentSeason?.id === season.id ? 'anime-button' : ''}`}
+                    title={season.title || `Season ${season.season_number}`}
+                  >
+                    S{season.season_number}
+                    {season.episode_count !== undefined && (
+                      <span className="ml-1 text-xs opacity-70">({season.episode_count})</span>
                     )}
-                  </h3>
-                  <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                    {allEpisodes.map((ep) => (
-                      <Link
-                        key={ep.id}
-                        to={`/watch/${ep.id}`}
-                        className={`block p-3 rounded-lg transition-colors ${
-                          ep.id === episodeId
-                            ? 'bg-primary/20 border border-primary/50'
-                            : 'bg-muted/50 hover:bg-muted'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-muted-foreground">
-                            EP {ep.episode_number}
-                          </span>
-                          <span className="text-sm font-medium truncate">{ep.title}</span>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Episode Info & Navigation */}
+      <div className="container py-6">
+        <div className="flex flex-col gap-8">
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Link to={`/anime/${anime?.id}`} className="hover:text-primary">
+              {anime?.title}
+            </Link>
+            <ChevronRight className="h-4 w-4" />
+            <span>Episode {episode.episode_number}</span>
+          </div>
+
+          {/* Anime Title */}
+          <h1 className="text-2xl md:text-3xl font-heading font-bold">
+            {episode.title}
+          </h1>
+
+          {/* Edit Episode (Admin/Uploader only) */}
+          <div className="flex items-center gap-4">
+            {(isAdmin || isUploader) && anime && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/upload/anime/${anime.id}/episode/${episode.id}/edit`)}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Episode
+              </Button>
+            )}
+          </div>
+
+          {episode.description && (
+            <p className="text-muted-foreground">{episode.description}</p>
+          )}
+
+          {/* Episode Navigation */}
+          <div className="flex flex-wrap gap-4">
+            {prevEpisode && (
+              <Button variant="outline" asChild>
+                <Link to={`/watch/${prevEpisode.id}`}>
+                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  Previous Episode
+                </Link>
+              </Button>
+            )}
+            {nextEpisode && (
+              <Button asChild className="anime-button">
+                <Link to={`/watch/${nextEpisode.id}`}>
+                  Next Episode
+                  <ChevronRight className="h-4 w-4 ml-2" />
+                </Link>
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              onClick={() => {
+                // Create clean URL with anime name, season, and episode number
+                const animeSlug = anime?.title
+                  ? anime.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+                  : '';
+                const seasonNum = currentSeason?.season_number || 1;
+                const shareUrl = `${window.location.origin}/${animeSlug}/season-${seasonNum}-episode-${episode.episode_number}`;
+                const shareText = `Watch "${anime?.title}" - S${seasonNum} E${episode.episode_number}: ${episode.title} on AnimeSavi!`;
+
+                if (navigator.share) {
+                  navigator.share({
+                    title: `${anime?.title} - S${seasonNum} E${episode.episode_number}`,
+                    text: shareText,
+                    url: shareUrl,
+                  }).catch(() => {
+                    navigator.clipboard.writeText(shareUrl);
+                    toast.success('Link copied to clipboard!');
+                  });
+                } else {
+                  navigator.clipboard.writeText(shareUrl);
+                  toast.success('Link copied to clipboard!');
+                }
+              }}
+            >
+              <Share2 className="h-4 w-4 mr-2" />
+              Share Episode
+            </Button>
+          </div>
+
+          {/* Comments */}
+          <div className="space-y-6">
+            <h2 className="text-xl font-heading font-bold flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              Comments ({comments.length})
+            </h2>
+
+            {/* Add Comment */}
+            {user ? (
+              <div className="flex gap-4">
+                <Avatar>
+                  <AvatarFallback className="bg-gradient-primary text-white">
+                    {user.email?.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 space-y-2">
+                  <Textarea
+                    placeholder="Add a comment..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    className="bg-muted/50"
+                  />
+                  <Button onClick={handleAddComment} className="anime-button">
+                    <Send className="h-4 w-4 mr-2" />
+                    Post Comment
+                  </Button>
                 </div>
               </div>
+            ) : (
+              <div className="bg-muted/50 rounded-lg p-4 text-center">
+                <p className="text-muted-foreground mb-2">Sign in to leave a comment</p>
+                <Button asChild variant="outline">
+                  <Link to="/auth">Sign In</Link>
+                </Button>
+              </div>
+            )}
+
+            {/* Comments List */}
+            <div className="space-y-4">
+              {comments.map((comment) => (
+                <div key={comment.id} className="flex gap-4">
+                  <Avatar>
+                    <AvatarFallback className="bg-secondary">
+                      {comment.profile?.username?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium">
+                        {comment.profile?.username || 'Anonymous'}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(comment.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-muted-foreground">{comment.content}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
