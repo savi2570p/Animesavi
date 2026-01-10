@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ interface AnimeWithoutEpisodes {
   cover_image: string | null;
   created_at: string;
   type: string | null;
+  status: string | null;
 }
 
 export function EpisodeProgress() {
@@ -24,10 +25,11 @@ export function EpisodeProgress() {
 
   const fetchAnimeWithoutEpisodes = async () => {
     try {
-      // Fetch all anime
+      // Optimized query: Fetch all anime with their episode counts in a single query
       const { data: allAnime, error: animeError } = await supabase
         .from('anime')
-        .select('id, title, cover_image, created_at, type')
+        .select('id, title, cover_image, created_at, type, status')
+        .neq('status', 'upcoming') // Exclude upcoming anime (they go to Coming Soon)
         .order('created_at', { ascending: false });
 
       if (animeError) {
@@ -36,39 +38,36 @@ export function EpisodeProgress() {
         return;
       }
 
-      // For each anime, check if it has episodes
-      const animeWithoutEpisodes: AnimeWithoutEpisodes[] = [];
+      // Fetch all seasons and episodes counts in batch
+      const { data: seasons } = await supabase
+        .from('seasons')
+        .select('id, anime_id');
 
-      for (const anime of allAnime || []) {
-        // Get seasons for this anime
-        const { data: seasons } = await supabase
-          .from('seasons')
-          .select('id')
-          .eq('anime_id', anime.id);
+      const seasonIds = seasons?.map(s => s.id) || [];
+      
+      // Get episode counts per season in one query
+      const { data: episodeCounts } = await supabase
+        .from('episodes')
+        .select('season_id')
+        .in('season_id', seasonIds.length > 0 ? seasonIds : ['no-match']);
 
-        if (!seasons || seasons.length === 0) {
-          animeWithoutEpisodes.push(anime);
-          continue;
-        }
-
-        // Check if any season has episodes
-        let hasEpisodes = false;
-        for (const season of seasons) {
-          const { count } = await supabase
-            .from('episodes')
-            .select('id', { count: 'exact', head: true })
-            .eq('season_id', season.id);
-
-          if (count && count > 0) {
-            hasEpisodes = true;
-            break;
+      // Create a map of anime_id to episode count
+      const animeEpisodeMap = new Map<string, number>();
+      if (seasons && episodeCounts) {
+        const seasonToAnime = new Map(seasons.map(s => [s.id, s.anime_id]));
+        episodeCounts.forEach(ep => {
+          const animeId = seasonToAnime.get(ep.season_id);
+          if (animeId) {
+            animeEpisodeMap.set(animeId, (animeEpisodeMap.get(animeId) || 0) + 1);
           }
-        }
-
-        if (!hasEpisodes) {
-          animeWithoutEpisodes.push(anime);
-        }
+        });
       }
+
+      // Filter anime without episodes
+      const animeWithoutEpisodes = (allAnime || []).filter(anime => {
+        const episodeCount = animeEpisodeMap.get(anime.id) || 0;
+        return episodeCount === 0;
+      });
 
       setAnimeList(animeWithoutEpisodes.slice(0, 8));
     } catch (error) {

@@ -50,7 +50,7 @@ export function EpisodeList({ episodes, currentEpisodeId, className }: EpisodeLi
       </div>
 
       {/* Episode list */}
-      <ScrollArea className="flex-1 max-h-[400px]">
+      <ScrollArea className="flex-1 max-h-[300px]">
         <div className="p-1">
           {filteredEpisodes.map((episode) => {
             const isActive = episode.id === currentEpisodeId;
@@ -59,26 +59,26 @@ export function EpisodeList({ episodes, currentEpisodeId, className }: EpisodeLi
                 key={episode.id}
                 to={`/watch/${episode.id}`}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors text-sm",
+                  "flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors text-xs",
                   isActive 
                     ? "bg-primary/20 text-primary" 
                     : "hover:bg-muted/50 text-foreground/80 hover:text-foreground"
                 )}
               >
-                <span className="text-muted-foreground w-6 text-right shrink-0">
+                <span className="text-muted-foreground w-5 text-right shrink-0 text-[10px]">
                   {episode.episode_number}
                 </span>
                 <span className="flex-1 truncate">
                   {episode.title}
                 </span>
                 {isActive && (
-                  <Play className="h-4 w-4 text-primary fill-primary shrink-0" />
+                  <Play className="h-3 w-3 text-primary fill-primary shrink-0" />
                 )}
               </Link>
             );
           })}
           {filteredEpisodes.length === 0 && (
-            <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+            <div className="px-3 py-4 text-center text-xs text-muted-foreground">
               No episodes found
             </div>
           )}

@@ -92,6 +92,7 @@ export type Database = {
           created_at: string
           episode_id: string
           id: string
+          parent_id: string | null
           user_id: string
         }
         Insert: {
@@ -99,6 +100,7 @@ export type Database = {
           created_at?: string
           episode_id: string
           id?: string
+          parent_id?: string | null
           user_id: string
         }
         Update: {
@@ -106,6 +108,7 @@ export type Database = {
           created_at?: string
           episode_id?: string
           id?: string
+          parent_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -114,6 +117,13 @@ export type Database = {
             columns: ["episode_id"]
             isOneToOne: false
             referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
             referencedColumns: ["id"]
           },
         ]
