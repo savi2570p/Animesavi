@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { VideoPlayer, ServerType } from '@/components/video/VideoPlayer';
@@ -62,11 +63,17 @@ interface Comment {
   content: string;
   created_at: string;
   user_id: string;
+  parent_id: string | null;
   profile?: {
     username: string | null;
     avatar_url: string | null;
   };
+  userEmail?: string;
+  replies?: Comment[];
 }
+
+// Owner email addresses
+const OWNER_EMAILS = ['savi2570p@gmail.com', 'savipanjeta2@gmail.com'];
 
 const TELEGRAM_POPUP_KEY = 'telegram_popup_last_shown';
 
@@ -84,6 +91,8 @@ export default function Watch() {
   const [currentSeason, setCurrentSeason] = useState<Season | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [watchHistoryId, setWatchHistoryId] = useState<string | null>(null);
   const [activeServer, setActiveServer] = useState<ServerType>('PLAY');
@@ -364,24 +373,40 @@ export default function Watch() {
         .select('id, username, avatar_url')
         .in('id', userIds);
 
+      // Fetch user emails to check for owners
+      const { data: { users } } = await supabase.auth.admin.listUsers?.() || { data: { users: [] } };
+      
+      // For non-admin access, we'll check email differently
       const profileMap = new Map(profiles?.map((p) => [p.id, p]));
 
-      setComments(
-        data.map((c) => ({
-          ...c,
-          profile: profileMap.get(c.user_id) || { username: null, avatar_url: null },
-        }))
-      );
+      const commentsWithProfiles = data.map((c) => ({
+        ...c,
+        profile: profileMap.get(c.user_id) || { username: null, avatar_url: null },
+      }));
+
+      // Organize comments into threads (parent comments with replies)
+      const parentComments = commentsWithProfiles.filter(c => !c.parent_id);
+      const replies = commentsWithProfiles.filter(c => c.parent_id);
+      
+      const commentsWithReplies = parentComments.map(parent => ({
+        ...parent,
+        replies: replies.filter(r => r.parent_id === parent.id).sort((a, b) => 
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        )
+      }));
+
+      setComments(commentsWithReplies);
     }
   };
 
-  const handleAddComment = async () => {
+  const handleAddComment = async (parentId?: string) => {
     if (!user) {
       toast.error('Please sign in to comment');
       return;
     }
 
-    const trimmedComment = newComment.trim();
+    const content = parentId ? replyContent : newComment;
+    const trimmedComment = content.trim();
     
     // Validate comment
     const commentResult = commentSchema.safeParse(trimmedComment);
@@ -394,15 +419,52 @@ export default function Watch() {
       user_id: user.id,
       episode_id: episodeId,
       content: trimmedComment,
+      parent_id: parentId || null,
     });
 
     if (error) {
       toast.error('Failed to add comment');
     } else {
-      setNewComment('');
+      if (parentId) {
+        setReplyContent('');
+        setReplyingTo(null);
+      } else {
+        setNewComment('');
+      }
       fetchComments();
-      toast.success('Comment added');
+      toast.success(parentId ? 'Reply added' : 'Comment added');
     }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('comments')
+      .delete()
+      .eq('id', commentId)
+      .eq('user_id', user.id);
+
+    if (error) {
+      toast.error('Failed to delete comment');
+    } else {
+      fetchComments();
+      toast.success('Comment deleted');
+    }
+  };
+
+  // Check if a user is an owner based on their email
+  const isOwnerEmail = (email: string | null | undefined): boolean => {
+    if (!email) return false;
+    return OWNER_EMAILS.includes(email.toLowerCase());
+  };
+
+  const getDisplayName = (comment: Comment): string => {
+    // Check if current user's email is in owner list
+    if (user?.email && isOwnerEmail(user.email) && comment.user_id === user.id) {
+      return 'Owner';
+    }
+    return comment.profile?.username || 'Anonymous';
   };
 
   // Handle season change - fetch episodes for the new season
@@ -528,6 +590,14 @@ export default function Watch() {
         </div>
       </div>
 
+      {/* Mobile Episode List - Below Player */}
+      <div className="lg:hidden container py-4 border-b border-border/30">
+        <EpisodeList
+          episodes={allEpisodes}
+          currentEpisodeId={episodeId || ''}
+          className="max-h-[250px]"
+        />
+      </div>
       {/* Below Player - Server Selection & Season Switcher */}
       <div className="container py-4 border-b border-border/30">
         <div className="flex flex-wrap items-center gap-4">
@@ -686,7 +756,7 @@ export default function Watch() {
                     onChange={(e) => setNewComment(e.target.value)}
                     className="bg-muted/50"
                   />
-                  <Button onClick={handleAddComment} className="anime-button">
+                  <Button onClick={() => handleAddComment()} className="anime-button">
                     <Send className="h-4 w-4 mr-2" />
                     Post Comment
                   </Button>
@@ -702,25 +772,102 @@ export default function Watch() {
             )}
 
             {/* Comments List */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               {comments.map((comment) => (
-                <div key={comment.id} className="flex gap-4">
-                  <Avatar>
-                    <AvatarFallback className="bg-secondary">
-                      {comment.profile?.username?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium">
-                        {comment.profile?.username || 'Anonymous'}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(comment.created_at).toLocaleDateString()}
-                      </span>
+                <div key={comment.id} className="space-y-3">
+                  {/* Parent Comment */}
+                  <div className="flex gap-4">
+                    <Avatar>
+                      <AvatarFallback className="bg-secondary">
+                        {comment.profile?.username?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium">
+                          {getDisplayName(comment)}
+                        </span>
+                        {user?.email && isOwnerEmail(user.email) && comment.user_id === user.id && (
+                          <span className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full">Owner</span>
+                        )}
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(comment.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-muted-foreground mb-2">{comment.content}</p>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                          className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          Reply
+                        </button>
+                        {user?.id === comment.user_id && (
+                          <button
+                            onClick={() => handleDeleteComment(comment.id)}
+                            className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Reply Input */}
+                      {replyingTo === comment.id && user && (
+                        <div className="mt-3 flex gap-2">
+                          <Input
+                            placeholder="Write a reply..."
+                            value={replyContent}
+                            onChange={(e) => setReplyContent(e.target.value)}
+                            className="flex-1 text-sm"
+                          />
+                          <Button size="sm" onClick={() => handleAddComment(comment.id)}>
+                            Reply
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => setReplyingTo(null)}>
+                            Cancel
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-muted-foreground">{comment.content}</p>
                   </div>
+
+                  {/* Replies */}
+                  {comment.replies && comment.replies.length > 0 && (
+                    <div className="ml-12 space-y-3 border-l-2 border-border/50 pl-4">
+                      {comment.replies.map((reply) => (
+                        <div key={reply.id} className="flex gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-secondary text-xs">
+                              {reply.profile?.username?.charAt(0).toUpperCase() || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium text-sm">
+                                {getDisplayName(reply)}
+                              </span>
+                              {user?.email && isOwnerEmail(user.email) && reply.user_id === user.id && (
+                                <span className="px-1.5 py-0.5 text-[10px] bg-primary/20 text-primary rounded-full">Owner</span>
+                              )}
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(reply.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{reply.content}</p>
+                            {user?.id === reply.user_id && (
+                              <button
+                                onClick={() => handleDeleteComment(reply.id)}
+                                className="text-xs text-muted-foreground hover:text-destructive transition-colors mt-1"
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

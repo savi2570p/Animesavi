@@ -757,3 +757,17 @@
     min-width: 44px;
   }
 }
+
+/* Uniform anime card sizing for mobile */
+@media (max-width: 768px) {
+  .anime-card-uniform {
+    width: calc(50% - 0.5rem);
+    min-width: 140px;
+    max-width: 180px;
+  }
+  
+  .anime-card-uniform .aspect-\[2\/3\],
+  .anime-card-uniform .aspect-\[3\/4\] {
+    aspect-ratio: 2/3;
+  }
+}

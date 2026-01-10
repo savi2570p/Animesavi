@@ -108,19 +108,26 @@ export default function History() {
   };
 
   const deleteHistoryItem = async (historyId: string, e: React.MouseEvent) => {
+    // Prevent navigation and event bubbling
     e.preventDefault();
     e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation();
 
-    const { error } = await supabase
-      .from('watch_history')
-      .delete()
-      .eq('id', historyId);
+    try {
+      const { error } = await supabase
+        .from('watch_history')
+        .delete()
+        .eq('id', historyId);
 
-    if (error) {
+      if (error) {
+        toast.error('Failed to delete history item');
+      } else {
+        setHistory(prev => prev.filter((item) => item.id !== historyId));
+        toast.success('Removed from history');
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
       toast.error('Failed to delete history item');
-    } else {
-      setHistory(history.filter((item) => item.id !== historyId));
-      toast.success('Removed from history');
     }
   };
 
@@ -295,13 +302,20 @@ export default function History() {
                     size="icon"
                     variant="ghost"
                     className="text-muted-foreground hover:text-destructive"
-                    onClick={(e) => deleteHistoryItem(item.id, e)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      deleteHistoryItem(item.id, e);
+                    }}
+                    type="button"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="outline" className="self-center">
-                    <Play className="h-4 w-4 mr-1 fill-current" />
-                    Continue
+                  <Button size="sm" variant="outline" className="self-center" asChild>
+                    <Link to={`/watch/${item.episode.id}?t=${item.progress || 0}`} onClick={(e) => e.stopPropagation()}>
+                      <Play className="h-4 w-4 mr-1 fill-current" />
+                      Continue
+                    </Link>
                   </Button>
                 </div>
               </Link>
@@ -341,8 +355,13 @@ export default function History() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="absolute top-1 right-1 h-6 w-6 text-white/80 hover:text-destructive bg-black/40 hover:bg-black/60"
-                      onClick={(e) => deleteHistoryItem(item.id, e)}
+                      className="absolute top-1 right-1 h-6 w-6 text-white/80 hover:text-destructive bg-black/40 hover:bg-black/60 z-10"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        deleteHistoryItem(item.id, e);
+                      }}
+                      type="button"
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>

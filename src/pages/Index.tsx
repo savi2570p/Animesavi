@@ -10,6 +10,7 @@ import { LatestMovies } from '@/components/home/LatestMovies';
 import { LatestSeries } from '@/components/home/LatestSeries';
 import { RecentlyCompleted } from '@/components/home/RecentlyCompleted';
 import { EpisodeProgress } from '@/components/home/EpisodeProgress';
+import { ComingSoon } from '@/components/home/ComingSoon';
 
 export default function Index() {
   const { user } = useAuth();
@@ -88,6 +89,9 @@ export default function Index() {
 
       {/* Latest Episodes */}
       <LatestEpisodes />
+
+      {/* Coming Soon - Upcoming anime */}
+      <ComingSoon />
 
       {/* Episode Progress - Anime with no episodes yet */}
       <EpisodeProgress />
