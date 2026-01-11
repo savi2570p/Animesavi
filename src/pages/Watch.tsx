@@ -556,12 +556,12 @@ export default function Watch() {
 
       {/* Main Watch Area - Video + Episode List */}
       <div className="flex">
-        {/* Episode List - Desktop Left Sidebar */}
+        {/* Episode List - Desktop Left Sidebar - Match video player height */}
         <div className="hidden lg:block w-72 shrink-0 border-r border-border/50 bg-card/30">
           <EpisodeList
             episodes={allEpisodes}
             currentEpisodeId={episodeId || ''}
-            className="h-[calc(100vh-4rem)] sticky top-16"
+            className="max-h-[70vh] sticky top-16"
           />
         </div>
 
