@@ -450,11 +450,10 @@ export function VideoPlayer({
               setQualityLevels(levels);
               console.log('Quality levels detected:', levels);
               
-              // Auto defaults to highest quality (1080p if available)
-              const highest1080 = levels.find(l => l.height >= 1080);
-              if (highest1080) {
-                hls.currentLevel = highest1080.id;
-              }
+              // Keep auto quality selection enabled - let user choose quality
+              // hls.currentLevel = -1 means auto ABR (adaptive bitrate)
+              setIsAutoQuality(true);
+              setCurrentQualityLevel(-1);
             }
             
             // Auto play
