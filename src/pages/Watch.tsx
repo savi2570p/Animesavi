@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { VideoPlayer, ServerType } from '@/components/video/VideoPlayer';
 import { EpisodeList } from '@/components/video/EpisodeList';
+import { RecommendedAnime } from '@/components/home/RecommendedAnime';
 import { z } from 'zod';
 import {
   ChevronLeft,
@@ -556,18 +557,19 @@ export default function Watch() {
 
       {/* Main Watch Area - Video + Episode List */}
       <div className="flex">
-        {/* Episode List - Desktop Left Sidebar - Match video player height */}
+        {/* Episode List - Desktop Left Sidebar - Ends at video player border */}
         <div className="hidden lg:block w-72 shrink-0 border-r border-border/50 bg-card/30">
           <EpisodeList
             episodes={allEpisodes}
             currentEpisodeId={episodeId || ''}
-            className="max-h-[70vh] sticky top-16"
+            className="sticky top-16 max-h-[60vh]"
           />
         </div>
 
         {/* Video Player */}
         <div className="flex-1">
           <VideoPlayer
+            key={`${episodeId}-${activeServer}`}
             videoUrl={episode.video_url}
             externalUrl={episode.external_url}
             title={episode.title}
@@ -871,6 +873,11 @@ export default function Watch() {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Recommended Anime Section */}
+          <div className="mt-8">
+            <RecommendedAnime />
           </div>
         </div>
       </div>
