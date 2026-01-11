@@ -221,6 +221,13 @@ export function VideoPlayer({
   const [currentQualityLevel, setCurrentQualityLevel] = useState<number>(-1); // -1 = Auto
   const [isAutoQuality, setIsAutoQuality] = useState(true);
   
+  // Bitrate indicator
+  const [currentBitrate, setCurrentBitrate] = useState<number>(0);
+  const [estimatedBandwidth, setEstimatedBandwidth] = useState<number>(0);
+  
+  // Quality preference key for localStorage
+  const QUALITY_PREFERENCE_KEY = 'preferred_quality_level';
+  
   // Playback speed
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
   
@@ -259,7 +266,7 @@ export function VideoPlayer({
   const effectiveVideoUrl = anyVideoUrl;
   const shouldUseIframe = useIframeFallback;
   
-  // Reset state when video URL changes
+  // Reset state when video URL or server changes
   useEffect(() => {
     setVideoError(false);
     setUseIframeFallback(false);
@@ -277,6 +284,12 @@ export function VideoPlayer({
     setPlaybackSpeed(1);
     setShowSkipIntro(false);
     setShowNextEpisode(false);
+    setCurrentBitrate(0);
+    setEstimatedBandwidth(0);
+    setIsPlaying(false);
+    setProgress(0);
+    setCurrentTime(0);
+    setDuration(0);
     
     if (processingTimerRef.current) {
       clearInterval(processingTimerRef.current);
@@ -287,7 +300,15 @@ export function VideoPlayer({
       hlsRef.current.destroy();
       hlsRef.current = null;
     }
-  }, [videoUrl, externalUrl]);
+    
+    // Force reload video when server changes
+    const video = videoRef.current;
+    if (video) {
+      video.pause();
+      video.currentTime = 0;
+      video.load();
+    }
+  }, [videoUrl, externalUrl, activeServer]);
 
   // HLS.js initialization for multi-audio and subtitle support
   useEffect(() => {
@@ -450,10 +471,32 @@ export function VideoPlayer({
               setQualityLevels(levels);
               console.log('Quality levels detected:', levels);
               
-              // Keep auto quality selection enabled - let user choose quality
-              // hls.currentLevel = -1 means auto ABR (adaptive bitrate)
-              setIsAutoQuality(true);
-              setCurrentQualityLevel(-1);
+              // Check for saved quality preference
+              const savedQuality = localStorage.getItem(QUALITY_PREFERENCE_KEY);
+              if (savedQuality !== null) {
+                const preferredLevel = parseInt(savedQuality, 10);
+                if (preferredLevel === -1) {
+                  // User prefers auto
+                  setIsAutoQuality(true);
+                  setCurrentQualityLevel(-1);
+                } else {
+                  // Find matching quality level by height
+                  const matchingLevel = levels.find(l => l.height === preferredLevel);
+                  if (matchingLevel) {
+                    hls.currentLevel = matchingLevel.id;
+                    setIsAutoQuality(false);
+                    setCurrentQualityLevel(matchingLevel.id);
+                  } else {
+                    // Fallback to auto
+                    setIsAutoQuality(true);
+                    setCurrentQualityLevel(-1);
+                  }
+                }
+              } else {
+                // Default to auto
+                setIsAutoQuality(true);
+                setCurrentQualityLevel(-1);
+              }
             }
             
             // Auto play
@@ -472,11 +515,22 @@ export function VideoPlayer({
             setCurrentSubtitleTrack(data.id);
           });
           
-          // Listen for level changes
+          // Listen for level changes and update bitrate
           hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
             console.log('Quality level switched to:', data.level);
+            const level = hls.levels[data.level];
+            if (level) {
+              setCurrentBitrate(level.bitrate);
+            }
             if (!isAutoQuality) {
               setCurrentQualityLevel(data.level);
+            }
+          });
+          
+          // Track bandwidth estimation for bitrate indicator
+          hls.on(Hls.Events.FRAG_LOADED, (event, data) => {
+            if (hls.bandwidthEstimate) {
+              setEstimatedBandwidth(hls.bandwidthEstimate);
             }
           });
 
@@ -627,21 +681,25 @@ export function VideoPlayer({
     return `${height}p (${bitrateKbps} kbps)`;
   };
 
-  // Switch quality level - HLS.js only
+  // Switch quality level - HLS.js only, with preference saving
   const switchQualityLevel = useCallback((levelId: number) => {
     if (hlsRef.current) {
       if (levelId === -1) {
-        // Auto quality - set to highest available (1080p preference)
+        // Auto quality
         hlsRef.current.currentLevel = -1;
         setIsAutoQuality(true);
         setCurrentQualityLevel(-1);
-        toast.success('Quality: Auto (1080p)');
+        localStorage.setItem(QUALITY_PREFERENCE_KEY, '-1');
+        toast.success('Quality: Auto');
       } else {
         // Specific quality
         hlsRef.current.currentLevel = levelId;
         setIsAutoQuality(false);
         setCurrentQualityLevel(levelId);
         const level = qualityLevels.find(l => l.id === levelId);
+        if (level) {
+          localStorage.setItem(QUALITY_PREFERENCE_KEY, level.height.toString());
+        }
         toast.success(`Quality: ${level?.height || levelId}p`);
       }
     }
@@ -1826,6 +1884,16 @@ export function VideoPlayer({
               >
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </button>
+
+              {/* Bitrate indicator */}
+              {currentBitrate > 0 && (
+                <div className="hidden md:flex items-center gap-1.5 ml-3 px-2 py-1 rounded bg-white/10 text-white/80">
+                  <Gauge className="w-3.5 h-3.5" />
+                  <span className="text-xs font-mono">
+                    {(currentBitrate / 1000000).toFixed(1)} Mbps
+                  </span>
+                </div>
+              )}
 
               {/* Episode title - desktop only */}
               <span className="text-white/70 text-sm hidden md:block ml-4 truncate max-w-[200px]">
