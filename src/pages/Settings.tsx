@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Settings as SettingsIcon, Moon, Sun, Monitor, Bell, Shield, Globe } from 'lucide-react';
+import { NotificationSettings } from '@/components/NotificationSettings';
+import { Settings as SettingsIcon, Moon, Sun, Monitor, Shield, Globe, Keyboard } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Settings() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
-  const [notifications, setNotifications] = useState(true);
   const [autoplay, setAutoplay] = useState(true);
 
   // Load saved theme on mount - works for all users, not just logged in
@@ -104,33 +104,8 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Notification Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Notifications
-            </CardTitle>
-            <CardDescription>
-              Configure notification preferences
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="notifications">Push Notifications</Label>
-                <p className="text-sm text-muted-foreground">
-                  Receive notifications about new episodes
-                </p>
-              </div>
-              <Switch
-                id="notifications"
-                checked={notifications}
-                onCheckedChange={setNotifications}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Push Notification Settings */}
+        <NotificationSettings />
 
         {/* Playback Settings */}
         <Card>
@@ -156,6 +131,47 @@ export default function Settings() {
                 checked={autoplay}
                 onCheckedChange={setAutoplay}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Keyboard Shortcuts */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Keyboard className="h-5 w-5" />
+              Keyboard Shortcuts
+            </CardTitle>
+            <CardDescription>
+              Quick controls for the video player
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                <span className="text-muted-foreground">Play/Pause</span>
+                <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">Space</kbd>
+              </div>
+              <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                <span className="text-muted-foreground">Fullscreen</span>
+                <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">F</kbd>
+              </div>
+              <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                <span className="text-muted-foreground">Mute/Unmute</span>
+                <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">M</kbd>
+              </div>
+              <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                <span className="text-muted-foreground">PiP Mode</span>
+                <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">P</kbd>
+              </div>
+              <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                <span className="text-muted-foreground">Skip Forward</span>
+                <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">→</kbd>
+              </div>
+              <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                <span className="text-muted-foreground">Skip Backward</span>
+                <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">←</kbd>
+              </div>
             </div>
           </CardContent>
         </Card>
