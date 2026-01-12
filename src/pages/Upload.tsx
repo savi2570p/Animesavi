@@ -112,7 +112,7 @@ export default function Upload() {
           .from('anime')
           .select('*')
           .eq('uploader_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false }); // Always show newest first
 
         if (error) {
           console.error('Error fetching my anime:', error);
