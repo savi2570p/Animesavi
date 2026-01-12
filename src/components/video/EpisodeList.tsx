@@ -49,8 +49,8 @@ export function EpisodeList({ episodes, currentEpisodeId, className }: EpisodeLi
         </div>
       </div>
 
-      {/* Episode list - height adapts based on episode count, max controlled by parent */}
-      <ScrollArea className="flex-1">
+      {/* Episode list - scrollable on mobile */}
+      <ScrollArea className="flex-1 max-h-[40vh] md:max-h-none overflow-y-auto touch-pan-y">
         <div className="p-1">
           {filteredEpisodes.map((episode) => {
             const isActive = episode.id === currentEpisodeId;

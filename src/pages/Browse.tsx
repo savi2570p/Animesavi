@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Filter, Play, Star, Sparkles, TrendingUp, Clock, Film, Tv, CheckCircle2, Timer, CalendarClock, X, AlertCircle } from 'lucide-react';
+import { Search, Filter, Play, Star, Sparkles, TrendingUp, Clock, Film, Tv, CheckCircle2, Timer, CalendarClock, X, AlertCircle, History, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSearchHistory } from '@/hooks/useSearchHistory';
 
 const ALLOWED_GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports'] as const;
 const MAX_SEARCH_LENGTH = 100;
@@ -94,6 +95,11 @@ export default function Browse() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>((searchParams.get('type') as TypeFilter) || 'all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>((searchParams.get('status') as StatusFilter) || 'all');
   const [episodeFilter, setEpisodeFilter] = useState<EpisodeFilter>((searchParams.get('episodes') as EpisodeFilter) || 'all');
+  const [showSearchHistory, setShowSearchHistory] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  
+  // Search history hook
+  const { searchHistory, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
   
   // No episodes popup state
   const [noEpisodesPopup, setNoEpisodesPopup] = useState<{ isOpen: boolean; animeTitle: string }>({
@@ -206,9 +212,20 @@ export default function Browse() {
     const params = new URLSearchParams(searchParams);
     if (searchQuery) {
       params.set('q', searchQuery);
+      // Add to search history
+      addToHistory(searchQuery);
     } else {
       params.delete('q');
     }
+    setShowSearchHistory(false);
+    setSearchParams(params);
+  };
+
+  const handleHistoryItemClick = (query: string) => {
+    setSearchQuery(query);
+    const params = new URLSearchParams(searchParams);
+    params.set('q', query);
+    setShowSearchHistory(false);
     setSearchParams(params);
   };
 
@@ -327,14 +344,60 @@ export default function Browse() {
           {/* Search bar */}
           <form onSubmit={handleSearch} className="flex gap-3 max-w-2xl animate-fade-in-up stagger-1">
             <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
               <Input
+                ref={searchInputRef}
                 type="search"
                 placeholder="Search for anime..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setShowSearchHistory(true)}
+                onBlur={() => setTimeout(() => setShowSearchHistory(false), 200)}
                 className="pl-12 h-14 bg-card/50 border-border/50 rounded-xl text-base focus:border-primary/50 focus:bg-card transition-all"
               />
+              
+              {/* Search History Dropdown */}
+              {showSearchHistory && searchHistory.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-xl overflow-hidden z-50">
+                  <div className="flex items-center justify-between px-4 py-2 border-b border-border/50">
+                    <span className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                      <History className="h-3 w-3" />
+                      Recent Searches
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); clearHistory(); }}
+                      className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto">
+                    {searchHistory.map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between px-4 py-2 hover:bg-muted/50 cursor-pointer group"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => handleHistoryItemClick(item.query)}
+                          className="flex items-center gap-3 flex-1 text-left"
+                        >
+                          <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-sm">{item.query}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); removeFromHistory(item.query); }}
+                          className="p-1 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <Button type="submit" className="anime-button h-14 px-8 rounded-xl">
               <Search className="h-5 w-5 mr-2" />

@@ -341,11 +341,8 @@ export function Footer() {
 
         {/* Bottom */}
         <div className="border-t border-border/30 mt-10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground flex items-center gap-1">
-            © {new Date().getFullYear()} Anime.Savi.me. Made with <Heart className="h-3.5 w-3.5 text-primary fill-primary" /> for anime fans.
-          </p>
-          <p className="text-xs text-muted-foreground/60">
-            All anime content is provided by third-party hosts.
+          <p className="text-sm text-muted-foreground">
+            ©{new Date().getFullYear()} Anime.Savi.Me all rights reserved
           </p>
         </div>
       </div>

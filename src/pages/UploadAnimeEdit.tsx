@@ -8,8 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Plus, Trash2, Film, Tv, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Film, Tv, ArrowLeft, Save } from 'lucide-react';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { BatchEpisodeUpload } from '@/components/upload/BatchEpisodeUpload';
 
@@ -18,6 +19,7 @@ interface Anime {
   title: string;
   description: string | null;
   uploader_id: string | null;
+  status: string | null;
 }
 
 interface Season {
@@ -54,6 +56,10 @@ export default function UploadAnimeEdit() {
 
   // New season form
   const [newSeasonTitle, setNewSeasonTitle] = useState('');
+  
+  // Anime status
+  const [animeStatus, setAnimeStatus] = useState<string>('ongoing');
+  const [isSavingStatus, setIsSavingStatus] = useState(false);
 
   // New episode form
   const [newEpisodeTitle, setNewEpisodeTitle] = useState('');
@@ -112,6 +118,7 @@ export default function UploadAnimeEdit() {
     }
 
     setAnime(animeData);
+    setAnimeStatus(animeData.status || 'ongoing');
 
     // Fetch seasons
     const { data: seasonsData } = await supabase
@@ -128,6 +135,23 @@ export default function UploadAnimeEdit() {
     }
 
     setIsLoading(false);
+  };
+
+  const handleUpdateStatus = async (newStatus: string) => {
+    setIsSavingStatus(true);
+    setAnimeStatus(newStatus);
+    
+    const { error } = await supabase
+      .from('anime')
+      .update({ status: newStatus })
+      .eq('id', animeId);
+    
+    if (error) {
+      toast.error('Failed to update status');
+    } else {
+      toast.success(`Status updated to ${newStatus}`);
+    }
+    setIsSavingStatus(false);
   };
 
   const fetchEpisodes = async (seasonId: string) => {
@@ -250,7 +274,25 @@ export default function UploadAnimeEdit() {
         <h1 className="text-3xl font-heading font-bold mb-2">
           Edit: <span className="anime-gradient-text">{anime?.title}</span>
         </h1>
-        <p className="text-muted-foreground">Manage seasons and episodes</p>
+        <p className="text-muted-foreground">Manage seasons, episodes and status</p>
+        
+        {/* Status Editor */}
+        <div className="mt-4 flex items-center gap-4 p-4 bg-card/50 rounded-xl border border-border/50">
+          <Label className="text-sm font-medium">Anime Status:</Label>
+          <Select value={animeStatus} onValueChange={handleUpdateStatus} disabled={isSavingStatus}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="upcoming">Upcoming</SelectItem>
+              <SelectItem value="ongoing">Ongoing</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+          {isSavingStatus && (
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue="seasons">
