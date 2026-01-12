@@ -1778,37 +1778,214 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* CUSTOM CONTROLS - FIXED for fullscreen */}
-      <div 
-        className={`absolute inset-0 flex flex-col justify-between transition-opacity duration-300 ${
-          showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-        style={{ 
-          zIndex: 50,
-          pointerEvents: showControls ? 'auto' : 'none',
-        }}
-      >
-        {/* Top gradient */}
-        <div className="h-24 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
+      {/* CUSTOM CONTROLS - FIXED for fullscreen - Use portal when in fullscreen */}
+      {isFullscreen ? createPortal(
+        <div 
+          className={`fixed inset-0 flex flex-col justify-between transition-opacity duration-300 ${
+            showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+          style={{ 
+            zIndex: 2147483646,
+            pointerEvents: showControls ? 'auto' : 'none',
+          }}
+          onMouseMove={handleMouseMove}
+          onTouchStart={handleTouchStart}
+          onClick={(e) => {
+            // Allow click through to video toggle
+            const target = e.target as HTMLElement;
+            if (!target.closest('button, input, [role="menuitem"]')) {
+              togglePlay();
+            }
+          }}
+        >
+          {/* Top gradient */}
+          <div className="h-24 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
 
-        {/* Center Play/Pause Button */}
-        {!isPlaying && showControls && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[60]">
-            <div 
-              className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
-              onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-              style={{ pointerEvents: 'auto' }}
-            >
-              <Play className="w-10 h-10 text-white fill-current ml-1" />
+          {/* Center Play/Pause Button */}
+          {!isPlaying && showControls && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 2147483647 }}>
+              <div 
+                className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
+                onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+                style={{ pointerEvents: 'auto' }}
+              >
+                <Play className="w-10 h-10 text-white fill-current ml-1" />
+              </div>
+            </div>
+          )}
+
+          {/* Bottom controls */}
+          <div 
+            className="bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 pb-4 px-4"
+            style={{ pointerEvents: 'auto', zIndex: 2147483647 }}
+          >
+            {/* Progress bar with buffer indicator */}
+            <div className="mb-4 relative">
+              <div className="flex items-center gap-3">
+                <span className="text-white/90 text-sm font-mono min-w-[50px]">{formatTime(currentTime)}</span>
+                <div className="flex-1 relative h-2">
+                  {/* Buffer progress (background) */}
+                  <div className="absolute inset-0 bg-white/20 rounded-full" />
+                  <div 
+                    className="absolute top-0 left-0 h-full bg-white/40 rounded-full transition-all duration-300"
+                    style={{ width: `${buffered}%` }}
+                  />
+                  {/* Playback progress (foreground) */}
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={progress}
+                    onChange={handleSeek}
+                    className="absolute inset-0 w-full h-full bg-transparent rounded-full appearance-none cursor-pointer 
+                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 
+                      [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg
+                      [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125
+                      [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:bg-primary 
+                      [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0
+                      [&::-webkit-slider-runnable-track]:bg-transparent
+                      [&::-moz-range-track]:bg-transparent"
+                    style={{
+                      background: `linear-gradient(to right, hsl(var(--primary)) ${progress}%, transparent ${progress}%)`,
+                      touchAction: 'none',
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+                <span className="text-white/90 text-sm font-mono min-w-[50px]">{formatTime(duration)}</span>
+              </div>
+            </div>
+
+            {/* Control buttons - Fullscreen version */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button 
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  onClick={(e) => { e.stopPropagation(); skipBackward(); }} 
+                  title="Skip back 10s"
+                >
+                  <SkipBack className="w-5 h-5" />
+                </button>
+                <button 
+                  className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+                >
+                  {isPlaying ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 fill-current ml-0.5" />}
+                </button>
+                <button 
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  onClick={(e) => { e.stopPropagation(); skipForward(); }} 
+                  title="Skip forward 10s"
+                >
+                  <SkipForward className="w-5 h-5" />
+                </button>
+                <button 
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  onClick={(e) => { e.stopPropagation(); toggleMute(); }}
+                >
+                  {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                </button>
+                {currentBitrate > 0 && (
+                  <div className="hidden md:flex items-center gap-1.5 ml-3 px-2 py-1 rounded bg-white/10 text-white/80">
+                    <Gauge className="w-3.5 h-3.5" />
+                    <span className="text-xs font-mono">{(currentBitrate / 1000000).toFixed(1)} Mbps</span>
+                  </div>
+                )}
+                <span className="text-white/70 text-sm hidden md:block ml-4 truncate max-w-[200px]">
+                  Episode {episodeNumber}: {title}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1">
+                {/* Settings Menu */}
+                <DropdownMenu 
+                  modal={false} 
+                  open={settingsOpen}
+                  onOpenChange={(open) => { 
+                    setSettingsOpen(open);
+                    if (!open) setSettingsMenu('main'); 
+                  }}
+                >
+                  <DropdownMenuTrigger asChild>
+                    <button 
+                      className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
+                      onClick={(e) => e.stopPropagation()}
+                      title="Settings"
+                    >
+                      <Settings className="w-5 h-5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    align="end" 
+                    side="top"
+                    className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[220px] max-h-[350px] overflow-y-auto"
+                    sideOffset={12}
+                    style={{ zIndex: 2147483647 }}
+                    onCloseAutoFocus={(e) => e.preventDefault()}
+                  >
+                    {renderSettingsContent()}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {features.includes('download') && (
+                  <button 
+                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                    onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
+                    title="Download"
+                  >
+                    <Download className="w-5 h-5" />
+                  </button>
+                )}
+                <button 
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
+                  title="Picture-in-Picture"
+                >
+                  <PictureInPicture2 className="w-5 h-5" />
+                </button>
+                <button 
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
+                  title="Exit Fullscreen"
+                >
+                  <Minimize className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
-        )}
-
-        {/* Bottom controls */}
+        </div>,
+        document.body
+      ) : (
         <div 
-          className="bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 pb-4 px-4"
-          style={{ pointerEvents: 'auto', zIndex: 60 }}
+          className={`absolute inset-0 flex flex-col justify-between transition-opacity duration-300 ${
+            showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+          style={{ 
+            zIndex: 50,
+            pointerEvents: showControls ? 'auto' : 'none',
+          }}
         >
+          {/* Top gradient */}
+          <div className="h-24 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
+
+          {/* Center Play/Pause Button */}
+          {!isPlaying && showControls && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[60]">
+              <div 
+                className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
+                onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+                style={{ pointerEvents: 'auto' }}
+              >
+                <Play className="w-10 h-10 text-white fill-current ml-1" />
+              </div>
+            </div>
+          )}
+
+          {/* Bottom controls */}
+          <div 
+            className="bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 pb-4 px-4"
+            style={{ pointerEvents: 'auto', zIndex: 60 }}
+          >
           {/* Progress bar with buffer indicator */}
           <div className="mb-4 relative">
             <div className="flex items-center gap-3">
@@ -1967,6 +2144,7 @@ export function VideoPlayer({
           </div>
         </div>
       </div>
+      )}
       
       {/* Download Verification Dialog */}
       <DownloadVerificationDialog

@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { MainLayout } from "@/components/layout";
 import { WelcomePopup } from "@/components/WelcomePopup";
 import { FloatingTelegramButton } from "@/components/FloatingTelegramButton";
+import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Browse from "./pages/Browse";
@@ -33,6 +34,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollToTop />
           <WelcomePopup />
           <FloatingTelegramButton />
           <Routes>

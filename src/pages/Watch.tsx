@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { VideoPlayer, ServerType } from '@/components/video/VideoPlayer';
 import { EpisodeList } from '@/components/video/EpisodeList';
 import { RecommendedAnime } from '@/components/home/RecommendedAnime';
+import { WatchParty } from '@/components/WatchParty';
 import { z } from 'zod';
 import {
   ChevronLeft,
@@ -669,7 +670,7 @@ export default function Watch() {
             {episode.title}
           </h1>
 
-          {/* Edit Episode (Admin/Uploader only) */}
+          {/* Edit Episode and Watch Party */}
           <div className="flex items-center gap-4">
             {(isAdmin || isUploader) && anime && (
               <Button
@@ -681,6 +682,14 @@ export default function Watch() {
                 Edit Episode
               </Button>
             )}
+            
+            {/* Watch Party Button */}
+            <WatchParty
+              episodeId={episode.id}
+              videoRef={null as any}
+              animeTitle={anime?.title || ''}
+              episodeNumber={episode.episode_number}
+            />
           </div>
 
           {episode.description && (
