@@ -50,6 +50,13 @@ interface Anime {
   episode_count?: number;
 }
 
+interface SearchSuggestion {
+  id: string;
+  title: string;
+  cover_image: string | null;
+  type: string | null;
+}
+
 interface NoEpisodesPopupProps {
   isOpen: boolean;
   onClose: () => void;
@@ -95,8 +102,11 @@ export default function Browse() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>((searchParams.get('type') as TypeFilter) || 'all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>((searchParams.get('status') as StatusFilter) || 'all');
   const [episodeFilter, setEpisodeFilter] = useState<EpisodeFilter>((searchParams.get('episodes') as EpisodeFilter) || 'all');
-  const [showSearchHistory, setShowSearchHistory] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [searchSuggestions, setSearchSuggestions] = useState<SearchSuggestion[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   
   // Search history hook
   const { searchHistory, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
@@ -106,6 +116,45 @@ export default function Browse() {
     isOpen: false,
     animeTitle: '',
   });
+
+  // Fetch search suggestions when typing
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (searchQuery.trim().length < 2) {
+        setSearchSuggestions([]);
+        return;
+      }
+
+      setIsLoadingSuggestions(true);
+      const sanitized = sanitizeSearchQuery(searchQuery);
+      
+      const { data } = await supabase
+        .from('anime_public')
+        .select('id, title, cover_image, type')
+        .ilike('title', `%${sanitized}%`)
+        .limit(6);
+
+      if (data) {
+        setSearchSuggestions(data);
+      }
+      setIsLoadingSuggestions(false);
+    };
+
+    const debounce = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(debounce);
+  }, [searchQuery]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setShowSearchDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const urlType = searchParams.get('type') as TypeFilter;
@@ -217,7 +266,7 @@ export default function Browse() {
     } else {
       params.delete('q');
     }
-    setShowSearchHistory(false);
+    setShowSearchDropdown(false);
     setSearchParams(params);
   };
 
@@ -225,8 +274,14 @@ export default function Browse() {
     setSearchQuery(query);
     const params = new URLSearchParams(searchParams);
     params.set('q', query);
-    setShowSearchHistory(false);
+    setShowSearchDropdown(false);
     setSearchParams(params);
+  };
+
+  const handleSuggestionClick = (suggestion: SearchSuggestion) => {
+    setShowSearchDropdown(false);
+    addToHistory(suggestion.title);
+    navigate(`/anime/${suggestion.id}`);
   };
 
   const handleGenreFilter = (genre: string) => {
@@ -314,6 +369,11 @@ export default function Browse() {
     { value: 'no-episodes', label: 'Episode Progress' },
   ];
 
+  // Determine what to show in dropdown
+  const showSuggestions = searchQuery.trim().length >= 2 && searchSuggestions.length > 0;
+  const showHistory = searchQuery.trim().length === 0 && searchHistory.length > 0;
+  const showDropdownContent = showSuggestions || showHistory;
+
   return (
     <div className="min-h-screen">
       {/* No Episodes Popup */}
@@ -343,7 +403,7 @@ export default function Browse() {
         <div className="mb-10 space-y-6">
           {/* Search bar */}
           <form onSubmit={handleSearch} className="flex gap-3 max-w-2xl animate-fade-in-up stagger-1">
-            <div className="relative flex-1">
+            <div className="relative flex-1" ref={searchContainerRef}>
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
               <Input
                 ref={searchInputRef}
@@ -351,51 +411,84 @@ export default function Browse() {
                 placeholder="Search for anime..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setShowSearchHistory(true)}
-                onBlur={() => setTimeout(() => setShowSearchHistory(false), 200)}
+                onFocus={() => setShowSearchDropdown(true)}
                 className="pl-12 h-14 bg-card/50 border-border/50 rounded-xl text-base focus:border-primary/50 focus:bg-card transition-all"
               />
               
-              {/* Search History Dropdown */}
-              {showSearchHistory && searchHistory.length > 0 && (
+              {/* Search Dropdown - Shows suggestions OR history */}
+              {showSearchDropdown && showDropdownContent && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-xl overflow-hidden z-50">
-                  <div className="flex items-center justify-between px-4 py-2 border-b border-border/50">
-                    <span className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-                      <History className="h-3 w-3" />
-                      Recent Searches
-                    </span>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.preventDefault(); clearHistory(); }}
-                      className="text-xs text-muted-foreground hover:text-destructive transition-colors"
-                    >
-                      Clear All
-                    </button>
-                  </div>
-                  <div className="max-h-48 overflow-y-auto">
-                    {searchHistory.map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between px-4 py-2 hover:bg-muted/50 cursor-pointer group"
-                      >
+                  {/* Search Suggestions with Thumbnails */}
+                  {showSuggestions && (
+                    <div className="max-h-80 overflow-y-auto">
+                      <div className="px-4 py-2 border-b border-border/50">
+                        <span className="text-xs font-medium text-muted-foreground">Suggestions</span>
+                      </div>
+                      {searchSuggestions.map((suggestion) => (
                         <button
+                          key={suggestion.id}
                           type="button"
-                          onClick={() => handleHistoryItemClick(item.query)}
-                          className="flex items-center gap-3 flex-1 text-left"
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="flex items-center gap-3 w-full px-4 py-3 hover:bg-muted/50 transition-colors"
                         >
-                          <Search className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="text-sm">{item.query}</span>
+                          <div className="w-12 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                            <img 
+                              src={suggestion.cover_image || '/placeholder.svg'} 
+                              alt={suggestion.title}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 text-left">
+                            <p className="text-sm font-medium line-clamp-1">{suggestion.title}</p>
+                            <p className="text-xs text-muted-foreground capitalize">{suggestion.type || 'Anime'}</p>
+                          </div>
                         </button>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Search History - Only when input is empty */}
+                  {showHistory && (
+                    <>
+                      <div className="flex items-center justify-between px-4 py-2 border-b border-border/50">
+                        <span className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                          <History className="h-3 w-3" />
+                          Recent Searches
+                        </span>
                         <button
                           type="button"
-                          onClick={(e) => { e.stopPropagation(); removeFromHistory(item.query); }}
-                          className="p-1 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => { e.preventDefault(); clearHistory(); }}
+                          className="text-xs text-muted-foreground hover:text-destructive transition-colors"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          Clear All
                         </button>
                       </div>
-                    ))}
-                  </div>
+                      <div className="max-h-48 overflow-y-auto">
+                        {searchHistory.map((item, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between px-4 py-2 hover:bg-muted/50 cursor-pointer group"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => handleHistoryItemClick(item.query)}
+                              className="flex items-center gap-3 flex-1 text-left"
+                            >
+                              <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span className="text-sm">{item.query}</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); removeFromHistory(item.query); }}
+                              className="p-1 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>

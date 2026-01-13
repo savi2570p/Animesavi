@@ -27,7 +27,7 @@ export function LatestSeries() {
 
   const fetchLatestSeries = async () => {
     try {
-      // Fetch anime series 
+      // Fetch anime series - order by created_at to show newest first
       const { data: animeData, error: animeError } = await supabase
         .from('anime')
         .select(`
@@ -40,6 +40,7 @@ export function LatestSeries() {
           status
         `)
         .eq('type', 'series')
+        .order('created_at', { ascending: false })
         .limit(20);
 
       if (animeError) throw animeError;
@@ -88,18 +89,14 @@ export function LatestSeries() {
         })
       );
 
-      // Filter out anime with 0 episodes
-      const seriesWithEpisodes = seriesWithData.filter(anime => anime.episode_count > 0);
-      
-      // Sort by latest episode date OR updated_at (whichever is more recent)
-      seriesWithEpisodes.sort((a, b) => {
-        const aDate = a.latest_episode_date || a.updated_at;
-        const bDate = b.latest_episode_date || b.updated_at;
-        return new Date(bDate).getTime() - new Date(aDate).getTime();
+      // Sort by created_at (newest first) to show recently uploaded anime immediately
+      // This ensures newly uploaded anime appears even if it has 0 episodes
+      seriesWithData.sort((a, b) => {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
 
-      // Take only first 4
-      setSeries(seriesWithEpisodes.slice(0, 4));
+      // Take first 4 (includes anime with 0 episodes)
+      setSeries(seriesWithData.slice(0, 4));
     } catch (error) {
       console.error('Error fetching latest series:', error);
     } finally {

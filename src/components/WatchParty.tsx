@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { Users, Send, Copy, X, Crown, UserPlus, MessageSquare, Link2 } from 'lucide-react';
+import { Users, Send, Copy, X, Crown, UserPlus, MessageSquare, Link2, Tv, Play } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -18,14 +18,35 @@ interface ChatMessage {
   isHost?: boolean;
 }
 
+interface PartyInfo {
+  animeTitle: string;
+  seasonNumber: number;
+  episodeNumber: number;
+  episodeId: string;
+}
+
 interface WatchPartyProps {
   episodeId: string;
   videoRef: React.RefObject<HTMLVideoElement>;
   animeTitle: string;
   episodeNumber: number;
+  seasonNumber?: number;
 }
 
-export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber }: WatchPartyProps) {
+// Store active party info globally for Join Party feature
+let activePartyInfo: PartyInfo | null = null;
+let activePartyCode: string | null = null;
+
+export function getActivePartyInfo() {
+  return { partyInfo: activePartyInfo, partyCode: activePartyCode };
+}
+
+export function setActivePartyFromJoin(code: string, info: PartyInfo) {
+  activePartyCode = code;
+  activePartyInfo = info;
+}
+
+export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, seasonNumber = 1 }: WatchPartyProps) {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [partyCode, setPartyCode] = useState<string | null>(null);
@@ -36,7 +57,31 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber }: W
   const [newMessage, setNewMessage] = useState('');
   const [showJoinDialog, setShowJoinDialog] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [partyInfo, setPartyInfo] = useState<PartyInfo | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Update global party info when party is created
+  useEffect(() => {
+    if (partyCode && isHost) {
+      const info: PartyInfo = {
+        animeTitle,
+        seasonNumber,
+        episodeNumber,
+        episodeId,
+      };
+      setPartyInfo(info);
+      activePartyInfo = info;
+      activePartyCode = partyCode;
+    }
+    
+    return () => {
+      // Cleanup when party ends
+      if (isHost) {
+        activePartyInfo = null;
+        activePartyCode = null;
+      }
+    };
+  }, [partyCode, isHost, animeTitle, seasonNumber, episodeNumber, episodeId]);
 
   // Generate a party code
   const generatePartyCode = () => {
@@ -59,18 +104,33 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber }: W
     setPartyCode(code);
     setIsHost(true);
     setParticipants([{ id: user.id, name: user.email?.split('@')[0] || 'Host', isHost: true }]);
+    
+    const info: PartyInfo = {
+      animeTitle,
+      seasonNumber,
+      episodeNumber,
+      episodeId,
+    };
+    setPartyInfo(info);
+    
     setMessages([{
       id: crypto.randomUUID(),
       userId: 'system',
       username: 'System',
       message: `Watch party created! Share the code: ${code}`,
       timestamp: new Date(),
+    }, {
+      id: crypto.randomUUID(),
+      userId: 'system',
+      username: 'System',
+      message: `Now watching: ${animeTitle} - S${seasonNumber} E${episodeNumber}`,
+      timestamp: new Date(),
     }]);
     setShowCreateDialog(false);
     setIsOpen(true);
     
     toast.success(`Watch party created! Code: ${code}`);
-  }, [user]);
+  }, [user, animeTitle, seasonNumber, episodeNumber, episodeId]);
 
   // Join an existing party
   const joinParty = useCallback(() => {
@@ -85,8 +145,17 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber }: W
     }
 
     // In a real implementation, this would connect to a WebSocket server
+    // For now, simulate joining with demo info
+    const demoPartyInfo: PartyInfo = {
+      animeTitle: 'Demo Anime',
+      seasonNumber: 1,
+      episodeNumber: 1,
+      episodeId: episodeId,
+    };
+    
     setPartyCode(joinCode.toUpperCase());
     setIsHost(false);
+    setPartyInfo(demoPartyInfo);
     setParticipants([
       { id: 'host', name: 'Host', isHost: true },
       { id: user.id, name: user.email?.split('@')[0] || 'You', isHost: false }
@@ -97,12 +166,18 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber }: W
       username: 'System',
       message: `You joined the watch party!`,
       timestamp: new Date(),
+    }, {
+      id: crypto.randomUUID(),
+      userId: 'system',
+      username: 'System',
+      message: `Host is watching: ${demoPartyInfo.animeTitle} - S${demoPartyInfo.seasonNumber} E${demoPartyInfo.episodeNumber}`,
+      timestamp: new Date(),
     }]);
     setShowJoinDialog(false);
     setIsOpen(true);
     
     toast.success('Joined the watch party!');
-  }, [user, joinCode]);
+  }, [user, joinCode, episodeId]);
 
   // Send chat message
   const sendMessage = useCallback(() => {
@@ -131,10 +206,15 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber }: W
 
   // Leave party
   const leaveParty = () => {
+    if (isHost) {
+      activePartyInfo = null;
+      activePartyCode = null;
+    }
     setPartyCode(null);
     setIsHost(false);
     setParticipants([]);
     setMessages([]);
+    setPartyInfo(null);
     setIsOpen(false);
     toast.success('Left the watch party');
   };
@@ -169,10 +249,19 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber }: W
                 Create Watch Party
               </DialogTitle>
               <DialogDescription>
-                Watch "{animeTitle}" Episode {episodeNumber} together with friends
+                Watch "{animeTitle}" S{seasonNumber} E{episodeNumber} together with friends
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
+              <div className="bg-muted/50 rounded-lg p-3 flex items-center gap-3">
+                <div className="p-2 bg-primary/20 rounded-lg">
+                  <Tv className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{animeTitle}</p>
+                  <p className="text-xs text-muted-foreground">Season {seasonNumber} • Episode {episodeNumber}</p>
+                </div>
+              </div>
               <p className="text-muted-foreground text-sm">
                 Create a watch party and share the code with your friends. Everyone can chat while watching the same episode in sync!
               </p>
@@ -254,6 +343,20 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber }: W
               Copy
             </Button>
           </div>
+          
+          {/* Now Watching Info */}
+          {partyInfo && (
+            <div className="mt-3 bg-primary/10 border border-primary/30 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                <Play className="h-3 w-3" />
+                <span>{isHost ? 'Now Watching' : 'Host is Watching'}</span>
+              </div>
+              <p className="font-medium text-sm">{partyInfo.animeTitle}</p>
+              <p className="text-xs text-muted-foreground">
+                Season {partyInfo.seasonNumber} • Episode {partyInfo.episodeNumber}
+              </p>
+            </div>
+          )}
         </SheetHeader>
 
         {/* Participants */}
@@ -327,5 +430,68 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber }: W
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+// Join Party Dialog Component for use in Header/Menu
+export function JoinPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
+  const { user } = useAuth();
+  const [joinCode, setJoinCode] = useState('');
+  const [open, setOpen] = useState(false);
+
+  const handleJoin = () => {
+    if (!user) {
+      toast.error('Please sign in to join a watch party');
+      return;
+    }
+
+    if (!joinCode || joinCode.length !== 6) {
+      toast.error('Please enter a valid 6-character party code');
+      return;
+    }
+
+    // In a real implementation, this would redirect to the watch page with the party
+    toast.success(`Joining party ${joinCode.toUpperCase()}...`);
+    setOpen(false);
+    
+    // Navigate to a demo page - in real implementation would fetch party info
+    window.location.href = `/browse?party=${joinCode.toUpperCase()}`;
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {trigger || (
+          <Button variant="ghost" size="sm" className="gap-2 w-full justify-start">
+            <UserPlus className="h-4 w-4" />
+            Join Party
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-primary" />
+            Join Watch Party
+          </DialogTitle>
+          <DialogDescription>
+            Enter the party code shared by your friend to watch anime together
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <Input
+            placeholder="Enter 6-character code"
+            value={joinCode}
+            onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+            maxLength={6}
+            className="text-center text-2xl tracking-widest font-mono"
+          />
+          <Button onClick={handleJoin} className="w-full gap-2" disabled={joinCode.length !== 6}>
+            <Link2 className="h-4 w-4" />
+            Join Party
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
