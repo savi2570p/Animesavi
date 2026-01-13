@@ -3,7 +3,14 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Play, ChevronRight, Clock, Sparkles } from 'lucide-react';
+import { Play, ChevronRight, Clock, Sparkles, ChevronLeft } from 'lucide-react';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
 
 interface Anime {
   id: string;
@@ -68,7 +75,7 @@ export function ContinueWatching() {
       }
       
       // Fetch season info for each episode
-      const uniqueItems = Array.from(uniqueMap.values()).slice(0, 6);
+      const uniqueItems = Array.from(uniqueMap.values()).slice(0, 12);
       const itemsWithSeason = await Promise.all(
         uniqueItems.map(async (item) => {
           if (item.episode?.season_id) {
@@ -105,7 +112,7 @@ export function ContinueWatching() {
             <div className="h-8 w-8 bg-primary/20 rounded-lg animate-pulse" />
             <div className="h-8 w-56 bg-muted animate-pulse rounded-lg" />
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="space-y-3">
                 <div className="aspect-video bg-muted animate-pulse rounded-xl skeleton-shimmer" />
@@ -154,64 +161,90 @@ export function ContinueWatching() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
-          {history.map((item, index) => (
-            <Link
-              key={item.id}
-              to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
-              className="group relative"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <div className="anime-card opacity-0 animate-fade-in">
-                {/* Thumbnail container */}
-                <div className="relative aspect-video rounded-xl overflow-hidden bg-muted/50 border border-border/50 group-hover:border-primary/50 transition-all duration-500">
-                  <img
-                    src={item.episode.thumbnail || item.anime.cover_image || '/placeholder.svg'}
-                    alt={item.anime.title}
-                    className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110"
-                    loading="lazy"
-                  />
-                  
-                  {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
-                  
-                  {/* Play button overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-primary/30 rounded-full blur-xl scale-150 animate-pulse" />
-                      <div className="relative w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/50 transform group-hover:scale-110 transition-transform duration-300">
-                        <Play className="h-5 w-5 text-primary-foreground fill-current ml-0.5" />
+        <Carousel
+          opts={{
+            align: "start",
+            loop: false,
+          }}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-2 md:-ml-4">
+            {history.map((item, index) => (
+              <CarouselItem key={item.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6">
+                <Link
+                  to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
+                  className="group relative block"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <div className="anime-card opacity-0 animate-fade-in">
+                    {/* Thumbnail container */}
+                    <div className="relative aspect-video rounded-xl overflow-hidden bg-muted/50 border border-border/50 group-hover:border-primary/50 transition-all duration-500">
+                      <img
+                        src={item.episode.thumbnail || item.anime.cover_image || '/placeholder.svg'}
+                        alt={item.anime.title}
+                        className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110"
+                        loading="lazy"
+                      />
+                      
+                      {/* Gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
+                      
+                      {/* Play button overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-primary/30 rounded-full blur-xl scale-150 animate-pulse" />
+                          <div className="relative w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/50 transform group-hover:scale-110 transition-transform duration-300">
+                            <Play className="h-5 w-5 text-primary-foreground fill-current ml-0.5" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Season & Episode badge */}
+                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
+                        S{item.season?.season_number || 1} E{item.episode.episode_number}
+                      </div>
+
+                      {/* Progress percentage badge */}
+                      <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] font-medium text-white/90">
+                        {Math.round(item.progress || 0)}%
+                      </div>
+
+                      {/* Premium progress bar */}
+                      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/50 backdrop-blur-sm">
+                        <div className="relative h-full overflow-hidden">
+                          <div className="absolute inset-0 bg-white/10" />
+                          <div 
+                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-primary to-primary/80 transition-all duration-500 ease-out"
+                            style={{ width: `${Math.min(item.progress || 0, 100)}%` }}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine" />
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Season & Episode badge */}
-                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
-                    S{item.season?.season_number || 1} E{item.episode.episode_number}
-                  </div>
-
-                  {/* Progress percentage badge */}
-                  <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] font-medium text-white/90">
-                    {Math.round(item.progress || 0)}%
-                  </div>
-
-                  {/* Premium progress bar */}
-                  <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/50 backdrop-blur-sm">
-                    <div className="relative h-full overflow-hidden">
-                      <div className="absolute inset-0 bg-white/10" />
-                      <div 
-                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-primary to-primary/80 transition-all duration-500 ease-out"
-                        style={{ width: `${Math.min(item.progress || 0, 100)}%` }}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine" />
-                      </div>
+                    
+                    {/* Title and info below card */}
+                    <div className="mt-2 px-1">
+                      <h3 className="text-sm font-medium text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                        {item.anime.title}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Episode {item.episode.episode_number}
+                        {formatTimeLeft(item.progress, item.episode.duration) && (
+                          <span className="ml-2 text-primary/80">
+                            • {formatTimeLeft(item.progress, item.episode.duration)}
+                          </span>
+                        )}
+                      </p>
                     </div>
                   </div>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+                </Link>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex -left-4 bg-background/80 backdrop-blur-sm border-border/50 hover:bg-primary/10 hover:border-primary/50" />
+          <CarouselNext className="hidden md:flex -right-4 bg-background/80 backdrop-blur-sm border-border/50 hover:bg-primary/10 hover:border-primary/50" />
+        </Carousel>
       </div>
     </section>
   );

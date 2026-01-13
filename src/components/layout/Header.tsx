@@ -23,12 +23,14 @@ import {
   History,
   Crown,
   Sparkles,
-  ChevronDown
+  ChevronDown,
+  Users
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
+import { JoinPartyDialog } from '@/components/WatchParty';
 
 const genres = [
   'Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 
@@ -285,6 +287,19 @@ export function Header() {
                   >
                     Browse All
                   </Link>
+                  
+                  {/* Join Party Option */}
+                  <div className="py-2 px-3">
+                    <JoinPartyDialog 
+                      trigger={
+                        <button className="flex items-center gap-3 text-lg font-medium hover:text-primary transition-colors w-full text-left">
+                          <Users className="h-5 w-5" />
+                          Join Party
+                        </button>
+                      }
+                    />
+                  </div>
+                  
                   {user && (
                     <>
                       <Link 
