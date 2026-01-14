@@ -684,12 +684,16 @@ export default function Watch() {
             )}
             
             {/* Watch Party Button */}
-            <WatchParty
-              episodeId={episode.id}
-              videoRef={null as any}
-              animeTitle={anime?.title || ''}
-              episodeNumber={episode.episode_number}
-            />
+            {anime && (
+              <WatchParty
+                episodeId={episode.id}
+                videoRef={{ current: document.querySelector('video') } as React.RefObject<HTMLVideoElement>}
+                animeTitle={anime.title || ''}
+                episodeNumber={episode.episode_number}
+                seasonNumber={currentSeason?.season_number || 1}
+                animeId={anime.id}
+              />
+            )}
           </div>
 
           {episode.description && (
