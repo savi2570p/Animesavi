@@ -6,8 +6,10 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Users, Send, Copy, X, Crown, UserPlus, MessageSquare, Link2, Tv, Play } from 'lucide-react';
+import { Users, Send, Copy, X, Crown, UserPlus, Link2, Tv, Play, Eye, MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface ChatMessage {
   id: string;
@@ -31,25 +33,26 @@ interface WatchPartyProps {
   animeTitle: string;
   episodeNumber: number;
   seasonNumber?: number;
+  animeId?: string;
 }
 
-// Store active party info globally for Join Party feature
-let activePartyInfo: PartyInfo | null = null;
-let activePartyCode: string | null = null;
-
-export function getActivePartyInfo() {
-  return { partyInfo: activePartyInfo, partyCode: activePartyCode };
+interface JoinedParty {
+  id: string;
+  code: string;
+  anime_title: string;
+  season_number: number;
+  episode_number: number;
+  episode_id: string;
+  is_active: boolean;
+  host_id: string;
 }
 
-export function setActivePartyFromJoin(code: string, info: PartyInfo) {
-  activePartyCode = code;
-  activePartyInfo = info;
-}
-
-export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, seasonNumber = 1 }: WatchPartyProps) {
+export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, seasonNumber = 1, animeId }: WatchPartyProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [partyCode, setPartyCode] = useState<string | null>(null);
+  const [partyId, setPartyId] = useState<string | null>(null);
   const [joinCode, setJoinCode] = useState('');
   const [isHost, setIsHost] = useState(false);
   const [participants, setParticipants] = useState<{ id: string; name: string; isHost: boolean }[]>([]);
@@ -59,29 +62,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [partyInfo, setPartyInfo] = useState<PartyInfo | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Update global party info when party is created
-  useEffect(() => {
-    if (partyCode && isHost) {
-      const info: PartyInfo = {
-        animeTitle,
-        seasonNumber,
-        episodeNumber,
-        episodeId,
-      };
-      setPartyInfo(info);
-      activePartyInfo = info;
-      activePartyCode = partyCode;
-    }
-    
-    return () => {
-      // Cleanup when party ends
-      if (isHost) {
-        activePartyInfo = null;
-        activePartyCode = null;
-      }
-    };
-  }, [partyCode, isHost, animeTitle, seasonNumber, episodeNumber, episodeId]);
+  const syncIntervalRef = useRef<NodeJS.Timeout>();
 
   // Generate a party code
   const generatePartyCode = () => {
@@ -93,47 +74,78 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     return code;
   };
 
-  // Create a new watch party
-  const createParty = useCallback(() => {
+  // Create a new watch party with database
+  const createParty = useCallback(async () => {
     if (!user) {
       toast.error('Please sign in to create a watch party');
       return;
     }
 
+    if (!animeId) {
+      toast.error('Anime ID is required');
+      return;
+    }
+
     const code = generatePartyCode();
-    setPartyCode(code);
-    setIsHost(true);
-    setParticipants([{ id: user.id, name: user.email?.split('@')[0] || 'Host', isHost: true }]);
     
-    const info: PartyInfo = {
-      animeTitle,
-      seasonNumber,
-      episodeNumber,
-      episodeId,
-    };
-    setPartyInfo(info);
-    
-    setMessages([{
-      id: crypto.randomUUID(),
-      userId: 'system',
-      username: 'System',
-      message: `Watch party created! Share the code: ${code}`,
-      timestamp: new Date(),
-    }, {
-      id: crypto.randomUUID(),
-      userId: 'system',
-      username: 'System',
-      message: `Now watching: ${animeTitle} - S${seasonNumber} E${episodeNumber}`,
-      timestamp: new Date(),
-    }]);
-    setShowCreateDialog(false);
-    setIsOpen(true);
-    
-    toast.success(`Watch party created! Code: ${code}`);
-  }, [user, animeTitle, seasonNumber, episodeNumber, episodeId]);
+    try {
+      // Insert party into database
+      const { data: party, error } = await supabase
+        .from('watch_parties')
+        .insert({
+          code,
+          host_id: user.id,
+          anime_id: animeId,
+          episode_id: episodeId,
+          anime_title: animeTitle,
+          season_number: seasonNumber,
+          episode_number: episodeNumber,
+          playback_time: videoRef.current?.currentTime || 0,
+          is_playing: !videoRef.current?.paused,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Add host as member
+      await supabase.from('watch_party_members').insert({
+        party_id: party.id,
+        user_id: user.id,
+        username: user.email?.split('@')[0] || 'Host',
+      });
+
+      // Add system message
+      await supabase.from('watch_party_messages').insert({
+        party_id: party.id,
+        user_id: user.id,
+        username: 'System',
+        message: `Watch party created! Share the code: ${code}`,
+        is_host: false,
+      });
+
+      setPartyCode(code);
+      setPartyId(party.id);
+      setIsHost(true);
+      setPartyInfo({
+        animeTitle,
+        seasonNumber,
+        episodeNumber,
+        episodeId,
+      });
+      setParticipants([{ id: user.id, name: user.email?.split('@')[0] || 'Host', isHost: true }]);
+      setShowCreateDialog(false);
+      setIsOpen(true);
+
+      toast.success(`Watch party created! Code: ${code}`);
+    } catch (error) {
+      console.error('Error creating party:', error);
+      toast.error('Failed to create watch party');
+    }
+  }, [user, animeTitle, seasonNumber, episodeNumber, episodeId, animeId, videoRef]);
 
   // Join an existing party
-  const joinParty = useCallback(() => {
+  const joinParty = useCallback(async () => {
     if (!user) {
       toast.error('Please sign in to join a watch party');
       return;
@@ -144,57 +156,256 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
       return;
     }
 
-    // In a real implementation, this would connect to a WebSocket server
-    // For now, simulate joining with demo info
-    const demoPartyInfo: PartyInfo = {
-      animeTitle: 'Demo Anime',
-      seasonNumber: 1,
-      episodeNumber: 1,
-      episodeId: episodeId,
+    try {
+      // Find the party
+      const { data: party, error } = await supabase
+        .from('watch_parties')
+        .select('*')
+        .eq('code', joinCode.toUpperCase())
+        .eq('is_active', true)
+        .single();
+
+      if (error || !party) {
+        toast.error('Party not found or has ended');
+        return;
+      }
+
+      // Add user as member
+      await supabase.from('watch_party_members').insert({
+        party_id: party.id,
+        user_id: user.id,
+        username: user.email?.split('@')[0] || 'Guest',
+      });
+
+      // Add join message
+      await supabase.from('watch_party_messages').insert({
+        party_id: party.id,
+        user_id: user.id,
+        username: user.email?.split('@')[0] || 'Guest',
+        message: `${user.email?.split('@')[0] || 'Guest'} joined the party!`,
+        is_host: false,
+      });
+
+      setPartyCode(party.code);
+      setPartyId(party.id);
+      setIsHost(false);
+      setPartyInfo({
+        animeTitle: party.anime_title,
+        seasonNumber: party.season_number,
+        episodeNumber: party.episode_number,
+        episodeId: party.episode_id,
+      });
+      setShowJoinDialog(false);
+      setIsOpen(true);
+
+      // Navigate to the episode if different
+      if (party.episode_id !== episodeId) {
+        navigate(`/watch/${party.episode_id}?party=${party.code}`);
+      }
+
+      toast.success('Joined the watch party!');
+    } catch (error) {
+      console.error('Error joining party:', error);
+      toast.error('Failed to join watch party');
+    }
+  }, [user, joinCode, episodeId, navigate]);
+
+  // Real-time sync: Host syncs playback state
+  useEffect(() => {
+    if (!isHost || !partyId || !videoRef.current) return;
+
+    const syncPlayback = async () => {
+      const video = videoRef.current;
+      if (!video) return;
+
+      await supabase
+        .from('watch_parties')
+        .update({
+          playback_time: video.currentTime,
+          is_playing: !video.paused,
+        })
+        .eq('id', partyId);
     };
-    
-    setPartyCode(joinCode.toUpperCase());
-    setIsHost(false);
-    setPartyInfo(demoPartyInfo);
-    setParticipants([
-      { id: 'host', name: 'Host', isHost: true },
-      { id: user.id, name: user.email?.split('@')[0] || 'You', isHost: false }
-    ]);
-    setMessages([{
-      id: crypto.randomUUID(),
-      userId: 'system',
-      username: 'System',
-      message: `You joined the watch party!`,
-      timestamp: new Date(),
-    }, {
-      id: crypto.randomUUID(),
-      userId: 'system',
-      username: 'System',
-      message: `Host is watching: ${demoPartyInfo.animeTitle} - S${demoPartyInfo.seasonNumber} E${demoPartyInfo.episodeNumber}`,
-      timestamp: new Date(),
-    }]);
-    setShowJoinDialog(false);
-    setIsOpen(true);
-    
-    toast.success('Joined the watch party!');
-  }, [user, joinCode, episodeId]);
+
+    // Sync every 2 seconds
+    syncIntervalRef.current = setInterval(syncPlayback, 2000);
+
+    // Also sync on play/pause
+    const handlePlay = () => syncPlayback();
+    const handlePause = () => syncPlayback();
+    const handleSeeked = () => syncPlayback();
+
+    videoRef.current.addEventListener('play', handlePlay);
+    videoRef.current.addEventListener('pause', handlePause);
+    videoRef.current.addEventListener('seeked', handleSeeked);
+
+    return () => {
+      if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
+      const video = videoRef.current;
+      if (video) {
+        video.removeEventListener('play', handlePlay);
+        video.removeEventListener('pause', handlePause);
+        video.removeEventListener('seeked', handleSeeked);
+      }
+    };
+  }, [isHost, partyId, videoRef]);
+
+  // Real-time sync: Non-host receives updates
+  useEffect(() => {
+    if (isHost || !partyId) return;
+
+    const channel = supabase
+      .channel(`party-sync-${partyId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'watch_parties',
+          filter: `id=eq.${partyId}`,
+        },
+        (payload) => {
+          const party = payload.new as any;
+          const video = videoRef.current;
+          if (!video) return;
+
+          // Sync playback state
+          if (Math.abs(video.currentTime - party.playback_time) > 2) {
+            video.currentTime = party.playback_time;
+          }
+
+          if (party.is_playing && video.paused) {
+            video.play().catch(() => {});
+          } else if (!party.is_playing && !video.paused) {
+            video.pause();
+          }
+
+          // Check if party ended
+          if (!party.is_active) {
+            toast.info('The host has ended the watch party');
+            leaveParty();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isHost, partyId, videoRef]);
+
+  // Real-time: Listen for new messages
+  useEffect(() => {
+    if (!partyId) return;
+
+    // Load existing messages
+    const loadMessages = async () => {
+      const { data } = await supabase
+        .from('watch_party_messages')
+        .select('*')
+        .eq('party_id', partyId)
+        .order('created_at', { ascending: true });
+
+      if (data) {
+        setMessages(data.map(m => ({
+          id: m.id,
+          userId: m.user_id,
+          username: m.username,
+          message: m.message,
+          timestamp: new Date(m.created_at),
+          isHost: m.is_host,
+        })));
+      }
+    };
+
+    loadMessages();
+
+    // Load participants
+    const loadParticipants = async () => {
+      const { data: party } = await supabase
+        .from('watch_parties')
+        .select('host_id')
+        .eq('id', partyId)
+        .single();
+
+      const { data: members } = await supabase
+        .from('watch_party_members')
+        .select('*')
+        .eq('party_id', partyId);
+
+      if (members && party) {
+        setParticipants(members.map(m => ({
+          id: m.user_id,
+          name: m.username || 'Anonymous',
+          isHost: m.user_id === party.host_id,
+        })));
+      }
+    };
+
+    loadParticipants();
+
+    // Subscribe to new messages
+    const messageChannel = supabase
+      .channel(`party-messages-${partyId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'watch_party_messages',
+          filter: `party_id=eq.${partyId}`,
+        },
+        (payload) => {
+          const msg = payload.new as any;
+          setMessages(prev => [...prev, {
+            id: msg.id,
+            userId: msg.user_id,
+            username: msg.username,
+            message: msg.message,
+            timestamp: new Date(msg.created_at),
+            isHost: msg.is_host,
+          }]);
+        }
+      )
+      .subscribe();
+
+    // Subscribe to member changes
+    const memberChannel = supabase
+      .channel(`party-members-${partyId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'watch_party_members',
+          filter: `party_id=eq.${partyId}`,
+        },
+        () => {
+          loadParticipants();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(messageChannel);
+      supabase.removeChannel(memberChannel);
+    };
+  }, [partyId]);
 
   // Send chat message
-  const sendMessage = useCallback(() => {
-    if (!newMessage.trim() || !user) return;
+  const sendMessage = useCallback(async () => {
+    if (!newMessage.trim() || !user || !partyId) return;
 
-    const message: ChatMessage = {
-      id: crypto.randomUUID(),
-      userId: user.id,
+    await supabase.from('watch_party_messages').insert({
+      party_id: partyId,
+      user_id: user.id,
       username: user.email?.split('@')[0] || 'Anonymous',
       message: newMessage.trim(),
-      timestamp: new Date(),
-      isHost,
-    };
+      is_host: isHost,
+    });
 
-    setMessages(prev => [...prev, message]);
     setNewMessage('');
-  }, [newMessage, user, isHost]);
+  }, [newMessage, user, partyId, isHost]);
 
   // Copy party code
   const copyCode = () => {
@@ -205,12 +416,27 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
   };
 
   // Leave party
-  const leaveParty = () => {
-    if (isHost) {
-      activePartyInfo = null;
-      activePartyCode = null;
+  const leaveParty = async () => {
+    if (partyId && user) {
+      if (isHost) {
+        // End the party
+        await supabase
+          .from('watch_parties')
+          .update({ is_active: false })
+          .eq('id', partyId);
+      } else {
+        // Remove from members
+        await supabase
+          .from('watch_party_members')
+          .delete()
+          .eq('party_id', partyId)
+          .eq('user_id', user.id);
+      }
     }
+
+    if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
     setPartyCode(null);
+    setPartyId(null);
     setIsHost(false);
     setParticipants([]);
     setMessages([]);
@@ -263,7 +489,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
                 </div>
               </div>
               <p className="text-muted-foreground text-sm">
-                Create a watch party and share the code with your friends. Everyone can chat while watching the same episode in sync!
+                Create a watch party and share the code with your friends. Everyone watches in real-time sync with chat!
               </p>
               <Button onClick={createParty} className="w-full gap-2">
                 <Crown className="h-4 w-4" />
@@ -326,6 +552,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
             <SheetTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
               Watch Party
+              <span className="text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full">LIVE</span>
             </SheetTitle>
             <Button variant="ghost" size="icon" onClick={leaveParty}>
               <X className="h-4 w-4" />
@@ -349,7 +576,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
             <div className="mt-3 bg-primary/10 border border-primary/30 rounded-lg p-3">
               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                 <Play className="h-3 w-3" />
-                <span>{isHost ? 'Now Watching' : 'Host is Watching'}</span>
+                <span>{isHost ? 'Now Watching' : 'Synced with Host'}</span>
               </div>
               <p className="font-medium text-sm">{partyInfo.animeTitle}</p>
               <p className="text-xs text-muted-foreground">
@@ -379,16 +606,16 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-3">
             {messages.map(msg => (
-              <div key={msg.id} className={`flex gap-2 ${msg.userId === 'system' ? 'justify-center' : ''}`}>
-                {msg.userId !== 'system' && (
+              <div key={msg.id} className={`flex gap-2 ${msg.userId === 'system' || msg.username === 'System' ? 'justify-center' : ''}`}>
+                {msg.userId !== 'system' && msg.username !== 'System' && (
                   <Avatar className="h-7 w-7">
                     <AvatarFallback className="text-xs bg-primary/20">
                       {msg.username.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 )}
-                <div className={`${msg.userId === 'system' ? 'text-center' : ''}`}>
-                  {msg.userId === 'system' ? (
+                <div className={`${msg.userId === 'system' || msg.username === 'System' ? 'text-center' : ''}`}>
+                  {msg.userId === 'system' || msg.username === 'System' ? (
                     <p className="text-xs text-muted-foreground bg-muted rounded-full px-3 py-1">
                       {msg.message}
                     </p>
@@ -436,10 +663,11 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
 // Join Party Dialog Component for use in Header/Menu
 export function JoinPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [joinCode, setJoinCode] = useState('');
   const [open, setOpen] = useState(false);
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
     if (!user) {
       toast.error('Please sign in to join a watch party');
       return;
@@ -450,12 +678,29 @@ export function JoinPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
       return;
     }
 
-    // In a real implementation, this would redirect to the watch page with the party
-    toast.success(`Joining party ${joinCode.toUpperCase()}...`);
-    setOpen(false);
-    
-    // Navigate to a demo page - in real implementation would fetch party info
-    window.location.href = `/browse?party=${joinCode.toUpperCase()}`;
+    try {
+      // Find the party
+      const { data: party, error } = await supabase
+        .from('watch_parties')
+        .select('*')
+        .eq('code', joinCode.toUpperCase())
+        .eq('is_active', true)
+        .single();
+
+      if (error || !party) {
+        toast.error('Party not found or has ended');
+        return;
+      }
+
+      toast.success(`Joining party for ${party.anime_title}...`);
+      setOpen(false);
+      
+      // Navigate to the episode with party code
+      navigate(`/watch/${party.episode_id}?party=${party.code}`);
+    } catch (error) {
+      console.error('Error finding party:', error);
+      toast.error('Failed to find watch party');
+    }
   };
 
   return (
@@ -475,7 +720,7 @@ export function JoinPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
             Join Watch Party
           </DialogTitle>
           <DialogDescription>
-            Enter the party code shared by your friend to watch anime together
+            Enter the party code shared by your friend to watch anime together in sync
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -490,6 +735,125 @@ export function JoinPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
             <Link2 className="h-4 w-4" />
             Join Party
           </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// View Party Component - Shows joined parties
+export function ViewPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const [parties, setParties] = useState<JoinedParty[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (open && user) {
+      loadJoinedParties();
+    }
+  }, [open, user]);
+
+  const loadJoinedParties = async () => {
+    if (!user) return;
+    setLoading(true);
+
+    try {
+      // Get parties user is a member of
+      const { data: memberships } = await supabase
+        .from('watch_party_members')
+        .select('party_id')
+        .eq('user_id', user.id);
+
+      if (memberships && memberships.length > 0) {
+        const partyIds = memberships.map(m => m.party_id);
+        const { data: partyData } = await supabase
+          .from('watch_parties')
+          .select('*')
+          .in('id', partyIds)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+
+        setParties((partyData || []) as JoinedParty[]);
+      } else {
+        setParties([]);
+      }
+    } catch (error) {
+      console.error('Error loading parties:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleJoinParty = (party: JoinedParty) => {
+    setOpen(false);
+    navigate(`/watch/${party.episode_id}?party=${party.code}`);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {trigger || (
+          <Button variant="ghost" size="sm" className="gap-2 w-full justify-start">
+            <Eye className="h-4 w-4" />
+            View Parties
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Eye className="h-5 w-5 text-primary" />
+            Your Watch Parties
+          </DialogTitle>
+          <DialogDescription>
+            Active watch parties you've joined
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          ) : parties.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>No active watch parties</p>
+              <p className="text-sm mt-1">Join or create a party to watch together!</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {parties.map((party) => (
+                <div
+                  key={party.id}
+                  className="bg-muted/50 rounded-lg p-3 hover:bg-muted transition-colors cursor-pointer"
+                  onClick={() => handleJoinParty(party)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm bg-primary/20 text-primary px-2 py-0.5 rounded">
+                          {party.code}
+                        </span>
+                        <span className="text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full">
+                          LIVE
+                        </span>
+                      </div>
+                      <p className="font-medium text-sm mt-2">{party.anime_title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Season {party.season_number} • Episode {party.episode_number}
+                      </p>
+                    </div>
+                    <Button size="sm" variant="outline" className="gap-1">
+                      <Play className="h-3 w-3" />
+                      Join
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -446,6 +446,146 @@ export type Database = {
           },
         ]
       }
+      watch_parties: {
+        Row: {
+          anime_id: string
+          anime_title: string
+          code: string
+          created_at: string
+          episode_id: string
+          episode_number: number
+          host_id: string
+          id: string
+          is_active: boolean
+          is_playing: boolean
+          playback_time: number
+          season_number: number
+          updated_at: string
+        }
+        Insert: {
+          anime_id: string
+          anime_title: string
+          code: string
+          created_at?: string
+          episode_id: string
+          episode_number: number
+          host_id: string
+          id?: string
+          is_active?: boolean
+          is_playing?: boolean
+          playback_time?: number
+          season_number?: number
+          updated_at?: string
+        }
+        Update: {
+          anime_id?: string
+          anime_title?: string
+          code?: string
+          created_at?: string
+          episode_id?: string
+          episode_number?: number
+          host_id?: string
+          id?: string
+          is_active?: boolean
+          is_playing?: boolean
+          playback_time?: number
+          season_number?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watch_parties_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "anime"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "watch_parties_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "anime_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "watch_parties_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      watch_party_members: {
+        Row: {
+          id: string
+          joined_at: string
+          party_id: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          party_id: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          party_id?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watch_party_members_party_id_fkey"
+            columns: ["party_id"]
+            isOneToOne: false
+            referencedRelation: "watch_parties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      watch_party_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_host: boolean
+          message: string
+          party_id: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_host?: boolean
+          message: string
+          party_id: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_host?: boolean
+          message?: string
+          party_id?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watch_party_messages_party_id_fkey"
+            columns: ["party_id"]
+            isOneToOne: false
+            referencedRelation: "watch_parties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       anime_public: {

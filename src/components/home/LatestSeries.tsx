@@ -89,14 +89,18 @@ export function LatestSeries() {
         })
       );
 
-      // Sort by created_at (newest first) to show recently uploaded anime immediately
-      // This ensures newly uploaded anime appears even if it has 0 episodes
-      seriesWithData.sort((a, b) => {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      // Filter to only show anime with episodes > 0
+      const seriesWithEpisodes = seriesWithData.filter(anime => anime.episode_count > 0);
+
+      // Sort by latest episode date or created_at (newest first)
+      seriesWithEpisodes.sort((a, b) => {
+        const dateA = a.latest_episode_date || a.created_at;
+        const dateB = b.latest_episode_date || b.created_at;
+        return new Date(dateB).getTime() - new Date(dateA).getTime();
       });
 
-      // Take first 4 (includes anime with 0 episodes)
-      setSeries(seriesWithData.slice(0, 4));
+      // Take first 4
+      setSeries(seriesWithEpisodes.slice(0, 4));
     } catch (error) {
       console.error('Error fetching latest series:', error);
     } finally {
