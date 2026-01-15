@@ -417,7 +417,7 @@ export default function Browse() {
               
               {/* Search Dropdown - Shows suggestions OR history */}
               {showSearchDropdown && showDropdownContent && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-xl overflow-hidden z-50">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-xl overflow-hidden z-[9999]" style={{ zIndex: 9999 }}>
                   {/* Search Suggestions with Thumbnails */}
                   {showSuggestions && (
                     <div className="max-h-80 overflow-y-auto">
@@ -647,6 +647,14 @@ export default function Browse() {
                   {isNew(anime.created_at) && (
                     <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-md animate-pulse z-10">
                       NEW
+                    </div>
+                  )}
+
+                  {/* Episode count badge - Bottom left */}
+                  {anime.episode_count !== undefined && anime.episode_count > 0 && (
+                    <div className="absolute bottom-2 left-2 px-2 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-md flex items-center gap-1 z-10">
+                      <Tv className="h-3 w-3" />
+                      {anime.episode_count} EP{anime.episode_count !== 1 ? 'S' : ''}
                     </div>
                   )}
 

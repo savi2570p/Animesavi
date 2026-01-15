@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Play, Tv, TrendingUp, Users, Zap, Star, Clock, Award, Sparkles } from 'lucide-react';
+import { Play, Tv, TrendingUp, Users, Zap, Star, Clock, Award, Sparkles, Download } from 'lucide-react';
 import { FeaturedAnime } from '@/components/home/FeaturedAnime';
 import { ContinueWatching } from '@/components/home/ContinueWatching';
 import { RecommendedAnime } from '@/components/home/RecommendedAnime';
@@ -33,6 +33,12 @@ export default function Index() {
       title: 'Community',
       description: 'Join discussions, share your thoughts, and connect with fellow anime fans.',
       gradient: 'from-purple-500 to-pink-500',
+    },
+    {
+      icon: Download,
+      title: 'Download at Highest Quality',
+      description: 'Download your favorite episodes in the highest quality available for offline viewing.',
+      gradient: 'from-green-500 to-emerald-500',
     },
   ];
 
@@ -120,7 +126,7 @@ export default function Index() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {features.map((feature, index) => (
               <div 
                 key={feature.title}

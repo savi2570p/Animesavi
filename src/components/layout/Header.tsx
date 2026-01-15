@@ -32,6 +32,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
 import { JoinPartyDialog, ViewPartyDialog } from '@/components/WatchParty';
+import { NotificationBell } from '@/components/NotificationBell';
 
 const genres = [
   'Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 
@@ -156,6 +157,9 @@ export function Header() {
 
         {/* User Menu */}
         <div className="flex items-center gap-2">
+          {/* Notification Bell */}
+          {user && <NotificationBell />}
+          
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
