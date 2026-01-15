@@ -1816,14 +1816,14 @@ export function VideoPlayer({
 
           {/* Bottom controls */}
           <div 
-            className="bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 pb-4 px-4"
+            className="bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 pb-4 md:pb-6 px-3 md:px-6"
             style={{ pointerEvents: 'auto', zIndex: 2147483647 }}
           >
             {/* Progress bar with buffer indicator */}
-            <div className="mb-4 relative">
-              <div className="flex items-center gap-3">
-                <span className="text-white/90 text-sm font-mono min-w-[50px]">{formatTime(currentTime)}</span>
-                <div className="flex-1 relative h-2">
+            <div className="mb-3 md:mb-4 relative">
+              <div className="flex items-center gap-2 md:gap-3">
+                <span className="text-white/90 text-xs md:text-sm font-mono min-w-[40px] md:min-w-[50px]">{formatTime(currentTime)}</span>
+                <div className="flex-1 relative h-1.5 md:h-2">
                   {/* Buffer progress (background) */}
                   <div className="absolute inset-0 bg-white/20 rounded-full" />
                   <div 
@@ -1838,11 +1838,12 @@ export function VideoPlayer({
                     value={progress}
                     onChange={handleSeek}
                     className="absolute inset-0 w-full h-full bg-transparent rounded-full appearance-none cursor-pointer 
-                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 
+                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
+                      [&::-webkit-slider-thumb]:md:w-5 [&::-webkit-slider-thumb]:md:h-5
                       [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg
                       [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125
-                      [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:bg-primary 
-                      [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0
+                      [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:md:w-5 [&::-moz-range-thumb]:md:h-5
+                      [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0
                       [&::-webkit-slider-runnable-track]:bg-transparent
                       [&::-moz-range-track]:bg-transparent"
                     style={{
@@ -1852,51 +1853,70 @@ export function VideoPlayer({
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
-                <span className="text-white/90 text-sm font-mono min-w-[50px]">{formatTime(duration)}</span>
+                <span className="text-white/90 text-xs md:text-sm font-mono min-w-[40px] md:min-w-[50px]">{formatTime(duration)}</span>
               </div>
             </div>
 
-            {/* Control buttons - Fullscreen version */}
+            {/* Control buttons - Fullscreen version - Responsive */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 md:gap-2">
                 <button 
-                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); skipBackward(); }} 
                   title="Skip back 10s"
                 >
-                  <SkipBack className="w-5 h-5" />
+                  <SkipBack className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
                 <button 
-                  className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                 >
-                  {isPlaying ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 fill-current ml-0.5" />}
+                  {isPlaying ? <Pause className="w-5 h-5 md:w-7 md:h-7" /> : <Play className="w-5 h-5 md:w-7 md:h-7 fill-current ml-0.5" />}
                 </button>
                 <button 
-                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); skipForward(); }} 
                   title="Skip forward 10s"
                 >
-                  <SkipForward className="w-5 h-5" />
+                  <SkipForward className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
                 <button 
-                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); toggleMute(); }}
                 >
-                  {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                  {isMuted ? <VolumeX className="w-4 h-4 md:w-5 md:h-5" /> : <Volume2 className="w-4 h-4 md:w-5 md:h-5" />}
                 </button>
+                {/* Next Episode Button - Only for PLAY and SHORT servers */}
+                {hasNextEpisode && onNextEpisode && (
+                  <button 
+                    className="hidden md:flex w-auto px-3 h-8 md:h-10 rounded-full bg-primary/80 hover:bg-primary items-center justify-center text-white transition-colors gap-1" 
+                    onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
+                    title="Next Episode"
+                  >
+                    <span className="text-xs font-medium">Next</span>
+                    <SkipForward className="w-4 h-4" />
+                  </button>
+                )}
                 {currentBitrate > 0 && (
-                  <div className="hidden md:flex items-center gap-1.5 ml-3 px-2 py-1 rounded bg-white/10 text-white/80">
+                  <div className="hidden lg:flex items-center gap-1.5 ml-3 px-2 py-1 rounded bg-white/10 text-white/80">
                     <Gauge className="w-3.5 h-3.5" />
                     <span className="text-xs font-mono">{(currentBitrate / 1000000).toFixed(1)} Mbps</span>
                   </div>
                 )}
-                <span className="text-white/70 text-sm hidden md:block ml-4 truncate max-w-[200px]">
-                  Episode {episodeNumber}: {title}
-                </span>
               </div>
 
               <div className="flex items-center gap-1">
+                {/* Next Episode Button Mobile */}
+                {hasNextEpisode && onNextEpisode && (
+                  <button 
+                    className="md:hidden w-8 h-8 rounded-full bg-primary/80 hover:bg-primary flex items-center justify-center text-white transition-colors" 
+                    onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
+                    title="Next Episode"
+                  >
+                    <SkipForward className="w-4 h-4" />
+                  </button>
+                )}
+                
                 {/* Settings Menu */}
                 <DropdownMenu 
                   modal={false} 
@@ -1908,17 +1928,17 @@ export function VideoPlayer({
                 >
                   <DropdownMenuTrigger asChild>
                     <button 
-                      className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
                       onClick={(e) => e.stopPropagation()}
                       title="Settings"
                     >
-                      <Settings className="w-5 h-5" />
+                      <Settings className="w-4 h-4 md:w-5 md:h-5" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
                     align="end" 
                     side="top"
-                    className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[220px] max-h-[350px] overflow-y-auto"
+                    className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] md:min-w-[220px] max-h-[350px] overflow-y-auto"
                     sideOffset={12}
                     style={{ zIndex: 2147483647 }}
                     onCloseAutoFocus={(e) => e.preventDefault()}
@@ -1929,26 +1949,26 @@ export function VideoPlayer({
 
                 {features.includes('download') && (
                   <button 
-                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                    className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                     onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
                     title="Download"
                   >
-                    <Download className="w-5 h-5" />
+                    <Download className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
                 )}
                 <button 
-                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  className="hidden md:flex w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                   title="Picture-in-Picture"
                 >
-                  <PictureInPicture2 className="w-5 h-5" />
+                  <PictureInPicture2 className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
                 <button 
-                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
                   title="Exit Fullscreen"
                 >
-                  <Minimize className="w-5 h-5" />
+                  <Minimize className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
               </div>
             </div>
@@ -2025,61 +2045,77 @@ export function VideoPlayer({
             </div>
           </div>
 
-          {/* Control buttons - Simplified */}
+          {/* Control buttons - Responsive for mobile */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 md:gap-2">
               {/* Skip back */}
               <button 
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); skipBackward(); }} 
                 title="Skip back 10s"
               >
-                <SkipBack className="w-5 h-5" />
+                <SkipBack className="w-4 h-4 md:w-5 md:h-5" />
               </button>
 
               {/* Play/Pause */}
               <button 
-                className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); togglePlay(); }}
               >
-                {isPlaying ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 fill-current ml-0.5" />}
+                {isPlaying ? <Pause className="w-5 h-5 md:w-7 md:h-7" /> : <Play className="w-5 h-5 md:w-7 md:h-7 fill-current ml-0.5" />}
               </button>
 
               {/* Skip forward */}
               <button 
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); skipForward(); }} 
                 title="Skip forward 10s"
               >
-                <SkipForward className="w-5 h-5" />
+                <SkipForward className="w-4 h-4 md:w-5 md:h-5" />
               </button>
 
               {/* Volume */}
               <button 
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); toggleMute(); }}
               >
-                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                {isMuted ? <VolumeX className="w-4 h-4 md:w-5 md:h-5" /> : <Volume2 className="w-4 h-4 md:w-5 md:h-5" />}
               </button>
+
+              {/* Next Episode Button Desktop */}
+              {hasNextEpisode && onNextEpisode && (
+                <button 
+                  className="hidden md:flex w-auto px-3 h-8 md:h-10 rounded-full bg-primary/80 hover:bg-primary items-center justify-center text-white transition-colors gap-1" 
+                  onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
+                  title="Next Episode"
+                >
+                  <span className="text-xs font-medium">Next</span>
+                  <SkipForward className="w-4 h-4" />
+                </button>
+              )}
 
               {/* Bitrate indicator */}
               {currentBitrate > 0 && (
-                <div className="hidden md:flex items-center gap-1.5 ml-3 px-2 py-1 rounded bg-white/10 text-white/80">
+                <div className="hidden lg:flex items-center gap-1.5 ml-3 px-2 py-1 rounded bg-white/10 text-white/80">
                   <Gauge className="w-3.5 h-3.5" />
-                  <span className="text-xs font-mono">
-                    {(currentBitrate / 1000000).toFixed(1)} Mbps
-                  </span>
+                  <span className="text-xs font-mono">{(currentBitrate / 1000000).toFixed(1)} Mbps</span>
                 </div>
               )}
-
-              {/* Episode title - desktop only */}
-              <span className="text-white/70 text-sm hidden md:block ml-4 truncate max-w-[200px]">
-                Episode {episodeNumber}: {title}
-              </span>
             </div>
 
             <div className="flex items-center gap-1">
-              {/* Settings Menu - Contains Speed, Quality, Audio, Subtitles */}
+              {/* Next Episode Button Mobile */}
+              {hasNextEpisode && onNextEpisode && (
+                <button 
+                  className="md:hidden w-8 h-8 rounded-full bg-primary/80 hover:bg-primary flex items-center justify-center text-white transition-colors" 
+                  onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
+                  title="Next Episode"
+                >
+                  <SkipForward className="w-4 h-4" />
+                </button>
+              )}
+
+              {/* Settings Menu */}
               <DropdownMenu 
                 modal={false} 
                 open={settingsOpen}
@@ -2090,18 +2126,18 @@ export function VideoPlayer({
               >
                 <DropdownMenuTrigger asChild>
                   <button 
-                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
+                    className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
                     onClick={(e) => e.stopPropagation()}
                     title="Settings"
                   >
-                    <Settings className="w-5 h-5" />
+                    <Settings className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
                 </DropdownMenuTrigger>
                 {createPortal(
                   <DropdownMenuContent 
                     align="end" 
                     side="top"
-                    className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[220px] max-h-[350px] overflow-y-auto"
+                    className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] md:min-w-[220px] max-h-[350px] overflow-y-auto"
                     sideOffset={12}
                     style={{ zIndex: 2147483647 }}
                     onCloseAutoFocus={(e) => e.preventDefault()}
@@ -2112,33 +2148,33 @@ export function VideoPlayer({
                 )}
               </DropdownMenu>
 
-              {/* Download */}
+              {/* Download - Only for Zex server */}
               {features.includes('download') && (
                 <button 
-                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
                   title="Download"
                 >
-                  <Download className="w-5 h-5" />
+                  <Download className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
               )}
 
-              {/* PiP */}
+              {/* PiP - Hidden on mobile */}
               <button 
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                className="hidden md:flex w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                 title="Picture-in-Picture"
               >
-                <PictureInPicture2 className="w-5 h-5" />
+                <PictureInPicture2 className="w-4 h-4 md:w-5 md:h-5" />
               </button>
 
-              {/* Fullscreen - ALWAYS VISIBLE AND CLICKABLE */}
+              {/* Fullscreen */}
               <button 
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
                 title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
               >
-                {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+                {isFullscreen ? <Minimize className="w-4 h-4 md:w-5 md:h-5" /> : <Maximize className="w-4 h-4 md:w-5 md:h-5" />}
               </button>
             </div>
           </div>
