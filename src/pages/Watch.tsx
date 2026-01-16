@@ -71,6 +71,7 @@ interface Comment {
     avatar_url: string | null;
   };
   userEmail?: string;
+  isOwner?: boolean;
   replies?: Comment[];
 }
 
@@ -375,20 +376,46 @@ export default function Watch() {
         .select('id, username, avatar_url')
         .in('id', userIds);
 
-      // Fetch user emails to check for owners
-      const { data: { users } } = await supabase.auth.admin.listUsers?.() || { data: { users: [] } };
-      
-      // For non-admin access, we'll check email differently
       const profileMap = new Map(profiles?.map((p) => [p.id, p]));
 
-      const commentsWithProfiles = data.map((c) => ({
-        ...c,
-        profile: profileMap.get(c.user_id) || { username: null, avatar_url: null },
-      }));
+      const commentsWithProfiles = data.map((c) => {
+        // Check if the commenter's user_id matches any owner email in profiles
+        // We'll check by comparing user_id with the owner list
+        const isOwner = OWNER_EMAILS.some(ownerEmail => {
+          // We need to check if this user_id belongs to an owner
+          // Since we can't directly access auth.users, we'll check based on the current user if they're the commenter
+          return false; // This will be set properly below
+        });
+        
+        return {
+          ...c,
+          profile: profileMap.get(c.user_id) || { username: null, avatar_url: null },
+          isOwner: OWNER_EMAILS.includes(c.user_id) || false, // Will be updated with proper check
+        };
+      });
+
+      // For a proper owner check, we need to store owner user_ids
+      // For now, check if the uploader_id matches the commenter's user_id
+      const updatedComments = await Promise.all(
+        commentsWithProfiles.map(async (comment) => {
+          // Check if user is an uploader or admin
+          const { data: roles } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', comment.user_id);
+          
+          const isUploaderOrAdmin = roles?.some(r => r.role === 'uploader' || r.role === 'admin') || false;
+          
+          return {
+            ...comment,
+            isOwner: isUploaderOrAdmin,
+          };
+        })
+      );
 
       // Organize comments into threads (parent comments with replies)
-      const parentComments = commentsWithProfiles.filter(c => !c.parent_id);
-      const replies = commentsWithProfiles.filter(c => c.parent_id);
+      const parentComments = updatedComments.filter(c => !c.parent_id);
+      const replies = updatedComments.filter(c => c.parent_id);
       
       const commentsWithReplies = parentComments.map(parent => ({
         ...parent,
@@ -462,8 +489,8 @@ export default function Watch() {
   };
 
   const getDisplayName = (comment: Comment): string => {
-    // Check if current user's email is in owner list
-    if (user?.email && isOwnerEmail(user.email) && comment.user_id === user.id) {
+    // Check if the commenter is an owner (uploader/admin)
+    if (comment.isOwner) {
       return 'Owner';
     }
     return comment.profile?.username || 'Anonymous';
@@ -802,7 +829,7 @@ export default function Watch() {
                         <span className="font-medium">
                           {getDisplayName(comment)}
                         </span>
-                        {user?.email && isOwnerEmail(user.email) && comment.user_id === user.id && (
+                        {comment.isOwner && (
                           <span className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full">Owner</span>
                         )}
                         <span className="text-xs text-muted-foreground">
@@ -862,7 +889,7 @@ export default function Watch() {
                               <span className="font-medium text-sm">
                                 {getDisplayName(reply)}
                               </span>
-                              {user?.email && isOwnerEmail(user.email) && reply.user_id === user.id && (
+                              {reply.isOwner && (
                                 <span className="px-1.5 py-0.5 text-[10px] bg-primary/20 text-primary rounded-full">Owner</span>
                               )}
                               <span className="text-xs text-muted-foreground">

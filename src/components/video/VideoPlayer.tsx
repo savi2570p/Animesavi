@@ -22,7 +22,10 @@ import {
   ChevronLeft,
   Gauge,
   FastForward,
+  Info,
+  Keyboard,
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -234,6 +237,9 @@ export function VideoPlayer({
   // Settings menu state
   const [settingsMenu, setSettingsMenu] = useState<SettingsMenu>('main');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  
+  // Keyboard shortcuts info state
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   
   // Skip intro/outro state - Use props if available, otherwise defaults
   const [showSkipIntro, setShowSkipIntro] = useState(false);
@@ -1906,6 +1912,55 @@ export function VideoPlayer({
               </div>
 
               <div className="flex items-center gap-1">
+                {/* Keyboard Shortcuts Info Button - Fullscreen */}
+                <TooltipProvider>
+                  <Tooltip open={showKeyboardShortcuts} onOpenChange={setShowKeyboardShortcuts}>
+                    <TooltipTrigger asChild>
+                      <button 
+                        className="hidden md:flex w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
+                        onClick={(e) => { e.stopPropagation(); setShowKeyboardShortcuts(!showKeyboardShortcuts); }}
+                        title="Keyboard Shortcuts"
+                      >
+                        <Info className="w-4 h-4 md:w-5 md:h-5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="bg-background/95 backdrop-blur-xl border-border/50 p-4 max-w-[280px]" style={{ zIndex: 2147483647 }}>
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-sm flex items-center gap-2">
+                          <Keyboard className="w-4 h-4" />
+                          Keyboard Shortcuts
+                        </h4>
+                        <div className="grid gap-1.5 text-xs">
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Play/Pause</span>
+                            <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">Space</kbd>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Seek Forward 10s</span>
+                            <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">→</kbd>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Seek Backward 10s</span>
+                            <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">←</kbd>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Fullscreen</span>
+                            <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">F</kbd>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Mute</span>
+                            <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">M</kbd>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Picture-in-Picture</span>
+                            <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">P</kbd>
+                          </div>
+                        </div>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
                 {/* Next Episode Button Mobile */}
                 {hasNextEpisode && onNextEpisode && (
                   <button 
@@ -2103,6 +2158,55 @@ export function VideoPlayer({
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Keyboard Shortcuts Info Button */}
+              <TooltipProvider>
+                <Tooltip open={showKeyboardShortcuts} onOpenChange={setShowKeyboardShortcuts}>
+                  <TooltipTrigger asChild>
+                    <button 
+                      className="hidden md:flex w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
+                      onClick={(e) => { e.stopPropagation(); setShowKeyboardShortcuts(!showKeyboardShortcuts); }}
+                      title="Keyboard Shortcuts"
+                    >
+                      <Info className="w-4 h-4 md:w-5 md:h-5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="bg-background/95 backdrop-blur-xl border-border/50 p-4 max-w-[280px]" style={{ zIndex: 2147483647 }}>
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-sm flex items-center gap-2">
+                        <Keyboard className="w-4 h-4" />
+                        Keyboard Shortcuts
+                      </h4>
+                      <div className="grid gap-1.5 text-xs">
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Play/Pause</span>
+                          <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">Space</kbd>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Seek Forward 10s</span>
+                          <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">→</kbd>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Seek Backward 10s</span>
+                          <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">←</kbd>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Fullscreen</span>
+                          <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">F</kbd>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Mute</span>
+                          <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">M</kbd>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Picture-in-Picture</span>
+                          <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">P</kbd>
+                        </div>
+                      </div>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
               {/* Next Episode Button Mobile */}
               {hasNextEpisode && onNextEpisode && (
                 <button 
