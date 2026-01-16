@@ -1778,10 +1778,10 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* CUSTOM CONTROLS - FIXED for fullscreen - Use portal when in fullscreen */}
-      {isFullscreen ? createPortal(
+      {/* CUSTOM CONTROLS - FIXED for fullscreen - Render inside container for native fullscreen */}
+      {isFullscreen ? (
         <div 
-          className={`fixed inset-0 flex flex-col justify-between transition-opacity duration-300 ${
+          className={`absolute inset-0 flex flex-col justify-between transition-opacity duration-300 ${
             showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
           style={{ 
@@ -1973,8 +1973,7 @@ export function VideoPlayer({
               </div>
             </div>
           </div>
-        </div>,
-        document.body
+        </div>
       ) : (
         <div 
           className={`absolute inset-0 flex flex-col justify-between transition-opacity duration-300 ${

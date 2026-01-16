@@ -19,6 +19,8 @@ import {
   Sparkles,
   CheckCircle2,
   ChevronRight,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 interface Anime {
@@ -218,6 +220,61 @@ export default function AnimeDetail() {
   const isEpisodeCompleted = (episodeId: string): boolean => {
     const progress = watchProgress.get(episodeId);
     return progress?.completed || false;
+  };
+
+  const markAsWatched = async (episodeId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      toast.error('Please sign in to track your progress');
+      return;
+    }
+
+    const isCompleted = isEpisodeCompleted(episodeId);
+    
+    // Check if entry exists
+    const { data: existing } = await supabase
+      .from('watch_history')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('episode_id', episodeId)
+      .maybeSingle();
+
+    if (existing) {
+      // Update existing
+      await supabase
+        .from('watch_history')
+        .update({ 
+          completed: !isCompleted,
+          progress: !isCompleted ? 100 : 0,
+        })
+        .eq('id', existing.id);
+    } else {
+      // Insert new
+      await supabase
+        .from('watch_history')
+        .insert({
+          user_id: user.id,
+          episode_id: episodeId,
+          anime_id: id!,
+          completed: true,
+          progress: 100,
+        });
+    }
+
+    // Update local state
+    setWatchProgress(prev => {
+      const newMap = new Map(prev);
+      newMap.set(episodeId, {
+        episode_id: episodeId,
+        progress: !isCompleted ? 100 : 0,
+        completed: !isCompleted,
+      });
+      return newMap;
+    });
+
+    toast.success(!isCompleted ? 'Marked as watched' : 'Marked as unwatched');
   };
 
   const getFirstUnwatchedEpisode = (): Episode | null => {
@@ -494,6 +551,19 @@ export default function AnimeDetail() {
                                 <CheckCircle2 className="w-4 h-4 text-white" />
                               </div>
                             )}
+                            
+                            {/* Mark as Watched button */}
+                            <button
+                              onClick={(e) => markAsWatched(episode.id, e)}
+                              className="absolute top-2 left-2 p-1.5 bg-black/70 hover:bg-black/90 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 z-10"
+                              title={completed ? 'Mark as unwatched' : 'Mark as watched'}
+                            >
+                              {completed ? (
+                                <EyeOff className="w-4 h-4 text-white" />
+                              ) : (
+                                <Eye className="w-4 h-4 text-white" />
+                              )}
+                            </button>
                             
                             {/* Progress bar */}
                             {progress > 0 && !completed && (

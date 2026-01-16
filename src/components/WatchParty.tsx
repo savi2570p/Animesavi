@@ -64,14 +64,15 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const syncIntervalRef = useRef<NodeJS.Timeout>();
 
-  // Generate a party code
+  // Generate a unique party code with timestamp
   const generatePartyCode = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let code = '';
-    for (let i = 0; i < 6; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    const timestamp = Date.now().toString(36).slice(-2).toUpperCase();
+    let randomPart = '';
+    for (let i = 0; i < 4; i++) {
+      randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    return code;
+    return timestamp + randomPart;
   };
 
   // Create a new watch party with database
@@ -282,7 +283,10 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
 
           // Check if party ended
           if (!party.is_active) {
-            toast.info('The host has ended the watch party');
+            toast.error('Party is ended', {
+              description: 'The host has ended this watch party',
+              duration: 5000,
+            });
             leaveParty();
           }
         }
@@ -424,6 +428,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
           .from('watch_parties')
           .update({ is_active: false })
           .eq('id', partyId);
+        toast.success('Watch party ended');
       } else {
         // Remove from members
         await supabase
@@ -431,6 +436,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
           .delete()
           .eq('party_id', partyId)
           .eq('user_id', user.id);
+        toast.success('Left the watch party');
       }
     }
 
@@ -442,7 +448,26 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     setMessages([]);
     setPartyInfo(null);
     setIsOpen(false);
-    toast.success('Left the watch party');
+  };
+
+  // End party (host only)
+  const endParty = async () => {
+    if (!partyId || !isHost) return;
+    
+    await supabase
+      .from('watch_parties')
+      .update({ is_active: false })
+      .eq('id', partyId);
+    
+    if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
+    setPartyCode(null);
+    setPartyId(null);
+    setIsHost(false);
+    setParticipants([]);
+    setMessages([]);
+    setPartyInfo(null);
+    setIsOpen(false);
+    toast.success('Watch party ended');
   };
 
   // Scroll to bottom on new messages
@@ -554,9 +579,17 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
               Watch Party
               <span className="text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full">LIVE</span>
             </SheetTitle>
-            <Button variant="ghost" size="icon" onClick={leaveParty}>
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              {isHost && (
+                <Button variant="destructive" size="sm" onClick={endParty} className="gap-1">
+                  <X className="h-3 w-3" />
+                  End Party
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" onClick={leaveParty}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
           
           {/* Party code */}
