@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Users, Send, Copy, X, Crown, UserPlus, Link2, Tv, Play, Eye, MessageSquare } from 'lucide-react';
+import { Users, Send, Copy, X, Crown, UserPlus, Link2, Tv, Play, Eye, MessageSquare, SmilePlus } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useNavigate } from 'react-router-dom';
 
 interface ChatMessage {
@@ -18,7 +19,10 @@ interface ChatMessage {
   message: string;
   timestamp: Date;
   isHost?: boolean;
+  reactions?: { [emoji: string]: string[] }; // emoji -> array of user IDs
 }
+
+const EMOJI_OPTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥', '👏', '🎉'];
 
 interface PartyInfo {
   animeTitle: string;
@@ -411,6 +415,33 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     setNewMessage('');
   }, [newMessage, user, partyId, isHost]);
 
+  // Add emoji reaction to a message
+  const addReaction = useCallback((messageId: string, emoji: string) => {
+    if (!user) return;
+    
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === messageId) {
+        const reactions = msg.reactions || {};
+        const userReactions = reactions[emoji] || [];
+        
+        // Toggle reaction
+        if (userReactions.includes(user.id)) {
+          // Remove reaction
+          const newUserReactions = userReactions.filter(id => id !== user.id);
+          if (newUserReactions.length === 0) {
+            const { [emoji]: _, ...rest } = reactions;
+            return { ...msg, reactions: Object.keys(rest).length > 0 ? rest : undefined };
+          }
+          return { ...msg, reactions: { ...reactions, [emoji]: newUserReactions } };
+        } else {
+          // Add reaction
+          return { ...msg, reactions: { ...reactions, [emoji]: [...userReactions, user.id] } };
+        }
+      }
+      return msg;
+    }));
+  }, [user]);
+
   // Copy party code
   const copyCode = () => {
     if (partyCode) {
@@ -639,7 +670,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-3">
             {messages.map(msg => (
-              <div key={msg.id} className={`flex gap-2 ${msg.userId === 'system' || msg.username === 'System' ? 'justify-center' : ''}`}>
+              <div key={msg.id} className={`flex gap-2 group ${msg.userId === 'system' || msg.username === 'System' ? 'justify-center' : ''}`}>
                 {msg.userId !== 'system' && msg.username !== 'System' && (
                   <Avatar className="h-7 w-7">
                     <AvatarFallback className="text-xs bg-primary/20">
@@ -661,9 +692,52 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
                           {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
-                      <p className="text-sm bg-muted rounded-lg px-3 py-1.5 mt-0.5 inline-block">
-                        {msg.message}
-                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-sm bg-muted rounded-lg px-3 py-1.5 inline-block">
+                          {msg.message}
+                        </p>
+                        
+                        {/* Emoji reaction button */}
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button className="opacity-0 group-hover:opacity-100 hover:bg-muted rounded p-1 transition-all">
+                              <SmilePlus className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-2" side="top" align="start">
+                            <div className="flex gap-1">
+                              {EMOJI_OPTIONS.map(emoji => (
+                                <button
+                                  key={emoji}
+                                  onClick={() => addReaction(msg.id, emoji)}
+                                  className="text-lg hover:bg-muted rounded p-1 transition-colors"
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      
+                      {/* Reaction display */}
+                      {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {Object.entries(msg.reactions).map(([emoji, users]) => (
+                            <button
+                              key={emoji}
+                              onClick={() => addReaction(msg.id, emoji)}
+                              className={`text-xs px-1.5 py-0.5 rounded-full border transition-colors ${
+                                users.includes(user?.id || '') 
+                                  ? 'bg-primary/20 border-primary/50' 
+                                  : 'bg-muted/50 border-border hover:bg-muted'
+                              }`}
+                            >
+                              {emoji} {users.length}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
