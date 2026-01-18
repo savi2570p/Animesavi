@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,14 +14,19 @@ import {
   Share2,
   Calendar,
   Clock,
-  
   Star,
   Sparkles,
   CheckCircle2,
   ChevronRight,
   Eye,
   EyeOff,
+  Download,
 } from 'lucide-react';
+
+// Helper to create slug from title
+const createSlug = (title: string): string => {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+};
 
 interface Anime {
   id: string;
@@ -73,6 +78,57 @@ export default function AnimeDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [recommendations, setRecommendations] = useState<Anime[]>([]);
   const [watchProgress, setWatchProgress] = useState<Map<string, WatchProgress>>(new Map());
+  
+  // Long press for mobile thumbnail download
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const [isLongPressing, setIsLongPressing] = useState(false);
+  
+  // Download thumbnail handler
+  const handleDownloadThumbnail = useCallback(async () => {
+    if (!anime?.cover_image) {
+      toast.error('No image available to download');
+      return;
+    }
+    
+    try {
+      const response = await fetch(anime.cover_image);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${anime.title.replace(/[^a-z0-9]/gi, '_')}_poster.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success('Downloading poster...');
+    } catch (error) {
+      toast.error('Failed to download image');
+    }
+  }, [anime]);
+  
+  // Mobile long press handlers
+  const handleTouchStart = useCallback(() => {
+    longPressTimer.current = setTimeout(() => {
+      setIsLongPressing(true);
+      handleDownloadThumbnail();
+    }, 600);
+  }, [handleDownloadThumbnail]);
+  
+  const handleTouchEnd = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    setTimeout(() => setIsLongPressing(false), 100);
+  }, []);
+  
+  const handleTouchMove = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     if (id) {
@@ -346,13 +402,21 @@ export default function AnimeDetail() {
       {/* Content */}
       <div className="container relative -mt-[45vh] md:-mt-[50vh] z-10 pb-12">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Poster */}
+          {/* Poster - Right-click to save on PC, long-press on mobile */}
           <div className="flex-shrink-0 animate-fade-in">
-            <div className="relative group">
+            <div 
+              className="relative group"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              onTouchMove={handleTouchMove}
+            >
               <img
                 src={anime.cover_image || '/placeholder.svg'}
                 alt={anime.title}
-                className="w-48 md:w-72 rounded-2xl shadow-2xl border border-border/30 transition-transform duration-500 group-hover:scale-[1.02]"
+                className="w-48 md:w-72 rounded-2xl shadow-2xl border border-border/30 transition-transform duration-500 group-hover:scale-[1.02] cursor-pointer"
+                onContextMenu={(e) => {
+                  // Allow default right-click behavior on desktop for native save
+                }}
               />
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               
