@@ -255,7 +255,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     };
   }, [isHost, partyId, videoRef]);
 
-  // Real-time sync: Non-host receives updates
+  // Real-time sync: Non-host receives updates - auto exit when party ends
   useEffect(() => {
     if (isHost || !partyId) return;
 
@@ -272,6 +272,25 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
         (payload) => {
           const party = payload.new as any;
           const video = videoRef.current;
+
+          // Check if party ended - auto exit everyone
+          if (!party.is_active) {
+            toast.error('Party is ended', {
+              description: 'The host has ended this watch party',
+              duration: 5000,
+            });
+            // Auto cleanup and exit
+            if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
+            setPartyCode(null);
+            setPartyId(null);
+            setIsHost(false);
+            setParticipants([]);
+            setMessages([]);
+            setPartyInfo(null);
+            setIsOpen(false);
+            return;
+          }
+
           if (!video) return;
 
           // Sync playback state
@@ -283,15 +302,6 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
             video.play().catch(() => {});
           } else if (!party.is_playing && !video.paused) {
             video.pause();
-          }
-
-          // Check if party ended
-          if (!party.is_active) {
-            toast.error('Party is ended', {
-              description: 'The host has ended this watch party',
-              duration: 5000,
-            });
-            leaveParty();
           }
         }
       )

@@ -270,7 +270,7 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="right" className="w-80 bg-background/95 backdrop-blur-xl border-border/50">
               <div className="flex flex-col gap-6 mt-6">
-                {/* Mobile Search */}
+                {/* Mobile Search - Not auto-focused */}
                 <form onSubmit={handleSearch}>
                   <div className="relative">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -280,6 +280,8 @@ export function Header() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-11 bg-secondary/50 rounded-xl"
+                      autoFocus={false}
+                      tabIndex={-1}
                     />
                   </div>
                 </form>

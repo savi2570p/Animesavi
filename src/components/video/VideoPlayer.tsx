@@ -1972,7 +1972,7 @@ export function VideoPlayer({
                   </button>
                 )}
                 
-                {/* Settings Menu */}
+                {/* Settings Menu - Fullscreen Compatible */}
                 <DropdownMenu 
                   modal={false} 
                   open={settingsOpen}
@@ -1984,8 +1984,10 @@ export function VideoPlayer({
                   <DropdownMenuTrigger asChild>
                     <button 
                       className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => { e.stopPropagation(); setSettingsOpen(!settingsOpen); }}
+                      onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); setSettingsOpen(!settingsOpen); }}
                       title="Settings"
+                      style={{ touchAction: 'manipulation' }}
                     >
                       <Settings className="w-4 h-4 md:w-5 md:h-5" />
                     </button>
@@ -1995,8 +1997,9 @@ export function VideoPlayer({
                     side="top"
                     className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] md:min-w-[220px] max-h-[350px] overflow-y-auto"
                     sideOffset={12}
-                    style={{ zIndex: 2147483647 }}
+                    style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                     onCloseAutoFocus={(e) => e.preventDefault()}
+                    forceMount={settingsOpen ? true : undefined}
                   >
                     {renderSettingsContent()}
                   </DropdownMenuContent>
@@ -2218,7 +2221,7 @@ export function VideoPlayer({
                 </button>
               )}
 
-              {/* Settings Menu */}
+              {/* Settings Menu - Non Fullscreen */}
               <DropdownMenu 
                 modal={false} 
                 open={settingsOpen}
@@ -2230,25 +2233,25 @@ export function VideoPlayer({
                 <DropdownMenuTrigger asChild>
                   <button 
                     className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => { e.stopPropagation(); setSettingsOpen(!settingsOpen); }}
+                    onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); setSettingsOpen(!settingsOpen); }}
                     title="Settings"
+                    style={{ touchAction: 'manipulation' }}
                   >
                     <Settings className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
                 </DropdownMenuTrigger>
-                {createPortal(
-                  <DropdownMenuContent 
-                    align="end" 
-                    side="top"
-                    className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] md:min-w-[220px] max-h-[350px] overflow-y-auto"
-                    sideOffset={12}
-                    style={{ zIndex: 2147483647 }}
-                    onCloseAutoFocus={(e) => e.preventDefault()}
-                  >
-                    {renderSettingsContent()}
-                  </DropdownMenuContent>,
-                  document.body
-                )}
+                <DropdownMenuContent 
+                  align="end" 
+                  side="top"
+                  className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] md:min-w-[220px] max-h-[350px] overflow-y-auto"
+                  sideOffset={12}
+                  style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                  forceMount={settingsOpen ? true : undefined}
+                >
+                  {renderSettingsContent()}
+                </DropdownMenuContent>
               </DropdownMenu>
 
               {/* Download - Only for Zex server */}

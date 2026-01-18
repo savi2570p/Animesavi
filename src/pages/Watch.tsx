@@ -102,6 +102,7 @@ export default function Watch() {
   const [serverLoading, setServerLoading] = useState(false);
   const [showTelegramPopup, setShowTelegramPopup] = useState(false);
   const [initialSeekDone, setInitialSeekDone] = useState(false);
+  const [showResumeNotification, setShowResumeNotification] = useState(false);
   const ensureHistoryInFlightRef = useRef(false);
 
   // Check if Telegram popup should be shown (once per day)
@@ -209,7 +210,7 @@ export default function Watch() {
   const updateWatchProgress = useCallback(async (currentTime: number, duration: number) => {
     if (!user || !episodeId || !anime) return;
 
-    // Handle initial seek from resume progress
+    // Handle initial seek from resume progress - "Remember Playback Position" feature
     if (!initialSeekDone && resumeProgress && duration > 0) {
       const progressPercent = parseInt(resumeProgress, 10);
       if (!isNaN(progressPercent) && progressPercent > 0 && progressPercent < 95) {
@@ -218,6 +219,14 @@ export default function Watch() {
         const videoElement = document.querySelector('video');
         if (videoElement && Math.abs(videoElement.currentTime - seekTime) > 5) {
           videoElement.currentTime = seekTime;
+          // Show resume notification
+          setShowResumeNotification(true);
+          toast.success(`Resuming from ${Math.round(progressPercent)}%`, {
+            description: 'Your playback position was remembered',
+            duration: 3000,
+          });
+          // Hide notification after 3 seconds
+          setTimeout(() => setShowResumeNotification(false), 3000);
         }
       }
       setInitialSeekDone(true);
@@ -302,14 +311,14 @@ export default function Watch() {
         setAllEpisodes(episodesData);
       }
 
-      // Record watch history immediately
+      // Record watch history immediately and restore progress if available ("Remember Playback Position")
       if (user && seasonData.anime) {
         const animeId = (seasonData.anime as Anime).id;
 
-        // Check if record exists
+        // Check if record exists - also fetch saved progress
         const { data: existingHistory, error: checkError } = await supabase
           .from('watch_history')
-          .select('id')
+          .select('id, progress')
           .eq('user_id', user.id)
           .eq('episode_id', episodeId)
           .maybeSingle();
@@ -319,7 +328,7 @@ export default function Watch() {
         }
 
         if (existingHistory) {
-          // Update existing record
+          // Update existing record timestamp
           const { error: updateError } = await supabase
             .from('watch_history')
             .update({
@@ -333,6 +342,24 @@ export default function Watch() {
             console.log('Watch history updated:', existingHistory.id);
           }
           setWatchHistoryId(existingHistory.id);
+          
+          // Auto-restore progress if user didn't come with ?t= param and has saved progress
+          if (!resumeProgress && existingHistory.progress && existingHistory.progress > 5 && existingHistory.progress < 95) {
+            // Delay until video is loaded
+            setTimeout(() => {
+              const videoElement = document.querySelector('video');
+              if (videoElement && videoElement.duration > 0) {
+                const seekTime = (existingHistory.progress / 100) * videoElement.duration;
+                if (Math.abs(videoElement.currentTime - seekTime) > 5) {
+                  videoElement.currentTime = seekTime;
+                  toast.success(`Resuming from ${Math.round(existingHistory.progress)}%`, {
+                    description: 'Your playback position was remembered',
+                    duration: 3000,
+                  });
+                }
+              }
+            }, 1500);
+          }
         } else {
           // Insert new record
           const { data: newHistory, error: insertError } = await supabase

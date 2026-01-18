@@ -580,7 +580,7 @@ export default function AnimeDetail() {
                           <div className="p-4">
                             <div className="flex items-center gap-2 mb-2">
                               <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
-                                EP {episode.episode_number}
+                                S{seasons.find(s => s.id === selectedSeason)?.season_number || 1} [EP {episode.episode_number}]
                               </span>
                               {progress > 0 && !completed && (
                                 <span className="text-xs text-muted-foreground">
