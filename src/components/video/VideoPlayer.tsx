@@ -81,6 +81,8 @@ interface VideoPlayerProps {
   introEndTime?: number | null;
   outroStartTime?: number | null;
   outroEndTime?: number | null;
+  savedPlaybackProgress?: number; // For resume overlay
+  onResumeChoice?: (resume: boolean) => void; // Callback when user makes resume choice
 }
 
 const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
@@ -196,6 +198,8 @@ export function VideoPlayer({
   introEndTime = null,
   outroStartTime = null,
   outroEndTime = null,
+  savedPlaybackProgress = 0,
+  onResumeChoice,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -252,6 +256,23 @@ export function VideoPlayer({
   // Next episode button state with auto-hide
   const [showNextEpisode, setShowNextEpisode] = useState(false);
   const nextEpisodeTimeoutRef = useRef<NodeJS.Timeout>();
+  
+  // Watch Next countdown state
+  const [showWatchNextOverlay, setShowWatchNextOverlay] = useState(false);
+  const [watchNextCountdown, setWatchNextCountdown] = useState(10);
+  const watchNextIntervalRef = useRef<NodeJS.Timeout>();
+  
+  // Resume overlay state
+  const [showResumeOverlay, setShowResumeOverlay] = useState(false);
+  const [savedProgress, setSavedProgress] = useState(savedPlaybackProgress);
+  
+  // Initialize resume overlay based on saved progress
+  useEffect(() => {
+    if (savedPlaybackProgress > 5 && savedPlaybackProgress < 95) {
+      setSavedProgress(savedPlaybackProgress);
+      setShowResumeOverlay(true);
+    }
+  }, [savedPlaybackProgress]);
   
   // Video processing state for SAVI.IN server
   const [isProcessing, setIsProcessing] = useState(false);
@@ -1011,8 +1032,64 @@ export function VideoPlayer({
           }, 2000);
         }
       }
+      
+      // Show Watch Next overlay when video ends (within 5 seconds of end)
+      if (dur > 0 && secondsLeft <= 5 && hasNextEpisode && !isMovie && !showWatchNextOverlay) {
+        setShowWatchNextOverlay(true);
+        setWatchNextCountdown(10);
+      }
     }
   };
+  
+  // Watch Next countdown effect
+  useEffect(() => {
+    if (showWatchNextOverlay && hasNextEpisode && onNextEpisode) {
+      watchNextIntervalRef.current = setInterval(() => {
+        setWatchNextCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(watchNextIntervalRef.current);
+            onNextEpisode();
+            setShowWatchNextOverlay(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
+      return () => {
+        if (watchNextIntervalRef.current) {
+          clearInterval(watchNextIntervalRef.current);
+        }
+      };
+    }
+  }, [showWatchNextOverlay, hasNextEpisode, onNextEpisode]);
+  
+  // Cancel Watch Next
+  const cancelWatchNext = useCallback(() => {
+    if (watchNextIntervalRef.current) {
+      clearInterval(watchNextIntervalRef.current);
+    }
+    setShowWatchNextOverlay(false);
+    setWatchNextCountdown(10);
+  }, []);
+  
+  // Handle resume overlay - show when there's saved progress
+  const handleResumeChoice = useCallback((resume: boolean) => {
+    const video = videoRef.current;
+    if (!video) return;
+    
+    if (resume && savedProgress > 0 && video.duration > 0) {
+      const seekTime = (savedProgress / 100) * video.duration;
+      video.currentTime = seekTime;
+      toast.success(`Resuming from ${Math.round(savedProgress)}%`);
+    } else {
+      video.currentTime = 0;
+      toast.success('Starting from beginning');
+    }
+    setShowResumeOverlay(false);
+    onResumeChoice?.(resume);
+    video.play().catch(() => {});
+  }, [savedProgress, onResumeChoice]);
 
   // Reset next episode visibility on mouse move
   useEffect(() => {
@@ -1673,7 +1750,7 @@ export function VideoPlayer({
       )}
 
       {/* Next Episode Button */}
-      {showNextEpisode && hasNextEpisode && onNextEpisode && (
+      {showNextEpisode && hasNextEpisode && onNextEpisode && !showWatchNextOverlay && (
         <button
           onClick={(e) => { e.stopPropagation(); onNextEpisode(); }}
           className="absolute bottom-28 right-4 z-[100] px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center gap-2 animate-fade-in"
@@ -1681,6 +1758,98 @@ export function VideoPlayer({
           Next Episode
           <ChevronRight className="w-5 h-5" />
         </button>
+      )}
+      
+      {/* Watch Next Overlay with Countdown */}
+      {showWatchNextOverlay && hasNextEpisode && onNextEpisode && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-[150] animate-fade-in">
+          <div className="bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl p-8 max-w-md mx-4 shadow-2xl animate-scale-in text-center">
+            <div className="mb-4">
+              <div className="relative w-24 h-24 mx-auto">
+                <svg className="w-full h-full transform -rotate-90">
+                  <circle
+                    cx="48"
+                    cy="48"
+                    r="44"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    className="text-muted/30"
+                  />
+                  <circle
+                    cx="48"
+                    cy="48"
+                    r="44"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    strokeDasharray={276.46}
+                    strokeDashoffset={276.46 * (1 - watchNextCountdown / 10)}
+                    className="text-primary transition-all duration-1000"
+                  />
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-4xl font-bold text-foreground">
+                  {watchNextCountdown}
+                </span>
+              </div>
+            </div>
+            <h3 className="text-foreground font-heading font-bold text-xl mb-2">
+              Up Next
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              Playing next episode in {watchNextCountdown} seconds...
+            </p>
+            <div className="flex gap-3 justify-center">
+              <Button
+                onClick={(e) => { e.stopPropagation(); onNextEpisode(); setShowWatchNextOverlay(false); }}
+                className="anime-button px-6"
+              >
+                <Play className="w-4 h-4 mr-2 fill-current" />
+                Play Now
+              </Button>
+              <Button
+                onClick={(e) => { e.stopPropagation(); cancelWatchNext(); }}
+                variant="outline"
+                className="px-6"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Resume Overlay - Skip/Resume choice */}
+      {showResumeOverlay && savedProgress > 5 && savedProgress < 95 && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-[150] animate-fade-in">
+          <div className="bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl p-8 max-w-md mx-4 shadow-2xl animate-scale-in text-center">
+            <div className="mb-4">
+              <Play className="w-16 h-16 text-primary mx-auto" />
+            </div>
+            <h3 className="text-foreground font-heading font-bold text-xl mb-2">
+              Resume Watching?
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              You were {Math.round(savedProgress)}% through this episode
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button
+                onClick={(e) => { e.stopPropagation(); handleResumeChoice(true); }}
+                className="anime-button px-6"
+              >
+                <Play className="w-4 h-4 mr-2 fill-current" />
+                Resume from {Math.round(savedProgress)}%
+              </Button>
+              <Button
+                onClick={(e) => { e.stopPropagation(); handleResumeChoice(false); }}
+                variant="outline"
+                className="px-6"
+              >
+                Start from Beginning
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       <video

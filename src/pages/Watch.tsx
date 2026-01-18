@@ -103,6 +103,7 @@ export default function Watch() {
   const [showTelegramPopup, setShowTelegramPopup] = useState(false);
   const [initialSeekDone, setInitialSeekDone] = useState(false);
   const [showResumeNotification, setShowResumeNotification] = useState(false);
+  const [savedPlaybackProgress, setSavedPlaybackProgress] = useState(0);
   const ensureHistoryInFlightRef = useRef(false);
 
   // Check if Telegram popup should be shown (once per day)
@@ -343,22 +344,9 @@ export default function Watch() {
           }
           setWatchHistoryId(existingHistory.id);
           
-          // Auto-restore progress if user didn't come with ?t= param and has saved progress
+          // Set saved progress for resume overlay (instead of auto-seeking)
           if (!resumeProgress && existingHistory.progress && existingHistory.progress > 5 && existingHistory.progress < 95) {
-            // Delay until video is loaded
-            setTimeout(() => {
-              const videoElement = document.querySelector('video');
-              if (videoElement && videoElement.duration > 0) {
-                const seekTime = (existingHistory.progress / 100) * videoElement.duration;
-                if (Math.abs(videoElement.currentTime - seekTime) > 5) {
-                  videoElement.currentTime = seekTime;
-                  toast.success(`Resuming from ${Math.round(existingHistory.progress)}%`, {
-                    description: 'Your playback position was remembered',
-                    duration: 3000,
-                  });
-                }
-              }
-            }, 1500);
+            setSavedPlaybackProgress(existingHistory.progress);
           }
         } else {
           // Insert new record
@@ -643,6 +631,12 @@ export default function Watch() {
             introEndTime={episode.intro_end_time}
             outroStartTime={episode.outro_start_time}
             outroEndTime={episode.outro_end_time}
+            savedPlaybackProgress={savedPlaybackProgress}
+            onResumeChoice={(resume) => {
+              if (!resume) {
+                setSavedPlaybackProgress(0);
+              }
+            }}
           />
         </div>
       </div>
