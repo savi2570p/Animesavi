@@ -137,7 +137,7 @@ export function EpisodeProgress() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <Clock className="h-6 w-6 text-amber-500" />
-            <h2 className="text-xl md:text-2xl font-heading font-bold">Episode Progress</h2>
+            <h2 className="text-xl md:text-2xl font-heading font-bold">Pending Upload</h2>
           </div>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/browse?filter=no-episodes" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
