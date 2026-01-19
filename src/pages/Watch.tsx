@@ -22,6 +22,11 @@ import {
   Edit,
   Server,
   X,
+  ThumbsUp,
+  ThumbsDown,
+  ArrowUpDown,
+  Clock,
+  TrendingUp,
 } from 'lucide-react';
 
 // Comment validation schema
@@ -60,6 +65,11 @@ interface Anime {
   type: string | null;
 }
 
+interface CommentLike {
+  comment_id: string;
+  is_like: boolean;
+}
+
 interface Comment {
   id: string;
   content: string;
@@ -73,7 +83,12 @@ interface Comment {
   userEmail?: string;
   isOwner?: boolean;
   replies?: Comment[];
+  likes: number;
+  dislikes: number;
+  userLike?: boolean | null; // true = liked, false = disliked, null = no vote
 }
+
+type CommentSortOption = 'newest' | 'oldest' | 'most_liked';
 
 // Owner email addresses
 const OWNER_EMAILS = ['savi2570p@gmail.com', 'savipanjeta2@gmail.com'];
@@ -96,6 +111,7 @@ export default function Watch() {
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
+  const [commentSort, setCommentSort] = useState<CommentSortOption>('newest');
   const [isLoading, setIsLoading] = useState(true);
   const [watchHistoryId, setWatchHistoryId] = useState<string | null>(null);
   const [activeServer, setActiveServer] = useState<ServerType>('PLAY');
@@ -150,7 +166,7 @@ export default function Watch() {
       fetchEpisodeData();
       fetchComments();
     }
-  }, [episodeId]);
+  }, [episodeId, commentSort]);
 
   // Ensure watch history gets created even if auth loads AFTER the episode data
   useEffect(() => {
@@ -381,36 +397,51 @@ export default function Watch() {
       .from('comments')
       .select('*')
       .eq('episode_id', episodeId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: commentSort === 'oldest' });
 
     if (data) {
       // Fetch profiles for comments
       const userIds = [...new Set(data.map((c) => c.user_id))];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .in('id', userIds);
+      const commentIds = data.map((c) => c.id);
+      
+      const [profilesResult, likesResult, userLikesResult] = await Promise.all([
+        supabase.from('profiles').select('id, username, avatar_url').in('id', userIds),
+        // Get like/dislike counts for all comments
+        supabase.from('comment_likes').select('comment_id, is_like').in('comment_id', commentIds),
+        // Get current user's likes if logged in
+        user ? supabase.from('comment_likes').select('comment_id, is_like').eq('user_id', user.id).in('comment_id', commentIds) : Promise.resolve({ data: [] as CommentLike[] }),
+      ]);
 
-      const profileMap = new Map(profiles?.map((p) => [p.id, p]));
-
-      const commentsWithProfiles = data.map((c) => {
-        // Check if the commenter's user_id matches any owner email in profiles
-        // We'll check by comparing user_id with the owner list
-        const isOwner = OWNER_EMAILS.some(ownerEmail => {
-          // We need to check if this user_id belongs to an owner
-          // Since we can't directly access auth.users, we'll check based on the current user if they're the commenter
-          return false; // This will be set properly below
-        });
-        
-        return {
-          ...c,
-          profile: profileMap.get(c.user_id) || { username: null, avatar_url: null },
-          isOwner: OWNER_EMAILS.includes(c.user_id) || false, // Will be updated with proper check
-        };
+      const profileMap = new Map(profilesResult.data?.map((p) => [p.id, p]));
+      
+      // Calculate likes/dislikes per comment
+      const likeCounts = new Map<string, { likes: number; dislikes: number }>();
+      likesResult.data?.forEach((like) => {
+        const current = likeCounts.get(like.comment_id) || { likes: 0, dislikes: 0 };
+        if (like.is_like) {
+          current.likes++;
+        } else {
+          current.dislikes++;
+        }
+        likeCounts.set(like.comment_id, current);
+      });
+      
+      // Map user's likes
+      const userLikesMap = new Map<string, boolean>();
+      (userLikesResult.data as CommentLike[] || []).forEach((like) => {
+        userLikesMap.set(like.comment_id, like.is_like);
       });
 
-      // For a proper owner check, we need to store owner user_ids
-      // For now, check if the uploader_id matches the commenter's user_id
+      const commentsWithProfiles = data.map((c) => ({
+        ...c,
+        profile: profileMap.get(c.user_id) || { username: null, avatar_url: null },
+        isOwner: false,
+        likes: likeCounts.get(c.id)?.likes || 0,
+        dislikes: likeCounts.get(c.id)?.dislikes || 0,
+        userLike: userLikesMap.has(c.id) ? userLikesMap.get(c.id) : null,
+      }));
+
+      // For a proper owner check, check if the uploader_id matches the commenter's user_id
       const updatedComments = await Promise.all(
         commentsWithProfiles.map(async (comment) => {
           // Check if user is an uploader or admin
@@ -429,8 +460,22 @@ export default function Watch() {
       );
 
       // Organize comments into threads (parent comments with replies)
-      const parentComments = updatedComments.filter(c => !c.parent_id);
+      let parentComments = updatedComments.filter(c => !c.parent_id);
       const replies = updatedComments.filter(c => c.parent_id);
+      
+      // Sort based on selected option
+      if (commentSort === 'most_liked') {
+        parentComments = parentComments.sort((a, b) => (b.likes - b.dislikes) - (a.likes - a.dislikes));
+      } else if (commentSort === 'oldest') {
+        parentComments = parentComments.sort((a, b) => 
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+      } else {
+        // newest first (default)
+        parentComments = parentComments.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      }
       
       const commentsWithReplies = parentComments.map(parent => ({
         ...parent,
@@ -494,6 +539,62 @@ export default function Watch() {
     } else {
       fetchComments();
       toast.success('Comment deleted');
+    }
+  };
+
+  const handleLikeComment = async (commentId: string, isLike: boolean) => {
+    if (!user) {
+      toast.error('Please sign in to like/dislike comments');
+      return;
+    }
+
+    // Check if user already has a like/dislike on this comment
+    const comment = comments.find(c => c.id === commentId) || 
+      comments.flatMap(c => c.replies || []).find(c => c.id === commentId);
+    
+    if (!comment) return;
+
+    if (comment.userLike === isLike) {
+      // User is clicking the same button - remove the like/dislike
+      const { error } = await supabase
+        .from('comment_likes')
+        .delete()
+        .eq('comment_id', commentId)
+        .eq('user_id', user.id);
+      
+      if (error) {
+        toast.error('Failed to remove vote');
+      } else {
+        fetchComments();
+      }
+    } else if (comment.userLike !== null) {
+      // User is switching their vote
+      const { error } = await supabase
+        .from('comment_likes')
+        .update({ is_like: isLike })
+        .eq('comment_id', commentId)
+        .eq('user_id', user.id);
+      
+      if (error) {
+        toast.error('Failed to update vote');
+      } else {
+        fetchComments();
+      }
+    } else {
+      // New vote
+      const { error } = await supabase
+        .from('comment_likes')
+        .insert({
+          comment_id: commentId,
+          user_id: user.id,
+          is_like: isLike,
+        });
+      
+      if (error) {
+        toast.error('Failed to add vote');
+      } else {
+        fetchComments();
+      }
     }
   };
 
@@ -656,8 +757,8 @@ export default function Watch() {
           <div className="flex items-center gap-3">
             <Server className="h-5 w-5 text-muted-foreground" />
             <span className="text-muted-foreground font-medium">Server:</span>
-            <div className="flex gap-2">
-              {(['PLAY', 'SHORT', 'Zex'] as ServerType[]).map((server) => {
+            <div className="flex gap-2 flex-wrap">
+              {(['PLAY', 'SHORT', 'Zex', 'SUB'] as ServerType[]).map((server) => {
                 const displayName = server === 'SHORT' ? 'SAVI.IN' : server;
                 return (
                   <Button
@@ -799,10 +900,45 @@ export default function Watch() {
 
           {/* Comments */}
           <div className="space-y-6">
-            <h2 className="text-xl font-heading font-bold flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              Comments ({comments.length})
-            </h2>
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <h2 className="text-xl font-heading font-bold flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Comments ({comments.length})
+              </h2>
+              
+              {/* Sort Options */}
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                <div className="flex gap-1">
+                  <Button
+                    size="sm"
+                    variant={commentSort === 'newest' ? 'default' : 'ghost'}
+                    onClick={() => setCommentSort('newest')}
+                    className="text-xs"
+                  >
+                    <Clock className="h-3 w-3 mr-1" />
+                    Newest
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={commentSort === 'oldest' ? 'default' : 'ghost'}
+                    onClick={() => setCommentSort('oldest')}
+                    className="text-xs"
+                  >
+                    Oldest
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={commentSort === 'most_liked' ? 'default' : 'ghost'}
+                    onClick={() => setCommentSort('most_liked')}
+                    className="text-xs"
+                  >
+                    <TrendingUp className="h-3 w-3 mr-1" />
+                    Top
+                  </Button>
+                </div>
+              </div>
+            </div>
 
             {/* Add Comment */}
             {user ? (
@@ -859,6 +995,21 @@ export default function Watch() {
                       </div>
                       <p className="text-muted-foreground mb-2">{comment.content}</p>
                       <div className="flex items-center gap-3">
+                        {/* Like/Dislike Buttons */}
+                        <button
+                          onClick={() => handleLikeComment(comment.id, true)}
+                          className={`flex items-center gap-1 text-xs transition-colors ${comment.userLike === true ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+                        >
+                          <ThumbsUp className="h-3.5 w-3.5" />
+                          {comment.likes > 0 && <span>{comment.likes}</span>}
+                        </button>
+                        <button
+                          onClick={() => handleLikeComment(comment.id, false)}
+                          className={`flex items-center gap-1 text-xs transition-colors ${comment.userLike === false ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'}`}
+                        >
+                          <ThumbsDown className="h-3.5 w-3.5" />
+                          {comment.dislikes > 0 && <span>{comment.dislikes}</span>}
+                        </button>
                         <button
                           onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
                           className="text-xs text-muted-foreground hover:text-primary transition-colors"

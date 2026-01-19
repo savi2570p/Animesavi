@@ -59,7 +59,7 @@ interface QualityLevel {
   label: string;
 }
 
-export type ServerType = 'PLAY' | 'SHORT' | 'Zex';
+export type ServerType = 'PLAY' | 'SHORT' | 'Zex' | 'SUB';
 
 interface VideoPlayerProps {
   videoUrl: string | null;
@@ -85,7 +85,7 @@ interface VideoPlayerProps {
   onResumeChoice?: (resume: boolean) => void; // Callback when user makes resume choice
 }
 
-const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
+const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string; audioFilter?: string }> = {
   PLAY: { 
     name: 'PLAY', 
     features: ['watch'],
@@ -100,6 +100,12 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
     name: 'Zex', 
     features: ['watch', 'quality', 'download'],
     playerStyle: 'advanced'
+  },
+  SUB: { 
+    name: 'SUB', 
+    features: ['watch', 'quality'],
+    playerStyle: 'standard',
+    audioFilter: 'english'
   },
 };
 
@@ -448,11 +454,16 @@ export function VideoPlayer({
             // Audio tracks
             if (data.audioTracks && data.audioTracks.length > 0) {
               let hindiTrackIndex = -1;
+              let englishTrackIndex = -1;
               const tracks: AudioTrackInfo[] = data.audioTracks.map((track, index) => {
                 const label = getAudioLabel(track.name, track.lang, index);
                 // Check for Hindi track
                 if (label.toLowerCase().includes('hindi') || track.lang?.toLowerCase().includes('hin') || track.lang === 'hi') {
                   hindiTrackIndex = index;
+                }
+                // Check for English track
+                if (label.toLowerCase().includes('english') || track.lang?.toLowerCase().includes('eng') || track.lang === 'en') {
+                  englishTrackIndex = index;
                 }
                 return {
                   id: track.id,
@@ -463,8 +474,14 @@ export function VideoPlayer({
               });
               setAudioTracks(tracks);
               
-              // Default to Hindi if available
-              if (hindiTrackIndex >= 0) {
+              // Default audio selection based on server
+              const audioFilter = serverConfigs[activeServer]?.audioFilter;
+              if (audioFilter === 'english' && englishTrackIndex >= 0) {
+                // SUB server: force English audio
+                hls.audioTrack = englishTrackIndex;
+                setCurrentAudioTrack(englishTrackIndex);
+              } else if (hindiTrackIndex >= 0) {
+                // Default to Hindi if available
                 hls.audioTrack = hindiTrackIndex;
                 setCurrentAudioTrack(hindiTrackIndex);
               } else {
@@ -2153,8 +2170,11 @@ export function VideoPlayer({
                   <DropdownMenuTrigger asChild>
                     <button 
                       className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
-                      onClick={(e) => { e.stopPropagation(); setSettingsOpen(!settingsOpen); }}
-                      onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); setSettingsOpen(!settingsOpen); }}
+                      onPointerDown={(e) => { 
+                        e.stopPropagation(); 
+                        e.preventDefault();
+                        setSettingsOpen(prev => !prev); 
+                      }}
                       title="Settings"
                       style={{ touchAction: 'manipulation' }}
                     >
@@ -2168,6 +2188,7 @@ export function VideoPlayer({
                     sideOffset={12}
                     style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                     onCloseAutoFocus={(e) => e.preventDefault()}
+                    onPointerDownOutside={(e) => e.preventDefault()}
                     forceMount={settingsOpen ? true : undefined}
                   >
                     {renderSettingsContent()}
@@ -2402,8 +2423,11 @@ export function VideoPlayer({
                 <DropdownMenuTrigger asChild>
                   <button 
                     className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
-                    onClick={(e) => { e.stopPropagation(); setSettingsOpen(!settingsOpen); }}
-                    onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); setSettingsOpen(!settingsOpen); }}
+                    onPointerDown={(e) => { 
+                      e.stopPropagation(); 
+                      e.preventDefault();
+                      setSettingsOpen(prev => !prev); 
+                    }}
                     title="Settings"
                     style={{ touchAction: 'manipulation' }}
                   >
@@ -2417,6 +2441,7 @@ export function VideoPlayer({
                   sideOffset={12}
                   style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                   onCloseAutoFocus={(e) => e.preventDefault()}
+                  onPointerDownOutside={(e) => e.preventDefault()}
                   forceMount={settingsOpen ? true : undefined}
                 >
                   {renderSettingsContent()}

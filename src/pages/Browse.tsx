@@ -366,7 +366,7 @@ export default function Browse() {
 
   const episodeOptions: { value: EpisodeFilter; label: string }[] = [
     { value: 'all', label: 'All' },
-    { value: 'no-episodes', label: 'Episode Progress' },
+    { value: 'no-episodes', label: 'Pending Upload' },
   ];
 
   // Determine what to show in dropdown
@@ -417,7 +417,7 @@ export default function Browse() {
               
               {/* Search Dropdown - Shows suggestions OR history */}
               {showSearchDropdown && showDropdownContent && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-xl overflow-hidden z-[9999]" style={{ zIndex: 9999 }}>
+                <div className="absolute top-full left-0 right-0 mt-2 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-xl overflow-hidden" style={{ zIndex: 99999, position: 'relative' }}>
                   {/* Search Suggestions with Thumbnails */}
                   {showSuggestions && (
                     <div className="max-h-80 overflow-y-auto">
