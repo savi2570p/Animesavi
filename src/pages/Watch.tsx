@@ -843,7 +843,7 @@ export default function Watch() {
             <Server className="h-5 w-5 text-muted-foreground" />
             <span className="text-muted-foreground font-medium">Server:</span>
             <div className="flex gap-2 flex-wrap">
-              {(['PLAY', 'SHORT', 'Zex', 'DUB'] as ServerType[]).map((server) => {
+              {(['PLAY', 'SHORT', 'Zex'] as ServerType[]).map((server) => {
                 const displayName = server === 'SHORT' ? 'SAVI.IN' : server;
                 return (
                   <Button
