@@ -59,7 +59,7 @@ interface QualityLevel {
   label: string;
 }
 
-export type ServerType = 'PLAY' | 'SHORT' | 'Zex' | 'DUB';
+export type ServerType = 'PLAY' | 'SHORT' | 'Zex';
 
 interface VideoPlayerProps {
   videoUrl: string | null;
@@ -85,7 +85,7 @@ interface VideoPlayerProps {
   onResumeChoice?: (resume: boolean) => void; // Callback when user makes resume choice
 }
 
-const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string; audioFilter?: string }> = {
+const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
   PLAY: { 
     name: 'PLAY', 
     features: ['watch'],
@@ -100,12 +100,6 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
     name: 'Zex', 
     features: ['watch', 'quality', 'download'],
     playerStyle: 'advanced'
-  },
-  DUB: { 
-    name: 'DUB', 
-    features: ['watch', 'quality'],
-    playerStyle: 'standard',
-    audioFilter: 'english'
   },
 };
 
@@ -474,14 +468,8 @@ export function VideoPlayer({
               });
               setAudioTracks(tracks);
               
-              // Default audio selection based on server
-              const audioFilter = serverConfigs[activeServer]?.audioFilter;
-              if (audioFilter === 'english' && englishTrackIndex >= 0) {
-                // SUB server: force English audio
-                hls.audioTrack = englishTrackIndex;
-                setCurrentAudioTrack(englishTrackIndex);
-              } else if (hindiTrackIndex >= 0) {
-                // Default to Hindi if available
+              // Default audio selection - prefer Hindi if available
+              if (hindiTrackIndex >= 0) {
                 hls.audioTrack = hindiTrackIndex;
                 setCurrentAudioTrack(hindiTrackIndex);
               } else {

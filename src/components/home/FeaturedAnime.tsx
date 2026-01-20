@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Play, Info, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Play, Info, ChevronLeft, ChevronRight, Search, ArrowRight } from 'lucide-react';
 
 interface Anime {
   id: string;
@@ -15,10 +16,26 @@ interface Anime {
   status: string | null;
 }
 
+// Trending search tags - HiAnime style
+const trendingSearches = [
+  'Jujutsu Kaisen',
+  'One Piece',
+  'Demon Slayer',
+  'Attack on Titan',
+  'My Hero Academia',
+  'Naruto',
+  'Bleach',
+  'Dragon Ball',
+  'Solo Leveling',
+  'Chainsaw Man'
+];
+
 export function FeaturedAnime() {
   const [featured, setFeatured] = useState<Anime[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
   
   // Touch handling refs
   const touchStartX = useRef<number>(0);
@@ -41,7 +58,6 @@ export function FeaturedAnime() {
   }, [featured.length, currentIndex]);
 
   const fetchFeatured = async () => {
-    // Use anime_public view to avoid exposing uploader_id
     const { data } = await supabase
       .from('anime_public')
       .select('*')
@@ -90,16 +106,23 @@ export function FeaturedAnime() {
 
   const handleTouchEnd = useCallback(() => {
     const diff = touchStartX.current - touchEndX.current;
-    const threshold = 50; // Minimum swipe distance
+    const threshold = 50;
     
     if (Math.abs(diff) > threshold) {
       if (diff > 0) {
-        nextSlide(); // Swipe left = next
+        nextSlide();
       } else {
-        prevSlide(); // Swipe right = previous
+        prevSlide();
       }
     }
   }, [nextSlide, prevSlide]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/browse?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   if (featured.length === 0) return null;
 
@@ -108,17 +131,17 @@ export function FeaturedAnime() {
   return (
     <section 
       ref={containerRef}
-      className="relative h-[70vh] md:h-[85vh] overflow-hidden touch-pan-y gpu-accelerate"
+      className="relative h-[60vh] md:h-[75vh] overflow-hidden"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Background with smooth transition - HD quality */}
+      {/* Background with smooth transition */}
       <div className="absolute inset-0">
         {featured.map((anime, index) => (
           <div
             key={anime.id}
-            className={`absolute inset-0 transition-all duration-700 ease-out gpu-accelerate ${
+            className={`absolute inset-0 transition-all duration-700 ease-out ${
               index === currentIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
             }`}
           >
@@ -126,9 +149,6 @@ export function FeaturedAnime() {
               src={anime.banner_image || anime.cover_image || '/placeholder.svg'}
               alt={anime.title || 'Featured anime'}
               className="w-full h-full object-cover object-center"
-              style={{
-                imageRendering: 'auto',
-              }}
               loading={index === 0 ? 'eager' : 'lazy'}
               decoding="async"
               fetchPriority={index === 0 ? 'high' : 'auto'}
@@ -137,68 +157,64 @@ export function FeaturedAnime() {
         ))}
       </div>
       
-      {/* Animated overlay particles effect */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-40 right-20 w-48 h-48 bg-accent/10 rounded-full blur-3xl animate-pulse animation-delay-500" />
-        <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-primary/5 rounded-full blur-2xl float" />
-      </div>
-      
-      {/* Overlays for readability */}
-      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-      <div className="absolute inset-0 bg-background/30" />
+      {/* Overlays for readability - HiAnime style gradient */}
+      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/40" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
 
-      {/* Content with enhanced animations */}
+      {/* Content - HiAnime Layout */}
       <div className="relative h-full container flex items-center">
         <div 
           key={current.id}
-          className="max-w-2xl space-y-5"
+          className="max-w-xl space-y-4"
         >
-          {/* Genres with staggered animation */}
-          <div className="flex flex-wrap gap-2">
-            {current.genres?.slice(0, 4).map((genre, i) => (
-              <Badge 
-                key={genre} 
-                className={`genre-badge stagger-${i + 1} animate-fade-in-up hover:scale-105 transition-transform duration-200`}
-              >
-                {genre}
-              </Badge>
-            ))}
-          </div>
+          {/* Brand Title */}
+          <h2 className="text-3xl md:text-4xl font-bold">
+            <span className="text-primary">h</span>
+            <span className="text-foreground">!</span>
+            <span className="text-foreground">anime</span>
+          </h2>
 
-          {/* Title with slide animation */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold leading-tight tracking-tight animate-fade-in-left">
-            {current.title}
-          </h1>
-
-          {/* Description with fade animation */}
-          {current.description && (
-            <p className="text-base md:text-lg text-foreground/80 line-clamp-3 max-w-xl leading-relaxed animate-fade-in animation-delay-200">
-              {current.description}
-            </p>
-          )}
-
-          {/* CTA Buttons with bounce animation */}
-          <div className="flex gap-3 pt-3 animate-fade-in-up animation-delay-300">
-            <Button asChild size="lg" className="anime-button text-base md:text-lg group">
-              <Link to={`/anime/${current.id}`}>
-                <Play className="h-5 w-5 mr-2 fill-current group-hover:scale-110 transition-transform duration-200" />
-                Watch Now
-              </Link>
-            </Button>
+          {/* Search Bar - HiAnime Style */}
+          <form onSubmit={handleSearch} className="relative">
+            <Input
+              type="search"
+              placeholder="Search anime..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-4 pr-14 py-6 text-base bg-card/80 backdrop-blur border-border rounded-lg"
+            />
             <Button 
-              asChild 
-              size="lg" 
-              variant="outline" 
-              className="text-base md:text-lg border-foreground/20 bg-background/40 backdrop-blur-sm hover:bg-background/60 transition-all duration-200 hover:scale-105"
+              type="submit" 
+              size="icon" 
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 bg-primary hover:bg-primary/90 rounded-md"
             >
-              <Link to={`/anime/${current.id}`}>
-                <Info className="h-5 w-5 mr-2" />
-                More Info
-              </Link>
+              <Search className="h-5 w-5" />
             </Button>
+          </form>
+
+          {/* Trending Searches */}
+          <div className="space-y-2">
+            <span className="text-sm text-muted-foreground">Top search:</span>
+            <div className="flex flex-wrap gap-2">
+              {trendingSearches.slice(0, 6).map((term) => (
+                <Link
+                  key={term}
+                  to={`/browse?q=${encodeURIComponent(term)}`}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {term}
+                </Link>
+              ))}
+            </div>
           </div>
+
+          {/* CTA Button */}
+          <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8">
+            <Link to="/browse">
+              Watch anime
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -208,24 +224,24 @@ export function FeaturedAnime() {
           <Button
             variant="ghost"
             size="icon"
-            className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 bg-background/30 backdrop-blur-sm hover:bg-background/50 transition-all duration-200 rounded-full"
+            className="absolute left-4 top-1/2 -translate-y-1/2 h-10 w-10 bg-background/50 backdrop-blur hover:bg-background/70 rounded-full"
             onClick={prevSlide}
             disabled={isTransitioning}
           >
-            <ChevronLeft className="h-6 w-6" />
+            <ChevronLeft className="h-5 w-5" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 bg-background/30 backdrop-blur-sm hover:bg-background/50 transition-all duration-200 rounded-full"
+            className="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 bg-background/50 backdrop-blur hover:bg-background/70 rounded-full"
             onClick={nextSlide}
             disabled={isTransitioning}
           >
-            <ChevronRight className="h-6 w-6" />
+            <ChevronRight className="h-5 w-5" />
           </Button>
 
           {/* Progress Indicators */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
             {featured.map((_, i) => (
               <button
                 key={i}
@@ -233,7 +249,7 @@ export function FeaturedAnime() {
                 disabled={isTransitioning}
                 className={`h-1 rounded-full transition-all duration-300 ${
                   i === currentIndex 
-                    ? 'w-10 bg-primary' 
+                    ? 'w-8 bg-primary' 
                     : 'w-2 bg-foreground/30 hover:bg-foreground/50'
                 }`}
               />
