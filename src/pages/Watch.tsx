@@ -27,6 +27,9 @@ import {
   ArrowUpDown,
   Clock,
   TrendingUp,
+  Flag,
+  Bell,
+  BellDot,
 } from 'lucide-react';
 
 // Comment validation schema
@@ -115,6 +118,10 @@ export default function Watch() {
   const [isLoading, setIsLoading] = useState(true);
   const [watchHistoryId, setWatchHistoryId] = useState<string | null>(null);
   const [activeServer, setActiveServer] = useState<ServerType>('PLAY');
+  const [reportingCommentId, setReportingCommentId] = useState<string | null>(null);
+  const [reportReason, setReportReason] = useState('');
+  const [commentNotifications, setCommentNotifications] = useState<any[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [serverLoading, setServerLoading] = useState(false);
   const [showTelegramPopup, setShowTelegramPopup] = useState(false);
   const [initialSeekDone, setInitialSeekDone] = useState(false);
@@ -167,6 +174,54 @@ export default function Watch() {
       fetchComments();
     }
   }, [episodeId, commentSort]);
+
+  // Fetch comment notifications
+  useEffect(() => {
+    if (user) {
+      fetchCommentNotifications();
+    }
+  }, [user]);
+
+  const fetchCommentNotifications = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from('comment_notifications')
+      .select(`
+        *,
+        episode:episodes(id, title, season_id),
+        replier:profiles!comment_notifications_replier_id_fkey(username)
+      `)
+      .eq('user_id', user.id)
+      .eq('is_read', false)
+      .order('created_at', { ascending: false })
+      .limit(10);
+    
+    if (data) {
+      setCommentNotifications(data);
+    }
+  };
+
+  const markNotificationAsRead = async (notificationId: string) => {
+    await supabase
+      .from('comment_notifications')
+      .update({ is_read: true })
+      .eq('id', notificationId);
+    
+    fetchCommentNotifications();
+  };
+
+  const markAllNotificationsAsRead = async () => {
+    if (!user) return;
+    
+    await supabase
+      .from('comment_notifications')
+      .update({ is_read: true })
+      .eq('user_id', user.id);
+    
+    setCommentNotifications([]);
+    toast.success('All notifications marked as read');
+  };
 
   // Ensure watch history gets created even if auth loads AFTER the episode data
   useEffect(() => {
@@ -598,6 +653,36 @@ export default function Watch() {
     }
   };
 
+  const handleReportComment = async (commentId: string) => {
+    if (!user) {
+      toast.error('Please sign in to report comments');
+      return;
+    }
+
+    if (!reportReason.trim()) {
+      toast.error('Please provide a reason for the report');
+      return;
+    }
+
+    const { error } = await supabase.from('comment_reports').insert({
+      comment_id: commentId,
+      reporter_id: user.id,
+      reason: reportReason.trim(),
+    });
+
+    if (error) {
+      if (error.code === '23505') {
+        toast.error('You have already reported this comment');
+      } else {
+        toast.error('Failed to report comment');
+      }
+    } else {
+      toast.success('Comment reported successfully');
+      setReportingCommentId(null);
+      setReportReason('');
+    }
+  };
+
   // Check if a user is an owner based on their email
   const isOwnerEmail = (email: string | null | undefined): boolean => {
     if (!email) return false;
@@ -758,7 +843,7 @@ export default function Watch() {
             <Server className="h-5 w-5 text-muted-foreground" />
             <span className="text-muted-foreground font-medium">Server:</span>
             <div className="flex gap-2 flex-wrap">
-              {(['PLAY', 'SHORT', 'Zex', 'SUB'] as ServerType[]).map((server) => {
+              {(['PLAY', 'SHORT', 'Zex', 'DUB'] as ServerType[]).map((server) => {
                 const displayName = server === 'SHORT' ? 'SAVI.IN' : server;
                 return (
                   <Button
@@ -901,10 +986,77 @@ export default function Watch() {
           {/* Comments */}
           <div className="space-y-6">
             <div className="flex items-center justify-between flex-wrap gap-4">
-              <h2 className="text-xl font-heading font-bold flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Comments ({comments.length})
-              </h2>
+              <div className="flex items-center gap-4">
+                <h2 className="text-xl font-heading font-bold flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Comments ({comments.length})
+                </h2>
+                
+                {/* Notification Bell */}
+                {user && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowNotifications(!showNotifications)}
+                      className="relative p-2 rounded-full hover:bg-muted transition-colors"
+                    >
+                      {commentNotifications.length > 0 ? (
+                        <BellDot className="h-5 w-5 text-primary" />
+                      ) : (
+                        <Bell className="h-5 w-5 text-muted-foreground" />
+                      )}
+                      {commentNotifications.length > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                          {commentNotifications.length}
+                        </span>
+                      )}
+                    </button>
+                    
+                    {/* Notifications Dropdown */}
+                    {showNotifications && (
+                      <div className="absolute top-full right-0 mt-2 w-80 bg-card border border-border rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+                        <div className="p-3 border-b border-border flex items-center justify-between">
+                          <span className="font-medium">Reply Notifications</span>
+                          {commentNotifications.length > 0 && (
+                            <button
+                              onClick={markAllNotificationsAsRead}
+                              className="text-xs text-primary hover:underline"
+                            >
+                              Mark all as read
+                            </button>
+                          )}
+                        </div>
+                        {commentNotifications.length === 0 ? (
+                          <div className="p-4 text-center text-muted-foreground text-sm">
+                            No new notifications
+                          </div>
+                        ) : (
+                          <div className="divide-y divide-border">
+                            {commentNotifications.map((notification) => (
+                              <div
+                                key={notification.id}
+                                className="p-3 hover:bg-muted/50 cursor-pointer"
+                                onClick={() => {
+                                  markNotificationAsRead(notification.id);
+                                  navigate(`/watch/${notification.episode_id}`);
+                                  setShowNotifications(false);
+                                }}
+                              >
+                                <p className="text-sm">
+                                  <span className="font-medium">{notification.replier?.username || 'Someone'}</span>
+                                  {' '}replied to your comment
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {new Date(notification.created_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
               
               {/* Sort Options */}
               <div className="flex items-center gap-2">
@@ -1024,8 +1176,40 @@ export default function Watch() {
                             Delete
                           </button>
                         )}
+                        {user && user.id !== comment.user_id && (
+                          <button
+                            onClick={() => setReportingCommentId(reportingCommentId === comment.id ? null : comment.id)}
+                            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive/80 transition-colors"
+                          >
+                            <Flag className="h-3 w-3" />
+                            Report
+                          </button>
+                        )}
                       </div>
-
+                      
+                      {/* Report Input */}
+                      {reportingCommentId === comment.id && (
+                        <div className="mt-3 p-3 bg-muted/50 rounded-lg space-y-2">
+                          <p className="text-sm font-medium">Report this comment</p>
+                          <Input
+                            placeholder="Reason for reporting..."
+                            value={reportReason}
+                            onChange={(e) => setReportReason(e.target.value)}
+                            className="text-sm"
+                          />
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="destructive" onClick={() => handleReportComment(comment.id)}>
+                              Submit Report
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => {
+                              setReportingCommentId(null);
+                              setReportReason('');
+                            }}>
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                       {/* Reply Input */}
                       {replyingTo === comment.id && user && (
                         <div className="mt-3 flex gap-2">

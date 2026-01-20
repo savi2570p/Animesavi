@@ -118,6 +118,102 @@ export type Database = {
           },
         ]
       }
+      comment_notifications: {
+        Row: {
+          comment_id: string
+          created_at: string
+          episode_id: string
+          id: string
+          is_read: boolean
+          replier_id: string
+          reply_id: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          episode_id: string
+          id?: string
+          is_read?: boolean
+          replier_id: string
+          reply_id: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          episode_id?: string
+          id?: string
+          is_read?: boolean
+          replier_id?: string
+          reply_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_notifications_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_notifications_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_notifications_reply_id_fkey"
+            columns: ["reply_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comment_reports: {
+        Row: {
+          admin_notes: string | null
+          comment_id: string
+          created_at: string
+          id: string
+          reason: string
+          reporter_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          comment_id: string
+          created_at?: string
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          comment_id?: string
+          created_at?: string
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_reports_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           content: string
