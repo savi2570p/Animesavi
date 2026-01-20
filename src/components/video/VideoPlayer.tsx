@@ -59,7 +59,7 @@ interface QualityLevel {
   label: string;
 }
 
-export type ServerType = 'PLAY' | 'SHORT' | 'Zex' | 'SUB';
+export type ServerType = 'PLAY' | 'SHORT' | 'Zex' | 'DUB';
 
 interface VideoPlayerProps {
   videoUrl: string | null;
@@ -101,8 +101,8 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
     features: ['watch', 'quality', 'download'],
     playerStyle: 'advanced'
   },
-  SUB: { 
-    name: 'SUB', 
+  DUB: { 
+    name: 'DUB', 
     features: ['watch', 'quality'],
     playerStyle: 'standard',
     audioFilter: 'english'
