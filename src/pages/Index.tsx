@@ -50,8 +50,8 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Continue Watching - Top Priority for logged in users */}
-      <ContinueWatching />
+      {/* Continue Watching - Only shown on home page */}
+      <ContinueWatching showOnHomeOnly={true} />
 
       {/* Recommended Anime */}
       <RecommendedAnime />

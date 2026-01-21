@@ -159,11 +159,6 @@ export function FeaturedAnime() {
             </h2>
           </div>
 
-          {/* Tagline */}
-          <p className="text-lg md:text-xl text-muted-foreground max-w-md">
-            Watch your favorite anime in Hindi DUB - Free, Fast, and HD Quality
-          </p>
-
           {/* CTA Button */}
           <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 shadow-lg">
             <Link to="/browse">

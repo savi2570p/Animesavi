@@ -41,18 +41,26 @@ interface WatchHistoryItem {
   season?: Season;
 }
 
-export function ContinueWatching() {
+interface ContinueWatchingProps {
+  showOnHomeOnly?: boolean;
+}
+
+export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingProps) {
   const { user } = useAuth();
   const [history, setHistory] = useState<WatchHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Only show on home page if specified
+  const isHomePage = typeof window !== 'undefined' && window.location.pathname === '/';
+  const shouldRender = showOnHomeOnly ? isHomePage : true;
+
   useEffect(() => {
-    if (user) {
+    if (user && shouldRender) {
       fetchRecentHistory();
     } else {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, shouldRender]);
 
   const fetchRecentHistory = async () => {
     setIsLoading(true);
@@ -102,7 +110,7 @@ export function ContinueWatching() {
     return `${minutes}m left`;
   };
 
-  if (!user || (!isLoading && history.length === 0)) return null;
+  if (!user || !shouldRender || (!isLoading && history.length === 0)) return null;
 
   if (isLoading) {
     return (
