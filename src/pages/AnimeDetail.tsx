@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { BatchDownload } from '@/components/download/BatchDownload';
 import {
   Play,
   Heart,
@@ -538,6 +539,11 @@ export default function AnimeDetail() {
                 <Share2 className="h-5 w-5 mr-2" />
                 Share
               </Button>
+              
+              {/* Batch Download Button */}
+              {episodes.length > 0 && (
+                <BatchDownload episodes={episodes} animeTitle={anime.title} />
+              )}
             </div>
           </div>
         </div>

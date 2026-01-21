@@ -14,8 +14,9 @@ export default function Settings() {
   const navigate = useNavigate();
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [autoplay, setAutoplay] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Load saved theme on mount - works for all users, not just logged in
+  // Load saved theme on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' | null;
     if (savedTheme) {
@@ -24,7 +25,7 @@ export default function Settings() {
     }
   }, []);
 
-  // Redirect to auth if not logged in (optional - can be removed to allow theme changes without login)
+  // Redirect to auth if not logged in
   useEffect(() => {
     if (!user) {
       navigate('/auth');
@@ -33,19 +34,33 @@ export default function Settings() {
 
   const applyTheme = (newTheme: 'light' | 'dark' | 'system') => {
     const root = document.documentElement;
+    
+    // Add transition class for smooth theme change
+    root.classList.add('theme-transitioning');
+    
     if (newTheme === 'system') {
       const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       root.classList.toggle('dark', systemPrefersDark);
     } else {
       root.classList.toggle('dark', newTheme === 'dark');
     }
+    
+    // Remove transition class after animation completes
+    setTimeout(() => {
+      root.classList.remove('theme-transitioning');
+    }, 500);
   };
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
+    if (isTransitioning) return;
+    
+    setIsTransitioning(true);
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     applyTheme(newTheme);
     toast.success(`Theme changed to ${newTheme}`);
+    
+    setTimeout(() => setIsTransitioning(false), 500);
   };
 
   if (!user) return null;
@@ -79,7 +94,8 @@ export default function Settings() {
               <Button
                 variant={theme === 'light' ? 'default' : 'outline'}
                 onClick={() => handleThemeChange('light')}
-                className="flex flex-col gap-2 h-auto py-4"
+                disabled={isTransitioning}
+                className="flex flex-col gap-2 h-auto py-4 transition-all duration-300"
               >
                 <Sun className="h-5 w-5" />
                 <span className="text-xs">Light</span>
@@ -87,7 +103,8 @@ export default function Settings() {
               <Button
                 variant={theme === 'dark' ? 'default' : 'outline'}
                 onClick={() => handleThemeChange('dark')}
-                className="flex flex-col gap-2 h-auto py-4"
+                disabled={isTransitioning}
+                className="flex flex-col gap-2 h-auto py-4 transition-all duration-300"
               >
                 <Moon className="h-5 w-5" />
                 <span className="text-xs">Dark</span>
@@ -95,7 +112,8 @@ export default function Settings() {
               <Button
                 variant={theme === 'system' ? 'default' : 'outline'}
                 onClick={() => handleThemeChange('system')}
-                className="flex flex-col gap-2 h-auto py-4"
+                disabled={isTransitioning}
+                className="flex flex-col gap-2 h-auto py-4 transition-all duration-300"
               >
                 <Monitor className="h-5 w-5" />
                 <span className="text-xs">System</span>
