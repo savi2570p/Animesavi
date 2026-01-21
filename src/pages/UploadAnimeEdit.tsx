@@ -51,6 +51,7 @@ export default function UploadAnimeEdit() {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [selectedSeason, setSelectedSeason] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('seasons');
 
   const isAuthReady = !isAuthLoading && isRolesLoaded;
 
@@ -295,7 +296,7 @@ export default function UploadAnimeEdit() {
         </div>
       </div>
 
-      <Tabs defaultValue="seasons">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-8">
           <TabsTrigger value="seasons">Seasons</TabsTrigger>
           <TabsTrigger value="episodes" disabled={seasons.length === 0}>

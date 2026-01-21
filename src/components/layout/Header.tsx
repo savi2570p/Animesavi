@@ -26,7 +26,8 @@ import {
   Film,
   Tv,
   TrendingUp,
-  Star
+  Star,
+  Calendar
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -76,8 +77,8 @@ export function Header() {
     { to: '/', label: 'Home', icon: null },
     { to: '/browse?type=movie', label: 'Movies', icon: Film },
     { to: '/browse?type=series', label: 'TV Series', icon: Tv },
+    { to: '/schedule', label: 'Schedule', icon: Calendar },
     { to: '/browse?sort=popular', label: 'Most Popular', icon: TrendingUp },
-    { to: '/browse?status=ongoing', label: 'Top Airing', icon: Star },
   ];
 
   return (
@@ -91,9 +92,11 @@ export function Header() {
             className="h-8 w-8 rounded-lg object-contain" 
           />
           <span className="hidden sm:inline-block text-lg font-bold">
-            <span className="text-primary">h</span>
-            <span className="text-foreground">!</span>
-            <span className="text-foreground">anime</span>
+            <span className="text-primary">Anime</span>
+            <span className="text-muted-foreground">.</span>
+            <span className="text-foreground">Savi</span>
+            <span className="text-muted-foreground">.</span>
+            <span className="text-primary">me</span>
           </span>
         </Link>
 

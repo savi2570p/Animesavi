@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Play, Tv, Star, Clock, Award, ArrowRight, TrendingUp, Film, Sparkles } from 'lucide-react';
+import { Play, Tv, Clock, Award, ArrowRight, Film, Sparkles } from 'lucide-react';
 import { FeaturedAnime } from '@/components/home/FeaturedAnime';
 import { ContinueWatching } from '@/components/home/ContinueWatching';
 import { RecommendedAnime } from '@/components/home/RecommendedAnime';
@@ -11,20 +11,7 @@ import { LatestSeries } from '@/components/home/LatestSeries';
 import { RecentlyCompleted } from '@/components/home/RecentlyCompleted';
 import { EpisodeProgress } from '@/components/home/EpisodeProgress';
 import { ComingSoon } from '@/components/home/ComingSoon';
-
-// Trending search tags - HiAnime style
-const trendingSearches = [
-  'Jujutsu Kaisen',
-  'One Piece',
-  'Demon Slayer',
-  'Attack on Titan',
-  'My Hero Academia',
-  'Naruto',
-  'Bleach',
-  'Dragon Ball',
-  'Solo Leveling',
-  'Chainsaw Man'
-];
+import { SocialShare } from '@/components/home/SocialShare';
 
 export default function Index() {
   const { user } = useAuth();
@@ -40,29 +27,6 @@ export default function Index() {
     <div className="min-h-screen bg-background">
       {/* Featured Anime Hero */}
       <FeaturedAnime />
-
-      {/* Trending Searches - HiAnime Style */}
-      <section className="py-4 border-b border-border/50 bg-card/30">
-        <div className="container">
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-sm text-muted-foreground font-medium flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Top search:
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {trendingSearches.map((term) => (
-                <Link
-                  key={term}
-                  to={`/browse?q=${encodeURIComponent(term)}`}
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
-                >
-                  {term}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Quick Stats Bar */}
       <section className="py-6 border-b border-border/30 bg-card/20">
@@ -109,6 +73,13 @@ export default function Index() {
 
       {/* Recently Completed */}
       <RecentlyCompleted />
+
+      {/* Social Share Section */}
+      <section className="py-8">
+        <div className="container">
+          <SocialShare />
+        </div>
+      </section>
 
       {/* Platform Info Section - HiAnime Style */}
       <section className="py-16 bg-card/30 border-t border-border/30">
