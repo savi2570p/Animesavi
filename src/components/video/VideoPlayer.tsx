@@ -418,19 +418,31 @@ export function VideoPlayer({
           const hls = new Hls({
             enableWorker: true,
             lowLatencyMode: true,
-            // Optimize for faster loading
-            maxBufferLength: 30,
-            maxMaxBufferLength: 60,
-            maxBufferSize: 60 * 1000 * 1000,
-            maxBufferHole: 0.5,
-            // Faster startup
-            startLevel: -1, // Auto select best quality
+            // Optimized for FASTER startup
+            maxBufferLength: 20, // Reduced for faster initial load
+            maxMaxBufferLength: 120,
+            maxBufferSize: 120 * 1000 * 1000,
+            maxBufferHole: 0.3, // Smaller gap tolerance for smoother playback
+            // Faster startup - start at lowest quality then upgrade
+            startLevel: 0, // Start with lowest quality for instant playback
             autoStartLoad: true,
-            // Better ABR
-            abrEwmaDefaultEstimate: 5000000, // 5 Mbps default estimate
-            abrBandWidthFactor: 0.95,
-            abrBandWidthUpFactor: 0.7,
-            backBufferLength: 90,
+            // Better ABR for quick adaptation
+            abrEwmaDefaultEstimate: 3000000, // 3 Mbps default estimate
+            abrBandWidthFactor: 0.8, // More conservative
+            abrBandWidthUpFactor: 0.6,
+            backBufferLength: 30, // Less back buffer
+            // Faster fragment loading
+            fragLoadingTimeOut: 20000,
+            fragLoadingMaxRetry: 4,
+            fragLoadingRetryDelay: 500,
+            // Faster level loading
+            levelLoadingTimeOut: 10000,
+            levelLoadingMaxRetry: 4,
+            levelLoadingRetryDelay: 500,
+            // Faster manifest loading  
+            manifestLoadingTimeOut: 10000,
+            manifestLoadingMaxRetry: 3,
+            manifestLoadingRetryDelay: 500,
           });
           
           hlsRef.current = hls;
@@ -571,13 +583,21 @@ export function VideoPlayer({
             if (data.fatal) {
               switch (data.type) {
                 case Hls.ErrorTypes.NETWORK_ERROR:
-                  hls.startLoad();
+                  console.log('Network error, attempting recovery...');
+                  setTimeout(() => hls.startLoad(), 1000);
                   break;
                 case Hls.ErrorTypes.MEDIA_ERROR:
+                  console.log('Media error, attempting recovery...');
                   hls.recoverMediaError();
                   break;
                 default:
-                  setVideoError(true);
+                  console.error('Unrecoverable error');
+                  // Only set error after multiple retries fail
+                  setTimeout(() => {
+                    if (hlsRef.current) {
+                      setVideoError(true);
+                    }
+                  }, 3000);
                   break;
               }
             }

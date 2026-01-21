@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Play, Info, ChevronLeft, ChevronRight, Search, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import logo from '@/assets/logo.png';
 
 interface Anime {
   id: string;
@@ -16,26 +15,10 @@ interface Anime {
   status: string | null;
 }
 
-// Trending search tags - HiAnime style
-const trendingSearches = [
-  'Jujutsu Kaisen',
-  'One Piece',
-  'Demon Slayer',
-  'Attack on Titan',
-  'My Hero Academia',
-  'Naruto',
-  'Bleach',
-  'Dragon Ball',
-  'Solo Leveling',
-  'Chainsaw Man'
-];
-
 export function FeaturedAnime() {
   const [featured, setFeatured] = useState<Anime[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const navigate = useNavigate();
   
   // Touch handling refs
   const touchStartX = useRef<number>(0);
@@ -117,13 +100,6 @@ export function FeaturedAnime() {
     }
   }, [nextSlide, prevSlide]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/browse?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  };
-
   if (featured.length === 0) return null;
 
   const current = featured[currentIndex];
@@ -131,7 +107,7 @@ export function FeaturedAnime() {
   return (
     <section 
       ref={containerRef}
-      className="relative h-[60vh] md:h-[75vh] overflow-hidden"
+      className="relative h-[50vh] md:h-[65vh] overflow-hidden"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -157,59 +133,39 @@ export function FeaturedAnime() {
         ))}
       </div>
       
-      {/* Overlays for readability - HiAnime style gradient */}
+      {/* Overlays for readability */}
       <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/40" />
       <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
 
-      {/* Content - HiAnime Layout */}
+      {/* Content */}
       <div className="relative h-full container flex items-center">
         <div 
           key={current.id}
-          className="max-w-xl space-y-4"
+          className="max-w-xl space-y-6"
         >
-          {/* Brand Title */}
-          <h2 className="text-3xl md:text-4xl font-bold">
-            <span className="text-primary">h</span>
-            <span className="text-foreground">!</span>
-            <span className="text-foreground">anime</span>
-          </h2>
-
-          {/* Search Bar - HiAnime Style */}
-          <form onSubmit={handleSearch} className="relative">
-            <Input
-              type="search"
-              placeholder="Search anime..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-4 pr-14 py-6 text-base bg-card/80 backdrop-blur border-border rounded-lg"
+          {/* Brand Logo & Title */}
+          <div className="flex items-center gap-3">
+            <img 
+              src={logo} 
+              alt="Anime.Savi.me" 
+              className="h-12 w-12 rounded-xl object-contain shadow-lg" 
             />
-            <Button 
-              type="submit" 
-              size="icon" 
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 bg-primary hover:bg-primary/90 rounded-md"
-            >
-              <Search className="h-5 w-5" />
-            </Button>
-          </form>
-
-          {/* Trending Searches */}
-          <div className="space-y-2">
-            <span className="text-sm text-muted-foreground">Top search:</span>
-            <div className="flex flex-wrap gap-2">
-              {trendingSearches.slice(0, 6).map((term) => (
-                <Link
-                  key={term}
-                  to={`/browse?q=${encodeURIComponent(term)}`}
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  {term}
-                </Link>
-              ))}
-            </div>
+            <h2 className="text-2xl md:text-3xl font-bold">
+              <span className="text-primary">Anime</span>
+              <span className="text-muted-foreground">.</span>
+              <span className="text-foreground">Savi</span>
+              <span className="text-muted-foreground">.</span>
+              <span className="text-primary">me</span>
+            </h2>
           </div>
 
+          {/* Tagline */}
+          <p className="text-lg md:text-xl text-muted-foreground max-w-md">
+            Watch your favorite anime in Hindi DUB - Free, Fast, and HD Quality
+          </p>
+
           {/* CTA Button */}
-          <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8">
+          <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 shadow-lg">
             <Link to="/browse">
               Watch anime
               <ArrowRight className="h-4 w-4 ml-2" />
