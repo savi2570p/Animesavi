@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,9 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { User, Mail, Lock, Palette, Camera } from 'lucide-react';
+import { User, Mail, Lock, Palette, Camera, Upload, Link as LinkIcon } from 'lucide-react';
 import { z } from 'zod';
 
 // Input validation schemas
@@ -20,9 +19,9 @@ const usernameSchema = z.string()
   .optional()
   .or(z.literal(''));
 
+// Allow any URL length for avatar
 const avatarUrlSchema = z.string()
   .url('Please enter a valid URL')
-  .max(500, 'URL is too long')
   .refine((url) => {
     try {
       const parsed = new URL(url);
@@ -37,6 +36,7 @@ const avatarUrlSchema = z.string()
 export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
@@ -49,6 +49,7 @@ export default function Profile() {
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -76,6 +77,65 @@ export default function Profile() {
     if (data) {
       setUsername(data.username || '');
       setAvatarUrl(data.avatar_url || '');
+    }
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+
+    try {
+      // Create a unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('anime-media')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('anime-media')
+        .getPublicUrl(filePath);
+
+      // Update avatar URL
+      setAvatarUrl(publicUrl);
+      
+      // Save to profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      toast.success('Profile picture updated!');
+    } catch (error: any) {
+      console.error('Error uploading avatar:', error);
+      toast.error('Failed to upload profile picture');
+    } finally {
+      setIsUploadingAvatar(false);
     }
   };
 
@@ -216,8 +276,47 @@ export default function Profile() {
               />
             </div>
             
+            {/* Profile Picture Upload */}
             <div className="space-y-2">
-              <Label htmlFor="avatar">Avatar URL</Label>
+              <Label>Profile Picture</Label>
+              <div className="flex items-center gap-4">
+                <Avatar className="h-20 w-20">
+                  <AvatarImage src={avatarUrl} alt="Avatar" />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+                    {username?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingAvatar}
+                    className="gap-2"
+                  >
+                    <Upload className="h-4 w-4" />
+                    {isUploadingAvatar ? 'Uploading...' : 'Upload Photo'}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    JPG, PNG or GIF. Max 5MB.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Avatar URL Input */}
+            <div className="space-y-2">
+              <Label htmlFor="avatar" className="flex items-center gap-2">
+                <LinkIcon className="h-4 w-4" />
+                Or use URL
+              </Label>
               <div className="flex gap-2">
                 <Input
                   id="avatar"
@@ -226,12 +325,9 @@ export default function Profile() {
                   placeholder="https://example.com/avatar.jpg"
                   className="bg-muted/50"
                 />
-                <Button variant="outline" size="icon">
-                  <Camera className="h-4 w-4" />
-                </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Enter a URL for your profile picture
+                Enter any image URL (no length limit)
               </p>
             </div>
             

@@ -12,6 +12,7 @@ import { RecentlyCompleted } from '@/components/home/RecentlyCompleted';
 import { EpisodeProgress } from '@/components/home/EpisodeProgress';
 import { ComingSoon } from '@/components/home/ComingSoon';
 import { SocialShare } from '@/components/home/SocialShare';
+import { MostPopular } from '@/components/home/MostPopular';
 
 export default function Index() {
   const { user } = useAuth();
@@ -25,7 +26,7 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Featured Anime Hero */}
+      {/* Featured Anime - Contained Section (No Carousel) */}
       <FeaturedAnime />
 
       {/* Quick Stats Bar */}
@@ -56,6 +57,9 @@ export default function Index() {
       {/* Recommended Anime */}
       <RecommendedAnime />
 
+      {/* Most Popular */}
+      <MostPopular />
+
       {/* Latest Series */}
       <LatestSeries />
 
@@ -78,45 +82,6 @@ export default function Index() {
       <section className="py-8">
         <div className="container">
           <SocialShare />
-        </div>
-      </section>
-
-      {/* Platform Info Section - HiAnime Style */}
-      <section className="py-16 bg-card/30 border-t border-border/30">
-        <div className="container">
-          <div className="max-w-4xl">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">
-              Anime.Savi.me – The best site to watch anime online for Free
-            </h2>
-            <p className="text-muted-foreground mb-6 leading-relaxed">
-              Do you know that according to Google, the monthly search volume for anime related topics is up to over 1 Billion times? 
-              Anime is famous worldwide and it is no wonder we've seen a sharp rise in the number of free anime streaming sites. 
-              Just like free online movie streaming sites, anime watching sites are not created equally, some are better than the rest, 
-              so we've decided to build Anime.Savi.me to be one of the best free anime streaming site for all anime fans in the world.
-            </p>
-            
-            <h3 className="text-xl font-semibold mb-3 text-primary">What is Anime.Savi.me?</h3>
-            <p className="text-muted-foreground mb-6 leading-relaxed">
-              Anime.Savi.me is a free site to watch anime and you can even download subbed or dubbed anime in ultra HD quality 
-              without any registration or payment. By having only one ads, we are able to offer you more anime and faster with 
-              better quality while still covering our costs!
-            </p>
-
-            <div className="flex flex-wrap gap-4 pt-4">
-              <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <Link to={user ? '/browse' : '/auth'}>
-                  <Play className="h-5 w-5 mr-2 fill-current" />
-                  Watch anime
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link to="/browse">
-                  <Film className="h-5 w-5 mr-2" />
-                  Browse Library
-                </Link>
-              </Button>
-            </div>
-          </div>
         </div>
       </section>
 
