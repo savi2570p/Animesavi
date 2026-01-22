@@ -27,7 +27,7 @@ export function LatestSeries() {
 
   const fetchLatestSeries = async () => {
     try {
-      // Fetch anime series - order by created_at to show newest first
+      // Fetch ALL anime series (including upcoming, ongoing, completed)
       const { data: animeData, error: animeError } = await supabase
         .from('anime')
         .select(`
@@ -89,18 +89,15 @@ export function LatestSeries() {
         })
       );
 
-      // Filter to only show anime with episodes > 0
-      const seriesWithEpisodes = seriesWithData.filter(anime => anime.episode_count > 0);
-
-      // Sort by latest episode date or created_at (newest first)
-      seriesWithEpisodes.sort((a, b) => {
+      // Sort by latest episode date or created_at (newest first) - include ALL anime
+      seriesWithData.sort((a, b) => {
         const dateA = a.latest_episode_date || a.created_at;
         const dateB = b.latest_episode_date || b.created_at;
         return new Date(dateB).getTime() - new Date(dateA).getTime();
       });
 
-      // Take first 4
-      setSeries(seriesWithEpisodes.slice(0, 4));
+      // Take first 8 (show more anime)
+      setSeries(seriesWithData.slice(0, 8));
     } catch (error) {
       console.error('Error fetching latest series:', error);
     } finally {
@@ -116,6 +113,25 @@ export function LatestSeries() {
     const diff = now.getTime() - date.getTime();
     const days = diff / (1000 * 60 * 60 * 24);
     return days <= 7;
+  };
+
+  const getStatusBadge = (anime: AnimeSeries) => {
+    if (anime.status === 'upcoming') {
+      return (
+        <div className="absolute top-10 left-2 px-2 py-1 text-xs font-bold bg-orange-500 text-white rounded-lg shadow-md animate-pulse flex items-center gap-1">
+          <CalendarClock className="h-3 w-3" />
+          Coming Soon
+        </div>
+      );
+    }
+    if (anime.status === 'completed') {
+      return (
+        <div className="absolute top-10 left-2 px-2 py-1 text-xs font-bold bg-green-600 text-white rounded-lg shadow-md">
+          COMPLETE
+        </div>
+      );
+    }
+    return null;
   };
 
   if (loading) {
@@ -166,7 +182,7 @@ export function LatestSeries() {
         </div>
 
         <div className="flex md:grid md:grid-cols-4 gap-3 md:gap-4 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
-          {series.map((anime, index) => (
+          {series.slice(0, 4).map((anime, index) => (
             <AnimeCardContextMenu
               key={anime.id}
               animeTitle={anime.title}
@@ -202,19 +218,14 @@ export function LatestSeries() {
                   </div>
 
                   {/* NEW badge */}
-                  {isNew(anime) && anime.episode_count > 0 && (
+                  {isNew(anime) && (
                     <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-lg shadow-md animate-pulse">
                       NEW
                     </div>
                   )}
 
-                  {/* Coming Soon badge for upcoming */}
-                  {anime.status === 'upcoming' && (
-                    <div className="absolute top-10 left-2 px-2 py-1 text-xs font-bold bg-orange-500 text-white rounded-lg shadow-md animate-pulse flex items-center gap-1">
-                      <CalendarClock className="h-3 w-3" />
-                      Coming Soon
-                    </div>
-                  )}
+                  {/* Status Badge */}
+                  {getStatusBadge(anime)}
 
                   {/* Title at bottom */}
                   <div className="absolute bottom-0 left-0 right-0 p-3">

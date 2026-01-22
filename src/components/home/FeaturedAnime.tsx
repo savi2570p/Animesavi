@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Play, Info, Star } from 'lucide-react';
 import logo from '@/assets/logo.png';
 
 interface Anime {
@@ -13,201 +14,144 @@ interface Anime {
   banner_image: string | null;
   genres: string[];
   status: string | null;
+  view_count: number | null;
 }
 
 export function FeaturedAnime() {
-  const [featured, setFeatured] = useState<Anime[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  
-  // Touch handling refs
-  const touchStartX = useRef<number>(0);
-  const touchEndX = useRef<number>(0);
-  const containerRef = useRef<HTMLElement>(null);
+  const [featured, setFeatured] = useState<Anime | null>(null);
 
   useEffect(() => {
     fetchFeatured();
   }, []);
 
-  // Auto-advance carousel every 6 seconds
-  useEffect(() => {
-    if (featured.length <= 1) return;
-    
-    const interval = setInterval(() => {
-      nextSlide();
-    }, 6000);
-
-    return () => clearInterval(interval);
-  }, [featured.length, currentIndex]);
-
   const fetchFeatured = async () => {
+    // First try to get featured anime
     const { data } = await supabase
       .from('anime_public')
       .select('*')
       .eq('is_featured', true)
-      .limit(5);
+      .limit(1);
 
     if (data && data.length > 0) {
-      setFeatured(data);
+      setFeatured(data[0]);
     } else {
+      // Fallback to most popular
       const { data: popularData } = await supabase
         .from('anime_public')
         .select('*')
         .order('view_count', { ascending: false })
-        .limit(5);
+        .limit(1);
 
-      if (popularData) {
-        setFeatured(popularData);
+      if (popularData && popularData.length > 0) {
+        setFeatured(popularData[0]);
       }
     }
   };
 
-  const changeSlide = useCallback((newIndex: number) => {
-    if (isTransitioning) return;
-    setIsTransitioning(true);
-    setCurrentIndex(newIndex);
-    setTimeout(() => setIsTransitioning(false), 500);
-  }, [isTransitioning]);
-
-  const nextSlide = useCallback(() => {
-    changeSlide((currentIndex + 1) % featured.length);
-  }, [changeSlide, currentIndex, featured.length]);
-
-  const prevSlide = useCallback(() => {
-    changeSlide((currentIndex - 1 + featured.length) % featured.length);
-  }, [changeSlide, currentIndex, featured.length]);
-
-  // Touch handlers for mobile swipe
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchEndX.current = e.touches[0].clientX;
-  }, []);
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    touchEndX.current = e.touches[0].clientX;
-  }, []);
-
-  const handleTouchEnd = useCallback(() => {
-    const diff = touchStartX.current - touchEndX.current;
-    const threshold = 50;
-    
-    if (Math.abs(diff) > threshold) {
-      if (diff > 0) {
-        nextSlide();
-      } else {
-        prevSlide();
-      }
-    }
-  }, [nextSlide, prevSlide]);
-
-  if (featured.length === 0) return null;
-
-  const current = featured[currentIndex];
+  if (!featured) return null;
 
   return (
-    <section 
-      ref={containerRef}
-      className="relative h-[50vh] md:h-[65vh] overflow-hidden"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
-      {/* Background with smooth transition */}
-      <div className="absolute inset-0">
-        {featured.map((anime, index) => (
-          <div
-            key={anime.id}
-            className={`absolute inset-0 transition-all duration-700 ease-out ${
-              index === currentIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
-            }`}
-          >
-            <img
-              src={anime.banner_image || anime.cover_image || '/placeholder.svg'}
-              alt={anime.title || 'Featured anime'}
-              className="w-full h-full object-cover object-center"
-              loading={index === 0 ? 'eager' : 'lazy'}
-              decoding="async"
-              fetchPriority={index === 0 ? 'high' : 'auto'}
-            />
-          </div>
-        ))}
-      </div>
-      
-      {/* Overlays for readability */}
-      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/40" />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+    <section className="py-8 md:py-12">
+      <div className="container">
+        {/* Brand Header */}
+        <div className="flex items-center gap-3 mb-8">
+          <img 
+            src={logo} 
+            alt="Anime.Savi.me" 
+            className="h-12 w-12 rounded-xl object-contain shadow-lg" 
+          />
+          <h2 className="text-2xl md:text-3xl font-bold">
+            <span className="text-primary">Anime</span>
+            <span className="text-muted-foreground">.</span>
+            <span className="text-foreground">Savi</span>
+            <span className="text-muted-foreground">.</span>
+            <span className="text-primary">me</span>
+          </h2>
+        </div>
 
-      {/* Content */}
-      <div className="relative h-full container flex items-center">
-        <div 
-          key={current.id}
-          className="max-w-xl space-y-6"
-        >
-          {/* Brand Logo & Title */}
-          <div className="flex items-center gap-3">
-            <img 
-              src={logo} 
-              alt="Anime.Savi.me" 
-              className="h-12 w-12 rounded-xl object-contain shadow-lg" 
-            />
-            <h2 className="text-2xl md:text-3xl font-bold">
-              <span className="text-primary">Anime</span>
-              <span className="text-muted-foreground">.</span>
-              <span className="text-foreground">Savi</span>
-              <span className="text-muted-foreground">.</span>
-              <span className="text-primary">me</span>
-            </h2>
+        {/* Featured Anime Card */}
+        <div className="relative rounded-2xl overflow-hidden bg-card border border-border/50">
+          <div className="flex flex-col md:flex-row gap-6 p-6 md:p-8">
+            {/* Poster/Thumbnail */}
+            <div className="relative flex-shrink-0 w-full md:w-64">
+              <div className="aspect-[3/4] rounded-xl overflow-hidden shadow-xl">
+                <img
+                  src={featured.cover_image || '/placeholder.svg'}
+                  alt={featured.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              {/* Status Badge */}
+              {featured.status && (
+                <Badge 
+                  className="absolute top-3 left-3 capitalize"
+                  variant={featured.status === 'completed' ? 'default' : 'secondary'}
+                >
+                  {featured.status}
+                </Badge>
+              )}
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 flex flex-col justify-center space-y-4">
+              {/* Title */}
+              <h1 className="text-2xl md:text-4xl font-bold line-clamp-2">
+                {featured.title}
+              </h1>
+
+              {/* Genres */}
+              {featured.genres && featured.genres.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {featured.genres.slice(0, 4).map((genre, i) => (
+                    <Badge key={i} variant="outline" className="text-xs">
+                      {genre}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Description */}
+              {featured.description && (
+                <p className="text-muted-foreground line-clamp-3 text-sm md:text-base">
+                  {featured.description}
+                </p>
+              )}
+
+              {/* View Count */}
+              {featured.view_count && featured.view_count > 0 && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Star className="h-4 w-4 text-primary" />
+                  <span>{featured.view_count.toLocaleString()} views</span>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-3 pt-2">
+                <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  <Link to={`/anime/${featured.id}`}>
+                    <Play className="h-5 w-5 mr-2 fill-current" />
+                    Watch Now
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link to={`/anime/${featured.id}`}>
+                    <Info className="h-5 w-5 mr-2" />
+                    More Info
+                  </Link>
+                </Button>
+              </div>
+            </div>
           </div>
 
-          {/* CTA Button */}
-          <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 shadow-lg">
-            <Link to="/browse">
-              Watch anime
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Link>
-          </Button>
+          {/* Subtle Background Gradient */}
+          <div 
+            className="absolute inset-0 -z-10 opacity-20 blur-3xl"
+            style={{
+              background: `radial-gradient(circle at 30% 50%, hsl(var(--primary) / 0.3), transparent 60%)`
+            }}
+          />
         </div>
       </div>
-
-      {/* Navigation Arrows */}
-      {featured.length > 1 && (
-        <>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute left-4 top-1/2 -translate-y-1/2 h-10 w-10 bg-background/50 backdrop-blur hover:bg-background/70 rounded-full"
-            onClick={prevSlide}
-            disabled={isTransitioning}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 bg-background/50 backdrop-blur hover:bg-background/70 rounded-full"
-            onClick={nextSlide}
-            disabled={isTransitioning}
-          >
-            <ChevronRight className="h-5 w-5" />
-          </Button>
-
-          {/* Progress Indicators */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-            {featured.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => changeSlide(i)}
-                disabled={isTransitioning}
-                className={`h-1 rounded-full transition-all duration-300 ${
-                  i === currentIndex 
-                    ? 'w-8 bg-primary' 
-                    : 'w-2 bg-foreground/30 hover:bg-foreground/50'
-                }`}
-              />
-            ))}
-          </div>
-        </>
-      )}
     </section>
   );
 }

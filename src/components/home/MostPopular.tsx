@@ -1,0 +1,145 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { TrendingUp, ChevronRight, Play, Eye } from 'lucide-react';
+import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
+
+interface PopularAnime {
+  id: string;
+  title: string;
+  cover_image: string | null;
+  view_count: number | null;
+  status: string | null;
+}
+
+export function MostPopular() {
+  const [animeList, setAnimeList] = useState<PopularAnime[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPopularAnime();
+  }, []);
+
+  const fetchPopularAnime = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('anime')
+        .select('id, title, cover_image, view_count, status')
+        .order('view_count', { ascending: false })
+        .limit(8);
+
+      if (error) throw error;
+      setAnimeList(data || []);
+    } catch (error) {
+      console.error('Error fetching popular anime:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <section className="py-10 md:py-14">
+        <div className="container">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <TrendingUp className="h-5 w-5 text-primary" />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-heading font-bold">Most Popular</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Array(4).fill(0).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="aspect-[3/4] rounded-lg" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (animeList.length === 0) return null;
+
+  return (
+    <section className="py-10 md:py-14">
+      <div className="container">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <TrendingUp className="h-5 w-5 text-primary" />
+            </div>
+            <h2 className="text-2xl md:text-3xl font-heading font-bold">Most Popular</h2>
+            <span className="px-2 py-1 text-xs font-medium bg-primary/20 text-primary rounded-full">
+              Trending
+            </span>
+          </div>
+          <Button asChild variant="ghost" className="group">
+            <Link to="/browse?sort=popular" className="flex items-center gap-1">
+              See All
+              <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </Button>
+        </div>
+
+        <div className="flex md:grid md:grid-cols-4 gap-3 md:gap-4 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
+          {animeList.slice(0, 4).map((anime, index) => (
+            <AnimeCardContextMenu
+              key={anime.id}
+              animeTitle={anime.title}
+              animeUrl={`/anime/${anime.id}`}
+              coverImage={anime.cover_image}
+            >
+              <Link
+                to={`/anime/${anime.id}`}
+                className={`group relative block stagger-${Math.min(index + 1, 4)} animate-fade-in w-[140px] md:w-auto shrink-0`}
+              >
+                <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-muted shadow-md group-hover:shadow-xl transition-all duration-500">
+                  <img
+                    src={anime.cover_image || '/placeholder.svg'}
+                    alt={anime.title}
+                    className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
+                    loading="lazy"
+                  />
+                  
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-60 group-hover:opacity-90 transition-all duration-300" />
+                  
+                  {/* Play overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    <div className="p-4 rounded-full bg-primary/90 shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                      <Play className="h-6 w-6 text-primary-foreground fill-current" />
+                    </div>
+                  </div>
+
+                  {/* Rank Badge */}
+                  <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-lg shadow-md">
+                    #{index + 1}
+                  </div>
+
+                  {/* View Count */}
+                  {anime.view_count && anime.view_count > 0 && (
+                    <div className="absolute top-2 right-2 px-2 py-1 text-xs font-medium bg-black/60 text-white rounded-lg flex items-center gap-1">
+                      <Eye className="h-3 w-3" />
+                      {anime.view_count.toLocaleString()}
+                    </div>
+                  )}
+
+                  {/* Title at bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 p-3">
+                    <h3 className="text-sm md:text-base font-semibold text-white line-clamp-2 drop-shadow-lg">
+                      {anime.title}
+                    </h3>
+                  </div>
+                </div>
+              </Link>
+            </AnimeCardContextMenu>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

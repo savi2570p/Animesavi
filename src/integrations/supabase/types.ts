@@ -574,6 +574,35 @@ export type Database = {
           },
         ]
       }
+      watch_later: {
+        Row: {
+          created_at: string
+          episode_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          episode_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          episode_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watch_later_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       watch_parties: {
         Row: {
           anime_id: string

@@ -20,6 +20,7 @@ interface LatestEpisode {
       title: string;
       cover_image: string | null;
       type: string | null;
+      status: string | null;
     };
   };
 }
@@ -35,6 +36,7 @@ export function LatestEpisodes() {
   const fetchLatestEpisodes = async () => {
     try {
       // Fetch episodes ordered by created_at (most recent first)
+      // Include ALL anime status (upcoming, ongoing, completed)
       const { data, error } = await supabase
         .from('episodes')
         .select(`
@@ -51,6 +53,7 @@ export function LatestEpisodes() {
               title,
               cover_image,
               type,
+              status,
               updated_at
             )
           )
@@ -65,8 +68,8 @@ export function LatestEpisodes() {
         return ep.season?.anime && ep.season.anime.type !== 'movie';
       });
       
-      // Take only first 4 after filtering
-      setEpisodes(filteredEpisodes.slice(0, 4) as unknown as LatestEpisode[]);
+      // Take only first 8 after filtering (show more episodes)
+      setEpisodes(filteredEpisodes.slice(0, 8) as unknown as LatestEpisode[]);
     } catch (error) {
       console.error('Error fetching latest episodes:', error);
     } finally {
@@ -137,7 +140,7 @@ export function LatestEpisodes() {
         </div>
 
         <div className="flex md:grid md:grid-cols-4 gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
-          {episodes.map((episode, index) => {
+          {episodes.slice(0, 4).map((episode, index) => {
             const hasThumbnail = is16by9Ratio(episode.thumbnail);
             
             return (

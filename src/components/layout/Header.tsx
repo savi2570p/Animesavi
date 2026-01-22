@@ -26,7 +26,6 @@ import {
   Film,
   Tv,
   TrendingUp,
-  Star,
   Calendar
 } from 'lucide-react';
 import { useState } from 'react';
@@ -35,6 +34,7 @@ import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
 import { JoinPartyDialog, ViewPartyDialog } from '@/components/WatchParty';
 import { NotificationBell } from '@/components/NotificationBell';
+import { WatchLaterButton } from '@/components/WatchLater';
 
 export function Header() {
   const { user, isUploader, isAdmin, signOut } = useAuth();
@@ -149,6 +149,9 @@ export function Header() {
 
         {/* User Menu */}
         <div className="flex items-center gap-2">
+          {/* Watch Later Button */}
+          {user && <WatchLaterButton />}
+          
           {/* Notification Bell */}
           {user && <NotificationBell />}
           
