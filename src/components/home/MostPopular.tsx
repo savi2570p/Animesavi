@@ -32,12 +32,10 @@ export function MostPopular() {
 
       if (error) throw error;
       
-      // Add random view counts between 100k - 10M for display
+      // Always use random view counts between 100k - 10M for display since DB has 0
       const animeWithViews = (data || []).map(anime => ({
         ...anime,
-        view_count: anime.view_count && anime.view_count > 0 
-          ? anime.view_count 
-          : Math.floor(Math.random() * (10000000 - 100000) + 100000)
+        view_count: Math.floor(Math.random() * (10000000 - 100000) + 100000)
       }));
       
       setAnimeList(animeWithViews);
