@@ -60,7 +60,7 @@ function PrivacyPolicyButton() {
               <div className="space-y-2">
                 <h3 className="text-foreground font-semibold">Data Collection</h3>
                 <p>
-                  Anime.Savi.me does not store any video files on our servers. We only index links from the internet which are hosted on third-party services, similar to how search engines operate.
+                  Anime Savi does not store any video files on our servers. We only index links from the internet which are hosted on third-party services, similar to how search engines operate.
                 </p>
               </div>
               
@@ -124,14 +124,14 @@ function TermsOfServiceButton() {
               <div className="space-y-3">
                 <h3 className="text-foreground font-semibold text-base">1. Acceptance of Terms</h3>
                 <p>
-                  By accessing and using Anime.Savi.me ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our Service.
+                  By accessing and using Anime Savi ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our Service.
                 </p>
               </div>
               
               <div className="space-y-3">
                 <h3 className="text-foreground font-semibold text-base">2. Description of Service</h3>
                 <p>
-                  Anime.Savi.me is a streaming index platform that aggregates anime content links from various third-party sources. We do not host, upload, or store any video content on our servers. Our Service functions as a content discovery and indexing platform only.
+                  Anime Savi is a streaming index platform that aggregates anime content links from various third-party sources. We do not host, upload, or store any video content on our servers. Our Service functions as a content discovery and indexing platform only.
                 </p>
               </div>
               
@@ -170,7 +170,7 @@ function TermsOfServiceButton() {
               <div className="space-y-3">
                 <h3 className="text-foreground font-semibold text-base">6. Intellectual Property</h3>
                 <p>
-                  The Anime.Savi.me name, logo, and website design are our intellectual property. Anime titles, characters, and related media remain the property of their respective owners.
+                  The Anime Savi name, logo, and website design are our intellectual property. Anime titles, characters, and related media remain the property of their respective owners.
                 </p>
               </div>
               
@@ -231,11 +231,11 @@ export function Footer() {
             <Link to="/" className="flex items-center gap-3 mb-4 group">
               <img 
                 src={logo} 
-                alt="Anime.Savi.me" 
+                alt="Anime Savi" 
                 className="h-12 w-12 rounded-xl object-contain transition-transform duration-300 group-hover:scale-110" 
               />
               <span className="text-xl font-heading font-bold anime-gradient-text">
-                Anime.Savi.me
+                Anime Savi
               </span>
             </Link>
             <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
@@ -342,7 +342,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="border-t border-border/30 mt-10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            ©{new Date().getFullYear()} Anime.Savi.Me all rights reserved
+            ©{new Date().getFullYear()} Anime Savi all rights reserved
           </p>
         </div>
       </div>
