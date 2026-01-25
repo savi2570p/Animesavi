@@ -24,7 +24,7 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import ExternalPlayer from "./pages/ExternalPlayer";
 import AnimeSlugRedirect from "./pages/AnimeSlugRedirect";
-import Schedule from "./pages/Schedule";
+// Schedule import removed
 
 const queryClient = new QueryClient();
 
@@ -43,7 +43,7 @@ const App = () => (
             <Route path="/external-player" element={<ExternalPlayer />} />
             <Route element={<MainLayout />}>
               <Route path="/" element={<Index />} />
-              <Route path="/schedule" element={<Schedule />} />
+              {/* Schedule route removed */}
               <Route path="/browse" element={<Browse />} />
               <Route path="/anime/:id" element={<AnimeDetail />} />
               <Route path="/watch/:episodeId" element={<Watch />} />

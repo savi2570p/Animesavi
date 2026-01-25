@@ -25,8 +25,7 @@ import {
   Eye,
   Film,
   Tv,
-  TrendingUp,
-  Calendar
+  TrendingUp
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -77,7 +76,6 @@ export function Header() {
     { to: '/', label: 'Home', icon: null },
     { to: '/browse?type=movie', label: 'Movies', icon: Film },
     { to: '/browse?type=series', label: 'TV Series', icon: Tv },
-    { to: '/schedule', label: 'Schedule', icon: Calendar },
     { to: '/browse?sort=popular', label: 'Most Popular', icon: TrendingUp },
   ];
 
@@ -88,15 +86,12 @@ export function Header() {
         <Link to="/" className="flex items-center gap-2 flex-shrink-0 group">
           <img 
             src={logo} 
-            alt="Anime.Savi.me" 
+            alt="Anime Savi" 
             className="h-8 w-8 rounded-lg object-contain" 
           />
           <span className="hidden sm:inline-block text-lg font-bold">
             <span className="text-primary">Anime</span>
-            <span className="text-muted-foreground">.</span>
-            <span className="text-foreground">Savi</span>
-            <span className="text-muted-foreground">.</span>
-            <span className="text-primary">me</span>
+            <span className="text-foreground ml-1">Savi</span>
           </span>
         </Link>
 

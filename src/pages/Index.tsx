@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Play, Tv, Clock, Award, ArrowRight, Film, Sparkles } from 'lucide-react';
 import { FeaturedAnime } from '@/components/home/FeaturedAnime';
+import { FeaturedSlider } from '@/components/home/FeaturedSlider';
 import { ContinueWatching } from '@/components/home/ContinueWatching';
 import { RecommendedAnime } from '@/components/home/RecommendedAnime';
 import { LatestEpisodes } from '@/components/home/LatestEpisodes';
@@ -26,8 +27,8 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Featured Anime - Contained Section (No Carousel) */}
-      <FeaturedAnime />
+      {/* Featured Anime Slider - Top section */}
+      <FeaturedSlider />
 
       {/* Quick Stats Bar */}
       <section className="py-6 border-b border-border/30 bg-card/20">

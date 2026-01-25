@@ -678,7 +678,7 @@ export function VideoPlayer({
     };
   }, [effectiveVideoUrl]);
 
-  // Helper to get readable audio labels
+  // Helper to get readable audio labels with Tamil and Telugu support
   const getAudioLabel = (label: string | undefined, lang: string | undefined, index: number): string => {
     const language = (lang || '').toLowerCase();
     
@@ -686,6 +686,8 @@ export function VideoPlayer({
     
     if (language.includes('hin') || language === 'hi') return '🇮🇳 Hindi';
     if (language.includes('eng') || language === 'en') return '🇬🇧 English';
+    if (language.includes('tam') || language === 'ta') return '🇮🇳 Tamil';
+    if (language.includes('tel') || language === 'te') return '🇮🇳 Telugu';
     if (language.includes('jpn') || language === 'ja' || language.includes('jap')) return '🇯🇵 Japanese';
     if (language.includes('spa') || language === 'es') return '🇪🇸 Spanish';
     if (language.includes('fra') || language === 'fr') return '🇫🇷 French';
@@ -1908,7 +1910,13 @@ export function VideoPlayer({
         autoPlay
         playsInline
         webkit-playsinline="true"
+        x-webkit-airplay="allow"
+        x5-video-player-type="h5-page"
+        x5-video-player-fullscreen="true"
+        x5-video-orientation="portraint"
+        preload="auto"
         crossOrigin="anonymous"
+        muted={false}
       />
       
       {/* Video Processing State for SAVI.IN */}

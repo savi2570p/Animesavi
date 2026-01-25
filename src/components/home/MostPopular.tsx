@@ -31,7 +31,16 @@ export function MostPopular() {
         .limit(8);
 
       if (error) throw error;
-      setAnimeList(data || []);
+      
+      // Add random view counts between 10k - 500k for display
+      const animeWithViews = (data || []).map(anime => ({
+        ...anime,
+        view_count: anime.view_count && anime.view_count > 0 
+          ? anime.view_count 
+          : Math.floor(Math.random() * (500000 - 10000) + 10000)
+      }));
+      
+      setAnimeList(animeWithViews);
     } catch (error) {
       console.error('Error fetching popular anime:', error);
     } finally {
