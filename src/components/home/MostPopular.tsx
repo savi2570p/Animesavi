@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, ChevronRight, Play, Eye, Filter } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
+import { TrailerPreview } from '@/components/home/TrailerPreview';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,6 +33,8 @@ export function MostPopular() {
   const [filteredList, setFilteredList] = useState<PopularAnime[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
+  const [hoveredAnimeId, setHoveredAnimeId] = useState<string | null>(null);
+  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetchPopularAnime();
@@ -85,6 +88,22 @@ export function MostPopular() {
 
   const handleGenreFilter = (genre: string | null) => {
     setSelectedGenre(genre);
+  };
+
+  const handleMouseEnter = (animeId: string) => {
+    // Set a delay before showing trailer to avoid accidental triggers
+    const timeout = setTimeout(() => {
+      setHoveredAnimeId(animeId);
+    }, 800);
+    setHoverTimeout(timeout);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout);
+      setHoverTimeout(null);
+    }
+    setHoveredAnimeId(null);
   };
 
   if (loading) {
@@ -185,8 +204,20 @@ export function MostPopular() {
                 <Link
                   to={`/anime/${anime.id}`}
                   className={`group relative block stagger-${Math.min(index + 1, 4)} animate-fade-in w-[140px] md:w-auto shrink-0`}
+                  onMouseEnter={() => handleMouseEnter(anime.id)}
+                  onMouseLeave={handleMouseLeave}
                 >
                   <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-muted shadow-md group-hover:shadow-xl transition-all duration-500">
+                    {/* Trailer Preview on Hover */}
+                    {hoveredAnimeId === anime.id && (
+                      <TrailerPreview
+                        animeId={anime.id}
+                        coverImage={anime.cover_image}
+                        title={anime.title}
+                        onClose={() => setHoveredAnimeId(null)}
+                      />
+                    )}
+                    
                     <img
                       src={anime.cover_image || '/placeholder.svg'}
                       alt={anime.title}
@@ -197,21 +228,23 @@ export function MostPopular() {
                     {/* Gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-60 group-hover:opacity-90 transition-all duration-300" />
                     
-                    {/* Play overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                      <div className="p-4 rounded-full bg-primary/90 shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300">
-                        <Play className="h-6 w-6 text-primary-foreground fill-current" />
+                    {/* Play overlay - hide when trailer is showing */}
+                    {hoveredAnimeId !== anime.id && (
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        <div className="p-4 rounded-full bg-primary/90 shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                          <Play className="h-6 w-6 text-primary-foreground fill-current" />
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Rank Badge */}
-                    <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-lg shadow-md">
+                    <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-lg shadow-md z-20">
                       #{index + 1}
                     </div>
 
                     {/* View Count */}
                     {anime.view_count && anime.view_count > 0 && (
-                      <div className="absolute top-2 right-2 px-2 py-1 text-xs font-medium bg-black/60 text-white rounded-lg flex items-center gap-1">
+                      <div className="absolute top-2 right-2 px-2 py-1 text-xs font-medium bg-black/60 text-white rounded-lg flex items-center gap-1 z-20">
                         <Eye className="h-3 w-3" />
                         {anime.view_count >= 1000000 
                           ? `${(anime.view_count / 1000000).toFixed(1)}M` 
@@ -220,7 +253,7 @@ export function MostPopular() {
                     )}
 
                     {/* Title at bottom */}
-                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                    <div className="absolute bottom-0 left-0 right-0 p-3 z-20">
                       <h3 className="text-sm md:text-base font-semibold text-white line-clamp-2 drop-shadow-lg">
                         {anime.title}
                       </h3>

@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Play, Info, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { TrailerPreview } from '@/components/home/TrailerPreview';
 
 interface FeaturedAnimeItem {
   id: string;
@@ -48,6 +49,8 @@ const getViewCount = (title: string, dbViewCount: number | null): number => {
 export function FeaturedSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showTrailer, setShowTrailer] = useState(false);
+  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
   const [featuredAnime, setFeaturedAnime] = useState<FeaturedAnimeItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -84,14 +87,29 @@ export function FeaturedSlider() {
     fetchFeaturedAnime();
   }, []);
 
-  // Auto-slide every 4 seconds
+  // Auto-slide every 4 seconds (pause when trailer is showing)
   useEffect(() => {
-    if (featuredAnime.length === 0) return;
+    if (featuredAnime.length === 0 || showTrailer) return;
     const interval = setInterval(() => {
       handleNext();
     }, 4000);
     return () => clearInterval(interval);
-  }, [currentIndex, featuredAnime.length]);
+  }, [currentIndex, featuredAnime.length, showTrailer]);
+
+  const handleThumbnailMouseEnter = () => {
+    const timeout = setTimeout(() => {
+      setShowTrailer(true);
+    }, 800);
+    setHoverTimeout(timeout);
+  };
+
+  const handleThumbnailMouseLeave = () => {
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout);
+      setHoverTimeout(null);
+    }
+    setShowTrailer(false);
+  };
 
   const handleNext = () => {
     if (isAnimating || featuredAnime.length === 0) return;
@@ -159,14 +177,27 @@ export function FeaturedSlider() {
               isAnimating ? '-translate-x-full' : 'translate-x-0'
             }`}
           >
-            {/* Thumbnail */}
-            <div className="relative flex-shrink-0 w-40 md:w-52">
+            {/* Thumbnail with Trailer Preview on Hover */}
+            <div 
+              className="relative flex-shrink-0 w-40 md:w-52"
+              onMouseEnter={handleThumbnailMouseEnter}
+              onMouseLeave={handleThumbnailMouseLeave}
+            >
               <div className="aspect-[3/4] rounded-xl overflow-hidden shadow-2xl ring-2 ring-primary/20">
-                <img
-                  src={current.thumbnail || '/placeholder.svg'}
-                  alt={current.title}
-                  className="w-full h-full object-cover"
-                />
+                {showTrailer ? (
+                  <TrailerPreview
+                    animeId={current.id}
+                    coverImage={current.thumbnail}
+                    title={current.title}
+                    onClose={() => setShowTrailer(false)}
+                  />
+                ) : (
+                  <img
+                    src={current.thumbnail || '/placeholder.svg'}
+                    alt={current.title}
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </div>
             </div>
 

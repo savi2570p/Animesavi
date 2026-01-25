@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Search, Filter, Play, Star, Sparkles, TrendingUp, Clock, Film, Tv, CheckCircle2, Timer, CalendarClock, X, AlertCircle, History, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
+import { MostPopularSection } from '@/components/browse/MostPopularSection';
 
 const ALLOWED_GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports'] as const;
 const MAX_SEARCH_LENGTH = 100;
@@ -575,6 +576,11 @@ export default function Browse() {
             ))}
           </div>
         </div>
+
+        {/* Most Popular Section - Show when no filters applied */}
+        {!searchParams.get('q') && !searchParams.get('genre') && sortBy === 'newest' && (
+          <MostPopularSection />
+        )}
 
         {/* Results count */}
         {!isLoading && (
