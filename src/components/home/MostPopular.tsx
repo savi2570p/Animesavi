@@ -35,8 +35,13 @@ export function MostPopular() {
       // Always use random view counts between 100k - 10M for display since DB has 0
       const animeWithViews = (data || []).map(anime => ({
         ...anime,
-        view_count: Math.floor(Math.random() * (10000000 - 100000) + 100000)
+        view_count: anime.title === 'Your Name' 
+          ? 8400000 
+          : Math.floor(Math.random() * (10000000 - 100000) + 100000)
       }));
+      
+      // Sort by view count after assigning values
+      animeWithViews.sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
       
       setAnimeList(animeWithViews);
     } catch (error) {
