@@ -32,12 +32,12 @@ export function MostPopular() {
 
       if (error) throw error;
       
-      // Add random view counts between 10k - 500k for display
+      // Add random view counts between 100k - 10M for display
       const animeWithViews = (data || []).map(anime => ({
         ...anime,
         view_count: anime.view_count && anime.view_count > 0 
           ? anime.view_count 
-          : Math.floor(Math.random() * (500000 - 10000) + 10000)
+          : Math.floor(Math.random() * (10000000 - 100000) + 100000)
       }));
       
       setAnimeList(animeWithViews);
@@ -133,7 +133,9 @@ export function MostPopular() {
                   {anime.view_count && anime.view_count > 0 && (
                     <div className="absolute top-2 right-2 px-2 py-1 text-xs font-medium bg-black/60 text-white rounded-lg flex items-center gap-1">
                       <Eye className="h-3 w-3" />
-                      {anime.view_count.toLocaleString()}
+                      {anime.view_count >= 1000000 
+                        ? `${(anime.view_count / 1000000).toFixed(1)}M` 
+                        : `${(anime.view_count / 1000).toFixed(0)}K`}
                     </div>
                   )}
 

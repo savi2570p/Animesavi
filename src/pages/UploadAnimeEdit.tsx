@@ -9,10 +9,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { toast } from 'sonner';
-import { Plus, Trash2, Film, Tv, ArrowLeft, Save } from 'lucide-react';
+import { Plus, Trash2, Film, Tv, ArrowLeft, Save, CalendarIcon } from 'lucide-react';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { BatchEpisodeUpload } from '@/components/upload/BatchEpisodeUpload';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface Anime {
   id: string;
@@ -27,6 +31,7 @@ interface Season {
   season_number: number;
   title: string | null;
   anime_id: string;
+  release_date: string | null;
 }
 
 interface Episode {
@@ -57,6 +62,7 @@ export default function UploadAnimeEdit() {
 
   // New season form
   const [newSeasonTitle, setNewSeasonTitle] = useState('');
+  const [newSeasonReleaseDate, setNewSeasonReleaseDate] = useState<Date | undefined>();
   
   // Anime status
   const [animeStatus, setAnimeStatus] = useState<string>('ongoing');
@@ -176,6 +182,7 @@ export default function UploadAnimeEdit() {
         anime_id: animeId,
         season_number: nextSeasonNumber,
         title: newSeasonTitle.trim() || null,
+        release_date: newSeasonReleaseDate ? format(newSeasonReleaseDate, 'yyyy-MM-dd') : null,
       })
       .select()
       .single();
@@ -185,8 +192,25 @@ export default function UploadAnimeEdit() {
     } else {
       toast.success('Season added');
       setNewSeasonTitle('');
+      setNewSeasonReleaseDate(undefined);
       setSeasons([...seasons, data]);
       setSelectedSeason(data.id);
+    }
+  };
+
+  const handleUpdateSeasonReleaseDate = async (seasonId: string, date: Date | undefined) => {
+    const { error } = await supabase
+      .from('seasons')
+      .update({ release_date: date ? format(date, 'yyyy-MM-dd') : null })
+      .eq('id', seasonId);
+
+    if (error) {
+      toast.error('Failed to update release date');
+    } else {
+      toast.success('Release date updated');
+      setSeasons(seasons.map(s => 
+        s.id === seasonId ? { ...s, release_date: date ? format(date, 'yyyy-MM-dd') : null } : s
+      ));
     }
   };
 
@@ -324,20 +348,50 @@ export default function UploadAnimeEdit() {
                     {seasons.map((season) => (
                       <div
                         key={season.id}
-                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                        className="flex flex-col gap-2 p-3 bg-muted/50 rounded-lg"
                       >
-                        <span>
-                          Season {season.season_number}
-                          {season.title && ` - ${season.title}`}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => handleDeleteSeason(season.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">
+                            Season {season.season_number}
+                            {season.title && ` - ${season.title}`}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteSeason(season.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className={cn(
+                                  "justify-start text-left font-normal",
+                                  !season.release_date && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-3 w-3" />
+                                {season.release_date 
+                                  ? format(new Date(season.release_date), 'PPP') 
+                                  : 'Set release date'}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={season.release_date ? new Date(season.release_date) : undefined}
+                                onSelect={(date) => handleUpdateSeasonReleaseDate(season.id, date)}
+                                initialFocus
+                                className="pointer-events-auto"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -363,6 +417,32 @@ export default function UploadAnimeEdit() {
                     onChange={(e) => setNewSeasonTitle(e.target.value)}
                     className="bg-muted/50"
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>Release Date (Optional)</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !newSeasonReleaseDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {newSeasonReleaseDate ? format(newSeasonReleaseDate, 'PPP') : 'Pick a date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={newSeasonReleaseDate}
+                        onSelect={setNewSeasonReleaseDate}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <Button onClick={handleAddSeason} className="anime-button">
                   <Plus className="h-4 w-4 mr-2" />

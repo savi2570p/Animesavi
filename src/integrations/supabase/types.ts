@@ -350,6 +350,7 @@ export type Database = {
           anime_id: string
           created_at: string
           id: string
+          release_date: string | null
           season_number: number
           title: string | null
         }
@@ -357,6 +358,7 @@ export type Database = {
           anime_id: string
           created_at?: string
           id?: string
+          release_date?: string | null
           season_number: number
           title?: string | null
         }
@@ -364,6 +366,7 @@ export type Database = {
           anime_id?: string
           created_at?: string
           id?: string
+          release_date?: string | null
           season_number?: number
           title?: string | null
         }

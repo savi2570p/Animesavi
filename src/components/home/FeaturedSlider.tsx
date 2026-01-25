@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Play, Info, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Play, Info, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 
 interface FeaturedAnimeItem {
   id: string;
@@ -10,50 +10,64 @@ interface FeaturedAnimeItem {
   description: string;
   thumbnail: string;
   genres: string[];
+  views: number;
 }
+
+const formatViews = (views: number): string => {
+  if (views >= 1000000) {
+    return `${(views / 1000000).toFixed(1)}M`;
+  }
+  return `${(views / 1000).toFixed(0)}K`;
+};
 
 const FEATURED_ANIME: FeaturedAnimeItem[] = [
   {
     id: 'your-name',
     title: 'Your Name',
     description: 'Two teenagers share a profound, magical connection upon discovering they are swapping bodies. Things manage to become even more complicated when the boy and girl decide to meet in person.',
-    thumbnail: 'https://m.media-amazon.com/images/M/MV5BNGYyNmI3M2YtNzYzZS00OTViLTkxYjAtZDIyZmE1Y2U1ZmRkXkEyXkFqcGdeQXVyMTA4NjE0NjEy._V1_.jpg',
-    genres: ['Romance', 'Fantasy', 'Drama']
+    thumbnail: 'https://upload.wikimedia.org/wikipedia/en/0/0b/Your_Name_poster.png',
+    genres: ['Romance', 'Fantasy', 'Drama'],
+    views: 8500000
   },
   {
     id: 'suzume',
     title: 'Suzume',
     description: 'A modern action adventure road story where a 17-year-old girl named Suzume helps a mysterious young man close doors from the other side that are releasing disaster all over Japan.',
-    thumbnail: 'https://m.media-amazon.com/images/M/MV5BNGVkNDc3NjUtNTY5ZS00ZmE0LWE3YzctMDk2OTRlNTdiZWQwXkEyXkFqcGdeQXVyMTU3NDg0OTgx._V1_.jpg',
-    genres: ['Adventure', 'Fantasy', 'Animation']
+    thumbnail: 'https://upload.wikimedia.org/wikipedia/en/a/a9/Suzume_no_Tojimari.jpg',
+    genres: ['Adventure', 'Fantasy', 'Animation'],
+    views: 6200000
   },
   {
     id: 'your-lie-in-april',
     title: 'Your Lie in April',
     description: 'A piano prodigy who lost his ability to play after suffering a traumatic event in his childhood is forced back into the spotlight by an eccentric girl with a secret of her own.',
-    thumbnail: 'https://m.media-amazon.com/images/M/MV5BYThlNWY5ZDgtYTIxNC00ZjdiLWJmNGUtMDFjMDlmZTAzOWFiXkEyXkFqcGdeQXVyNTAyODkwOQ@@._V1_.jpg',
-    genres: ['Drama', 'Music', 'Romance']
+    thumbnail: 'https://upload.wikimedia.org/wikipedia/en/0/05/Your_lie_in_April_cover.jpg',
+    genres: ['Drama', 'Music', 'Romance'],
+    views: 4800000
   },
   {
     id: 'bofuri',
     title: "Bofuri: I Don't Want to Get Hurt",
     description: 'Kaede Honjou is invited by her friend to play a VRMMO game with her. Naming her character Maple, she joins in and puts all her points in vitality to not feel pain, unlocking unique abilities.',
-    thumbnail: 'https://m.media-amazon.com/images/M/MV5BNjQwODMxNzE5M15BMl5BanBnXkFtZTgwNjk0NzMyNzM@._V1_.jpg',
-    genres: ['Action', 'Comedy', 'Fantasy']
+    thumbnail: 'https://upload.wikimedia.org/wikipedia/en/3/3f/Bofuri_light_novel_volume_1_cover.jpg',
+    genres: ['Action', 'Comedy', 'Fantasy'],
+    views: 3100000
   },
   {
     id: 'jujutsu-kaisen',
     title: 'Jujutsu Kaisen',
     description: 'A boy swallows a cursed talisman - the finger of a demon - and becomes cursed himself. He enters a shaman school to be able to locate the demon\'s other body parts and thus exorcise himself.',
-    thumbnail: 'https://m.media-amazon.com/images/M/MV5BNGY4MTg3NzgtMmFkZi00NTgyLWFmMGUtMjlkMjVkYTFkNTMxXkEyXkFqcGdeQXVyMjQwMDg0Ng@@._V1_.jpg',
-    genres: ['Action', 'Fantasy', 'Horror']
+    thumbnail: 'https://upload.wikimedia.org/wikipedia/en/4/46/Jujutsu_Kaisen_key_visual.png',
+    genres: ['Action', 'Fantasy', 'Horror'],
+    views: 9200000
   },
   {
     id: 'solo-leveling',
     title: 'Solo Leveling',
     description: 'In a world where hunters - humans who possess magical abilities - must battle deadly monsters to protect the human race, Sung Jinwoo, the weakest of the hunters, emerges as a powerful player.',
-    thumbnail: 'https://m.media-amazon.com/images/M/MV5BMmIyOGQyNzctMWUzMy00ZjU2LWI3OTUtNWEyYWI0YjllNThjXkEyXkFqcGdeQXVyMTUzMTg2ODkz._V1_.jpg',
-    genres: ['Action', 'Adventure', 'Fantasy']
+    thumbnail: 'https://upload.wikimedia.org/wikipedia/en/c/c4/Solo_Leveling_Volume_1.png',
+    genres: ['Action', 'Adventure', 'Fantasy'],
+    views: 7600000
   }
 ];
 
@@ -139,13 +153,17 @@ export function FeaturedSlider() {
                 {current.title}
               </h2>
 
-              {/* Genres */}
-              <div className="flex flex-wrap justify-center md:justify-start gap-2">
+              {/* Genres and Views */}
+              <div className="flex flex-wrap justify-center md:justify-start items-center gap-2">
                 {current.genres.map((genre, i) => (
                   <Badge key={i} variant="outline" className="text-xs">
                     {genre}
                   </Badge>
                 ))}
+                <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
+                  <Eye className="h-3 w-3" />
+                  {formatViews(current.views)} views
+                </div>
               </div>
 
               {/* Description */}

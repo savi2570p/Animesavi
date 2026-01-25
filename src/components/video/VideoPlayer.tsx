@@ -1914,7 +1914,7 @@ export function VideoPlayer({
         x5-video-player-type="h5-page"
         x5-video-player-fullscreen="true"
         x5-video-orientation="portraint"
-        preload="auto"
+        preload="metadata"
         crossOrigin="anonymous"
         muted={false}
       />
