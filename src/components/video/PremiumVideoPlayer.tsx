@@ -16,10 +16,13 @@ import {
   Check,
   MonitorPlay,
   Headphones,
+  Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { DownloadVerificationDialog } from './DownloadVerificationDialog';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AudioTrackInfo {
   id: string;
@@ -101,6 +104,7 @@ export function PremiumVideoPlayer({
   captionsUrl,
   onTimeUpdate,
 }: PremiumVideoPlayerProps) {
+  const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
@@ -124,6 +128,8 @@ export function PremiumVideoPlayer({
   const [audioTracks, setAudioTracks] = useState<AudioTrackInfo[]>([]);
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [currentAudioTrack, setCurrentAudioTrack] = useState<string>('');
+  const [isInWatchLater, setIsInWatchLater] = useState(false);
+  const [watchLaterLoading, setWatchLaterLoading] = useState(false);
   
   
   // Download verification dialog state
@@ -139,6 +145,62 @@ export function PremiumVideoPlayer({
   const anyVideoUrl = videoUrl || externalUrl;
   const effectiveVideoUrl = anyVideoUrl;
   const shouldUseIframe = useIframeFallback;
+
+  // Check if episode is in watch later
+  useEffect(() => {
+    if (!user || !episodeId) return;
+    
+    const checkWatchLater = async () => {
+      const { data } = await supabase
+        .from('watch_later')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('episode_id', episodeId)
+        .maybeSingle();
+      
+      setIsInWatchLater(!!data);
+    };
+    
+    checkWatchLater();
+  }, [user, episodeId]);
+
+  const toggleWatchLater = async () => {
+    if (!user) {
+      toast.error('Please sign in to save to Watch Later');
+      return;
+    }
+    
+    if (!episodeId) return;
+    
+    setWatchLaterLoading(true);
+    
+    try {
+      if (isInWatchLater) {
+        await supabase
+          .from('watch_later')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('episode_id', episodeId);
+        
+        setIsInWatchLater(false);
+        toast.success('Removed from Watch Later');
+      } else {
+        await supabase
+          .from('watch_later')
+          .insert({
+            user_id: user.id,
+            episode_id: episodeId
+          });
+        
+        setIsInWatchLater(true);
+        toast.success('Added to Watch Later');
+      }
+    } catch (error) {
+      toast.error('Failed to update Watch Later');
+    } finally {
+      setWatchLaterLoading(false);
+    }
+  };
 
   useEffect(() => {
     setVideoError(false);
@@ -623,6 +685,7 @@ export function PremiumVideoPlayer({
         poster={poster}
         autoPlay
         playsInline
+        preload="metadata"
         crossOrigin="anonymous"
       />
       
@@ -840,6 +903,19 @@ export function PremiumVideoPlayer({
                   </div>
                 )}
               </div>
+
+              {/* Watch Later */}
+              <button 
+                className={cn(
+                  "player-btn w-10 h-10",
+                  isInWatchLater ? "text-primary" : "text-white"
+                )} 
+                onClick={toggleWatchLater} 
+                title={isInWatchLater ? "Remove from Watch Later" : "Add to Watch Later"}
+                disabled={watchLaterLoading}
+              >
+                <Clock className={cn("w-5 h-5", isInWatchLater && "fill-primary")} />
+              </button>
 
               {/* Download */}
               {features.includes('download') && (
