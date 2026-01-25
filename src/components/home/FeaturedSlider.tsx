@@ -29,6 +29,9 @@ const VIEW_COUNT_MAP: Record<string, number> = {
   'The Angel Next Door Spoils me Rotten': 1200000,
   'The angel next door spoils me rotten': 1200000,
   'Mechanical Marie': 977000,
+  'Solo Leveling': 730000,
+  'BOFURI: I Don\'t Want to Get Hurt, so I\'ll Max Out My Defense.': 2300000,
+  'A Gatherer\'s Adventure in Isekai': 267000,
 };
 
 // Generate random views between 100K and 900K for unlisted anime
