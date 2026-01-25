@@ -160,6 +160,7 @@ export default function Profile() {
     
     setIsUpdatingProfile(true);
     
+    // Update profiles table
     const { error } = await supabase
       .from('profiles')
       .update({ 
@@ -167,6 +168,14 @@ export default function Profile() {
         avatar_url: avatarUrl.trim() || null 
       })
       .eq('id', user.id);
+    
+    // Also update auth user metadata so it reflects in header immediately
+    await supabase.auth.updateUser({
+      data: {
+        username: username.trim() || null,
+        avatar_url: avatarUrl.trim() || null
+      }
+    });
     
     if (error) {
       toast.error('Failed to update profile');

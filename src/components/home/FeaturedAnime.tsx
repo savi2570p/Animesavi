@@ -51,21 +51,18 @@ export function FeaturedAnime() {
   if (!featured) return null;
 
   return (
-    <section className="py-8 md:py-12">
+    <section className="py-6 md:py-10">
       <div className="container">
         {/* Brand Header */}
-        <div className="flex items-center gap-3 mb-8">
+        <div className="flex items-center gap-3 mb-6">
           <img 
             src={logo} 
-            alt="Anime.Savi.me" 
-            className="h-12 w-12 rounded-xl object-contain shadow-lg" 
+            alt="Anime Savi" 
+            className="h-10 w-10 md:h-12 md:w-12 rounded-xl object-contain shadow-lg" 
           />
-          <h2 className="text-2xl md:text-3xl font-bold">
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold">
             <span className="text-primary">Anime</span>
-            <span className="text-muted-foreground">.</span>
-            <span className="text-foreground">Savi</span>
-            <span className="text-muted-foreground">.</span>
-            <span className="text-primary">me</span>
+            <span className="text-foreground ml-1">Savi</span>
           </h2>
         </div>
 

@@ -89,15 +89,18 @@ export function LatestSeries() {
         })
       );
 
-      // Sort by latest episode date or created_at (newest first) - include ALL anime
-      seriesWithData.sort((a, b) => {
+      // Filter out anime with zero episodes
+      const seriesWithEpisodes = seriesWithData.filter(anime => anime.episode_count > 0);
+
+      // Sort by latest episode date or created_at (newest first)
+      seriesWithEpisodes.sort((a, b) => {
         const dateA = a.latest_episode_date || a.created_at;
         const dateB = b.latest_episode_date || b.created_at;
         return new Date(dateB).getTime() - new Date(dateA).getTime();
       });
 
       // Take first 8 (show more anime)
-      setSeries(seriesWithData.slice(0, 8));
+      setSeries(seriesWithEpisodes.slice(0, 8));
     } catch (error) {
       console.error('Error fetching latest series:', error);
     } finally {

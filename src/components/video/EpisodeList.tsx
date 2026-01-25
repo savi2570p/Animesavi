@@ -1,9 +1,13 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Play } from 'lucide-react';
+import { Search, Play, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface Episode {
   id: string;
@@ -19,6 +23,7 @@ interface EpisodeListProps {
 
 export function EpisodeList({ episodes, currentEpisodeId, className }: EpisodeListProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const { user } = useAuth();
 
   const filteredEpisodes = useMemo(() => {
     if (!searchQuery.trim()) return episodes;
@@ -28,6 +33,44 @@ export function EpisodeList({ episodes, currentEpisodeId, className }: EpisodeLi
       ep.episode_number.toString().includes(query)
     );
   }, [episodes, searchQuery]);
+
+  const handleAddToWatchLater = async (e: React.MouseEvent, episodeId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      toast.error('Please sign in to use Watch Later');
+      return;
+    }
+
+    try {
+      // Check if already exists
+      const { data: existing } = await supabase
+        .from('watch_later')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('episode_id', episodeId)
+        .maybeSingle();
+
+      if (existing) {
+        toast.info('Already in Watch Later');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('watch_later')
+        .insert({
+          user_id: user.id,
+          episode_id: episodeId
+        });
+
+      if (error) throw error;
+      toast.success('Added to Watch Later');
+    } catch (error) {
+      console.error('Error adding to watch later:', error);
+      toast.error('Failed to add to Watch Later');
+    }
+  };
 
   return (
     <div className={cn("flex flex-col bg-card/95 backdrop-blur-sm border border-border/50 rounded-lg overflow-hidden", className)}>
@@ -55,26 +98,40 @@ export function EpisodeList({ episodes, currentEpisodeId, className }: EpisodeLi
           {filteredEpisodes.map((episode) => {
             const isActive = episode.id === currentEpisodeId;
             return (
-              <Link
+              <div
                 key={episode.id}
-                to={`/watch/${episode.id}`}
                 className={cn(
-                  "flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors text-xs",
+                  "flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors text-xs group",
                   isActive 
                     ? "bg-primary/20 text-primary" 
                     : "hover:bg-muted/50 text-foreground/80 hover:text-foreground"
                 )}
               >
-                <span className="text-muted-foreground w-5 text-right shrink-0 text-[10px]">
-                  {episode.episode_number}
-                </span>
-                <span className="flex-1 truncate">
-                  {episode.title}
-                </span>
-                {isActive && (
-                  <Play className="h-3 w-3 text-primary fill-primary shrink-0" />
-                )}
-              </Link>
+                <Link
+                  to={`/watch/${episode.id}`}
+                  className="flex items-center gap-2 flex-1 min-w-0"
+                >
+                  <span className="text-muted-foreground w-5 text-right shrink-0 text-[10px]">
+                    {episode.episode_number}
+                  </span>
+                  <span className="flex-1 truncate">
+                    {episode.title}
+                  </span>
+                  {isActive && (
+                    <Play className="h-3 w-3 text-primary fill-primary shrink-0" />
+                  )}
+                </Link>
+                {/* Watch Later button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                  onClick={(e) => handleAddToWatchLater(e, episode.id)}
+                  title="Add to Watch Later"
+                >
+                  <Clock className="h-3 w-3" />
+                </Button>
+              </div>
             );
           })}
           {filteredEpisodes.length === 0 && (
