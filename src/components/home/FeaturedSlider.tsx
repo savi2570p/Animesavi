@@ -22,9 +22,24 @@ const formatViews = (views: number): string => {
   return `${(views / 1000).toFixed(0)}K`;
 };
 
-// Generate random views between 100K and 10M
-const generateRandomViews = (): number => {
-  return Math.floor(Math.random() * (10000000 - 100000) + 100000);
+// Curated view counts for specific anime (matching Most Popular section)
+const VIEW_COUNT_MAP: Record<string, number> = {
+  'Your Name': 9500000,
+  'Your lie in April': 3400000,
+  'The Angel Next Door Spoils me Rotten': 1200000,
+  'The angel next door spoils me rotten': 1200000,
+  'Mechanical Marie': 977000,
+};
+
+// Generate random views between 100K and 900K for unlisted anime
+const getViewCount = (title: string, dbViewCount: number | null): number => {
+  if (VIEW_COUNT_MAP[title]) {
+    return VIEW_COUNT_MAP[title];
+  }
+  if (dbViewCount && dbViewCount > 0) {
+    return dbViewCount;
+  }
+  return Math.floor(Math.random() * (900000 - 100000) + 100000);
 };
 
 export function FeaturedSlider() {
@@ -52,7 +67,7 @@ export function FeaturedSlider() {
             description: anime.description,
             thumbnail: anime.cover_image,
             genres: anime.genres || [],
-            views: anime.view_count && anime.view_count > 0 ? anime.view_count : generateRandomViews()
+            views: getViewCount(anime.title, anime.view_count)
           }));
           setFeaturedAnime(animeWithViews);
         }
