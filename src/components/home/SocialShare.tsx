@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Share2, Copy, Check } from 'lucide-react';
+import { Share2, Copy, Check, MessageCircle, Hash, Facebook, Instagram, Camera } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -27,31 +27,31 @@ export function SocialShare({
   const shareOptions = [
     {
       name: 'Telegram',
-      icon: '📱',
+      icon: MessageCircle,
       url: `https://t.me/share/url?url=${encodeURIComponent(websiteUrl)}&text=${encodeURIComponent('Check out Anime Savi - Free HD Anime Streaming!')}`,
       color: 'bg-[#0088cc]/10 border-[#0088cc]/30 hover:bg-[#0088cc]/20 text-[#0088cc]'
     },
     {
       name: 'Twitter X',
-      icon: '𝕏',
+      icon: Hash,
       url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(websiteUrl)}&text=${encodeURIComponent('Check out Anime Savi - Free HD Anime Streaming!')}`,
       color: 'bg-foreground/10 border-foreground/30 hover:bg-foreground/20 text-foreground'
     },
     {
       name: 'Facebook',
-      icon: '📘',
+      icon: Facebook,
       url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(websiteUrl)}`,
       color: 'bg-[#1877f2]/10 border-[#1877f2]/30 hover:bg-[#1877f2]/20 text-[#1877f2]'
     },
     {
       name: 'Instagram',
-      icon: '📸',
+      icon: Instagram,
       url: `https://www.instagram.com/`,
       color: 'bg-[#e4405f]/10 border-[#e4405f]/30 hover:bg-[#e4405f]/20 text-[#e4405f]'
     },
     {
       name: 'Snapchat',
-      icon: '👻',
+      icon: Camera,
       url: `https://www.snapchat.com/`,
       color: 'bg-[#fffc00]/10 border-[#fffc00]/30 hover:bg-[#fffc00]/20 text-[#fffc00]'
     }
@@ -88,7 +88,7 @@ export function SocialShare({
             className={`gap-2 ${option.color}`}
             onClick={() => window.open(option.url, '_blank')}
           >
-            <span>{option.icon}</span>
+            <option.icon className="h-4 w-4" />
             <span className="hidden sm:inline">{option.name}</span>
           </Button>
         ))}

@@ -66,12 +66,12 @@ export function FeaturedSlider() {
     fetchFeaturedAnime();
   }, []);
 
-  // Auto-slide every 3 seconds
+  // Auto-slide every 4 seconds
   useEffect(() => {
     if (featuredAnime.length === 0) return;
     const interval = setInterval(() => {
       handleNext();
-    }, 3000);
+    }, 4000);
     return () => clearInterval(interval);
   }, [currentIndex, featuredAnime.length]);
 
