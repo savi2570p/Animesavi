@@ -30,7 +30,6 @@ const generateRandomViews = (): number => {
 export function FeaturedSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [direction, setDirection] = useState<'left' | 'right'>('right');
   const [featuredAnime, setFeaturedAnime] = useState<FeaturedAnimeItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -67,33 +66,31 @@ export function FeaturedSlider() {
     fetchFeaturedAnime();
   }, []);
 
-  // Auto-slide every 5 seconds
+  // Auto-slide every 3 seconds
   useEffect(() => {
     if (featuredAnime.length === 0) return;
     const interval = setInterval(() => {
       handleNext();
-    }, 5000);
+    }, 3000);
     return () => clearInterval(interval);
   }, [currentIndex, featuredAnime.length]);
 
   const handleNext = () => {
     if (isAnimating || featuredAnime.length === 0) return;
-    setDirection('right');
     setIsAnimating(true);
     setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % featuredAnime.length);
       setIsAnimating(false);
-    }, 500);
+    }, 400);
   };
 
   const handlePrev = () => {
     if (isAnimating || featuredAnime.length === 0) return;
-    setDirection('left');
     setIsAnimating(true);
     setTimeout(() => {
       setCurrentIndex((prev) => (prev - 1 + featuredAnime.length) % featuredAnime.length);
       setIsAnimating(false);
-    }, 500);
+    }, 400);
   };
 
   if (loading) {
@@ -138,14 +135,10 @@ export function FeaturedSlider() {
         </button>
 
         {/* Slide Content */}
-        <div className="relative mx-8 md:mx-12">
+        <div className="relative mx-8 md:mx-12 overflow-hidden">
           <div
-            className={`flex flex-col md:flex-row gap-4 md:gap-6 items-center transition-all duration-500 ${
-              isAnimating
-                ? direction === 'right'
-                  ? 'opacity-0 translate-x-4'
-                  : 'opacity-0 -translate-x-4'
-                : 'opacity-100 translate-x-0'
+            className={`flex flex-col md:flex-row gap-4 md:gap-6 items-center transition-transform duration-400 ease-out ${
+              isAnimating ? '-translate-x-full' : 'translate-x-0'
             }`}
           >
             {/* Thumbnail */}
@@ -209,7 +202,6 @@ export function FeaturedSlider() {
               key={index}
               onClick={() => {
                 if (isAnimating) return;
-                setDirection(index > currentIndex ? 'right' : 'left');
                 setIsAnimating(true);
                 setTimeout(() => {
                   setCurrentIndex(index);
