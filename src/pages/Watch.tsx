@@ -66,6 +66,7 @@ interface Anime {
   title: string;
   cover_image: string | null;
   type: string | null;
+  uploader_id: string | null;
 }
 
 interface CommentLike {
@@ -496,20 +497,30 @@ export default function Watch() {
         userLike: userLikesMap.has(c.id) ? userLikesMap.get(c.id) : null,
       }));
 
-      // For a proper owner check, check if the uploader_id matches the commenter's user_id
+      // For a proper owner check, check if the uploader_id of the anime matches the commenter's user_id
+      // or if the commenter is in the OWNER_EMAILS list
       const updatedComments = await Promise.all(
         commentsWithProfiles.map(async (comment) => {
-          // Check if user is an uploader or admin
+          // Get user email from auth
+          const { data: authUser } = await supabase.auth.admin?.getUserById?.(comment.user_id) || { data: null };
+          
+          // Check if this commenter is the anime uploader
+          const isAnimeUploader = anime?.uploader_id === comment.user_id;
+          
+          // Check if this is an owner email
+          const isOwnerEmail = OWNER_EMAILS.includes(comment.profile?.username?.toLowerCase() || '');
+          
+          // Check if user is an admin
           const { data: roles } = await supabase
             .from('user_roles')
             .select('role')
             .eq('user_id', comment.user_id);
           
-          const isUploaderOrAdmin = roles?.some(r => r.role === 'uploader' || r.role === 'admin') || false;
+          const isAdmin = roles?.some(r => r.role === 'admin') || false;
           
           return {
             ...comment,
-            isOwner: isUploaderOrAdmin,
+            isOwner: isAnimeUploader || isAdmin || isOwnerEmail,
           };
         })
       );
