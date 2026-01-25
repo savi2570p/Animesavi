@@ -165,7 +165,7 @@ export function FeaturedSlider() {
                     {genre}
                   </Badge>
                 ))}
-                <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
+                <div className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
                   <Eye className="h-3 w-3" />
                   {formatViews(current.views)} views
                 </div>
