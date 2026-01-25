@@ -5,14 +5,19 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { Download, Share2, Link, Image } from 'lucide-react';
+import { Download, Share2, Link, Image, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+} from '@/components/ui/dialog';
 
 interface AnimeCardContextMenuProps {
   children: ReactNode;
   animeTitle: string;
   animeUrl: string;
   coverImage?: string | null;
+  description?: string | null;
 }
 
 // Helper to create clean slug from title
@@ -24,10 +29,12 @@ export function AnimeCardContextMenu({
   children, 
   animeTitle, 
   animeUrl,
-  coverImage 
+  coverImage,
+  description 
 }: AnimeCardContextMenuProps) {
   const { toast } = useToast();
   const [isLongPress, setIsLongPress] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
 
@@ -159,14 +166,19 @@ export function AnimeCardContextMenu({
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     longPressTimer.current = setTimeout(() => {
       setIsLongPress(true);
-      // Trigger context menu via custom event
-      const contextEvent = new MouseEvent('contextmenu', {
-        bubbles: true,
-        cancelable: true,
-        clientX: e.touches[0].clientX,
-        clientY: e.touches[0].clientY,
-      });
-      e.currentTarget.dispatchEvent(contextEvent);
+      // On iOS, show preview instead of context menu
+      if (isIOS) {
+        setShowPreview(true);
+      } else {
+        // Trigger context menu via custom event for other devices
+        const contextEvent = new MouseEvent('contextmenu', {
+          bubbles: true,
+          cancelable: true,
+          clientX: e.touches[0].clientX,
+          clientY: e.touches[0].clientY,
+        });
+        e.currentTarget.dispatchEvent(contextEvent);
+      }
     }, 500);
   }, []);
 
@@ -186,52 +198,103 @@ export function AnimeCardContextMenu({
     }
   }, []);
 
-  // Detect if mobile
+  // Detect if mobile and if iOS
   const isMobile = typeof window !== 'undefined' && 'ontouchstart' in window;
+  const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
-        <div
-          ref={contextMenuRef}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          onTouchMove={handleTouchMove}
-          onClick={(e) => {
-            // Prevent click if it was a long press
-            if (isLongPress) {
-              e.preventDefault();
-              e.stopPropagation();
-            }
-          }}
-        >
-          {children}
-        </div>
-      </ContextMenuTrigger>
-      <ContextMenuContent className="w-52">
-        {/* Save to Gallery - Mobile only */}
-        {isMobile && coverImage && (
-          <ContextMenuItem onClick={handleSaveToGallery} className="flex items-center gap-2 cursor-pointer">
-            <Image className="h-4 w-4" />
-            <span>Save to Gallery</span>
+    <>
+      {/* iOS-style Preview Dialog */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-sm p-0 overflow-hidden rounded-2xl">
+          <div className="relative">
+            {coverImage && (
+              <img
+                src={coverImage}
+                alt={animeTitle}
+                className="w-full aspect-[3/4] object-cover"
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
+              <h3 className="text-white font-bold text-lg line-clamp-2">{animeTitle}</h3>
+              {description && (
+                <p className="text-white/70 text-sm line-clamp-3">{description}</p>
+              )}
+              <div className="flex gap-2 pt-2">
+                <a
+                  href={animeUrl}
+                  className="flex-1 flex items-center justify-center gap-2 py-2 px-4 bg-primary text-primary-foreground rounded-lg text-sm font-medium"
+                  onClick={() => setShowPreview(false)}
+                >
+                  <Eye className="h-4 w-4" />
+                  View Details
+                </a>
+                <button
+                  onClick={() => {
+                    handleShare();
+                    setShowPreview(false);
+                  }}
+                  className="flex items-center justify-center gap-2 py-2 px-4 bg-white/20 text-white rounded-lg text-sm font-medium"
+                >
+                  <Share2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div
+            ref={contextMenuRef}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onTouchMove={handleTouchMove}
+            onClick={(e) => {
+              // Prevent click if it was a long press
+              if (isLongPress) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
+          >
+            {children}
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-52">
+          {/* Preview option */}
+          {coverImage && (
+            <ContextMenuItem onClick={() => setShowPreview(true)} className="flex items-center gap-2 cursor-pointer">
+              <Eye className="h-4 w-4" />
+              <span>Preview</span>
+            </ContextMenuItem>
+          )}
+          {/* Save to Gallery - Mobile only */}
+          {isMobile && coverImage && (
+            <ContextMenuItem onClick={handleSaveToGallery} className="flex items-center gap-2 cursor-pointer">
+              <Image className="h-4 w-4" />
+              <span>Save to Gallery</span>
+            </ContextMenuItem>
+          )}
+          {/* Download - Desktop */}
+          {!isMobile && coverImage && (
+            <ContextMenuItem onClick={handleDownload} className="flex items-center gap-2 cursor-pointer">
+              <Download className="h-4 w-4" />
+              <span>Save Image</span>
+            </ContextMenuItem>
+          )}
+          <ContextMenuItem onClick={handleCopyLink} className="flex items-center gap-2 cursor-pointer">
+            <Link className="h-4 w-4" />
+            <span>Copy Link</span>
           </ContextMenuItem>
-        )}
-        {/* Download - Desktop */}
-        {!isMobile && coverImage && (
-          <ContextMenuItem onClick={handleDownload} className="flex items-center gap-2 cursor-pointer">
-            <Download className="h-4 w-4" />
-            <span>Save Image</span>
+          <ContextMenuItem onClick={handleShare} className="flex items-center gap-2 cursor-pointer">
+            <Share2 className="h-4 w-4" />
+            <span>Share</span>
           </ContextMenuItem>
-        )}
-        <ContextMenuItem onClick={handleCopyLink} className="flex items-center gap-2 cursor-pointer">
-          <Link className="h-4 w-4" />
-          <span>Copy Link</span>
-        </ContextMenuItem>
-        <ContextMenuItem onClick={handleShare} className="flex items-center gap-2 cursor-pointer">
-          <Share2 className="h-4 w-4" />
-          <span>Share</span>
-        </ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
+        </ContextMenuContent>
+      </ContextMenu>
+    </>
   );
 }
