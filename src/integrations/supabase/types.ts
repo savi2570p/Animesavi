@@ -45,6 +45,7 @@ export type Database = {
           release_year: number | null
           status: string | null
           title: string
+          trailer_url: string | null
           type: string | null
           updated_at: string
           uploader_id: string | null
@@ -62,6 +63,7 @@ export type Database = {
           release_year?: number | null
           status?: string | null
           title: string
+          trailer_url?: string | null
           type?: string | null
           updated_at?: string
           uploader_id?: string | null
@@ -79,12 +81,58 @@ export type Database = {
           release_year?: number | null
           status?: string | null
           title?: string
+          trailer_url?: string | null
           type?: string | null
           updated_at?: string
           uploader_id?: string | null
           view_count?: number | null
         }
         Relationships: []
+      }
+      anime_reviews: {
+        Row: {
+          anime_id: string
+          created_at: string
+          id: string
+          rating: number
+          review_text: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          anime_id: string
+          created_at?: string
+          id?: string
+          rating: number
+          review_text?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          anime_id?: string
+          created_at?: string
+          id?: string
+          rating?: number
+          review_text?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anime_reviews_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "anime"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anime_reviews_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "anime_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       comment_likes: {
         Row: {

@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { BatchDownload } from '@/components/download/BatchDownload';
+import { AnimeReviews } from '@/components/anime/AnimeReviews';
 import {
   Play,
   Heart,
@@ -715,6 +716,9 @@ export default function AnimeDetail() {
             </div>
           </div>
         )}
+
+        {/* Reviews Section */}
+        <AnimeReviews animeId={anime.id} />
       </div>
     </div>
   );

@@ -33,6 +33,9 @@ const VIEW_COUNT_MAP: Record<string, number> = {
   'Solo Leveling': 730000,
   'BOFURI: I Don\'t Want to Get Hurt, so I\'ll Max Out My Defense.': 2300000,
   'A Gatherer\'s Adventure in Isekai': 267000,
+  'Jujutsu Kaisen': 8700000,
+  'My Dress-Up Darling': 6200000,
+  'Reborn to Master the Blade: From Hero-King to Extraordinary Squire': 1800000,
 };
 
 // Generate random views between 100K and 900K for unlisted anime

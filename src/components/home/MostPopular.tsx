@@ -66,7 +66,14 @@ export function MostPopular() {
         'Your Name': 9500000,
         'Your lie in April': 3400000,
         'The angel next door spoils me rotten': 1200000,
+        'The Angel Next Door Spoils me Rotten': 1200000,
         'Mechanical Marie': 977000,
+        'Solo Leveling': 730000,
+        'BOFURI: I Don\'t Want to Get Hurt, so I\'ll Max Out My Defense.': 2300000,
+        'A Gatherer\'s Adventure in Isekai': 267000,
+        'Jujutsu Kaisen': 8700000,
+        'My Dress-Up Darling': 6200000,
+        'Reborn to Master the Blade: From Hero-King to Extraordinary Squire': 1800000,
       };
       
       const animeWithViews = (data || []).map(anime => ({
