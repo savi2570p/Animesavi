@@ -118,6 +118,17 @@ export default function Browse() {
     animeTitle: '',
   });
 
+  // Determine if we're in Search Mode (active search query in URL)
+  const isSearchMode = Boolean(searchParams.get('q'));
+  
+  // Clear search and return to Browse Mode
+  const clearSearch = () => {
+    setSearchQuery('');
+    const params = new URLSearchParams(searchParams);
+    params.delete('q');
+    setSearchParams(params);
+  };
+
   // Fetch search suggestions when typing
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -390,34 +401,90 @@ export default function Browse() {
         <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
         
         <div className="container relative">
+          {/* Mode indicator */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className={cn(
+              "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all",
+              isSearchMode 
+                ? "bg-primary/20 text-primary border border-primary/30" 
+                : "bg-muted text-muted-foreground"
+            )}>
+              {isSearchMode ? (
+                <>
+                  <Search className="h-4 w-4" />
+                  Search Mode
+                </>
+              ) : (
+                <>
+                  <Filter className="h-4 w-4" />
+                  Browse Mode
+                </>
+              )}
+            </div>
+            {isSearchMode && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearSearch}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Exit Search
+              </Button>
+            )}
+          </div>
+          
           <h1 className="text-5xl md:text-6xl font-heading font-bold mb-4 animate-fade-in">
-            Browse <span className="anime-gradient-text">Anime</span>
+            {isSearchMode ? (
+              <>Search Results for "<span className="anime-gradient-text">{searchParams.get('q')}</span>"</>
+            ) : (
+              <>Browse <span className="anime-gradient-text">Anime</span></>
+            )}
           </h1>
           <p className="text-muted-foreground text-lg max-w-xl animate-fade-in animation-delay-100">
-            Discover your next favorite series from our extensive collection
+            {isSearchMode 
+              ? `Showing results matching your search`
+              : 'Discover your next favorite series from our extensive collection'
+            }
           </p>
         </div>
       </div>
 
       <div className="container pb-12">
-        {/* Search & Filters */}
-        <div className="mb-10 space-y-6">
-          {/* Search bar */}
+        {/* Search Bar - Always visible */}
+        <div className="mb-8">
           <form onSubmit={handleSearch} className="flex gap-3 max-w-2xl animate-fade-in-up stagger-1">
             <div className="relative flex-1" ref={searchContainerRef}>
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
               <Input
                 ref={searchInputRef}
                 type="search"
-                placeholder="Search for anime..."
+                placeholder={isSearchMode ? "Modify your search..." : "Search for anime..."}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setShowSearchDropdown(true)}
-                className="pl-12 h-14 bg-card/50 border-border/50 rounded-xl text-base focus:border-primary/50 focus:bg-card transition-all"
+                className={cn(
+                  "pl-12 pr-10 h-14 bg-card/50 border-border/50 rounded-xl text-base focus:border-primary/50 focus:bg-card transition-all",
+                  isSearchMode && "border-primary/30 bg-primary/5"
+                )}
               />
               
-              {/* Search Dropdown - Shows suggestions OR history */}
-              {showSearchDropdown && showDropdownContent && (
+              {/* Clear input button */}
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    if (isSearchMode) clearSearch();
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground z-10"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+              
+              {/* Search Dropdown - Only in Browse Mode */}
+              {!isSearchMode && showSearchDropdown && showDropdownContent && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-xl overflow-hidden" style={{ zIndex: 99999, position: 'relative' }}>
                   {/* Search Suggestions with Thumbnails */}
                   {showSuggestions && (
@@ -498,6 +565,11 @@ export default function Browse() {
               Search
             </Button>
           </form>
+        </div>
+
+        {/* Browse Mode Filters - Hidden in Search Mode */}
+        {!isSearchMode && (
+          <div className="mb-10 space-y-6">
 
           {/* Type filter */}
           <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-2">
@@ -571,22 +643,31 @@ export default function Browse() {
                 onClick={() => handleGenreFilter(genre)}
                 className={cn("filter-btn", selectedGenre === genre.toLowerCase() && "active")}
               >
-                {genre}
+            {genre}
               </button>
             ))}
           </div>
         </div>
+        )}
 
-        {/* Most Popular Section - Show when no filters applied */}
-        {!searchParams.get('q') && !searchParams.get('genre') && sortBy === 'newest' && (
+        {/* Most Popular Section - Only in Browse Mode */}
+        {!isSearchMode && !searchParams.get('genre') && sortBy === 'newest' && (
           <MostPopularSection />
         )}
 
         {/* Results count */}
         {!isLoading && (
           <div className="mb-6 text-muted-foreground animate-fade-in">
-            Found <span className="text-foreground font-semibold">{animeList.length}</span> anime
-            {selectedGenre && <span> in <span className="text-primary font-medium capitalize">{selectedGenre}</span></span>}
+            {isSearchMode ? (
+              <>
+                Found <span className="text-foreground font-semibold">{animeList.length}</span> result{animeList.length !== 1 ? 's' : ''} for "<span className="text-primary font-medium">{searchParams.get('q')}</span>"
+              </>
+            ) : (
+              <>
+                Found <span className="text-foreground font-semibold">{animeList.length}</span> anime
+                {selectedGenre && <span> in <span className="text-primary font-medium capitalize">{selectedGenre}</span></span>}
+              </>
+            )}
           </div>
         )}
 
@@ -602,10 +683,25 @@ export default function Browse() {
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
               <Search className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-2xl font-bold mb-2">No anime found</h3>
+            <h3 className="text-2xl font-bold mb-2">
+              {isSearchMode ? 'No results found' : 'No anime found'}
+            </h3>
             <p className="text-muted-foreground max-w-md mx-auto">
-              Try adjusting your search or filters to find what you're looking for.
+              {isSearchMode 
+                ? `We couldn't find any anime matching "${searchParams.get('q')}". Try a different search term.`
+                : 'Try adjusting your filters to find what you\'re looking for.'
+              }
             </p>
+            {isSearchMode && (
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={clearSearch}
+              >
+                <X className="h-4 w-4 mr-2" />
+                Clear Search
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
