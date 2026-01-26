@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Play, ChevronRight, Clock, Sparkles, ChevronLeft } from 'lucide-react';
+import { Play, ChevronRight, Clock, Sparkles, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   Carousel,
   CarouselContent,
@@ -93,6 +94,25 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       setHistory(itemsWithSeason);
     }
     setIsLoading(false);
+  };
+
+  const handleMarkCompleted = async (e: React.MouseEvent, historyId: string, animeTitle: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const { error } = await supabase
+      .from('watch_history')
+      .update({ completed: true })
+      .eq('id', historyId);
+    
+    if (error) {
+      toast.error('Failed to mark as completed');
+      return;
+    }
+    
+    // Remove from local state immediately
+    setHistory(prev => prev.filter(item => item.id !== historyId));
+    toast.success(`${animeTitle} marked as completed`);
   };
 
   const formatTimeLeft = (progress: number | null, duration: number | null) => {
@@ -208,6 +228,17 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
                       <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] font-medium text-white/90">
                         {Math.round(item.progress || 0)}%
                       </div>
+
+                      {/* Mark as Completed button */}
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="absolute bottom-3 right-2 h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-medium z-10"
+                        onClick={(e) => handleMarkCompleted(e, item.id, item.anime.title)}
+                      >
+                        <Check className="h-3 w-3 mr-1" />
+                        Done
+                      </Button>
 
                       {/* Premium progress bar */}
                       <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/50 backdrop-blur-sm">
