@@ -18,8 +18,10 @@ import {
   FileText,
   TrendingUp,
   FileVideo,
+  Globe,
 } from 'lucide-react';
 import { VideoEncodingDashboard } from '@/components/admin/VideoEncodingDashboard';
+import { CDNHealthDashboard } from '@/components/admin/CDNHealthDashboard';
 
 interface Application {
   id: string;
@@ -254,13 +256,17 @@ export default function Admin() {
 
       {/* Main Tabs */}
       <Tabs defaultValue="applications">
-        <TabsList className="mb-6">
+        <TabsList className="mb-6 flex-wrap">
           <TabsTrigger value="applications">
             Applications ({applications.length})
           </TabsTrigger>
           <TabsTrigger value="encoding" className="flex items-center gap-2">
             <FileVideo className="h-4 w-4" />
-            Video Encoding
+            Encoding
+          </TabsTrigger>
+          <TabsTrigger value="cdn" className="flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            CDN Health
           </TabsTrigger>
         </TabsList>
 
@@ -376,6 +382,10 @@ export default function Admin() {
 
         <TabsContent value="encoding">
           <VideoEncodingDashboard />
+        </TabsContent>
+
+        <TabsContent value="cdn">
+          <CDNHealthDashboard />
         </TabsContent>
       </Tabs>
     </div>

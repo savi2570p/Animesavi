@@ -37,6 +37,7 @@ import {
 import { toast } from 'sonner';
 import { DownloadVerificationDialog } from './DownloadVerificationDialog';
 import { QualityOverlay } from './QualityOverlay';
+import { BufferingIndicator } from './BufferingIndicator';
 
 interface AudioTrackInfo {
   id: number;
@@ -1787,6 +1788,12 @@ export function VideoPlayer({
       onTouchEnd={handleTouchEnd}
       onMouseLeave={() => isPlaying && !settingsOpen && setShowControls(false)}
     >
+      {/* Buffering Indicator */}
+      <BufferingIndicator 
+        videoRef={videoRef}
+        isVisible={!shouldUseIframe && !!effectiveVideoUrl}
+      />
+
       {/* Quality Overlay */}
       <QualityOverlay
         currentBitrate={currentBitrate}
