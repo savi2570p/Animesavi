@@ -40,6 +40,7 @@ import { QualityOverlay } from './QualityOverlay';
 import { BufferingIndicator } from './BufferingIndicator';
 import { VolumeSlider } from './VolumeSlider';
 import { GestureIndicator } from './GestureIndicator';
+import { MobileMuteIndicator } from './MobileMuteIndicator';
 import { useVideoGestures } from '@/hooks/useVideoGestures';
 
 interface AudioTrackInfo {
@@ -301,6 +302,10 @@ export function VideoPlayer({
   // Double-tap state for mobile seek
   const lastTapRef = useRef<{ time: number; x: number }>({ time: 0, x: 0 });
   const [doubleTapSide, setDoubleTapSide] = useState<'left' | 'right' | null>(null);
+  
+  // Mobile mute indicator state (shows when video is muted due to autoplay policy)
+  const [showMobileUnmute, setShowMobileUnmute] = useState(false);
+  const [wasMutedForAutoplay, setWasMutedForAutoplay] = useState(false);
   
   const features = serverConfigs[activeServer].features;
   
@@ -1243,9 +1248,11 @@ export function VideoPlayer({
         videoRef.current.pause();
       } else {
         // Auto-unmute on user interaction (mobile autoplay starts muted)
-        if (isMobile && videoRef.current.muted) {
+        if (isMobile && videoRef.current.muted && wasMutedForAutoplay) {
           videoRef.current.muted = false;
           setIsMuted(false);
+          setShowMobileUnmute(false);
+          setWasMutedForAutoplay(false);
         }
         videoRef.current.play().catch((error) => {
           console.warn('Play failed:', error);
@@ -1253,13 +1260,25 @@ export function VideoPlayer({
           if (videoRef.current) {
             videoRef.current.muted = true;
             setIsMuted(true);
+            setWasMutedForAutoplay(true);
+            setShowMobileUnmute(true);
             videoRef.current.play().catch(() => {});
           }
         });
       }
       setIsPlaying(!isPlaying);
     }
-  }, [isPlaying, isMobile]);
+  }, [isPlaying, isMobile, wasMutedForAutoplay]);
+
+  // Handler for mobile unmute indicator tap
+  const handleMobileUnmute = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = false;
+      setIsMuted(false);
+      setShowMobileUnmute(false);
+      setWasMutedForAutoplay(false);
+    }
+  }, []);
 
   const toggleMute = useCallback(() => {
     if (videoRef.current) {
@@ -2039,7 +2058,15 @@ export function VideoPlayer({
         ref={videoRef}
         className={`w-full h-full object-contain transition-all duration-300 ${videoError ? 'hidden' : ''}`}
         onTimeUpdate={handleTimeUpdate}
-        onPlay={() => setIsPlaying(true)}
+        onPlay={() => {
+          setIsPlaying(true);
+          // Check if video started muted on mobile (autoplay policy)
+          if (isMobile && videoRef.current?.muted) {
+            setWasMutedForAutoplay(true);
+            setShowMobileUnmute(true);
+            setIsMuted(true);
+          }
+        }}
         onPause={() => setIsPlaying(false)}
         onLoadedMetadata={() => {
           if (videoRef.current) {
@@ -2108,6 +2135,15 @@ export function VideoPlayer({
         controlsList="nodownload noremoteplayback"
         disablePictureInPicture={false}
       />
+      
+      {/* Mobile Mute Indicator - shows when video is muted for autoplay */}
+      {isMobile && (
+        <MobileMuteIndicator 
+          isMuted={isMuted && wasMutedForAutoplay}
+          isVisible={showMobileUnmute && isPlaying}
+          onTap={handleMobileUnmute}
+        />
+      )}
       
       {/* Video Processing State for SAVI.IN */}
       {isProcessing && activeServer === 'SHORT' && (
@@ -2430,7 +2466,7 @@ export function VideoPlayer({
                   </button>
                 )}
                 <button 
-                  className="hidden md:flex w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
+                  className="flex w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                   title="Picture-in-Picture"
                 >
@@ -2704,7 +2740,7 @@ export function VideoPlayer({
 
               {/* PiP - Hidden on mobile */}
               <button 
-                className="hidden md:flex w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
+                className="flex w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                 title="Picture-in-Picture"
               >
