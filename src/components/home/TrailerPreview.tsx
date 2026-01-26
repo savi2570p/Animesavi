@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Play, Volume2, VolumeX } from 'lucide-react';
+import Hls from 'hls.js';
 
 interface TrailerPreviewProps {
   animeId: string;
@@ -14,6 +15,7 @@ export function TrailerPreview({ animeId, coverImage, title, onClose }: TrailerP
   const [loading, setLoading] = useState(true);
   const [muted, setMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
 
   useEffect(() => {
     fetchFirstEpisodeVideo();
@@ -21,7 +23,6 @@ export function TrailerPreview({ animeId, coverImage, title, onClose }: TrailerP
 
   const fetchFirstEpisodeVideo = async () => {
     try {
-      // Get first season
       const { data: seasons } = await supabase
         .from('seasons')
         .select('id')
@@ -34,7 +35,6 @@ export function TrailerPreview({ animeId, coverImage, title, onClose }: TrailerP
         return;
       }
 
-      // Get first episode with video
       const { data: episodes } = await supabase
         .from('episodes')
         .select('video_url, external_url')
@@ -57,9 +57,72 @@ export function TrailerPreview({ animeId, coverImage, title, onClose }: TrailerP
   };
 
   useEffect(() => {
-    if (videoRef.current && videoUrl) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {});
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!videoRef.current || !videoUrl) return;
+
+    const video = videoRef.current;
+    const isHLS = videoUrl.includes('.m3u8');
+    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+
+    if (isHLS) {
+      if (Hls.isSupported()) {
+        const hls = new Hls({
+          maxBufferLength: isMobile ? 10 : 15,
+          maxMaxBufferLength: isMobile ? 20 : 30,
+          maxBufferHole: 0.5,
+          startLevel: isMobile ? 0 : -1,
+          abrBandWidthFactor: isMobile ? 1.5 : 0.95,
+          manifestLoadingTimeOut: 15000,
+          xhrSetup: (xhr) => {
+            xhr.withCredentials = false;
+          },
+        });
+
+        hlsRef.current = hls;
+        hls.loadSource(videoUrl);
+        hls.attachMedia(video);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          video.currentTime = 0;
+          video.play().catch(() => {});
+        });
+
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          if (data.fatal) {
+            console.error('HLS error in trailer:', data);
+            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+              hls.startLoad();
+            } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+              hls.recoverMediaError();
+            }
+          }
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = videoUrl;
+        video.addEventListener('loadedmetadata', () => {
+          video.currentTime = 0;
+          video.play().catch(() => {});
+        });
+      }
+    } else {
+      video.src = videoUrl;
+      video.addEventListener('loadedmetadata', () => {
+        video.currentTime = 0;
+        video.play().catch(() => {});
+      });
     }
   }, [videoUrl]);
 
@@ -94,12 +157,14 @@ export function TrailerPreview({ animeId, coverImage, title, onClose }: TrailerP
     <div className="absolute inset-0 rounded-xl overflow-hidden z-10">
       <video
         ref={videoRef}
-        src={videoUrl}
         className="w-full h-full object-cover"
         muted={muted}
         autoPlay
         loop
         playsInline
+        webkit-playsinline="true"
+        x5-video-player-type="h5"
+        preload="auto"
       />
       
       {/* Overlay controls */}
