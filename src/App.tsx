@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +9,7 @@ import { MainLayout } from "@/components/layout";
 import { WelcomePopup } from "@/components/WelcomePopup";
 import { FloatingTelegramButton } from "@/components/FloatingTelegramButton";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
+import { useNetworkSpeed } from "@/hooks/useNetworkSpeed";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Browse from "./pages/Browse";
@@ -24,9 +26,24 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import ExternalPlayer from "./pages/ExternalPlayer";
 import AnimeSlugRedirect from "./pages/AnimeSlugRedirect";
-// Schedule import removed
 
 const queryClient = new QueryClient();
+
+// Network speed test component that runs on app load
+function NetworkSpeedInitializer() {
+  const { downloadSpeed, recommendedQuality, isSlowNetwork, isTesting } = useNetworkSpeed();
+  
+  useEffect(() => {
+    if (!isTesting && downloadSpeed > 0) {
+      console.log(`Network speed test complete: ${downloadSpeed} Mbps, recommended quality: ${recommendedQuality}`);
+      if (isSlowNetwork) {
+        console.log('Slow network detected, video will start at lower quality');
+      }
+    }
+  }, [downloadSpeed, recommendedQuality, isSlowNetwork, isTesting]);
+  
+  return null;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -38,6 +55,7 @@ const App = () => (
           <ScrollToTop />
           <WelcomePopup />
           <FloatingTelegramButton />
+          <NetworkSpeedInitializer />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/external-player" element={<ExternalPlayer />} />
