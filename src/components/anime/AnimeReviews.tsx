@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star, Trash2, Edit2, User } from 'lucide-react';
 import { toast } from 'sonner';
@@ -19,6 +19,7 @@ interface Review {
   created_at: string;
   updated_at: string;
   username?: string;
+  avatar_url?: string | null;
 }
 
 interface AnimeReviewsProps {
@@ -56,18 +57,19 @@ export function AnimeReviews({ animeId }: AnimeReviewsProps) {
       return;
     }
 
-    // Fetch usernames for reviews
+    // Fetch usernames and avatars for reviews
     const userIds = [...new Set(reviewsData.map(r => r.user_id))];
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, username')
+      .select('id, username, avatar_url')
       .in('id', userIds);
 
-    const profileMap = new Map(profiles?.map(p => [p.id, p.username]) || []);
+    const profileMap = new Map(profiles?.map(p => [p.id, { username: p.username, avatar_url: p.avatar_url }]) || []);
     
     const enrichedReviews = reviewsData.map(review => ({
       ...review,
-      username: profileMap.get(review.user_id) || 'Anonymous'
+      username: profileMap.get(review.user_id)?.username || 'Anonymous',
+      avatar_url: profileMap.get(review.user_id)?.avatar_url || null
     }));
 
     setReviews(enrichedReviews);
@@ -301,6 +303,7 @@ export function AnimeReviews({ animeId }: AnimeReviewsProps) {
             >
               <div className="flex items-start gap-3">
                 <Avatar className="h-10 w-10">
+                  <AvatarImage src={review.avatar_url || undefined} alt={review.username} />
                   <AvatarFallback className="bg-primary/10 text-primary">
                     <User className="h-5 w-5" />
                   </AvatarFallback>

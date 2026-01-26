@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { VideoPlayer, ServerType } from '@/components/video/VideoPlayer';
 import { EpisodeList } from '@/components/video/EpisodeList';
@@ -127,6 +127,7 @@ export default function Watch() {
   const [initialSeekDone, setInitialSeekDone] = useState(false);
   const [showResumeNotification, setShowResumeNotification] = useState(false);
   const [savedPlaybackProgress, setSavedPlaybackProgress] = useState(0);
+  const [userProfile, setUserProfile] = useState<{ avatar_url: string | null } | null>(null);
   const ensureHistoryInFlightRef = useRef(false);
 
   // Check if Telegram popup should be shown (once per day)
@@ -174,6 +175,20 @@ export default function Watch() {
       fetchComments();
     }
   }, [episodeId, commentSort]);
+
+  // Fetch current user's profile for avatar
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data) setUserProfile(data);
+        });
+    }
+  }, [user]);
 
   // Fetch comment notifications
   useEffect(() => {
@@ -1066,6 +1081,7 @@ export default function Watch() {
             {user ? (
               <div className="flex gap-4">
                 <Avatar>
+                  <AvatarImage src={userProfile?.avatar_url || undefined} alt="Your avatar" />
                   <AvatarFallback className="bg-gradient-primary text-white">
                     {user.email?.charAt(0).toUpperCase()}
                   </AvatarFallback>
@@ -1099,6 +1115,7 @@ export default function Watch() {
                   {/* Parent Comment */}
                   <div className="flex gap-4">
                     <Avatar>
+                      <AvatarImage src={comment.profile?.avatar_url || undefined} alt={comment.profile?.username || 'User'} />
                       <AvatarFallback className="bg-secondary">
                         {comment.profile?.username?.charAt(0).toUpperCase() || 'U'}
                       </AvatarFallback>
@@ -1206,6 +1223,7 @@ export default function Watch() {
                       {comment.replies.map((reply) => (
                         <div key={reply.id} className="flex gap-3">
                           <Avatar className="h-8 w-8">
+                            <AvatarImage src={reply.profile?.avatar_url || undefined} alt={reply.profile?.username || 'User'} />
                             <AvatarFallback className="bg-secondary text-xs">
                               {reply.profile?.username?.charAt(0).toUpperCase() || 'U'}
                             </AvatarFallback>
