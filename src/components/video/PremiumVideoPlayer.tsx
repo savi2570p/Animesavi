@@ -676,17 +676,50 @@ export function PremiumVideoPlayer({
           }
         }}
         onCanPlay={() => setVideoError(false)}
+        onWaiting={() => {
+          console.log('Video buffering...');
+        }}
+        onStalled={() => {
+          console.log('Video stalled, attempting to resume...');
+          if (videoRef.current && !videoRef.current.paused) {
+            setTimeout(() => {
+              if (videoRef.current) {
+                videoRef.current.play().catch(() => {});
+              }
+            }, 1000);
+          }
+        }}
         onError={(e) => {
           const video = e.currentTarget;
-          if (video.src && video.networkState === 3) {
-            setVideoError(true);
+          const error = video.error;
+          console.error('Video error:', {
+            src: video.src,
+            networkState: video.networkState,
+            readyState: video.readyState,
+            error: error ? { code: error.code, message: error.message } : null
+          });
+          
+          // Only show error for actual failures
+          if (video.src && video.networkState === 3 && video.readyState === 0) {
+            // Retry once before showing error
+            setTimeout(() => {
+              if (videoRef.current && videoRef.current.networkState === 3) {
+                videoRef.current.load();
+                videoRef.current.play().catch(() => {
+                  setVideoError(true);
+                });
+              }
+            }, 2000);
           }
         }}
         poster={poster}
         autoPlay
         playsInline
-        preload="metadata"
-        crossOrigin="anonymous"
+        webkit-playsinline="true"
+        x-webkit-airplay="allow"
+        x5-video-player-type="h5-page"
+        x5-video-player-fullscreen="true"
+        preload="auto"
       />
       
       {/* Error modal */}

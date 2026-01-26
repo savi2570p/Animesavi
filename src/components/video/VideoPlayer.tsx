@@ -415,34 +415,51 @@ export function VideoPlayer({
         // Use HLS.js for other browsers
         if (Hls.isSupported()) {
           console.log('Using HLS.js for multi-audio and subtitle support');
+          
+          // Detect mobile and connection type for optimized settings
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          const connection = (navigator as any).connection;
+          const isSlowNetwork = connection && (connection.effectiveType === '2g' || connection.effectiveType === 'slow-2g' || connection.saveData);
+          const isCellular = connection && connection.type === 'cellular';
+          
+          console.log('Network info:', { isMobile, isSlowNetwork, isCellular, effectiveType: connection?.effectiveType });
+          
           const hls = new Hls({
             enableWorker: true,
-            lowLatencyMode: true,
-            // Optimized for FASTER startup
-            maxBufferLength: 20, // Reduced for faster initial load
-            maxMaxBufferLength: 120,
-            maxBufferSize: 120 * 1000 * 1000,
-            maxBufferHole: 0.3, // Smaller gap tolerance for smoother playback
-            // Faster startup - start at lowest quality then upgrade
-            startLevel: 0, // Start with lowest quality for instant playback
+            lowLatencyMode: false, // Disable for better compatibility on mobile
+            // Mobile-optimized buffer settings
+            maxBufferLength: isMobile ? 15 : 20,
+            maxMaxBufferLength: isMobile ? 60 : 120,
+            maxBufferSize: isMobile ? 60 * 1000 * 1000 : 120 * 1000 * 1000,
+            maxBufferHole: 0.5, // More tolerant for mobile networks
+            // Start with lowest quality for faster startup on mobile
+            startLevel: isMobile || isSlowNetwork ? 0 : -1,
             autoStartLoad: true,
-            // Better ABR for quick adaptation
-            abrEwmaDefaultEstimate: 3000000, // 3 Mbps default estimate
-            abrBandWidthFactor: 0.8, // More conservative
-            abrBandWidthUpFactor: 0.6,
-            backBufferLength: 30, // Less back buffer
-            // Faster fragment loading
-            fragLoadingTimeOut: 20000,
-            fragLoadingMaxRetry: 4,
-            fragLoadingRetryDelay: 500,
-            // Faster level loading
-            levelLoadingTimeOut: 10000,
-            levelLoadingMaxRetry: 4,
-            levelLoadingRetryDelay: 500,
-            // Faster manifest loading  
-            manifestLoadingTimeOut: 10000,
-            manifestLoadingMaxRetry: 3,
-            manifestLoadingRetryDelay: 500,
+            // Conservative ABR for mobile/cellular
+            abrEwmaDefaultEstimate: isSlowNetwork ? 500000 : (isCellular ? 1500000 : 3000000),
+            abrBandWidthFactor: isMobile ? 0.7 : 0.8,
+            abrBandWidthUpFactor: isMobile ? 0.5 : 0.6,
+            backBufferLength: isMobile ? 15 : 30,
+            // More tolerant timeouts for mobile/cellular
+            fragLoadingTimeOut: isMobile ? 30000 : 20000,
+            fragLoadingMaxRetry: isMobile ? 6 : 4,
+            fragLoadingRetryDelay: isMobile ? 1000 : 500,
+            // Level loading
+            levelLoadingTimeOut: isMobile ? 15000 : 10000,
+            levelLoadingMaxRetry: isMobile ? 6 : 4,
+            levelLoadingRetryDelay: isMobile ? 1000 : 500,
+            // Manifest loading
+            manifestLoadingTimeOut: isMobile ? 15000 : 10000,
+            manifestLoadingMaxRetry: isMobile ? 5 : 3,
+            manifestLoadingRetryDelay: isMobile ? 1000 : 500,
+            // XHR setup for better mobile compatibility
+            xhrSetup: (xhr, url) => {
+              xhr.withCredentials = false; // Prevent CORS issues on mobile
+            },
+            // Progressive loading for mobile
+            progressive: isMobile,
+            // Limit max auto level on slow networks
+            capLevelToPlayerSize: isMobile,
           });
           
           hlsRef.current = hls;
@@ -578,13 +595,29 @@ export function VideoPlayer({
             }
           });
 
+          // Enhanced error handling for mobile networks
+          let networkRetryCount = 0;
+          const MAX_NETWORK_RETRIES = 5;
+          
           hls.on(Hls.Events.ERROR, (event, data) => {
             console.error('HLS error:', data);
             if (data.fatal) {
               switch (data.type) {
                 case Hls.ErrorTypes.NETWORK_ERROR:
-                  console.log('Network error, attempting recovery...');
-                  setTimeout(() => hls.startLoad(), 1000);
+                  networkRetryCount++;
+                  console.log(`Network error, attempting recovery... (attempt ${networkRetryCount}/${MAX_NETWORK_RETRIES})`);
+                  if (networkRetryCount <= MAX_NETWORK_RETRIES) {
+                    // Progressive backoff for mobile networks
+                    const delay = Math.min(1000 * networkRetryCount, 5000);
+                    setTimeout(() => {
+                      if (hlsRef.current) {
+                        hls.startLoad();
+                      }
+                    }, delay);
+                  } else {
+                    console.error('Max network retries reached');
+                    setVideoError(true);
+                  }
                   break;
                 case Hls.ErrorTypes.MEDIA_ERROR:
                   console.log('Media error, attempting recovery...');
@@ -592,7 +625,7 @@ export function VideoPlayer({
                   break;
                 default:
                   console.error('Unrecoverable error');
-                  // Only set error after multiple retries fail
+                  // Only set error after delay
                   setTimeout(() => {
                     if (hlsRef.current) {
                       setVideoError(true);
@@ -600,7 +633,15 @@ export function VideoPlayer({
                   }, 3000);
                   break;
               }
+            } else {
+              // Non-fatal errors - log but don't interrupt playback
+              console.warn('Non-fatal HLS error:', data.type, data.details);
             }
+          });
+          
+          // Reset retry count on successful fragment load
+          hls.on(Hls.Events.FRAG_LOADED, () => {
+            networkRetryCount = 0;
           });
         }
       } else {
@@ -1892,6 +1933,22 @@ export function VideoPlayer({
           }
         }}
         onCanPlay={() => setVideoError(false)}
+        onWaiting={() => {
+          // Handle buffering state for mobile networks
+          console.log('Video buffering...');
+        }}
+        onStalled={() => {
+          // Handle stalled playback - common on mobile
+          console.log('Video stalled, attempting to resume...');
+          if (videoRef.current && !videoRef.current.paused) {
+            // Try to resume playback
+            setTimeout(() => {
+              if (videoRef.current) {
+                videoRef.current.play().catch(() => {});
+              }
+            }, 1000);
+          }
+        }}
         onProgress={() => {
           if (videoRef.current && videoRef.current.buffered.length > 0) {
             const bufferedEnd = videoRef.current.buffered.end(videoRef.current.buffered.length - 1);
@@ -1901,9 +1958,25 @@ export function VideoPlayer({
         }}
         onError={(e) => {
           const video = e.currentTarget;
-          if (video.src && video.networkState === 3) {
-            console.error('Video failed to load:', video.src);
-            setVideoError(true);
+          const error = video.error;
+          console.error('Video error:', {
+            src: video.src,
+            networkState: video.networkState,
+            readyState: video.readyState,
+            error: error ? { code: error.code, message: error.message } : null
+          });
+          
+          // Only show error for actual failures, not for empty src or aborted loads
+          if (video.src && video.networkState === 3 && video.readyState === 0) {
+            // Retry once before showing error
+            setTimeout(() => {
+              if (videoRef.current && videoRef.current.networkState === 3) {
+                videoRef.current.load();
+                videoRef.current.play().catch(() => {
+                  setVideoError(true);
+                });
+              }
+            }, 2000);
           }
         }}
         poster={poster}
@@ -1914,8 +1987,7 @@ export function VideoPlayer({
         x5-video-player-type="h5-page"
         x5-video-player-fullscreen="true"
         x5-video-orientation="portraint"
-        preload="metadata"
-        crossOrigin="anonymous"
+        preload="auto"
         muted={false}
       />
       
