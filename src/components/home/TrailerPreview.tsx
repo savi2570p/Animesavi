@@ -163,8 +163,12 @@ export function TrailerPreview({ animeId, coverImage, title, onClose }: TrailerP
         loop
         playsInline
         webkit-playsinline="true"
-        x5-video-player-type="h5"
-        preload="auto"
+        x-webkit-airplay="allow"
+        x5-video-player-type="h5-page"
+        x5-video-player-fullscreen="false"
+        x5-playsinline="true"
+        preload="metadata"
+        controlsList="nodownload noremoteplayback"
       />
       
       {/* Overlay controls */}
