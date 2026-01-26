@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserProfileHoverCard } from '@/components/UserProfileHoverCard';
 import { toast } from 'sonner';
 import { VideoPlayer, ServerType } from '@/components/video/VideoPlayer';
 import { EpisodeList } from '@/components/video/EpisodeList';
@@ -1114,17 +1115,21 @@ export default function Watch() {
                 <div key={comment.id} className="space-y-3">
                   {/* Parent Comment */}
                   <div className="flex gap-4">
-                    <Avatar>
-                      <AvatarImage src={comment.profile?.avatar_url || undefined} alt={comment.profile?.username || 'User'} />
-                      <AvatarFallback className="bg-secondary">
-                        {comment.profile?.username?.charAt(0).toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
+                    <UserProfileHoverCard username={comment.profile?.username || null} avatarUrl={comment.profile?.avatar_url || null}>
+                      <Avatar className="cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all">
+                        <AvatarImage src={comment.profile?.avatar_url || undefined} alt={comment.profile?.username || 'User'} />
+                        <AvatarFallback className="bg-secondary">
+                          {comment.profile?.username?.charAt(0).toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </UserProfileHoverCard>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium">
-                          {getDisplayName(comment)}
-                        </span>
+                        <UserProfileHoverCard username={comment.profile?.username || null} avatarUrl={comment.profile?.avatar_url || null}>
+                          <span className="font-medium cursor-pointer hover:text-primary transition-colors">
+                            {getDisplayName(comment)}
+                          </span>
+                        </UserProfileHoverCard>
                         {comment.isOwner && (
                           <span className="px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full">Owner</span>
                         )}
@@ -1222,17 +1227,21 @@ export default function Watch() {
                     <div className="ml-12 space-y-3 border-l-2 border-border/50 pl-4">
                       {comment.replies.map((reply) => (
                         <div key={reply.id} className="flex gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={reply.profile?.avatar_url || undefined} alt={reply.profile?.username || 'User'} />
-                            <AvatarFallback className="bg-secondary text-xs">
-                              {reply.profile?.username?.charAt(0).toUpperCase() || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
+                          <UserProfileHoverCard username={reply.profile?.username || null} avatarUrl={reply.profile?.avatar_url || null}>
+                            <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all">
+                              <AvatarImage src={reply.profile?.avatar_url || undefined} alt={reply.profile?.username || 'User'} />
+                              <AvatarFallback className="bg-secondary text-xs">
+                                {reply.profile?.username?.charAt(0).toUpperCase() || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                          </UserProfileHoverCard>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-sm">
-                                {getDisplayName(reply)}
-                              </span>
+                              <UserProfileHoverCard username={reply.profile?.username || null} avatarUrl={reply.profile?.avatar_url || null}>
+                                <span className="font-medium text-sm cursor-pointer hover:text-primary transition-colors">
+                                  {getDisplayName(reply)}
+                                </span>
+                              </UserProfileHoverCard>
                               {reply.isOwner && (
                                 <span className="px-1.5 py-0.5 text-[10px] bg-primary/20 text-primary rounded-full">Owner</span>
                               )}

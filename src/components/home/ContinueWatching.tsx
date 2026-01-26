@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Play, ChevronRight, Clock, Sparkles, Check } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Play, ChevronRight, Clock, Sparkles, Check, User } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Carousel,
@@ -50,6 +51,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
   const { user } = useAuth();
   const [history, setHistory] = useState<WatchHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<{ username: string | null; avatar_url: string | null } | null>(null);
 
   // Only show on home page if specified
   const isHomePage = typeof window !== 'undefined' && window.location.pathname === '/';
@@ -58,10 +60,21 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
   useEffect(() => {
     if (user && shouldRender) {
       fetchRecentHistory();
+      fetchUserProfile();
     } else {
       setIsLoading(false);
     }
   }, [user, shouldRender]);
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('profiles')
+      .select('username, avatar_url')
+      .eq('id', user.id)
+      .single();
+    if (data) setUserProfile(data);
+  };
 
   const fetchRecentHistory = async () => {
     setIsLoading(true);
@@ -154,6 +167,13 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       <div className="container relative">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
+            {/* User Profile Avatar */}
+            <Avatar className="h-10 w-10 md:h-12 md:w-12 border-2 border-primary/30">
+              <AvatarImage src={userProfile?.avatar_url || undefined} alt={userProfile?.username || 'User'} />
+              <AvatarFallback className="bg-primary/10 text-primary">
+                {userProfile?.username?.charAt(0).toUpperCase() || <User className="h-5 w-5" />}
+              </AvatarFallback>
+            </Avatar>
             <div className="relative">
               <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
                 <Clock className="h-5 w-5 text-primary" />

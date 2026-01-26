@@ -5,7 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
-import { History as HistoryIcon, Play, Clock, Trash2 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { History as HistoryIcon, Play, Clock, Trash2, User } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -46,6 +47,7 @@ export default function History() {
   const navigate = useNavigate();
   const [history, setHistory] = useState<WatchHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<{ username: string | null; avatar_url: string | null } | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -54,7 +56,18 @@ export default function History() {
     }
 
     fetchHistory();
+    fetchUserProfile();
   }, [user]);
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('profiles')
+      .select('username, avatar_url')
+      .eq('id', user.id)
+      .single();
+    if (data) setUserProfile(data);
+  };
 
   const fetchHistory = async () => {
     try {
@@ -194,6 +207,13 @@ export default function History() {
     <div className="container py-8">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
+          {/* User Profile Avatar */}
+          <Avatar className="h-10 w-10 border-2 border-primary/30">
+            <AvatarImage src={userProfile?.avatar_url || undefined} alt={userProfile?.username || 'User'} />
+            <AvatarFallback className="bg-primary/10 text-primary">
+              {userProfile?.username?.charAt(0).toUpperCase() || <User className="h-5 w-5" />}
+            </AvatarFallback>
+          </Avatar>
           <HistoryIcon className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-heading font-bold">
             Watch <span className="anime-gradient-text">History</span>

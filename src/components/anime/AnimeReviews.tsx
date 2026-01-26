@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserProfileHoverCard } from '@/components/UserProfileHoverCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star, Trash2, Edit2, User } from 'lucide-react';
 import { toast } from 'sonner';
@@ -302,16 +303,20 @@ export function AnimeReviews({ animeId }: AnimeReviewsProps) {
               className="p-4 bg-card/50 rounded-xl border border-border/30"
             >
               <div className="flex items-start gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={review.avatar_url || undefined} alt={review.username} />
-                  <AvatarFallback className="bg-primary/10 text-primary">
-                    <User className="h-5 w-5" />
-                  </AvatarFallback>
-                </Avatar>
+                <UserProfileHoverCard username={review.username || null} avatarUrl={review.avatar_url || null}>
+                  <Avatar className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all">
+                    <AvatarImage src={review.avatar_url || undefined} alt={review.username} />
+                    <AvatarFallback className="bg-primary/10 text-primary">
+                      <User className="h-5 w-5" />
+                    </AvatarFallback>
+                  </Avatar>
+                </UserProfileHoverCard>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{review.username}</span>
+                      <UserProfileHoverCard username={review.username || null} avatarUrl={review.avatar_url || null}>
+                        <span className="font-medium cursor-pointer hover:text-primary transition-colors">{review.username}</span>
+                      </UserProfileHoverCard>
                       <StarRating value={review.rating} size="sm" />
                     </div>
                     <span className="text-xs text-muted-foreground">
