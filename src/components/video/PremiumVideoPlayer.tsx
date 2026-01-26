@@ -21,6 +21,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { DownloadVerificationDialog } from './DownloadVerificationDialog';
+import { MobileMuteIndicator } from './MobileMuteIndicator';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -139,12 +140,19 @@ export function PremiumVideoPlayer({
   const lastTapRef = useRef<{ time: number; x: number }>({ time: 0, x: 0 });
   const [doubleTapSide, setDoubleTapSide] = useState<'left' | 'right' | null>(null);
   
+  // Mobile mute indicator state (shows when video is muted due to autoplay policy)
+  const [showMobileUnmute, setShowMobileUnmute] = useState(false);
+  const [wasMutedForAutoplay, setWasMutedForAutoplay] = useState(false);
+  
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
 
   const features = serverConfigs[activeServer].features;
   const anyVideoUrl = videoUrl || externalUrl;
   const effectiveVideoUrl = anyVideoUrl;
   const shouldUseIframe = useIframeFallback;
+  
+  // Detect mobile device
+  const isMobile = typeof window !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   // Check if episode is in watch later
   useEffect(() => {
@@ -355,26 +363,41 @@ export function PremiumVideoPlayer({
 
   const togglePlay = useCallback(() => {
     if (videoRef.current) {
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       if (isPlaying) {
         videoRef.current.pause();
       } else {
         // Auto-unmute on user interaction (mobile autoplay starts muted)
-        if (isMobile && videoRef.current.muted) {
+        if (isMobile && videoRef.current.muted && wasMutedForAutoplay) {
           videoRef.current.muted = false;
+          setIsMuted(false);
+          setShowMobileUnmute(false);
+          setWasMutedForAutoplay(false);
         }
         videoRef.current.play().catch((error) => {
           console.warn('Play failed:', error);
           // If play fails, try muted
           if (videoRef.current) {
             videoRef.current.muted = true;
+            setIsMuted(true);
+            setWasMutedForAutoplay(true);
+            setShowMobileUnmute(true);
             videoRef.current.play().catch(() => {});
           }
         });
       }
       setIsPlaying(!isPlaying);
     }
-  }, [isPlaying]);
+  }, [isPlaying, isMobile, wasMutedForAutoplay]);
+
+  // Handler for mobile unmute indicator tap
+  const handleMobileUnmute = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = false;
+      setIsMuted(false);
+      setShowMobileUnmute(false);
+      setWasMutedForAutoplay(false);
+    }
+  }, []);
 
   const handleVolumeChange = (newVolume: number) => {
     if (videoRef.current) {
@@ -679,7 +702,15 @@ export function PremiumVideoPlayer({
           videoError && "hidden"
         )}
         onTimeUpdate={handleTimeUpdate}
-        onPlay={() => setIsPlaying(true)}
+        onPlay={() => {
+          setIsPlaying(true);
+          // Check if video started muted on mobile (autoplay policy)
+          if (isMobile && videoRef.current?.muted) {
+            setWasMutedForAutoplay(true);
+            setShowMobileUnmute(true);
+            setIsMuted(true);
+          }
+        }}
         onPause={() => setIsPlaying(false)}
         onLoadedMetadata={() => {
           if (videoRef.current) {
@@ -738,6 +769,15 @@ export function PremiumVideoPlayer({
         controlsList="nodownload noremoteplayback"
         disablePictureInPicture={false}
       />
+      
+      {/* Mobile Mute Indicator - shows when video is muted for autoplay */}
+      {isMobile && (
+        <MobileMuteIndicator 
+          isMuted={isMuted && wasMutedForAutoplay}
+          isVisible={showMobileUnmute && isPlaying}
+          onTap={handleMobileUnmute}
+        />
+      )}
       
       {/* Error modal */}
       {videoError && (

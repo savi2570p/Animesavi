@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Play, Volume2, VolumeX } from 'lucide-react';
 import Hls from 'hls.js';
+import { MobileMuteIndicator } from '@/components/video/MobileMuteIndicator';
 
 interface TrailerPreviewProps {
   animeId: string;
@@ -14,8 +15,13 @@ export function TrailerPreview({ animeId, coverImage, title, onClose }: TrailerP
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [muted, setMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showMobileUnmute, setShowMobileUnmute] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+  
+  // Detect mobile device
+  const isMobile = typeof window !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   useEffect(() => {
     fetchFirstEpisodeVideo();
@@ -153,6 +159,11 @@ export function TrailerPreview({ animeId, coverImage, title, onClose }: TrailerP
     );
   }
 
+  const handleMobileUnmute = () => {
+    setMuted(false);
+    setShowMobileUnmute(false);
+  };
+
   return (
     <div className="absolute inset-0 rounded-xl overflow-hidden z-10">
       <video
@@ -169,7 +180,24 @@ export function TrailerPreview({ animeId, coverImage, title, onClose }: TrailerP
         x5-playsinline="true"
         preload="metadata"
         controlsList="nodownload noremoteplayback"
+        onPlay={() => {
+          setIsPlaying(true);
+          // Show mobile unmute indicator if video started muted on mobile
+          if (isMobile && muted) {
+            setShowMobileUnmute(true);
+          }
+        }}
+        onPause={() => setIsPlaying(false)}
       />
+      
+      {/* Mobile Mute Indicator */}
+      {isMobile && (
+        <MobileMuteIndicator 
+          isMuted={muted}
+          isVisible={showMobileUnmute && isPlaying}
+          onTap={handleMobileUnmute}
+        />
+      )}
       
       {/* Overlay controls */}
       <div className="absolute bottom-2 right-2 flex gap-2">
@@ -178,6 +206,7 @@ export function TrailerPreview({ animeId, coverImage, title, onClose }: TrailerP
             e.preventDefault();
             e.stopPropagation();
             setMuted(!muted);
+            if (muted) setShowMobileUnmute(false);
           }}
           className="p-1.5 rounded-full bg-black/60 hover:bg-black/80 transition-colors"
         >
