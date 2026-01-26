@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { DownloadVerificationDialog } from './DownloadVerificationDialog';
+import { QualityOverlay } from './QualityOverlay';
 
 interface AudioTrackInfo {
   id: number;
@@ -1786,6 +1787,18 @@ export function VideoPlayer({
       onTouchEnd={handleTouchEnd}
       onMouseLeave={() => isPlaying && !settingsOpen && setShowControls(false)}
     >
+      {/* Quality Overlay */}
+      <QualityOverlay
+        currentBitrate={currentBitrate}
+        estimatedBandwidth={estimatedBandwidth}
+        qualityLevels={qualityLevels}
+        currentQualityLevel={currentQualityLevel}
+        isAutoQuality={isAutoQuality}
+        onQualityChange={switchQualityLevel}
+        isVisible={showControls && qualityLevels.length > 0}
+        position="top-right"
+      />
+
       {/* Double-tap seek indicators */}
       {doubleTapSide === 'left' && (
         <div className="absolute left-4 top-1/2 -translate-y-1/2 z-[100] pointer-events-none animate-fade-in">

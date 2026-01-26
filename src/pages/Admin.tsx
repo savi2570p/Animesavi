@@ -17,7 +17,9 @@ import {
   Clock,
   FileText,
   TrendingUp,
+  FileVideo,
 } from 'lucide-react';
+import { VideoEncodingDashboard } from '@/components/admin/VideoEncodingDashboard';
 
 interface Application {
   id: string;
@@ -250,111 +252,130 @@ export default function Admin() {
         </Card>
       </div>
 
-      {/* Applications */}
-      <Tabs defaultValue="pending">
+      {/* Main Tabs */}
+      <Tabs defaultValue="applications">
         <TabsList className="mb-6">
-          <TabsTrigger value="pending">
-            Pending ({applications.filter((a) => a.status === 'pending').length})
+          <TabsTrigger value="applications">
+            Applications ({applications.length})
           </TabsTrigger>
-          <TabsTrigger value="all">All Applications</TabsTrigger>
+          <TabsTrigger value="encoding" className="flex items-center gap-2">
+            <FileVideo className="h-4 w-4" />
+            Video Encoding
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="pending">
-          <div className="space-y-4">
-            {applications
-              .filter((a) => a.status === 'pending')
-              .map((app) => (
-                <Card key={app.id}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="text-lg">
-                          {app.profile?.username || 'Unknown User'}
-                        </CardTitle>
-                        <CardDescription>
-                          Applied {new Date(app.created_at).toLocaleDateString()}
-                        </CardDescription>
+        <TabsContent value="applications">
+          {/* Applications Sub-Tabs */}
+          <Tabs defaultValue="pending">
+            <TabsList className="mb-4">
+              <TabsTrigger value="pending">
+                Pending ({applications.filter((a) => a.status === 'pending').length})
+              </TabsTrigger>
+              <TabsTrigger value="all">All Applications</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="pending">
+              <div className="space-y-4">
+                {applications
+                  .filter((a) => a.status === 'pending')
+                  .map((app) => (
+                    <Card key={app.id}>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <CardTitle className="text-lg">
+                              {app.profile?.username || 'Unknown User'}
+                            </CardTitle>
+                            <CardDescription>
+                              Applied {new Date(app.created_at).toLocaleDateString()}
+                            </CardDescription>
+                          </div>
+                          {getStatusBadge(app.status)}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-1">Reason</p>
+                          <p>{app.reason}</p>
+                        </div>
+
+                        {app.sample_work && (
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-1">Sample Work</p>
+                            <p>{app.sample_work}</p>
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">Admin Notes (Optional)</p>
+                          <Textarea
+                            placeholder="Add notes for the applicant..."
+                            value={adminNotes[app.id] || ''}
+                            onChange={(e) =>
+                              setAdminNotes({ ...adminNotes, [app.id]: e.target.value })
+                            }
+                            className="bg-muted/50"
+                          />
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                          <Button
+                            onClick={() => handleApplicationAction(app.id, 'approved', app.user_id)}
+                            disabled={processingId === app.id}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Approve
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={() => handleApplicationAction(app.id, 'rejected', app.user_id)}
+                            disabled={processingId === app.id}
+                          >
+                            <XCircle className="h-4 w-4 mr-2" />
+                            Reject
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+
+                {applications.filter((a) => a.status === 'pending').length === 0 && (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                      <CheckCircle className="h-12 w-12 text-green-500 mb-4" />
+                      <p className="text-lg font-medium">No pending applications</p>
+                      <p className="text-muted-foreground">All caught up!</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="all">
+              <div className="space-y-4">
+                {applications.map((app) => (
+                  <Card key={app.id}>
+                    <CardContent className="flex items-center justify-between p-4">
+                      <div className="flex items-center gap-4">
+                        <div>
+                          <p className="font-medium">{app.profile?.username || 'Unknown User'}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(app.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
                       {getStatusBadge(app.status)}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Reason</p>
-                      <p>{app.reason}</p>
-                    </div>
-
-                    {app.sample_work && (
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Sample Work</p>
-                        <p>{app.sample_work}</p>
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Admin Notes (Optional)</p>
-                      <Textarea
-                        placeholder="Add notes for the applicant..."
-                        value={adminNotes[app.id] || ''}
-                        onChange={(e) =>
-                          setAdminNotes({ ...adminNotes, [app.id]: e.target.value })
-                        }
-                        className="bg-muted/50"
-                      />
-                    </div>
-
-                    <div className="flex gap-3 pt-2">
-                      <Button
-                        onClick={() => handleApplicationAction(app.id, 'approved', app.user_id)}
-                        disabled={processingId === app.id}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Approve
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={() => handleApplicationAction(app.id, 'rejected', app.user_id)}
-                        disabled={processingId === app.id}
-                      >
-                        <XCircle className="h-4 w-4 mr-2" />
-                        Reject
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-
-            {applications.filter((a) => a.status === 'pending').length === 0 && (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <CheckCircle className="h-12 w-12 text-green-500 mb-4" />
-                  <p className="text-lg font-medium">No pending applications</p>
-                  <p className="text-muted-foreground">All caught up!</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
-        <TabsContent value="all">
-          <div className="space-y-4">
-            {applications.map((app) => (
-              <Card key={app.id}>
-                <CardContent className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-4">
-                    <div>
-                      <p className="font-medium">{app.profile?.username || 'Unknown User'}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(app.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  {getStatusBadge(app.status)}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        <TabsContent value="encoding">
+          <VideoEncodingDashboard />
         </TabsContent>
       </Tabs>
     </div>
