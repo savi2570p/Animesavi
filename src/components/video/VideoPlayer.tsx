@@ -38,6 +38,9 @@ import { toast } from 'sonner';
 import { DownloadVerificationDialog } from './DownloadVerificationDialog';
 import { QualityOverlay } from './QualityOverlay';
 import { BufferingIndicator } from './BufferingIndicator';
+import { VolumeSlider } from './VolumeSlider';
+import { GestureIndicator } from './GestureIndicator';
+import { useVideoGestures } from '@/hooks/useVideoGestures';
 
 interface AudioTrackInfo {
   id: number;
@@ -209,6 +212,9 @@ export function VideoPlayer({
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [brightness, setBrightness] = useState(1);
+  const [zoom, setZoom] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [progress, setProgress] = useState(0);
   const [buffered, setBuffered] = useState(0);
@@ -294,6 +300,42 @@ export function VideoPlayer({
   const anyVideoUrl = videoUrl || externalUrl;
   const effectiveVideoUrl = anyVideoUrl;
   const shouldUseIframe = useIframeFallback;
+  
+  // Detect if mobile device
+  const isMobile = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  // Gesture controls hook for mobile
+  const { gestureState, isGestureActive } = useVideoGestures({
+    containerRef,
+    videoRef,
+    volume,
+    onVolumeChange: (v) => {
+      setVolume(v);
+      if (videoRef.current) {
+        videoRef.current.volume = v;
+        if (v > 0 && isMuted) {
+          setIsMuted(false);
+          videoRef.current.muted = false;
+        }
+      }
+    },
+    brightness,
+    onBrightnessChange: (b) => {
+      setBrightness(b);
+      if (videoRef.current) {
+        videoRef.current.style.filter = `brightness(${b})`;
+      }
+    },
+    zoom,
+    onZoomChange: (z) => {
+      setZoom(z);
+      if (videoRef.current) {
+        videoRef.current.style.transform = `scale(${z})`;
+        videoRef.current.style.transformOrigin = 'center center';
+      }
+    },
+    enabled: isMobile && !shouldUseIframe,
+  });
   
   // Reset state when video URL or server changes
   useEffect(() => {
@@ -1198,12 +1240,26 @@ export function VideoPlayer({
     }
   }, [isPlaying]);
 
-  const toggleMute = () => {
+  const toggleMute = useCallback(() => {
     if (videoRef.current) {
       videoRef.current.muted = !isMuted;
       setIsMuted(!isMuted);
     }
-  };
+  }, [isMuted]);
+
+  const handleVolumeChange = useCallback((newVolume: number) => {
+    if (videoRef.current) {
+      videoRef.current.volume = newVolume;
+      setVolume(newVolume);
+      if (newVolume > 0 && isMuted) {
+        videoRef.current.muted = false;
+        setIsMuted(false);
+      } else if (newVolume === 0 && !isMuted) {
+        videoRef.current.muted = true;
+        setIsMuted(true);
+      }
+    }
+  }, [isMuted]);
 
   // ENHANCED Fullscreen toggle - fixes all control issues
   const toggleFullscreen = useCallback(async () => {
@@ -1358,6 +1414,16 @@ export function VideoPlayer({
           e.preventDefault();
           skipBackward();
           break;
+        case 'arrowup':
+          e.preventDefault();
+          handleVolumeChange(Math.min(1, volume + 0.1));
+          toast.success(`Volume: ${Math.round(Math.min(1, volume + 0.1) * 100)}%`);
+          break;
+        case 'arrowdown':
+          e.preventDefault();
+          handleVolumeChange(Math.max(0, volume - 0.1));
+          toast.success(`Volume: ${Math.round(Math.max(0, volume - 0.1) * 100)}%`);
+          break;
         case 'escape':
           if (isFullscreen) {
             e.preventDefault();
@@ -1369,7 +1435,7 @@ export function VideoPlayer({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [togglePlay, toggleFullscreen, togglePiP, skipForward, skipBackward, isFullscreen, toggleMute]);
+  }, [togglePlay, toggleFullscreen, togglePiP, skipForward, skipBackward, isFullscreen, toggleMute, handleVolumeChange, volume]);
 
   const handleDownload = () => {
     if (!effectiveVideoUrl) {
@@ -1806,6 +1872,14 @@ export function VideoPlayer({
         position="top-right"
       />
 
+      {/* Gesture Indicator for mobile swipe controls */}
+      <GestureIndicator
+        type={gestureState.type}
+        value={gestureState.value}
+        isVisible={isGestureActive}
+        position={gestureState.type === 'brightness' ? 'left' : gestureState.type === 'volume' ? 'right' : 'center'}
+      />
+
       {/* Double-tap seek indicators */}
       {doubleTapSide === 'left' && (
         <div className="absolute left-4 top-1/2 -translate-y-1/2 z-[100] pointer-events-none animate-fade-in">
@@ -2180,11 +2254,21 @@ export function VideoPlayer({
                 >
                   <SkipForward className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
+                {/* Volume Slider - Desktop */}
+                <div className="hidden md:block" onClick={(e) => e.stopPropagation()}>
+                  <VolumeSlider
+                    volume={volume}
+                    isMuted={isMuted}
+                    onVolumeChange={handleVolumeChange}
+                    onMuteToggle={toggleMute}
+                  />
+                </div>
+                {/* Volume Button - Mobile (just mute toggle) */}
                 <button 
-                  className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  className="md:hidden w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); toggleMute(); }}
                 >
-                  {isMuted ? <VolumeX className="w-4 h-4 md:w-5 md:h-5" /> : <Volume2 className="w-4 h-4 md:w-5 md:h-5" />}
+                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                 </button>
                 {/* Next Episode Button - Only for PLAY and SHORT servers */}
                 {hasNextEpisode && onNextEpisode && (
@@ -2244,6 +2328,14 @@ export function VideoPlayer({
                           <div className="flex justify-between items-center">
                             <span className="text-muted-foreground">Mute</span>
                             <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">M</kbd>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Volume Up</span>
+                            <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">↑</kbd>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Volume Down</span>
+                            <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">↓</kbd>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-muted-foreground">Picture-in-Picture</span>
@@ -2430,12 +2522,21 @@ export function VideoPlayer({
                 <SkipForward className="w-4 h-4 md:w-5 md:h-5" />
               </button>
 
-              {/* Volume */}
+              {/* Volume Slider - Desktop */}
+              <div className="hidden md:block" onClick={(e) => e.stopPropagation()}>
+                <VolumeSlider
+                  volume={volume}
+                  isMuted={isMuted}
+                  onVolumeChange={handleVolumeChange}
+                  onMuteToggle={toggleMute}
+                />
+              </div>
+              {/* Volume Button - Mobile (just mute toggle) */}
               <button 
-                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                className="md:hidden w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); toggleMute(); }}
               >
-                {isMuted ? <VolumeX className="w-4 h-4 md:w-5 md:h-5" /> : <Volume2 className="w-4 h-4 md:w-5 md:h-5" />}
+                {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
               </button>
 
               {/* Next Episode Button Desktop */}
@@ -2498,6 +2599,14 @@ export function VideoPlayer({
                         <div className="flex justify-between items-center">
                           <span className="text-muted-foreground">Mute</span>
                           <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">M</kbd>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Volume Up</span>
+                          <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">↑</kbd>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Volume Down</span>
+                          <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">↓</kbd>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-muted-foreground">Picture-in-Picture</span>
