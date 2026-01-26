@@ -54,6 +54,7 @@ export default function Upload() {
   const [description, setDescription] = useState('');
   const [coverImage, setCoverImage] = useState('');
   const [bannerImage, setBannerImage] = useState('');
+  const [trailerUrl, setTrailerUrl] = useState('');
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [releaseYear, setReleaseYear] = useState('');
   const [type, setType] = useState('series');
@@ -193,6 +194,7 @@ export default function Upload() {
         description: description.trim() || null,
         cover_image: coverImage.trim() || null,
         banner_image: bannerImage.trim() || null,
+        trailer_url: trailerUrl.trim() || null,
         genres: selectedGenres.length > 0 ? selectedGenres : null,
         release_year: releaseYear ? parseInt(releaseYear) : null,
         type,
@@ -212,6 +214,7 @@ export default function Upload() {
       setDescription('');
       setCoverImage('');
       setBannerImage('');
+      setTrailerUrl('');
       setSelectedGenres([]);
       setReleaseYear('');
       setType('series');
@@ -526,6 +529,20 @@ export default function Upload() {
                     folder="banners"
                     placeholder="https://example.com/banner.jpg"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="trailerUrl">Trailer URL (Optional)</Label>
+                  <Input
+                    id="trailerUrl"
+                    placeholder="https://youtube.com/watch?v=... or direct video URL"
+                    value={trailerUrl}
+                    onChange={(e) => setTrailerUrl(e.target.value)}
+                    className="bg-muted/50"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Add a YouTube link or direct video URL for the official trailer
+                  </p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
