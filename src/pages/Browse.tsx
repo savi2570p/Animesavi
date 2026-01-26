@@ -129,6 +129,18 @@ export default function Browse() {
     setSearchParams(params);
   };
 
+  // Escape key handler to exit Search Mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isSearchMode) {
+        clearSearch();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isSearchMode]);
+
   // Fetch search suggestions when typing
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -422,15 +434,20 @@ export default function Browse() {
               )}
             </div>
             {isSearchMode && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearSearch}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4 mr-1" />
-                Exit Search
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearSearch}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Exit Search
+                </Button>
+                <span className="text-xs text-muted-foreground hidden sm:inline">
+                  Press <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Esc</kbd> to exit
+                </span>
+              </div>
             )}
           </div>
           
@@ -567,9 +584,18 @@ export default function Browse() {
           </form>
         </div>
 
-        {/* Browse Mode Filters - Hidden in Search Mode */}
-        {!isSearchMode && (
-          <div className="mb-10 space-y-6">
+        {/* Browse Filters - Available in both modes for optional refinement */}
+        <div className={cn(
+          "mb-10 space-y-6 transition-all",
+          isSearchMode && "opacity-70"
+        )}>
+          {/* Section label for Search Mode */}
+          {isSearchMode && (
+            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border/50">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Optional filters to refine search results</span>
+            </div>
+          )}
 
           {/* Type filter */}
           <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-2">
@@ -587,20 +613,22 @@ export default function Browse() {
             ))}
           </div>
 
-          {/* Sort options */}
-          <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-3">
-            <span className="text-sm text-muted-foreground font-medium">Sort by:</span>
-            {sortOptions.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setSortBy(option.value)}
-                className={cn("filter-btn flex items-center gap-2", sortBy === option.value && "active")}
-              >
-                <option.icon className="h-4 w-4" />
-                {option.label}
-              </button>
-            ))}
-          </div>
+          {/* Sort options - Hide in Search Mode as search is keyword-based */}
+          {!isSearchMode && (
+            <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-3">
+              <span className="text-sm text-muted-foreground font-medium">Sort by:</span>
+              {sortOptions.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setSortBy(option.value)}
+                  className={cn("filter-btn flex items-center gap-2", sortBy === option.value && "active")}
+                >
+                  <option.icon className="h-4 w-4" />
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Status filter */}
           <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-4">
@@ -617,19 +645,21 @@ export default function Browse() {
             ))}
           </div>
 
-          {/* Episode filter */}
-          <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-5">
-            <span className="text-sm text-muted-foreground font-medium">Episodes:</span>
-            {episodeOptions.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => handleEpisodeFilter(option.value)}
-                className={cn("filter-btn flex items-center gap-2", episodeFilter === option.value && "active")}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
+          {/* Episode filter - Only in Browse Mode */}
+          {!isSearchMode && (
+            <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-5">
+              <span className="text-sm text-muted-foreground font-medium">Episodes:</span>
+              {episodeOptions.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => handleEpisodeFilter(option.value)}
+                  className={cn("filter-btn flex items-center gap-2", episodeFilter === option.value && "active")}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Genre filters */}
           <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-5">
@@ -643,15 +673,14 @@ export default function Browse() {
                 onClick={() => handleGenreFilter(genre)}
                 className={cn("filter-btn", selectedGenre === genre.toLowerCase() && "active")}
               >
-            {genre}
+                {genre}
               </button>
             ))}
           </div>
         </div>
-        )}
 
-        {/* Most Popular Section - Only in Browse Mode */}
-        {!isSearchMode && !searchParams.get('genre') && sortBy === 'newest' && (
+        {/* Top 10 Most Popular Section - Independent section, always visible */}
+        {!searchParams.get('genre') && (sortBy === 'newest' || isSearchMode) && (
           <MostPopularSection />
         )}
 
