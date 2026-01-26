@@ -55,33 +55,46 @@ function PrivacyPolicyButton() {
           </DialogHeader>
           <ScrollArea className="max-h-[60vh]">
             <div className="space-y-4 text-sm text-muted-foreground pr-4">
-              <p className="text-foreground font-medium">Last Updated: December 2024</p>
+              <p className="text-foreground font-medium">Last Updated: January 2026</p>
               
-              <div className="space-y-2">
-                <h3 className="text-foreground font-semibold">Data Collection</h3>
-                <p>
-                  Anime Savi does not store any video files on our servers. We only index links from the internet which are hosted on third-party services, similar to how search engines operate.
+              <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+                <p className="text-foreground font-medium text-center">
+                  Anime.Savi.me does not store any files on own server. We only index links from internet which are hosted on third-party services. We Index Links Just Like Google.
                 </p>
               </div>
               
               <div className="space-y-2">
-                <h3 className="text-foreground font-semibold">Cookies & Local Storage</h3>
+                <h3 className="text-foreground font-semibold">Content Indexing</h3>
                 <p>
-                  We use local storage to save your preferences such as watch history, favorites, and theme settings. This data is stored locally on your device and is never transmitted to our servers.
+                  Anime Savi functions as a search engine and content aggregator. We do not host, upload, or store any video files on our servers. All content is indexed from publicly available third-party sources.
                 </p>
               </div>
               
               <div className="space-y-2">
-                <h3 className="text-foreground font-semibold">Third-Party Services</h3>
+                <h3 className="text-foreground font-semibold">Local Storage & Cookies</h3>
                 <p>
-                  Video content is provided by third-party hosting services. Each service has its own privacy policy that governs how they handle data. We recommend reviewing their policies.
+                  We use local storage to save your preferences including watch history, favorites, theme settings, and playback preferences. This data remains on your device and is never transmitted to external servers.
                 </p>
               </div>
               
               <div className="space-y-2">
-                <h3 className="text-foreground font-semibold">Account Data</h3>
+                <h3 className="text-foreground font-semibold">Third-Party Content</h3>
                 <p>
-                  If you create an account, we store your email address and username for authentication purposes. Your password is encrypted and we never have access to it in plain text.
+                  All video content accessible through our platform is hosted by independent third-party services. Each service operates under its own privacy policy. We have no control over their data practices.
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-foreground font-semibold">Account Information</h3>
+                <p>
+                  When you create an account, we collect your email address and username for authentication. Passwords are encrypted using industry-standard methods. We never store or have access to plain text passwords.
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-foreground font-semibold">Analytics</h3>
+                <p>
+                  We may collect anonymous usage statistics to improve our service. This includes page views and general interaction patterns. No personally identifiable information is collected without consent.
                 </p>
               </div>
             </div>
@@ -119,93 +132,107 @@ function TermsOfServiceButton() {
           </DialogHeader>
           <ScrollArea className="max-h-[70vh]">
             <div className="space-y-6 text-sm text-muted-foreground pr-4">
-              <p className="text-foreground font-medium">Last Updated: December 2024</p>
+              <p className="text-foreground font-medium">Last Updated: January 2026</p>
+              
+              <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+                <p className="text-foreground font-medium text-center">
+                  Anime.Savi.me does not store any files on own server. We only index links from internet which are hosted on third-party services. We Index Links Just Like Google.
+                </p>
+              </div>
               
               <div className="space-y-3">
                 <h3 className="text-foreground font-semibold text-base">1. Acceptance of Terms</h3>
                 <p>
-                  By accessing and using Anime Savi ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our Service.
+                  By accessing and using Anime Savi ("the Service"), you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. If you do not agree, you must discontinue use immediately.
                 </p>
               </div>
               
               <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">2. Description of Service</h3>
+                <h3 className="text-foreground font-semibold text-base">2. Nature of Service</h3>
                 <p>
-                  Anime Savi is a streaming index platform that aggregates anime content links from various third-party sources. We do not host, upload, or store any video content on our servers. Our Service functions as a content discovery and indexing platform only.
+                  Anime Savi operates as a content indexing and discovery platform, similar to search engines like Google. We aggregate and index links to anime content hosted on independent third-party servers. We do not host, upload, store, or control any video files on our servers.
                 </p>
               </div>
               
               <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">3. User Accounts</h3>
+                <h3 className="text-foreground font-semibold text-base">3. User Accounts & Eligibility</h3>
                 <ul className="list-disc list-inside space-y-1 ml-2">
                   <li>You must be at least 13 years old to create an account</li>
-                  <li>You are responsible for maintaining the security of your account</li>
-                  <li>You must not share your account credentials with others</li>
-                  <li>You are responsible for all activities under your account</li>
-                  <li>We reserve the right to suspend or terminate accounts that violate these terms</li>
+                  <li>You are solely responsible for maintaining account security</li>
+                  <li>Account sharing is prohibited</li>
+                  <li>You are liable for all activities conducted under your account</li>
+                  <li>We reserve the right to suspend or terminate accounts without notice</li>
                 </ul>
               </div>
               
               <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">4. Acceptable Use Policy</h3>
+                <h3 className="text-foreground font-semibold text-base">4. Prohibited Activities</h3>
                 <p>You agree not to:</p>
                 <ul className="list-disc list-inside space-y-1 ml-2">
-                  <li>Use the Service for any illegal purposes</li>
-                  <li>Attempt to gain unauthorized access to our systems</li>
-                  <li>Interfere with the proper functioning of the Service</li>
-                  <li>Upload malicious content or spam</li>
-                  <li>Harass or abuse other users</li>
-                  <li>Scrape or collect user data without authorization</li>
-                  <li>Use bots or automated scripts without permission</li>
+                  <li>Use the Service for any unlawful purpose</li>
+                  <li>Attempt unauthorized access to our systems or user data</li>
+                  <li>Interfere with or disrupt Service functionality</li>
+                  <li>Upload malicious code, spam, or harmful content</li>
+                  <li>Harass, threaten, or abuse other users</li>
+                  <li>Scrape, crawl, or collect data without authorization</li>
+                  <li>Deploy automated tools or bots without written permission</li>
+                  <li>Circumvent any security measures or access restrictions</li>
                 </ul>
               </div>
               
               <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">5. Content Disclaimer</h3>
+                <h3 className="text-foreground font-semibold text-base">5. Third-Party Content Disclaimer</h3>
                 <p>
-                  All anime content accessible through our Service is hosted by third-party providers. We do not control, endorse, or assume responsibility for any third-party content. We respect intellectual property rights and will respond to valid DMCA takedown requests.
+                  All video content accessible through Anime Savi is hosted on independent third-party platforms. We do not control, verify, endorse, or assume any responsibility for third-party content, including its accuracy, legality, or quality. Your use of third-party content is at your own risk.
                 </p>
               </div>
               
               <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">6. Intellectual Property</h3>
+                <h3 className="text-foreground font-semibold text-base">6. Intellectual Property Rights</h3>
                 <p>
-                  The Anime Savi name, logo, and website design are our intellectual property. Anime titles, characters, and related media remain the property of their respective owners.
+                  The Anime Savi brand, logo, website design, and original content are our exclusive intellectual property. All anime titles, characters, artwork, and related media are the property of their respective copyright holders. We make no claim of ownership over indexed content.
                 </p>
               </div>
               
               <div className="space-y-3">
                 <h3 className="text-foreground font-semibold text-base">7. User-Generated Content</h3>
                 <p>
-                  By uploading content (comments, profile information, etc.), you grant us a non-exclusive license to display and use that content. You retain ownership of your content and are responsible for ensuring it doesn't violate others' rights.
+                  By submitting content (comments, reviews, profile information), you grant Anime Savi a non-exclusive, royalty-free, worldwide license to display, reproduce, and distribute such content. You retain ownership and are responsible for ensuring your content does not infringe on third-party rights.
                 </p>
               </div>
               
               <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">8. Limitation of Liability</h3>
+                <h3 className="text-foreground font-semibold text-base">8. Disclaimer of Warranties</h3>
                 <p>
-                  The Service is provided "as is" without warranties. We are not liable for any damages arising from your use of the Service, including but not limited to direct, indirect, incidental, or consequential damages.
+                  THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR FREE OF VIRUSES OR OTHER HARMFUL COMPONENTS.
                 </p>
               </div>
               
               <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">9. Service Modifications</h3>
+                <h3 className="text-foreground font-semibold text-base">9. Limitation of Liability</h3>
                 <p>
-                  We reserve the right to modify, suspend, or discontinue the Service at any time without prior notice. We may also update these terms periodically, and continued use constitutes acceptance of changes.
+                  TO THE MAXIMUM EXTENT PERMITTED BY LAW, ANIME SAVI SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF THE SERVICE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
                 </p>
               </div>
               
               <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">10. DMCA & Copyright</h3>
+                <h3 className="text-foreground font-semibold text-base">10. DMCA & Copyright Claims</h3>
                 <p>
-                  We respect copyright holders' rights. If you believe content indexed on our platform infringes your copyright, please contact us with a valid DMCA notice and we will take appropriate action.
+                  We respect intellectual property rights. If you believe any indexed content infringes your copyright, please submit a valid DMCA takedown notice via our Telegram channel. We will review and respond to legitimate claims in accordance with applicable law.
                 </p>
               </div>
               
               <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">11. Contact Information</h3>
+                <h3 className="text-foreground font-semibold text-base">11. Modifications to Terms</h3>
                 <p>
-                  For questions regarding these Terms of Service, please contact us through our Telegram channel or email.
+                  We reserve the right to modify these Terms at any time. Changes will be effective immediately upon posting. Your continued use of the Service after modifications constitutes acceptance of the updated Terms.
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <h3 className="text-foreground font-semibold text-base">12. Contact</h3>
+                <p>
+                  For questions, concerns, or DMCA notices, contact us via our official Telegram channel: @AnimeSaviInhindiDUB
                 </p>
               </div>
             </div>
