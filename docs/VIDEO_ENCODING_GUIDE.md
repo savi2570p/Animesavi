@@ -1,29 +1,28 @@
 # Video Encoding Guide for AnimeSavi
 
+## Mobile Playback Compatibility
+
+### Supported Formats (HTML5 Native)
+| Format | Extension | Mobile Support | Notes |
+|--------|-----------|----------------|-------|
+| MP4 (H.264) | `.mp4` | ✅ All devices | **Recommended** |
+| WebM (VP9) | `.webm` | ✅ All devices | Good alternative |
+| OGG | `.ogg`, `.ogv` | ⚠️ Partial | Desktop only |
+| HLS | `.m3u8` | ✅ All devices | **Best for streaming** |
+
+### Unsupported Formats (Require Conversion)
+| Format | Extension | Issue |
+|--------|-----------|-------|
+| MKV | `.mkv` | Container not supported |
+| AVI | `.avi` | Legacy format |
+| MOV | `.mov` | Limited mobile support |
+| WMV | `.wmv` | Windows-only codec |
+| FLV | `.flv` | Flash-based, deprecated |
+| MP4V | `.mp4v` | Rare variant |
+
 ## Critical Root Cause Analysis
 
 Universal video playback failures across all devices typically stem from:
-
-1. **Incompatible H.264 Profile/Level** - High Profile Level 4.1+ fails on older mobile devices
-2. **Missing Fast Start** - `moov` atom at end of file prevents progressive playback
-3. **CORS Issues** - Incorrect headers blocking video requests
-4. **Missing Byte-Range Support** - Required for seeking and HLS segments
-5. **Improper HLS Implementation** - Malformed playlists or segments
-
-## Universal Encoding Settings
-
-### For MP4 (Direct Download & Fallback)
-
-**Baseline Profile (Maximum Compatibility):**
-```bash
-ffmpeg -i input.mp4 \
-  -c:v libx264 -profile:v baseline -level:v 3.1 \
-  -preset fast -crf 23 -pix_fmt yuv420p \
-  -c:a aac -b:a 128k -ac 2 \
-  -movflags +faststart \
-  -vf "scale='min(1280,iw)':'min(720,ih)':force_original_aspect_ratio=decrease" \
-  output_720p_baseline.mp4
-```
 
 **Main Profile (Better Quality for 1080p):**
 ```bash

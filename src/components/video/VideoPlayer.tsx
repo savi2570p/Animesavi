@@ -150,12 +150,20 @@ const isHlsUrl = (url: string | null): boolean => {
   return /\.m3u8(\?.*)?$/i.test(url) || url.includes('.m3u8');
 };
 
+// Helper to detect formats that require conversion (not natively supported on mobile)
+const requiresConversion = (url: string | null): boolean => {
+  if (!url) return false;
+  const urlLower = url.toLowerCase().split('?')[0];
+  // These formats are NOT natively supported on mobile browsers
+  return /\.(mkv|avi|wmv|flv|mov|mp4v)$/i.test(urlLower);
+};
+
 // Helper to detect direct video file URLs that can be played natively
 const isDirectVideoUrl = (url: string | null): boolean => {
   if (!url) return false;
   
-  // Direct video file extensions
-  const videoExtensions = /\.(mp4|webm|mkv|avi|mov|m4v|ogg|ogv|mpd)(\?.*)?$/i;
+  // Native HTML5 video extensions (works on all devices)
+  const nativeVideoExtensions = /\.(mp4|webm|ogg|ogv|m4v)(\?.*)?$/i;
   
   // Known video hosting CDNs that serve direct video files
   const directVideoPatterns = [
@@ -174,8 +182,8 @@ const isDirectVideoUrl = (url: string | null): boolean => {
     /firebasestorage\.googleapis\.com/i,
   ];
   
-  // Check for video extensions first
-  if (videoExtensions.test(url)) return true;
+  // Check for native video extensions first
+  if (nativeVideoExtensions.test(url)) return true;
   
   // Check for known CDN patterns
   return directVideoPatterns.some(pattern => pattern.test(url));
@@ -1234,11 +1242,24 @@ export function VideoPlayer({
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.play();
+        // Auto-unmute on user interaction (mobile autoplay starts muted)
+        if (isMobile && videoRef.current.muted) {
+          videoRef.current.muted = false;
+          setIsMuted(false);
+        }
+        videoRef.current.play().catch((error) => {
+          console.warn('Play failed:', error);
+          // If play fails, try muted
+          if (videoRef.current) {
+            videoRef.current.muted = true;
+            setIsMuted(true);
+            videoRef.current.play().catch(() => {});
+          }
+        });
       }
       setIsPlaying(!isPlaying);
     }
-  }, [isPlaying]);
+  }, [isPlaying, isMobile]);
 
   const toggleMute = useCallback(() => {
     if (videoRef.current) {
@@ -2080,9 +2101,12 @@ export function VideoPlayer({
         x-webkit-airplay="allow"
         x5-video-player-type="h5-page"
         x5-video-player-fullscreen="true"
-        x5-video-orientation="portraint"
-        preload="auto"
-        muted={false}
+        x5-video-orientation="landscape"
+        x5-playsinline="true"
+        preload={isMobile ? 'metadata' : 'auto'}
+        muted={isMobile}
+        controlsList="nodownload noremoteplayback"
+        disablePictureInPicture={false}
       />
       
       {/* Video Processing State for SAVI.IN */}
@@ -2209,7 +2233,7 @@ export function VideoPlayer({
                     type="range"
                     min="0"
                     max="100"
-                    value={progress}
+                    value={isNaN(progress) ? 0 : progress}
                     onChange={handleSeek}
                     className="absolute inset-0 w-full h-full bg-transparent rounded-full appearance-none cursor-pointer 
                       [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
@@ -2472,7 +2496,7 @@ export function VideoPlayer({
                   type="range"
                   min="0"
                   max="100"
-                  value={progress}
+                  value={isNaN(progress) ? 0 : progress}
                   onChange={handleSeek}
                   className="absolute inset-0 w-full h-full bg-transparent rounded-full appearance-none cursor-pointer 
                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 

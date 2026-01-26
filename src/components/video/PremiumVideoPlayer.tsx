@@ -355,10 +355,22 @@ export function PremiumVideoPlayer({
 
   const togglePlay = useCallback(() => {
     if (videoRef.current) {
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.play();
+        // Auto-unmute on user interaction (mobile autoplay starts muted)
+        if (isMobile && videoRef.current.muted) {
+          videoRef.current.muted = false;
+        }
+        videoRef.current.play().catch((error) => {
+          console.warn('Play failed:', error);
+          // If play fails, try muted
+          if (videoRef.current) {
+            videoRef.current.muted = true;
+            videoRef.current.play().catch(() => {});
+          }
+        });
       }
       setIsPlaying(!isPlaying);
     }
@@ -719,7 +731,12 @@ export function PremiumVideoPlayer({
         x-webkit-airplay="allow"
         x5-video-player-type="h5-page"
         x5-video-player-fullscreen="true"
-        preload="auto"
+        x5-video-orientation="landscape"
+        x5-playsinline="true"
+        preload={/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'metadata' : 'auto'}
+        muted={/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)}
+        controlsList="nodownload noremoteplayback"
+        disablePictureInPicture={false}
       />
       
       {/* Error modal */}
