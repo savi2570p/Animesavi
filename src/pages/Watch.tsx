@@ -223,61 +223,46 @@ export default function Watch() {
     toast.success('All notifications marked as read');
   };
 
-  // Ensure watch history gets created even if auth loads AFTER the episode data
+  // Ensure watch history gets created/updated - ONE entry per anime per user
   useEffect(() => {
-    if (!user || !episodeId || !anime?.id) return;
+    if (!user || !episodeId || !anime?.id || !currentSeason) return;
     if (watchHistoryId || ensureHistoryInFlightRef.current) return;
 
     ensureHistoryInFlightRef.current = true;
 
     (async () => {
       try {
-        const { data: existingHistory, error: checkError } = await supabase
+        // Use UPSERT to ensure one entry per user+anime - update episode if watching different one
+        const { data: upsertedHistory, error: upsertError } = await supabase
           .from('watch_history')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('episode_id', episodeId)
-          .maybeSingle();
-
-        if (checkError) {
-          console.error('Error checking watch history:', checkError);
-          return;
-        }
-
-        if (existingHistory?.id) {
-          setWatchHistoryId(existingHistory.id);
-          await supabase
-            .from('watch_history')
-            .update({ watched_at: new Date().toISOString() })
-            .eq('id', existingHistory.id);
-          return;
-        }
-
-        const { data: newHistory, error: insertError } = await supabase
-          .from('watch_history')
-          .insert({
+          .upsert({
             user_id: user.id,
             anime_id: anime.id,
             episode_id: episodeId,
             progress: 0,
+            completed: false,
+            watched_at: new Date().toISOString(),
+          }, {
+            onConflict: 'user_id,anime_id',
+            ignoreDuplicates: false,
           })
           .select('id')
           .maybeSingle();
 
-        if (insertError) {
-          console.error('Error inserting watch history:', insertError);
+        if (upsertError) {
+          console.error('Error upserting watch history:', upsertError);
           toast.error('Could not save watch history');
           return;
         }
 
-        if (newHistory?.id) {
-          setWatchHistoryId(newHistory.id);
+        if (upsertedHistory?.id) {
+          setWatchHistoryId(upsertedHistory.id);
         }
       } finally {
         ensureHistoryInFlightRef.current = false;
       }
     })();
-  }, [user, episodeId, anime?.id, watchHistoryId]);
+  }, [user, episodeId, anime?.id, currentSeason, watchHistoryId]);
 
   const updateWatchProgress = useCallback(async (currentTime: number, duration: number) => {
     if (!user || !episodeId || !anime) return;
@@ -383,61 +368,47 @@ export default function Watch() {
         setAllEpisodes(episodesData);
       }
 
-      // Record watch history immediately and restore progress if available ("Remember Playback Position")
+      // Record watch history using UPSERT - ONE entry per anime per user
       if (user && seasonData.anime) {
         const animeId = (seasonData.anime as Anime).id;
 
-        // Check if record exists - also fetch saved progress
-        const { data: existingHistory, error: checkError } = await supabase
+        // First check for existing entry to get saved progress for resume
+        const { data: existingHistory } = await supabase
           .from('watch_history')
-          .select('id, progress')
+          .select('id, progress, episode_id')
           .eq('user_id', user.id)
-          .eq('episode_id', episodeId)
+          .eq('anime_id', animeId)
           .maybeSingle();
 
-        if (checkError) {
-          console.error('Error checking watch history:', checkError);
-        }
-
-        if (existingHistory) {
-          // Update existing record timestamp
-          const { error: updateError } = await supabase
-            .from('watch_history')
-            .update({
-              watched_at: new Date().toISOString(),
-            })
-            .eq('id', existingHistory.id);
-          
-          if (updateError) {
-            console.error('Error updating watch history:', updateError);
-          } else {
-            console.log('Watch history updated:', existingHistory.id);
-          }
-          setWatchHistoryId(existingHistory.id);
-          
-          // Set saved progress for resume overlay (instead of auto-seeking)
+        // Set saved progress for resume overlay if same episode
+        if (existingHistory && existingHistory.episode_id === episodeId) {
           if (!resumeProgress && existingHistory.progress && existingHistory.progress > 5 && existingHistory.progress < 95) {
             setSavedPlaybackProgress(existingHistory.progress);
           }
-        } else {
-          // Insert new record
-          const { data: newHistory, error: insertError } = await supabase
-            .from('watch_history')
-            .insert({
-              user_id: user.id,
-              anime_id: animeId,
-              episode_id: episodeId,
-              progress: 0,
-            })
-            .select('id')
-            .single();
+        }
 
-          if (insertError) {
-            console.error('Error inserting watch history:', insertError);
-          } else if (newHistory) {
-            console.log('Watch history created:', newHistory.id);
-            setWatchHistoryId(newHistory.id);
-          }
+        // UPSERT - creates new or updates existing entry for this anime
+        const { data: upsertedHistory, error: upsertError } = await supabase
+          .from('watch_history')
+          .upsert({
+            user_id: user.id,
+            anime_id: animeId,
+            episode_id: episodeId,
+            progress: existingHistory?.episode_id === episodeId ? (existingHistory.progress || 0) : 0,
+            completed: false,
+            watched_at: new Date().toISOString(),
+          }, {
+            onConflict: 'user_id,anime_id',
+            ignoreDuplicates: false,
+          })
+          .select('id')
+          .maybeSingle();
+
+        if (upsertError) {
+          console.error('Error upserting watch history:', upsertError);
+        } else if (upsertedHistory) {
+          console.log('Watch history upserted:', upsertedHistory.id);
+          setWatchHistoryId(upsertedHistory.id);
         }
       } else {
         console.log('Watch history not recorded - user:', !!user, 'anime:', !!seasonData?.anime);
