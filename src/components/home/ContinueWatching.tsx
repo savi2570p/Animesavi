@@ -64,28 +64,20 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
 
   const fetchRecentHistory = async () => {
     setIsLoading(true);
+    // Now we have ONE entry per anime per user (unique constraint enforced)
+    // No need for client-side deduplication
     const { data } = await supabase
       .from('watch_history')
       .select('*, anime:anime_id(*), episode:episode_id(*)')
       .eq('user_id', user!.id)
       .eq('completed', false)
       .order('watched_at', { ascending: false })
-      .limit(50);
+      .limit(12);
 
     if (data) {
-      // Get unique anime_id + episode_id combinations (no duplicates)
-      const uniqueMap = new Map<string, WatchHistoryItem>();
-      for (const item of data as WatchHistoryItem[]) {
-        const key = `${item.anime?.id}-${item.episode?.id}`;
-        if (!uniqueMap.has(key)) {
-          uniqueMap.set(key, item);
-        }
-      }
-      
       // Fetch season info for each episode
-      const uniqueItems = Array.from(uniqueMap.values()).slice(0, 12);
       const itemsWithSeason = await Promise.all(
-        uniqueItems.map(async (item) => {
+        (data as WatchHistoryItem[]).map(async (item) => {
           if (item.episode?.season_id) {
             const { data: seasonData } = await supabase
               .from('seasons')
