@@ -2266,7 +2266,7 @@ export function VideoPlayer({
                   </button>
                 )}
                 
-                {/* Settings Menu - Fullscreen Compatible */}
+                {/* Settings Menu - Fullscreen Compatible - Uses container prop to render inside fullscreen */}
                 <DropdownMenu 
                   modal={false} 
                   open={settingsOpen}
@@ -2298,6 +2298,7 @@ export function VideoPlayer({
                     onCloseAutoFocus={(e) => e.preventDefault()}
                     onPointerDownOutside={(e) => e.preventDefault()}
                     forceMount={settingsOpen ? true : undefined}
+                    container={containerRef.current || undefined}
                   >
                     {renderSettingsContent()}
                   </DropdownMenuContent>
@@ -2551,6 +2552,7 @@ export function VideoPlayer({
                   onCloseAutoFocus={(e) => e.preventDefault()}
                   onPointerDownOutside={(e) => e.preventDefault()}
                   forceMount={settingsOpen ? true : undefined}
+                  container={containerRef.current || undefined}
                 >
                   {renderSettingsContent()}
                 </DropdownMenuContent>
