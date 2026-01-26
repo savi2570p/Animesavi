@@ -94,8 +94,7 @@ interface Comment {
 
 type CommentSortOption = 'newest' | 'oldest' | 'most_liked';
 
-// Owner email addresses
-const OWNER_EMAILS = ['savi2570p@gmail.com', 'savipanjeta2@gmail.com'];
+// Telegram popup key for localStorage
 
 const TELEGRAM_POPUP_KEY = 'telegram_popup_last_shown';
 
@@ -501,14 +500,8 @@ export default function Watch() {
       // or if the commenter is in the OWNER_EMAILS list
       const updatedComments = await Promise.all(
         commentsWithProfiles.map(async (comment) => {
-          // Get user email from auth
-          const { data: authUser } = await supabase.auth.admin?.getUserById?.(comment.user_id) || { data: null };
-          
           // Check if this commenter is the anime uploader
           const isAnimeUploader = anime?.uploader_id === comment.user_id;
-          
-          // Check if this is an owner email
-          const isOwnerEmail = OWNER_EMAILS.includes(comment.profile?.username?.toLowerCase() || '');
           
           // Check if user is an admin
           const { data: roles } = await supabase
@@ -520,7 +513,7 @@ export default function Watch() {
           
           return {
             ...comment,
-            isOwner: isAnimeUploader || isAdmin || isOwnerEmail,
+            isOwner: isAnimeUploader || isAdmin,
           };
         })
       );
@@ -694,11 +687,6 @@ export default function Watch() {
     }
   };
 
-  // Check if a user is an owner based on their email
-  const isOwnerEmail = (email: string | null | undefined): boolean => {
-    if (!email) return false;
-    return OWNER_EMAILS.includes(email.toLowerCase());
-  };
 
   const getDisplayName = (comment: Comment): string => {
     // Check if the commenter is an owner (uploader/admin)

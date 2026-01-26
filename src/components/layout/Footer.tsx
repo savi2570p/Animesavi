@@ -46,12 +46,15 @@ function PrivacyPolicyButton() {
         Privacy Policy
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg bg-card/95 backdrop-blur-xl border-border/50">
+        <DialogContent className="max-w-lg bg-card/95 backdrop-blur-xl border-border/50" aria-describedby="privacy-policy-description">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <Shield className="h-5 w-5 text-primary" />
               Privacy Policy
             </DialogTitle>
+            <DialogDescription id="privacy-policy-description" className="sr-only">
+              Privacy policy and data handling information for Anime Savi
+            </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[60vh]">
             <div className="space-y-4 text-sm text-muted-foreground pr-4">
@@ -123,12 +126,15 @@ function TermsOfServiceButton() {
         Terms of Service
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl bg-card/95 backdrop-blur-xl border-border/50">
+        <DialogContent className="max-w-2xl bg-card/95 backdrop-blur-xl border-border/50" aria-describedby="terms-of-service-description">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <FileText className="h-5 w-5 text-primary" />
               Terms of Service
             </DialogTitle>
+            <DialogDescription id="terms-of-service-description" className="sr-only">
+              Terms of service and usage conditions for Anime Savi
+            </DialogDescription>
           </DialogHeader>
           <ScrollArea className="max-h-[70vh]">
             <div className="space-y-6 text-sm text-muted-foreground pr-4">
