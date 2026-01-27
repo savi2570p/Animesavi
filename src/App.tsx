@@ -28,6 +28,7 @@ import Profile from "./pages/Profile";
 import UserStats from "./pages/UserStats";
 import NotFound from "./pages/NotFound";
 import ExternalPlayer from "./pages/ExternalPlayer";
+import EmbedPlayer from "./pages/EmbedPlayer";
 import AnimeSlugRedirect from "./pages/AnimeSlugRedirect";
 
 const queryClient = new QueryClient();
@@ -64,6 +65,7 @@ const App = () => (
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/external-player" element={<ExternalPlayer />} />
+              <Route path="/embed/:episodeId" element={<EmbedPlayer />} />
               <Route element={<MainLayout />}>
                 <Route path="/" element={<Index />} />
                 {/* Schedule route removed */}
