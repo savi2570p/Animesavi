@@ -160,6 +160,13 @@ export default function Watch() {
   const handleServerChange = (server: ServerType) => {
     if (server === activeServer) return;
     
+    // Handle EMBED server - open in new tab
+    if (server === 'EMBED') {
+      const embedUrl = `/embed/${episodeId}`;
+      window.open(embedUrl, '_blank');
+      return;
+    }
+    
     setServerLoading(true);
     setActiveServer(server);
     
@@ -829,15 +836,15 @@ export default function Watch() {
             <Server className="h-5 w-5 text-muted-foreground" />
             <span className="text-muted-foreground font-medium">Server:</span>
             <div className="flex gap-2 flex-wrap">
-              {(['PLAY', 'SHORT', 'Zex'] as ServerType[]).map((server) => {
-                const displayName = server === 'SHORT' ? 'SAVI.IN' : server;
+              {(['PLAY', 'SHORT', 'Zex', 'EMBED'] as ServerType[]).map((server) => {
+                const displayName = server === 'SHORT' ? 'SAVI.IN' : server === 'EMBED' ? 'Embed Player' : server;
                 return (
                   <Button
                     key={server}
                     size="sm"
                     variant={activeServer === server ? 'default' : 'outline'}
                     onClick={() => handleServerChange(server)}
-                    disabled={serverLoading}
+                    disabled={serverLoading && server !== 'EMBED'}
                     className={activeServer === server ? 'anime-button' : ''}
                   >
                     {displayName}

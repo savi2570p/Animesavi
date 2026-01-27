@@ -65,7 +65,7 @@ interface QualityLevel {
   label: string;
 }
 
-export type ServerType = 'PLAY' | 'SHORT' | 'Zex';
+export type ServerType = 'PLAY' | 'SHORT' | 'Zex' | 'EMBED';
 
 interface VideoPlayerProps {
   videoUrl: string | null;
@@ -106,6 +106,11 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
     name: 'Zex', 
     features: ['watch', 'quality', 'download'],
     playerStyle: 'advanced'
+  },
+  EMBED: { 
+    name: 'Embed', 
+    features: ['watch'],
+    playerStyle: 'embed'
   },
 };
 
