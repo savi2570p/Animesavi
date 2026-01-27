@@ -137,7 +137,6 @@ export function AnimeCardContextMenu({
     const shareUrl = `${window.location.origin}/${animeSlug}`;
     const shareData = {
       title: animeTitle,
-      text: `Check out ${animeTitle} on AnimeSavi!`,
       url: shareUrl,
     };
 
