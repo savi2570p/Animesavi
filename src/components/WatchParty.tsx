@@ -11,6 +11,15 @@ import { toast } from 'sonner';
 import { Users, Send, Copy, X, Crown, UserPlus, Link2, Tv, Play, Eye, MessageSquare, SmilePlus } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useNavigate } from 'react-router-dom';
+import { z } from 'zod';
+
+// Message validation schema
+const messageSchema = z.object({
+  message: z.string()
+    .trim()
+    .min(1, 'Message cannot be empty')
+    .max(500, 'Message must be 500 characters or less'),
+});
 
 interface ChatMessage {
   id: string;
@@ -410,19 +419,35 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     };
   }, [partyId]);
 
-  // Send chat message
+  // Send chat message with validation
   const sendMessage = useCallback(async () => {
-    if (!newMessage.trim() || !user || !partyId) return;
+    if (!user || !partyId) return;
 
-    await supabase.from('watch_party_messages').insert({
-      party_id: partyId,
-      user_id: user.id,
-      username: user.email?.split('@')[0] || 'Anonymous',
-      message: newMessage.trim(),
-      is_host: isHost,
-    });
+    // Validate message using zod schema
+    const result = messageSchema.safeParse({ message: newMessage });
+    if (!result.success) {
+      const error = result.error.errors[0];
+      toast.error(error.message);
+      return;
+    }
 
-    setNewMessage('');
+    const validatedMessage = result.data.message;
+
+    try {
+      const { error } = await supabase.from('watch_party_messages').insert({
+        party_id: partyId,
+        user_id: user.id,
+        username: user.email?.split('@')[0] || 'Anonymous',
+        message: validatedMessage,
+        is_host: isHost,
+      });
+
+      if (error) throw error;
+      setNewMessage('');
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      toast.error('Failed to send message');
+    }
   }, [newMessage, user, partyId, isHost]);
 
   // Add emoji reaction to a message
