@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, forwardRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,37 +24,79 @@ interface BatchEpisodeUploadProps {
   onEpisodesAdded: () => void;
 }
 
-export function BatchEpisodeUpload({ 
-  animeId, 
-  seasonId, 
-  currentEpisodeCount,
-  onEpisodesAdded 
-}: BatchEpisodeUploadProps) {
-  const [episodes, setEpisodes] = useState<BatchEpisode[]>([
-    { id: crypto.randomUUID(), title: '', videoUrl: '', thumbnail: '', duration: '', externalUrl: '' }
-  ]);
+// Storage key for persisting batch upload state
+const getStorageKey = (animeId: string, seasonId: string) => 
+  `batch_upload_${animeId}_${seasonId}`;
+
+const createEmptyEpisode = (): BatchEpisode => ({
+  id: crypto.randomUUID(),
+  title: '',
+  videoUrl: '',
+  thumbnail: '',
+  duration: '',
+  externalUrl: ''
+});
+
+export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadProps>(
+  function BatchEpisodeUpload({ animeId, seasonId, currentEpisodeCount, onEpisodesAdded }, ref) {
+  const storageKey = getStorageKey(animeId, seasonId);
+  
+  // Load initial state from sessionStorage
+  const [episodes, setEpisodes] = useState<BatchEpisode[]>(() => {
+    try {
+      const saved = sessionStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load saved batch episodes:', e);
+    }
+    return [createEmptyEpisode()];
+  });
+  
   const [isUploading, setIsUploading] = useState(false);
 
-  const addEpisodeSlot = () => {
-    setEpisodes([
-      ...episodes,
-      { id: crypto.randomUUID(), title: '', videoUrl: '', thumbnail: '', duration: '', externalUrl: '' }
-    ]);
-  };
-
-  const removeEpisodeSlot = (id: string) => {
-    if (episodes.length === 1) {
-      toast.error('At least one episode slot is required');
-      return;
+  // Persist episodes to sessionStorage whenever they change
+  useEffect(() => {
+    try {
+      // Only save if there's meaningful data
+      const hasData = episodes.some(ep => ep.title.trim() || ep.videoUrl || ep.externalUrl || ep.thumbnail);
+      if (hasData) {
+        sessionStorage.setItem(storageKey, JSON.stringify(episodes));
+      } else {
+        // Clear storage if all episodes are empty
+        sessionStorage.removeItem(storageKey);
+      }
+    } catch (e) {
+      console.warn('Failed to save batch episodes:', e);
     }
-    setEpisodes(episodes.filter(ep => ep.id !== id));
-  };
+  }, [episodes, storageKey]);
 
-  const updateEpisode = (id: string, field: keyof BatchEpisode, value: string) => {
-    setEpisodes(episodes.map(ep => 
+  const addEpisodeSlot = useCallback(() => {
+    setEpisodes(prev => [
+      ...prev,
+      createEmptyEpisode()
+    ]);
+  }, []);
+
+  const removeEpisodeSlot = useCallback((id: string) => {
+    setEpisodes(prev => {
+      if (prev.length === 1) {
+        toast.error('At least one episode slot is required');
+        return prev;
+      }
+      return prev.filter(ep => ep.id !== id);
+    });
+  }, []);
+
+  const updateEpisode = useCallback((id: string, field: keyof BatchEpisode, value: string) => {
+    setEpisodes(prev => prev.map(ep => 
       ep.id === id ? { ...ep, [field]: value } : ep
     ));
-  };
+  }, []);
 
   const handleBatchUpload = async () => {
     // Filter out empty episodes
@@ -90,10 +132,11 @@ export function BatchEpisodeUpload({
 
       toast.success(`${validEpisodes.length} episode(s) added successfully!`);
       
+      // Clear sessionStorage after successful upload
+      sessionStorage.removeItem(storageKey);
+      
       // Reset form
-      setEpisodes([
-        { id: crypto.randomUUID(), title: '', videoUrl: '', thumbnail: '', duration: '', externalUrl: '' }
-      ]);
+      setEpisodes([createEmptyEpisode()]);
       
       onEpisodesAdded();
     } catch (error) {
@@ -107,7 +150,7 @@ export function BatchEpisodeUpload({
   const validCount = episodes.filter(ep => ep.title.trim() && (ep.videoUrl || ep.externalUrl)).length;
 
   return (
-    <Card className="border-primary/20">
+    <Card ref={ref} className="border-primary/20">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Upload className="h-5 w-5" />
@@ -225,4 +268,4 @@ export function BatchEpisodeUpload({
       </CardContent>
     </Card>
   );
-}
+});
