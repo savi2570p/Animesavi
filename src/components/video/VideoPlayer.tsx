@@ -859,11 +859,14 @@ export function VideoPlayer({
   }, [qualityLevels]);
 
   // Switch audio track - works with both HLS.js and native
+  // Note: Chrome/Edge on Windows don't support native audioTracks API for MP4
+  // HLS.js handles audio switching properly, native API is Safari/Firefox only
   const switchAudioTrack = useCallback((trackId: number) => {
     const video = videoRef.current;
     
-    // Try HLS.js first
+    // Try HLS.js first - this is the primary method for HLS streams
     if (hlsRef.current && hlsRef.current.audioTracks.length > 0) {
+      console.log('Switching audio track via HLS.js:', trackId);
       hlsRef.current.audioTrack = trackId;
       const track = hlsRef.current.audioTracks[trackId];
       toast.success(`Audio: ${track?.name || `Track ${trackId + 1}`}`);
@@ -872,16 +875,27 @@ export function VideoPlayer({
       return;
     }
     
-    // Fallback to native audioTracks API
+    // Fallback to native audioTracks API (Safari, Firefox)
+    // Chrome/Edge on Windows don't support this for MP4 files
     if (video) {
       const nativeAudioTracks = (video as any).audioTracks;
       if (nativeAudioTracks && nativeAudioTracks.length > 0) {
+        console.log('Switching audio track via native API:', trackId);
+        // First, disable all tracks
         for (let i = 0; i < nativeAudioTracks.length; i++) {
-          nativeAudioTracks[i].enabled = i === trackId;
+          nativeAudioTracks[i].enabled = false;
         }
-        const track = nativeAudioTracks[trackId];
-        toast.success(`Audio: ${track?.label || `Track ${trackId + 1}`}`);
-        setCurrentAudioTrack(trackId);
+        // Then enable the selected track
+        if (nativeAudioTracks[trackId]) {
+          nativeAudioTracks[trackId].enabled = true;
+          const track = nativeAudioTracks[trackId];
+          toast.success(`Audio: ${track?.label || `Track ${trackId + 1}`}`);
+          setCurrentAudioTrack(trackId);
+        }
+      } else {
+        // No audio tracks available - inform user
+        console.warn('No audio tracks available via native API');
+        toast.error('Audio track switching requires HLS stream format. MP4 files with multiple audio tracks are not supported on Windows browsers.');
       }
     }
     setSettingsOpen(false);

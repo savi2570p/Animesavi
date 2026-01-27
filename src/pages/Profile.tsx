@@ -441,13 +441,20 @@ export default function Profile() {
               Customize your viewing experience
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             <Button 
               variant="outline" 
               className="w-full"
               onClick={() => navigate('/settings')}
             >
               Go to Settings
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => navigate('/stats')}
+            >
+              View Watch Statistics
             </Button>
           </CardContent>
         </Card>
