@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,6 +25,20 @@ interface LatestEpisode {
   };
 }
 
+interface GroupedEpisode {
+  animeId: string;
+  animeTitle: string;
+  seasonNumber: number;
+  coverImage: string | null;
+  thumbnail: string | null;
+  episodeMin: number;
+  episodeMax: number;
+  episodeCount: number;
+  latestEpisodeId: string;
+  latestCreatedAt: string;
+  status: string | null;
+}
+
 export function LatestEpisodes() {
   const [episodes, setEpisodes] = useState<LatestEpisode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,8 +49,7 @@ export function LatestEpisodes() {
 
   const fetchLatestEpisodes = async () => {
     try {
-      // Fetch episodes ordered by created_at (most recent first)
-      // Include ALL anime status (upcoming, ongoing, completed)
+      // Fetch more episodes to allow for better grouping
       const { data, error } = await supabase
         .from('episodes')
         .select(`
@@ -59,7 +72,7 @@ export function LatestEpisodes() {
           )
         `)
         .order('created_at', { ascending: false })
-        .limit(24);
+        .limit(50);
 
       if (error) throw error;
       
@@ -68,14 +81,58 @@ export function LatestEpisodes() {
         return ep.season?.anime && ep.season.anime.type !== 'movie';
       });
       
-      // Take only first 8 after filtering (show more episodes)
-      setEpisodes(filteredEpisodes.slice(0, 8) as unknown as LatestEpisode[]);
+      setEpisodes(filteredEpisodes as unknown as LatestEpisode[]);
     } catch (error) {
       console.error('Error fetching latest episodes:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  // Group episodes by anime + season and merge into single entries
+  const groupedEpisodes = useMemo<GroupedEpisode[]>(() => {
+    const groups = new Map<string, GroupedEpisode>();
+    
+    for (const ep of episodes) {
+      if (!ep.season?.anime) continue;
+      
+      const key = `${ep.season.anime.id}-${ep.season.season_number}`;
+      const existing = groups.get(key);
+      
+      if (existing) {
+        // Update min/max episode numbers
+        existing.episodeMin = Math.min(existing.episodeMin, ep.episode_number);
+        existing.episodeMax = Math.max(existing.episodeMax, ep.episode_number);
+        existing.episodeCount++;
+        
+        // Keep the latest episode's data for the card
+        if (new Date(ep.created_at) > new Date(existing.latestCreatedAt)) {
+          existing.latestEpisodeId = ep.id;
+          existing.latestCreatedAt = ep.created_at;
+          existing.thumbnail = ep.thumbnail || existing.thumbnail;
+        }
+      } else {
+        groups.set(key, {
+          animeId: ep.season.anime.id,
+          animeTitle: ep.season.anime.title,
+          seasonNumber: ep.season.season_number,
+          coverImage: ep.season.anime.cover_image,
+          thumbnail: ep.thumbnail,
+          episodeMin: ep.episode_number,
+          episodeMax: ep.episode_number,
+          episodeCount: 1,
+          latestEpisodeId: ep.id,
+          latestCreatedAt: ep.created_at,
+          status: ep.season.anime.status,
+        });
+      }
+    }
+    
+    // Convert to array and sort by latest created_at
+    return Array.from(groups.values())
+      .sort((a, b) => new Date(b.latestCreatedAt).getTime() - new Date(a.latestCreatedAt).getTime())
+      .slice(0, 8);
+  }, [episodes]);
 
   const isNew = (dateString: string) => {
     const date = new Date(dateString);
@@ -85,11 +142,12 @@ export function LatestEpisodes() {
     return hours <= 24;
   };
 
-  // Check if thumbnail is 16:9 aspect ratio (or close to it)
-  const is16by9Ratio = (thumbnail: string | null): boolean => {
-    // For now, assume episode thumbnails are typically 16:9
-    // Actual ratio detection would require loading the image
-    return !!thumbnail;
+  // Format episode range string
+  const formatEpisodeRange = (min: number, max: number, count: number) => {
+    if (min === max) {
+      return `Episode ${min}`;
+    }
+    return `Episodes ${min}–${max}`;
   };
 
   if (loading) {
@@ -116,7 +174,7 @@ export function LatestEpisodes() {
     );
   }
 
-  if (episodes.length === 0) return null;
+  if (groupedEpisodes.length === 0) return null;
 
   return (
     <section className="py-10 md:py-14">
@@ -140,25 +198,27 @@ export function LatestEpisodes() {
         </div>
 
         <div className="flex md:grid md:grid-cols-4 gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
-          {episodes.slice(0, 4).map((episode, index) => {
-            const hasThumbnail = is16by9Ratio(episode.thumbnail);
+          {groupedEpisodes.slice(0, 4).map((group, index) => {
+            const displayImage = group.thumbnail || group.coverImage || '/placeholder.svg';
+            const episodeRangeText = formatEpisodeRange(group.episodeMin, group.episodeMax, group.episodeCount);
+            const hasMultipleEpisodes = group.episodeMin !== group.episodeMax;
             
             return (
               <AnimeCardContextMenu
-                key={episode.id}
-                animeTitle={episode.season?.anime?.title || episode.title}
-                animeUrl={`/watch/${episode.id}`}
-                coverImage={episode.thumbnail || episode.season?.anime?.cover_image}
+                key={`${group.animeId}-${group.seasonNumber}`}
+                animeTitle={group.animeTitle}
+                animeUrl={`/watch/${group.latestEpisodeId}`}
+                coverImage={displayImage}
               >
                 <Link
-                  to={`/watch/${episode.id}`}
+                  to={`/watch/${group.latestEpisodeId}`}
                   className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in w-[200px] md:w-auto shrink-0`}
                 >
                   {/* Thumbnail with hover effects */}
                   <div className="relative aspect-video rounded-xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl transition-all duration-500">
                     <img
-                      src={episode.thumbnail || episode.season?.anime?.cover_image || '/placeholder.svg'}
-                      alt={episode.season?.anime?.title || episode.title}
+                      src={displayImage}
+                      alt={group.animeTitle}
                       className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
                       loading="lazy"
                     />
@@ -173,37 +233,35 @@ export function LatestEpisodes() {
                       </div>
                     </div>
 
-                    {/* Season & Episode badge */}
+                    {/* Season badge */}
                     <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-lg shadow-md">
-                      S{episode.season?.season_number} E{episode.episode_number}
+                      S{group.seasonNumber}
                     </div>
 
+                    {/* Episode count badge for multiple episodes */}
+                    {hasMultipleEpisodes && (
+                      <div className="absolute top-2 left-14 px-2 py-1 text-xs font-bold bg-secondary text-secondary-foreground rounded-lg shadow-md">
+                        +{group.episodeCount} eps
+                      </div>
+                    )}
+
                     {/* NEW badge */}
-                    {isNew(episode.created_at) && (
+                    {isNew(group.latestCreatedAt) && (
                       <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-lg shadow-md animate-pulse">
                         NEW
                       </div>
                     )}
 
-                    {/* Title overlay for 16:9 thumbnails */}
-                    {hasThumbnail && (
-                      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent">
-                        <h3 className="text-sm font-semibold text-white line-clamp-1 drop-shadow-lg">
-                          {episode.season?.anime?.title}
-                        </h3>
-                        <p className="text-xs text-white/70 mt-0.5">
-                          Episode {episode.episode_number}
-                        </p>
-                      </div>
-                    )}
+                    {/* Title and episode range overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent">
+                      <h3 className="text-sm font-semibold text-white line-clamp-1 drop-shadow-lg">
+                        {group.animeTitle}
+                      </h3>
+                      <p className="text-xs text-white/70 mt-0.5">
+                        {episodeRangeText}
+                      </p>
+                    </div>
                   </div>
-
-                  {/* Anime Title below (only if no overlay title) */}
-                  {!hasThumbnail && (
-                    <h3 className="text-sm md:text-base font-semibold mt-3 line-clamp-2 group-hover:text-primary transition-colors duration-300">
-                      {episode.season?.anime?.title}
-                    </h3>
-                  )}
                 </Link>
               </AnimeCardContextMenu>
             );
