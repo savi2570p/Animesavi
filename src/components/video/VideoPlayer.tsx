@@ -515,40 +515,39 @@ export function VideoPlayer({
           
           const hls = new Hls({
             enableWorker: true,
-            lowLatencyMode: false, // Disable for better compatibility on mobile
-            // Mobile-optimized buffer settings
-            maxBufferLength: isMobile ? 15 : 20,
-            maxMaxBufferLength: isMobile ? 60 : 120,
-            maxBufferSize: isMobile ? 60 * 1000 * 1000 : 120 * 1000 * 1000,
-            maxBufferHole: 0.5, // More tolerant for mobile networks
-            // Start with lowest quality for faster startup on mobile
-            startLevel: isMobile || isSlowNetwork ? 0 : -1,
+            lowLatencyMode: true, // Enable for faster start
+            // FAST START: Minimal initial buffering
+            maxBufferLength: 10, // Reduced for faster playback start
+            maxMaxBufferLength: isMobile ? 30 : 60,
+            maxBufferSize: isMobile ? 20 * 1000 * 1000 : 40 * 1000 * 1000,
+            maxBufferHole: 0.3,
+            // CRITICAL: Always start at lowest quality for instant playback
+            startLevel: 0, // Force lowest quality for fastest start
             autoStartLoad: true,
-            // Conservative ABR for mobile/cellular
-            abrEwmaDefaultEstimate: isSlowNetwork ? 500000 : (isCellular ? 1500000 : 3000000),
-            abrBandWidthFactor: isMobile ? 0.7 : 0.8,
-            abrBandWidthUpFactor: isMobile ? 0.5 : 0.6,
-            backBufferLength: isMobile ? 15 : 30,
-            // More tolerant timeouts for mobile/cellular
-            fragLoadingTimeOut: isMobile ? 30000 : 20000,
-            fragLoadingMaxRetry: isMobile ? 6 : 4,
-            fragLoadingRetryDelay: isMobile ? 1000 : 500,
-            // Level loading
-            levelLoadingTimeOut: isMobile ? 15000 : 10000,
-            levelLoadingMaxRetry: isMobile ? 6 : 4,
-            levelLoadingRetryDelay: isMobile ? 1000 : 500,
-            // Manifest loading
-            manifestLoadingTimeOut: isMobile ? 15000 : 10000,
-            manifestLoadingMaxRetry: isMobile ? 5 : 3,
-            manifestLoadingRetryDelay: isMobile ? 1000 : 500,
-            // XHR setup for better mobile compatibility
+            // Aggressive ABR for quick upscaling after start
+            abrEwmaDefaultEstimate: isSlowNetwork ? 500000 : 1500000,
+            abrBandWidthFactor: 0.9,
+            abrBandWidthUpFactor: 0.8,
+            abrMaxWithRealBitrate: true,
+            backBufferLength: 5,
+            // FAST loading timeouts
+            fragLoadingTimeOut: 8000,
+            fragLoadingMaxRetry: 3,
+            fragLoadingRetryDelay: 500,
+            levelLoadingTimeOut: 6000,
+            levelLoadingMaxRetry: 3,
+            levelLoadingRetryDelay: 500,
+            manifestLoadingTimeOut: 5000,
+            manifestLoadingMaxRetry: 2,
+            manifestLoadingRetryDelay: 300,
+            // XHR setup
             xhrSetup: (xhr, url) => {
-              xhr.withCredentials = false; // Prevent CORS issues on mobile
+              xhr.withCredentials = false;
             },
-            // Progressive loading for mobile
-            progressive: isMobile,
-            // Limit max auto level on slow networks
+            // Progressive for faster initial segment
+            progressive: true,
             capLevelToPlayerSize: isMobile,
+            testBandwidth: false, // Skip bandwidth test for faster start
           });
           
           hlsRef.current = hls;

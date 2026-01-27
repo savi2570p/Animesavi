@@ -308,7 +308,7 @@ export default function EmbedPlayer() {
         </div>
       )}
 
-      {/* Video element with mobile-specific attributes */}
+      {/* Video element with mobile-specific attributes and fast preloading */}
       <video
         ref={videoRef}
         className="w-full h-full object-contain"
@@ -319,8 +319,9 @@ export default function EmbedPlayer() {
         x5-video-player-type="h5"
         x5-video-player-fullscreen="true"
         x5-video-orientation="landscape"
-        preload="metadata"
+        preload="auto"
         controlsList="nodownload noremoteplayback"
+        muted
       />
 
       {/* Controls overlay */}

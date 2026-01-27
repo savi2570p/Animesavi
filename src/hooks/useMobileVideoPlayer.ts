@@ -132,53 +132,57 @@ function getNetworkInfo() {
   return { effectiveType, isSlowNetwork, saveData };
 }
 
-// Get mobile-optimized HLS config
+// Get optimized HLS config for FASTEST playback start
 function getMobileHlsConfig(isMobile: boolean, isSlowNetwork: boolean) {
   return {
     enableWorker: true,
-    lowLatencyMode: false, // Disable for mobile compatibility
+    lowLatencyMode: true, // Enable for faster start
     
-    // Buffer settings - conservative for mobile
-    maxBufferLength: isMobile ? 15 : 30,
-    maxMaxBufferLength: isMobile ? 45 : 120,
-    maxBufferSize: isMobile ? 30 * 1000 * 1000 : 60 * 1000 * 1000,
-    maxBufferHole: 0.5,
+    // CRITICAL: Minimal initial buffer for instant playback
+    maxBufferLength: 10, // Reduced from 15/30 - start playing sooner
+    maxMaxBufferLength: isMobile ? 30 : 60, // Reduced max buffer
+    maxBufferSize: isMobile ? 20 * 1000 * 1000 : 40 * 1000 * 1000,
+    maxBufferHole: 0.3, // Smaller buffer hole tolerance
     
-    // Start level - lower for mobile/slow networks
-    startLevel: isMobile || isSlowNetwork ? 0 : -1,
+    // FASTEST START: Always start at lowest quality for instant playback
+    startLevel: 0, // Always start at lowest quality for fastest start
     autoStartLoad: true,
+    startPosition: -1, // Start from beginning
     
-    // ABR settings
-    abrEwmaDefaultEstimate: isSlowNetwork ? 500000 : 2000000,
-    abrBandWidthFactor: isMobile ? 0.7 : 0.8,
-    abrBandWidthUpFactor: isMobile ? 0.5 : 0.7,
+    // ABR - aggressive upscaling once playback starts
+    abrEwmaDefaultEstimate: isSlowNetwork ? 500000 : 1500000,
+    abrBandWidthFactor: 0.9, // More aggressive bandwidth usage
+    abrBandWidthUpFactor: 0.8, // Faster quality upscaling
+    abrMaxWithRealBitrate: true,
     
-    // Back buffer
-    backBufferLength: isMobile ? 15 : 30,
+    // Minimal back buffer - save memory, faster seeking
+    backBufferLength: 5,
     
-    // Fragment loading - more tolerant for mobile
-    fragLoadingTimeOut: isMobile ? 30000 : 20000,
-    fragLoadingMaxRetry: isMobile ? 8 : 4,
-    fragLoadingRetryDelay: isMobile ? 1500 : 1000,
+    // FAST fragment loading with quick timeouts
+    fragLoadingTimeOut: 8000, // Reduced from 20-30s
+    fragLoadingMaxRetry: 3, // Quick retries
+    fragLoadingRetryDelay: 500, // Fast retry
     
-    // Level loading
-    levelLoadingTimeOut: isMobile ? 20000 : 10000,
-    levelLoadingMaxRetry: isMobile ? 6 : 4,
-    levelLoadingRetryDelay: isMobile ? 1500 : 1000,
+    // Fast level loading
+    levelLoadingTimeOut: 6000, // Reduced from 10-20s
+    levelLoadingMaxRetry: 3,
+    levelLoadingRetryDelay: 500,
     
-    // Manifest loading
-    manifestLoadingTimeOut: isMobile ? 20000 : 10000,
-    manifestLoadingMaxRetry: isMobile ? 6 : 3,
-    manifestLoadingRetryDelay: isMobile ? 2000 : 1000,
+    // Fast manifest loading - CRITICAL for initial start
+    manifestLoadingTimeOut: 5000, // Reduced from 10-20s
+    manifestLoadingMaxRetry: 2,
+    manifestLoadingRetryDelay: 300,
     
     // XHR setup - prevent CORS issues
     xhrSetup: (xhr: XMLHttpRequest) => {
       xhr.withCredentials = false;
     },
     
-    // Mobile optimizations
-    progressive: isMobile,
-    capLevelToPlayerSize: isMobile,
+    // Optimizations for fast start
+    progressive: true, // Always progressive for faster initial segment
+    capLevelToPlayerSize: isMobile, // Only cap on mobile
+    testBandwidth: false, // Skip bandwidth test for faster start
+    initialLiveManifestSize: 1, // Minimal initial manifest fetch
   };
 }
 
@@ -292,143 +296,36 @@ export function useMobileVideoPlayer(options: UseMobileVideoPlayerOptions): UseM
     };
   }, [videoUrl]);
 
-  // Setup HLS playback
-  const setupHlsPlayback = useCallback((video: HTMLVideoElement) => {
-    if (!videoUrl) return;
-
-    // Check for native HLS support (Safari/iOS)
-    if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      console.log('[VideoPlayer] Using native HLS support (Safari/iOS)');
-      video.src = videoUrl;
-      
-      video.addEventListener('loadedmetadata', () => {
-        updateState({ isLoading: false, duration: video.duration });
-        if (startTime > 0) video.currentTime = startTime;
-        if (autoPlay) {
-          attemptAutoplay(video);
-        }
-      });
-      
-      video.addEventListener('error', () => {
-        handleVideoError('Native HLS playback failed');
-      });
-      
-      return;
-    }
-
-    // Use HLS.js for other browsers
-    if (!Hls.isSupported()) {
-      updateState({ isLoading: false, error: 'HLS is not supported in this browser' });
-      return;
-    }
-
-    console.log('[VideoPlayer] Using HLS.js for playback');
-    const hlsConfig = getMobileHlsConfig(deviceInfo.isMobile, networkInfo.isSlowNetwork);
-    const hls = new Hls(hlsConfig);
-    hlsRef.current = hls;
-
-    hls.loadSource(videoUrl);
-    hls.attachMedia(video);
-
-    hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
-      console.log('[VideoPlayer] HLS manifest parsed:', data.levels?.length, 'quality levels');
-      
-      // Extract quality levels
-      if (data.levels && data.levels.length > 0) {
-        const levels: HlsQualityLevel[] = data.levels.map((level, index) => ({
-          id: index,
-          height: level.height,
-          width: level.width,
-          bitrate: level.bitrate,
-          label: getQualityLabel(level.height, level.bitrate),
-        }));
-        levels.sort((a, b) => b.height - a.height);
-        updateState({ hlsLevels: levels, isHlsActive: true });
-      }
-
-      updateState({ isLoading: false, duration: video.duration || 0 });
-      if (startTime > 0) video.currentTime = startTime;
-      if (autoPlay) {
-        attemptAutoplay(video);
-      }
-    });
-
-    hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
-      updateState({ currentLevel: data.level });
-    });
-
-    hls.on(Hls.Events.ERROR, (_, data) => {
-      console.error('[VideoPlayer] HLS error:', data.type, data.details, data.fatal);
-      
-      if (data.fatal) {
-        handleHlsError(hls, data);
-      }
-    });
-
-    hls.on(Hls.Events.FRAG_LOADED, () => {
-      retryCountRef.current = 0; // Reset retry count on success
-    });
-  }, [videoUrl, startTime, autoPlay, deviceInfo, networkInfo]);
-
-  // Setup native video playback (MP4, WebM, etc.)
-  const setupNativePlayback = useCallback((video: HTMLVideoElement) => {
-    if (!videoUrl) return;
-
-    console.log('[VideoPlayer] Using native video playback for:', formatInfo.extension || 'direct URL');
-    video.src = videoUrl;
-
-    video.addEventListener('loadedmetadata', () => {
-      updateState({ isLoading: false, duration: video.duration });
-      if (startTime > 0) video.currentTime = startTime;
-      if (autoPlay) {
-        attemptAutoplay(video);
-      }
-    });
-
-    video.addEventListener('error', (e) => {
-      const error = video.error;
-      let errorMessage = 'Video playback failed';
-      
-      if (error) {
-        switch (error.code) {
-          case MediaError.MEDIA_ERR_ABORTED:
-            errorMessage = 'Video playback was aborted';
-            break;
-          case MediaError.MEDIA_ERR_NETWORK:
-            errorMessage = 'Network error while loading video';
-            break;
-          case MediaError.MEDIA_ERR_DECODE:
-            errorMessage = 'Video decode error - format may not be supported';
-            break;
-          case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-            errorMessage = 'Video format not supported on this device';
-            break;
-        }
-      }
-      
-      handleVideoError(errorMessage);
-    });
-  }, [videoUrl, startTime, autoPlay, formatInfo]);
-
-  // Attempt autoplay with muted fallback
+  // Attempt autoplay - start muted for guaranteed playback on mobile
   const attemptAutoplay = useCallback(async (video: HTMLVideoElement) => {
+    // CRITICAL: Start muted for instant, guaranteed playback on mobile
+    video.muted = true;
+    
     try {
       await video.play();
-      updateState({ isPlaying: true, isMuted: video.muted });
-    } catch (error) {
-      console.log('[VideoPlayer] Autoplay blocked, trying muted:', error);
+      updateState({ isPlaying: true, isMuted: true });
+      console.log('[VideoPlayer] Autoplay started (muted for compatibility)');
       
-      // Try muted autoplay (required on most mobile browsers)
-      video.muted = true;
-      try {
-        await video.play();
-        updateState({ isPlaying: true, isMuted: true });
-      } catch (mutedError) {
-        console.warn('[VideoPlayer] Even muted autoplay failed:', mutedError);
-        updateState({ isPlaying: false });
-      }
+      // Try to unmute after a short delay (some browsers allow this)
+      setTimeout(() => {
+        if (video && !video.paused) {
+          video.muted = false;
+          updateState({ isMuted: false });
+          console.log('[VideoPlayer] Unmuted successfully');
+        }
+      }, 100);
+    } catch (error) {
+      console.warn('[VideoPlayer] Even muted autoplay failed:', error);
+      updateState({ isPlaying: false, isMuted: true });
     }
-  }, []);
+  }, [updateState]);
+
+  // Handle video errors
+  const handleVideoError = useCallback((message: string) => {
+    console.error('[VideoPlayer] Video error:', message);
+    updateState({ isLoading: false, error: message });
+    onError?.(message);
+  }, [onError, updateState]);
 
   // Handle HLS errors with retry logic
   const handleHlsError = useCallback((hls: Hls, data: any) => {
@@ -455,14 +352,147 @@ export function useMobileVideoPlayer(options: UseMobileVideoPlayerOptions): UseM
       updateState({ error: 'Video playback error - please try a different server' });
       onError?.('Playback error');
     }
-  }, [onError]);
+  }, [onError, updateState]);
 
-  // Handle native video errors
-  const handleVideoError = useCallback((message: string) => {
-    console.error('[VideoPlayer] Video error:', message);
-    updateState({ isLoading: false, error: message });
-    onError?.(message);
-  }, [onError]);
+  // Setup HLS playback - optimized for fastest start
+  const setupHlsPlayback = useCallback((video: HTMLVideoElement) => {
+    if (!videoUrl) return;
+
+    // CRITICAL: Start muted for instant playback
+    video.muted = true;
+
+    // Check for native HLS support (Safari/iOS)
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      console.log('[VideoPlayer] Using native HLS support (Safari/iOS)');
+      video.src = videoUrl;
+      video.preload = 'auto';
+      
+      video.addEventListener('loadedmetadata', () => {
+        updateState({ isLoading: false, duration: video.duration });
+        if (startTime > 0) video.currentTime = startTime;
+        attemptAutoplay(video);
+      }, { once: true });
+      
+      // Also try to play immediately on canplay
+      video.addEventListener('canplay', () => {
+        if (video.paused && autoPlay) {
+          attemptAutoplay(video);
+        }
+      }, { once: true });
+      
+      video.addEventListener('error', () => {
+        handleVideoError('Native HLS playback failed');
+      }, { once: true });
+      
+      return;
+    }
+
+    // Use HLS.js for other browsers
+    if (!Hls.isSupported()) {
+      updateState({ isLoading: false, error: 'HLS is not supported in this browser' });
+      return;
+    }
+
+    console.log('[VideoPlayer] Using HLS.js for playback');
+    const hlsConfig = getMobileHlsConfig(deviceInfo.isMobile, networkInfo.isSlowNetwork);
+    const hls = new Hls(hlsConfig);
+    hlsRef.current = hls;
+
+    hls.loadSource(videoUrl);
+    hls.attachMedia(video);
+
+    // Start playback as soon as first fragment is loaded
+    hls.on(Hls.Events.FRAG_LOADED, () => {
+      retryCountRef.current = 0;
+      if (video.paused && autoPlay) {
+        attemptAutoplay(video);
+      }
+    });
+
+    hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+      console.log('[VideoPlayer] HLS manifest parsed:', data.levels?.length, 'quality levels');
+      
+      // Extract quality levels
+      if (data.levels && data.levels.length > 0) {
+        const levels: HlsQualityLevel[] = data.levels.map((level, index) => ({
+          id: index,
+          height: level.height,
+          width: level.width,
+          bitrate: level.bitrate,
+          label: getQualityLabel(level.height, level.bitrate),
+        }));
+        levels.sort((a, b) => b.height - a.height);
+        updateState({ hlsLevels: levels, isHlsActive: true });
+      }
+
+      updateState({ isLoading: false, duration: video.duration || 0 });
+      if (startTime > 0) video.currentTime = startTime;
+      
+      // Immediate autoplay attempt
+      attemptAutoplay(video);
+    });
+
+    hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
+      updateState({ currentLevel: data.level });
+    });
+
+    hls.on(Hls.Events.ERROR, (_, data) => {
+      console.error('[VideoPlayer] HLS error:', data.type, data.details, data.fatal);
+      
+      if (data.fatal) {
+        handleHlsError(hls, data);
+      }
+    });
+  }, [videoUrl, startTime, autoPlay, deviceInfo, networkInfo, attemptAutoplay, handleVideoError, handleHlsError, updateState]);
+
+  // Setup native video playback (MP4, WebM, etc.)
+  const setupNativePlayback = useCallback((video: HTMLVideoElement) => {
+    if (!videoUrl) return;
+
+    // Start muted for instant playback
+    video.muted = true;
+    video.preload = 'auto';
+
+    console.log('[VideoPlayer] Using native video playback for:', formatInfo.extension || 'direct URL');
+    video.src = videoUrl;
+
+    video.addEventListener('loadedmetadata', () => {
+      updateState({ isLoading: false, duration: video.duration });
+      if (startTime > 0) video.currentTime = startTime;
+      attemptAutoplay(video);
+    }, { once: true });
+
+    // Also try on canplay for faster start
+    video.addEventListener('canplay', () => {
+      if (video.paused && autoPlay) {
+        attemptAutoplay(video);
+      }
+    }, { once: true });
+
+    video.addEventListener('error', (e) => {
+      const error = video.error;
+      let errorMessage = 'Video playback failed';
+      
+      if (error) {
+        switch (error.code) {
+          case MediaError.MEDIA_ERR_ABORTED:
+            errorMessage = 'Video playback was aborted';
+            break;
+          case MediaError.MEDIA_ERR_NETWORK:
+            errorMessage = 'Network error while loading video';
+            break;
+          case MediaError.MEDIA_ERR_DECODE:
+            errorMessage = 'Video decode error - format may not be supported';
+            break;
+          case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+            errorMessage = 'Video format not supported on this device';
+            break;
+        }
+      }
+      
+      handleVideoError(errorMessage);
+    }, { once: true });
+  }, [videoUrl, startTime, autoPlay, formatInfo, attemptAutoplay, handleVideoError, updateState]);
 
   // Video event handlers
   useEffect(() => {
