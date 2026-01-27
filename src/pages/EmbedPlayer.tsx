@@ -1,133 +1,84 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Play, Pause, Volume2, VolumeX, Maximize, SkipForward, SkipBack, Loader2 } from 'lucide-react';
+import { 
+  Play, 
+  Pause, 
+  Volume2, 
+  VolumeX, 
+  Maximize, 
+  SkipForward, 
+  SkipBack, 
+  Loader2, 
+  AlertTriangle,
+  RefreshCw,
+  Settings,
+  Check
+} from 'lucide-react';
 import Hls from 'hls.js';
+import { useMobileVideoPlayer, detectDeviceInfo, detectVideoFormat } from '@/hooks/useMobileVideoPlayer';
 
 export default function EmbedPlayer() {
   const { episodeId } = useParams();
   const [searchParams] = useSearchParams();
   const startTime = parseFloat(searchParams.get('t') || '0');
   
-  const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const hlsRef = useRef<Hls | null>(null);
-  
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [useIframe, setUseIframe] = useState(false);
+  const [episodeData, setEpisodeData] = useState<{ title: string; videoUrl: string | null } | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [showQualityMenu, setShowQualityMenu] = useState(false);
   
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   const lastTapRef = useRef<{ time: number; x: number }>({ time: 0, x: 0 });
   const [doubleTapSide, setDoubleTapSide] = useState<'left' | 'right' | null>(null);
 
+  const deviceInfo = detectDeviceInfo();
+
   // Fetch episode data
   useEffect(() => {
     const fetchEpisode = async () => {
       if (!episodeId) {
-        setError('No episode ID provided');
-        setIsLoading(false);
+        setFetchError('No episode ID provided');
         return;
       }
 
       try {
-        const { data, error: fetchError } = await supabase
+        const { data, error } = await supabase
           .from('episodes')
           .select('video_url, external_url, title')
           .eq('id', episodeId)
           .single();
 
-        if (fetchError || !data) {
-          setError('Episode not found');
-          setIsLoading(false);
+        if (error || !data) {
+          setFetchError('Episode not found');
           return;
         }
 
         const url = data.video_url || data.external_url;
         if (!url) {
-          setError('No video available');
-          setIsLoading(false);
+          setFetchError('No video available');
           return;
         }
 
-        setVideoUrl(url);
+        setEpisodeData({ title: data.title, videoUrl: url });
       } catch (err) {
-        setError('Failed to load episode');
-        setIsLoading(false);
+        console.error('[EmbedPlayer] Fetch error:', err);
+        setFetchError('Failed to load episode');
       }
     };
 
     fetchEpisode();
   }, [episodeId]);
 
-  // Setup HLS or native video
-  useEffect(() => {
-    if (!videoUrl || !videoRef.current) return;
-
-    const video = videoRef.current;
-    const isHLS = videoUrl.includes('.m3u8');
-
-    if (isHLS && Hls.isSupported()) {
-      const hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: false,
-        backBufferLength: 30,
-        maxBufferLength: 30,
-        maxMaxBufferLength: 60,
-        startLevel: -1,
-        fragLoadingTimeOut: 20000,
-        manifestLoadingTimeOut: 20000,
-      });
-
-      hlsRef.current = hls;
-      hls.loadSource(videoUrl);
-      hls.attachMedia(video);
-
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        setIsLoading(false);
-        if (startTime > 0) {
-          video.currentTime = startTime;
-        }
-        video.play().catch(() => {});
-      });
-
-      hls.on(Hls.Events.ERROR, (_, data) => {
-        if (data.fatal) {
-          setUseIframe(true);
-        }
-      });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl') || !isHLS) {
-      video.src = videoUrl;
-      video.load();
-      
-      video.onloadedmetadata = () => {
-        setIsLoading(false);
-        if (startTime > 0) {
-          video.currentTime = startTime;
-        }
-        video.play().catch(() => {});
-      };
-
-      video.onerror = () => {
-        setUseIframe(true);
-      };
-    }
-
-    return () => {
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-    };
-  }, [videoUrl, startTime]);
+  // Use the mobile video player hook
+  const { videoRef, state, controls, hlsRef } = useMobileVideoPlayer({
+    videoUrl: episodeData?.videoUrl || null,
+    autoPlay: true,
+    startTime,
+    onError: (error) => console.error('[EmbedPlayer] Playback error:', error),
+  });
 
   // Fullscreen change handler
   useEffect(() => {
@@ -147,9 +98,10 @@ export default function EmbedPlayer() {
 
   // Auto-hide controls
   useEffect(() => {
-    if (isPlaying) {
+    if (state.isPlaying) {
       controlsTimeoutRef.current = setTimeout(() => {
         setShowControls(false);
+        setShowQualityMenu(false);
       }, 3000);
     }
     return () => {
@@ -157,34 +109,23 @@ export default function EmbedPlayer() {
         clearTimeout(controlsTimeoutRef.current);
       }
     };
-  }, [isPlaying, showControls]);
+  }, [state.isPlaying, showControls]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    const video = videoRef.current;
-    return () => {
-      if (video) {
-        video.pause();
-        video.src = '';
-        video.load();
-      }
-    };
-  }, []);
-
-  const handleMouseMove = () => {
+  const handleMouseMove = useCallback(() => {
     setShowControls(true);
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
     }
-    if (isPlaying) {
+    if (state.isPlaying) {
       controlsTimeoutRef.current = setTimeout(() => {
         setShowControls(false);
+        setShowQualityMenu(false);
       }, 3000);
     }
-  };
+  }, [state.isPlaying]);
 
   const formatTime = (seconds: number) => {
-    if (isNaN(seconds)) return '0:00';
+    if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
@@ -194,40 +135,8 @@ export default function EmbedPlayer() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      const current = videoRef.current.currentTime;
-      const dur = videoRef.current.duration;
-      setProgress((current / dur) * 100);
-      setCurrentTime(current);
-      setDuration(dur);
-    }
-  };
-
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (videoRef.current) {
-      const time = (parseFloat(e.target.value) / 100) * videoRef.current.duration;
-      videoRef.current.currentTime = time;
-      setProgress(parseFloat(e.target.value));
-    }
-  };
-
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
+    controls.seekPercent(parseFloat(e.target.value));
   };
 
   const toggleFullscreen = async () => {
@@ -235,8 +144,6 @@ export default function EmbedPlayer() {
     const video = videoRef.current;
     
     if (!container) return;
-
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
     try {
       const isCurrentlyFullscreen = !!(document.fullscreenElement || (document as any).webkitFullscreenElement);
@@ -248,7 +155,8 @@ export default function EmbedPlayer() {
           (document as any).webkitExitFullscreen();
         }
       } else {
-        if (isIOS && video) {
+        // iOS Safari needs video fullscreen
+        if (deviceInfo.isIOS && video) {
           if ((video as any).webkitEnterFullscreen) {
             (video as any).webkitEnterFullscreen();
             return;
@@ -262,21 +170,17 @@ export default function EmbedPlayer() {
         }
       }
     } catch (err) {
-      console.error('Fullscreen error:', err);
+      console.error('[EmbedPlayer] Fullscreen error:', err);
     }
   };
 
-  const skipForward = () => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = Math.min(videoRef.current.currentTime + 10, videoRef.current.duration);
-    }
-  };
+  const skipForward = useCallback(() => {
+    controls.seek(state.currentTime + 10);
+  }, [controls, state.currentTime]);
 
-  const skipBackward = () => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = Math.max(videoRef.current.currentTime - 10, 0);
-    }
-  };
+  const skipBackward = useCallback(() => {
+    controls.seek(state.currentTime - 10);
+  }, [controls, state.currentTime]);
 
   const handleDoubleTap = (e: React.TouchEvent) => {
     const now = Date.now();
@@ -306,26 +210,59 @@ export default function EmbedPlayer() {
     }
   };
 
-  // Error state
-  if (error) {
+  const handleContainerClick = (e: React.MouseEvent) => {
+    // Don't toggle play if clicking on controls
+    if ((e.target as HTMLElement).closest('.controls-area')) return;
+    controls.togglePlay();
+  };
+
+  // Fetch error state
+  if (fetchError) {
     return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center">
-        <p className="text-white text-lg">{error}</p>
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 p-4">
+        <AlertTriangle className="w-12 h-12 text-yellow-500" />
+        <p className="text-white text-lg text-center">{fetchError}</p>
       </div>
     );
   }
 
-  // Iframe fallback
-  if (useIframe && videoUrl) {
+  // Loading episode data
+  if (!episodeData) {
     return (
-      <div className="fixed inset-0 bg-black">
-        <iframe
-          src={`${videoUrl}${videoUrl.includes('?') ? '&' : '?'}autoplay=1`}
-          className="w-full h-full"
-          allowFullScreen
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-          style={{ border: 'none' }}
-        />
+      <div className="fixed inset-0 bg-black flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  // Unsupported format error
+  if (state.isUnsupportedFormat) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <AlertTriangle className="w-16 h-16 text-yellow-500" />
+        <h2 className="text-white text-xl font-bold">Format Not Supported</h2>
+        <p className="text-white/80 max-w-md">{state.formatWarning}</p>
+        <p className="text-white/60 text-sm">
+          Please try a different server or contact the uploader to convert the video.
+        </p>
+      </div>
+    );
+  }
+
+  // Playback error with retry
+  if (state.error && !state.isUnsupportedFormat) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <AlertTriangle className="w-16 h-16 text-red-500" />
+        <h2 className="text-white text-xl font-bold">Playback Error</h2>
+        <p className="text-white/80 max-w-md">{state.error}</p>
+        <button 
+          onClick={controls.retry}
+          className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+        >
+          <RefreshCw className="w-5 h-5" />
+          Retry
+        </button>
       </div>
     );
   }
@@ -339,12 +276,17 @@ export default function EmbedPlayer() {
         setShowControls(true);
         handleDoubleTap(e);
       }}
-      onClick={togglePlay}
+      onClick={handleContainerClick}
     >
       {/* Loading indicator */}
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center z-20">
-          <Loader2 className="w-12 h-12 text-primary animate-spin" />
+      {(state.isLoading || state.isBuffering) && (
+        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            {state.isBuffering && (
+              <span className="text-white/70 text-sm">Buffering...</span>
+            )}
+          </div>
         </div>
       )}
 
@@ -366,42 +308,42 @@ export default function EmbedPlayer() {
         </div>
       )}
 
-      {/* Video element */}
+      {/* Video element with mobile-specific attributes */}
       <video
         ref={videoRef}
         className="w-full h-full object-contain"
-        onTimeUpdate={handleTimeUpdate}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-        onLoadedMetadata={() => {
-          if (videoRef.current) {
-            setDuration(videoRef.current.duration);
-          }
-        }}
-        onWaiting={() => setIsLoading(true)}
-        onCanPlay={() => setIsLoading(false)}
+        poster={undefined}
         autoPlay
         playsInline
         webkit-playsinline="true"
         x5-video-player-type="h5"
+        x5-video-player-fullscreen="true"
+        x5-video-orientation="landscape"
+        preload="metadata"
+        controlsList="nodownload noremoteplayback"
       />
 
       {/* Controls overlay */}
       <div 
-        className={`absolute inset-0 flex flex-col justify-end transition-opacity duration-300 ${
+        className={`controls-area absolute inset-0 flex flex-col justify-end transition-opacity duration-300 ${
           showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Title bar */}
+        <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/80 to-transparent">
+          <h1 className="text-white font-medium truncate">{episodeData.title}</h1>
+        </div>
+
         {/* Center play button */}
-        {!isPlaying && showControls && (
+        {!state.isPlaying && showControls && !state.isLoading && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div 
-              className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer pointer-events-auto shadow-xl"
-              onClick={togglePlay}
+            <button 
+              className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer pointer-events-auto shadow-xl hover:bg-primary transition-colors"
+              onClick={() => controls.play()}
             >
               <Play className="w-10 h-10 text-white fill-current ml-1" />
-            </div>
+            </button>
           </div>
         )}
 
@@ -410,46 +352,117 @@ export default function EmbedPlayer() {
           {/* Progress bar */}
           <div className="mb-4">
             <div className="flex items-center gap-3">
-              <span className="text-white/90 text-sm font-mono min-w-[45px]">{formatTime(currentTime)}</span>
-              <div className="flex-1">
+              <span className="text-white/90 text-sm font-mono min-w-[45px]">
+                {formatTime(state.currentTime)}
+              </span>
+              <div className="flex-1 relative">
+                {/* Buffered progress */}
+                <div 
+                  className="absolute inset-0 h-1.5 bg-white/20 rounded-full pointer-events-none"
+                  style={{ width: `${state.bufferedProgress}%` }}
+                />
                 <input
                   type="range"
                   min="0"
                   max="100"
-                  value={progress}
+                  value={state.progress}
                   onChange={handleSeek}
-                  className="w-full h-1.5 bg-white/30 rounded-full appearance-none cursor-pointer 
+                  className="w-full h-1.5 bg-white/30 rounded-full appearance-none cursor-pointer relative z-10
                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
-                    [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg"
+                    [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg
+                    [&::-webkit-slider-thumb]:cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, hsl(var(--primary)) ${progress}%, rgba(255,255,255,0.3) ${progress}%)`
+                    background: `linear-gradient(to right, hsl(var(--primary)) ${state.progress}%, rgba(255,255,255,0.3) ${state.progress}%)`
                   }}
                 />
               </div>
-              <span className="text-white/90 text-sm font-mono min-w-[45px]">{formatTime(duration)}</span>
+              <span className="text-white/90 text-sm font-mono min-w-[45px]">
+                {formatTime(state.duration)}
+              </span>
             </div>
           </div>
 
           {/* Control buttons */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <button className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white" onClick={skipBackward}>
+              <button 
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                onClick={skipBackward}
+              >
                 <SkipBack className="w-5 h-5" />
               </button>
-              <button className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white" onClick={togglePlay}>
-                {isPlaying ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 fill-current ml-0.5" />}
+              <button 
+                className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                onClick={() => controls.togglePlay()}
+              >
+                {state.isPlaying ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 fill-current ml-0.5" />}
               </button>
-              <button className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white" onClick={skipForward}>
+              <button 
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                onClick={skipForward}
+              >
                 <SkipForward className="w-5 h-5" />
               </button>
-              <button className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white" onClick={toggleMute}>
-                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              <button 
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                onClick={controls.toggleMute}
+              >
+                {state.isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </button>
             </div>
-            
-            <button className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white" onClick={toggleFullscreen}>
-              <Maximize className="w-5 h-5" />
-            </button>
+
+            <div className="flex items-center gap-2">
+              {/* Quality selector (if HLS with multiple levels) */}
+              {state.isHlsActive && state.hlsLevels.length > 1 && (
+                <div className="relative">
+                  <button 
+                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                    onClick={() => setShowQualityMenu(!showQualityMenu)}
+                  >
+                    <Settings className="w-5 h-5" />
+                  </button>
+                  
+                  {showQualityMenu && (
+                    <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-sm rounded-lg py-2 min-w-[120px] shadow-xl">
+                      <button
+                        className={`w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center justify-between ${
+                          state.currentLevel === -1 ? 'text-primary' : 'text-white'
+                        }`}
+                        onClick={() => {
+                          controls.setQualityLevel(-1);
+                          setShowQualityMenu(false);
+                        }}
+                      >
+                        Auto
+                        {state.currentLevel === -1 && <Check className="w-4 h-4" />}
+                      </button>
+                      {state.hlsLevels.map((level) => (
+                        <button
+                          key={level.id}
+                          className={`w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center justify-between ${
+                            state.currentLevel === level.id ? 'text-primary' : 'text-white'
+                          }`}
+                          onClick={() => {
+                            controls.setQualityLevel(level.id);
+                            setShowQualityMenu(false);
+                          }}
+                        >
+                          {level.label}
+                          {state.currentLevel === level.id && <Check className="w-4 h-4" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <button 
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                onClick={toggleFullscreen}
+              >
+                <Maximize className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>

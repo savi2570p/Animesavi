@@ -76,7 +76,9 @@ export function TrailerPreview({ animeId, coverImage, title, onClose }: TrailerP
 
     const video = videoRef.current;
     const isHLS = videoUrl.includes('.m3u8');
-    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+    const isMobileDevice = /Android|iPhone|iPad/i.test(navigator.userAgent);
+    const connection = (navigator as any).connection;
+    const isSlowNetwork = connection && (connection.effectiveType === '2g' || connection.effectiveType === 'slow-2g');
 
     if (hlsRef.current) {
       hlsRef.current.destroy();
@@ -84,13 +86,26 @@ export function TrailerPreview({ animeId, coverImage, title, onClose }: TrailerP
     }
 
     if (isHLS) {
-      if (Hls.isSupported()) {
+      // Check for native HLS support (Safari/iOS)
+      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        console.log('[TrailerPreview] Using native HLS (Safari/iOS)');
+        video.src = videoUrl;
+        video.addEventListener('loadedmetadata', () => {
+          video.currentTime = 0;
+          video.play().catch(() => {});
+        });
+      } else if (Hls.isSupported()) {
+        console.log('[TrailerPreview] Using HLS.js');
         const hls = new Hls({
-          maxBufferLength: isMobile ? 10 : 15,
-          maxMaxBufferLength: isMobile ? 20 : 30,
+          enableWorker: true,
+          lowLatencyMode: false,
+          maxBufferLength: isMobileDevice ? 10 : 15,
+          maxMaxBufferLength: isMobileDevice ? 20 : 30,
           maxBufferHole: 0.5,
-          startLevel: isMobile ? 0 : -1,
-          abrBandWidthFactor: isMobile ? 1.5 : 0.95,
+          startLevel: isMobileDevice || isSlowNetwork ? 0 : -1,
+          abrBandWidthFactor: isMobileDevice ? 1.2 : 0.95,
+          fragLoadingTimeOut: isMobileDevice ? 25000 : 15000,
+          fragLoadingMaxRetry: isMobileDevice ? 6 : 4,
           manifestLoadingTimeOut: 15000,
           xhrSetup: (xhr) => {
             xhr.withCredentials = false;
@@ -108,26 +123,25 @@ export function TrailerPreview({ animeId, coverImage, title, onClose }: TrailerP
 
         hls.on(Hls.Events.ERROR, (event, data) => {
           if (data.fatal) {
-            console.error('HLS error in trailer:', data);
+            console.error('[TrailerPreview] HLS error:', data);
             if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-              hls.startLoad();
+              setTimeout(() => hls.startLoad(), 2000);
             } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
               hls.recoverMediaError();
             }
           }
         });
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = videoUrl;
-        video.addEventListener('loadedmetadata', () => {
-          video.currentTime = 0;
-          video.play().catch(() => {});
-        });
       }
     } else {
+      // Native video playback (MP4, WebM)
       video.src = videoUrl;
       video.addEventListener('loadedmetadata', () => {
         video.currentTime = 0;
         video.play().catch(() => {});
+      });
+      
+      video.addEventListener('error', () => {
+        console.error('[TrailerPreview] Native video error');
       });
     }
   }, [videoUrl]);

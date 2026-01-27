@@ -42,6 +42,7 @@ import { VolumeSlider } from './VolumeSlider';
 import { GestureIndicator } from './GestureIndicator';
 import { MobileMuteIndicator } from './MobileMuteIndicator';
 import { useVideoGestures } from '@/hooks/useVideoGestures';
+import { UnsupportedFormatWarning } from './UnsupportedFormatWarning';
 
 interface AudioTrackInfo {
   id: number;
@@ -161,7 +162,15 @@ const requiresConversion = (url: string | null): boolean => {
   if (!url) return false;
   const urlLower = url.toLowerCase().split('?')[0];
   // These formats are NOT natively supported on mobile browsers
-  return /\.(mkv|avi|wmv|flv|mov|mp4v)$/i.test(urlLower);
+  return /\.(mkv|avi|wmv|flv|mov|mp4v|divx|xvid)$/i.test(urlLower);
+};
+
+// Get format name from URL
+const getFormatName = (url: string | null): string => {
+  if (!url) return 'Unknown';
+  const urlLower = url.toLowerCase().split('?')[0];
+  const match = urlLower.match(/\.([a-z0-9]+)$/);
+  return match ? match[1].toUpperCase() : 'Unknown';
 };
 
 // Helper to detect direct video file URLs that can be played natively
@@ -312,6 +321,10 @@ export function VideoPlayer({
   const [showMobileUnmute, setShowMobileUnmute] = useState(false);
   const [wasMutedForAutoplay, setWasMutedForAutoplay] = useState(false);
   
+  // Unsupported format state
+  const [isUnsupportedFormat, setIsUnsupportedFormat] = useState(false);
+  const [unsupportedFormatName, setUnsupportedFormatName] = useState('');
+  
   const features = serverConfigs[activeServer].features;
   
   // Get any available URL for playback
@@ -319,8 +332,22 @@ export function VideoPlayer({
   const effectiveVideoUrl = anyVideoUrl;
   const shouldUseIframe = useIframeFallback;
   
-  // Detect if mobile device
+  // Detect if mobile device (MUST be before hooks that use it)
   const isMobile = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  // Check for unsupported formats on mobile devices
+  useEffect(() => {
+    if (isMobile && effectiveVideoUrl && requiresConversion(effectiveVideoUrl)) {
+      const formatName = getFormatName(effectiveVideoUrl);
+      setIsUnsupportedFormat(true);
+      setUnsupportedFormatName(formatName);
+      console.warn(`[VideoPlayer] Unsupported format detected on mobile: ${formatName}`);
+    } else {
+      setIsUnsupportedFormat(false);
+      setUnsupportedFormatName('');
+    }
+  }, [effectiveVideoUrl, isMobile]);
+  
   
   // Gesture controls hook for mobile
   const { gestureState, isGestureActive } = useVideoGestures({
@@ -1913,10 +1940,29 @@ export function VideoPlayer({
       onTouchEnd={handleTouchEnd}
       onMouseLeave={() => isPlaying && !settingsOpen && setShowControls(false)}
     >
+      {/* Unsupported Format Warning for Mobile */}
+      {isUnsupportedFormat && isMobile && (
+        <UnsupportedFormatWarning
+          format={unsupportedFormatName}
+          onTryAnyway={() => {
+            setVideoError(false);
+            setIsUnsupportedFormat(false);
+            if (videoRef.current) {
+              videoRef.current.load();
+              videoRef.current.play().catch(() => {});
+            }
+          }}
+          onUseEmbed={() => {
+            const embedUrl = `/embed/${episodeId}`;
+            window.open(embedUrl, '_blank');
+          }}
+        />
+      )}
+
       {/* Buffering Indicator */}
       <BufferingIndicator 
         videoRef={videoRef}
-        isVisible={!shouldUseIframe && !!effectiveVideoUrl}
+        isVisible={!shouldUseIframe && !!effectiveVideoUrl && !isUnsupportedFormat}
       />
 
       {/* Quality Overlay */}
