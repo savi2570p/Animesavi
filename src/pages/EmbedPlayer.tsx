@@ -16,7 +16,27 @@ import {
   Check
 } from 'lucide-react';
 import Hls from 'hls.js';
-import { useMobileVideoPlayer, detectDeviceInfo, detectVideoFormat } from '@/hooks/useMobileVideoPlayer';
+
+// Detect device/browser type
+function detectDeviceInfo() {
+  if (typeof window === 'undefined') {
+    return { isMobile: false, isIOS: false, isAndroid: false, isSafari: false };
+  }
+  
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  const isAndroid = /Android/.test(ua);
+  const isMobile = isIOS || isAndroid || /webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+  
+  return { isMobile, isIOS, isAndroid, isSafari };
+}
+
+// Check if URL is HLS
+function isHlsUrl(url: string | null): boolean {
+  if (!url) return false;
+  return /\.m3u8(\?.*)?$/i.test(url) || url.includes('.m3u8');
+}
 
 export default function EmbedPlayer() {
   const { episodeId } = useParams();
@@ -24,11 +44,28 @@ export default function EmbedPlayer() {
   const startTime = parseFloat(searchParams.get('t') || '0');
   
   const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
+  
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [episodeData, setEpisodeData] = useState<{ title: string; videoUrl: string | null } | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [showQualityMenu, setShowQualityMenu] = useState(false);
+  
+  // Playback state
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [bufferedProgress, setBufferedProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [hlsLevels, setHlsLevels] = useState<{ id: number; height: number; label: string }[]>([]);
+  const [currentLevel, setCurrentLevel] = useState(-1);
+  const [isHlsActive, setIsHlsActive] = useState(false);
   
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   const lastTapRef = useRef<{ time: number; x: number }>({ time: 0, x: 0 });
@@ -72,13 +109,158 @@ export default function EmbedPlayer() {
     fetchEpisode();
   }, [episodeId]);
 
-  // Use the mobile video player hook
-  const { videoRef, state, controls, hlsRef } = useMobileVideoPlayer({
-    videoUrl: episodeData?.videoUrl || null,
-    autoPlay: true,
-    startTime,
-    onError: (error) => console.error('[EmbedPlayer] Playback error:', error),
-  });
+  // Video playback setup - plays ANY format
+  useEffect(() => {
+    const video = videoRef.current;
+    const videoUrl = episodeData?.videoUrl;
+    
+    if (!video || !videoUrl) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    // Cleanup previous HLS
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+    
+    // Start muted for autoplay
+    video.muted = true;
+    setIsMuted(true);
+    
+    if (isHlsUrl(videoUrl)) {
+      // HLS playback
+      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        // Native HLS (Safari)
+        video.src = videoUrl;
+      } else if (Hls.isSupported()) {
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+          startLevel: 0,
+          maxBufferLength: 10,
+        });
+        hlsRef.current = hls;
+        hls.loadSource(videoUrl);
+        hls.attachMedia(video);
+        
+        hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+          setIsHlsActive(true);
+          if (data.levels?.length > 0) {
+            const levels = data.levels.map((level, idx) => ({
+              id: idx,
+              height: level.height,
+              label: level.height >= 2160 ? '4K' : level.height >= 1080 ? '1080p' : level.height >= 720 ? '720p' : `${level.height}p`
+            }));
+            setHlsLevels(levels);
+          }
+          video.play().catch(() => {});
+        });
+        
+        hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
+          setCurrentLevel(data.level);
+        });
+        
+        hls.on(Hls.Events.ERROR, (_, data) => {
+          if (data.fatal) {
+            setError('Playback error - please retry');
+          }
+        });
+      }
+    } else {
+      // Direct video playback - try ANY format
+      video.src = videoUrl;
+    }
+    
+    const handleCanPlay = () => {
+      setIsLoading(false);
+      if (startTime > 0) video.currentTime = startTime;
+      video.play().catch(() => {});
+    };
+    
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    const handleWaiting = () => setIsBuffering(true);
+    const handlePlaying = () => setIsBuffering(false);
+    
+    const handleTimeUpdate = () => {
+      setCurrentTime(video.currentTime);
+      setDuration(video.duration || 0);
+      setProgress(video.duration ? (video.currentTime / video.duration) * 100 : 0);
+    };
+    
+    const handleProgress = () => {
+      if (video.buffered.length > 0) {
+        const buffered = video.buffered.end(video.buffered.length - 1);
+        setBufferedProgress(video.duration ? (buffered / video.duration) * 100 : 0);
+      }
+    };
+    
+    const handleError = () => {
+      setIsLoading(false);
+      setError('Video failed to load - please try again');
+    };
+    
+    video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
+    video.addEventListener('waiting', handleWaiting);
+    video.addEventListener('playing', handlePlaying);
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('progress', handleProgress);
+    video.addEventListener('error', handleError);
+    
+    return () => {
+      video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
+      video.removeEventListener('waiting', handleWaiting);
+      video.removeEventListener('playing', handlePlaying);
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('progress', handleProgress);
+      video.removeEventListener('error', handleError);
+      
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [episodeData?.videoUrl, startTime]);
+
+  // Controls
+  const play = () => videoRef.current?.play();
+  const pause = () => videoRef.current?.pause();
+  const togglePlay = () => isPlaying ? pause() : play();
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
+  const seek = (time: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = Math.max(0, Math.min(time, duration));
+    }
+  };
+  const seekPercent = (percent: number) => {
+    if (videoRef.current && duration) {
+      videoRef.current.currentTime = (percent / 100) * duration;
+    }
+  };
+  const setQualityLevel = (level: number) => {
+    if (hlsRef.current) {
+      hlsRef.current.currentLevel = level;
+      setCurrentLevel(level);
+    }
+  };
+  const retry = () => {
+    setError(null);
+    setIsLoading(true);
+    if (videoRef.current) {
+      videoRef.current.load();
+    }
+  };
 
   // Fullscreen change handler
   useEffect(() => {
@@ -98,7 +280,7 @@ export default function EmbedPlayer() {
 
   // Auto-hide controls
   useEffect(() => {
-    if (state.isPlaying) {
+    if (isPlaying) {
       controlsTimeoutRef.current = setTimeout(() => {
         setShowControls(false);
         setShowQualityMenu(false);
@@ -109,20 +291,20 @@ export default function EmbedPlayer() {
         clearTimeout(controlsTimeoutRef.current);
       }
     };
-  }, [state.isPlaying, showControls]);
+  }, [isPlaying, showControls]);
 
   const handleMouseMove = useCallback(() => {
     setShowControls(true);
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
     }
-    if (state.isPlaying) {
+    if (isPlaying) {
       controlsTimeoutRef.current = setTimeout(() => {
         setShowControls(false);
         setShowQualityMenu(false);
       }, 3000);
     }
-  }, [state.isPlaying]);
+  }, [isPlaying]);
 
   const formatTime = (seconds: number) => {
     if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
@@ -136,7 +318,7 @@ export default function EmbedPlayer() {
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    controls.seekPercent(parseFloat(e.target.value));
+    seekPercent(parseFloat(e.target.value));
   };
 
   const toggleFullscreen = async () => {
@@ -175,12 +357,12 @@ export default function EmbedPlayer() {
   };
 
   const skipForward = useCallback(() => {
-    controls.seek(state.currentTime + 10);
-  }, [controls, state.currentTime]);
+    seek(currentTime + 10);
+  }, [currentTime]);
 
   const skipBackward = useCallback(() => {
-    controls.seek(state.currentTime - 10);
-  }, [controls, state.currentTime]);
+    seek(currentTime - 10);
+  }, [currentTime]);
 
   const handleDoubleTap = (e: React.TouchEvent) => {
     const now = Date.now();
@@ -213,14 +395,14 @@ export default function EmbedPlayer() {
   const handleContainerClick = (e: React.MouseEvent) => {
     // Don't toggle play if clicking on controls
     if ((e.target as HTMLElement).closest('.controls-area')) return;
-    controls.togglePlay();
+    togglePlay();
   };
 
   // Fetch error state
   if (fetchError) {
     return (
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 p-4">
-        <AlertTriangle className="w-12 h-12 text-yellow-500" />
+        <AlertTriangle className="w-12 h-12 text-destructive" />
         <p className="text-white text-lg text-center">{fetchError}</p>
       </div>
     );
@@ -235,30 +417,16 @@ export default function EmbedPlayer() {
     );
   }
 
-  // Unsupported format error
-  if (state.isUnsupportedFormat) {
-    return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 p-6 text-center">
-        <AlertTriangle className="w-16 h-16 text-yellow-500" />
-        <h2 className="text-white text-xl font-bold">Format Not Supported</h2>
-        <p className="text-white/80 max-w-md">{state.formatWarning}</p>
-        <p className="text-white/60 text-sm">
-          Please try a different server or contact the uploader to convert the video.
-        </p>
-      </div>
-    );
-  }
-
   // Playback error with retry
-  if (state.error && !state.isUnsupportedFormat) {
+  if (error) {
     return (
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 p-6 text-center">
-        <AlertTriangle className="w-16 h-16 text-red-500" />
+        <AlertTriangle className="w-16 h-16 text-destructive" />
         <h2 className="text-white text-xl font-bold">Playback Error</h2>
-        <p className="text-white/80 max-w-md">{state.error}</p>
+        <p className="text-white/80 max-w-md">{error}</p>
         <button 
-          onClick={controls.retry}
-          className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+          onClick={retry}
+          className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
         >
           <RefreshCw className="w-5 h-5" />
           Retry
@@ -279,11 +447,11 @@ export default function EmbedPlayer() {
       onClick={handleContainerClick}
     >
       {/* Loading indicator */}
-      {(state.isLoading || state.isBuffering) && (
+      {(isLoading || isBuffering) && (
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div className="flex flex-col items-center gap-2">
             <Loader2 className="w-12 h-12 text-primary animate-spin" />
-            {state.isBuffering && (
+            {isBuffering && (
               <span className="text-white/70 text-sm">Buffering...</span>
             )}
           </div>
@@ -337,13 +505,13 @@ export default function EmbedPlayer() {
         </div>
 
         {/* Center play button */}
-        {!state.isPlaying && showControls && !state.isLoading && (
+        {!isPlaying && showControls && !isLoading && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <button 
               className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer pointer-events-auto shadow-xl hover:bg-primary transition-colors"
-              onClick={() => controls.play()}
+              onClick={() => play()}
             >
-              <Play className="w-10 h-10 text-white fill-current ml-1" />
+              <Play className="w-10 h-10 text-primary-foreground fill-current ml-1" />
             </button>
           </div>
         )}
@@ -354,31 +522,31 @@ export default function EmbedPlayer() {
           <div className="mb-4">
             <div className="flex items-center gap-3">
               <span className="text-white/90 text-sm font-mono min-w-[45px]">
-                {formatTime(state.currentTime)}
+                {formatTime(currentTime)}
               </span>
               <div className="flex-1 relative">
                 {/* Buffered progress */}
                 <div 
                   className="absolute inset-0 h-1.5 bg-white/20 rounded-full pointer-events-none"
-                  style={{ width: `${state.bufferedProgress}%` }}
+                  style={{ width: `${bufferedProgress}%` }}
                 />
                 <input
                   type="range"
                   min="0"
                   max="100"
-                  value={state.progress}
+                  value={progress}
                   onChange={handleSeek}
                   className="w-full h-1.5 bg-white/30 rounded-full appearance-none cursor-pointer relative z-10
                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
                     [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg
                     [&::-webkit-slider-thumb]:cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, hsl(var(--primary)) ${state.progress}%, rgba(255,255,255,0.3) ${state.progress}%)`
+                    background: `linear-gradient(to right, hsl(var(--primary)) ${progress}%, rgba(255,255,255,0.3) ${progress}%)`
                   }}
                 />
               </div>
               <span className="text-white/90 text-sm font-mono min-w-[45px]">
-                {formatTime(state.duration)}
+                {formatTime(duration)}
               </span>
             </div>
           </div>
@@ -394,9 +562,9 @@ export default function EmbedPlayer() {
               </button>
               <button 
                 className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
-                onClick={() => controls.togglePlay()}
+                onClick={() => togglePlay()}
               >
-                {state.isPlaying ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 fill-current ml-0.5" />}
+                {isPlaying ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 fill-current ml-0.5" />}
               </button>
               <button 
                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
@@ -406,15 +574,15 @@ export default function EmbedPlayer() {
               </button>
               <button 
                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
-                onClick={controls.toggleMute}
+                onClick={toggleMute}
               >
-                {state.isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
               </button>
             </div>
 
             <div className="flex items-center gap-2">
               {/* Quality selector (if HLS with multiple levels) */}
-              {state.isHlsActive && state.hlsLevels.length > 1 && (
+              {isHlsActive && hlsLevels.length > 1 && (
                 <div className="relative">
                   <button 
                     className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
@@ -427,29 +595,29 @@ export default function EmbedPlayer() {
                     <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-sm rounded-lg py-2 min-w-[120px] shadow-xl">
                       <button
                         className={`w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center justify-between ${
-                          state.currentLevel === -1 ? 'text-primary' : 'text-white'
+                          currentLevel === -1 ? 'text-primary' : 'text-white'
                         }`}
                         onClick={() => {
-                          controls.setQualityLevel(-1);
+                          setQualityLevel(-1);
                           setShowQualityMenu(false);
                         }}
                       >
                         Auto
-                        {state.currentLevel === -1 && <Check className="w-4 h-4" />}
+                        {currentLevel === -1 && <Check className="w-4 h-4" />}
                       </button>
-                      {state.hlsLevels.map((level) => (
+                      {hlsLevels.map((level) => (
                         <button
                           key={level.id}
                           className={`w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center justify-between ${
-                            state.currentLevel === level.id ? 'text-primary' : 'text-white'
+                            currentLevel === level.id ? 'text-primary' : 'text-white'
                           }`}
                           onClick={() => {
-                            controls.setQualityLevel(level.id);
+                            setQualityLevel(level.id);
                             setShowQualityMenu(false);
                           }}
                         >
                           {level.label}
-                          {state.currentLevel === level.id && <Check className="w-4 h-4" />}
+                          {currentLevel === level.id && <Check className="w-4 h-4" />}
                         </button>
                       ))}
                     </div>
