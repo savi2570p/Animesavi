@@ -859,24 +859,40 @@ export function VideoPlayer({
   }, [qualityLevels]);
 
   // Switch audio track - works with both HLS.js and native
-  // Note: Chrome/Edge on Windows don't support native audioTracks API for MP4
-  // HLS.js handles audio switching properly, native API is Safari/Firefox only
+  // HLS.js is the primary method for audio switching on all platforms
+  // Native API works on Safari/Firefox, but not Chrome/Edge for MP4
   const switchAudioTrack = useCallback((trackId: number) => {
     const video = videoRef.current;
+    const currentPlaybackTime = video?.currentTime || 0;
     
-    // Try HLS.js first - this is the primary method for HLS streams
+    // Try HLS.js first - this is the primary and most reliable method
     if (hlsRef.current && hlsRef.current.audioTracks.length > 0) {
-      console.log('Switching audio track via HLS.js:', trackId);
+      console.log('Switching audio track via HLS.js:', trackId, 'on platform:', navigator.userAgent);
+      
+      // Store current playback position
+      const wasPlaying = !video?.paused;
+      
       hlsRef.current.audioTrack = trackId;
       const track = hlsRef.current.audioTracks[trackId];
+      
+      // Save audio preference
+      localStorage.setItem('preferred_audio_track', trackId.toString());
+      
       toast.success(`Audio: ${track?.name || `Track ${trackId + 1}`}`);
       setCurrentAudioTrack(trackId);
       setSettingsOpen(false);
+      
+      // Resume playback if was playing (some browsers pause on track switch)
+      if (wasPlaying && video) {
+        setTimeout(() => {
+          video.play().catch(() => {});
+        }, 100);
+      }
       return;
     }
     
     // Fallback to native audioTracks API (Safari, Firefox)
-    // Chrome/Edge on Windows don't support this for MP4 files
+    // Note: This doesn't work on Chrome/Edge for MP4 files
     if (video) {
       const nativeAudioTracks = (video as any).audioTracks;
       if (nativeAudioTracks && nativeAudioTracks.length > 0) {
@@ -889,13 +905,22 @@ export function VideoPlayer({
         if (nativeAudioTracks[trackId]) {
           nativeAudioTracks[trackId].enabled = true;
           const track = nativeAudioTracks[trackId];
+          localStorage.setItem('preferred_audio_track', trackId.toString());
           toast.success(`Audio: ${track?.label || `Track ${trackId + 1}`}`);
           setCurrentAudioTrack(trackId);
         }
       } else {
-        // No audio tracks available - inform user
+        // No audio tracks available - inform user with helpful message
         console.warn('No audio tracks available via native API');
-        toast.error('Audio track switching requires HLS stream format. MP4 files with multiple audio tracks are not supported on Windows browsers.');
+        const isChrome = /Chrome/.test(navigator.userAgent) && !/Edge/.test(navigator.userAgent);
+        const isWindows = /Windows/.test(navigator.userAgent);
+        const isAndroid = /Android/.test(navigator.userAgent);
+        
+        if ((isChrome || isWindows) && !isAndroid) {
+          toast.info('Audio track switching works best with HLS streams (.m3u8). For MP4 files, try using Safari or Firefox.');
+        } else {
+          toast.error('Audio track switching is not available for this video');
+        }
       }
     }
     setSettingsOpen(false);

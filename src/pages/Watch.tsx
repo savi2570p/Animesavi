@@ -13,6 +13,7 @@ import { VideoPlayer, ServerType } from '@/components/video/VideoPlayer';
 import { EpisodeList } from '@/components/video/EpisodeList';
 import { RecommendedAnime } from '@/components/home/RecommendedAnime';
 import { WatchParty } from '@/components/WatchParty';
+import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton';
 import { z } from 'zod';
 import {
   ChevronLeft,
@@ -941,7 +942,7 @@ export default function Watch() {
           )}
 
           {/* Episode Navigation */}
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             {prevEpisode && (
               <Button variant="outline" asChild>
                 <Link to={`/watch/${prevEpisode.id}`}>
@@ -958,6 +959,15 @@ export default function Watch() {
                 </Link>
               </Button>
             )}
+            
+            {/* Offline Download Button */}
+            <OfflineDownloadButton
+              videoUrl={episode.video_url}
+              episodeId={episode.id}
+              episodeTitle={episode.title}
+              animeTitle={anime?.title || 'Unknown'}
+            />
+            
             <Button
               variant="outline"
               onClick={() => {

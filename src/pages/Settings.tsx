@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { NotificationSettings } from '@/components/NotificationSettings';
+import { ReleaseReminderSettings } from '@/components/ReleaseReminderSettings';
 import { Settings as SettingsIcon, Moon, Sun, Monitor, Shield, Globe, Keyboard } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -124,6 +125,9 @@ export default function Settings() {
 
         {/* Push Notification Settings */}
         <NotificationSettings />
+
+        {/* Release Reminder Settings */}
+        <ReleaseReminderSettings />
 
         {/* Playback Settings */}
         <Card>
