@@ -11,6 +11,7 @@ import { WelcomePopup } from "@/components/WelcomePopup";
 import { FloatingTelegramButton } from "@/components/FloatingTelegramButton";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { MiniPlayer } from "@/components/video/MiniPlayer";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { useNetworkSpeed } from "@/hooks/useNetworkSpeed";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -61,6 +62,7 @@ const App = () => (
             <WelcomePopup />
             <FloatingTelegramButton />
             <MiniPlayer />
+            <PWAInstallPrompt />
             <NetworkSpeedInitializer />
             <Routes>
               <Route path="/auth" element={<Auth />} />

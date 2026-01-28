@@ -76,7 +76,7 @@ export function WelcomePopup() {
         </DialogContent>
       </Dialog>
 
-      {/* Notice Popup - shows every time unless "Don't show again" is checked */}
+      {/* What's New Popup - shows every time unless "Don't show again" is checked */}
       <Dialog
         open={showNotice}
         onOpenChange={(open) => {
@@ -86,22 +86,42 @@ export function WelcomePopup() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-xl font-heading text-center">
-              📢 Important Notice
+              ✨ What's New
             </DialogTitle>
-            <DialogDescription className="text-center text-base pt-4 leading-relaxed">
-              We are now uploading the latest anime and anime movie also those anime or anime movie which is already released. We updating all completed series or movie which is already released within 7-10 Days. If you want to upload your own anime like older anime or anime movie also if you DUBBED your own anime or anime movie then DM us on telegram Channel we will upload on it with Full Credits.
-            </DialogDescription>
           </DialogHeader>
           
-          <div className="flex justify-center pt-2">
-            <a
-              href="https://t.me/Lv_Savi"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:text-primary/80 underline underline-offset-4 font-medium transition-colors"
-            >
-              Contact
-            </a>
+          <div className="space-y-3 pt-2">
+            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+              <span className="text-lg">🚀</span>
+              <div>
+                <h4 className="font-medium text-foreground">Website Improvement</h4>
+                <p className="text-sm text-muted-foreground">Enhanced performance and faster loading times</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+              <span className="text-lg">💪</span>
+              <div>
+                <h4 className="font-medium text-foreground">More Stable</h4>
+                <p className="text-sm text-muted-foreground">Improved stability across all devices</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+              <span className="text-lg">🐛</span>
+              <div>
+                <h4 className="font-medium text-foreground">Bug Fixed</h4>
+                <p className="text-sm text-muted-foreground">Multiple bugs have been squashed</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+              <span className="text-lg">🎬</span>
+              <div>
+                <h4 className="font-medium text-foreground">Fixed Video Player</h4>
+                <p className="text-sm text-muted-foreground">Better video playback experience</p>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center justify-center gap-2 pt-4">
