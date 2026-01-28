@@ -2,11 +2,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Bell, BellOff, BellRing } from 'lucide-react';
+import { Bell, BellOff, BellRing, Volume2, VolumeX, Heart } from 'lucide-react';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { Separator } from '@/components/ui/separator';
 
 export function NotificationSettings() {
-  const { isSupported, permission, requestPermission } = usePushNotifications();
+  const { isSupported, permission, settings, updateSettings, requestPermission } = usePushNotifications();
 
   if (!isSupported) {
     return (
@@ -35,7 +36,8 @@ export function NotificationSettings() {
           Get notified when new episodes are released for your favorite anime.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
+        {/* Main Notification Toggle */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {permission === 'granted' ? (
@@ -66,6 +68,75 @@ export function NotificationSettings() {
             </Button>
           )}
         </div>
+
+        {permission === 'granted' && (
+          <>
+            <Separator />
+            
+            {/* Notification Preferences */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium">Notification Preferences</h4>
+              
+              {/* New Episodes Toggle */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Bell className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <Label htmlFor="new-episodes">New Episodes</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Get notified when new episodes are uploaded
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="new-episodes"
+                  checked={settings.newEpisodes}
+                  onCheckedChange={(checked) => updateSettings({ newEpisodes: checked })}
+                />
+              </div>
+
+              {/* Favorites Only Toggle */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Heart className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <Label htmlFor="favorites-only">Favorites Only</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Only notify for anime in your favorites
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="favorites-only"
+                  checked={settings.favorites}
+                  onCheckedChange={(checked) => updateSettings({ favorites: checked })}
+                />
+              </div>
+
+              {/* Sound Toggle */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {settings.sound ? (
+                    <Volume2 className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <VolumeX className="h-4 w-4 text-muted-foreground" />
+                  )}
+                  <div>
+                    <Label htmlFor="notification-sound">Notification Sound</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Play sound when notifications arrive
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="notification-sound"
+                  checked={settings.sound}
+                  onCheckedChange={(checked) => updateSettings({ sound: checked })}
+                />
+              </div>
+            </div>
+          </>
+        )}
 
         {permission === 'denied' && (
           <p className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">

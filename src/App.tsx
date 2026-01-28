@@ -12,6 +12,7 @@ import { FloatingTelegramButton } from "@/components/FloatingTelegramButton";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { MiniPlayer } from "@/components/video/MiniPlayer";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useNetworkSpeed } from "@/hooks/useNetworkSpeed";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -32,7 +33,16 @@ import ExternalPlayer from "./pages/ExternalPlayer";
 import EmbedPlayer from "./pages/EmbedPlayer";
 import AnimeSlugRedirect from "./pages/AnimeSlugRedirect";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 30, // 30 minutes (previously cacheTime)
+      retry: 2,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // Network speed test component that runs on app load
 function NetworkSpeedInitializer() {
@@ -59,6 +69,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ScrollToTop />
+            <OfflineIndicator />
             <WelcomePopup />
             <FloatingTelegramButton />
             <MiniPlayer />

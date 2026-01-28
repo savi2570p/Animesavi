@@ -156,8 +156,8 @@ export default function Watch() {
     setShowTelegramPopup(false);
   };
 
-  // Handle server change with loading
-  const handleServerChange = (server: ServerType) => {
+  // Handle server change with optimized loading
+  const handleServerChange = useCallback((server: ServerType) => {
     if (server === activeServer) return;
     
     // Handle EMBED server - open in new tab
@@ -167,15 +167,28 @@ export default function Watch() {
       return;
     }
     
+    // Save preference to localStorage for persistence
+    localStorage.setItem('preferred_video_server', server);
+    
     setServerLoading(true);
     setActiveServer(server);
     
-    // Simulate loading for 2-3 seconds
-    const loadTime = 2000 + Math.random() * 1000;
-    setTimeout(() => {
-      setServerLoading(false);
-    }, loadTime);
-  };
+    // Optimized loading - faster transition with requestAnimationFrame
+    requestAnimationFrame(() => {
+      // Minimal delay for smooth UI transition
+      setTimeout(() => {
+        setServerLoading(false);
+      }, 500);
+    });
+  }, [activeServer, episodeId]);
+
+  // Load saved server preference on mount
+  useEffect(() => {
+    const savedServer = localStorage.getItem('preferred_video_server') as ServerType | null;
+    if (savedServer && ['PLAY', 'SHORT', 'Zex'].includes(savedServer)) {
+      setActiveServer(savedServer);
+    }
+  }, []);
 
   useEffect(() => {
     if (episodeId) {
