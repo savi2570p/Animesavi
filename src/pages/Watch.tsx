@@ -836,15 +836,15 @@ export default function Watch() {
             <Server className="h-5 w-5 text-muted-foreground" />
             <span className="text-muted-foreground font-medium">Server:</span>
             <div className="flex gap-2 flex-wrap">
-              {(['PLAY', 'SHORT', 'Zex', 'EMBED'] as ServerType[]).map((server) => {
-                const displayName = server === 'SHORT' ? 'SAVI.IN' : server === 'EMBED' ? 'Embed Player' : server;
+              {(['PLAY', 'SHORT', 'Zex'] as ServerType[]).map((server) => {
+                const displayName = server === 'SHORT' ? 'SAVI.IN' : server;
                 return (
                   <Button
                     key={server}
                     size="sm"
                     variant={activeServer === server ? 'default' : 'outline'}
                     onClick={() => handleServerChange(server)}
-                    disabled={serverLoading && server !== 'EMBED'}
+                    disabled={serverLoading}
                     className={activeServer === server ? 'anime-button' : ''}
                   >
                     {displayName}
