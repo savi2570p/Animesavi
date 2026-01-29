@@ -14,6 +14,7 @@ import { MiniPlayer } from "@/components/video/MiniPlayer";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useNetworkSpeed } from "@/hooks/useNetworkSpeed";
+import { useBackgroundSync } from "@/hooks/useBackgroundSync";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Browse from "./pages/Browse";
@@ -60,6 +61,19 @@ function NetworkSpeedInitializer() {
   return null;
 }
 
+// Background sync component that runs within AuthProvider context
+function BackgroundSyncInitializer() {
+  const { isSyncing, newEpisodes, lastSyncTime } = useBackgroundSync();
+  
+  useEffect(() => {
+    if (newEpisodes.length > 0) {
+      console.log(`Background sync found ${newEpisodes.length} new episodes`);
+    }
+  }, [newEpisodes]);
+  
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -75,6 +89,7 @@ const App = () => (
             <MiniPlayer />
             <PWAInstallPrompt />
             <NetworkSpeedInitializer />
+            <BackgroundSyncInitializer />
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/external-player" element={<ExternalPlayer />} />

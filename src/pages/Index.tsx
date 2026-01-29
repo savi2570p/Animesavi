@@ -14,6 +14,7 @@ import { EpisodeProgress } from '@/components/home/EpisodeProgress';
 import { ComingSoon } from '@/components/home/ComingSoon';
 import { SocialShare } from '@/components/home/SocialShare';
 import { MostPopular } from '@/components/home/MostPopular';
+import { AnimeCalendar } from '@/components/AnimeCalendar';
 
 export default function Index() {
   const { user } = useAuth();
@@ -69,6 +70,9 @@ export default function Index() {
 
       {/* Coming Soon - Upcoming anime */}
       <ComingSoon />
+
+      {/* Release Calendar */}
+      <AnimeCalendar />
 
       {/* Pending Upload - Anime with no episodes yet */}
       <EpisodeProgress />
