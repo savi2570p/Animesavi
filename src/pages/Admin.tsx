@@ -19,9 +19,11 @@ import {
   TrendingUp,
   FileVideo,
   Globe,
+  Smartphone,
 } from 'lucide-react';
 import { VideoEncodingDashboard } from '@/components/admin/VideoEncodingDashboard';
 import { CDNHealthDashboard } from '@/components/admin/CDNHealthDashboard';
+import { VideoConversionDashboard } from '@/components/admin/VideoConversionDashboard';
 
 interface Application {
   id: string;
@@ -264,6 +266,10 @@ export default function Admin() {
             <FileVideo className="h-4 w-4" />
             Encoding
           </TabsTrigger>
+          <TabsTrigger value="ios-conversion" className="flex items-center gap-2">
+            <Smartphone className="h-4 w-4" />
+            iOS Conversion
+          </TabsTrigger>
           <TabsTrigger value="cdn" className="flex items-center gap-2">
             <Globe className="h-4 w-4" />
             CDN Health
@@ -382,6 +388,10 @@ export default function Admin() {
 
         <TabsContent value="encoding">
           <VideoEncodingDashboard />
+        </TabsContent>
+
+        <TabsContent value="ios-conversion">
+          <VideoConversionDashboard />
         </TabsContent>
 
         <TabsContent value="cdn">

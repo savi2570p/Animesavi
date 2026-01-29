@@ -573,6 +573,80 @@ export type Database = {
         }
         Relationships: []
       }
+      video_conversions: {
+        Row: {
+          audio_codec: string | null
+          conversion_completed_at: string | null
+          conversion_started_at: string | null
+          created_at: string
+          episode_id: string | null
+          error_message: string | null
+          file_size_bytes: number | null
+          id: string
+          ios_file_size_bytes: number | null
+          ios_ready_path: string | null
+          ios_ready_url: string | null
+          is_10bit: boolean | null
+          is_hevc: boolean | null
+          needs_conversion: boolean | null
+          original_path: string | null
+          original_url: string
+          status: string
+          updated_at: string
+          video_codec: string | null
+        }
+        Insert: {
+          audio_codec?: string | null
+          conversion_completed_at?: string | null
+          conversion_started_at?: string | null
+          created_at?: string
+          episode_id?: string | null
+          error_message?: string | null
+          file_size_bytes?: number | null
+          id?: string
+          ios_file_size_bytes?: number | null
+          ios_ready_path?: string | null
+          ios_ready_url?: string | null
+          is_10bit?: boolean | null
+          is_hevc?: boolean | null
+          needs_conversion?: boolean | null
+          original_path?: string | null
+          original_url: string
+          status?: string
+          updated_at?: string
+          video_codec?: string | null
+        }
+        Update: {
+          audio_codec?: string | null
+          conversion_completed_at?: string | null
+          conversion_started_at?: string | null
+          created_at?: string
+          episode_id?: string | null
+          error_message?: string | null
+          file_size_bytes?: number | null
+          id?: string
+          ios_file_size_bytes?: number | null
+          ios_ready_path?: string | null
+          ios_ready_url?: string | null
+          is_10bit?: boolean | null
+          is_hevc?: boolean | null
+          needs_conversion?: boolean | null
+          original_path?: string | null
+          original_url?: string
+          status?: string
+          updated_at?: string
+          video_codec?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_conversions_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: true
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       watch_history: {
         Row: {
           anime_id: string
