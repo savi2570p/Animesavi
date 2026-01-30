@@ -14,6 +14,8 @@ import { EpisodeList } from '@/components/video/EpisodeList';
 import { RecommendedAnime } from '@/components/home/RecommendedAnime';
 import { WatchParty } from '@/components/WatchParty';
 import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton';
+import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
+import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
 import { z } from 'zod';
 import {
   ChevronLeft,
@@ -132,6 +134,8 @@ export default function Watch() {
   const [userProfile, setUserProfile] = useState<{ avatar_url: string | null } | null>(null);
   const ensureHistoryInFlightRef = useRef(false);
 
+  // Device-optimized video URL for iOS compatibility
+  const deviceOptimizedVideo = useDeviceOptimizedVideo(episodeId, episode?.video_url || null);
   // Check if Telegram popup should be shown (once per day)
   useEffect(() => {
     const lastShown = localStorage.getItem(TELEGRAM_POPUP_KEY);
@@ -897,13 +901,23 @@ export default function Watch() {
       {/* Episode Info & Navigation */}
       <div className="container py-6">
         <div className="flex flex-col gap-8">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link to={`/anime/${anime?.id}`} className="hover:text-primary">
-              {anime?.title}
-            </Link>
-            <ChevronRight className="h-4 w-4" />
-            <span>Episode {episode.episode_number}</span>
+          {/* Breadcrumb with Format Indicator */}
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Link to={`/anime/${anime?.id}`} className="hover:text-primary">
+                {anime?.title}
+              </Link>
+              <ChevronRight className="h-4 w-4" />
+              <span>Episode {episode.episode_number}</span>
+            </div>
+            
+            {/* Video Format Indicator */}
+            <VideoFormatIndicator
+              servedFormat={deviceOptimizedVideo.servedFormat}
+              device={deviceOptimizedVideo.device}
+              conversionStatus={deviceOptimizedVideo.conversionStatus}
+              isHLS={deviceOptimizedVideo.videoUrl?.includes('.m3u8') || false}
+            />
           </div>
 
           {/* Anime Title */}

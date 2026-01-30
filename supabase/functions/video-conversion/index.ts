@@ -24,6 +24,50 @@ const generateFFmpegCommand = (inputPath: string, outputPath: string): string =>
   "${outputPath}"`;
 };
 
+// GPU-accelerated FFmpeg command (NVENC)
+const generateGPUFFmpegCommand = (inputPath: string, outputPath: string): string => {
+  return `# GPU Accelerated (NVIDIA NVENC)
+ffmpeg -hwaccel cuda -i "${inputPath}" \\
+  -c:v h264_nvenc \\
+  -preset p4 \\
+  -tune hq \\
+  -rc vbr \\
+  -cq 23 \\
+  -profile:v high \\
+  -level:v 4.1 \\
+  -pix_fmt yuv420p \\
+  -c:a aac \\
+  -b:a 192k \\
+  -ac 2 \\
+  -movflags +faststart \\
+  -sn \\
+  -map 0:v:0 \\
+  -map 0:a:0 \\
+  "${outputPath}"`;
+};
+
+// Generate multi-quality HLS command
+const generateHLSCommand = (inputPath: string, outputDir: string): string => {
+  return `# Multi-quality HLS generation
+ffmpeg -i "${inputPath}" \\
+  -filter_complex "[0:v]split=3[v1][v2][v3]; \\
+    [v1]scale=w=640:h=360:force_original_aspect_ratio=decrease[v360]; \\
+    [v2]scale=w=1280:h=720:force_original_aspect_ratio=decrease[v720]; \\
+    [v3]scale=w=1920:h=1080:force_original_aspect_ratio=decrease[v1080]" \\
+  -map "[v360]" -c:v:0 libx264 -b:v:0 800k -maxrate:v:0 856k -bufsize:v:0 1200k \\
+  -map "[v720]" -c:v:1 libx264 -b:v:1 2800k -maxrate:v:1 2996k -bufsize:v:1 4200k \\
+  -map "[v1080]" -c:v:2 libx264 -b:v:2 5000k -maxrate:v:2 5350k -bufsize:v:2 7500k \\
+  -map 0:a -c:a aac -b:a 128k -ac 2 \\
+  -pix_fmt yuv420p -profile:v high -level:v 4.1 -sn \\
+  -f hls -hls_time 6 -hls_playlist_type vod \\
+  -hls_flags independent_segments \\
+  -hls_segment_type mpegts \\
+  -hls_segment_filename "${outputDir}/segment_%v_%03d.ts" \\
+  -master_pl_name "master.m3u8" \\
+  -var_stream_map "v:0,a:0 v:1,a:0 v:2,a:0" \\
+  "${outputDir}/stream_%v.m3u8"`;
+};
+
 // Detect if video needs conversion based on file extension and metadata
 const needsConversion = (url: string, videoCodec?: string, audioCodec?: string, is10bit?: boolean, isHevc?: boolean): boolean => {
   // MKV always needs conversion for iOS
@@ -119,11 +163,16 @@ Deno.serve(async (req) => {
         let videoUrl = episode.video_url || episode.external_url;
         let servedFormat = 'original';
         let conversionStatus = conversion?.status || 'none';
+        let isHLS = false;
 
         // For iOS, serve iOS-ready version if available
         if (isIOS && conversion?.status === 'completed' && conversion?.ios_ready_url) {
           videoUrl = conversion.ios_ready_url;
           servedFormat = 'ios_ready';
+          // Check if it's HLS
+          if (videoUrl.includes('.m3u8')) {
+            isHLS = true;
+          }
         }
 
         return new Response(
@@ -133,6 +182,11 @@ Deno.serve(async (req) => {
             device: isIOS ? 'ios' : isAndroid ? 'android' : isWindows ? 'windows' : 'other',
             conversionStatus,
             needsConversion: conversion?.needs_conversion || false,
+            isHLS,
+            videoCodec: conversion?.video_codec || null,
+            audioCodec: conversion?.audio_codec || null,
+            is10bit: conversion?.is_10bit || false,
+            isHevc: conversion?.is_hevc || false,
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -163,6 +217,34 @@ Deno.serve(async (req) => {
 
         return new Response(
           JSON.stringify({ conversions: pending }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Get processing conversions (for real-time progress)
+      if (action === 'processing') {
+        const { data: processing, error } = await supabaseClient
+          .from('video_conversions')
+          .select(`
+            *,
+            episodes (
+              title,
+              episode_number,
+              seasons (
+                season_number,
+                anime (
+                  title
+                )
+              )
+            )
+          `)
+          .eq('status', 'processing')
+          .order('conversion_started_at', { ascending: false });
+
+        if (error) throw error;
+
+        return new Response(
+          JSON.stringify({ conversions: processing }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -198,6 +280,7 @@ Deno.serve(async (req) => {
       // Generate FFmpeg command for a specific conversion
       if (action === 'ffmpeg-command') {
         const conversionId = url.searchParams.get('conversionId');
+        const commandType = url.searchParams.get('type') || 'cpu'; // cpu, gpu, hls
         
         if (!conversionId) {
           return new Response(
@@ -223,14 +306,28 @@ Deno.serve(async (req) => {
         const outputPath = inputPath
           .replace('/original/', '/ios_ready/')
           .replace(/\.(mkv|webm|avi)$/i, '.mp4');
+        const hlsOutputDir = inputPath
+          .replace('/original/', '/hls/')
+          .replace(/\.[^.]+$/, '');
 
-        const ffmpegCmd = generateFFmpegCommand(inputPath, outputPath);
+        let ffmpegCmd: string;
+        switch (commandType) {
+          case 'gpu':
+            ffmpegCmd = generateGPUFFmpegCommand(inputPath, outputPath);
+            break;
+          case 'hls':
+            ffmpegCmd = generateHLSCommand(inputPath, hlsOutputDir);
+            break;
+          default:
+            ffmpegCmd = generateFFmpegCommand(inputPath, outputPath);
+        }
 
         return new Response(
           JSON.stringify({ 
             command: ffmpegCmd,
             inputPath,
             outputPath,
+            hlsOutputDir,
             conversion
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -243,6 +340,8 @@ Deno.serve(async (req) => {
 
       // Scan all existing episodes for missing conversion records
       if (action === 'scan-existing') {
+        console.log('Starting scan of existing episodes...');
+        
         const { data: episodes, error: fetchError } = await supabaseClient
           .from('episodes')
           .select('id, video_url')
@@ -266,7 +365,7 @@ Deno.serve(async (req) => {
           if (!existing) {
             const requiresConversion = needsConversion(episode.video_url);
             
-            await supabaseClient
+            const { error: insertError } = await supabaseClient
               .from('video_conversions')
               .insert({
                 episode_id: episode.id,
@@ -276,11 +375,14 @@ Deno.serve(async (req) => {
                 status: requiresConversion ? 'pending' : 'skipped',
               });
             
-            created++;
+            if (!insertError) created++;
+            else console.error('Insert error:', insertError);
           } else {
             skipped++;
           }
         }
+
+        console.log(`Scan complete: created=${created}, skipped=${skipped}`);
 
         return new Response(
           JSON.stringify({ 
@@ -295,7 +397,20 @@ Deno.serve(async (req) => {
 
       // Update conversion status (for external workers to report back)
       if (action === 'update-status') {
-        const { conversionId, status, iosReadyUrl, iosReadyPath, errorMessage, iosFileSizeBytes, videoCodec, audioCodec, is10bit, isHevc } = body;
+        const { 
+          conversionId, 
+          status, 
+          iosReadyUrl, 
+          iosReadyPath, 
+          errorMessage, 
+          iosFileSizeBytes, 
+          videoCodec, 
+          audioCodec, 
+          is10bit, 
+          isHevc,
+          progress,
+          hlsUrl
+        } = body;
 
         if (!conversionId || !status) {
           return new Response(
@@ -315,6 +430,7 @@ Deno.serve(async (req) => {
           if (iosReadyUrl) updateData.ios_ready_url = iosReadyUrl;
           if (iosReadyPath) updateData.ios_ready_path = iosReadyPath;
           if (iosFileSizeBytes) updateData.ios_file_size_bytes = iosFileSizeBytes;
+          if (hlsUrl) updateData.ios_ready_url = hlsUrl; // HLS master playlist URL
         }
         
         if (status === 'failed' && errorMessage) {
@@ -334,6 +450,8 @@ Deno.serve(async (req) => {
           .single();
 
         if (error) throw error;
+
+        console.log(`Status updated: ${conversionId} -> ${status}`);
 
         return new Response(
           JSON.stringify({ success: true, conversion: updated }),
@@ -366,8 +484,33 @@ Deno.serve(async (req) => {
 
         if (error) throw error;
 
+        console.log(`Conversion retried: ${conversionId}`);
+
         return new Response(
           JSON.stringify({ success: true, conversion: updated }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Retry all failed conversions
+      if (action === 'retry-all-failed') {
+        const { data: updated, error } = await supabaseClient
+          .from('video_conversions')
+          .update({ 
+            status: 'pending',
+            error_message: null,
+            conversion_started_at: null,
+            conversion_completed_at: null
+          })
+          .eq('status', 'failed')
+          .select();
+
+        if (error) throw error;
+
+        console.log(`Retried ${updated?.length || 0} failed conversions`);
+
+        return new Response(
+          JSON.stringify({ success: true, count: updated?.length || 0 }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
