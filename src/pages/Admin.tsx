@@ -20,10 +20,12 @@ import {
   FileVideo,
   Globe,
   Smartphone,
+  Zap,
 } from 'lucide-react';
 import { VideoEncodingDashboard } from '@/components/admin/VideoEncodingDashboard';
 import { CDNHealthDashboard } from '@/components/admin/CDNHealthDashboard';
 import { VideoConversionDashboard } from '@/components/admin/VideoConversionDashboard';
+import { HLSConversionDashboard } from '@/components/admin/HLSConversionDashboard';
 
 interface Application {
   id: string;
@@ -270,6 +272,10 @@ export default function Admin() {
             <Smartphone className="h-4 w-4" />
             iOS Conversion
           </TabsTrigger>
+          <TabsTrigger value="hls-system" className="flex items-center gap-2">
+            <Zap className="h-4 w-4" />
+            HLS System
+          </TabsTrigger>
           <TabsTrigger value="cdn" className="flex items-center gap-2">
             <Globe className="h-4 w-4" />
             CDN Health
@@ -392,6 +398,10 @@ export default function Admin() {
 
         <TabsContent value="ios-conversion">
           <VideoConversionDashboard />
+        </TabsContent>
+
+        <TabsContent value="hls-system">
+          <HLSConversionDashboard />
         </TabsContent>
 
         <TabsContent value="cdn">
