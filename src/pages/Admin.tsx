@@ -21,11 +21,13 @@ import {
   Globe,
   Smartphone,
   Zap,
+  Bell,
 } from 'lucide-react';
 import { VideoEncodingDashboard } from '@/components/admin/VideoEncodingDashboard';
 import { CDNHealthDashboard } from '@/components/admin/CDNHealthDashboard';
 import { VideoConversionDashboard } from '@/components/admin/VideoConversionDashboard';
 import { HLSConversionDashboard } from '@/components/admin/HLSConversionDashboard';
+import { ConversionNotifications } from '@/components/admin/ConversionNotifications';
 
 interface Application {
   id: string;
@@ -276,6 +278,10 @@ export default function Admin() {
             <Zap className="h-4 w-4" />
             HLS System
           </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            Notifications
+          </TabsTrigger>
           <TabsTrigger value="cdn" className="flex items-center gap-2">
             <Globe className="h-4 w-4" />
             CDN Health
@@ -402,6 +408,10 @@ export default function Admin() {
 
         <TabsContent value="hls-system">
           <HLSConversionDashboard />
+        </TabsContent>
+
+        <TabsContent value="notifications">
+          <ConversionNotifications />
         </TabsContent>
 
         <TabsContent value="cdn">

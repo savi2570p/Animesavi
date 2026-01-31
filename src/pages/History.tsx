@@ -120,11 +120,15 @@ export default function History() {
     setIsLoading(false);
   };
 
-  const deleteHistoryItem = async (historyId: string, e: React.MouseEvent) => {
-    // Prevent navigation and event bubbling
+  const deleteHistoryItem = async (historyId: string, e: React.MouseEvent | React.TouchEvent) => {
+    // Critical: Stop event propagation to prevent card navigation
     e.preventDefault();
     e.stopPropagation();
-    e.nativeEvent.stopImmediatePropagation();
+    
+    // For touch events on mobile, we need extra protection
+    if ('nativeEvent' in e && e.nativeEvent) {
+      e.nativeEvent.stopImmediatePropagation();
+    }
 
     try {
       const { error } = await supabase
@@ -317,16 +321,13 @@ export default function History() {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                   <Button
                     size="icon"
                     variant="ghost"
                     className="text-muted-foreground hover:text-destructive"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      deleteHistoryItem(item.id, e);
-                    }}
+                    onClick={(e) => deleteHistoryItem(item.id, e)}
+                    onTouchStart={(e) => e.stopPropagation()}
                     type="button"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -376,10 +377,11 @@ export default function History() {
                       size="icon"
                       variant="ghost"
                       className="absolute top-1 right-1 h-6 w-6 text-white/80 hover:text-destructive bg-black/40 hover:bg-black/60 z-10"
-                      onClick={(e) => {
+                      onClick={(e) => deleteHistoryItem(item.id, e)}
+                      onTouchStart={(e) => e.stopPropagation()}
+                      onTouchEnd={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        deleteHistoryItem(item.id, e);
                       }}
                       type="button"
                     >
