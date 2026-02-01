@@ -80,8 +80,8 @@ export function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border/50">
-      <div className="container flex h-14 items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b border-border/50 safe-area-top">
+      <div className="container flex h-14 items-center justify-between gap-2 sm:gap-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 flex-shrink-0 group">
           <img 
@@ -223,36 +223,37 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" asChild className="hidden sm:inline-flex">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex text-sm px-3">
                 <Link to="/auth">Sign In</Link>
               </Button>
-              <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 text-sm px-3 sm:px-4">
                 <Link to="/auth">
-                  Get Started
+                  <span className="hidden xs:inline">Get Started</span>
+                  <span className="xs:hidden">Sign In</span>
                 </Link>
               </Button>
             </div>
           )}
 
           {/* Mobile Search Button */}
-          <form onSubmit={handleSearch} className="md:hidden">
+          <form onSubmit={handleSearch} className="md:hidden flex-shrink-0">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-28 pl-9 pr-2 h-9 bg-card border-border focus:w-36 transition-all duration-200 rounded-lg text-sm"
+                className="w-20 pl-8 pr-2 h-8 bg-card border-border focus:w-28 transition-all duration-200 rounded-lg text-xs"
               />
             </div>
           </form>
 
           {/* Mobile Menu */}
           <Sheet>
-            <SheetTrigger asChild className="lg:hidden">
-              <Button variant="ghost" size="icon" className="h-9 w-9">
+            <SheetTrigger asChild className="lg:hidden flex-shrink-0">
+              <Button variant="ghost" size="icon" className="h-8 w-8">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
