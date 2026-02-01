@@ -15,6 +15,7 @@ import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useNetworkSpeed } from "@/hooks/useNetworkSpeed";
 import { useBackgroundSync } from "@/hooks/useBackgroundSync";
+import { useAutoVideoScan } from "@/hooks/useAutoVideoScan";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Browse from "./pages/Browse";
@@ -74,6 +75,19 @@ function BackgroundSyncInitializer() {
   return null;
 }
 
+// Auto video scan component for MKV conversion queue
+function AutoVideoScanInitializer() {
+  const { hasScanned, scanResult, isScanning } = useAutoVideoScan();
+  
+  useEffect(() => {
+    if (hasScanned && scanResult && scanResult.created > 0) {
+      console.log(`[AutoVideoScan] Queued ${scanResult.created} new videos for iOS conversion`);
+    }
+  }, [hasScanned, scanResult]);
+  
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -90,6 +104,7 @@ const App = () => (
             <PWAInstallPrompt />
             <NetworkSpeedInitializer />
             <BackgroundSyncInitializer />
+            <AutoVideoScanInitializer />
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/external-player" element={<ExternalPlayer />} />
