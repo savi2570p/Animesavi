@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Plus, Trash2, Upload, Loader2, GripVertical } from 'lucide-react';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
+import { VideoFormatConverter } from '@/components/upload/VideoFormatConverter';
 import { supabase } from '@/integrations/supabase/client';
 
 interface BatchEpisode {
@@ -58,6 +59,7 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
   });
   
   const [isUploading, setIsUploading] = useState(false);
+  const [targetFormat, setTargetFormat] = useState<'original' | 'mp4'>('original');
 
   // Persist episodes to sessionStorage whenever they change
   useEffect(() => {
@@ -161,6 +163,14 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Format Converter Option */}
+        <VideoFormatConverter
+          onFormatChange={setTargetFormat}
+          currentFormat={targetFormat}
+          showAsCard={false}
+          compact={true}
+        />
+        
         <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
           {episodes.map((episode, index) => (
             <div 

@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { ArrowLeft, Save, Film, Volume2 } from 'lucide-react';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { IntroOutroEditor } from '@/components/upload/IntroOutroEditor';
+import { VideoFormatConverter } from '@/components/upload/VideoFormatConverter';
 
 const AUDIO_LANGUAGES = [
   { value: 'original', label: 'Original (Japanese)' },
@@ -312,6 +313,12 @@ export default function EpisodeEdit() {
             onChange={setThumbnail}
             folder={`anime/${animeId}/thumbnails`}
             placeholder="https://example.com/thumbnail.jpg"
+          />
+
+          {/* Video Format Converter */}
+          <VideoFormatConverter
+            showAsCard={false}
+            compact={true}
           />
 
           <div className="flex gap-4 pt-4">
