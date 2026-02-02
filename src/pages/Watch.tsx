@@ -822,6 +822,7 @@ export default function Watch() {
             title={episode.title}
             animeTitle={anime?.title || ''}
             episodeNumber={episode.episode_number}
+            seasonNumber={currentSeason?.season_number || 1}
             episodeId={episode.id}
             poster={anime?.cover_image || undefined}
             isMovie={isMovie}
@@ -984,9 +985,11 @@ export default function Watch() {
             {/* Offline Download Button */}
             <OfflineDownloadButton
               videoUrl={episode.video_url}
+              iosVideoUrl={deviceOptimizedVideo.device === 'iOS' ? deviceOptimizedVideo.videoUrl : null}
               episodeId={episode.id}
               episodeTitle={episode.title}
               animeTitle={anime?.title || 'Unknown'}
+              isIOSDevice={deviceOptimizedVideo.device === 'iOS'}
             />
             
             <Button

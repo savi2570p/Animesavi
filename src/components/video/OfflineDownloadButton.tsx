@@ -8,17 +8,20 @@ import {
   Loader2, 
   HardDrive,
   Wifi,
-  WifiOff 
+  WifiOff,
+  Smartphone 
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface OfflineDownloadButtonProps {
   videoUrl: string | null;
+  iosVideoUrl?: string | null; // iOS-converted video URL
   episodeId: string;
   episodeTitle: string;
   animeTitle: string;
   className?: string;
+  isIOSDevice?: boolean;
 }
 
 const OFFLINE_CACHE_NAME = 'anime-offline-videos';
@@ -31,20 +34,27 @@ interface OfflineVideoEntry {
   videoUrl: string;
   cachedAt: string;
   size: number;
+  isIOSOptimized?: boolean;
 }
 
 export function OfflineDownloadButton({
   videoUrl,
+  iosVideoUrl,
   episodeId,
   episodeTitle,
   animeTitle,
   className,
+  isIOSDevice = false,
 }: OfflineDownloadButtonProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isCached, setIsCached] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [cacheSize, setCacheSize] = useState<string>('');
+  const [isIOSOptimized, setIsIOSOptimized] = useState(false);
+
+  // Determine the best video URL to download (prefer iOS-optimized on iOS devices)
+  const effectiveVideoUrl = (isIOSDevice && iosVideoUrl) ? iosVideoUrl : videoUrl;
 
   // Check if video is already cached
   useEffect(() => {
@@ -61,6 +71,7 @@ export function OfflineDownloadButton({
           if (response) {
             setIsCached(true);
             setCacheSize(formatBytes(entry.size));
+            setIsIOSOptimized(entry.isIOSOptimized || false);
           } else {
             // Entry exists but video is not cached - clean up
             removeFromIndex(episodeId);
@@ -72,7 +83,7 @@ export function OfflineDownloadButton({
     };
 
     checkCache();
-  }, [episodeId]);
+  }, [episodeId, effectiveVideoUrl]);
 
   // Monitor online status
   useEffect(() => {
@@ -122,7 +133,9 @@ export function OfflineDownloadButton({
   };
 
   const downloadForOffline = useCallback(async () => {
-    if (!videoUrl) {
+    const urlToDownload = effectiveVideoUrl;
+    
+    if (!urlToDownload) {
       toast.error('No video URL available');
       return;
     }
@@ -144,7 +157,7 @@ export function OfflineDownloadButton({
       const cache = await caches.open(OFFLINE_CACHE_NAME);
 
       // Fetch with progress tracking
-      const response = await fetch(videoUrl);
+      const response = await fetch(urlToDownload);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -191,21 +204,26 @@ export function OfflineDownloadButton({
         },
       });
 
-      await cache.put(videoUrl, cacheResponse);
+      await cache.put(urlToDownload, cacheResponse);
 
-      // Save to index
+      // Save to index with iOS optimization flag
+      const isOptimized = isIOSDevice && iosVideoUrl === urlToDownload;
       saveToIndex({
         episodeId,
         episodeTitle,
         animeTitle,
-        videoUrl,
+        videoUrl: urlToDownload,
         cachedAt: new Date().toISOString(),
         size: receivedLength,
+        isIOSOptimized: isOptimized,
       });
 
       setIsCached(true);
       setCacheSize(formatBytes(receivedLength));
-      toast.success('Video saved for offline viewing!', {
+      setIsIOSOptimized(isOptimized);
+      
+      const formatLabel = isOptimized ? ' (iOS Optimized)' : '';
+      toast.success(`Video saved for offline viewing!${formatLabel}`, {
         description: `${episodeTitle} (${formatBytes(receivedLength)})`,
       });
     } catch (error) {
@@ -215,23 +233,24 @@ export function OfflineDownloadButton({
       setIsDownloading(false);
       setDownloadProgress(0);
     }
-  }, [videoUrl, episodeId, episodeTitle, animeTitle, isOnline]);
+  }, [effectiveVideoUrl, iosVideoUrl, episodeId, episodeTitle, animeTitle, isOnline, isIOSDevice]);
 
   const removeOfflineVideo = useCallback(async () => {
-    if (!videoUrl) return;
+    if (!effectiveVideoUrl) return;
 
     try {
       const cache = await caches.open(OFFLINE_CACHE_NAME);
-      await cache.delete(videoUrl);
+      await cache.delete(effectiveVideoUrl);
       removeFromIndex(episodeId);
       setIsCached(false);
       setCacheSize('');
+      setIsIOSOptimized(false);
       toast.success('Offline video removed');
     } catch (error) {
       console.error('Error removing cached video:', error);
       toast.error('Failed to remove offline video');
     }
-  }, [videoUrl, episodeId]);
+  }, [effectiveVideoUrl, episodeId]);
 
   if (!('caches' in window)) {
     return null; // Don't show button if caching isn't supported
@@ -243,6 +262,9 @@ export function OfflineDownloadButton({
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span>Downloading... {downloadProgress}%</span>
+          {isIOSDevice && iosVideoUrl && (
+            <span className="text-xs text-primary">(iOS Optimized)</span>
+          )}
         </div>
         <Progress value={downloadProgress} className="h-2" />
       </div>
@@ -260,6 +282,7 @@ export function OfflineDownloadButton({
         >
           <CheckCircle2 className="h-4 w-4" />
           Saved Offline
+          {isIOSOptimized && <Smartphone className="h-3 w-3" />}
           {cacheSize && <span className="text-xs opacity-70">({cacheSize})</span>}
         </Button>
         <Button
@@ -279,13 +302,22 @@ export function OfflineDownloadButton({
       variant="outline"
       size="sm"
       onClick={downloadForOffline}
-      disabled={!isOnline || !videoUrl}
+      disabled={!isOnline || !effectiveVideoUrl}
       className={cn("gap-2", className)}
     >
       {isOnline ? (
         <>
-          <HardDrive className="h-4 w-4" />
-          Save Offline
+          {isIOSDevice && iosVideoUrl ? (
+            <>
+              <Smartphone className="h-4 w-4" />
+              Save Offline (iOS)
+            </>
+          ) : (
+            <>
+              <HardDrive className="h-4 w-4" />
+              Save Offline
+            </>
+          )}
         </>
       ) : (
         <>

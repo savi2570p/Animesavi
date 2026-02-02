@@ -41,6 +41,7 @@ import { BufferingIndicator } from './BufferingIndicator';
 import { VolumeSlider } from './VolumeSlider';
 import { GestureIndicator } from './GestureIndicator';
 import { MobileMuteIndicator } from './MobileMuteIndicator';
+import { VideoPlayerInfoOverlay } from './VideoPlayerInfoOverlay';
 import { useVideoGestures } from '@/hooks/useVideoGestures';
 
 
@@ -74,6 +75,7 @@ interface VideoPlayerProps {
   title: string;
   animeTitle: string;
   episodeNumber: number;
+  seasonNumber?: number;
   episodeId: string;
   poster?: string;
   isMovie?: boolean;
@@ -197,6 +199,7 @@ export function VideoPlayer({
   title,
   animeTitle,
   episodeNumber,
+  seasonNumber = 1,
   episodeId,
   poster,
   isMovie = false,
@@ -1940,6 +1943,14 @@ export function VideoPlayer({
         isVisible={!shouldUseIframe && !!effectiveVideoUrl}
       />
 
+      {/* Video Player Info Overlay - Anime Title & Episode/Season */}
+      <VideoPlayerInfoOverlay
+        animeTitle={animeTitle}
+        episodeNumber={episodeNumber}
+        seasonNumber={seasonNumber}
+        isVisible={showControls && !isMovie}
+      />
+
       {/* Quality Overlay */}
       <QualityOverlay
         currentBitrate={currentBitrate}
@@ -1949,7 +1960,7 @@ export function VideoPlayer({
         isAutoQuality={isAutoQuality}
         onQualityChange={switchQualityLevel}
         isVisible={showControls && qualityLevels.length > 0}
-        position="top-right"
+        position="bottom-left"
       />
 
       {/* Gesture Indicator for mobile swipe controls */}
