@@ -42,6 +42,7 @@ import { VolumeSlider } from './VolumeSlider';
 import { GestureIndicator } from './GestureIndicator';
 import { MobileMuteIndicator } from './MobileMuteIndicator';
 import { VideoPlayerInfoOverlay } from './VideoPlayerInfoOverlay';
+import { PremiumLoader } from './PremiumLoader';
 import { useVideoGestures } from '@/hooks/useVideoGestures';
 
 
@@ -301,6 +302,10 @@ export function VideoPlayer({
   // Download verification dialog state
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
   
+  // Premium loading state - Netflix-style loader
+  const [showPremiumLoader, setShowPremiumLoader] = useState(true);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  
   // Double-tap state for mobile seek
   const lastTapRef = useRef<{ time: number; x: number }>({ time: 0, x: 0 });
   const [doubleTapSide, setDoubleTapSide] = useState<'left' | 'right' | null>(null);
@@ -378,6 +383,8 @@ export function VideoPlayer({
     setProgress(0);
     setCurrentTime(0);
     setDuration(0);
+    setShowPremiumLoader(true);
+    setHasUserInteracted(false);
     
     if (processingTimerRef.current) {
       clearInterval(processingTimerRef.current);
@@ -1937,10 +1944,13 @@ export function VideoPlayer({
       onMouseLeave={() => isPlaying && !settingsOpen && setShowControls(false)}
     >
 
-      {/* Buffering Indicator */}
+      {/* Premium Loading Animation - Netflix-style loader */}
+      <PremiumLoader isVisible={showPremiumLoader && !shouldUseIframe && !!effectiveVideoUrl} />
+
+      {/* Buffering Indicator - only show after initial load */}
       <BufferingIndicator 
         videoRef={videoRef}
-        isVisible={!shouldUseIframe && !!effectiveVideoUrl}
+        isVisible={!shouldUseIframe && !!effectiveVideoUrl && !showPremiumLoader}
       />
 
       {/* Video Player Info Overlay - Anime Title & Episode/Season */}
@@ -2111,6 +2121,9 @@ export function VideoPlayer({
         onTimeUpdate={handleTimeUpdate}
         onPlay={() => {
           setIsPlaying(true);
+          setHasUserInteracted(true);
+          // Hide premium loader on play
+          setShowPremiumLoader(false);
           // Check if video started muted on mobile (autoplay policy)
           if (isMobile && videoRef.current?.muted) {
             setWasMutedForAutoplay(true);
@@ -2125,10 +2138,21 @@ export function VideoPlayer({
             setVideoError(false);
           }
         }}
-        onCanPlay={() => setVideoError(false)}
+        onCanPlay={() => {
+          setVideoError(false);
+          // Hide premium loader when video is ready
+          setShowPremiumLoader(false);
+        }}
+        onCanPlayThrough={() => {
+          // Ensure loader is hidden when fully ready
+          setShowPremiumLoader(false);
+        }}
         onWaiting={() => {
           // Handle buffering state for mobile networks
-          console.log('Video buffering...');
+          // Only show buffering if already playing (not initial load)
+          if (hasUserInteracted) {
+            console.log('Video buffering...');
+          }
         }}
         onStalled={() => {
           // Handle stalled playback - common on mobile
@@ -2159,6 +2183,9 @@ export function VideoPlayer({
             error: error ? { code: error.code, message: error.message } : null
           });
           
+          // Hide loader on error
+          setShowPremiumLoader(false);
+          
           // Only show error for actual failures, not for empty src or aborted loads
           if (video.src && video.networkState === 3 && video.readyState === 0) {
             // Retry once before showing error
@@ -2172,7 +2199,6 @@ export function VideoPlayer({
             }, 2000);
           }
         }}
-        poster={poster}
         autoPlay
         playsInline
         webkit-playsinline="true"
@@ -2181,7 +2207,7 @@ export function VideoPlayer({
         x5-video-player-fullscreen="true"
         x5-video-orientation="landscape"
         x5-playsinline="true"
-        preload={isMobile ? 'metadata' : 'auto'}
+        preload="auto"
         muted={isMobile}
         controlsList="nodownload noremoteplayback"
         disablePictureInPicture={false}

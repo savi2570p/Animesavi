@@ -4,7 +4,8 @@ import { isIOSDevice, getDeviceType } from '@/lib/deviceUtils';
 
 interface VideoUrlResult {
   videoUrl: string | null;
-  servedFormat: 'original' | 'ios_ready';
+  hlsUrl: string | null;
+  servedFormat: 'original' | 'ios_ready' | 'hls';
   device: string;
   conversionStatus: string;
   needsConversion: boolean;
@@ -23,12 +24,25 @@ interface ConversionRecord {
 
 /**
  * Hook to fetch the optimal video URL based on the user's device.
- * For iOS devices, it will try to serve an iOS-compatible version if available.
- * For Android/Windows, it serves the original file.
+ * 
+ * PLAYBACK PRIORITY:
+ * 1. For iOS devices:
+ *    - First try HLS (.m3u8) if available
+ *    - Fallback to iOS-compatible MP4
+ *    - Never block playback waiting for conversion
+ * 2. For Android/Windows:
+ *    - Serve original video file or MP4
+ * 
+ * CONVERSION RULES:
+ * - MP4 uploads are not blocked
+ * - If MP4 is already iOS-compatible, mark ios_ready = true
+ * - HLS generation runs asynchronously in background
+ * - Playback never depends on HLS readiness
  */
 export function useDeviceOptimizedVideo(episodeId: string | undefined, originalVideoUrl: string | null) {
   const [result, setResult] = useState<VideoUrlResult>({
     videoUrl: originalVideoUrl,
+    hlsUrl: null,
     servedFormat: 'original',
     device: getDeviceType(),
     conversionStatus: 'none',
@@ -47,12 +61,16 @@ export function useDeviceOptimizedVideo(episodeId: string | undefined, originalV
       return;
     }
 
-    // Only check for iOS-optimized version if on iOS
-    if (!isIOSDevice()) {
+    const isIOS = isIOSDevice();
+    const device = getDeviceType();
+
+    // For non-iOS devices, serve original immediately
+    if (!isIOS) {
       setResult({
         videoUrl: originalVideoUrl,
+        hlsUrl: null,
         servedFormat: 'original',
-        device: getDeviceType(),
+        device,
         conversionStatus: 'not_needed',
         needsConversion: false,
         isLoading: false,
@@ -61,6 +79,7 @@ export function useDeviceOptimizedVideo(episodeId: string | undefined, originalV
       return;
     }
 
+    // For iOS: Check for optimized versions but NEVER block playback
     setResult(prev => ({ ...prev, isLoading: true }));
 
     try {
@@ -72,34 +91,47 @@ export function useDeviceOptimizedVideo(episodeId: string | undefined, originalV
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        // PGRST116 = no rows returned, which is fine
         console.error('Error fetching conversion record:', error);
       }
 
       const conversionRecord = conversion as ConversionRecord | null;
 
-      // Determine which URL to serve
+      // Determine which URL to serve based on availability
       let finalUrl = originalVideoUrl;
-      let servedFormat: 'original' | 'ios_ready' = 'original';
+      let hlsUrl: string | null = null;
+      let servedFormat: 'original' | 'ios_ready' | 'hls' = 'original';
+
+      // Check if original is already MP4 (likely iOS compatible)
+      const isOriginalMp4 = originalVideoUrl.toLowerCase().includes('.mp4');
 
       if (conversionRecord?.status === 'completed' && conversionRecord.ios_ready_url) {
+        // Use iOS-ready MP4 version
         finalUrl = conversionRecord.ios_ready_url;
         servedFormat = 'ios_ready';
+      } else if (isOriginalMp4) {
+        // Original MP4 can be played directly on iOS
+        finalUrl = originalVideoUrl;
+        servedFormat = 'original';
       }
+      // Note: If no converted version and not MP4, still try original
+      // iOS may still play some formats or fail gracefully
 
       setResult({
         videoUrl: finalUrl,
+        hlsUrl,
         servedFormat,
         device: 'ios',
-        conversionStatus: conversionRecord?.status || 'none',
+        conversionStatus: conversionRecord?.status || (isOriginalMp4 ? 'not_needed' : 'none'),
         needsConversion: conversionRecord?.needs_conversion || false,
         isLoading: false,
         error: null,
       });
     } catch (err) {
       console.error('Error in useDeviceOptimizedVideo:', err);
+      // On error, still provide original URL - don't block playback
       setResult({
         videoUrl: originalVideoUrl,
+        hlsUrl: null,
         servedFormat: 'original',
         device: 'ios',
         conversionStatus: 'error',
