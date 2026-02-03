@@ -15,7 +15,6 @@ import { RecommendedAnime } from '@/components/home/RecommendedAnime';
 import { WatchParty } from '@/components/WatchParty';
 import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton';
 import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
-import { IOSConversionWarning } from '@/components/video/IOSConversionWarning';
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
 import { z } from 'zod';
 import {
@@ -761,12 +760,6 @@ export default function Watch() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* iOS Conversion Warning Banner */}
-      <IOSConversionWarning
-        conversionStatus={deviceOptimizedVideo.conversionStatus}
-        servedFormat={deviceOptimizedVideo.servedFormat}
-      />
-
       {/* Telegram Popup */}
       {showTelegramPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
@@ -919,13 +912,15 @@ export default function Watch() {
               <span>Episode {episode.episode_number}</span>
             </div>
             
-            {/* Video Format Indicator */}
-            <VideoFormatIndicator
-              servedFormat={deviceOptimizedVideo.servedFormat}
-              device={deviceOptimizedVideo.device}
-              conversionStatus={deviceOptimizedVideo.conversionStatus}
-              isHLS={deviceOptimizedVideo.videoUrl?.includes('.m3u8') || false}
-            />
+            {/* Video Format Indicator - Only visible to admin/uploader */}
+            {(isAdmin || isUploader) && (
+              <VideoFormatIndicator
+                servedFormat={deviceOptimizedVideo.servedFormat}
+                device={deviceOptimizedVideo.device}
+                conversionStatus={deviceOptimizedVideo.conversionStatus}
+                isHLS={deviceOptimizedVideo.videoUrl?.includes('.m3u8') || false}
+              />
+            )}
           </div>
 
           {/* Anime Title */}
