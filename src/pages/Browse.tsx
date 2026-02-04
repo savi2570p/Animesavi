@@ -7,6 +7,7 @@ import { Search, Filter, Play, Star, Sparkles, TrendingUp, Clock, Film, Tv, Chec
 import { cn } from '@/lib/utils';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { MostPopularSection } from '@/components/browse/MostPopularSection';
+import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
 
 const ALLOWED_GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports'] as const;
 const MAX_SEARCH_LENGTH = 100;
@@ -400,6 +401,9 @@ export default function Browse() {
 
   return (
     <div className="min-h-screen">
+      {/* Content Navigation Tabs */}
+      <ContentNavTabs />
+      
       {/* No Episodes Popup */}
       <NoEpisodesPopup
         isOpen={noEpisodesPopup.isOpen}
