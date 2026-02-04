@@ -34,6 +34,10 @@ import NotFound from "./pages/NotFound";
 import ExternalPlayer from "./pages/ExternalPlayer";
 import EmbedPlayer from "./pages/EmbedPlayer";
 import AnimeSlugRedirect from "./pages/AnimeSlugRedirect";
+import LatestSeriesPage from "./pages/LatestSeriesPage";
+import LatestEpisodesPage from "./pages/LatestEpisodesPage";
+import LatestMoviesPage from "./pages/LatestMoviesPage";
+import PendingUploadPage from "./pages/PendingUploadPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -113,6 +117,10 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 {/* Schedule route removed */}
                 <Route path="/browse" element={<Browse />} />
+                <Route path="/latest-series" element={<LatestSeriesPage />} />
+                <Route path="/latest-episodes" element={<LatestEpisodesPage />} />
+                <Route path="/latest-movies" element={<LatestMoviesPage />} />
+                <Route path="/pending-upload" element={<PendingUploadPage />} />
                 <Route path="/anime/:id" element={<AnimeDetail />} />
                 <Route path="/watch/:episodeId" element={<Watch />} />
                 <Route path="/favorites" element={<Favorites />} />
