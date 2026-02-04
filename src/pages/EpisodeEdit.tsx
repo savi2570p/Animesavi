@@ -21,7 +21,11 @@ const AUDIO_LANGUAGES = [
   { value: 'Tamil', label: 'Tamil DUB' },
   { value: 'Telugu', label: 'Telugu DUB' },
   { value: 'Korean', label: 'Korean' },
-  { value: 'Chinese', label: 'Chinese' },
+  { value: 'Chinese', label: 'Chinese (Mandarin)' },
+  { value: 'Cantonese', label: 'Chinese (Cantonese)' },
+  { value: 'Thai', label: 'Thai' },
+  { value: 'Vietnamese', label: 'Vietnamese' },
+  { value: 'Indonesian', label: 'Indonesian' },
 ];
 
 interface Episode {

@@ -25,6 +25,13 @@ import {
   Info,
   Keyboard,
 } from 'lucide-react';
+import { 
+  getAudioTrackLabel, 
+  getSubtitleTrackLabel, 
+  getPreferredAudioTrack,
+  normalizeLanguageCode,
+  LANGUAGE_CODE_MAP
+} from '@/lib/audioLanguageUtils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   DropdownMenu,
@@ -426,11 +433,12 @@ export function VideoPlayer({
           
           // For Safari, use native audioTracks and textTracks API
           const detectNativeTracks = () => {
-            // Audio tracks
+            // Audio tracks with advanced multilingual detection
             const nativeAudioTracks = (video as any).audioTracks;
             if (nativeAudioTracks && nativeAudioTracks.length > 0) {
               const tracks: AudioTrackInfo[] = [];
-              let hindiTrackIndex = -1;
+              const trackInfoForSelection: Array<{ label: string; lang: string; index: number }> = [];
+              
               for (let i = 0; i < nativeAudioTracks.length; i++) {
                 const track = nativeAudioTracks[i];
                 const label = getAudioLabel(track.label, track.language, i);
@@ -440,23 +448,28 @@ export function VideoPlayer({
                   language: track.language || 'Unknown',
                   enabled: track.enabled,
                 });
+                trackInfoForSelection.push({
+                  label: track.label || '',
+                  lang: track.language || '',
+                  index: i,
+                });
                 if (track.enabled) setCurrentAudioTrack(i);
-                // Check for Hindi track
-                if (label.toLowerCase().includes('hindi') || track.language?.toLowerCase().includes('hin') || track.language === 'hi') {
-                  hindiTrackIndex = i;
-                }
               }
               setAudioTracks(tracks);
-              // Default to Hindi if available
-              if (hindiTrackIndex >= 0 && nativeAudioTracks[hindiTrackIndex]) {
+              
+              // Use advanced preference-based selection
+              const preferredIndex = getPreferredAudioTrack(trackInfoForSelection, animeTitle);
+              console.log('Safari preferred audio track:', preferredIndex, 'for anime:', animeTitle);
+              
+              if (preferredIndex >= 0 && nativeAudioTracks[preferredIndex]) {
                 for (let i = 0; i < nativeAudioTracks.length; i++) {
-                  nativeAudioTracks[i].enabled = i === hindiTrackIndex;
+                  nativeAudioTracks[i].enabled = i === preferredIndex;
                 }
-                setCurrentAudioTrack(hindiTrackIndex);
+                setCurrentAudioTrack(preferredIndex);
               }
             }
             
-            // Subtitle tracks
+            // Subtitle tracks with advanced detection
             const nativeTextTracks = video.textTracks;
             if (nativeTextTracks && nativeTextTracks.length > 0) {
               const subs: SubtitleTrackInfo[] = [];
@@ -541,33 +554,31 @@ export function VideoPlayer({
               levels: data.levels
             });
             
-            // Audio tracks
+            // Audio tracks with advanced multilingual detection
             if (data.audioTracks && data.audioTracks.length > 0) {
-              let hindiTrackIndex = -1;
-              let englishTrackIndex = -1;
-              const tracks: AudioTrackInfo[] = data.audioTracks.map((track, index) => {
-                const label = getAudioLabel(track.name, track.lang, index);
-                // Check for Hindi track
-                if (label.toLowerCase().includes('hindi') || track.lang?.toLowerCase().includes('hin') || track.lang === 'hi') {
-                  hindiTrackIndex = index;
-                }
-                // Check for English track
-                if (label.toLowerCase().includes('english') || track.lang?.toLowerCase().includes('eng') || track.lang === 'en') {
-                  englishTrackIndex = index;
-                }
-                return {
-                  id: track.id,
-                  label,
-                  language: track.lang || 'Unknown',
-                  enabled: index === hls.audioTrack,
-                };
-              });
+              const tracks: AudioTrackInfo[] = data.audioTracks.map((track, index) => ({
+                id: track.id,
+                label: getAudioLabel(track.name, track.lang, index),
+                language: track.lang || 'Unknown',
+                enabled: index === hls.audioTrack,
+              }));
               setAudioTracks(tracks);
               
-              // Default audio selection - prefer Hindi if available
-              if (hindiTrackIndex >= 0) {
-                hls.audioTrack = hindiTrackIndex;
-                setCurrentAudioTrack(hindiTrackIndex);
+              // Use advanced audio track selection based on content and preferences
+              const preferredIndex = getPreferredAudioTrack(
+                data.audioTracks.map((t, i) => ({ 
+                  label: t.name || '', 
+                  lang: t.lang || '', 
+                  index: i 
+                })),
+                animeTitle
+              );
+              
+              console.log('Preferred audio track:', preferredIndex, 'for anime:', animeTitle);
+              
+              if (preferredIndex >= 0 && preferredIndex < data.audioTracks.length) {
+                hls.audioTrack = preferredIndex;
+                setCurrentAudioTrack(preferredIndex);
               } else {
                 setCurrentAudioTrack(hls.audioTrack);
               }
@@ -717,11 +728,12 @@ export function VideoPlayer({
         
         // Try to detect audio tracks for MP4/MKV with multiple audio streams
         const detectNativeTracks = () => {
-          // Audio tracks
+          // Audio tracks with advanced multilingual detection
           const nativeAudioTracks = (video as any).audioTracks;
           if (nativeAudioTracks && nativeAudioTracks.length > 0) {
             const tracks: AudioTrackInfo[] = [];
-            let hindiTrackIndex = -1;
+            const trackInfoForSelection: Array<{ label: string; lang: string; index: number }> = [];
+            
             for (let i = 0; i < nativeAudioTracks.length; i++) {
               const track = nativeAudioTracks[i];
               const label = getAudioLabel(track.label, track.language, i);
@@ -731,22 +743,28 @@ export function VideoPlayer({
                 language: track.language || 'Unknown',
                 enabled: track.enabled,
               });
+              trackInfoForSelection.push({
+                label: track.label || '',
+                lang: track.language || '',
+                index: i,
+              });
               if (track.enabled) setCurrentAudioTrack(i);
-              if (label.toLowerCase().includes('hindi') || track.language?.toLowerCase().includes('hin') || track.language === 'hi') {
-                hindiTrackIndex = i;
-              }
             }
             setAudioTracks(tracks);
-            // Default to Hindi if available
-            if (hindiTrackIndex >= 0) {
+            
+            // Use advanced preference-based selection
+            const preferredIndex = getPreferredAudioTrack(trackInfoForSelection, animeTitle);
+            console.log('Native preferred audio track:', preferredIndex, 'for anime:', animeTitle);
+            
+            if (preferredIndex >= 0 && nativeAudioTracks[preferredIndex]) {
               for (let i = 0; i < nativeAudioTracks.length; i++) {
-                nativeAudioTracks[i].enabled = i === hindiTrackIndex;
+                nativeAudioTracks[i].enabled = i === preferredIndex;
               }
-              setCurrentAudioTrack(hindiTrackIndex);
+              setCurrentAudioTrack(preferredIndex);
             }
           }
           
-          // Subtitle tracks
+          // Subtitle tracks with advanced detection
           const nativeTextTracks = video.textTracks;
           if (nativeTextTracks && nativeTextTracks.length > 0) {
             const subs: SubtitleTrackInfo[] = [];
@@ -786,47 +804,16 @@ export function VideoPlayer({
     };
   }, [effectiveVideoUrl]);
 
-  // Helper to get readable audio labels with Tamil and Telugu support
-  const getAudioLabel = (label: string | undefined, lang: string | undefined, index: number): string => {
-    const language = (lang || '').toLowerCase();
-    
-    if (label && label.trim()) return label;
-    
-    if (language.includes('hin') || language === 'hi') return '🇮🇳 Hindi';
-    if (language.includes('eng') || language === 'en') return '🇬🇧 English';
-    if (language.includes('tam') || language === 'ta') return '🇮🇳 Tamil';
-    if (language.includes('tel') || language === 'te') return '🇮🇳 Telugu';
-    if (language.includes('jpn') || language === 'ja' || language.includes('jap')) return '🇯🇵 Japanese';
-    if (language.includes('spa') || language === 'es') return '🇪🇸 Spanish';
-    if (language.includes('fra') || language === 'fr') return '🇫🇷 French';
-    if (language.includes('ger') || language === 'de') return '🇩🇪 German';
-    if (language.includes('ita') || language === 'it') return '🇮🇹 Italian';
-    if (language.includes('por') || language === 'pt') return '🇧🇷 Portuguese';
-    if (language.includes('kor') || language === 'ko') return '🇰🇷 Korean';
-    if (language.includes('chi') || language === 'zh') return '🇨🇳 Chinese';
-    
-    return `Audio ${index + 1}`;
-  };
+  // Advanced multilingual audio label detection
+  // Uses centralized utility for consistent language detection across the app
+  const getAudioLabel = useCallback((label: string | undefined, lang: string | undefined, index: number): string => {
+    return getAudioTrackLabel(label, lang, index, animeTitle);
+  }, [animeTitle]);
 
-  // Helper to get readable subtitle labels
-  const getSubtitleLabel = (label: string | undefined, lang: string | undefined, index: number): string => {
-    const language = (lang || '').toLowerCase();
-    
-    if (label && label.trim()) return label;
-    
-    if (language.includes('hin') || language === 'hi') return '🇮🇳 Hindi';
-    if (language.includes('eng') || language === 'en') return '🇬🇧 English';
-    if (language.includes('jpn') || language === 'ja' || language.includes('jap')) return '🇯🇵 Japanese';
-    if (language.includes('spa') || language === 'es') return '🇪🇸 Spanish';
-    if (language.includes('fra') || language === 'fr') return '🇫🇷 French';
-    if (language.includes('ger') || language === 'de') return '🇩🇪 German';
-    if (language.includes('ita') || language === 'it') return '🇮🇹 Italian';
-    if (language.includes('por') || language === 'pt') return '🇧🇷 Portuguese';
-    if (language.includes('kor') || language === 'ko') return '🇰🇷 Korean';
-    if (language.includes('chi') || language === 'zh') return '🇨🇳 Chinese';
-    
-    return `Subtitle ${index + 1}`;
-  };
+  // Advanced multilingual subtitle label detection
+  const getSubtitleLabel = useCallback((label: string | undefined, lang: string | undefined, index: number): string => {
+    return getSubtitleTrackLabel(label, lang, index);
+  }, []);
 
   // Helper to get readable quality labels
   const getQualityLabel = (height: number, bitrate: number): string => {
