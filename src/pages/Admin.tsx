@@ -22,12 +22,14 @@ import {
   Smartphone,
   Zap,
   Bell,
+   Activity,
 } from 'lucide-react';
 import { VideoEncodingDashboard } from '@/components/admin/VideoEncodingDashboard';
 import { CDNHealthDashboard } from '@/components/admin/CDNHealthDashboard';
 import { VideoConversionDashboard } from '@/components/admin/VideoConversionDashboard';
 import { HLSConversionDashboard } from '@/components/admin/HLSConversionDashboard';
 import { ConversionNotifications } from '@/components/admin/ConversionNotifications';
+ import { ConversionHealthDashboard } from '@/components/admin/ConversionHealthDashboard';
 
 interface Application {
   id: string;
@@ -278,6 +280,10 @@ export default function Admin() {
             <Zap className="h-4 w-4" />
             HLS System
           </TabsTrigger>
+           <TabsTrigger value="health" className="flex items-center gap-2">
+             <Activity className="h-4 w-4" />
+             Health
+           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
             Notifications
@@ -410,6 +416,10 @@ export default function Admin() {
           <HLSConversionDashboard />
         </TabsContent>
 
+         <TabsContent value="health">
+           <ConversionHealthDashboard />
+         </TabsContent>
+ 
         <TabsContent value="notifications">
           <ConversionNotifications />
         </TabsContent>

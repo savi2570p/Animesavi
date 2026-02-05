@@ -514,6 +514,181 @@ Deno.serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+
+       // Fix all old anime - repair all videos that need conversion
+       if (action === 'fix-all-old') {
+         console.log('Starting fix all old anime process...');
+         
+         // Get all videos that need repair
+         const { data: videos, error: fetchError } = await supabaseClient
+           .from('video_conversions')
+           .select('id, original_url, status, needs_conversion, ios_ready_url')
+           .or('status.eq.failed,status.eq.pending,ios_ready_url.is.null');
+ 
+         if (fetchError) throw fetchError;
+ 
+         let repaired = 0;
+         let skipped = 0;
+         let failed = 0;
+ 
+         for (const video of videos || []) {
+           // Skip if already completed with iOS-ready URL
+           if (video.status === 'completed' && video.ios_ready_url) {
+             skipped++;
+             continue;
+           }
+ 
+           // Determine if needs conversion based on file extension
+           const originalUrl = video.original_url.toLowerCase();
+           const needsConversion = 
+             originalUrl.endsWith('.mkv') ||
+             originalUrl.endsWith('.webm') ||
+             originalUrl.endsWith('.avi');
+ 
+           // Queue for conversion
+           const { error: updateError } = await supabaseClient
+             .from('video_conversions')
+             .update({
+               status: 'pending',
+               error_message: null,
+               conversion_started_at: null,
+               conversion_completed_at: null,
+               needs_conversion: needsConversion,
+             })
+             .eq('id', video.id);
+ 
+           if (updateError) {
+             failed++;
+             console.error(`Failed to queue ${video.id}:`, updateError);
+           } else {
+             repaired++;
+           }
+         }
+ 
+         console.log(`Fix all complete: repaired=${repaired}, skipped=${skipped}, failed=${failed}`);
+ 
+         return new Response(
+           JSON.stringify({
+             success: true,
+             message: 'Fix all old anime completed',
+             repaired,
+             skipped,
+             failed,
+             total: videos?.length || 0,
+           }),
+           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+         );
+       }
+ 
+       // Get health stats for dashboard
+       if (action === 'health-stats') {
+         const { data: conversions, error } = await supabaseClient
+           .from('video_conversions')
+           .select('status, ios_ready_url, needs_conversion, is_hevc, is_10bit');
+ 
+         if (error) throw error;
+ 
+         const stats = {
+           total: conversions?.length || 0,
+           healthy: 0,
+           processing: 0,
+           pending: 0,
+           failed: 0,
+           iosRisk: 0,
+         };
+ 
+         conversions?.forEach(row => {
+           if (row.status === 'completed' && row.ios_ready_url) {
+             stats.healthy++;
+           } else if (row.status === 'processing') {
+             stats.processing++;
+           } else if (row.status === 'pending') {
+             stats.pending++;
+           } else if (row.status === 'failed') {
+             stats.failed++;
+           }
+ 
+           // Check for iOS risk
+           if (
+             row.status === 'failed' ||
+             (row.status === 'pending' && row.needs_conversion) ||
+             (!row.ios_ready_url && row.needs_conversion)
+           ) {
+             stats.iosRisk++;
+           }
+         });
+ 
+         return new Response(
+           JSON.stringify({ stats }),
+           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+         );
+       }
+
+       // Auto-process on upload - called after video upload
+       if (action === 'auto-process') {
+         const { episodeId, videoUrl } = body;
+ 
+         if (!episodeId || !videoUrl) {
+           return new Response(
+             JSON.stringify({ error: 'episodeId and videoUrl are required' }),
+             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+           );
+         }
+ 
+         console.log(`Auto-processing video for episode ${episodeId}: ${videoUrl}`);
+ 
+         // Check if conversion record already exists
+         const { data: existing } = await supabaseClient
+           .from('video_conversions')
+           .select('id')
+           .eq('episode_id', episodeId)
+           .single();
+ 
+         // Determine if needs conversion
+         const requiresConversion = needsConversion(videoUrl);
+ 
+         if (existing) {
+           // Update existing record
+           const { error: updateError } = await supabaseClient
+             .from('video_conversions')
+             .update({
+               original_url: videoUrl,
+               original_path: videoUrl,
+               needs_conversion: requiresConversion,
+               status: requiresConversion ? 'pending' : 'skipped',
+               error_message: null,
+             })
+             .eq('id', existing.id);
+ 
+           if (updateError) throw updateError;
+ 
+           console.log(`Updated existing conversion record for episode ${episodeId}`);
+         } else {
+           // Create new record
+           const { error: insertError } = await supabaseClient
+             .from('video_conversions')
+             .insert({
+               episode_id: episodeId,
+               original_url: videoUrl,
+               original_path: videoUrl,
+               needs_conversion: requiresConversion,
+               status: requiresConversion ? 'pending' : 'skipped',
+             });
+ 
+           if (insertError) throw insertError;
+ 
+           console.log(`Created conversion record for episode ${episodeId}`);
+         }
+ 
+         return new Response(
+           JSON.stringify({
+             success: true,
+             needsConversion: requiresConversion,
+             status: requiresConversion ? 'queued' : 'skipped',
+           }),
+           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+         );
+       }
     }
 
     return new Response(
