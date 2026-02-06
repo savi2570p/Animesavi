@@ -331,27 +331,38 @@ export function getPreferredAudioTrack(
 ): number {
   if (tracks.length === 0) return 0;
   
-  // Priority order: Japanese first (default for anime), then user preference
-  const priorityOrder = userPreference 
-    ? [userPreference, 'ja', 'jpn', 'hi', 'en', 'zh']
-    : ['ja', 'jpn', 'hi', 'en', 'zh'];
+  // Check for saved user preference from localStorage
+  const savedPreference = typeof window !== 'undefined' 
+    ? localStorage.getItem('preferred_audio_language') 
+    : null;
+  
+  const effectivePreference = userPreference || savedPreference;
   
   // For Donghua, prioritize Chinese
   if (isDonghua(animeTitle)) {
     const chineseTrack = tracks.find(t => {
       const normalized = normalizeLanguageCode(t.lang);
-      return normalized === 'zh' || normalized === 'cmn' || normalized === 'chi';
+      const labelDetection = detectLanguageFromLabel(t.label);
+      return normalized === 'zh' || normalized === 'cmn' || normalized === 'chi' ||
+             (labelDetection && (labelDetection.code === 'zh' || labelDetection.code === 'cmn'));
     });
     if (chineseTrack) return chineseTrack.index;
   }
   
-  // Find track by priority
+  // Priority order: Hindi first (default for Indian anime platform), then others
+  // User preference overrides default order
+  const priorityOrder = effectivePreference 
+    ? [effectivePreference, 'hi', 'hin', 'ja', 'jpn', 'en', 'eng', 'zh']
+    : ['hi', 'hin', 'ja', 'jpn', 'en', 'eng', 'zh'];
+  
+  // Find track by priority - check both lang code and label
   for (const preferredLang of priorityOrder) {
     const track = tracks.find(t => {
       const normalized = normalizeLanguageCode(t.lang);
       const labelDetection = detectLanguageFromLabel(t.label);
       return normalized === preferredLang || 
-             (labelDetection && labelDetection.code === preferredLang);
+             normalizeLanguageCode(preferredLang) === normalized ||
+             (labelDetection && (labelDetection.code === preferredLang || labelDetection.code === normalizeLanguageCode(preferredLang)));
     });
     if (track) return track.index;
   }

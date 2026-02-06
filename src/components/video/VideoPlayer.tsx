@@ -432,7 +432,7 @@ export function VideoPlayer({
           video.src = effectiveVideoUrl;
           
           // For Safari, use native audioTracks and textTracks API
-          const detectNativeTracks = () => {
+            const detectNativeTracks = () => {
             // Audio tracks with advanced multilingual detection
             const nativeAudioTracks = (video as any).audioTracks;
             if (nativeAudioTracks && nativeAudioTracks.length > 0) {
@@ -457,15 +457,21 @@ export function VideoPlayer({
               }
               setAudioTracks(tracks);
               
-              // Use advanced preference-based selection
+              // Use advanced preference-based selection (Hindi default)
               const preferredIndex = getPreferredAudioTrack(trackInfoForSelection, animeTitle);
               console.log('Safari preferred audio track:', preferredIndex, 'for anime:', animeTitle);
               
               if (preferredIndex >= 0 && nativeAudioTracks[preferredIndex]) {
                 for (let i = 0; i < nativeAudioTracks.length; i++) {
-                  nativeAudioTracks[i].enabled = i === preferredIndex;
+                  nativeAudioTracks[i].enabled = (i === preferredIndex);
                 }
                 setCurrentAudioTrack(preferredIndex);
+                
+                // iOS needs a seek nudge to apply the initial audio track selection
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                if (isIOS && video.currentTime > 0) {
+                  video.currentTime = video.currentTime + 0.01;
+                }
               }
             }
             
@@ -564,7 +570,7 @@ export function VideoPlayer({
               }));
               setAudioTracks(tracks);
               
-              // Use advanced audio track selection based on content and preferences
+              // Use advanced audio track selection based on content and preferences (Hindi default)
               const preferredIndex = getPreferredAudioTrack(
                 data.audioTracks.map((t, i) => ({ 
                   label: t.name || '', 
@@ -579,6 +585,11 @@ export function VideoPlayer({
               if (preferredIndex >= 0 && preferredIndex < data.audioTracks.length) {
                 hls.audioTrack = preferredIndex;
                 setCurrentAudioTrack(preferredIndex);
+                // Save the selected language preference
+                const selectedTrack = data.audioTracks[preferredIndex];
+                if (selectedTrack?.lang) {
+                  localStorage.setItem('preferred_audio_language', selectedTrack.lang);
+                }
               } else {
                 setCurrentAudioTrack(hls.audioTrack);
               }
@@ -752,15 +763,21 @@ export function VideoPlayer({
             }
             setAudioTracks(tracks);
             
-            // Use advanced preference-based selection
+            // Use advanced preference-based selection (Hindi default)
             const preferredIndex = getPreferredAudioTrack(trackInfoForSelection, animeTitle);
             console.log('Native preferred audio track:', preferredIndex, 'for anime:', animeTitle);
             
             if (preferredIndex >= 0 && nativeAudioTracks[preferredIndex]) {
               for (let i = 0; i < nativeAudioTracks.length; i++) {
-                nativeAudioTracks[i].enabled = i === preferredIndex;
+                nativeAudioTracks[i].enabled = (i === preferredIndex);
               }
               setCurrentAudioTrack(preferredIndex);
+              
+              // iOS needs a seek nudge to apply the initial audio track selection
+              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+              if (isIOS && video.currentTime > 0) {
+                video.currentTime = video.currentTime + 0.01;
+              }
             }
           }
           
@@ -857,30 +874,35 @@ export function VideoPlayer({
 
   // Switch audio track - works with both HLS.js and native
   // HLS.js is the primary method for audio switching on all platforms
-  // Native API works on Safari/Firefox, but not Chrome/Edge for MP4
+  // Native API works on Safari/Firefox/iOS, but not Chrome/Edge for MP4
   const switchAudioTrack = useCallback((trackId: number) => {
     const video = videoRef.current;
-    const currentPlaybackTime = video?.currentTime || 0;
+    if (!video) return;
+    
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const wasPlaying = !video.paused;
+    const savedTime = video.currentTime;
     
     // Try HLS.js first - this is the primary and most reliable method
     if (hlsRef.current && hlsRef.current.audioTracks.length > 0) {
       console.log('Switching audio track via HLS.js:', trackId, 'on platform:', navigator.userAgent);
       
-      // Store current playback position
-      const wasPlaying = !video?.paused;
-      
       hlsRef.current.audioTrack = trackId;
       const track = hlsRef.current.audioTracks[trackId];
       
-      // Save audio preference
+      // Save audio preference (both track index and language)
       localStorage.setItem('preferred_audio_track', trackId.toString());
+      if (track?.lang) {
+        localStorage.setItem('preferred_audio_language', track.lang);
+      }
       
       toast.success(`Audio: ${track?.name || `Track ${trackId + 1}`}`);
       setCurrentAudioTrack(trackId);
       setSettingsOpen(false);
       
       // Resume playback if was playing (some browsers pause on track switch)
-      if (wasPlaying && video) {
+      if (wasPlaying) {
         setTimeout(() => {
           video.play().catch(() => {});
         }, 100);
@@ -888,37 +910,65 @@ export function VideoPlayer({
       return;
     }
     
-    // Fallback to native audioTracks API (Safari, Firefox)
-    // Note: This doesn't work on Chrome/Edge for MP4 files
-    if (video) {
-      const nativeAudioTracks = (video as any).audioTracks;
-      if (nativeAudioTracks && nativeAudioTracks.length > 0) {
-        console.log('Switching audio track via native API:', trackId);
-        // First, disable all tracks
-        for (let i = 0; i < nativeAudioTracks.length; i++) {
-          nativeAudioTracks[i].enabled = false;
-        }
-        // Then enable the selected track
-        if (nativeAudioTracks[trackId]) {
-          nativeAudioTracks[trackId].enabled = true;
-          const track = nativeAudioTracks[trackId];
-          localStorage.setItem('preferred_audio_track', trackId.toString());
-          toast.success(`Audio: ${track?.label || `Track ${trackId + 1}`}`);
-          setCurrentAudioTrack(trackId);
-        }
-      } else {
-        // No audio tracks available - inform user with helpful message
-        console.warn('No audio tracks available via native API');
-        const isChrome = /Chrome/.test(navigator.userAgent) && !/Edge/.test(navigator.userAgent);
-        const isWindows = /Windows/.test(navigator.userAgent);
-        const isAndroid = /Android/.test(navigator.userAgent);
-        
-        if ((isChrome || isWindows) && !isAndroid) {
-          toast.info('Audio track switching works best with HLS streams (.m3u8). For MP4 files, try using Safari or Firefox.');
-        } else {
-          toast.error('Audio track switching is not available for this video');
-        }
+    // Native audioTracks API - required for iOS Safari with MP4 files
+    const nativeAudioTracks = (video as any).audioTracks;
+    if (nativeAudioTracks && nativeAudioTracks.length > 0) {
+      console.log('Switching audio track via native API:', trackId, 'iOS:', isIOS, 'Safari:', isSafari);
+      
+      // iOS/Safari specific: disable all first, then enable target
+      for (let i = 0; i < nativeAudioTracks.length; i++) {
+        nativeAudioTracks[i].enabled = (i === trackId);
       }
+      
+      const track = nativeAudioTracks[trackId];
+      
+      // Save preferences
+      localStorage.setItem('preferred_audio_track', trackId.toString());
+      if (track?.language) {
+        localStorage.setItem('preferred_audio_language', track.language);
+      }
+      
+      // iOS Safari may need a seek nudge to actually switch the audio stream
+      if (isIOS || isSafari) {
+        console.log('iOS/Safari: applying seek nudge for audio switch');
+        // Small seek to force audio pipeline refresh
+        video.currentTime = savedTime + 0.01;
+        
+        // Verify the switch took effect after a short delay
+        setTimeout(() => {
+          if (nativeAudioTracks[trackId] && !nativeAudioTracks[trackId].enabled) {
+            console.warn('iOS audio switch may not have taken effect, retrying...');
+            for (let i = 0; i < nativeAudioTracks.length; i++) {
+              nativeAudioTracks[i].enabled = (i === trackId);
+            }
+            video.currentTime = savedTime;
+          }
+          if (wasPlaying) {
+            video.play().catch(() => {});
+          }
+        }, 200);
+      } else if (wasPlaying) {
+        setTimeout(() => {
+          video.play().catch(() => {});
+        }, 100);
+      }
+      
+      toast.success(`Audio: ${track?.label || `Track ${trackId + 1}`}`);
+      setCurrentAudioTrack(trackId);
+      setSettingsOpen(false);
+      return;
+    }
+    
+    // No audio tracks available - inform user with helpful message
+    console.warn('No audio tracks available via native API');
+    const isChrome = /Chrome/.test(navigator.userAgent) && !/Edge/.test(navigator.userAgent);
+    const isWindows = /Windows/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    
+    if ((isChrome || isWindows) && !isAndroid) {
+      toast.info('Audio track switching works best with HLS streams (.m3u8). For MP4 files, try using Safari or Firefox.');
+    } else {
+      toast.error('Audio track switching is not available for this video');
     }
     setSettingsOpen(false);
   }, []);
