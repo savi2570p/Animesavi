@@ -331,10 +331,10 @@ export function getPreferredAudioTrack(
 ): number {
   if (tracks.length === 0) return 0;
   
-  // Priority order for Indian audience (can be customized)
+  // Priority order: Japanese first (default for anime), then user preference
   const priorityOrder = userPreference 
-    ? [userPreference, 'hi', 'ta', 'te', 'en', 'ja', 'zh']
-    : ['hi', 'ta', 'te', 'en', 'ja', 'zh'];
+    ? [userPreference, 'ja', 'jpn', 'hi', 'en', 'zh']
+    : ['ja', 'jpn', 'hi', 'en', 'zh'];
   
   // For Donghua, prioritize Chinese
   if (isDonghua(animeTitle)) {

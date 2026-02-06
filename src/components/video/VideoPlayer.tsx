@@ -1640,8 +1640,51 @@ export function VideoPlayer({
     );
   }
 
-  // External URL player (iframe)
+  // External URL player (iframe) - Only use for embeddable URLs, not direct video/storage URLs
   if (shouldUseIframe && anyVideoUrl) {
+    // Check if URL is a direct video/storage URL that won't work in an iframe
+    const isStorageUrl = /supabase.*storage|blob\.core\.windows|s3\.amazonaws|cloudfront\.net|r2\.cloudflarestorage|storage\.googleapis/i.test(anyVideoUrl);
+    const isDirectFile = /\.(mp4|mkv|webm|avi|m3u8|m4v)(\?.*)?$/i.test(anyVideoUrl);
+    
+    if (isStorageUrl || isDirectFile) {
+      // For direct video URLs, fall back to native player instead of iframe
+      return (
+        <div 
+          ref={containerRef} 
+          className={`relative bg-black w-full ${isFullscreen ? 'fixed inset-0 z-[9999]' : ''}`}
+          style={{ 
+            aspectRatio: isFullscreen ? undefined : '16/9', 
+            maxHeight: isFullscreen ? '100vh' : '70vh',
+            height: isFullscreen ? '100vh' : undefined,
+          }}
+        >
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
+            <div className="text-destructive mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            </div>
+            <h3 className="text-white font-semibold text-lg">Video Not Available</h3>
+            <p className="text-white/70 text-sm max-w-md">
+              This video file could not be played. It may have been removed or the link is broken.
+            </p>
+            <Button
+              onClick={() => {
+                setUseIframeFallback(false);
+                setVideoError(false);
+                if (videoRef.current) {
+                  videoRef.current.load();
+                  videoRef.current.play().catch(() => {});
+                }
+              }}
+              variant="outline"
+              className="text-white border-white/30 hover:bg-white/10"
+            >
+              Try Again
+            </Button>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div 
         ref={containerRef} 
@@ -1761,6 +1804,12 @@ export function VideoPlayer({
         );
       
       case 'subtitles':
+        // Hide subtitles submenu entirely if no subtitle tracks exist
+        if (subtitleTracks.length === 0) {
+          // Auto-redirect back to main menu since there are no subtitles
+          setSettingsMenu('main');
+          return null;
+        }
         return (
           <div className="py-1">
             <button
@@ -1781,23 +1830,17 @@ export function VideoPlayer({
               <span className="text-sm">Off</span>
               {currentSubtitleTrack === -1 && <Check className="w-4 h-4 text-primary" />}
             </button>
-            {subtitleTracks.length > 0 ? (
-              subtitleTracks.map((track) => (
-                <button
-                  key={track.id}
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); switchSubtitleTrack(track.id); }}
-                  className={`${currentSubtitleTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm`}
-                >
-                  <span className="text-sm">{track.label}</span>
-                  {currentSubtitleTrack === track.id && <Check className="w-4 h-4 text-primary" />}
-                </button>
-              ))
-            ) : (
-              <div className="px-2 py-2 text-xs text-muted-foreground">
-                No subtitles available
-              </div>
-            )}
+            {subtitleTracks.map((track) => (
+              <button
+                key={track.id}
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); switchSubtitleTrack(track.id); }}
+                className={`${currentSubtitleTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm`}
+              >
+                <span className="text-sm">{track.label}</span>
+                {currentSubtitleTrack === track.id && <Check className="w-4 h-4 text-primary" />}
+              </button>
+            ))}
           </div>
         );
       
@@ -1885,21 +1928,23 @@ export function VideoPlayer({
               </div>
             </button>
             
-            {/* Subtitles option */}
-            <button
-              type="button"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('subtitles'); }}
-              className="flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm"
-            >
-              <div className="flex items-center gap-2">
-                <Subtitles className="w-4 h-4" />
-                <span className="text-sm">Subtitles</span>
-              </div>
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <span className="text-xs truncate max-w-[80px]">{getCurrentSubtitleLabel()}</span>
-                <ChevronRight className="w-4 h-4" />
-              </div>
-            </button>
+            {/* Subtitles option - only show if subtitles exist */}
+            {subtitleTracks.length > 0 && (
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('subtitles'); }}
+                className="flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm"
+              >
+                <div className="flex items-center gap-2">
+                  <Subtitles className="w-4 h-4" />
+                  <span className="text-sm">Subtitles</span>
+                </div>
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <span className="text-xs truncate max-w-[80px]">{getCurrentSubtitleLabel()}</span>
+                  <ChevronRight className="w-4 h-4" />
+                </div>
+              </button>
+            )}
           </div>
         );
     }
