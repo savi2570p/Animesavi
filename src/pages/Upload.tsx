@@ -20,7 +20,6 @@ import {
   Film,
   Edit,
   Eye,
-  FolderPlus,
   Wrench,
 } from 'lucide-react';
 
@@ -328,10 +327,6 @@ export default function Upload() {
           <TabsTrigger value="new-movie" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
             <Film className="h-4 w-4 mr-2" />
             Add New Movie
-          </TabsTrigger>
-          <TabsTrigger value="existing" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
-            <FolderPlus className="h-4 w-4 mr-2" />
-            Existing Upload
           </TabsTrigger>
           <TabsTrigger value="tools" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
             <Wrench className="h-4 w-4 mr-2" />
@@ -800,128 +795,6 @@ export default function Upload() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="existing">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FolderPlus className="h-5 w-5" />
-                Add Episode to Existing Anime
-              </CardTitle>
-              <CardDescription>
-                Select an anime and season to add a new episode with video and thumbnail
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleAddEpisodeToExisting} className="space-y-6">
-                {/* Anime Selection */}
-                <div className="space-y-2">
-                  <Label>Select Anime *</Label>
-                  <Select value={selectedAnimeId} onValueChange={setSelectedAnimeId}>
-                    <SelectTrigger className="bg-muted/50">
-                      <SelectValue placeholder="Choose an anime..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allAnime.map((anime) => (
-                        <SelectItem key={anime.id} value={anime.id}>
-                          {anime.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Season Selection */}
-                {selectedAnimeId && (
-                  <div className="space-y-2">
-                    <Label>Select Season *</Label>
-                    {seasons.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">
-                        No seasons found. Please add a season first in the anime edit page.
-                      </p>
-                    ) : (
-                      <Select value={selectedSeasonId} onValueChange={setSelectedSeasonId}>
-                        <SelectTrigger className="bg-muted/50">
-                          <SelectValue placeholder="Choose a season..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {seasons.map((season) => (
-                            <SelectItem key={season.id} value={season.id}>
-                              Season {season.season_number} {season.title && `- ${season.title}`}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </div>
-                )}
-
-                {/* Episode Details */}
-                {selectedSeasonId && (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="episodeTitle">Episode Title *</Label>
-                      <Input
-                        id="episodeTitle"
-                        placeholder="Episode title"
-                        value={episodeTitle}
-                        onChange={(e) => setEpisodeTitle(e.target.value)}
-                        required
-                        className="bg-muted/50"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="episodeDescription">Description</Label>
-                      <Textarea
-                        id="episodeDescription"
-                        placeholder="Brief description..."
-                        value={episodeDescription}
-                        onChange={(e) => setEpisodeDescription(e.target.value)}
-                        className="bg-muted/50"
-                      />
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <FileUploadInput
-                        label="Episode Video"
-                        accept="video"
-                        value={episodeVideoUrl}
-                        onChange={setEpisodeVideoUrl}
-                        folder="episodes"
-                        placeholder="https://example.com/video.mp4"
-                      />
-
-                      <FileUploadInput
-                        label="Episode Thumbnail"
-                        accept="image"
-                        value={episodeThumbnail}
-                        onChange={setEpisodeThumbnail}
-                        folder="thumbnails"
-                        placeholder="https://example.com/thumb.jpg"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="episodeDuration">Duration (minutes)</Label>
-                      <Input
-                        id="episodeDuration"
-                        type="number"
-                        placeholder="24"
-                        value={episodeDuration}
-                        onChange={(e) => setEpisodeDuration(e.target.value)}
-                        className="bg-muted/50 max-w-[200px]"
-                      />
-                    </div>
-
-                    <Button type="submit" disabled={isAddingEpisode} className="anime-button">
-                      {isAddingEpisode ? 'Adding Episode...' : 'Add Episode'}
-                    </Button>
-                  </>
-                )}
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         {/* Tools Tab - Video Format Validator */}
         <TabsContent value="tools">
