@@ -9,13 +9,15 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserProfileHoverCard } from '@/components/UserProfileHoverCard';
 import { toast } from 'sonner';
-import { VideoPlayer, ServerType } from '@/components/video/VideoPlayer';
+import { VideoPlayer } from '@/components/video/VideoPlayer';
+import { ServerType } from '@/hooks/useServerAutoSelect';
 import { EpisodeList } from '@/components/video/EpisodeList';
 import { RecommendedAnime } from '@/components/home/RecommendedAnime';
 import { WatchParty } from '@/components/WatchParty';
 import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton';
 import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
+import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hooks/useServerAutoSelect';
 import { z } from 'zod';
 import {
   ChevronLeft,
@@ -121,12 +123,29 @@ export default function Watch() {
   const [commentSort, setCommentSort] = useState<CommentSortOption>('newest');
   const [isLoading, setIsLoading] = useState(true);
   const [watchHistoryId, setWatchHistoryId] = useState<string | null>(null);
-  const [activeServer, setActiveServer] = useState<ServerType>('PLAY');
+  const {
+    activeServer,
+    isServerLoading: serverLoading,
+    availableServers,
+    failedServers,
+    switchServer: handleServerSwitch,
+    onVideoLoadSuccess,
+    onVideoLoadError,
+    startFallbackTimer,
+  } = useServerAutoSelect({
+    onServerSwitch: (from, to, reason) => {
+      console.log(`Server auto-switched: ${from} → ${to} (${reason})`);
+      if (reason === 'timeout') {
+        toast.info(`Switched to ${SERVER_CONFIGS[to].name} (${SERVER_CONFIGS[from].name} was slow)`);
+      } else if (reason === 'error') {
+        toast.info(`Switched to ${SERVER_CONFIGS[to].name} (${SERVER_CONFIGS[from].name} failed)`);
+      }
+    },
+  });
   const [reportingCommentId, setReportingCommentId] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState('');
   const [commentNotifications, setCommentNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [serverLoading, setServerLoading] = useState(false);
   const [showTelegramPopup, setShowTelegramPopup] = useState(false);
   const [initialSeekDone, setInitialSeekDone] = useState(false);
   const [showResumeNotification, setShowResumeNotification] = useState(false);
@@ -161,44 +180,17 @@ export default function Watch() {
     setShowTelegramPopup(false);
   };
 
-  // Handle server change with optimized loading
+  // Handle server change - delegates to useServerAutoSelect
   const handleServerChange = useCallback((server: ServerType) => {
-    if (server === activeServer) return;
-    
-    // Handle EMBED server - open in new tab
-    if (server === 'EMBED') {
-      const embedUrl = `/embed/${episodeId}`;
-      window.open(embedUrl, '_blank');
-      return;
-    }
-    
-    // Save preference to localStorage for persistence
-    localStorage.setItem('preferred_video_server', server);
-    
-    setServerLoading(true);
-    setActiveServer(server);
-    
-    // Optimized loading - faster transition with requestAnimationFrame
-    requestAnimationFrame(() => {
-      // Minimal delay for smooth UI transition
-      setTimeout(() => {
-        setServerLoading(false);
-      }, 500);
-    });
-  }, [activeServer, episodeId]);
-
-  // Load saved server preference on mount
-  useEffect(() => {
-    const savedServer = localStorage.getItem('preferred_video_server') as ServerType | null;
-    if (savedServer && ['PLAY', 'SHORT', 'Zex'].includes(savedServer)) {
-      setActiveServer(savedServer);
-    }
-  }, []);
+    handleServerSwitch(server);
+  }, [handleServerSwitch]);
 
   useEffect(() => {
     if (episodeId) {
       fetchEpisodeData();
       fetchComments();
+      // Start fallback timer for the current server when episode loads
+      startFallbackTimer();
     }
   }, [episodeId, commentSort]);
 
@@ -835,6 +827,8 @@ export default function Watch() {
                 setSavedPlaybackProgress(0);
               }
             }}
+            onVideoLoadSuccess={onVideoLoadSuccess}
+            onVideoLoadError={onVideoLoadError}
           />
         </div>
       </div>
@@ -855,8 +849,9 @@ export default function Watch() {
             <Server className="h-5 w-5 text-muted-foreground" />
             <span className="text-muted-foreground font-medium">Server:</span>
             <div className="flex gap-2 flex-wrap">
-              {(['PLAY', 'SHORT', 'Zex'] as ServerType[]).map((server) => {
-                const displayName = server === 'SHORT' ? 'SAVI.IN' : server;
+              {availableServers.map((server) => {
+                const config = SERVER_CONFIGS[server];
+                const isFailed = failedServers.has(server);
                 return (
                   <Button
                     key={server}
@@ -864,9 +859,13 @@ export default function Watch() {
                     variant={activeServer === server ? 'default' : 'outline'}
                     onClick={() => handleServerChange(server)}
                     disabled={serverLoading}
-                    className={activeServer === server ? 'anime-button' : ''}
+                    className={`${activeServer === server ? 'anime-button' : ''} ${isFailed ? 'opacity-60' : ''}`}
+                    title={config.description}
                   >
-                    {displayName}
+                    {config.name}
+                    {activeServer === server && (
+                      <span className="ml-1.5 text-[10px] opacity-75">●</span>
+                    )}
                   </Button>
                 );
               })}

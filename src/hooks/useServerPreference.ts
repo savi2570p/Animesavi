@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import type { ServerType } from '@/hooks/useServerAutoSelect';
 
 const SERVER_PREFERENCE_KEY = 'preferred_video_server';
 const SERVER_PERFORMANCE_KEY = 'server_performance_data';
 
-export type ServerType = 'PLAY' | 'SHORT' | 'Zex';
+export type { ServerType } from '@/hooks/useServerAutoSelect';
 
 interface ServerPerformance {
   server: ServerType;
