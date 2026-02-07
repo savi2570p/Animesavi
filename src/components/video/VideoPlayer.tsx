@@ -75,7 +75,9 @@ interface QualityLevel {
   label: string;
 }
 
-export type ServerType = 'PLAY' | 'SHORT' | 'Zex' | 'EMBED';
+import { ServerType } from '@/hooks/useServerAutoSelect';
+
+export { type ServerType } from '@/hooks/useServerAutoSelect';
 
 interface VideoPlayerProps {
   videoUrl: string | null;
@@ -98,8 +100,10 @@ interface VideoPlayerProps {
   introEndTime?: number | null;
   outroStartTime?: number | null;
   outroEndTime?: number | null;
-  savedPlaybackProgress?: number; // For resume overlay
-  onResumeChoice?: (resume: boolean) => void; // Callback when user makes resume choice
+  savedPlaybackProgress?: number;
+  onResumeChoice?: (resume: boolean) => void;
+  onVideoLoadSuccess?: () => void;
+  onVideoLoadError?: () => void;
 }
 
 const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
@@ -117,11 +121,6 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
     name: 'Zex', 
     features: ['watch', 'quality', 'download'],
     playerStyle: 'advanced'
-  },
-  EMBED: { 
-    name: 'Embed', 
-    features: ['watch'],
-    playerStyle: 'embed'
   },
 };
 
@@ -224,6 +223,8 @@ export function VideoPlayer({
   outroEndTime = null,
   savedPlaybackProgress = 0,
   onResumeChoice,
+  onVideoLoadSuccess,
+  onVideoLoadError,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1684,7 +1685,7 @@ export function VideoPlayer({
       >
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="text-white text-lg">Loading {activeServer === 'SHORT' ? 'SAVI.IN' : activeServer} server...</p>
+          <p className="text-white text-lg">Loading {serverConfigs[activeServer]?.name || activeServer} server...</p>
         </div>
       </div>
     );
@@ -2224,6 +2225,8 @@ export function VideoPlayer({
           setVideoError(false);
           // Hide premium loader when video is ready
           setShowPremiumLoader(false);
+          // Notify parent that video loaded successfully (cancels fallback timer)
+          onVideoLoadSuccess?.();
         }}
         onCanPlayThrough={() => {
           // Ensure loader is hidden when fully ready
@@ -2276,6 +2279,8 @@ export function VideoPlayer({
                 videoRef.current.load();
                 videoRef.current.play().catch(() => {
                   setVideoError(true);
+                  // Notify parent of video load failure (triggers fallback to Zex)
+                  onVideoLoadError?.();
                 });
               }
             }, 2000);
