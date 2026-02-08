@@ -35,7 +35,8 @@ export const SERVER_CONFIGS: Record<ServerType, ServerConfig> = {
   },
 };
 
-const FALLBACK_TIMEOUT_MS = 3000;
+const AUTO_FALLBACK_TIMEOUT_MS = 3000;
+const MANUAL_FALLBACK_TIMEOUT_MS = 15000; // Give manual switches much more time
 const SERVER_PREF_KEY = 'preferred_video_server';
 
 /**
@@ -118,16 +119,16 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
     setActiveServer(server);
     localStorage.setItem(SERVER_PREF_KEY, server);
 
-    // Start fallback timer for the new server
+    // Manual switches get a much longer timeout before fallback
     fallbackTimerRef.current = setTimeout(() => {
       if (!videoLoadedRef.current && server !== 'Zex') {
-        console.log(`Server ${server} did not respond in ${FALLBACK_TIMEOUT_MS}ms, switching to Zex`);
+        console.log(`Server ${server} did not respond in ${MANUAL_FALLBACK_TIMEOUT_MS}ms after manual switch, switching to Zex`);
         setFailedServers(prev => new Set(prev).add(server));
         setActiveServer('Zex');
         setIsServerLoading(false);
         options?.onServerSwitch?.(server, 'Zex', 'timeout');
       }
-    }, FALLBACK_TIMEOUT_MS);
+    }, MANUAL_FALLBACK_TIMEOUT_MS);
 
     // Clear loading state after transition
     requestAnimationFrame(() => {
@@ -174,13 +175,13 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
 
     fallbackTimerRef.current = setTimeout(() => {
       if (!videoLoadedRef.current) {
-        console.log(`Server ${activeServer} timeout after ${FALLBACK_TIMEOUT_MS}ms, switching to Zex`);
+        console.log(`Server ${activeServer} timeout after ${AUTO_FALLBACK_TIMEOUT_MS}ms, switching to Zex`);
         setFailedServers(prev => new Set(prev).add(activeServer));
         const previousServer = activeServer;
         setActiveServer('Zex');
         options?.onServerSwitch?.(previousServer, 'Zex', 'timeout');
       }
-    }, FALLBACK_TIMEOUT_MS);
+    }, AUTO_FALLBACK_TIMEOUT_MS);
   }, [activeServer, clearFallbackTimer, options]);
 
   // Cleanup on unmount
