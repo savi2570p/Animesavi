@@ -59,6 +59,7 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
   });
   
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ completed: number; total: number } | null>(null);
   const [targetFormat, setTargetFormat] = useState<'original' | 'mp4'>('original');
 
   // Persist episodes to sessionStorage whenever they change
@@ -110,6 +111,7 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
     }
 
     setIsUploading(true);
+    setUploadProgress({ completed: 0, total: validEpisodes.length });
 
     try {
       const episodesToInsert = validEpisodes.map((ep, index) => ({
@@ -122,30 +124,46 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
         duration: ep.duration ? parseInt(ep.duration) : null,
       }));
 
-      const { error } = await supabase
-        .from('episodes')
-        .insert(episodesToInsert);
+      // Upload in parallel chunks of 5 for speed
+      const CHUNK_SIZE = 5;
+      let completed = 0;
+      let hasError = false;
 
-      if (error) {
-        console.error('Batch upload error:', error);
-        toast.error('Failed to upload episodes');
-        return;
+      for (let i = 0; i < episodesToInsert.length; i += CHUNK_SIZE) {
+        const chunk = episodesToInsert.slice(i, i + CHUNK_SIZE);
+        
+        const { error } = await supabase
+          .from('episodes')
+          .insert(chunk);
+
+        if (error) {
+          console.error('Batch upload chunk error:', error);
+          hasError = true;
+          toast.error(`Failed to upload episodes ${i + 1}-${i + chunk.length}`);
+          break;
+        }
+
+        completed += chunk.length;
+        setUploadProgress({ completed, total: validEpisodes.length });
       }
 
-      toast.success(`${validEpisodes.length} episode(s) added successfully!`);
-      
-      // Clear sessionStorage after successful upload
-      sessionStorage.removeItem(storageKey);
-      
-      // Reset form
-      setEpisodes([createEmptyEpisode()]);
-      
-      onEpisodesAdded();
+      if (!hasError) {
+        toast.success(`${validEpisodes.length} episode(s) added successfully!`);
+        
+        // Clear sessionStorage after successful upload
+        sessionStorage.removeItem(storageKey);
+        
+        // Reset form
+        setEpisodes([createEmptyEpisode()]);
+        
+        onEpisodesAdded();
+      }
     } catch (error) {
       console.error('Batch upload error:', error);
       toast.error('An error occurred during upload');
     } finally {
       setIsUploading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -248,11 +266,28 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
           ))}
         </div>
 
+        {/* Upload Progress */}
+        {uploadProgress && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Uploading episodes...</span>
+              <span className="font-medium">{uploadProgress.completed}/{uploadProgress.total}</span>
+            </div>
+            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary rounded-full transition-all duration-300"
+                style={{ width: `${(uploadProgress.completed / uploadProgress.total) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border/50">
           <Button
             variant="outline"
             onClick={addEpisodeSlot}
             className="flex-1"
+            disabled={isUploading}
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Another Episode
@@ -265,7 +300,9 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
             {isUploading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Uploading...
+                {uploadProgress
+                  ? `Uploading ${uploadProgress.completed}/${uploadProgress.total}...`
+                  : 'Preparing...'}
               </>
             ) : (
               <>

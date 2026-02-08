@@ -34,6 +34,7 @@ import logo from '@/assets/logo.png';
 import { JoinPartyDialog, ViewPartyDialog } from '@/components/WatchParty';
 import { NotificationBell } from '@/components/NotificationBell';
 import { WatchLaterButton } from '@/components/WatchLater';
+import { AccountSwitcher, rememberAccount } from '@/components/AccountSwitcher';
 
 export function Header() {
   const { user, isUploader, isAdmin, signOut } = useAuth();
@@ -48,7 +49,11 @@ export function Header() {
     }
   };
 
+  // Remember current account before sign out
   const handleSignOut = async () => {
+    if (user?.email) {
+      rememberAccount(user.email, user.user_metadata?.username || user.email.split('@')[0]);
+    }
     await signOut();
     navigate('/');
   };
@@ -213,6 +218,9 @@ export function Header() {
                   <Link to="/settings" className="flex items-center gap-2 py-2">
                     <Settings className="h-4 w-4" /> Settings
                   </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="p-0">
+                  <AccountSwitcher />
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={handleSignOut} 
