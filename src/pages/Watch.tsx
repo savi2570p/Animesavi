@@ -16,6 +16,7 @@ import { RecommendedAnime } from '@/components/home/RecommendedAnime';
 import { WatchParty } from '@/components/WatchParty';
 import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton';
 import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
+import { ServerStatusIndicator } from '@/components/video/ServerStatusIndicator';
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
 import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hooks/useServerAutoSelect';
 import { z } from 'zod';
@@ -128,6 +129,8 @@ export default function Watch() {
     isServerLoading: serverLoading,
     availableServers,
     failedServers,
+    fallbackOccurred,
+    fallbackFrom,
     switchServer: handleServerSwitch,
     onVideoLoadSuccess,
     onVideoLoadError,
@@ -859,7 +862,7 @@ export default function Watch() {
                     variant={activeServer === server ? 'default' : 'outline'}
                     onClick={() => handleServerChange(server)}
                     disabled={serverLoading}
-                    className={`${activeServer === server ? 'anime-button' : ''} ${isFailed ? 'opacity-60' : ''}`}
+                    className={`${activeServer === server ? 'anime-button' : ''} ${isFailed ? 'opacity-60 line-through' : ''}`}
                     title={config.description}
                   >
                     {config.name}
@@ -870,6 +873,14 @@ export default function Watch() {
                 );
               })}
             </div>
+            {/* Live server status indicator */}
+            <ServerStatusIndicator
+              activeServer={activeServer}
+              failedServers={failedServers}
+              isServerLoading={serverLoading}
+              fallbackOccurred={fallbackOccurred}
+              fallbackFrom={fallbackFrom}
+            />
           </div>
 
           {/* Season Switcher */}
