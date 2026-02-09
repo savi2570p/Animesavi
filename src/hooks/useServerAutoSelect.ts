@@ -88,6 +88,8 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
   const [activeServer, setActiveServer] = useState<ServerType>(() => getDefaultServer());
   const [isServerLoading, setIsServerLoading] = useState(false);
   const [failedServers, setFailedServers] = useState<Set<ServerType>>(new Set());
+  const [fallbackOccurred, setFallbackOccurred] = useState(false);
+  const [fallbackFrom, setFallbackFrom] = useState<ServerType | null>(null);
   const fallbackTimerRef = useRef<NodeJS.Timeout | null>(null);
   const videoLoadedRef = useRef(false);
 
@@ -124,6 +126,8 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
       if (!videoLoadedRef.current && server !== 'Zex') {
         console.log(`Server ${server} did not respond in ${MANUAL_FALLBACK_TIMEOUT_MS}ms after manual switch, switching to Zex`);
         setFailedServers(prev => new Set(prev).add(server));
+        setFallbackOccurred(true);
+        setFallbackFrom(server);
         setActiveServer('Zex');
         setIsServerLoading(false);
         options?.onServerSwitch?.(server, 'Zex', 'timeout');
@@ -157,6 +161,8 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
     if (activeServer !== 'Zex') {
       console.log(`Server ${activeServer} failed, falling back to Zex`);
       setFailedServers(prev => new Set(prev).add(activeServer));
+      setFallbackOccurred(true);
+      setFallbackFrom(activeServer);
       const previousServer = activeServer;
       setActiveServer('Zex');
       options?.onServerSwitch?.(previousServer, 'Zex', 'error');
@@ -177,6 +183,8 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
       if (!videoLoadedRef.current) {
         console.log(`Server ${activeServer} timeout after ${AUTO_FALLBACK_TIMEOUT_MS}ms, switching to Zex`);
         setFailedServers(prev => new Set(prev).add(activeServer));
+        setFallbackOccurred(true);
+        setFallbackFrom(activeServer);
         const previousServer = activeServer;
         setActiveServer('Zex');
         options?.onServerSwitch?.(previousServer, 'Zex', 'timeout');
@@ -194,6 +202,8 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
     isServerLoading,
     availableServers,
     failedServers,
+    fallbackOccurred,
+    fallbackFrom,
     switchServer,
     onVideoLoadSuccess,
     onVideoLoadError,

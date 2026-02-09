@@ -195,7 +195,7 @@ generate_hls() {
   return $?
 }
 
-# Generate single MP4 for iOS fallback
+# Generate single MP4 for iOS with ALL audio tracks and subtitles preserved
 generate_ios_mp4() {
   local input_file=$1
   local output_file=$2
@@ -218,18 +218,46 @@ generate_ios_mp4() {
     esac
   fi
   
+  # Detect if file has malformed container (.mkv.mp4 etc.)
+  local basename_file=$(basename "$input_file")
+  local is_malformed=false
+  if echo "$basename_file" | grep -qiE '\.(mkv|avi|webm)\.(mp4|m4v)$'; then
+    is_malformed=true
+    log "Malformed container detected: $basename_file - will fully remux & reconvert"
+  fi
+  
+  # Count audio tracks
+  local audio_count=$(ffprobe -v quiet -select_streams a -show_entries stream=index -of csv=p=0 "$input_file" 2>/dev/null | wc -l)
+  log "Detected $audio_count audio track(s)"
+  
+  # Build audio mapping - map ALL audio tracks
+  local audio_maps=""
+  if [ "$audio_count" -gt 0 ]; then
+    audio_maps="-map 0:a"
+  else
+    audio_maps="-map 0:a:0"
+  fi
+  
+  # Build subtitle mapping
+  local sub_maps=""
+  local sub_count=$(ffprobe -v quiet -select_streams s -show_entries stream=index -of csv=p=0 "$input_file" 2>/dev/null | wc -l)
+  if [ "$sub_count" -gt 0 ]; then
+    sub_maps="-map 0:s? -c:s mov_text"
+    log "Detected $sub_count subtitle track(s)"
+  fi
+  
   ffmpeg -y -i "$input_file" \
     -c:v "$encoder" $extra_opts \
-    -profile:v high \
+    -profile:v main \
     -level:v 4.1 \
     -pix_fmt yuv420p \
+    $audio_maps \
     -c:a aac \
     -b:a 192k \
     -ac 2 \
+    $sub_maps \
     -movflags +faststart \
-    -sn \
     -map 0:v:0 \
-    -map 0:a:0 \
     "$output_file" 2>&1
     
   return $?
