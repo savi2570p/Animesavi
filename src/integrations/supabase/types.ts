@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      allowed_short_uploaders: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
       allowed_uploaders: {
         Row: {
           created_at: string
@@ -431,6 +449,65 @@ export type Database = {
             columns: ["anime_id"]
             isOneToOne: false
             referencedRelation: "anime_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shorts: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration: number
+          end_time: number
+          episode_id: string | null
+          id: string
+          start_time: number
+          tags: string[] | null
+          thumbnail: string | null
+          title: string
+          updated_at: string
+          uploader_id: string
+          video_url: string
+          view_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration: number
+          end_time?: number
+          episode_id?: string | null
+          id?: string
+          start_time?: number
+          tags?: string[] | null
+          thumbnail?: string | null
+          title: string
+          updated_at?: string
+          uploader_id: string
+          video_url: string
+          view_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration?: number
+          end_time?: number
+          episode_id?: string | null
+          id?: string
+          start_time?: number
+          tags?: string[] | null
+          thumbnail?: string | null
+          title?: string
+          updated_at?: string
+          uploader_id?: string
+          video_url?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shorts_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
             referencedColumns: ["id"]
           },
         ]
