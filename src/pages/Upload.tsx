@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
-import { VideoFormatValidator } from '@/components/upload/VideoFormatValidator';
+import { ConversionHealthDashboard } from '@/components/admin/ConversionHealthDashboard';
+import { ShortsUpload } from '@/components/upload/ShortsUpload';
 import {
   Upload as UploadIcon,
   Plus,
@@ -331,6 +332,9 @@ export default function Upload() {
           <TabsTrigger value="tools" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
             <Wrench className="h-4 w-4 mr-2" />
             Tools
+          </TabsTrigger>
+          <TabsTrigger value="shorts" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
+            Shorts
           </TabsTrigger>
         </TabsList>
 
@@ -796,49 +800,16 @@ export default function Upload() {
         </TabsContent>
 
 
-        {/* Tools Tab - Video Format Validator */}
+        {/* Tools Tab */}
         <TabsContent value="tools">
           <div className="space-y-6">
-            <VideoFormatValidator />
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>iOS Video Playback Guide</CardTitle>
-                <CardDescription>
-                  Tips for ensuring your videos play on all devices including iPhone and iPad
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <h4 className="font-medium text-foreground mb-2">✅ Recommended Formats</h4>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• HLS (.m3u8) - Best for streaming</li>
-                      <li>• MP4 (.mp4) with H.264 codec</li>
-                      <li>• M4V (.m4v) - Apple format</li>
-                    </ul>
-                  </div>
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <h4 className="font-medium text-foreground mb-2">❌ Not Supported on iOS</h4>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• MKV (.mkv) - Needs conversion</li>
-                      <li>• AVI (.avi) - Legacy format</li>
-                      <li>• WMV (.wmv) - Windows only</li>
-                      <li>• FLV (.flv) - Flash based</li>
-                    </ul>
-                  </div>
-                </div>
-                
-                <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
-                  <h4 className="font-medium text-primary mb-2">💡 Pro Tip</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Always convert your videos to HLS format for the best cross-platform compatibility. 
-                    HLS supports adaptive bitrate streaming, which automatically adjusts quality based on the viewer's internet speed.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <ConversionHealthDashboard />
           </div>
+        </TabsContent>
+
+        {/* Shorts Tab */}
+        <TabsContent value="shorts">
+          <ShortsUpload />
         </TabsContent>
       </Tabs>
     </div>
