@@ -15,6 +15,7 @@ import { ComingSoon } from '@/components/home/ComingSoon';
 import { SocialShare } from '@/components/home/SocialShare';
 import { MostPopular } from '@/components/home/MostPopular';
 import { AnimeCalendar } from '@/components/AnimeCalendar';
+import { ShortsSection } from '@/components/home/ShortsSection';
 
 export default function Index() {
   const { user } = useAuth();
@@ -58,6 +59,9 @@ export default function Index() {
 
       {/* Recommended Anime */}
       <RecommendedAnime />
+
+      {/* Shorts */}
+      <ShortsSection />
 
       {/* Most Popular */}
       <MostPopular />
