@@ -348,17 +348,17 @@
            continue;
          }
  
-         // Queue for conversion
-         const { error: updateError } = await supabase
-           .from('video_conversions')
-           .update({
-             status: 'pending',
-             error_message: null,
-             conversion_started_at: null,
-             conversion_completed_at: null,
-             needs_conversion: true,
-           })
-           .eq('id', video.id);
+          // Start conversion immediately
+          const { error: updateError } = await supabase
+            .from('video_conversions')
+            .update({
+              status: 'processing',
+              error_message: null,
+              conversion_started_at: new Date().toISOString(),
+              conversion_completed_at: null,
+              needs_conversion: true,
+            })
+            .eq('id', video.id);
  
          if (updateError) {
            failedCount++;
@@ -676,15 +676,43 @@
                </CardTitle>
              </CardHeader>
              <CardContent>
-               <div className="flex items-center gap-4 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-                 <div className="h-4 w-4 rounded-full bg-green-500 animate-pulse" />
-                 <div>
-                   <p className="font-medium">Worker Status: Ready</p>
-                   <p className="text-sm text-muted-foreground">
-                     Background processing available via FFmpeg worker scripts
-                   </p>
-                 </div>
-               </div>
+              <div className="flex items-center justify-between p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                  <div className="flex items-center gap-4">
+                    <div className="h-4 w-4 rounded-full bg-green-500 animate-pulse" />
+                    <div>
+                      <p className="font-medium">Worker Status: Ready</p>
+                      <p className="text-sm text-muted-foreground">
+                        Background processing available via FFmpeg worker scripts
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={async () => {
+                      try {
+                        const { data, error } = await supabase
+                          .from('video_conversions')
+                          .update({
+                            status: 'processing',
+                            conversion_started_at: new Date().toISOString(),
+                            error_message: null,
+                          })
+                          .eq('status', 'pending')
+                          .select();
+                        if (error) throw error;
+                        toast.success(`Started ${data?.length || 0} pending conversions`);
+                        fetchData();
+                      } catch (err) {
+                        console.error(err);
+                        toast.error('Failed to start conversions');
+                      }
+                    }}
+                    disabled={pipelineStatus.pendingJobs === 0}
+                    className="shrink-0"
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    Start ({pipelineStatus.pendingJobs})
+                  </Button>
+                </div>
              </CardContent>
            </Card>
          </TabsContent>
