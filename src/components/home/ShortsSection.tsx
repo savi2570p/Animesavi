@@ -4,7 +4,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Play, Pause, Volume2, VolumeX, ChevronUp, ChevronDown, Eye, Scissors } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, ChevronUp, ChevronDown, Eye, Scissors, Maximize2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface ShortItem {
   id: string;
@@ -110,6 +111,12 @@ export function ShortsSection() {
           <Scissors className="h-5 w-5 text-primary" />
           <h2 className="text-xl font-bold">Shorts</h2>
           <Badge variant="secondary" className="text-xs">{shorts.length}</Badge>
+          <Button asChild variant="ghost" size="sm" className="ml-auto">
+            <Link to="/shorts" className="flex items-center gap-1">
+              <Maximize2 className="h-4 w-4" />
+              Full Screen
+            </Link>
+          </Button>
         </div>
 
         <div className="flex flex-col md:flex-row gap-6">

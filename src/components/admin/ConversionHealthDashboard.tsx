@@ -74,14 +74,15 @@
    };
  }
  
- interface HealthStats {
-   total: number;
-   healthy: number;
-   processing: number;
-   hlsPending: number;
-   failed: number;
-   iosRisk: number;
- }
+  interface HealthStats {
+    total: number;
+    healthy: number;
+    processing: number;
+    hlsPending: number;
+    failed: number;
+    iosRisk: number;
+    estimatedTotalMinutes: number;
+  }
  
  interface PipelineStatus {
    uploadQueue: number;
@@ -106,14 +107,15 @@
  }
  
  export function ConversionHealthDashboard() {
-   const [healthStats, setHealthStats] = useState<HealthStats>({
-     total: 0,
-     healthy: 0,
-     processing: 0,
-     hlsPending: 0,
-     failed: 0,
-     iosRisk: 0,
-   });
+    const [healthStats, setHealthStats] = useState<HealthStats>({
+      total: 0,
+      healthy: 0,
+      processing: 0,
+      hlsPending: 0,
+      failed: 0,
+      iosRisk: 0,
+      estimatedTotalMinutes: 0,
+    });
    const [pipelineStatus, setPipelineStatus] = useState<PipelineStatus>({
      uploadQueue: 0,
      mp4Conversion: 0,
@@ -167,15 +169,20 @@
        const records = (conversions as VideoHealthRecord[]) || [];
        setVideoRecords(records);
  
-       // Calculate health stats
-       const stats: HealthStats = {
-         total: records.length,
-         healthy: records.filter(r => r.status === 'completed' && r.ios_ready_url).length,
-         processing: records.filter(r => r.status === 'processing').length,
-         hlsPending: records.filter(r => r.status === 'pending').length,
-         failed: records.filter(r => r.status === 'failed').length,
-         iosRisk: records.filter(r => isIosRisk(r)).length,
-       };
+        // Calculate health stats
+        const pendingCount = records.filter(r => r.status === 'pending').length;
+        const processingCount = records.filter(r => r.status === 'processing').length;
+        // Estimate ~3 min per video for conversion
+        const estimatedMinutes = (pendingCount + processingCount) * 3;
+        const stats: HealthStats = {
+          total: records.length,
+          healthy: records.filter(r => r.status === 'completed' && r.ios_ready_url).length,
+          processing: processingCount,
+          hlsPending: pendingCount,
+          failed: records.filter(r => r.status === 'failed').length,
+          iosRisk: records.filter(r => isIosRisk(r)).length,
+          estimatedTotalMinutes: estimatedMinutes,
+        };
        setHealthStats(stats);
  
        // Calculate pipeline status
@@ -513,22 +520,49 @@
        </div>
  
        {/* Health Progress Bar */}
-       <Card>
-         <CardContent className="p-4">
-           <div className="space-y-2">
-             <div className="flex justify-between text-sm">
-               <span className="flex items-center gap-2">
-                 <Shield className="h-4 w-4 text-green-500" />
-                 Overall Platform Health
-               </span>
-               <span className={healthPercentage >= 80 ? 'text-green-500' : healthPercentage >= 50 ? 'text-yellow-500' : 'text-red-500'}>
-                 {healthPercentage}% Healthy
-               </span>
-             </div>
-             <Progress value={healthPercentage} className="h-3" />
-           </div>
-         </CardContent>
-       </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-green-500" />
+                  Overall Platform Health
+                </span>
+                <span className={healthPercentage >= 80 ? 'text-green-500' : healthPercentage >= 50 ? 'text-yellow-500' : 'text-red-500'}>
+                  {healthPercentage}% Healthy
+                </span>
+              </div>
+              <Progress value={healthPercentage} className="h-3" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Estimated Time */}
+        {(healthStats.processing > 0 || healthStats.hlsPending > 0) && (
+          <Card className="border-blue-500/30">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Clock className="h-5 w-5 text-blue-500" />
+                  <div>
+                    <p className="font-medium">Estimated Time to Complete</p>
+                    <p className="text-sm text-muted-foreground">
+                      {healthStats.processing + healthStats.hlsPending} videos remaining
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-blue-500">
+                    {healthStats.estimatedTotalMinutes >= 60
+                      ? `${Math.floor(healthStats.estimatedTotalMinutes / 60)}h ${healthStats.estimatedTotalMinutes % 60}m`
+                      : `${healthStats.estimatedTotalMinutes}m`}
+                  </p>
+                  <p className="text-xs text-muted-foreground">~3 min per video</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
  
        {/* Tabs */}
        <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -761,8 +795,9 @@
                        <TableHead>iOS MP4</TableHead>
                        <TableHead>HLS</TableHead>
                        <TableHead>Audio</TableHead>
-                       <TableHead>Status</TableHead>
-                       <TableHead>Actions</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Est. Time</TableHead>
+                        <TableHead>Actions</TableHead>
                      </TableRow>
                    </TableHeader>
                    <TableBody>
@@ -810,8 +845,13 @@
                                {health.icon}
                                <span className="text-xs">{health.label}</span>
                              </div>
-                           </TableCell>
-                           <TableCell>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-xs text-muted-foreground">
+                                {record.status === 'processing' || record.status === 'pending' ? '~3 min' : record.status === 'completed' ? '✓' : '—'}
+                              </span>
+                            </TableCell>
+                            <TableCell>
                              <Button
                                variant="ghost"
                                size="sm"
