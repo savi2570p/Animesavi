@@ -38,6 +38,7 @@ import LatestSeriesPage from "./pages/LatestSeriesPage";
 import LatestEpisodesPage from "./pages/LatestEpisodesPage";
 import LatestMoviesPage from "./pages/LatestMoviesPage";
 import PendingUploadPage from "./pages/PendingUploadPage";
+import ShortsPage from "./pages/Shorts";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -111,6 +112,7 @@ const App = () => (
             <AutoVideoScanInitializer />
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/shorts" element={<ShortsPage />} />
               <Route path="/external-player" element={<ExternalPlayer />} />
               <Route path="/embed/:episodeId" element={<EmbedPlayer />} />
               <Route element={<MainLayout />}>
