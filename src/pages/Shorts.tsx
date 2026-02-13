@@ -3,9 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Play, Pause, Volume2, VolumeX, ChevronUp, ChevronDown, Eye, Heart, Share2, ArrowLeft, Scissors } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, ChevronUp, ChevronDown, Eye, Heart, Share2, ArrowLeft, Scissors, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface ShortItem {
@@ -28,9 +29,13 @@ export default function ShortsPage() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
+  const [likedShorts, setLikedShorts] = useState<Set<string>>(new Set());
+  const [commentText, setCommentText] = useState('');
+  const [showComments, setShowComments] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const { user } = useAuth();
   const touchStartY = useRef(0);
   const isTransitioning = useRef(false);
 
@@ -126,6 +131,19 @@ export default function ShortsPage() {
       await navigator.clipboard.writeText(url);
       toast.success('Link copied!');
     }
+  };
+
+  const toggleLike = (shortId: string) => {
+    setLikedShorts(prev => {
+      const next = new Set(prev);
+      if (next.has(shortId)) {
+        next.delete(shortId);
+      } else {
+        next.add(shortId);
+        toast.success('Liked!');
+      }
+      return next;
+    });
   };
 
   if (loading) {
@@ -249,6 +267,26 @@ export default function ShortsPage() {
           <div className="absolute right-3 bottom-32 flex flex-col items-center gap-5 z-20">
             <button
               className="flex flex-col items-center gap-1"
+              onClick={(e) => { e.stopPropagation(); toggleLike(activeShort.id); }}
+            >
+              <div className={`backdrop-blur-sm rounded-full p-3 transition-colors ${likedShorts.has(activeShort.id) ? 'bg-red-500/30' : 'bg-white/10'}`}>
+                <Heart className={`h-6 w-6 ${likedShorts.has(activeShort.id) ? 'text-red-500 fill-red-500' : 'text-white'}`} />
+              </div>
+              <span className="text-white/60 text-[10px]">Like</span>
+            </button>
+
+            <button
+              className="flex flex-col items-center gap-1"
+              onClick={(e) => { e.stopPropagation(); setShowComments(!showComments); }}
+            >
+              <div className={`backdrop-blur-sm rounded-full p-3 ${showComments ? 'bg-primary/30' : 'bg-white/10'}`}>
+                <MessageCircle className="h-6 w-6 text-white" />
+              </div>
+              <span className="text-white/60 text-[10px]">Comment</span>
+            </button>
+
+            <button
+              className="flex flex-col items-center gap-1"
               onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
             >
               <div className="bg-white/10 backdrop-blur-sm rounded-full p-3">
@@ -287,6 +325,39 @@ export default function ShortsPage() {
             </button>
           </div>
         </div>
+
+        {/* Comment overlay */}
+        {showComments && (
+          <div 
+            className="absolute bottom-0 left-0 right-0 max-h-[50%] bg-black/90 backdrop-blur-md rounded-t-2xl z-30 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <h3 className="text-white font-semibold">Comments</h3>
+              <button onClick={() => setShowComments(false)} className="text-white/60 hover:text-white text-sm">Close</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <p className="text-white/40 text-sm text-center py-8">Comments coming soon!</p>
+            </div>
+            <div className="p-3 border-t border-white/10 flex gap-2">
+              <input
+                type="text"
+                placeholder={user ? "Add a comment..." : "Login to comment"}
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                disabled={!user}
+                className="flex-1 bg-white/10 text-white text-sm rounded-full px-4 py-2 placeholder:text-white/30 outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+              />
+              <button
+                disabled={!user || !commentText.trim()}
+                className="bg-primary text-primary-foreground rounded-full px-4 py-2 text-sm font-medium disabled:opacity-50"
+                onClick={() => { toast.info('Comments feature coming soon!'); setCommentText(''); }}
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -60,9 +60,6 @@ export default function Index() {
       {/* Recommended Anime */}
       <RecommendedAnime />
 
-      {/* Shorts */}
-      <ShortsSection />
-
       {/* Most Popular */}
       <MostPopular />
 
@@ -83,6 +80,9 @@ export default function Index() {
 
       {/* Latest Movies */}
       <LatestMovies />
+
+      {/* Shorts - Bottom section */}
+      <ShortsSection />
 
       {/* Recently Completed */}
       <RecentlyCompleted />
