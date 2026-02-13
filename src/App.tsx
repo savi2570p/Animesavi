@@ -80,9 +80,9 @@ function BackgroundSyncInitializer() {
   return null;
 }
 
-// Auto video scan component for MKV conversion queue
+// Auto video scan + auto-start converter component
 function AutoVideoScanInitializer() {
-  const { hasScanned, scanResult, isScanning } = useAutoVideoScan();
+  const { hasScanned, scanResult } = useAutoVideoScan();
   
   useEffect(() => {
     if (hasScanned && scanResult && scanResult.created > 0) {
