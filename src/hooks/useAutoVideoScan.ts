@@ -3,8 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 /**
- * Hook that automatically scans for unconverted MKV videos on app startup.
- * Only runs for admin/uploader users and limits to once per session.
+ * Hook that automatically scans for unconverted videos AND auto-starts
+ * pending conversions on app startup. Runs continuously in background
+ * for admin/uploader users. Only stops when the browser/tab is closed.
  */
 export function useAutoVideoScan() {
   const { isAdmin, isUploader } = useAuth();
@@ -16,24 +17,43 @@ export function useAutoVideoScan() {
   } | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const scanAttemptedRef = useRef(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Auto-start pending conversions
+  const autoStartPending = async () => {
+    try {
+      const { data: pending } = await supabase
+        .from('video_conversions')
+        .select('id')
+        .eq('status', 'pending')
+        .limit(10);
+
+      if (pending && pending.length > 0) {
+        const ids = pending.map(p => p.id);
+        const { error } = await supabase
+          .from('video_conversions')
+          .update({
+            status: 'processing',
+            conversion_started_at: new Date().toISOString(),
+            error_message: null,
+          })
+          .in('id', ids);
+
+        if (!error) {
+          console.log(`[AutoVideoScan] Auto-started ${ids.length} pending conversions`);
+        }
+      }
+    } catch (error) {
+      console.error('[AutoVideoScan] Auto-start failed:', error);
+    }
+  };
 
   useEffect(() => {
-    // Only run scan for admins or uploaders
+    // Only run for admins or uploaders
     if (!isAdmin && !isUploader) return;
     
     // Prevent multiple scan attempts in the same session
     if (scanAttemptedRef.current) return;
-    
-    // Check if we've already scanned in this browser session
-    const lastScan = sessionStorage.getItem('auto_video_scan_timestamp');
-    if (lastScan) {
-      const lastScanTime = parseInt(lastScan, 10);
-      const hoursSinceLastScan = (Date.now() - lastScanTime) / (1000 * 60 * 60);
-      // Only scan once per hour
-      if (hoursSinceLastScan < 1) {
-        return;
-      }
-    }
 
     scanAttemptedRef.current = true;
     
@@ -71,8 +91,8 @@ export function useAutoVideoScan() {
         
         setHasScanned(true);
         
-        // Mark this scan in session storage to prevent repeated scans
-        sessionStorage.setItem('auto_video_scan_timestamp', Date.now().toString());
+        // Auto-start any pending conversions immediately
+        await autoStartPending();
         
       } catch (error) {
         console.error('[AutoVideoScan] Background scan failed:', error);
@@ -81,10 +101,19 @@ export function useAutoVideoScan() {
       }
     };
 
-    // Delay the scan slightly to not block initial page load
+    // Delay the initial scan slightly to not block page load
     const timeoutId = setTimeout(runBackgroundScan, 3000);
+
+    // Keep checking for pending conversions every 60 seconds
+    // This ensures the converter never stops unless the browser is closed
+    intervalRef.current = setInterval(autoStartPending, 60000);
     
-    return () => clearTimeout(timeoutId);
+    return () => {
+      clearTimeout(timeoutId);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
   }, [isAdmin, isUploader]);
 
   return {

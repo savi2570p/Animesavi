@@ -172,8 +172,8 @@
         // Calculate health stats
         const pendingCount = records.filter(r => r.status === 'pending').length;
         const processingCount = records.filter(r => r.status === 'processing').length;
-        // Estimate ~3 min per video for conversion
-        const estimatedMinutes = (pendingCount + processingCount) * 3;
+         // Estimate ~1 min per video for optimized conversion
+         const estimatedMinutes = (pendingCount + processingCount) * 1;
         const stats: HealthStats = {
           total: records.length,
           healthy: records.filter(r => r.status === 'completed' && r.ios_ready_url).length,
@@ -557,7 +557,7 @@
                       ? `${Math.floor(healthStats.estimatedTotalMinutes / 60)}h ${healthStats.estimatedTotalMinutes % 60}m`
                       : `${healthStats.estimatedTotalMinutes}m`}
                   </p>
-                  <p className="text-xs text-muted-foreground">~3 min per video</p>
+                  <p className="text-xs text-muted-foreground">~1 min per video</p>
                 </div>
               </div>
             </CardContent>
@@ -848,7 +848,7 @@
                             </TableCell>
                             <TableCell>
                               <span className="text-xs text-muted-foreground">
-                                {record.status === 'processing' || record.status === 'pending' ? '~3 min' : record.status === 'completed' ? '✓' : '—'}
+                                {record.status === 'processing' || record.status === 'pending' ? '~1 min' : record.status === 'completed' ? '✓' : '—'}
                               </span>
                             </TableCell>
                             <TableCell>

@@ -21,7 +21,7 @@ export default function Index() {
   const { user } = useAuth();
 
   const stats = [
-    { icon: Play, value: '10,000+', label: 'Episodes' },
+    { icon: Play, value: 'Latest', label: 'Series & movies upload every week' },
     { icon: Tv, value: '1,500+', label: 'Series' },
     { icon: Clock, value: '24/7', label: 'Available' },
     { icon: Award, value: '100%', label: 'Free' },
