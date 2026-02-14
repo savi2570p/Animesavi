@@ -100,13 +100,7 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
       reader.readAsDataURL(file);
     }
 
-    // Start upload immediately
     await runUpload(file);
-
-    // Reset input (lets user pick the same file again if needed)
-    if (inputRef.current) {
-      inputRef.current.value = '';
-    }
   };
 
   const handleRetry = async () => {

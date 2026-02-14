@@ -26,6 +26,7 @@ export function useAutoVideoScan() {
         .from('video_conversions')
         .select('id')
         .eq('status', 'pending')
+        .eq('needs_conversion', true)
         .limit(10);
 
       if (pending && pending.length > 0) {

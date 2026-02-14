@@ -132,7 +132,7 @@
    const [filteredRecords, setFilteredRecords] = useState<VideoHealthRecord[]>([]);
    const [loading, setLoading] = useState(true);
    const [searchQuery, setSearchQuery] = useState('');
-   const [filterType, setFilterType] = useState<'all' | 'ios-risk' | 'failed' | 'healthy'>('all');
+   const [filterType, setFilterType] = useState<'all' | 'ios-risk' | 'failed' | 'healthy' | 'compatible'>('all');
    const [repairProgress, setRepairProgress] = useState<RepairProgress>({
      isRunning: false,
      total: 0,
@@ -234,17 +234,20 @@
        );
      }
  
-     switch (filterType) {
-       case 'ios-risk':
-         filtered = filtered.filter(r => isIosRisk(r));
-         break;
-       case 'failed':
-         filtered = filtered.filter(r => r.status === 'failed');
-         break;
-       case 'healthy':
-         filtered = filtered.filter(r => r.status === 'completed' && r.ios_ready_url);
-         break;
-     }
+      switch (filterType) {
+        case 'ios-risk':
+          filtered = filtered.filter(r => isIosRisk(r));
+          break;
+        case 'failed':
+          filtered = filtered.filter(r => r.status === 'failed');
+          break;
+        case 'healthy':
+          filtered = filtered.filter(r => r.status === 'completed' && r.ios_ready_url);
+          break;
+        case 'compatible':
+          filtered = filtered.filter(r => r.status === 'completed' && !r.needs_conversion);
+          break;
+      }
  
      setFilteredRecords(filtered);
    }, [videoRecords, searchQuery, filterType]);
@@ -825,17 +828,17 @@
                      className="pl-10"
                    />
                  </div>
-                 <div className="flex gap-2">
-                   {(['all', 'ios-risk', 'failed', 'healthy'] as const).map(filter => (
-                     <Button
-                       key={filter}
-                       variant={filterType === filter ? 'default' : 'outline'}
-                       size="sm"
-                       onClick={() => setFilterType(filter)}
-                     >
-                       {filter === 'all' ? 'All' : filter === 'ios-risk' ? 'iOS Risk' : filter.charAt(0).toUpperCase() + filter.slice(1)}
-                     </Button>
-                   ))}
+                  <div className="flex gap-2 flex-wrap">
+                    {(['all', 'compatible', 'ios-risk', 'failed', 'healthy'] as const).map(filter => (
+                      <Button
+                        key={filter}
+                        variant={filterType === filter ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setFilterType(filter)}
+                      >
+                        {filter === 'all' ? 'All' : filter === 'ios-risk' ? 'iOS Risk' : filter === 'compatible' ? 'Compatible' : filter.charAt(0).toUpperCase() + filter.slice(1)}
+                      </Button>
+                    ))}
                  </div>
                </div>
  
