@@ -16,32 +16,34 @@
    TableHeader,
    TableRow,
  } from '@/components/ui/table';
- import { toast } from 'sonner';
- import {
-   RefreshCw,
-   Check,
-   X,
-   Clock,
-   AlertTriangle,
-   Smartphone,
-   Activity,
-   Server,
-   Search,
-   Wrench,
-   Play,
-   Film,
-   Tv,
-   FileVideo,
-   Volume2,
-   Subtitles,
-   Shield,
-   Zap,
-   RotateCcw,
-   CheckCircle2,
-   XCircle,
-   AlertCircle,
-   Loader2,
- } from 'lucide-react';
+  import { toast } from 'sonner';
+  import {
+    RefreshCw,
+    Check,
+    X,
+    Clock,
+    AlertTriangle,
+    Smartphone,
+    Activity,
+    Server,
+    Search,
+    Wrench,
+    Play,
+    Film,
+    Tv,
+    FileVideo,
+    Volume2,
+    Subtitles,
+    Shield,
+    Zap,
+    RotateCcw,
+    CheckCircle2,
+    XCircle,
+    AlertCircle,
+    Loader2,
+    Pause,
+    Square,
+  } from 'lucide-react';
  
  interface VideoHealthRecord {
    id: string;
@@ -720,32 +722,84 @@
                       </p>
                     </div>
                   </div>
-                  <Button
-                    onClick={async () => {
-                      try {
-                        const { data, error } = await supabase
-                          .from('video_conversions')
-                          .update({
-                            status: 'processing',
-                            conversion_started_at: new Date().toISOString(),
-                            error_message: null,
-                          })
-                          .eq('status', 'pending')
-                          .select();
-                        if (error) throw error;
-                        toast.success(`Started ${data?.length || 0} pending conversions`);
-                        fetchData();
-                      } catch (err) {
-                        console.error(err);
-                        toast.error('Failed to start conversions');
-                      }
-                    }}
-                    disabled={pipelineStatus.pendingJobs === 0}
-                    className="shrink-0"
-                  >
-                    <Play className="h-4 w-4 mr-2" />
-                    Start ({pipelineStatus.pendingJobs})
-                  </Button>
+                  <div className="flex gap-2 shrink-0">
+                    <Button
+                      onClick={async () => {
+                        try {
+                          const { data, error } = await supabase
+                            .from('video_conversions')
+                            .update({
+                              status: 'processing',
+                              conversion_started_at: new Date().toISOString(),
+                              error_message: null,
+                            })
+                            .eq('status', 'pending')
+                            .select();
+                          if (error) throw error;
+                          toast.success(`Started ${data?.length || 0} pending conversions`);
+                          fetchData();
+                        } catch (err) {
+                          console.error(err);
+                          toast.error('Failed to start conversions');
+                        }
+                      }}
+                      disabled={pipelineStatus.pendingJobs === 0}
+                    >
+                      <Play className="h-4 w-4 mr-2" />
+                      Start ({pipelineStatus.pendingJobs})
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={async () => {
+                        try {
+                          const { data, error } = await supabase
+                            .from('video_conversions')
+                            .update({
+                              status: 'pending',
+                              conversion_started_at: null,
+                            })
+                            .eq('status', 'processing')
+                            .select();
+                          if (error) throw error;
+                          toast.success(`Paused ${data?.length || 0} active conversions`);
+                          fetchData();
+                        } catch (err) {
+                          console.error(err);
+                          toast.error('Failed to pause conversions');
+                        }
+                      }}
+                      disabled={pipelineStatus.activeJobs === 0}
+                    >
+                      <Pause className="h-4 w-4 mr-2" />
+                      Pause ({pipelineStatus.activeJobs})
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={async () => {
+                        try {
+                          const { data, error } = await supabase
+                            .from('video_conversions')
+                            .update({
+                              status: 'pending',
+                              conversion_started_at: null,
+                              error_message: 'Stopped by admin',
+                            })
+                            .eq('status', 'processing')
+                            .select();
+                          if (error) throw error;
+                          toast.success(`Stopped ${data?.length || 0} conversions`);
+                          fetchData();
+                        } catch (err) {
+                          console.error(err);
+                          toast.error('Failed to stop conversions');
+                        }
+                      }}
+                      disabled={pipelineStatus.activeJobs === 0}
+                    >
+                      <Square className="h-4 w-4 mr-2" />
+                      Stop
+                    </Button>
+                  </div>
                 </div>
              </CardContent>
            </Card>
