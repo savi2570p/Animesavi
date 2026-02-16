@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-FFmpeg Background Worker for iOS HLS Video Conversion
-======================================================
-This script runs as a background worker to process video conversions.
-Deploy this on a server with FFmpeg installed (with NVENC support for GPU).
+Production-Grade FFmpeg Video Conversion Worker
+=================================================
+Smart processing, parallel jobs, error recovery, HLS generation,
+resource protection, and real-time progress tracking.
 
 Usage:
-    python ffmpeg-worker.py [--gpu] [--max-concurrent=2] [--poll-interval=30]
+    python ffmpeg-worker.py [--gpu] [--max-concurrent=4] [--poll-interval=15]
 
 Environment Variables Required:
     SUPABASE_URL        - Your Supabase project URL
@@ -20,37 +20,44 @@ import sys
 import json
 import time
 import signal
+import shutil
 import argparse
 import subprocess
 import threading
-import queue
+import psutil  # pip install psutil
 import requests
 from pathlib import Path
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple, List
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# Configuration from environment
+# ── Configuration ──────────────────────────────────────────────────────────────
 SUPABASE_URL = os.getenv('SUPABASE_URL', '')
 SUPABASE_SERVICE_KEY = os.getenv('SUPABASE_SERVICE_KEY', '')
 STORAGE_BASE_PATH = os.getenv('STORAGE_BASE_PATH', '/mnt/videos')
 CDN_BASE_URL = os.getenv('CDN_BASE_URL', 'https://your-cdn.com')
-
 EDGE_FUNCTION_URL = f"{SUPABASE_URL}/functions/v1/video-conversion"
+
+# Resource limits
+MAX_CPU_PERCENT = 85
+MAX_MEMORY_PERCENT = 85
+TEMP_CLEANUP_AGE_HOURS = 24
 
 # Worker state
 shutdown_event = threading.Event()
+pause_event = threading.Event()
 worker_id = f"{os.uname().nodename}-{os.getpid()}"
+active_jobs = threading.Semaphore(1)  # Will be re-set in main()
 
 
-def log(message: str):
-    """Log with timestamp and worker ID."""
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    print(f"[{timestamp}] [{worker_id}] {message}", flush=True)
+# ── Logging ────────────────────────────────────────────────────────────────────
+def log(message: str, level: str = 'INFO'):
+    ts = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print(f"[{ts}] [{level}] [{worker_id}] {message}", flush=True)
 
 
+# ── API helpers ────────────────────────────────────────────────────────────────
 def api_headers():
-    """Get API request headers."""
     return {
         'Authorization': f'Bearer {SUPABASE_SERVICE_KEY}',
         'Content-Type': 'application/json'
@@ -58,166 +65,337 @@ def api_headers():
 
 
 def update_status(conversion_id: str, status: str, **kwargs):
-    """Update conversion status via API."""
-    payload = {'conversionId': conversion_id, 'status': status}
-    
-    if 'ios_ready_url' in kwargs:
-        payload['iosReadyUrl'] = kwargs['ios_ready_url']
-    if 'ios_ready_path' in kwargs:
-        payload['iosReadyPath'] = kwargs['ios_ready_path']
-    if 'error_message' in kwargs:
-        payload['errorMessage'] = kwargs['error_message']
-    if 'ios_file_size_bytes' in kwargs:
-        payload['iosFileSizeBytes'] = kwargs['ios_file_size_bytes']
-    if 'video_codec' in kwargs:
-        payload['videoCodec'] = kwargs['video_codec']
-    if 'audio_codec' in kwargs:
-        payload['audioCodec'] = kwargs['audio_codec']
-    if 'is_10bit' in kwargs:
-        payload['is10bit'] = kwargs['is_10bit']
-    if 'is_hevc' in kwargs:
-        payload['isHevc'] = kwargs['is_hevc']
-    if 'progress' in kwargs:
-        payload['progress'] = kwargs['progress']
-    
+    payload: Dict[str, Any] = {
+        'conversionId': conversion_id,
+        'status': status,
+    }
+    field_map = {
+        'ios_ready_url': 'iosReadyUrl',
+        'ios_ready_path': 'iosReadyPath',
+        'error_message': 'errorMessage',
+        'ios_file_size_bytes': 'iosFileSizeBytes',
+        'video_codec': 'videoCodec',
+        'audio_codec': 'audioCodec',
+        'is_10bit': 'is10bit',
+        'is_hevc': 'isHevc',
+        'progress': 'progress',
+        'hls_url': 'hlsUrl',
+        'conversion_stage': 'conversionStage',
+        'estimated_seconds_remaining': 'estimatedSecondsRemaining',
+        'worker_id': 'workerId',
+        'video_profile': 'videoProfile',
+        'pixel_format': 'pixelFormat',
+        'audio_channels': 'audioChannels',
+        'audio_sample_rate': 'audioSampleRate',
+        'subtitle_format': 'subtitleFormat',
+        'container_format': 'containerFormat',
+        'ios_compatible': 'iosCompatible',
+        'compatibility_details': 'compatibilityDetails',
+        'retry_count': 'retryCount',
+    }
+    for k, v in kwargs.items():
+        if k in field_map and v is not None:
+            payload[field_map[k]] = v
+
     try:
-        response = requests.post(
+        r = requests.post(
             f"{EDGE_FUNCTION_URL}?action=update-status",
-            headers=api_headers(),
-            json=payload
+            headers=api_headers(), json=payload, timeout=15
         )
-        response.raise_for_status()
-        return response.json()
+        r.raise_for_status()
+        return r.json()
     except Exception as e:
-        log(f"Error updating status: {e}")
+        log(f"Status update failed for {conversion_id}: {e}", 'ERROR')
         return None
 
 
 def get_pending_conversions() -> list:
-    """Fetch pending conversions from API."""
     try:
-        response = requests.get(
+        r = requests.get(
             f"{EDGE_FUNCTION_URL}?action=pending",
-            headers=api_headers()
+            headers=api_headers(), timeout=15
         )
-        response.raise_for_status()
-        data = response.json()
-        return data.get('conversions', [])
+        r.raise_for_status()
+        return r.json().get('conversions', [])
     except Exception as e:
-        log(f"Error fetching pending: {e}")
+        log(f"Fetch pending failed: {e}", 'ERROR')
         return []
 
 
-def detect_video_properties(input_file: str) -> Dict[str, Any]:
-    """Detect video properties using ffprobe."""
+# ── Video analysis ─────────────────────────────────────────────────────────────
+def probe_video(input_file: str) -> Dict[str, Any]:
+    """Full ffprobe analysis returning streams + format."""
     try:
         result = subprocess.run([
-            'ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_streams', input_file
-        ], capture_output=True, text=True)
+            'ffprobe', '-v', 'quiet', '-print_format', 'json',
+            '-show_streams', '-show_format', input_file
+        ], capture_output=True, text=True, timeout=60)
         return json.loads(result.stdout)
     except Exception as e:
-        log(f"Error detecting video properties: {e}")
+        log(f"ffprobe error: {e}", 'ERROR')
         return {}
 
 
-def check_gpu_encoder() -> str:
-    """Check available GPU encoder."""
+def analyze_compatibility(probe_data: Dict) -> Dict[str, Any]:
+    """Strict iOS compatibility analysis based on actual codec inspection."""
+    info: Dict[str, Any] = {
+        'container_format': None,
+        'video_codec': None,
+        'video_profile': None,
+        'pixel_format': None,
+        'audio_codec': None,
+        'audio_channels': None,
+        'audio_sample_rate': None,
+        'subtitle_format': None,
+        'is_10bit': False,
+        'is_hevc': False,
+        'duration_seconds': 0,
+        'ios_compatible': False,
+        'issues': [],
+    }
+
+    # Container
+    fmt = probe_data.get('format', {})
+    info['container_format'] = fmt.get('format_name', 'unknown')
     try:
-        result = subprocess.run(
-            ['ffmpeg', '-encoders'],
-            capture_output=True, text=True
-        )
-        output = result.stdout
-        
-        if 'h264_nvenc' in output:
+        info['duration_seconds'] = float(fmt.get('duration', 0))
+    except (ValueError, TypeError):
+        pass
+
+    for stream in probe_data.get('streams', []):
+        codec_type = stream.get('codec_type')
+        if codec_type == 'video' and info['video_codec'] is None:
+            info['video_codec'] = stream.get('codec_name', 'unknown')
+            info['video_profile'] = stream.get('profile', 'unknown')
+            info['pixel_format'] = stream.get('pix_fmt', 'unknown')
+            info['is_10bit'] = '10' in str(info['pixel_format'])
+            info['is_hevc'] = info['video_codec'].lower() in ('hevc', 'h265')
+        elif codec_type == 'audio' and info['audio_codec'] is None:
+            info['audio_codec'] = stream.get('codec_name', 'unknown')
+            info['audio_channels'] = stream.get('channels', 0)
+            try:
+                info['audio_sample_rate'] = int(stream.get('sample_rate', 0))
+            except (ValueError, TypeError):
+                info['audio_sample_rate'] = 0
+        elif codec_type == 'subtitle' and info['subtitle_format'] is None:
+            info['subtitle_format'] = stream.get('codec_name', 'unknown')
+
+    # ── Strict iOS rules ──
+    issues = []
+    vc = (info['video_codec'] or '').lower()
+    if vc != 'h264':
+        issues.append(f"Video codec '{info['video_codec']}' is not H.264")
+    vp = (info['video_profile'] or '').lower()
+    if vp not in ('main', 'baseline', 'constrained baseline'):
+        issues.append(f"Video profile '{info['video_profile']}' is not Main/Baseline")
+    if info['pixel_format'] != 'yuv420p':
+        issues.append(f"Pixel format '{info['pixel_format']}' is not yuv420p")
+    ac = (info['audio_codec'] or '').lower()
+    if ac != 'aac':
+        issues.append(f"Audio codec '{info['audio_codec']}' is not AAC")
+    if info['audio_channels'] and info['audio_channels'] > 2:
+        issues.append(f"Audio has {info['audio_channels']} channels (need stereo)")
+    if info['audio_sample_rate'] and info['audio_sample_rate'] not in (44100, 48000):
+        issues.append(f"Sample rate {info['audio_sample_rate']}Hz not standard")
+
+    # Container check
+    container = (info['container_format'] or '').lower()
+    if 'mp4' not in container and 'mov' not in container and 'm4v' not in container:
+        issues.append(f"Container '{container}' is not MP4/MOV")
+
+    info['issues'] = issues
+    info['ios_compatible'] = len(issues) == 0
+    return info
+
+
+def needs_video_reencode(info: Dict) -> bool:
+    vc = (info.get('video_codec') or '').lower()
+    vp = (info.get('video_profile') or '').lower()
+    pf = info.get('pixel_format', '')
+    if vc != 'h264':
+        return True
+    if vp not in ('main', 'baseline', 'constrained baseline', 'high'):
+        return True
+    if pf != 'yuv420p':
+        return True
+    return False
+
+
+def needs_audio_reencode(info: Dict) -> bool:
+    ac = (info.get('audio_codec') or '').lower()
+    ch = info.get('audio_channels', 0)
+    if ac != 'aac':
+        return True
+    if ch and ch > 2:
+        return True
+    return False
+
+
+# ── GPU detection ──────────────────────────────────────────────────────────────
+def check_gpu_encoder() -> str:
+    try:
+        result = subprocess.run(['ffmpeg', '-encoders'], capture_output=True, text=True, timeout=10)
+        out = result.stdout
+        if 'h264_nvenc' in out:
             return 'nvenc'
-        elif 'h264_videotoolbox' in output:
+        if 'h264_videotoolbox' in out:
             return 'videotoolbox'
-        elif 'h264_vaapi' in output:
+        if 'h264_vaapi' in out:
             return 'vaapi'
     except Exception:
         pass
     return 'cpu'
 
 
-def get_encoder_options(use_gpu: bool) -> tuple:
-    """Get FFmpeg encoder and options based on availability."""
+def get_encoder_config(use_gpu: bool) -> Tuple[str, List[str]]:
     if not use_gpu:
-        return 'libx264', ['-preset', 'medium', '-crf', '23']
-    
-    gpu_type = check_gpu_encoder()
-    
-    if gpu_type == 'nvenc':
-        log("Using NVIDIA NVENC GPU encoding")
-        return 'h264_nvenc', ['-preset', 'p4', '-tune', 'hq', '-rc', 'vbr', '-cq', '23']
-    elif gpu_type == 'videotoolbox':
-        log("Using Apple VideoToolbox GPU encoding")
-        return 'h264_videotoolbox', ['-q:v', '65']
-    elif gpu_type == 'vaapi':
-        log("Using Intel VAAPI GPU encoding")
+        return 'libx264', ['-preset', 'fast', '-crf', '22']  # fast preset for speed
+
+    gpu = check_gpu_encoder()
+    if gpu == 'nvenc':
+        log("Using NVIDIA NVENC")
+        return 'h264_nvenc', ['-preset', 'p4', '-tune', 'hq', '-rc', 'vbr', '-cq', '22']
+    elif gpu == 'videotoolbox':
+        log("Using Apple VideoToolbox")
+        return 'h264_videotoolbox', ['-q:v', '60']
+    elif gpu == 'vaapi':
+        log("Using Intel VAAPI")
         return 'h264_vaapi', ['-vaapi_device', '/dev/dri/renderD128']
     else:
-        log("No GPU encoder found, using CPU")
-        return 'libx264', ['-preset', 'medium', '-crf', '23']
+        return 'libx264', ['-preset', 'fast', '-crf', '22']
 
 
-def generate_ios_mp4(input_file: str, output_file: str, use_gpu: bool, 
-                     progress_callback=None) -> bool:
-    """Generate iOS-compatible MP4."""
-    encoder, encoder_opts = get_encoder_options(use_gpu)
-    
-    cmd = [
-        'ffmpeg', '-y', '-i', input_file,
-        '-c:v', encoder,
-        *encoder_opts,
-        '-profile:v', 'high',
-        '-level:v', '4.1',
-        '-pix_fmt', 'yuv420p',
-        '-c:a', 'aac',
-        '-b:a', '192k',
-        '-ac', '2',
+# ── Resource protection ───────────────────────────────────────────────────────
+def system_overloaded() -> bool:
+    cpu = psutil.cpu_percent(interval=1)
+    mem = psutil.virtual_memory().percent
+    if cpu > MAX_CPU_PERCENT:
+        log(f"CPU overloaded: {cpu}%", 'WARN')
+        return True
+    if mem > MAX_MEMORY_PERCENT:
+        log(f"Memory overloaded: {mem}%", 'WARN')
+        return True
+    return False
+
+
+def cleanup_temp_files():
+    """Remove old temp/partial files."""
+    temp_dir = Path(STORAGE_BASE_PATH) / 'temp'
+    if not temp_dir.exists():
+        return
+    cutoff = time.time() - (TEMP_CLEANUP_AGE_HOURS * 3600)
+    cleaned = 0
+    for f in temp_dir.iterdir():
+        if f.stat().st_mtime < cutoff:
+            try:
+                f.unlink()
+                cleaned += 1
+            except Exception:
+                pass
+    if cleaned:
+        log(f"Cleaned {cleaned} temp files")
+
+
+# ── Smart conversion ──────────────────────────────────────────────────────────
+def smart_convert(input_file: str, output_file: str, info: Dict,
+                  use_gpu: bool, conversion_id: str) -> bool:
+    """
+    Smart conversion: only re-encode streams that are incompatible.
+    - If video is already H.264/yuv420p → copy video stream
+    - If audio is already AAC stereo → copy audio stream
+    - Only remux container if everything is compatible
+    """
+    encoder, encoder_opts = get_encoder_config(use_gpu)
+    reencode_video = needs_video_reencode(info)
+    reencode_audio = needs_audio_reencode(info)
+    duration = info.get('duration_seconds', 0)
+
+    mode = 'full' if (reencode_video and reencode_audio) else \
+           'video-only' if reencode_video else \
+           'audio-only' if reencode_audio else 'remux'
+
+    log(f"Smart mode: {mode} (video={reencode_video}, audio={reencode_audio})")
+
+    update_status(conversion_id, 'processing',
+                  conversion_stage='encoding',
+                  progress=5,
+                  worker_id=worker_id)
+
+    cmd = ['ffmpeg', '-y', '-i', input_file]
+
+    # Video
+    if reencode_video:
+        cmd += ['-c:v', encoder] + encoder_opts + [
+            '-profile:v', 'main', '-level:v', '4.1', '-pix_fmt', 'yuv420p'
+        ]
+    else:
+        cmd += ['-c:v', 'copy']
+
+    # Audio
+    if reencode_audio:
+        cmd += ['-c:a', 'aac', '-b:a', '192k', '-ac', '2']
+    else:
+        cmd += ['-c:a', 'copy']
+
+    # Subtitles → mov_text for MP4
+    sub_format = info.get('subtitle_format')
+    if sub_format:
+        if sub_format in ('subrip', 'srt', 'ass', 'ssa'):
+            cmd += ['-map', '0:s?', '-c:s', 'mov_text']
+        else:
+            cmd += ['-sn']  # Drop incompatible subtitle formats
+    else:
+        cmd += ['-sn']
+
+    cmd += [
         '-movflags', '+faststart',
-        '-sn',
         '-map', '0:v:0',
         '-map', '0:a:0?',
         output_file
     ]
-    
+
     try:
         process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             universal_newlines=True
         )
-        
-        # Monitor progress
+
+        last_progress_update = time.time()
         for line in process.stderr:
-            if 'time=' in line and progress_callback:
-                # Parse time from FFmpeg output
+            if 'time=' in line and duration > 0:
                 try:
                     time_str = line.split('time=')[1].split()[0]
                     parts = time_str.split(':')
                     if len(parts) == 3:
-                        h, m, s = int(parts[0]), int(parts[1]), float(parts[2])
-                        current_seconds = h * 3600 + m * 60 + s
-                        progress_callback(current_seconds)
+                        current = int(parts[0]) * 3600 + int(parts[1]) * 60 + float(parts[2])
+                        pct = min(int((current / duration) * 95), 95)
+                        remaining = int((duration - current) * (1 if mode == 'remux' else 2))
+                        # Throttle updates to every 5 seconds
+                        if time.time() - last_progress_update >= 5:
+                            update_status(conversion_id, 'processing',
+                                          progress=pct,
+                                          estimated_seconds_remaining=max(remaining, 0),
+                                          conversion_stage='encoding')
+                            last_progress_update = time.time()
                 except Exception:
                     pass
-        
+
         process.wait()
         return process.returncode == 0
     except Exception as e:
-        log(f"FFmpeg error: {e}")
+        log(f"FFmpeg error: {e}", 'ERROR')
         return False
 
 
-def generate_hls(input_file: str, output_dir: str, use_gpu: bool) -> bool:
-    """Generate multi-quality HLS output."""
+def generate_hls(input_file: str, output_dir: str, use_gpu: bool,
+                 conversion_id: str) -> bool:
+    """Generate adaptive bitrate HLS output."""
     Path(output_dir).mkdir(parents=True, exist_ok=True)
-    
-    encoder, encoder_opts = get_encoder_options(use_gpu)
-    
+    encoder, encoder_opts = get_encoder_config(use_gpu)
+
+    update_status(conversion_id, 'processing',
+                  conversion_stage='hls_generation', progress=80)
+
     cmd = [
         'ffmpeg', '-y', '-i', input_file,
         '-filter_complex',
@@ -225,25 +403,16 @@ def generate_hls(input_file: str, output_dir: str, use_gpu: bool) -> bool:
         '[v1]scale=w=640:h=360:force_original_aspect_ratio=decrease[v360];'
         '[v2]scale=w=1280:h=720:force_original_aspect_ratio=decrease[v720];'
         '[v3]scale=w=1920:h=1080:force_original_aspect_ratio=decrease[v1080]',
-        # 360p
         '-map', '[v360]', '-c:v:0', encoder, *encoder_opts,
         '-b:v:0', '800k', '-maxrate:v:0', '856k', '-bufsize:v:0', '1200k',
-        # 720p
         '-map', '[v720]', '-c:v:1', encoder, *encoder_opts,
         '-b:v:1', '2800k', '-maxrate:v:1', '2996k', '-bufsize:v:1', '4200k',
-        # 1080p
         '-map', '[v1080]', '-c:v:2', encoder, *encoder_opts,
         '-b:v:2', '5000k', '-maxrate:v:2', '5350k', '-bufsize:v:2', '7500k',
-        # Audio
         '-map', '0:a', '-c:a', 'aac', '-b:a', '128k', '-ac', '2',
-        # Common options
-        '-pix_fmt', 'yuv420p',
-        '-profile:v', 'high', '-level:v', '4.1',
+        '-pix_fmt', 'yuv420p', '-profile:v', 'main', '-level:v', '4.1',
         '-sn',
-        # HLS options
-        '-f', 'hls',
-        '-hls_time', '6',
-        '-hls_playlist_type', 'vod',
+        '-f', 'hls', '-hls_time', '6', '-hls_playlist_type', 'vod',
         '-hls_flags', 'independent_segments',
         '-hls_segment_type', 'mpegts',
         '-hls_segment_filename', f'{output_dir}/segment_%v_%03d.ts',
@@ -251,164 +420,290 @@ def generate_hls(input_file: str, output_dir: str, use_gpu: bool) -> bool:
         '-var_stream_map', 'v:0,a:0 v:1,a:0 v:2,a:0',
         f'{output_dir}/stream_%v.m3u8'
     ]
-    
+
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=7200)
         return result.returncode == 0
     except Exception as e:
-        log(f"HLS generation error: {e}")
+        log(f"HLS error: {e}", 'ERROR')
         return False
 
 
+# ── Error recovery ─────────────────────────────────────────────────────────────
+def attempt_auto_fix(input_file: str, info: Dict) -> Optional[str]:
+    """Try to fix common issues before conversion."""
+    temp_dir = Path(STORAGE_BASE_PATH) / 'temp'
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    fixed_file = str(temp_dir / f"fixed_{Path(input_file).name}")
+
+    # If container is corrupt, try remuxing first
+    container = (info.get('container_format') or '').lower()
+    if 'matroska' in container or 'avi' in container or 'webm' in container:
+        log("Auto-fix: remuxing from non-MP4 container")
+        try:
+            result = subprocess.run([
+                'ffmpeg', '-y', '-i', input_file,
+                '-c', 'copy', '-movflags', '+faststart', fixed_file
+            ], capture_output=True, text=True, timeout=600)
+            if result.returncode == 0 and Path(fixed_file).exists():
+                return fixed_file
+        except Exception:
+            pass
+
+    return None
+
+
+# ── Main conversion pipeline ──────────────────────────────────────────────────
 def process_conversion(conversion: Dict[str, Any], use_gpu: bool) -> bool:
-    """Process a single video conversion."""
     conversion_id = conversion['id']
     original_url = conversion.get('original_url', '')
     original_path = conversion.get('original_path', original_url)
-    
-    log(f"Starting conversion: {conversion_id}")
-    log(f"Input: {original_path}")
-    
-    # Update status to processing
-    update_status(conversion_id, 'processing')
-    
+    retry_count = conversion.get('retry_count', 0)
+
+    log(f"Processing: {conversion_id} (retry={retry_count})")
+
+    update_status(conversion_id, 'processing',
+                  conversion_stage='analyzing',
+                  progress=0,
+                  worker_id=worker_id)
+
     try:
-        # Determine input file path
+        # ── Step 1: Resolve input file ──
         filename = Path(original_path).name
-        input_file = Path(STORAGE_BASE_PATH) / 'original' / filename
-        
-        if not input_file.exists():
-            # Try downloading from URL
-            log("Local file not found, attempting download...")
-            input_file.parent.mkdir(parents=True, exist_ok=True)
-            
+        input_file = str(Path(STORAGE_BASE_PATH) / 'original' / filename)
+
+        if not Path(input_file).exists():
+            log("Downloading from URL...")
+            Path(input_file).parent.mkdir(parents=True, exist_ok=True)
             try:
-                response = requests.get(original_url, stream=True)
-                response.raise_for_status()
+                resp = requests.get(original_url, stream=True, timeout=300)
+                resp.raise_for_status()
                 with open(input_file, 'wb') as f:
-                    for chunk in response.iter_content(chunk_size=8192):
+                    for chunk in resp.iter_content(8192):
                         f.write(chunk)
             except Exception as e:
-                update_status(conversion_id, 'failed', error_message=f"Could not access input file: {e}")
+                update_status(conversion_id, 'failed',
+                              error_message=f"Download failed: {e}",
+                              conversion_stage='failed')
                 return False
-        
-        # Create output paths
+
+        # ── Step 2: Analyze with ffprobe ──
+        update_status(conversion_id, 'processing',
+                      conversion_stage='analyzing', progress=2)
+        probe_data = probe_video(input_file)
+        info = analyze_compatibility(probe_data)
+
+        log(f"Analysis: codec={info['video_codec']}, profile={info['video_profile']}, "
+            f"pix={info['pixel_format']}, audio={info['audio_codec']}, "
+            f"compatible={info['ios_compatible']}, issues={info['issues']}")
+
+        # ── Step 3: Check if already compatible (smart skip) ──
+        if info['ios_compatible']:
+            log("Already iOS-compatible! Remuxing with faststart only.")
+            stem = Path(original_path).stem
+            ios_dir = Path(STORAGE_BASE_PATH) / 'ios_ready'
+            ios_dir.mkdir(parents=True, exist_ok=True)
+            output_file = str(ios_dir / f"{stem}.mp4")
+
+            # Just remux to ensure faststart
+            result = subprocess.run([
+                'ffmpeg', '-y', '-i', input_file,
+                '-c', 'copy', '-movflags', '+faststart', output_file
+            ], capture_output=True, text=True, timeout=600)
+
+            if result.returncode == 0:
+                file_size = Path(output_file).stat().st_size
+                ios_url = f"{CDN_BASE_URL}/ios_ready/{stem}.mp4"
+                update_status(conversion_id, 'completed',
+                              ios_ready_url=ios_url,
+                              ios_ready_path=output_file,
+                              ios_file_size_bytes=file_size,
+                              video_codec=info['video_codec'],
+                              audio_codec=info['audio_codec'],
+                              is_10bit=info['is_10bit'],
+                              is_hevc=info['is_hevc'],
+                              progress=100,
+                              conversion_stage='completed',
+                              ios_compatible=True,
+                              video_profile=info['video_profile'],
+                              pixel_format=info['pixel_format'],
+                              audio_channels=info['audio_channels'],
+                              audio_sample_rate=info['audio_sample_rate'],
+                              container_format='mp4')
+                return True
+
+        # ── Step 4: Convert (smart mode) ──
         stem = Path(original_path).stem
-        ios_output_dir = Path(STORAGE_BASE_PATH) / 'ios_ready'
-        ios_output_dir.mkdir(parents=True, exist_ok=True)
-        ios_output_file = ios_output_dir / f"{stem}.mp4"
-        
-        # Detect video properties
-        props = detect_video_properties(str(input_file))
-        video_codec = None
-        audio_codec = None
-        is_10bit = False
-        is_hevc = False
-        
-        for stream in props.get('streams', []):
-            if stream.get('codec_type') == 'video' and not video_codec:
-                video_codec = stream.get('codec_name', 'unknown')
-                pix_fmt = stream.get('pix_fmt', '')
-                is_10bit = '10' in pix_fmt
-                is_hevc = 'hevc' in video_codec.lower() or 'h265' in video_codec.lower()
-            elif stream.get('codec_type') == 'audio' and not audio_codec:
-                audio_codec = stream.get('codec_name', 'unknown')
-        
-        log(f"Detected: video={video_codec}, audio={audio_codec}, 10bit={is_10bit}, hevc={is_hevc}")
-        
-        # Generate iOS-compatible MP4
-        if generate_ios_mp4(str(input_file), str(ios_output_file), use_gpu):
-            ios_ready_url = f"{CDN_BASE_URL}/ios_ready/{stem}.mp4"
-            file_size = ios_output_file.stat().st_size
-            
-            log(f"Conversion successful: {ios_ready_url}")
-            
-            update_status(
-                conversion_id, 'completed',
-                ios_ready_url=ios_ready_url,
-                ios_ready_path=str(ios_output_file),
-                ios_file_size_bytes=file_size,
-                video_codec=video_codec,
-                audio_codec=audio_codec,
-                is_10bit=is_10bit,
-                is_hevc=is_hevc
-            )
-            return True
-        else:
-            log(f"Conversion failed for: {conversion_id}")
-            update_status(conversion_id, 'failed', error_message="FFmpeg conversion failed")
+        ios_dir = Path(STORAGE_BASE_PATH) / 'ios_ready'
+        ios_dir.mkdir(parents=True, exist_ok=True)
+        output_file = str(ios_dir / f"{stem}.mp4")
+
+        success = smart_convert(input_file, output_file, info, use_gpu, conversion_id)
+
+        if not success:
+            # ── Step 4b: Auto-fix and retry ──
+            log("Conversion failed, attempting auto-fix...")
+            fixed = attempt_auto_fix(input_file, info)
+            if fixed:
+                success = smart_convert(fixed, output_file, info, use_gpu, conversion_id)
+                # Cleanup temp
+                try:
+                    Path(fixed).unlink()
+                except Exception:
+                    pass
+
+        if not success:
+            # ── Step 4c: Retry or fail ──
+            if retry_count < 2:
+                log(f"Scheduling retry {retry_count + 1}")
+                update_status(conversion_id, 'pending',
+                              error_message=f"Retry {retry_count + 1}/2 scheduled",
+                              retry_count=retry_count + 1,
+                              conversion_stage='retry_pending')
+            else:
+                update_status(conversion_id, 'failed',
+                              error_message="Max retries exceeded",
+                              conversion_stage='failed')
             return False
-            
+
+        # ── Step 5: Verify output ──
+        if not Path(output_file).exists() or Path(output_file).stat().st_size < 1000:
+            update_status(conversion_id, 'failed',
+                          error_message="Output file missing or too small",
+                          conversion_stage='failed')
+            return False
+
+        # Verify output compatibility
+        output_probe = probe_video(output_file)
+        output_info = analyze_compatibility(output_probe)
+
+        file_size = Path(output_file).stat().st_size
+        ios_url = f"{CDN_BASE_URL}/ios_ready/{stem}.mp4"
+
+        update_status(conversion_id, 'completed',
+                      ios_ready_url=ios_url,
+                      ios_ready_path=output_file,
+                      ios_file_size_bytes=file_size,
+                      video_codec=output_info['video_codec'],
+                      audio_codec=output_info['audio_codec'],
+                      is_10bit=output_info['is_10bit'],
+                      is_hevc=output_info['is_hevc'],
+                      progress=95,
+                      conversion_stage='packaging',
+                      ios_compatible=output_info['ios_compatible'],
+                      video_profile=output_info['video_profile'],
+                      pixel_format=output_info['pixel_format'],
+                      audio_channels=output_info['audio_channels'],
+                      audio_sample_rate=output_info['audio_sample_rate'],
+                      container_format='mp4')
+
+        # ── Step 6: Generate HLS ──
+        hls_dir = str(Path(STORAGE_BASE_PATH) / 'hls' / stem)
+        if generate_hls(output_file, hls_dir, use_gpu, conversion_id):
+            hls_url = f"{CDN_BASE_URL}/hls/{stem}/master.m3u8"
+            update_status(conversion_id, 'completed',
+                          hls_url=hls_url,
+                          progress=100,
+                          conversion_stage='completed')
+            log(f"HLS generated: {hls_url}")
+        else:
+            log("HLS generation failed (non-critical)", 'WARN')
+            # Still mark as completed since MP4 is ready
+            update_status(conversion_id, 'completed',
+                          progress=100,
+                          conversion_stage='completed')
+
+        log(f"Conversion complete: {ios_url}")
+        return True
+
     except Exception as e:
-        log(f"Error processing {conversion_id}: {e}")
-        update_status(conversion_id, 'failed', error_message=str(e))
+        log(f"Fatal error: {e}", 'ERROR')
+        if retry_count < 2:
+            update_status(conversion_id, 'pending',
+                          error_message=f"Error: {e}",
+                          retry_count=retry_count + 1,
+                          conversion_stage='retry_pending')
+        else:
+            update_status(conversion_id, 'failed',
+                          error_message=str(e),
+                          conversion_stage='failed')
         return False
 
 
+# ── Main worker loop ──────────────────────────────────────────────────────────
 def worker_loop(use_gpu: bool, max_concurrent: int, poll_interval: int):
-    """Main worker loop."""
-    log(f"Starting FFmpeg worker (GPU={use_gpu}, MaxConcurrent={max_concurrent})")
-    
+    log(f"Worker started (GPU={use_gpu}, Workers={max_concurrent}, Poll={poll_interval}s)")
+
     if use_gpu:
-        gpu_type = check_gpu_encoder()
-        log(f"GPU encoder detected: {gpu_type}")
-    
+        gpu = check_gpu_encoder()
+        log(f"GPU encoder: {gpu}")
+
+    cleanup_counter = 0
+
     with ThreadPoolExecutor(max_workers=max_concurrent) as executor:
         while not shutdown_event.is_set():
+            # Resource protection
+            if system_overloaded():
+                log("System overloaded, pausing for 30s", 'WARN')
+                shutdown_event.wait(30)
+                continue
+
             try:
-                # Get pending conversions
                 pending = get_pending_conversions()
-                
+
                 if pending:
-                    log(f"Found {len(pending)} pending conversions")
-                    
-                    # Submit up to max_concurrent jobs
-                    futures = []
-                    for conversion in pending[:max_concurrent]:
-                        future = executor.submit(process_conversion, conversion, use_gpu)
-                        futures.append(future)
-                    
-                    # Wait for completion
+                    # Limit to available capacity
+                    batch = pending[:max_concurrent]
+                    log(f"Processing {len(batch)}/{len(pending)} pending")
+
+                    futures = {
+                        executor.submit(process_conversion, conv, use_gpu): conv['id']
+                        for conv in batch
+                    }
+
                     for future in as_completed(futures):
+                        cid = futures[future]
                         try:
-                            future.result()
+                            result = future.result()
+                            log(f"Job {cid}: {'OK' if result else 'FAILED'}")
                         except Exception as e:
-                            log(f"Job error: {e}")
+                            log(f"Job {cid} exception: {e}", 'ERROR')
                 else:
-                    log(f"No pending conversions, sleeping for {poll_interval} seconds")
-                
+                    log(f"No pending jobs, sleeping {poll_interval}s")
+
             except Exception as e:
-                log(f"Worker loop error: {e}")
-            
-            # Sleep with interrupt support
+                log(f"Loop error: {e}", 'ERROR')
+
+            # Periodic temp cleanup
+            cleanup_counter += 1
+            if cleanup_counter >= 20:
+                cleanup_temp_files()
+                cleanup_counter = 0
+
             shutdown_event.wait(poll_interval)
-    
+
     log("Worker shutdown complete")
 
 
 def signal_handler(signum, frame):
-    """Handle shutdown signals."""
     log("Shutdown signal received")
     shutdown_event.set()
 
 
 def main():
-    parser = argparse.ArgumentParser(description='FFmpeg Background Worker')
+    parser = argparse.ArgumentParser(description='Production FFmpeg Worker')
     parser.add_argument('--gpu', action='store_true', help='Enable GPU encoding')
-    parser.add_argument('--max-concurrent', type=int, default=2, help='Max concurrent jobs')
-    parser.add_argument('--poll-interval', type=int, default=30, help='Poll interval in seconds')
+    parser.add_argument('--max-concurrent', type=int, default=4, help='Max parallel jobs')
+    parser.add_argument('--poll-interval', type=int, default=15, help='Poll interval seconds')
     args = parser.parse_args()
-    
-    # Validate environment
+
     if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
         print("Error: SUPABASE_URL and SUPABASE_SERVICE_KEY must be set")
         sys.exit(1)
-    
-    # Register signal handlers
+
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
-    
-    # Run worker
+
     worker_loop(args.gpu, args.max_concurrent, args.poll_interval)
 
 
