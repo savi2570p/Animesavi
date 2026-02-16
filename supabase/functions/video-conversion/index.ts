@@ -5,141 +5,52 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-// Smart format detection - don't trust file extensions
-const detectActualFormat = (url: string): { isMalformed: boolean; detectedContainer: string; extension: string } => {
+// ── Strict iOS Compatibility Rules ──────────────────────────────────────────
+// NEVER use file extension to determine compatibility.
+// Only real codec inspection determines playback safety.
+
+interface CompatibilityResult {
+  ios_compatible: boolean;
+  issues: string[];
+  needs_conversion: boolean;
+}
+
+const checkUrlPatternCompatibility = (url: string): { isMalformed: boolean; detectedContainer: string } => {
   const normalizedUrl = url.toLowerCase();
-  const extension = normalizedUrl.split('.').pop()?.split('?')[0] || '';
-  
-  // Detect .mkv.mp4 pattern - an MKV improperly wrapped as MP4
-  if (normalizedUrl.includes('.mkv.mp4')) {
-    return { isMalformed: true, detectedContainer: 'mkv_in_mp4', extension: 'mkv.mp4' };
-  }
-  
-  // Detect double extensions like .avi.mp4, .webm.mp4, etc.
   const doubleExtMatch = normalizedUrl.match(/\.(mkv|avi|webm|wmv|flv)\.(mp4|m4v)/i);
   if (doubleExtMatch) {
-    return { isMalformed: true, detectedContainer: `${doubleExtMatch[1]}_in_${doubleExtMatch[2]}`, extension: `${doubleExtMatch[1]}.${doubleExtMatch[2]}` };
+    return { isMalformed: true, detectedContainer: `${doubleExtMatch[1]}_in_${doubleExtMatch[2]}` };
+  }
+  return { isMalformed: false, detectedContainer: normalizedUrl.split('.').pop()?.split('?')[0] || 'unknown' };
+};
+
+// Determine if a video LIKELY needs conversion based on URL patterns
+// This is a PRELIMINARY check - real validation happens via ffprobe in the worker
+const preliminaryNeedsConversion = (url: string): boolean => {
+  const normalized = url.toLowerCase();
+  const pattern = checkUrlPatternCompatibility(url);
+  
+  if (pattern.isMalformed) return true;
+  if (normalized.endsWith('.mkv')) return true;
+  if (normalized.endsWith('.webm')) return true;
+  if (normalized.endsWith('.avi')) return true;
+  if (normalized.endsWith('.wmv')) return true;
+  if (normalized.endsWith('.flv')) return true;
+  
+  // MP4 files need validation - mark as needs_validation, NOT as compatible
+  // The worker will run ffprobe to determine actual compatibility
+  if (normalized.endsWith('.mp4') || normalized.endsWith('.m4v')) {
+    return false; // Preliminary: likely compatible, but worker must verify
   }
   
-  return { isMalformed: false, detectedContainer: extension, extension };
+  return true; // Unknown format, assume needs conversion
 };
 
-// FFmpeg command template for iOS-compatible conversion with multi-audio & subtitle support
-const generateFFmpegCommand = (inputPath: string, outputPath: string): string => {
-  return `ffmpeg -i "${inputPath}" \\
-  -c:v libx264 \\
-  -profile:v main \\
-  -level:v 4.1 \\
-  -pix_fmt yuv420p \\
-  -preset medium \\
-  -crf 23 \\
-  -map 0:v:0 \\
-  -map 0:a \\
-  -c:a aac \\
-  -b:a 192k \\
-  -ac 2 \\
-  -map 0:s? \\
-  -c:s mov_text \\
-  -movflags +faststart \\
-  -metadata:s:a language= \\
-  "${outputPath}"`;
-};
-
-// GPU-accelerated FFmpeg command (NVENC) with multi-audio & subtitle support
-const generateGPUFFmpegCommand = (inputPath: string, outputPath: string): string => {
-  return `# GPU Accelerated (NVIDIA NVENC) - Multi-audio safe
-ffmpeg -hwaccel cuda -i "${inputPath}" \\
-  -c:v h264_nvenc \\
-  -preset p4 \\
-  -tune hq \\
-  -rc vbr \\
-  -cq 23 \\
-  -profile:v main \\
-  -level:v 4.1 \\
-  -pix_fmt yuv420p \\
-  -map 0:v:0 \\
-  -map 0:a \\
-  -c:a aac \\
-  -b:a 192k \\
-  -ac 2 \\
-  -map 0:s? \\
-  -c:s mov_text \\
-  -movflags +faststart \\
-  "${outputPath}"`;
-};
-
-// Generate multi-quality HLS command with all audio tracks preserved
-const generateHLSCommand = (inputPath: string, outputDir: string): string => {
-  return `# Multi-quality HLS with all audio tracks preserved
-ffmpeg -i "${inputPath}" \\
-  -filter_complex "[0:v]split=3[v1][v2][v3]; \\
-    [v1]scale=w=640:h=360:force_original_aspect_ratio=decrease[v360]; \\
-    [v2]scale=w=1280:h=720:force_original_aspect_ratio=decrease[v720]; \\
-    [v3]scale=w=1920:h=1080:force_original_aspect_ratio=decrease[v1080]" \\
-  -map "[v360]" -c:v:0 libx264 -b:v:0 800k -maxrate:v:0 856k -bufsize:v:0 1200k \\
-  -map "[v720]" -c:v:1 libx264 -b:v:1 2800k -maxrate:v:1 2996k -bufsize:v:1 4200k \\
-  -map "[v1080]" -c:v:2 libx264 -b:v:2 5000k -maxrate:v:2 5350k -bufsize:v:2 7500k \\
-  -map 0:a -c:a aac -b:a 128k -ac 2 \\
-  -map 0:s? -c:s webvtt \\
-  -pix_fmt yuv420p -profile:v main -level:v 4.1 \\
-  -f hls -hls_time 6 -hls_playlist_type vod \\
-  -hls_flags independent_segments \\
-  -hls_segment_type mpegts \\
-  -hls_segment_filename "${outputDir}/segment_%v_%03d.ts" \\
-  -master_pl_name "master.m3u8" \\
-  -var_stream_map "v:0,a:0 v:1,a:0 v:2,a:0" \\
-  "${outputDir}/stream_%v.m3u8"`;
-};
-
-// Smart format detection - inspect actual container, not just filename
-const needsConversion = (url: string, videoCodec?: string, audioCodec?: string, is10bit?: boolean, isHevc?: boolean): boolean => {
-  const normalizedUrl = url.toLowerCase();
-  
-  // Detect malformed containers (.mkv.mp4, .avi.mp4, etc.)
-  const formatInfo = detectActualFormat(url);
-  if (formatInfo.isMalformed) {
-    console.log(`Malformed container detected: ${formatInfo.detectedContainer} (file: ${url})`);
-    return true;
-  }
-  
-  // MKV always needs conversion for iOS
-  if (normalizedUrl.endsWith('.mkv')) return true;
-  
-  // HEVC/H.265 needs conversion
-  if (isHevc || videoCodec?.toLowerCase().includes('hevc') || videoCodec?.toLowerCase().includes('h265')) return true;
-  
-  // 10-bit video needs conversion
-  if (is10bit) return true;
-  
-  // Non-AAC audio needs conversion
-  if (audioCodec && !audioCodec.toLowerCase().includes('aac')) return true;
-  
-  // WebM, AVI, WMV, FLV need conversion
-  if (normalizedUrl.endsWith('.webm')) return true;
-  if (normalizedUrl.endsWith('.avi')) return true;
-  if (normalizedUrl.endsWith('.wmv')) return true;
-  if (normalizedUrl.endsWith('.flv')) return true;
-  
-  return false;
-};
-
-// Detect iOS devices from User-Agent
-const isIOSDevice = (userAgent: string): boolean => {
-  return /iPhone|iPad|iPod/i.test(userAgent);
-};
-
-// Detect Android devices from User-Agent
-const isAndroidDevice = (userAgent: string): boolean => {
-  return /Android/i.test(userAgent);
-};
-
-// Detect Windows devices from User-Agent
-const isWindowsDevice = (userAgent: string): boolean => {
-  return /Windows/i.test(userAgent);
-};
+const isIOSDevice = (ua: string): boolean => /iPhone|iPad|iPod/i.test(ua);
+const isAndroidDevice = (ua: string): boolean => /Android/i.test(ua);
+const isWindowsDevice = (ua: string): boolean => /Windows/i.test(ua);
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -152,15 +63,14 @@ Deno.serve(async (req) => {
 
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
-
-    // Get User-Agent for device detection
     const userAgent = req.headers.get('user-agent') || '';
 
+    // ── GET endpoints ─────────────────────────────────────────────────────
     if (req.method === 'GET') {
-      // Get video URL based on device type
+      
+      // Get video URL based on device type with safety check
       if (action === 'get-video-url') {
         const episodeId = url.searchParams.get('episodeId');
-        
         if (!episodeId) {
           return new Response(
             JSON.stringify({ error: 'episodeId is required' }),
@@ -168,13 +78,8 @@ Deno.serve(async (req) => {
           );
         }
 
-        // Fetch episode and conversion data
         const { data: episode, error: episodeError } = await supabaseClient
-          .from('episodes')
-          .select('video_url, external_url')
-          .eq('id', episodeId)
-          .single();
-
+          .from('episodes').select('video_url, external_url').eq('id', episodeId).single();
         if (episodeError || !episode) {
           return new Response(
             JSON.stringify({ error: 'Episode not found' }),
@@ -183,42 +88,42 @@ Deno.serve(async (req) => {
         }
 
         const { data: conversion } = await supabaseClient
-          .from('video_conversions')
-          .select('*')
-          .eq('episode_id', episodeId)
-          .single();
+          .from('video_conversions').select('*').eq('episode_id', episodeId).single();
 
         const isIOS = isIOSDevice(userAgent);
-        const isAndroid = isAndroidDevice(userAgent);
-        const isWindows = isWindowsDevice(userAgent);
-
         let videoUrl = episode.video_url || episode.external_url;
         let servedFormat = 'original';
         let conversionStatus = conversion?.status || 'none';
-        let isHLS = false;
 
-        // For iOS, serve iOS-ready version if available
-        if (isIOS && conversion?.status === 'completed' && conversion?.ios_ready_url) {
-          videoUrl = conversion.ios_ready_url;
-          servedFormat = 'ios_ready';
-          // Check if it's HLS
-          if (videoUrl.includes('.m3u8')) {
-            isHLS = true;
+        // Player safety: for iOS, ONLY serve verified compatible files
+        if (isIOS && conversion) {
+          if (conversion.ios_compatible && conversion.ios_ready_url) {
+            videoUrl = conversion.ios_ready_url;
+            servedFormat = 'ios_ready';
+          } else if (conversion.hls_url) {
+            videoUrl = conversion.hls_url;
+            servedFormat = 'hls';
+          } else if (conversion.status === 'completed' && conversion.ios_ready_url) {
+            videoUrl = conversion.ios_ready_url;
+            servedFormat = 'ios_ready';
           }
+          // If nothing compatible, still serve original but flag it
         }
 
         return new Response(
           JSON.stringify({
             videoUrl,
             servedFormat,
-            device: isIOS ? 'ios' : isAndroid ? 'android' : isWindows ? 'windows' : 'other',
+            device: isIOS ? 'ios' : isAndroidDevice(userAgent) ? 'android' : isWindowsDevice(userAgent) ? 'windows' : 'other',
             conversionStatus,
             needsConversion: conversion?.needs_conversion || false,
-            isHLS,
+            isHLS: videoUrl?.includes('.m3u8') || false,
+            iosCompatible: conversion?.ios_compatible || false,
             videoCodec: conversion?.video_codec || null,
             audioCodec: conversion?.audio_codec || null,
-            is10bit: conversion?.is_10bit || false,
-            isHevc: conversion?.is_hevc || false,
+            videoProfile: conversion?.video_profile || null,
+            pixelFormat: conversion?.pixel_format || null,
+            audioChannels: conversion?.audio_channels || null,
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -228,178 +133,101 @@ Deno.serve(async (req) => {
       if (action === 'pending') {
         const { data: pending, error } = await supabaseClient
           .from('video_conversions')
-          .select(`
-            *,
-            episodes (
-              title,
-              episode_number,
-              seasons (
-                season_number,
-                anime (
-                  title
-                )
-              )
-            )
-          `)
+          .select(`*, episodes (title, episode_number, seasons (season_number, anime (title)))`)
           .eq('status', 'pending')
           .order('created_at', { ascending: true })
           .limit(100);
-
         if (error) throw error;
-
         return new Response(
           JSON.stringify({ conversions: pending }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      // Get processing conversions (for real-time progress)
+      // Get processing conversions
       if (action === 'processing') {
         const { data: processing, error } = await supabaseClient
           .from('video_conversions')
-          .select(`
-            *,
-            episodes (
-              title,
-              episode_number,
-              seasons (
-                season_number,
-                anime (
-                  title
-                )
-              )
-            )
-          `)
+          .select(`*, episodes (title, episode_number, seasons (season_number, anime (title)))`)
           .eq('status', 'processing')
           .order('conversion_started_at', { ascending: false });
-
         if (error) throw error;
-
         return new Response(
           JSON.stringify({ conversions: processing }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      // Get conversion stats
+      // Stats
       if (action === 'stats') {
         const { data: stats, error } = await supabaseClient
-          .from('video_conversions')
-          .select('status');
-
+          .from('video_conversions').select('status');
         if (error) throw error;
-
-        const statusCounts = {
-          pending: 0,
-          processing: 0,
-          completed: 0,
-          failed: 0,
-          skipped: 0,
-        };
-
-        stats?.forEach(row => {
-          if (row.status in statusCounts) {
-            statusCounts[row.status as keyof typeof statusCounts]++;
-          }
-        });
-
+        const counts: Record<string, number> = { pending: 0, processing: 0, completed: 0, failed: 0, skipped: 0 };
+        stats?.forEach(r => { if (r.status in counts) counts[r.status]++; });
         return new Response(
-          JSON.stringify({ stats: statusCounts, total: stats?.length || 0 }),
+          JSON.stringify({ stats: counts, total: stats?.length || 0 }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      // Generate FFmpeg command for a specific conversion
+      // FFmpeg command generator
       if (action === 'ffmpeg-command') {
         const conversionId = url.searchParams.get('conversionId');
-        const commandType = url.searchParams.get('type') || 'cpu'; // cpu, gpu, hls
-        
+        const commandType = url.searchParams.get('type') || 'cpu';
         if (!conversionId) {
           return new Response(
             JSON.stringify({ error: 'conversionId is required' }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
           );
         }
-
         const { data: conversion, error } = await supabaseClient
-          .from('video_conversions')
-          .select('*')
-          .eq('id', conversionId)
-          .single();
-
+          .from('video_conversions').select('*').eq('id', conversionId).single();
         if (error || !conversion) {
           return new Response(
             JSON.stringify({ error: 'Conversion not found' }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
           );
         }
-
         const inputPath = conversion.original_path || conversion.original_url;
-        const outputPath = inputPath
-          .replace('/original/', '/ios_ready/')
-          .replace(/\.(mkv|webm|avi)$/i, '.mp4');
-        const hlsOutputDir = inputPath
-          .replace('/original/', '/hls/')
-          .replace(/\.[^.]+$/, '');
-
+        const outputPath = inputPath.replace('/original/', '/ios_ready/').replace(/\.(mkv|webm|avi)$/i, '.mp4');
+        
         let ffmpegCmd: string;
-        switch (commandType) {
-          case 'gpu':
-            ffmpegCmd = generateGPUFFmpegCommand(inputPath, outputPath);
-            break;
-          case 'hls':
-            ffmpegCmd = generateHLSCommand(inputPath, hlsOutputDir);
-            break;
-          default:
-            ffmpegCmd = generateFFmpegCommand(inputPath, outputPath);
+        if (commandType === 'gpu') {
+          ffmpegCmd = `ffmpeg -hwaccel cuda -i "${inputPath}" -c:v h264_nvenc -preset p4 -tune hq -rc vbr -cq 22 -profile:v main -level:v 4.1 -pix_fmt yuv420p -map 0:v:0 -map 0:a -c:a aac -b:a 192k -ac 2 -movflags +faststart "${outputPath}"`;
+        } else {
+          ffmpegCmd = `ffmpeg -i "${inputPath}" -c:v libx264 -profile:v main -level:v 4.1 -pix_fmt yuv420p -preset fast -crf 22 -map 0:v:0 -map 0:a -c:a aac -b:a 192k -ac 2 -movflags +faststart "${outputPath}"`;
         }
-
         return new Response(
-          JSON.stringify({ 
-            command: ffmpegCmd,
-            inputPath,
-            outputPath,
-            hlsOutputDir,
-            conversion
-          }),
+          JSON.stringify({ command: ffmpegCmd, inputPath, outputPath, conversion }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
     }
 
+    // ── POST endpoints ────────────────────────────────────────────────────
     if (req.method === 'POST') {
       const body = await req.json();
 
-      // Scan all existing episodes for missing conversion records
+      // Scan existing episodes
       if (action === 'scan-existing') {
         console.log('Starting smart scan of existing episodes...');
-        
         const { data: episodes, error: fetchError } = await supabaseClient
-          .from('episodes')
-          .select('id, video_url')
-          .not('video_url', 'is', null);
-
+          .from('episodes').select('id, video_url').not('video_url', 'is', null);
         if (fetchError) throw fetchError;
 
-        let created = 0;
-        let skipped = 0;
-        let requeued = 0;
-
+        let created = 0, skipped = 0, requeued = 0;
         for (const episode of episodes || []) {
           if (!episode.video_url) continue;
+          const pattern = checkUrlPatternCompatibility(episode.video_url);
+          const requiresConversion = preliminaryNeedsConversion(episode.video_url);
 
-          // Smart format detection
-          const formatInfo = detectActualFormat(episode.video_url);
-          const requiresConversion = needsConversion(episode.video_url);
-
-          // Check if conversion record already exists
           const { data: existing } = await supabaseClient
-            .from('video_conversions')
-            .select('id, status, original_url')
-            .eq('episode_id', episode.id)
-            .single();
+            .from('video_conversions').select('id, status, ios_compatible').eq('episode_id', episode.id).single();
 
           if (!existing) {
+            // For MP4 files, mark as needs validation (pending) not auto-completed
+            const status = requiresConversion ? 'pending' : 'pending'; // ALL need ffprobe validation
             const { error: insertError } = await supabaseClient
               .from('video_conversions')
               .insert({
@@ -407,24 +235,22 @@ Deno.serve(async (req) => {
                 original_url: episode.video_url,
                 original_path: episode.video_url,
                 needs_conversion: requiresConversion,
-                status: requiresConversion ? 'pending' : 'skipped',
+                status,
+                conversion_stage: 'queued',
               });
-            
             if (!insertError) created++;
-            else console.error('Insert error:', insertError);
-          } else if (formatInfo.isMalformed && existing.status !== 'completed') {
-            // Re-queue malformed files that weren't previously detected
+          } else if (pattern.isMalformed && existing.status !== 'completed') {
             const { error: updateError } = await supabaseClient
               .from('video_conversions')
               .update({
                 status: 'pending',
                 needs_conversion: true,
-                error_message: `Malformed container detected: ${formatInfo.detectedContainer}`,
+                error_message: `Malformed container: ${pattern.detectedContainer}`,
                 conversion_started_at: null,
                 conversion_completed_at: null,
+                conversion_stage: 'queued',
               })
               .eq('id', existing.id);
-            
             if (!updateError) requeued++;
           } else {
             skipped++;
@@ -432,36 +258,15 @@ Deno.serve(async (req) => {
         }
 
         console.log(`Smart scan complete: created=${created}, requeued=${requeued}, skipped=${skipped}`);
-
         return new Response(
-          JSON.stringify({ 
-            message: 'Smart scan completed',
-            created,
-            requeued,
-            skipped,
-            total: episodes?.length || 0
-          }),
+          JSON.stringify({ message: 'Smart scan completed', created, requeued, skipped, total: episodes?.length || 0 }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      // Update conversion status (for external workers to report back)
+      // Update conversion status (worker reports back)
       if (action === 'update-status') {
-        const { 
-          conversionId, 
-          status, 
-          iosReadyUrl, 
-          iosReadyPath, 
-          errorMessage, 
-          iosFileSizeBytes, 
-          videoCodec, 
-          audioCodec, 
-          is10bit, 
-          isHevc,
-          progress,
-          hlsUrl
-        } = body;
-
+        const { conversionId, status } = body;
         if (!conversionId || !status) {
           return new Response(
             JSON.stringify({ error: 'conversionId and status are required' }),
@@ -474,277 +279,223 @@ Deno.serve(async (req) => {
         if (status === 'processing') {
           updateData.conversion_started_at = new Date().toISOString();
         }
-        
         if (status === 'completed') {
           updateData.conversion_completed_at = new Date().toISOString();
-          if (iosReadyUrl) updateData.ios_ready_url = iosReadyUrl;
-          if (iosReadyPath) updateData.ios_ready_path = iosReadyPath;
-          if (iosFileSizeBytes) updateData.ios_file_size_bytes = iosFileSizeBytes;
-          if (hlsUrl) updateData.ios_ready_url = hlsUrl; // HLS master playlist URL
         }
-        
-        if (status === 'failed' && errorMessage) {
-          updateData.error_message = errorMessage;
+        if (status === 'failed' && body.errorMessage) {
+          updateData.error_message = body.errorMessage;
         }
 
-        if (videoCodec) updateData.video_codec = videoCodec;
-        if (audioCodec) updateData.audio_codec = audioCodec;
-        if (is10bit !== undefined) updateData.is_10bit = is10bit;
-        if (isHevc !== undefined) updateData.is_hevc = isHevc;
+        // Map all optional fields
+        const fieldMap: Record<string, string> = {
+          iosReadyUrl: 'ios_ready_url',
+          iosReadyPath: 'ios_ready_path',
+          iosFileSizeBytes: 'ios_file_size_bytes',
+          videoCodec: 'video_codec',
+          audioCodec: 'audio_codec',
+          is10bit: 'is_10bit',
+          isHevc: 'is_hevc',
+          hlsUrl: 'hls_url',
+          conversionStage: 'conversion_stage',
+          estimatedSecondsRemaining: 'estimated_seconds_remaining',
+          workerId: 'worker_id',
+          videoProfile: 'video_profile',
+          pixelFormat: 'pixel_format',
+          audioChannels: 'audio_channels',
+          audioSampleRate: 'audio_sample_rate',
+          subtitleFormat: 'subtitle_format',
+          containerFormat: 'container_format',
+          iosCompatible: 'ios_compatible',
+          compatibilityDetails: 'compatibility_details',
+          retryCount: 'retry_count',
+          progress: 'conversion_progress',
+          errorMessage: 'error_message',
+        };
+
+        for (const [bodyKey, dbKey] of Object.entries(fieldMap)) {
+          if (body[bodyKey] !== undefined) {
+            updateData[dbKey] = body[bodyKey];
+          }
+        }
 
         const { data: updated, error } = await supabaseClient
-          .from('video_conversions')
-          .update(updateData)
-          .eq('id', conversionId)
-          .select()
-          .single();
-
+          .from('video_conversions').update(updateData).eq('id', conversionId).select().single();
         if (error) throw error;
 
         console.log(`Status updated: ${conversionId} -> ${status}`);
-
         return new Response(
           JSON.stringify({ success: true, conversion: updated }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      // Retry failed conversion
+      // Retry failed
       if (action === 'retry') {
         const { conversionId } = body;
-
         if (!conversionId) {
           return new Response(
             JSON.stringify({ error: 'conversionId is required' }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
           );
         }
-
         const { data: updated, error } = await supabaseClient
           .from('video_conversions')
-          .update({ 
-            status: 'pending',
-            error_message: null,
-            conversion_started_at: null,
-            conversion_completed_at: null
-          })
-          .eq('id', conversionId)
-          .select()
-          .single();
-
+          .update({ status: 'pending', error_message: null, conversion_started_at: null, conversion_completed_at: null, conversion_stage: 'queued', conversion_progress: 0 })
+          .eq('id', conversionId).select().single();
         if (error) throw error;
-
-        console.log(`Conversion retried: ${conversionId}`);
-
         return new Response(
           JSON.stringify({ success: true, conversion: updated }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      // Retry all failed conversions
+      // Retry all failed
       if (action === 'retry-all-failed') {
         const { data: updated, error } = await supabaseClient
           .from('video_conversions')
-          .update({ 
-            status: 'pending',
-            error_message: null,
-            conversion_started_at: null,
-            conversion_completed_at: null
-          })
-          .eq('status', 'failed')
-          .select();
-
+          .update({ status: 'pending', error_message: null, conversion_started_at: null, conversion_completed_at: null, conversion_stage: 'queued', conversion_progress: 0 })
+          .eq('status', 'failed').select();
         if (error) throw error;
-
-        console.log(`Retried ${updated?.length || 0} failed conversions`);
-
         return new Response(
           JSON.stringify({ success: true, count: updated?.length || 0 }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-       // Fix all old anime - repair all videos with smart format detection
-       if (action === 'fix-all-old') {
-         console.log('Starting smart fix all old anime process...');
-         
-         // Get all videos that need repair
-         const { data: videos, error: fetchError } = await supabaseClient
-           .from('video_conversions')
-           .select('id, original_url, status, needs_conversion, ios_ready_url')
-           .or('status.eq.failed,status.eq.pending,ios_ready_url.is.null');
- 
-         if (fetchError) throw fetchError;
- 
-         let repaired = 0;
-         let skipped = 0;
-         let failed = 0;
-         let malformed = 0;
- 
-         for (const video of videos || []) {
-           // Skip if already completed with iOS-ready URL
-           if (video.status === 'completed' && video.ios_ready_url) {
-             skipped++;
-             continue;
-           }
- 
-           // Use smart format detection instead of just file extension
-           const formatInfo = detectActualFormat(video.original_url);
-           const requiresConversion = needsConversion(video.original_url);
-           
-           if (formatInfo.isMalformed) {
-             malformed++;
-             console.log(`Malformed file detected: ${video.original_url} (${formatInfo.detectedContainer})`);
-           }
- 
-           // Queue for conversion
-           const { error: updateError } = await supabaseClient
-             .from('video_conversions')
-             .update({
-               status: 'pending',
-               error_message: formatInfo.isMalformed 
-                 ? `Malformed container: ${formatInfo.detectedContainer} - will remux & reconvert` 
-                 : null,
-               conversion_started_at: null,
-               conversion_completed_at: null,
-               needs_conversion: requiresConversion || formatInfo.isMalformed,
-             })
-             .eq('id', video.id);
- 
-           if (updateError) {
-             failed++;
-             console.error(`Failed to queue ${video.id}:`, updateError);
-           } else {
-             repaired++;
-           }
-         }
- 
-         console.log(`Smart fix complete: repaired=${repaired}, malformed=${malformed}, skipped=${skipped}, failed=${failed}`);
- 
-         return new Response(
-           JSON.stringify({
-             success: true,
-             message: 'Smart fix all old anime completed',
-             repaired,
-             malformed,
-             skipped,
-             failed,
-             total: videos?.length || 0,
-           }),
-           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-         );
-       }
- 
-       // Get health stats for dashboard
-       if (action === 'health-stats') {
-         const { data: conversions, error } = await supabaseClient
-           .from('video_conversions')
-           .select('status, ios_ready_url, needs_conversion, is_hevc, is_10bit');
- 
-         if (error) throw error;
- 
-         const stats = {
-           total: conversions?.length || 0,
-           healthy: 0,
-           processing: 0,
-           pending: 0,
-           failed: 0,
-           iosRisk: 0,
-         };
- 
-         conversions?.forEach(row => {
-           if (row.status === 'completed' && row.ios_ready_url) {
-             stats.healthy++;
-           } else if (row.status === 'processing') {
-             stats.processing++;
-           } else if (row.status === 'pending') {
-             stats.pending++;
-           } else if (row.status === 'failed') {
-             stats.failed++;
-           }
- 
-           // Check for iOS risk
-           if (
-             row.status === 'failed' ||
-             (row.status === 'pending' && row.needs_conversion) ||
-             (!row.ios_ready_url && row.needs_conversion)
-           ) {
-             stats.iosRisk++;
-           }
-         });
- 
-         return new Response(
-           JSON.stringify({ stats }),
-           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-         );
-       }
+      // Fix all iOS playback issues - global revalidation
+      if (action === 'fix-all-ios') {
+        console.log('Starting global iOS fix...');
+        // Reset ALL completed videos that haven't been validated by ffprobe
+        const { data: videos, error: fetchError } = await supabaseClient
+          .from('video_conversions')
+          .select('id, original_url, status, ios_compatible, needs_conversion, ios_ready_url')
+          .or('ios_compatible.is.null,ios_compatible.eq.false,status.eq.failed,status.eq.pending');
 
-       // Auto-process on upload - called after video upload
-       if (action === 'auto-process') {
-         const { episodeId, videoUrl } = body;
- 
-         if (!episodeId || !videoUrl) {
-           return new Response(
-             JSON.stringify({ error: 'episodeId and videoUrl are required' }),
-             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-           );
-         }
- 
-         console.log(`Auto-processing video for episode ${episodeId}: ${videoUrl}`);
- 
-         // Check if conversion record already exists
-         const { data: existing } = await supabaseClient
-           .from('video_conversions')
-           .select('id')
-           .eq('episode_id', episodeId)
-           .single();
- 
-         // Determine if needs conversion
-         const requiresConversion = needsConversion(videoUrl);
- 
-         if (existing) {
-           // Update existing record
-           const { error: updateError } = await supabaseClient
-             .from('video_conversions')
-             .update({
-               original_url: videoUrl,
-               original_path: videoUrl,
-               needs_conversion: requiresConversion,
-               status: requiresConversion ? 'pending' : 'skipped',
-               error_message: null,
-             })
-             .eq('id', existing.id);
- 
-           if (updateError) throw updateError;
- 
-           console.log(`Updated existing conversion record for episode ${episodeId}`);
-         } else {
-           // Create new record
-           const { error: insertError } = await supabaseClient
-             .from('video_conversions')
-             .insert({
-               episode_id: episodeId,
-               original_url: videoUrl,
-               original_path: videoUrl,
-               needs_conversion: requiresConversion,
-               status: requiresConversion ? 'pending' : 'skipped',
-             });
- 
-           if (insertError) throw insertError;
- 
-           console.log(`Created conversion record for episode ${episodeId}`);
-         }
- 
-         return new Response(
-           JSON.stringify({
-             success: true,
-             needsConversion: requiresConversion,
-             status: requiresConversion ? 'queued' : 'skipped',
-           }),
-           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-         );
-       }
+        if (fetchError) throw fetchError;
+
+        let queued = 0, skipped = 0;
+        for (const video of videos || []) {
+          if (video.status === 'completed' && video.ios_compatible === true && video.ios_ready_url) {
+            skipped++;
+            continue;
+          }
+          const { error: updateError } = await supabaseClient
+            .from('video_conversions')
+            .update({
+              status: 'pending',
+              error_message: null,
+              conversion_started_at: null,
+              conversion_completed_at: null,
+              conversion_stage: 'queued',
+              conversion_progress: 0,
+              ios_compatible: false,
+            })
+            .eq('id', video.id);
+          if (!updateError) queued++;
+        }
+
+        console.log(`Global iOS fix: queued=${queued}, skipped=${skipped}`);
+        return new Response(
+          JSON.stringify({ success: true, queued, skipped, total: videos?.length || 0 }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Legacy: fix-all-old (redirect to fix-all-ios)
+      if (action === 'fix-all-old') {
+        // Same as fix-all-ios
+        const { data: videos, error: fetchError } = await supabaseClient
+          .from('video_conversions')
+          .select('id, original_url, status, ios_compatible, ios_ready_url')
+          .or('status.eq.failed,status.eq.pending,ios_ready_url.is.null,ios_compatible.is.null,ios_compatible.eq.false');
+
+        if (fetchError) throw fetchError;
+
+        let repaired = 0, skipped = 0;
+        for (const video of videos || []) {
+          if (video.status === 'completed' && video.ios_compatible === true && video.ios_ready_url) {
+            skipped++;
+            continue;
+          }
+          const { error: updateError } = await supabaseClient
+            .from('video_conversions')
+            .update({
+              status: 'pending', error_message: null,
+              conversion_started_at: null, conversion_completed_at: null,
+              needs_conversion: true, conversion_stage: 'queued', conversion_progress: 0,
+            })
+            .eq('id', video.id);
+          if (!updateError) repaired++;
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, repaired, skipped, total: videos?.length || 0 }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Health stats
+      if (action === 'health-stats') {
+        const { data: conversions, error } = await supabaseClient
+          .from('video_conversions')
+          .select('status, ios_ready_url, needs_conversion, ios_compatible, is_hevc, is_10bit');
+        if (error) throw error;
+
+        const stats = { total: conversions?.length || 0, healthy: 0, processing: 0, pending: 0, failed: 0, iosRisk: 0, iosVerified: 0 };
+        conversions?.forEach(r => {
+          if (r.status === 'completed' && r.ios_compatible) { stats.healthy++; stats.iosVerified++; }
+          else if (r.status === 'completed' && r.ios_ready_url) { stats.healthy++; }
+          else if (r.status === 'processing') stats.processing++;
+          else if (r.status === 'pending') stats.pending++;
+          else if (r.status === 'failed') stats.failed++;
+
+          if (r.status === 'failed' || (r.status === 'pending' && r.needs_conversion) || (!r.ios_compatible && r.needs_conversion)) {
+            stats.iosRisk++;
+          }
+        });
+
+        return new Response(
+          JSON.stringify({ stats }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Auto-process on upload
+      if (action === 'auto-process') {
+        const { episodeId, videoUrl } = body;
+        if (!episodeId || !videoUrl) {
+          return new Response(
+            JSON.stringify({ error: 'episodeId and videoUrl are required' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+          );
+        }
+
+        const requiresConversion = preliminaryNeedsConversion(videoUrl);
+        const { data: existing } = await supabaseClient
+          .from('video_conversions').select('id').eq('episode_id', episodeId).single();
+
+        if (existing) {
+          await supabaseClient.from('video_conversions').update({
+            original_url: videoUrl, original_path: videoUrl,
+            needs_conversion: requiresConversion,
+            status: 'pending', // Always pending - worker validates
+            error_message: null, conversion_stage: 'queued',
+            ios_compatible: false,
+          }).eq('id', existing.id);
+        } else {
+          await supabaseClient.from('video_conversions').insert({
+            episode_id: episodeId, original_url: videoUrl, original_path: videoUrl,
+            needs_conversion: requiresConversion,
+            status: 'pending',
+            conversion_stage: 'queued',
+          });
+        }
+
+        return new Response(
+          JSON.stringify({ success: true, needsConversion: requiresConversion, status: 'queued' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     return new Response(
@@ -753,9 +504,9 @@ Deno.serve(async (req) => {
     );
   } catch (error: unknown) {
     console.error('Video conversion error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const msg = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: msg }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }

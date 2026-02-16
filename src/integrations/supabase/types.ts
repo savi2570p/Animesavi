@@ -713,67 +713,115 @@ export type Database = {
       }
       video_conversions: {
         Row: {
+          audio_channels: number | null
           audio_codec: string | null
+          audio_sample_rate: number | null
+          compatibility_details: Json | null
+          container_format: string | null
           conversion_completed_at: string | null
+          conversion_progress: number | null
+          conversion_stage: string | null
           conversion_started_at: string | null
           created_at: string
           episode_id: string | null
           error_message: string | null
+          estimated_seconds_remaining: number | null
           file_size_bytes: number | null
+          hls_path: string | null
+          hls_url: string | null
           id: string
+          ios_compatible: boolean | null
           ios_file_size_bytes: number | null
           ios_ready_path: string | null
           ios_ready_url: string | null
           is_10bit: boolean | null
           is_hevc: boolean | null
+          max_retries: number | null
           needs_conversion: boolean | null
           original_path: string | null
           original_url: string
+          pixel_format: string | null
+          retry_count: number | null
           status: string
+          subtitle_format: string | null
           updated_at: string
           video_codec: string | null
+          video_profile: string | null
+          worker_id: string | null
         }
         Insert: {
+          audio_channels?: number | null
           audio_codec?: string | null
+          audio_sample_rate?: number | null
+          compatibility_details?: Json | null
+          container_format?: string | null
           conversion_completed_at?: string | null
+          conversion_progress?: number | null
+          conversion_stage?: string | null
           conversion_started_at?: string | null
           created_at?: string
           episode_id?: string | null
           error_message?: string | null
+          estimated_seconds_remaining?: number | null
           file_size_bytes?: number | null
+          hls_path?: string | null
+          hls_url?: string | null
           id?: string
+          ios_compatible?: boolean | null
           ios_file_size_bytes?: number | null
           ios_ready_path?: string | null
           ios_ready_url?: string | null
           is_10bit?: boolean | null
           is_hevc?: boolean | null
+          max_retries?: number | null
           needs_conversion?: boolean | null
           original_path?: string | null
           original_url: string
+          pixel_format?: string | null
+          retry_count?: number | null
           status?: string
+          subtitle_format?: string | null
           updated_at?: string
           video_codec?: string | null
+          video_profile?: string | null
+          worker_id?: string | null
         }
         Update: {
+          audio_channels?: number | null
           audio_codec?: string | null
+          audio_sample_rate?: number | null
+          compatibility_details?: Json | null
+          container_format?: string | null
           conversion_completed_at?: string | null
+          conversion_progress?: number | null
+          conversion_stage?: string | null
           conversion_started_at?: string | null
           created_at?: string
           episode_id?: string | null
           error_message?: string | null
+          estimated_seconds_remaining?: number | null
           file_size_bytes?: number | null
+          hls_path?: string | null
+          hls_url?: string | null
           id?: string
+          ios_compatible?: boolean | null
           ios_file_size_bytes?: number | null
           ios_ready_path?: string | null
           ios_ready_url?: string | null
           is_10bit?: boolean | null
           is_hevc?: boolean | null
+          max_retries?: number | null
           needs_conversion?: boolean | null
           original_path?: string | null
           original_url?: string
+          pixel_format?: string | null
+          retry_count?: number | null
           status?: string
+          subtitle_format?: string | null
           updated_at?: string
           video_codec?: string | null
+          video_profile?: string | null
+          worker_id?: string | null
         }
         Relationships: [
           {

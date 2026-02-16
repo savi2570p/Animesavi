@@ -990,26 +990,25 @@
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
              <Card>
                <CardHeader>
-                 <CardTitle className="flex items-center gap-2">
-                   <Wrench className="h-5 w-5" />
-                   Fix All Old Anime
-                 </CardTitle>
-                 <CardDescription>
-                   Repair all previously uploaded videos for iOS compatibility
-                 </CardDescription>
-               </CardHeader>
-               <CardContent>
-                 <div className="space-y-4">
-                   <p className="text-sm text-muted-foreground">
-                     This will scan all existing videos and queue them for conversion if needed.
-                     No re-upload required.
-                   </p>
-                   <ul className="text-sm space-y-1 text-muted-foreground">
-                     <li>• Detect original format (MKV/MP4)</li>
-                     <li>• Convert to iOS-safe MP4</li>
-                     <li>• Regenerate HLS if needed</li>
-                     <li>• Fix audio track labeling</li>
-                   </ul>
+              <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-orange-500" />
+                    Fix All iOS Playback Issues
+                  </CardTitle>
+                  <CardDescription>
+                    Revalidate all videos with real codec inspection and queue incompatible ones
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Scans every video, validates actual codecs via ffprobe, and queues non-compliant files for conversion.
+                    </p>
+                    <ul className="text-sm space-y-1 text-muted-foreground">
+                      <li>• Validate H.264 Main profile + yuv420p</li>
+                      <li>• Verify AAC stereo audio</li>
+                      <li>• Queue incompatible for smart conversion</li>
+                      <li>• Auto-generate HLS after conversion</li>
+                    </ul>
                    <Button
                      onClick={fixAllOldAnime}
                      disabled={repairProgress.isRunning}
