@@ -77,11 +77,10 @@ export function EpisodeProgress() {
 
   const fetchAnimeWithoutEpisodes = async () => {
     try {
-      // Optimized query: Fetch all anime with their episode counts in a single query
       const { data: allAnime, error: animeError } = await supabase
         .from('anime')
         .select('id, title, cover_image, created_at, type, status')
-        .neq('status', 'upcoming') // Exclude upcoming anime (they go to Coming Soon)
+        .neq('status', 'upcoming')
         .order('created_at', { ascending: false });
 
       if (animeError) {
@@ -90,36 +89,37 @@ export function EpisodeProgress() {
         return;
       }
 
-      // Fetch all seasons and episodes counts in batch
       const { data: seasons } = await supabase
         .from('seasons')
         .select('id, anime_id');
 
       const seasonIds = seasons?.map(s => s.id) || [];
-      
-      // Get episode counts per season in one query
-      const { data: episodeCounts } = await supabase
-        .from('episodes')
-        .select('season_id')
-        .in('season_id', seasonIds.length > 0 ? seasonIds : ['no-match']);
+      const seasonToAnime = new Map((seasons || []).map(s => [s.id, s.anime_id]));
+      const animeWithEpisodes = new Set<string>();
 
-      // Create a map of anime_id to episode count
-      const animeEpisodeMap = new Map<string, number>();
-      if (seasons && episodeCounts) {
-        const seasonToAnime = new Map(seasons.map(s => [s.id, s.anime_id]));
-        episodeCounts.forEach(ep => {
-          const animeId = seasonToAnime.get(ep.season_id);
-          if (animeId) {
-            animeEpisodeMap.set(animeId, (animeEpisodeMap.get(animeId) || 0) + 1);
-          }
-        });
+      if (seasonIds.length > 0) {
+        let offset = 0;
+        const pageSize = 1000;
+        let hasMore = true;
+        
+        while (hasMore) {
+          const { data: episodeBatch } = await supabase
+            .from('episodes')
+            .select('season_id')
+            .in('season_id', seasonIds)
+            .range(offset, offset + pageSize - 1);
+          
+          (episodeBatch || []).forEach(ep => {
+            const animeId = seasonToAnime.get(ep.season_id);
+            if (animeId) animeWithEpisodes.add(animeId);
+          });
+          
+          hasMore = (episodeBatch?.length || 0) === pageSize;
+          offset += pageSize;
+        }
       }
 
-      // Filter anime without episodes
-      const animeWithoutEpisodes = (allAnime || []).filter(anime => {
-        const episodeCount = animeEpisodeMap.get(anime.id) || 0;
-        return episodeCount === 0;
-      });
+      const animeWithoutEpisodes = (allAnime || []).filter(anime => !animeWithEpisodes.has(anime.id));
 
       setAnimeList(animeWithoutEpisodes.slice(0, 8));
     } catch (error) {

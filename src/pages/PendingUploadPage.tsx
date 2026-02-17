@@ -116,27 +116,36 @@ export default function PendingUploadPage() {
         .select('id, anime_id');
 
       const seasonIds = seasons?.map(s => s.id) || [];
-      
-      const { data: episodeCounts } = await supabase
-        .from('episodes')
-        .select('season_id')
-        .in('season_id', seasonIds.length > 0 ? seasonIds : ['no-match']);
 
-      const animeEpisodeMap = new Map<string, number>();
-      if (seasons && episodeCounts) {
-        const seasonToAnime = new Map(seasons.map(s => [s.id, s.anime_id]));
-        episodeCounts.forEach(ep => {
-          const animeId = seasonToAnime.get(ep.season_id);
-          if (animeId) {
-            animeEpisodeMap.set(animeId, (animeEpisodeMap.get(animeId) || 0) + 1);
-          }
-        });
+      // Instead of fetching all episodes (hits 1000-row limit),
+      // fetch distinct season_ids that have episodes using pagination
+      const animeWithEpisodes = new Set<string>();
+      const seasonToAnime = new Map((seasons || []).map(s => [s.id, s.anime_id]));
+      
+      if (seasonIds.length > 0) {
+        // Paginate through episodes to avoid 1000-row limit
+        let offset = 0;
+        const pageSize = 1000;
+        let hasMore = true;
+        
+        while (hasMore) {
+          const { data: episodeBatch } = await supabase
+            .from('episodes')
+            .select('season_id')
+            .in('season_id', seasonIds)
+            .range(offset, offset + pageSize - 1);
+          
+          (episodeBatch || []).forEach(ep => {
+            const animeId = seasonToAnime.get(ep.season_id);
+            if (animeId) animeWithEpisodes.add(animeId);
+          });
+          
+          hasMore = (episodeBatch?.length || 0) === pageSize;
+          offset += pageSize;
+        }
       }
 
-      const animeWithoutEpisodes = (allAnime || []).filter(anime => {
-        const episodeCount = animeEpisodeMap.get(anime.id) || 0;
-        return episodeCount === 0;
-      });
+      const animeWithoutEpisodes = (allAnime || []).filter(anime => !animeWithEpisodes.has(anime.id));
 
       setAnimeList(animeWithoutEpisodes);
     } catch (error) {
