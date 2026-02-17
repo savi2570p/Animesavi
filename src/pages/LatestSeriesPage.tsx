@@ -61,15 +61,28 @@ export default function LatestSeriesPage() {
 
       const allSeasonIds = (allSeasons || []).map(s => s.id);
 
-      const { data: allEpisodes } = await supabase
-        .from('episodes')
-        .select('id, season_id, created_at')
-        .in('season_id', allSeasonIds)
-        .order('created_at', { ascending: false });
+      // Paginate episodes to avoid 1000-row limit
+      const allEpisodes: { id: string; season_id: string; created_at: string }[] = [];
+      if (allSeasonIds.length > 0) {
+        let offset = 0;
+        const pageSize = 1000;
+        let hasMore = true;
+        while (hasMore) {
+          const { data: batch } = await supabase
+            .from('episodes')
+            .select('id, season_id, created_at')
+            .in('season_id', allSeasonIds)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + pageSize - 1);
+          if (batch) allEpisodes.push(...batch);
+          hasMore = (batch?.length || 0) === pageSize;
+          offset += pageSize;
+        }
+      }
 
       const episodesByAnime = new Map<string, { count: number; latestDate: string | null }>();
       
-      (allEpisodes || []).forEach(episode => {
+      allEpisodes.forEach(episode => {
         for (const [animeId, seasonIds] of seasonsByAnime.entries()) {
           if (seasonIds.includes(episode.season_id)) {
             const existing = episodesByAnime.get(animeId) || { count: 0, latestDate: null };
