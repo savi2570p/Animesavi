@@ -72,6 +72,31 @@ export default function PendingUploadPage() {
     }
   }, [isRolesLoaded, canAccess]);
 
+  // Subscribe to episode changes to auto-refresh the pending list
+  useEffect(() => {
+    if (!isRolesLoaded || !canAccess) return;
+    const channel = supabase
+      .channel('pending-upload-episodes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'episodes' },
+        () => {
+          // Refetch whenever episodes are inserted/updated/deleted
+          fetchAnimeWithoutEpisodes();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'anime' },
+        () => {
+          fetchAnimeWithoutEpisodes();
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [isRolesLoaded, canAccess]);
+
   const fetchAnimeWithoutEpisodes = async () => {
     try {
       const { data: allAnime, error: animeError } = await supabase

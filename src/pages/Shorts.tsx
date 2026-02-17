@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Play, Volume2, VolumeX, ChevronUp, ChevronDown, Eye, Heart, Share2, ArrowLeft, Scissors, MessageCircle, Trash2 } from 'lucide-react';
+import { Play, Volume2, VolumeX, ChevronUp, ChevronDown, Eye, Heart, ArrowLeft, Scissors, MessageCircle, Trash2, Languages } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,6 +21,7 @@ interface ShortItem {
   thumbnail: string | null;
   view_count: number;
   created_at: string;
+  episode_id: string | null;
 }
 
 interface ShortComment {
@@ -32,18 +33,28 @@ interface ShortComment {
   profile?: { username: string | null; avatar_url: string | null };
 }
 
+interface AudioTrackInfo {
+  label: string;
+  language: string;
+  index: number;
+}
+
 export default function ShortsPage() {
   const [shorts, setShorts] = useState<ShortItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [likedShorts, setLikedShorts] = useState<Set<string>>(new Set());
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
   const [commentText, setCommentText] = useState('');
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<ShortComment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
+  const [showAudioMenu, setShowAudioMenu] = useState(false);
+  const [audioTracks, setAudioTracks] = useState<AudioTrackInfo[]>([]);
+  const [selectedAudioTrack, setSelectedAudioTrack] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const commentInputRef = useRef<HTMLInputElement>(null);
@@ -52,12 +63,53 @@ export default function ShortsPage() {
   const touchStartY = useRef(0);
   const isTransitioning = useRef(false);
 
+  // Track fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  // Detect audio tracks when video loads
+  const handleVideoLoaded = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const tracks: AudioTrackInfo[] = [];
+    if ((video as any).audioTracks && (video as any).audioTracks.length > 0) {
+      for (let i = 0; i < (video as any).audioTracks.length; i++) {
+        const t = (video as any).audioTracks[i];
+        tracks.push({ label: t.label || `Track ${i + 1}`, language: t.language || 'unknown', index: i });
+      }
+    }
+    if (tracks.length === 0) {
+      tracks.push({ label: 'Default', language: 'default', index: 0 });
+    }
+    setAudioTracks(tracks);
+  }, []);
+
+  const switchAudioTrack = (index: number) => {
+    const video = videoRef.current;
+    if (!video || !(video as any).audioTracks) return;
+    for (let i = 0; i < (video as any).audioTracks.length; i++) {
+      (video as any).audioTracks[i].enabled = i === index;
+    }
+    setSelectedAudioTrack(index);
+    setShowAudioMenu(false);
+    toast.success(`Switched to ${audioTracks[index]?.label || 'Track ' + (index + 1)}`);
+  };
+
   // Fetch shorts
   useEffect(() => {
     const fetchShorts = async () => {
       const { data } = await supabase
         .from('shorts')
-        .select('id, title, description, tags, duration, start_time, end_time, video_url, thumbnail, view_count, created_at')
+        .select('id, title, description, tags, duration, start_time, end_time, video_url, thumbnail, view_count, created_at, episode_id')
         .order('created_at', { ascending: false })
         .limit(50);
       if (data) setShorts(data as ShortItem[]);
@@ -167,7 +219,6 @@ export default function ShortsPage() {
   // Keyboard navigation — skip when comment input is focused
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't intercept keys when typing in an input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === 'ArrowDown' || e.key === 'j') goNext();
       else if (e.key === 'ArrowUp' || e.key === 'k') goPrev();
@@ -178,20 +229,9 @@ export default function ShortsPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [goNext, goPrev]);
 
-  const handleShare = async (short: ShortItem) => {
-    const url = `${window.location.origin}/shorts`;
-    if (navigator.share) {
-      try { await navigator.share({ title: short.title, url }); } catch {}
-    } else {
-      await navigator.clipboard.writeText(url);
-      toast.success('Link copied!');
-    }
-  };
-
   const toggleLike = async (shortId: string) => {
     if (!user) { toast.error('Login to like shorts'); return; }
     const isLiked = likedShorts.has(shortId);
-    // Optimistic update
     setLikedShorts(prev => {
       const next = new Set(prev);
       if (isLiked) next.delete(shortId);
@@ -258,27 +298,33 @@ export default function ShortsPage() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Back button */}
-      <div className="absolute top-4 left-4 z-30">
-        <Button asChild variant="ghost" size="icon" className="text-white hover:bg-white/10 h-10 w-10">
-          <Link to="/"><ArrowLeft className="h-5 w-5" /></Link>
-        </Button>
-      </div>
+      {/* Back button — hidden in fullscreen */}
+      {!isFullscreen && (
+        <div className="absolute top-4 left-4 z-30">
+          <Button asChild variant="ghost" size="icon" className="text-white hover:bg-white/10 h-10 w-10">
+            <Link to="/"><ArrowLeft className="h-5 w-5" /></Link>
+          </Button>
+        </div>
+      )}
 
-      {/* Title */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30">
-        <h1 className="text-white font-bold text-lg flex items-center gap-2">
-          <Scissors className="h-5 w-5 text-primary" />
-          Shorts
-        </h1>
-      </div>
+      {/* Title — hidden in fullscreen */}
+      {!isFullscreen && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30">
+          <h1 className="text-white font-bold text-lg flex items-center gap-2">
+            <Scissors className="h-5 w-5 text-primary" />
+            Shorts
+          </h1>
+        </div>
+      )}
 
-      {/* Counter */}
-      <div className="absolute top-4 right-4 z-30">
-        <Badge variant="secondary" className="bg-white/10 text-white border-0">
-          {activeIndex + 1} / {shorts.length}
-        </Badge>
-      </div>
+      {/* Counter — hidden in fullscreen */}
+      {!isFullscreen && (
+        <div className="absolute top-4 right-4 z-30">
+          <Badge variant="secondary" className="bg-white/10 text-white border-0">
+            {activeIndex + 1} / {shorts.length}
+          </Badge>
+        </div>
+      )}
 
       {/* Video Container */}
       <div className="relative w-full h-full max-w-[420px] flex items-center justify-center">
@@ -293,6 +339,7 @@ export default function ShortsPage() {
             onTimeUpdate={handleTimeUpdate}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
+            onLoadedMetadata={handleVideoLoaded}
           />
 
           {!isPlaying && (
@@ -302,20 +349,6 @@ export default function ShortsPage() {
               </div>
             </div>
           )}
-
-          {/* Progress bar */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-white/20 z-20">
-            <div className="flex gap-0.5 h-full px-1">
-              {shorts.slice(0, Math.min(shorts.length, 20)).map((_, i) => (
-                <div
-                  key={i}
-                  className={`flex-1 rounded-full transition-colors duration-200 ${
-                    i === activeIndex ? 'bg-primary' : i < activeIndex ? 'bg-white/70' : 'bg-white/20'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
 
           {/* Bottom info overlay */}
           <div className="absolute bottom-0 left-0 right-16 p-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10">
@@ -372,14 +405,15 @@ export default function ShortsPage() {
               </div>
             </button>
 
+            {/* Audio Track button (replaces Share) */}
             <button
-              className="flex flex-col items-center gap-1"
-              onClick={(e) => { e.stopPropagation(); handleShare(activeShort); }}
+              className="flex flex-col items-center gap-1 relative"
+              onClick={(e) => { e.stopPropagation(); setShowAudioMenu(!showAudioMenu); }}
             >
-              <div className="bg-white/10 backdrop-blur-sm rounded-full p-3">
-                <Share2 className="h-6 w-6 text-white" />
+              <div className={`backdrop-blur-sm rounded-full p-3 ${showAudioMenu ? 'bg-primary/30' : 'bg-white/10'}`}>
+                <Languages className="h-6 w-6 text-white" />
               </div>
-              <span className="text-white/60 text-[10px]">Share</span>
+              <span className="text-white/60 text-[10px]">Audio</span>
             </button>
 
             <button
@@ -403,6 +437,42 @@ export default function ShortsPage() {
             </button>
           </div>
         </div>
+
+        {/* Audio Track Menu */}
+        {showAudioMenu && (
+          <div
+            className="absolute right-16 bottom-48 bg-black/90 backdrop-blur-md rounded-xl z-30 min-w-[180px] overflow-hidden border border-white/10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-4 py-3 border-b border-white/10">
+              <h4 className="text-white text-sm font-semibold flex items-center gap-2">
+                <Languages className="h-4 w-4" />
+                Audio Track
+              </h4>
+            </div>
+            <div className="max-h-[200px] overflow-y-auto">
+              {audioTracks.map((track) => (
+                <button
+                  key={track.index}
+                  className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                    selectedAudioTrack === track.index
+                      ? 'bg-primary/20 text-primary'
+                      : 'text-white/80 hover:bg-white/10'
+                  }`}
+                  onClick={() => switchAudioTrack(track.index)}
+                >
+                  <span className="font-medium">{track.label}</span>
+                  {track.language !== 'default' && (
+                    <span className="text-xs text-white/40 ml-2">({track.language})</span>
+                  )}
+                  {selectedAudioTrack === track.index && (
+                    <span className="float-right text-primary">✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Comment overlay */}
         {showComments && (
