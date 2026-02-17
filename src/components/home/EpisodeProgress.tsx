@@ -61,6 +61,20 @@ export function EpisodeProgress() {
     fetchAnimeWithoutEpisodes();
   }, []);
 
+  // Auto-refresh when episodes or anime change
+  useEffect(() => {
+    const channel = supabase
+      .channel('home-pending-episodes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'episodes' }, () => {
+        fetchAnimeWithoutEpisodes();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'anime' }, () => {
+        fetchAnimeWithoutEpisodes();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
   const fetchAnimeWithoutEpisodes = async () => {
     try {
       // Optimized query: Fetch all anime with their episode counts in a single query
