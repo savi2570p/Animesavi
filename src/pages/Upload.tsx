@@ -50,6 +50,7 @@ export default function Upload() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('my-anime');
+  const [animeSearchQuery, setAnimeSearchQuery] = useState('');
 
   // Form state for new anime
   const [title, setTitle] = useState('');
@@ -339,7 +340,18 @@ export default function Upload() {
         </TabsList>
 
         <TabsContent value="my-anime">
-          {myAnime.filter(a => a.type !== 'movie').length === 0 ? (
+          {/* Search bar */}
+          <div className="mb-4">
+            <Input
+              placeholder="Search anime series..."
+              value={animeSearchQuery}
+              onChange={(e) => setAnimeSearchQuery(e.target.value)}
+              className="max-w-md"
+            />
+          </div>
+          {(() => {
+            const filteredAnime = myAnime.filter(a => a.type !== 'movie' && a.title.toLowerCase().includes(animeSearchQuery.toLowerCase()));
+            return filteredAnime.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <UploadIcon className="h-12 w-12 text-muted-foreground mb-4" />
@@ -349,7 +361,7 @@ export default function Upload() {
             </Card>
           ) : (
             <div className="grid gap-4">
-              {myAnime.filter(a => a.type !== 'movie').map((anime) => (
+              {filteredAnime.map((anime) => (
                 <Card key={anime.id}>
                   <CardContent className="flex items-center gap-4 p-4">
                     <img
@@ -394,7 +406,8 @@ export default function Upload() {
                 </Card>
               ))}
             </div>
-          )}
+          );
+          })()}
         </TabsContent>
 
         {/* My Movies Tab */}

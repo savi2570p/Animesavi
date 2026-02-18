@@ -125,7 +125,7 @@ export default function PendingUploadPage() {
       if (seasonIds.length > 0) {
         // Paginate through episodes to avoid 1000-row limit
         let offset = 0;
-        const pageSize = 1000;
+        const pageSize = 100000;
         let hasMore = true;
         
         while (hasMore) {

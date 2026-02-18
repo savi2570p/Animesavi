@@ -121,6 +121,18 @@ const DONGHUA_TITLES = [
   'faraway wanderers',
 ];
 
+// Anime titles that should default to Japanese audio
+const JAPANESE_DEFAULT_TITLES = [
+  'adam\'s sweet agony',
+  'adams sweet agony',
+];
+
+// Anime titles with specific quality preferences (height in pixels)
+export const ANIME_QUALITY_OVERRIDES: Record<string, number> = {
+  'adam\'s sweet agony': 720,
+  'adams sweet agony': 720,
+};
+
 export interface DetectedLanguageInfo {
   code: string;
   name: string;
@@ -347,6 +359,17 @@ export function getPreferredAudioTrack(
              (labelDetection && (labelDetection.code === 'zh' || labelDetection.code === 'cmn'));
     });
     if (chineseTrack) return chineseTrack.index;
+  }
+  
+  // For anime with Japanese default override (e.g., Adam's Sweet Agony)
+  if (animeTitle && JAPANESE_DEFAULT_TITLES.some(t => animeTitle.toLowerCase().includes(t))) {
+    const japaneseTrack = tracks.find(t => {
+      const normalized = normalizeLanguageCode(t.lang);
+      const labelDetection = detectLanguageFromLabel(t.label);
+      return normalized === 'ja' || normalized === 'jpn' ||
+             (labelDetection && (labelDetection.code === 'ja' || labelDetection.code === 'jpn'));
+    });
+    if (japaneseTrack) return japaneseTrack.index;
   }
   
   // Priority order: Hindi first (default for Indian anime platform), then others
