@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import Hls from 'hls.js';
+import { ANIME_QUALITY_OVERRIDES } from '@/lib/audioLanguageUtils';
 import {
   Play,
   Pause,
@@ -622,31 +623,45 @@ export function VideoPlayer({
               setQualityLevels(levels);
               console.log('Quality levels detected:', levels);
               
-              // Check for saved quality preference
-              const savedQuality = localStorage.getItem(QUALITY_PREFERENCE_KEY);
-              if (savedQuality !== null) {
-                const preferredLevel = parseInt(savedQuality, 10);
-                if (preferredLevel === -1) {
-                  // User prefers auto
+              // Check for anime-specific quality override first
+              const animeQualityOverride = Object.entries(ANIME_QUALITY_OVERRIDES).find(
+                ([key]) => animeTitle.toLowerCase().includes(key)
+              );
+              
+              if (animeQualityOverride) {
+                const targetHeight = animeQualityOverride[1];
+                const matchingLevel = levels.find(l => l.height === targetHeight);
+                if (matchingLevel) {
+                  hls.currentLevel = matchingLevel.id;
+                  setIsAutoQuality(false);
+                  setCurrentQualityLevel(matchingLevel.id);
+                } else {
                   setIsAutoQuality(true);
                   setCurrentQualityLevel(-1);
-                } else {
-                  // Find matching quality level by height
-                  const matchingLevel = levels.find(l => l.height === preferredLevel);
-                  if (matchingLevel) {
-                    hls.currentLevel = matchingLevel.id;
-                    setIsAutoQuality(false);
-                    setCurrentQualityLevel(matchingLevel.id);
-                  } else {
-                    // Fallback to auto
-                    setIsAutoQuality(true);
-                    setCurrentQualityLevel(-1);
-                  }
                 }
               } else {
-                // Default to auto
-                setIsAutoQuality(true);
-                setCurrentQualityLevel(-1);
+                // Check for saved quality preference
+                const savedQuality = localStorage.getItem(QUALITY_PREFERENCE_KEY);
+                if (savedQuality !== null) {
+                  const preferredLevel = parseInt(savedQuality, 10);
+                  if (preferredLevel === -1) {
+                    setIsAutoQuality(true);
+                    setCurrentQualityLevel(-1);
+                  } else {
+                    const matchingLevel = levels.find(l => l.height === preferredLevel);
+                    if (matchingLevel) {
+                      hls.currentLevel = matchingLevel.id;
+                      setIsAutoQuality(false);
+                      setCurrentQualityLevel(matchingLevel.id);
+                    } else {
+                      setIsAutoQuality(true);
+                      setCurrentQualityLevel(-1);
+                    }
+                  }
+                } else {
+                  setIsAutoQuality(true);
+                  setCurrentQualityLevel(-1);
+                }
               }
             }
             

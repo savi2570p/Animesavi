@@ -65,7 +65,7 @@ export default function LatestSeriesPage() {
       const allEpisodes: { id: string; season_id: string; created_at: string }[] = [];
       if (allSeasonIds.length > 0) {
         let offset = 0;
-        const pageSize = 1000;
+        const pageSize = 100000;
         let hasMore = true;
         while (hasMore) {
           const { data: batch } = await supabase

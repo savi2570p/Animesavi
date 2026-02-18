@@ -46,7 +46,15 @@ export function ShortsSection() {
   useEffect(() => {
     if (videoRef.current && shorts[activeIndex]) {
       videoRef.current.currentTime = shorts[activeIndex].start_time;
-      if (isPlaying) videoRef.current.play();
+      if (isPlaying) {
+        const playPromise = videoRef.current.play();
+        if (playPromise) {
+          playPromise.catch(() => {
+            videoRef.current!.muted = true;
+            videoRef.current!.play().catch(() => {});
+          });
+        }
+      }
     }
   }, [activeIndex, shorts]);
 

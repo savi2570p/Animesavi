@@ -44,7 +44,7 @@ export default function ShortsPage() {
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // Start muted for mobile autoplay
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [likedShorts, setLikedShorts] = useState<Set<string>>(new Set());
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
@@ -166,8 +166,27 @@ export default function ShortsPage() {
   useEffect(() => {
     if (videoRef.current && shorts[activeIndex]) {
       videoRef.current.currentTime = shorts[activeIndex].start_time;
-      videoRef.current.play().catch(() => {});
-      setIsPlaying(true);
+      // Attempt autoplay - must be muted on mobile for autoplay policy
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch(() => {
+            // Autoplay blocked - ensure muted and retry
+            if (videoRef.current) {
+              videoRef.current.muted = true;
+              setIsMuted(true);
+              videoRef.current.play().then(() => {
+                setIsPlaying(true);
+              }).catch(() => {
+                // Even muted autoplay failed
+                setIsPlaying(false);
+              });
+            }
+          });
+      }
     }
   }, [activeIndex, shorts]);
 
@@ -336,6 +355,8 @@ export default function ShortsPage() {
             muted={isMuted}
             playsInline
             autoPlay
+            preload="auto"
+            webkit-playsinline="true"
             onTimeUpdate={handleTimeUpdate}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
