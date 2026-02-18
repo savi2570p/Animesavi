@@ -123,9 +123,9 @@ export default function PendingUploadPage() {
       const seasonToAnime = new Map((seasons || []).map(s => [s.id, s.anime_id]));
       
       if (seasonIds.length > 0) {
-        // Paginate through episodes to avoid 1000-row limit
+        // Paginate through episodes in chunks of 1000 (PostgREST max)
         let offset = 0;
-        const pageSize = 100000;
+        const pageSize = 1000;
         let hasMore = true;
         
         while (hasMore) {

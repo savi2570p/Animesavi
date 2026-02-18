@@ -99,7 +99,7 @@ export function EpisodeProgress() {
 
       if (seasonIds.length > 0) {
         let offset = 0;
-        const pageSize = 100000;
+        const pageSize = 1000;
         let hasMore = true;
         
         while (hasMore) {
