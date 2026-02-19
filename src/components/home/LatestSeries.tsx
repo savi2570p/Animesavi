@@ -130,13 +130,13 @@ export function LatestSeries() {
   };
 
   const isNew = (anime: AnimeSeries) => {
-    // Check if the latest episode or the anime itself was created/updated within last 7 days
+    // Check if the latest episode or the anime itself was created/updated within last 24 hours
     const dateToCheck = anime.latest_episode_date || anime.updated_at || anime.created_at;
     const date = new Date(dateToCheck);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
-    const days = diff / (1000 * 60 * 60 * 24);
-    return days <= 7;
+    const hours = diff / (1000 * 60 * 60);
+    return hours <= 24;
   };
 
   const getStatusBadge = (anime: AnimeSeries) => {

@@ -185,9 +185,11 @@ export function LatestEpisodes() {
               <Play className="h-5 w-5 text-primary" />
             </div>
             <h2 className="text-2xl md:text-3xl font-heading font-bold">Latest Episodes</h2>
-            <span className="px-2 py-1 text-xs font-medium bg-primary/20 text-primary rounded-full">
-              New
-            </span>
+            {groupedEpisodes.some(g => isNew(g.latestCreatedAt)) && (
+              <span className="px-2 py-1 text-xs font-medium bg-primary/20 text-primary rounded-full">
+                New
+              </span>
+            )}
           </div>
           <Button asChild variant="ghost" className="group">
             <Link to="/browse?type=series" className="flex items-center gap-1">
