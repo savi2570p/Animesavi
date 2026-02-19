@@ -389,13 +389,118 @@ def smart_convert(input_file: str, output_file: str, info: Dict,
 
 def generate_hls(input_file: str, output_dir: str, use_gpu: bool,
                  conversion_id: str) -> bool:
-    """Generate adaptive bitrate HLS output."""
+    """Generate adaptive bitrate HLS output with separate audio groups per language."""
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     encoder, encoder_opts = get_encoder_config(use_gpu)
 
     update_status(conversion_id, 'processing',
                   conversion_stage='hls_generation', progress=80)
 
+    # ── Detect audio tracks ──
+    probe_data = probe_video(input_file)
+    audio_streams = [
+        s for s in probe_data.get('streams', [])
+        if s.get('codec_type') == 'audio'
+    ]
+
+    # Build language metadata for each audio stream
+    LANG_LABELS = {
+        'hin': 'Hindi', 'hi': 'Hindi', 'hindi': 'Hindi',
+        'eng': 'English', 'en': 'English', 'english': 'English',
+        'jpn': 'Japanese', 'ja': 'Japanese', 'japanese': 'Japanese',
+    }
+
+    audio_tracks: List[Dict[str, Any]] = []
+    for idx, stream in enumerate(audio_streams):
+        tags = stream.get('tags', {})
+        lang_code = (tags.get('language') or 'und').lower()
+        title = tags.get('title', '')
+        label = LANG_LABELS.get(lang_code) or LANG_LABELS.get(title.lower(), title or f'Audio {idx + 1}')
+        audio_tracks.append({
+            'index': stream['index'],
+            'idx': idx,
+            'lang': lang_code if lang_code != 'und' else f'und{idx}',
+            'label': label,
+            'default': idx == 0,
+        })
+
+    if not audio_tracks:
+        audio_tracks = [{'index': 1, 'idx': 0, 'lang': 'und', 'label': 'Default', 'default': True}]
+
+    log(f"HLS: Detected {len(audio_tracks)} audio tracks: {[t['label'] for t in audio_tracks]}")
+
+    # ── Build ffmpeg command ──
+    cmd = ['ffmpeg', '-y', '-i', input_file]
+
+    # Video filter complex for ABR
+    cmd += [
+        '-filter_complex',
+        '[0:v]split=3[v1][v2][v3];'
+        '[v1]scale=w=640:h=360:force_original_aspect_ratio=decrease[v360];'
+        '[v2]scale=w=1280:h=720:force_original_aspect_ratio=decrease[v720];'
+        '[v3]scale=w=1920:h=1080:force_original_aspect_ratio=decrease[v1080]',
+    ]
+
+    # Map video streams (3 quality levels)
+    cmd += ['-map', '[v360]', '-c:v:0', encoder, *encoder_opts,
+            '-b:v:0', '800k', '-maxrate:v:0', '856k', '-bufsize:v:0', '1200k']
+    cmd += ['-map', '[v720]', '-c:v:1', encoder, *encoder_opts,
+            '-b:v:1', '2800k', '-maxrate:v:1', '2996k', '-bufsize:v:1', '4200k']
+    cmd += ['-map', '[v1080]', '-c:v:2', encoder, *encoder_opts,
+            '-b:v:2', '5000k', '-maxrate:v:2', '5350k', '-bufsize:v:2', '7500k']
+
+    # Map each audio track separately for each video quality level
+    audio_stream_idx = 0
+    for track in audio_tracks:
+        for _vq in range(3):  # one audio per video quality
+            cmd += ['-map', f'0:a:{track["idx"]}', f'-c:a:{audio_stream_idx}', 'aac',
+                    f'-b:a:{audio_stream_idx}', '128k', f'-ac:{audio_stream_idx}', '2']
+            audio_stream_idx += 1
+
+    cmd += [
+        '-pix_fmt', 'yuv420p', '-profile:v', 'main', '-level:v', '4.1',
+        '-sn',
+        '-f', 'hls', '-hls_time', '6', '-hls_playlist_type', 'vod',
+        '-hls_flags', 'independent_segments',
+        '-hls_segment_type', 'mpegts',
+        '-hls_segment_filename', f'{output_dir}/segment_%v_%03d.ts',
+        '-master_pl_name', 'master.m3u8',
+    ]
+
+    # Build var_stream_map: "v:0,a:0,agroup:hindi,... v:0,a:1,agroup:english,..."
+    # For multi-audio: each video quality maps to a separate audio group entry
+    var_entries = []
+    audio_idx = 0
+    for vq in range(3):  # 3 video qualities
+        for tidx, track in enumerate(audio_tracks):
+            name_safe = track['label'].replace(' ', '_').lower()
+            default_str = 'YES' if track['default'] else 'NO'
+            lang = track['lang'][:3] if len(track['lang']) >= 3 else track['lang']
+            var_entries.append(
+                f'v:{vq},a:{audio_idx},agroup:audio,name:{name_safe}_{vq}p,language:{lang},default:{default_str}'
+            )
+            audio_idx += 1
+
+    cmd += ['-var_stream_map', ' '.join(var_entries)]
+    cmd += [f'{output_dir}/stream_%v.m3u8']
+
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=7200)
+        if result.returncode != 0:
+            log(f"HLS stderr: {result.stderr[-500:]}", 'ERROR')
+
+            # Fallback: simpler single-audio HLS if multi-audio fails
+            log("Falling back to single-audio HLS generation")
+            return generate_hls_simple(input_file, output_dir, encoder, encoder_opts, conversion_id)
+        return True
+    except Exception as e:
+        log(f"HLS error: {e}", 'ERROR')
+        return False
+
+
+def generate_hls_simple(input_file: str, output_dir: str, encoder: str,
+                        encoder_opts: List[str], conversion_id: str) -> bool:
+    """Fallback: simple single-audio HLS generation."""
     cmd = [
         'ffmpeg', '-y', '-i', input_file,
         '-filter_complex',
@@ -420,12 +525,11 @@ def generate_hls(input_file: str, output_dir: str, use_gpu: bool,
         '-var_stream_map', 'v:0,a:0 v:1,a:0 v:2,a:0',
         f'{output_dir}/stream_%v.m3u8'
     ]
-
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=7200)
         return result.returncode == 0
     except Exception as e:
-        log(f"HLS error: {e}", 'ERROR')
+        log(f"HLS simple fallback error: {e}", 'ERROR')
         return False
 
 

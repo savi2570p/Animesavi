@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { rememberAccount } from '@/components/AccountSwitcher';
 
 type UserRole = 'viewer' | 'uploader' | 'admin';
 
@@ -56,6 +57,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (nextSession?.user) {
         setRolesLoaded(false);
+        // Auto-remember account on every sign-in event
+        if (event === 'SIGNED_IN') {
+          const email = nextSession.user.email || '';
+          const username = nextSession.user.user_metadata?.username || email.split('@')[0];
+          rememberAccount(email, username);
+        }
         // Defer any extra backend calls.
         setTimeout(() => {
           void fetchUserRoles(nextSession.user.id);
