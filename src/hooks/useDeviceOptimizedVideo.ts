@@ -64,26 +64,10 @@ export function useDeviceOptimizedVideo(episodeId: string | undefined, originalV
     const isIOS = isIOSDevice();
     const device = getDeviceType();
 
-    // For non-iOS devices, serve original immediately
-    if (!isIOS) {
-      setResult({
-        videoUrl: originalVideoUrl,
-        hlsUrl: null,
-        servedFormat: 'original',
-        device,
-        conversionStatus: 'not_needed',
-        needsConversion: false,
-        isLoading: false,
-        error: null,
-      });
-      return;
-    }
-
-    // For iOS: Check for optimized versions but NEVER block playback
+    // For ALL devices: check for HLS URL (enables multi-audio switching on desktop)
     setResult(prev => ({ ...prev, isLoading: true }));
 
     try {
-      // Check if there's an iOS-ready version available
       const { data: conversion, error } = await supabase
         .from('video_conversions')
         .select('*')
@@ -94,27 +78,44 @@ export function useDeviceOptimizedVideo(episodeId: string | undefined, originalV
         console.error('Error fetching conversion record:', error);
       }
 
-      const conversionRecord = conversion as ConversionRecord | null;
+      const conversionRecord = conversion as any;
 
-      // Determine which URL to serve based on availability
       let finalUrl = originalVideoUrl;
-      let hlsUrl: string | null = null;
+      let hlsUrl: string | null = conversionRecord?.hls_url || null;
       let servedFormat: 'original' | 'ios_ready' | 'hls' = 'original';
 
-      // Check if original is already MP4 (likely iOS compatible)
+      if (!isIOS) {
+        // Desktop/Android: prefer HLS for multi-audio support, fallback to original
+        if (hlsUrl) {
+          finalUrl = hlsUrl;
+          servedFormat = 'hls';
+        }
+        setResult({
+          videoUrl: finalUrl,
+          hlsUrl,
+          servedFormat,
+          device,
+          conversionStatus: conversionRecord?.status || 'not_needed',
+          needsConversion: false,
+          isLoading: false,
+          error: null,
+        });
+        return;
+      }
+
+      // iOS: Check for optimized versions but NEVER block playback
       const isOriginalMp4 = originalVideoUrl.toLowerCase().includes('.mp4');
 
-      if (conversionRecord?.status === 'completed' && conversionRecord.ios_ready_url) {
-        // Use iOS-ready MP4 version
+      if (hlsUrl) {
+        finalUrl = hlsUrl;
+        servedFormat = 'hls';
+      } else if (conversionRecord?.status === 'completed' && conversionRecord.ios_ready_url) {
         finalUrl = conversionRecord.ios_ready_url;
         servedFormat = 'ios_ready';
       } else if (isOriginalMp4) {
-        // Original MP4 can be played directly on iOS
         finalUrl = originalVideoUrl;
         servedFormat = 'original';
       }
-      // Note: If no converted version and not MP4, still try original
-      // iOS may still play some formats or fail gracefully
 
       setResult({
         videoUrl: finalUrl,

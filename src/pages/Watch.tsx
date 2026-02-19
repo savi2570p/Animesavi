@@ -805,7 +805,7 @@ export default function Watch() {
         <div className="flex-1">
           <VideoPlayer
             key={`${episodeId}-${activeServer}`}
-            videoUrl={episode.video_url}
+            videoUrl={deviceOptimizedVideo.videoUrl || episode.video_url}
             externalUrl={episode.external_url}
             title={episode.title}
             animeTitle={anime?.title || ''}
