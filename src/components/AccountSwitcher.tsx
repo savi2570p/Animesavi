@@ -39,11 +39,13 @@ function setSavedAccounts(accounts: SavedAccount[]) {
   localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(accounts));
 }
 
-/** Adds or updates an account in the saved list. */
+/** Adds or updates an account in the saved list. Always saves on successful login. */
 export function rememberAccount(email: string, username: string) {
   const accounts = getSavedAccounts();
+  const existing = accounts.find((a) => a.email === email);
+  // Update username and lastUsed if account already exists, otherwise add new
   const filtered = accounts.filter((a) => a.email !== email);
-  filtered.unshift({ email, username, lastUsed: Date.now() });
+  filtered.unshift({ email, username: username || existing?.username || email.split('@')[0], lastUsed: Date.now() });
   // Keep at most 5 accounts
   setSavedAccounts(filtered.slice(0, 5));
 }

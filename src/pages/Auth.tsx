@@ -71,12 +71,6 @@ export default function Auth() {
     setIsLoading(true);
     
     // If remember me is checked, we'll store a flag in localStorage
-    if (rememberMe) {
-      localStorage.setItem('anime_remember_me', 'true');
-    } else {
-      localStorage.removeItem('anime_remember_me');
-    }
-    
     const { error } = await signIn(email, password);
     setIsLoading(false);
 
@@ -168,7 +162,7 @@ export default function Auth() {
 
     setIsResetting(true);
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/auth?reset=true`,
+      redirectTo: `${window.location.origin}/reset-password`,
     });
     setIsResetting(false);
 
