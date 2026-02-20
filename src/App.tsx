@@ -38,6 +38,7 @@ import LatestSeriesPage from "./pages/LatestSeriesPage";
 import LatestEpisodesPage from "./pages/LatestEpisodesPage";
 import LatestMoviesPage from "./pages/LatestMoviesPage";
 import PendingUploadPage from "./pages/PendingUploadPage";
+import CrunchyPage from "./pages/CrunchyPage";
 import ShortsPage from "./pages/Shorts";
 import ResetPassword from "./pages/ResetPassword";
 
@@ -125,6 +126,7 @@ const App = () => (
                 <Route path="/latest-episodes" element={<LatestEpisodesPage />} />
                 <Route path="/latest-movies" element={<LatestMoviesPage />} />
                 <Route path="/pending-upload" element={<PendingUploadPage />} />
+                <Route path="/crunchy" element={<CrunchyPage />} />
                 <Route path="/anime/:id" element={<AnimeDetail />} />
                 <Route path="/watch/:episodeId" element={<Watch />} />
                 <Route path="/favorites" element={<Favorites />} />

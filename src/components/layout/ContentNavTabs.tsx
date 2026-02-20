@@ -1,7 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { Tv, Play, Film, Clock, LayoutGrid } from 'lucide-react';
+import { Tv, Play, Film, Clock, LayoutGrid, Cherry } from 'lucide-react';
+import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
 
 interface NavTab {
   to: string;
@@ -22,6 +23,7 @@ export function ContentNavTabs() {
     { to: '/latest-series', label: 'Latest Series', icon: Tv },
     { to: '/latest-episodes', label: 'Latest Episodes', icon: Play },
     { to: '/latest-movies', label: 'Latest Movies', icon: Film },
+    { to: '/crunchy', label: 'Crunchy', icon: Cherry },
     ...(isRolesLoaded && canAccessPending
       ? [{ to: '/pending-upload', label: 'Pending Upload', icon: Clock, requiresUploader: true }]
       : []),

@@ -58,6 +58,7 @@ export type Database = {
           description: string | null
           genres: string[] | null
           id: string
+          is_crunchyroll: boolean
           is_featured: boolean | null
           like_count: number | null
           release_year: number | null
@@ -76,6 +77,7 @@ export type Database = {
           description?: string | null
           genres?: string[] | null
           id?: string
+          is_crunchyroll?: boolean
           is_featured?: boolean | null
           like_count?: number | null
           release_year?: number | null
@@ -94,6 +96,7 @@ export type Database = {
           description?: string | null
           genres?: string[] | null
           id?: string
+          is_crunchyroll?: boolean
           is_featured?: boolean | null
           like_count?: number | null
           release_year?: number | null
