@@ -126,8 +126,8 @@ export default function LatestSeriesPage() {
     const date = new Date(dateToCheck);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
-    const days = diff / (1000 * 60 * 60 * 24);
-    return days <= 7;
+    const hours = diff / (1000 * 60 * 60);
+    return hours <= 24;
   };
 
   const getStatusBadge = (anime: AnimeSeries) => {

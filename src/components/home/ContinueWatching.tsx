@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Play, ChevronRight, Clock, Sparkles, Check, User } from 'lucide-react';
+import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
 import { toast } from 'sonner';
 import {
   Carousel,
@@ -165,6 +166,22 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none" />
       
       <div className="container relative">
+        {/* Crunchyroll Logo */}
+        <div className="mb-4">
+          <a
+            href="https://www.crunchyroll.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block hover:opacity-80 transition-opacity duration-200"
+          >
+            <img
+              src={crunchyrollLogo}
+              alt="Crunchyroll"
+              className="h-8 md:h-10 w-auto object-contain"
+            />
+          </a>
+        </div>
+
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             {/* User Profile Avatar */}
