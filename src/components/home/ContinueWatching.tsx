@@ -53,6 +53,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
   const [history, setHistory] = useState<WatchHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<{ username: string | null; avatar_url: string | null } | null>(null);
+  const [filterDubbed, setFilterDubbed] = useState(false);
 
   // Only show on home page if specified
   const isHomePage = typeof window !== 'undefined' && window.location.pathname === '/';
@@ -166,20 +167,23 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none" />
       
       <div className="container relative">
-        {/* Crunchyroll Logo */}
+        {/* Dubbed Filter Tab */}
         <div className="mb-4">
-          <a
-            href="https://www.crunchyroll.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block hover:opacity-80 transition-opacity duration-200"
+          <button
+            onClick={() => setFilterDubbed(prev => !prev)}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border ${
+              filterDubbed
+                ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30'
+                : 'bg-card/50 text-muted-foreground border-border/50 hover:bg-primary/10 hover:border-primary/50 hover:text-primary'
+            }`}
           >
             <img
               src={crunchyrollLogo}
-              alt="Crunchyroll"
-              className="h-8 md:h-10 w-auto object-contain"
+              alt="Dubbed"
+              className="h-5 w-auto object-contain"
             />
-          </a>
+            Dubbed
+          </button>
         </div>
 
         <div className="flex items-center justify-between mb-8">
@@ -226,7 +230,13 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
           className="w-full"
         >
           <CarouselContent className="-ml-2 md:-ml-4">
-            {history.map((item, index) => (
+            {(filterDubbed
+              ? history.filter(item => {
+                  const lang = (item.episode as any)?.audio_language?.toLowerCase() || '';
+                  return lang.includes('dub') || lang.includes('hindi') || lang.includes('english');
+                })
+              : history
+            ).map((item, index) => (
               <CarouselItem key={item.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6">
                 <Link
                   to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
