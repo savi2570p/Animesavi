@@ -19,16 +19,14 @@ export function WelcomePopup() {
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
   useEffect(() => {
-    // Show only on the home page
     if (location.pathname !== '/') return;
 
     const hasSeenWelcome = localStorage.getItem('has_seen_welcome');
-    const hideNotice = localStorage.getItem('hide_notice_popup');
+    const hideNotice = localStorage.getItem('hide_notice_popup_v2');
     
     if (!hasSeenWelcome) {
       setShowWelcome(true);
     } else if (!hideNotice) {
-      // If welcome was already seen and notice is not hidden, show the notice directly
       setShowNotice(true);
     }
   }, [location.pathname]);
@@ -36,8 +34,7 @@ export function WelcomePopup() {
   const handleWelcomeClose = () => {
     localStorage.setItem('has_seen_welcome', 'true');
     setShowWelcome(false);
-    // Show the notice after welcome is closed (if not hidden)
-    const hideNotice = localStorage.getItem('hide_notice_popup');
+    const hideNotice = localStorage.getItem('hide_notice_popup_v2');
     if (!hideNotice) {
       setShowNotice(true);
     }
@@ -45,20 +42,15 @@ export function WelcomePopup() {
 
   const handleNoticeClose = () => {
     if (dontShowAgain) {
-      localStorage.setItem('hide_notice_popup', 'true');
+      localStorage.setItem('hide_notice_popup_v2', 'true');
     }
     setShowNotice(false);
   };
 
   return (
     <>
-      {/* Welcome Popup - shows only once */}
-      <Dialog
-        open={showWelcome}
-        onOpenChange={(open) => {
-          if (!open) handleWelcomeClose();
-        }}
-      >
+      {/* Welcome Popup */}
+      <Dialog open={showWelcome} onOpenChange={(open) => { if (!open) handleWelcomeClose(); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-2xl font-heading text-center">
@@ -69,20 +61,13 @@ export function WelcomePopup() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-row gap-2 pt-4">
-            <Button variant="default" className="anime-button flex-1" onClick={handleWelcomeClose}>
-              OK
-            </Button>
+            <Button variant="default" className="anime-button flex-1" onClick={handleWelcomeClose}>OK</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* What's New Popup - shows every time unless "Don't show again" is checked */}
-      <Dialog
-        open={showNotice}
-        onOpenChange={(open) => {
-          if (!open) handleNoticeClose();
-        }}
-      >
+      {/* What's New Popup */}
+      <Dialog open={showNotice} onOpenChange={(open) => { if (!open) handleNoticeClose(); }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-xl font-heading text-center">
@@ -92,34 +77,34 @@ export function WelcomePopup() {
           
           <div className="space-y-3 pt-2">
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">🚀</span>
+              <span className="text-lg">🎨</span>
               <div>
-                <h4 className="font-medium text-foreground">Website Improvement</h4>
-                <p className="text-sm text-muted-foreground">Enhanced performance and faster loading times</p>
+                <h4 className="font-medium text-foreground">Brand New Look</h4>
+                <p className="text-sm text-muted-foreground">Fresh Netflix-inspired design with sleek dark theme</p>
               </div>
             </div>
-            
+
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">💪</span>
+              <span className="text-lg">📱</span>
               <div>
-                <h4 className="font-medium text-foreground">More Stable</h4>
-                <p className="text-sm text-muted-foreground">Improved stability across all devices</p>
+                <h4 className="font-medium text-foreground">Better Mobile Experience</h4>
+                <p className="text-sm text-muted-foreground">All tabs now visible on every phone including iOS</p>
               </div>
             </div>
-            
+
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">🐛</span>
+              <span className="text-lg">🍿</span>
               <div>
-                <h4 className="font-medium text-foreground">Bug Fixed</h4>
-                <p className="text-sm text-muted-foreground">Multiple bugs have been squashed</p>
+                <h4 className="font-medium text-foreground">Crunchy Collection</h4>
+                <p className="text-sm text-muted-foreground">Curated premium anime in one dedicated tab</p>
               </div>
             </div>
-            
+
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">🎬</span>
+              <span className="text-lg">⚡</span>
               <div>
-                <h4 className="font-medium text-foreground">Fixed Video Player</h4>
-                <p className="text-sm text-muted-foreground">Better video playback experience</p>
+                <h4 className="font-medium text-foreground">Faster & More Stable</h4>
+                <p className="text-sm text-muted-foreground">Improved performance and squashed bugs</p>
               </div>
             </div>
           </div>
@@ -130,18 +115,13 @@ export function WelcomePopup() {
               checked={dontShowAgain}
               onCheckedChange={(checked) => setDontShowAgain(checked === true)}
             />
-            <Label 
-              htmlFor="dont-show-again" 
-              className="text-sm text-muted-foreground cursor-pointer"
-            >
+            <Label htmlFor="dont-show-again" className="text-sm text-muted-foreground cursor-pointer">
               Don't show again
             </Label>
           </div>
 
           <DialogFooter className="flex-col sm:flex-row gap-2 pt-4">
-            <Button variant="default" className="anime-button flex-1" onClick={handleNoticeClose}>
-              Continue
-            </Button>
+            <Button variant="default" className="anime-button flex-1" onClick={handleNoticeClose}>Continue</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

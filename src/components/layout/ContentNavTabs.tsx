@@ -2,7 +2,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tv, Play, Film, Clock, LayoutGrid, Cherry } from 'lucide-react';
-import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
 
 interface NavTab {
   to: string;
@@ -39,7 +38,7 @@ export function ContentNavTabs() {
   return (
     <div className="sticky top-14 z-40 bg-background/95 backdrop-blur-md border-b border-border/50 safe-area-top">
       <div className="container">
-        <nav className="flex gap-1 overflow-x-auto pb-px -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none">
+        <nav className="flex gap-0.5 overflow-x-auto pb-px -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = isActiveTab(tab.to);
@@ -49,15 +48,14 @@ export function ContentNavTabs() {
                 key={tab.to}
                 to={tab.to}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-all duration-200 shrink-0",
+                  "flex items-center gap-1.5 px-3 py-3 text-xs sm:text-sm font-medium whitespace-nowrap border-b-2 transition-all duration-200 shrink-0",
                   isActive
                     ? "border-primary text-primary"
                     : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                 )}
               >
-                <Icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
+                <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span>{tab.label}</span>
               </Link>
             );
           })}

@@ -3,6 +3,15 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
 
 interface CrunchyAnime {
@@ -18,10 +27,10 @@ interface CrunchyAnime {
 export default function CrunchyPage() {
   const [animeList, setAnimeList] = useState<CrunchyAnime[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [underProgressAnime, setUnderProgressAnime] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCrunchyAnime = async () => {
-      // Fetch crunchy anime
       const { data, error } = await supabase
         .from('anime')
         .select('id, title, cover_image, type, status')
@@ -29,7 +38,6 @@ export default function CrunchyPage() {
         .order('title');
 
       if (!error && data) {
-        // For each anime, get episode count and latest episode date
         const enriched = await Promise.all(
           data.map(async (anime) => {
             const { count } = await supabase
@@ -56,16 +64,12 @@ export default function CrunchyPage() {
           })
         );
 
-        // Sort: newest episode first, then anime with 0 episodes at the end
         enriched.sort((a, b) => {
-          // Both have episodes - sort by latest episode date
           if (a.latest_episode_at && b.latest_episode_at) {
             return new Date(b.latest_episode_at).getTime() - new Date(a.latest_episode_at).getTime();
           }
-          // One has episodes, one doesn't - episodes first
           if (a.latest_episode_at && !b.latest_episode_at) return -1;
           if (!a.latest_episode_at && b.latest_episode_at) return 1;
-          // Both have no episodes - alphabetical
           return a.title.localeCompare(b.title);
         });
 
@@ -75,6 +79,13 @@ export default function CrunchyPage() {
     };
     fetchCrunchyAnime();
   }, []);
+
+  const handleAnimeClick = (e: React.MouseEvent, anime: CrunchyAnime) => {
+    if (anime.episode_count === 0) {
+      e.preventDefault();
+      setUnderProgressAnime(anime.title);
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -117,6 +128,7 @@ export default function CrunchyPage() {
               <Link
                 key={anime.id}
                 to={`/anime/${anime.id}`}
+                onClick={(e) => handleAnimeClick(e, anime)}
                 className="group relative animate-fade-in"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
@@ -155,6 +167,23 @@ export default function CrunchyPage() {
           </div>
         )}
       </div>
+
+      {/* Under Progress Popup */}
+      <Dialog open={!!underProgressAnime} onOpenChange={(open) => !open && setUnderProgressAnime(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-heading text-center">Under Progress</DialogTitle>
+            <DialogDescription className="text-center text-base pt-2">
+              The episodes of <span className="font-semibold text-foreground">{underProgressAnime}</span> is under progress
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="pt-4">
+            <Button variant="default" className="anime-button w-full" onClick={() => setUnderProgressAnime(null)}>
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
