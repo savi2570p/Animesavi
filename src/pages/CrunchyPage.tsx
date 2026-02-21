@@ -11,6 +11,8 @@ interface CrunchyAnime {
   cover_image: string | null;
   type: string | null;
   status: string | null;
+  episode_count?: number;
+  latest_episode_at?: string | null;
 }
 
 export default function CrunchyPage() {
@@ -19,6 +21,7 @@ export default function CrunchyPage() {
 
   useEffect(() => {
     const fetchCrunchyAnime = async () => {
+      // Fetch crunchy anime
       const { data, error } = await supabase
         .from('anime')
         .select('id, title, cover_image, type, status')
@@ -26,7 +29,47 @@ export default function CrunchyPage() {
         .order('title');
 
       if (!error && data) {
-        setAnimeList(data);
+        // For each anime, get episode count and latest episode date
+        const enriched = await Promise.all(
+          data.map(async (anime) => {
+            const { count } = await supabase
+              .from('episodes')
+              .select('id', { count: 'exact', head: true })
+              .in('season_id', 
+                (await supabase.from('seasons').select('id').eq('anime_id', anime.id)).data?.map(s => s.id) || []
+              );
+            
+            const { data: latestEp } = await supabase
+              .from('episodes')
+              .select('created_at, season_id')
+              .in('season_id',
+                (await supabase.from('seasons').select('id').eq('anime_id', anime.id)).data?.map(s => s.id) || []
+              )
+              .order('created_at', { ascending: false })
+              .limit(1);
+
+            return {
+              ...anime,
+              episode_count: count || 0,
+              latest_episode_at: latestEp?.[0]?.created_at || null,
+            };
+          })
+        );
+
+        // Sort: newest episode first, then anime with 0 episodes at the end
+        enriched.sort((a, b) => {
+          // Both have episodes - sort by latest episode date
+          if (a.latest_episode_at && b.latest_episode_at) {
+            return new Date(b.latest_episode_at).getTime() - new Date(a.latest_episode_at).getTime();
+          }
+          // One has episodes, one doesn't - episodes first
+          if (a.latest_episode_at && !b.latest_episode_at) return -1;
+          if (!a.latest_episode_at && b.latest_episode_at) return 1;
+          // Both have no episodes - alphabetical
+          return a.title.localeCompare(b.title);
+        });
+
+        setAnimeList(enriched);
       }
       setIsLoading(false);
     };
@@ -97,9 +140,16 @@ export default function CrunchyPage() {
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
-                <h3 className="mt-2 text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                  {anime.title}
-                </h3>
+                <div className="mt-2">
+                  <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                    {anime.title}
+                  </h3>
+                  {anime.episode_count === 0 && (
+                    <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded mt-1 inline-block">
+                      Under Progress
+                    </span>
+                  )}
+                </div>
               </Link>
             ))}
           </div>
