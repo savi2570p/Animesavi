@@ -67,6 +67,8 @@ export default function UploadAnimeEdit() {
   // Anime status
   const [animeStatus, setAnimeStatus] = useState<string>('ongoing');
   const [isSavingStatus, setIsSavingStatus] = useState(false);
+  const [isCrunchyroll, setIsCrunchyroll] = useState(false);
+  const [isSavingCrunchy, setIsSavingCrunchy] = useState(false);
 
   // New episode form
   const [newEpisodeTitle, setNewEpisodeTitle] = useState('');
@@ -126,6 +128,7 @@ export default function UploadAnimeEdit() {
 
     setAnime(animeData);
     setAnimeStatus(animeData.status || 'ongoing');
+    setIsCrunchyroll((animeData as any).is_crunchyroll || false);
 
     // Fetch seasons
     const { data: seasonsData } = await supabase
@@ -315,6 +318,38 @@ export default function UploadAnimeEdit() {
             </SelectContent>
           </Select>
           {isSavingStatus && (
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+          )}
+        </div>
+
+        {/* Crunchy Toggle */}
+        <div className="mt-4 flex items-center gap-4 p-4 bg-card/50 rounded-xl border border-border/50">
+          <label htmlFor="edit_is_crunchyroll" className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              id="edit_is_crunchyroll"
+              checked={isCrunchyroll}
+              onChange={async (e) => {
+                const val = e.target.checked;
+                setIsCrunchyroll(val);
+                setIsSavingCrunchy(true);
+                const { error } = await supabase
+                  .from('anime')
+                  .update({ is_crunchyroll: val } as any)
+                  .eq('id', animeId);
+                if (error) {
+                  toast.error('Failed to update Crunchy status');
+                  setIsCrunchyroll(!val);
+                } else {
+                  toast.success(val ? 'Added to Crunchy tab' : 'Removed from Crunchy tab');
+                }
+                setIsSavingCrunchy(false);
+              }}
+              className="w-5 h-5 rounded border-border accent-primary"
+            />
+            <span className="text-sm font-medium">Add to Crunchy Tab</span>
+          </label>
+          {isSavingCrunchy && (
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
           )}
         </div>
