@@ -77,34 +77,34 @@ export function WelcomePopup() {
           
           <div className="space-y-3 pt-2">
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">🎨</span>
+              <span className="text-lg">🔗</span>
               <div>
-                <h4 className="font-medium text-foreground">Brand New Look</h4>
-                <p className="text-sm text-muted-foreground">Fresh Netflix-inspired design with sleek dark theme</p>
+                <h4 className="font-medium text-foreground">Clean Share Links</h4>
+                <p className="text-sm text-muted-foreground">SEO-friendly anime URLs — share links look clean</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+              <span className="text-lg">🔥</span>
+              <div>
+                <h4 className="font-medium text-foreground">Trending in Crunchy</h4>
+                <p className="text-sm text-muted-foreground">See the most popular Crunchy anime at a glance</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+              <span className="text-lg">🌙</span>
+              <div>
+                <h4 className="font-medium text-foreground">Dark Mode Locked</h4>
+                <p className="text-sm text-muted-foreground">Permanently set to dark for the best viewing experience</p>
               </div>
             </div>
 
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
               <span className="text-lg">📱</span>
               <div>
-                <h4 className="font-medium text-foreground">Better Mobile Experience</h4>
-                <p className="text-sm text-muted-foreground">All tabs now visible on every phone including iOS</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">🍿</span>
-              <div>
-                <h4 className="font-medium text-foreground">Crunchy Collection</h4>
-                <p className="text-sm text-muted-foreground">Curated premium anime in one dedicated tab</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">⚡</span>
-              <div>
-                <h4 className="font-medium text-foreground">Faster & More Stable</h4>
-                <p className="text-sm text-muted-foreground">Improved performance and squashed bugs</p>
+                <h4 className="font-medium text-foreground">Better Mobile & iOS</h4>
+                <p className="text-sm text-muted-foreground">All tabs visible, smoother video controls on every device</p>
               </div>
             </div>
           </div>

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Play, Tv, Clock, Award, ArrowRight, Film, Sparkles } from 'lucide-react';
+import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
 import { FeaturedAnime } from '@/components/home/FeaturedAnime';
 import { FeaturedSlider } from '@/components/home/FeaturedSlider';
 import { ContinueWatching } from '@/components/home/ContinueWatching';
@@ -24,7 +25,7 @@ export default function Index() {
     { icon: Play, value: 'Latest', label: 'Series & movies upload every week' },
     { icon: Tv, value: '1,500+', label: 'Series' },
     { icon: Clock, value: '24/7', label: 'Available' },
-    { icon: Award, value: '100%', label: 'Free' },
+    { icon: Award, value: 'Fully', label: 'Ad free and free' },
   ];
 
   return (
@@ -56,6 +57,23 @@ export default function Index() {
 
       {/* Continue Watching - Only shown on home page */}
       <ContinueWatching showOnHomeOnly={true} />
+
+      {/* Crunchy Link - Always visible */}
+      <section className="py-4">
+        <div className="container">
+          <Link
+            to="/crunchy"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border bg-card/50 text-muted-foreground border-border/50 hover:bg-primary/10 hover:border-primary/50 hover:text-primary"
+          >
+            <img
+              src={crunchyrollLogo}
+              alt="Crunchy"
+              className="h-5 w-auto object-contain"
+            />
+            Crunchy
+          </Link>
+        </div>
+      </section>
 
       {/* Recommended Anime */}
       <RecommendedAnime />

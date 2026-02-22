@@ -137,15 +137,11 @@ export function LatestMovies() {
               New
             </span>
           </div>
-          <Button 
-            variant="ghost" 
-            className="group"
-            onClick={() => setShowAll(!showAll)}
-          >
-            <span className="flex items-center gap-1">
-              {showAll ? 'Show Less' : 'See All'}
-              <ChevronRight className={`h-4 w-4 transition-transform ${showAll ? 'rotate-90' : 'group-hover:translate-x-1'}`} />
-            </span>
+          <Button asChild variant="ghost" className="group">
+            <Link to="/latest-movies" className="flex items-center gap-1">
+              See All
+              <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
           </Button>
         </div>
 

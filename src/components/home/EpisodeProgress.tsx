@@ -154,7 +154,7 @@ export function EpisodeProgress() {
             <h2 className="text-xl md:text-2xl font-heading font-bold">Pending Upload</h2>
           </div>
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/browse?filter=no-episodes" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+            <Link to="/pending-upload" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
               See All
               <ChevronRight className="h-4 w-4" />
             </Link>

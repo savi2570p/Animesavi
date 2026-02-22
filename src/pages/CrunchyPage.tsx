@@ -12,6 +12,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { TrendingUp, Eye } from 'lucide-react';
 import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
 
 interface CrunchyAnime {
@@ -20,6 +21,7 @@ interface CrunchyAnime {
   cover_image: string | null;
   type: string | null;
   status: string | null;
+  view_count: number | null;
   episode_count?: number;
   latest_episode_at?: string | null;
 }
@@ -33,33 +35,45 @@ export default function CrunchyPage() {
     const fetchCrunchyAnime = async () => {
       const { data, error } = await supabase
         .from('anime')
-        .select('id, title, cover_image, type, status')
+        .select('id, title, cover_image, type, status, view_count')
         .eq('is_crunchyroll', true as any)
         .order('title');
 
       if (!error && data) {
         const enriched = await Promise.all(
           data.map(async (anime) => {
-            const { count } = await supabase
-              .from('episodes')
-              .select('id', { count: 'exact', head: true })
-              .in('season_id', 
-                (await supabase.from('seasons').select('id').eq('anime_id', anime.id)).data?.map(s => s.id) || []
-              );
-            
-            const { data: latestEp } = await supabase
-              .from('episodes')
-              .select('created_at, season_id')
-              .in('season_id',
-                (await supabase.from('seasons').select('id').eq('anime_id', anime.id)).data?.map(s => s.id) || []
-              )
-              .order('created_at', { ascending: false })
-              .limit(1);
+            const { data: seasonData } = await supabase
+              .from('seasons')
+              .select('id')
+              .eq('anime_id', anime.id);
+
+            const seasonIds = seasonData?.map(s => s.id) || [];
+
+            let episodeCount = 0;
+            let latestEpAt: string | null = null;
+
+            if (seasonIds.length > 0) {
+              const { count } = await supabase
+                .from('episodes')
+                .select('id', { count: 'exact', head: true })
+                .in('season_id', seasonIds);
+
+              episodeCount = count || 0;
+
+              const { data: latestEp } = await supabase
+                .from('episodes')
+                .select('created_at')
+                .in('season_id', seasonIds)
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+              latestEpAt = latestEp?.[0]?.created_at || null;
+            }
 
             return {
               ...anime,
-              episode_count: count || 0,
-              latest_episode_at: latestEp?.[0]?.created_at || null,
+              episode_count: episodeCount,
+              latest_episode_at: latestEpAt,
             };
           })
         );
@@ -87,6 +101,12 @@ export default function CrunchyPage() {
     }
   };
 
+  // Get trending/popular anime (sorted by view_count)
+  const trendingAnime = [...animeList]
+    .filter(a => (a.episode_count || 0) > 0)
+    .sort((a, b) => (b.view_count || 0) - (a.view_count || 0))
+    .slice(0, 6);
+
   return (
     <div className="min-h-screen">
       <ContentNavTabs />
@@ -107,6 +127,57 @@ export default function CrunchyPage() {
       </div>
 
       <div className="container pb-12">
+        {/* Trending / Most Popular Section */}
+        {!isLoading && trendingAnime.length > 0 && (
+          <div className="mb-10">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="text-xl md:text-2xl font-heading font-bold">Trending in Crunchy</h2>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-none">
+              {trendingAnime.map((anime) => (
+                <Link
+                  key={anime.id}
+                  to={`/anime/${anime.id}`}
+                  onClick={(e) => handleAnimeClick(e, anime)}
+                  className="group relative shrink-0 w-[140px] md:w-[160px]"
+                >
+                  <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+                    {anime.cover_image ? (
+                      <img
+                        src={anime.cover_image}
+                        alt={anime.title}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20">
+                        <span className="text-muted-foreground">No Image</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                    <div className="absolute bottom-2 left-2 right-2">
+                      <div className="flex items-center gap-1 text-[10px] text-white/80">
+                        <Eye className="h-3 w-3" />
+                        {(anime.view_count || 0).toLocaleString()} views
+                      </div>
+                    </div>
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
+                      🔥 Trending
+                    </div>
+                  </div>
+                  <h3 className="mt-2 text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                    {anime.title}
+                  </h3>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* All Crunchy Anime */}
         {isLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {Array.from({ length: 10 }).map((_, i) => (
