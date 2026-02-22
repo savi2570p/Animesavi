@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Play, ChevronRight, Clock, Sparkles, Check, User } from 'lucide-react';
-import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
+
 import { toast } from 'sonner';
 import {
   Carousel,
@@ -167,21 +167,6 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none" />
       
       <div className="container relative">
-        {/* Crunchy Tab Link */}
-        <div className="mb-4">
-          <Link
-            to="/crunchy"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border bg-card/50 text-muted-foreground border-border/50 hover:bg-primary/10 hover:border-primary/50 hover:text-primary"
-          >
-            <img
-              src={crunchyrollLogo}
-              alt="Crunchy"
-              className="h-5 w-auto object-contain"
-            />
-            Crunchy
-          </Link>
-        </div>
-
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             {/* User Profile Avatar */}

@@ -165,6 +165,15 @@ export default function AnimeDetail() {
 
     setAnime(animeData);
 
+    // Replace URL with slug-based URL for clean sharing
+    if (animeData.title) {
+      const slug = createSlug(animeData.title);
+      const slugUrl = `/${slug}`;
+      if (window.location.pathname !== slugUrl) {
+        window.history.replaceState(null, '', slugUrl);
+      }
+    }
+
     const { data: seasonsData } = await supabase
       .from('seasons')
       .select('*')
@@ -516,18 +525,10 @@ export default function AnimeDetail() {
                 variant="outline"
                 className="h-14 px-6 border-2"
                 onClick={() => {
-                  // Create clean URL with anime name only
-                  const animeSlug = anime.title
-                    .toLowerCase()
-                    .replace(/[^a-z0-9]+/g, '-')
-                    .replace(/(^-|-$)/g, '');
-                  const shareUrl = `${window.location.origin}/${animeSlug}`;
+                  // Use current page URL (will be slug-based after replaceState)
+                  const shareUrl = window.location.href;
                   if (navigator.share) {
-                    navigator.share({
-                      title: anime.title,
-                      text: `Check out "${anime.title}" on AnimeSavi!`,
-                      url: shareUrl,
-                    }).catch(() => {
+                    navigator.share({ url: shareUrl }).catch(() => {
                       navigator.clipboard.writeText(shareUrl);
                       toast.success('Link copied!');
                     });

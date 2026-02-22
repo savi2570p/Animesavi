@@ -192,7 +192,7 @@ export function LatestEpisodes() {
             )}
           </div>
           <Button asChild variant="ghost" className="group">
-            <Link to="/browse?type=series" className="flex items-center gap-1">
+            <Link to="/latest-episodes" className="flex items-center gap-1">
               See All
               <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>

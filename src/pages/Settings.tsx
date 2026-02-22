@@ -79,46 +79,22 @@ export default function Settings() {
       </div>
 
       <div className="space-y-6">
-        {/* Theme Settings */}
+        {/* Theme - Locked to Dark */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Sun className="h-5 w-5" />
+              <Moon className="h-5 w-5" />
               Appearance
             </CardTitle>
             <CardDescription>
-              Choose your preferred theme
+              Theme is locked to dark mode for the best viewing experience
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
-              <Button
-                variant={theme === 'light' ? 'default' : 'outline'}
-                onClick={() => handleThemeChange('light')}
-                disabled={isTransitioning}
-                className="flex flex-col gap-2 h-auto py-4 transition-all duration-300"
-              >
-                <Sun className="h-5 w-5" />
-                <span className="text-xs">Light</span>
-              </Button>
-              <Button
-                variant={theme === 'dark' ? 'default' : 'outline'}
-                onClick={() => handleThemeChange('dark')}
-                disabled={isTransitioning}
-                className="flex flex-col gap-2 h-auto py-4 transition-all duration-300"
-              >
-                <Moon className="h-5 w-5" />
-                <span className="text-xs">Dark</span>
-              </Button>
-              <Button
-                variant={theme === 'system' ? 'default' : 'outline'}
-                onClick={() => handleThemeChange('system')}
-                disabled={isTransitioning}
-                className="flex flex-col gap-2 h-auto py-4 transition-all duration-300"
-              >
-                <Monitor className="h-5 w-5" />
-                <span className="text-xs">System</span>
-              </Button>
+          <CardContent>
+            <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg border border-primary/20">
+              <Moon className="h-5 w-5 text-primary" />
+              <span className="font-medium">Dark Mode</span>
+              <span className="text-xs text-muted-foreground ml-auto">Always On</span>
             </div>
           </CardContent>
         </Card>

@@ -65,7 +65,9 @@ export function RecommendedAnime() {
 
       const { data } = await query;
       if (data) {
-        setRecommendations(data);
+        // Randomize the results
+        const shuffled = [...data].sort(() => Math.random() - 0.5);
+        setRecommendations(shuffled);
       }
     } else {
       fetchPopular();
@@ -83,7 +85,9 @@ export function RecommendedAnime() {
       .limit(12);
 
     if (data) {
-      setRecommendations(data);
+      // Randomize the results
+      const shuffled = [...data].sort(() => Math.random() - 0.5);
+      setRecommendations(shuffled);
     }
     setIsLoading(false);
   };

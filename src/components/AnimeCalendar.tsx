@@ -203,11 +203,11 @@ export function AnimeCalendar() {
         <div className="flex items-center gap-4 mb-4 text-sm">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full bg-primary" />
-            <span className="text-muted-foreground">Favorite</span>
+            <span className="text-muted-foreground">Today</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full bg-muted-foreground/50" />
-            <span className="text-muted-foreground">Other</span>
+            <span className="text-muted-foreground">Tomorrow / Yesterday</span>
           </div>
         </div>
 
