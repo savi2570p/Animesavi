@@ -16,6 +16,8 @@ import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useNetworkSpeed } from "@/hooks/useNetworkSpeed";
 import { useBackgroundSync } from "@/hooks/useBackgroundSync";
 import { useAutoVideoScan } from "@/hooks/useAutoVideoScan";
+import { AccessBanner } from "@/components/AccessBanner";
+import TokenVerify from "./pages/TokenVerify";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Browse from "./pages/Browse";
@@ -104,6 +106,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ScrollToTop />
+            <AccessBanner />
             <OfflineIndicator />
             <WelcomePopup />
             <FloatingTelegramButton />
@@ -115,6 +118,8 @@ const App = () => (
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/verify" element={<TokenVerify />} />
+              <Route path="/secure-verify" element={<TokenVerify />} />
               
               <Route path="/external-player" element={<ExternalPlayer />} />
               <Route path="/embed/:episodeId" element={<EmbedPlayer />} />

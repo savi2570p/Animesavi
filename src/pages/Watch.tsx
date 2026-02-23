@@ -20,6 +20,8 @@ import { ServerStatusIndicator } from '@/components/video/ServerStatusIndicator'
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
 import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hooks/useServerAutoSelect';
 import { z } from 'zod';
+import { hasValidAccess, isSuperAdmin } from '@/components/AccessBanner';
+import { TokenExpiredPopup } from '@/components/TokenExpiredPopup';
 import {
   ChevronLeft,
   ChevronRight,
@@ -751,6 +753,13 @@ export default function Watch() {
         </Button>
       </div>
     );
+  }
+
+  // Token access check - super admins bypass
+  const accessValid = hasValidAccess(user?.email);
+
+  if (!accessValid) {
+    return <TokenExpiredPopup />;
   }
 
   return (
