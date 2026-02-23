@@ -14,18 +14,17 @@ export function isSuperAdmin(email?: string | null): boolean {
   return SUPER_ADMIN_EMAILS.includes(email.toLowerCase());
 }
 
-/** Always fetch token system status directly from DB — no caching */
+/** Always fetch token system status directly from DB via RPC — bypasses RLS */
 export async function fetchTokenSystemStatus(): Promise<boolean> {
   try {
-    const { data } = await supabase
-      .from('unlock_tokens')
-      .select('is_active')
-      .eq('token', '__system_toggle__')
-      .maybeSingle();
-    // Default to enabled if row doesn't exist
-    return data ? data.is_active : true;
+    const { data, error } = await supabase.rpc('get_token_system_status');
+    if (error) {
+      console.error('Token system status fetch error:', error);
+      return true; // default enabled on error
+    }
+    return data ?? true;
   } catch {
-    return true; // default enabled on error
+    return true;
   }
 }
 
