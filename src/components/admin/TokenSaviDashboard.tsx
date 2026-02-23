@@ -286,42 +286,7 @@ export function TokenSaviDashboard() {
                 )}
               </div>
 
-              {/* Usage History */}
-              <div className="pt-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowUsage(!showUsage)}
-                  className="mb-2"
-                >
-                  <Users className="h-4 w-4 mr-1" />
-                  Usage History ({tokenUsage.length})
-                </Button>
-                {showUsage && (
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {tokenUsage.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">No usage recorded yet.</p>
-                    ) : (
-                      tokenUsage.map((u) => (
-                        <div
-                          key={u.id}
-                          className="flex items-center justify-between text-xs bg-muted/50 rounded p-2"
-                        >
-                          <div>
-                            <p className="font-mono">{u.user_ip || 'Unknown IP'}</p>
-                            <p className="text-muted-foreground truncate max-w-[200px]">
-                              {u.user_agent || 'Unknown device'}
-                            </p>
-                          </div>
-                          <span className="text-muted-foreground whitespace-nowrap ml-2">
-                            {new Date(u.used_at).toLocaleString()}
-                          </span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
+              {/* Usage History removed */}
             </>
           )}
         </CardContent>

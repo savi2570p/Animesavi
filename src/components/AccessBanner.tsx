@@ -90,16 +90,32 @@ export function AccessBanner() {
   if (superAdmin || !time || isPlayerPage || dismissed) return null;
 
   return (
-    <div className="sticky top-0 z-[60] bg-gradient-to-r from-red-700 to-red-600 text-white px-4 py-2">
+    <div
+      className="sticky top-0 z-[60] text-white px-4 py-2.5 animate-fade-in"
+      style={{
+        background: 'linear-gradient(135deg, hsl(0 72% 30%) 0%, hsl(0 80% 42%) 50%, hsl(0 72% 30%) 100%)',
+        boxShadow: '0 4px 20px hsla(0, 80%, 40%, 0.4), 0 0 40px hsla(0, 80%, 40%, 0.15)',
+      }}
+    >
       <div className="container flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Clock className="h-4 w-4" />
-          <span>Access expires in: </span>
-          <span className="font-mono font-bold">
+        <div className="flex items-center gap-2.5 text-sm font-medium tracking-wide">
+          <Clock className="h-4 w-4 animate-pulse" />
+          <span className="opacity-90">Access expires in</span>
+          <span
+            className="font-mono font-bold text-base px-2.5 py-0.5 rounded-md"
+            style={{
+              background: 'hsla(0, 0%, 0%, 0.3)',
+              textShadow: '0 0 8px hsla(0, 80%, 60%, 0.6)',
+              letterSpacing: '0.1em',
+            }}
+          >
             {String(time.hours).padStart(2, '0')}:{String(time.minutes).padStart(2, '0')}:{String(time.seconds).padStart(2, '0')}
           </span>
         </div>
-        <button onClick={() => setDismissed(true)} className="hover:bg-white/20 rounded p-1">
+        <button
+          onClick={() => setDismissed(true)}
+          className="hover:bg-white/20 rounded-full p-1.5 transition-colors duration-200"
+        >
           <X className="h-4 w-4" />
         </button>
       </div>
