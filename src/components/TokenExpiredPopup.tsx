@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Lock, Ban, Globe, ExternalLink } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 type Language = 'en' | 'hinglish' | 'hi' | 'bn' | 'ta' | 'te';
 
@@ -76,19 +75,32 @@ export function TokenExpiredPopup() {
   const t = translations[lang];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-2xl border border-orange-500/30 bg-black/70 backdrop-blur-xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      style={{ background: 'radial-gradient(ellipse at center, rgba(180,0,0,0.15) 0%, rgba(0,0,0,0.85) 70%)' }}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl overflow-hidden animate-scale-in"
+        style={{
+          background: 'linear-gradient(165deg, rgba(30,0,0,0.92) 0%, rgba(10,10,10,0.96) 100%)',
+          border: '1px solid rgba(220,38,38,0.3)',
+          boxShadow: '0 0 60px rgba(220,38,38,0.15), 0 0 120px rgba(220,38,38,0.05), 0 25px 50px rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(24px)',
+        }}
+      >
         {/* Language Switcher */}
-        <div className="flex flex-wrap gap-1 p-3 bg-black/40 border-b border-orange-500/20">
+        <div className="flex flex-wrap gap-1 p-3 border-b" style={{ borderColor: 'rgba(220,38,38,0.15)', background: 'rgba(0,0,0,0.4)' }}>
           {(Object.keys(langLabels) as Language[]).map((l) => (
             <button
               key={l}
               onClick={() => setLang(l)}
-              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+              className="px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200"
+              style={
                 lang === l
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-white/10 text-white/70 hover:bg-white/20'
-              }`}
+                  ? { background: 'rgb(220,38,38)', color: 'white', boxShadow: '0 0 12px rgba(220,38,38,0.4)' }
+                  : { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }
+              }
+              onMouseEnter={(e) => { if (lang !== l) e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }}
+              onMouseLeave={(e) => { if (lang !== l) e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
             >
               {langLabels[l]}
             </button>
@@ -98,32 +110,35 @@ export function TokenExpiredPopup() {
         {/* Content */}
         <div className="p-6 space-y-6">
           <div className="text-center">
-            <div className="mx-auto w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-4">
-              <Lock className="h-8 w-8 text-orange-500" />
+            <div
+              className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
+              style={{
+                background: 'radial-gradient(circle, rgba(220,38,38,0.25) 0%, rgba(220,38,38,0.08) 100%)',
+                boxShadow: '0 0 30px rgba(220,38,38,0.2)',
+              }}
+            >
+              <Lock className="h-8 w-8" style={{ color: 'rgb(239,68,68)' }} />
             </div>
-            <h2 className="text-xl font-bold text-white">{t.title}</h2>
+            <h2 className="text-xl font-bold text-white tracking-tight">{t.title}</h2>
           </div>
 
           {/* Features */}
           <div className="space-y-3">
-            <div className="flex items-center gap-3 text-white/90">
-              <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center shrink-0">
-                <Lock className="h-4 w-4 text-orange-400" />
+            {[
+              { icon: Lock, text: t.feature1 },
+              { icon: Ban, text: t.feature2 },
+              { icon: Globe, text: t.feature3 },
+            ].map(({ icon: Icon, text }, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: 'rgba(220,38,38,0.12)' }}
+                >
+                  <Icon className="h-4 w-4" style={{ color: 'rgb(248,113,113)' }} />
+                </div>
+                <span className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>{text}</span>
               </div>
-              <span className="text-sm">{t.feature1}</span>
-            </div>
-            <div className="flex items-center gap-3 text-white/90">
-              <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center shrink-0">
-                <Ban className="h-4 w-4 text-orange-400" />
-              </div>
-              <span className="text-sm">{t.feature2}</span>
-            </div>
-            <div className="flex items-center gap-3 text-white/90">
-              <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center shrink-0">
-                <Globe className="h-4 w-4 text-orange-400" />
-              </div>
-              <span className="text-sm">{t.feature3}</span>
-            </div>
+            ))}
           </div>
 
           {/* Buttons */}
@@ -132,7 +147,19 @@ export function TokenExpiredPopup() {
               href="https://t.me/getunlocktoken"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-semibold transition-all"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold transition-all duration-200 text-white"
+              style={{
+                background: 'linear-gradient(135deg, rgb(220,38,38) 0%, rgb(185,28,28) 100%)',
+                boxShadow: '0 0 20px rgba(220,38,38,0.3), 0 4px 12px rgba(0,0,0,0.3)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 30px rgba(220,38,38,0.5), 0 4px 16px rgba(0,0,0,0.4)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 20px rgba(220,38,38,0.3), 0 4px 12px rgba(0,0,0,0.3)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
             >
               <ExternalLink className="h-4 w-4" />
               {t.skipAds}
@@ -141,7 +168,20 @@ export function TokenExpiredPopup() {
               href="https://telegra.ph/How-to-Get-token-02-20"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border-2 border-orange-500 text-orange-500 hover:bg-orange-500/10 font-semibold transition-all"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold transition-all duration-200"
+              style={{
+                border: '2px solid rgba(220,38,38,0.6)',
+                color: 'rgb(248,113,113)',
+                background: 'transparent',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(220,38,38,0.1)';
+                e.currentTarget.style.borderColor = 'rgba(220,38,38,0.8)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderColor = 'rgba(220,38,38,0.6)';
+              }}
             >
               {t.howTo}
             </a>
