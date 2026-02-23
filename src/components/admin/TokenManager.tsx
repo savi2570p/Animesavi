@@ -30,6 +30,7 @@ export function TokenManager() {
     const { data, error } = await supabase
       .from('unlock_tokens')
       .select('*')
+      .neq('token', '__system_toggle__')
       .order('created_at', { ascending: false });
 
     if (data) setTokens(data as Token[]);
