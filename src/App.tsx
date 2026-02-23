@@ -18,6 +18,7 @@ import { useBackgroundSync } from "@/hooks/useBackgroundSync";
 import { useAutoVideoScan } from "@/hooks/useAutoVideoScan";
 import { AccessBanner } from "@/components/AccessBanner";
 import TokenVerify from "./pages/TokenVerify";
+import UnlockAccess from "./pages/UnlockAccess";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Browse from "./pages/Browse";
@@ -120,6 +121,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/verify" element={<TokenVerify />} />
               <Route path="/secure-verify" element={<TokenVerify />} />
+              <Route path="/unlock/:token" element={<UnlockAccess />} />
               
               <Route path="/external-player" element={<ExternalPlayer />} />
               <Route path="/embed/:episodeId" element={<EmbedPlayer />} />
