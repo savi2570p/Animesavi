@@ -16,7 +16,7 @@ import { ComingSoon } from '@/components/home/ComingSoon';
 import { SocialShare } from '@/components/home/SocialShare';
 import { MostPopular } from '@/components/home/MostPopular';
 import { AnimeCalendar } from '@/components/AnimeCalendar';
-import { ShortsSection } from '@/components/home/ShortsSection';
+
 
 export default function Index() {
   const { user } = useAuth();
@@ -24,8 +24,8 @@ export default function Index() {
   const stats = [
     { icon: Play, value: 'Latest', label: 'Series & movies upload every week' },
     { icon: Tv, value: '1,500+', label: 'Series' },
-    { icon: Clock, value: '24/7', label: 'Available' },
-    { icon: Award, value: 'Fully', label: 'Ad free and free' },
+    { icon: Clock, value: '24/7', label: 'Join Telegram group for more updates' },
+    { icon: Award, value: 'Fully', label: 'Ad free' },
   ];
 
   return (
@@ -99,8 +99,6 @@ export default function Index() {
       {/* Latest Movies */}
       <LatestMovies />
 
-      {/* Shorts - Bottom section */}
-      <ShortsSection />
 
       {/* Recently Completed */}
       <RecentlyCompleted />

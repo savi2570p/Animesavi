@@ -2714,11 +2714,12 @@ export function VideoPlayer({
                   value={isNaN(progress) ? 0 : progress}
                   onChange={handleSeek}
                   className="absolute inset-0 w-full h-full bg-transparent rounded-full appearance-none cursor-pointer 
-                    [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 
+                    [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
+                    [&::-webkit-slider-thumb]:md:w-5 [&::-webkit-slider-thumb]:md:h-5
                     [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg
                     [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125
-                    [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:bg-primary 
-                    [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0
+                    [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:md:w-5 [&::-moz-range-thumb]:md:h-5
+                    [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0
                     [&::-webkit-slider-runnable-track]:bg-transparent
                     [&::-moz-range-track]:bg-transparent"
                   style={{
@@ -2734,31 +2735,31 @@ export function VideoPlayer({
 
           {/* Control buttons - Responsive for mobile */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1 md:gap-2">
+            <div className="flex items-center gap-0.5 md:gap-2">
               {/* Skip back */}
               <button 
-                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); skipBackward(); }} 
                 title="Skip back 10s"
               >
-                <SkipBack className="w-4 h-4 md:w-5 md:h-5" />
+                <SkipBack className="w-3.5 h-3.5 md:w-5 md:h-5" />
               </button>
 
               {/* Play/Pause */}
               <button 
-                className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); togglePlay(); }}
               >
-                {isPlaying ? <Pause className="w-5 h-5 md:w-7 md:h-7" /> : <Play className="w-5 h-5 md:w-7 md:h-7 fill-current ml-0.5" />}
+                {isPlaying ? <Pause className="w-4 h-4 md:w-7 md:h-7" /> : <Play className="w-4 h-4 md:w-7 md:h-7 fill-current ml-0.5" />}
               </button>
 
               {/* Skip forward */}
               <button 
-                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); skipForward(); }} 
                 title="Skip forward 10s"
               >
-                <SkipForward className="w-4 h-4 md:w-5 md:h-5" />
+                <SkipForward className="w-3.5 h-3.5 md:w-5 md:h-5" />
               </button>
 
               {/* Volume Slider - Desktop */}
@@ -2772,10 +2773,10 @@ export function VideoPlayer({
               </div>
               {/* Volume Button - Mobile (just mute toggle) */}
               <button 
-                className="md:hidden w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                className="md:hidden w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); toggleMute(); }}
               >
-                {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
               </button>
 
               {/* Next Episode Button Desktop */}
@@ -2799,7 +2800,7 @@ export function VideoPlayer({
               )}
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5 md:gap-1">
               {/* Keyboard Shortcuts Info Button */}
               <TooltipProvider>
                 <Tooltip open={showKeyboardShortcuts} onOpenChange={setShowKeyboardShortcuts}>
@@ -2860,11 +2861,11 @@ export function VideoPlayer({
               {/* Next Episode Button Mobile */}
               {hasNextEpisode && onNextEpisode && (
                 <button 
-                  className="md:hidden w-8 h-8 rounded-full bg-primary/80 hover:bg-primary flex items-center justify-center text-white transition-colors" 
+                  className="md:hidden w-7 h-7 rounded-full bg-primary/80 hover:bg-primary flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
                   title="Next Episode"
                 >
-                  <SkipForward className="w-4 h-4" />
+                  <SkipForward className="w-3.5 h-3.5" />
                 </button>
               )}
 
@@ -2879,7 +2880,7 @@ export function VideoPlayer({
               >
                 <DropdownMenuTrigger asChild>
                   <button 
-                    className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
+                    className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
                     onPointerDown={(e) => { 
                       e.stopPropagation(); 
                       e.preventDefault();
@@ -2909,7 +2910,7 @@ export function VideoPlayer({
               {/* Download - Only for Zex server */}
               {features.includes('download') && (
                 <button 
-                  className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                   onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
                   title="Download"
                 >
@@ -2918,8 +2919,8 @@ export function VideoPlayer({
               )}
 
               {/* PiP - Hidden on mobile */}
-              <button 
-                className="flex w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
+                <button 
+                  className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                 onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                 title="Picture-in-Picture"
               >
@@ -2927,8 +2928,8 @@ export function VideoPlayer({
               </button>
 
               {/* Fullscreen */}
-              <button 
-                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                <button 
+                  className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                 onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
                 title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
               >

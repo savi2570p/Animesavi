@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { ConversionHealthDashboard } from '@/components/admin/ConversionHealthDashboard';
-import { ShortsUpload } from '@/components/upload/ShortsUpload';
+
 import {
   Upload as UploadIcon,
   Plus,
@@ -335,9 +335,6 @@ export default function Upload() {
           <TabsTrigger value="tools" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
             <Wrench className="h-4 w-4 mr-2" />
             Tools
-          </TabsTrigger>
-          <TabsTrigger value="shorts" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
-            Shorts
           </TabsTrigger>
         </TabsList>
 
@@ -835,10 +832,6 @@ export default function Upload() {
           </div>
         </TabsContent>
 
-        {/* Shorts Tab */}
-        <TabsContent value="shorts">
-          <ShortsUpload />
-        </TabsContent>
       </Tabs>
     </div>
   );

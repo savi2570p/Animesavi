@@ -22,6 +22,8 @@ interface Anime {
   id: string;
   title: string;
   description: string | null;
+  cover_image: string | null;
+  banner_image: string | null;
   uploader_id: string | null;
   status: string | null;
 }
@@ -69,6 +71,12 @@ export default function UploadAnimeEdit() {
   const [isSavingStatus, setIsSavingStatus] = useState(false);
   const [isCrunchyroll, setIsCrunchyroll] = useState(false);
   const [isSavingCrunchy, setIsSavingCrunchy] = useState(false);
+
+  // Anime info editing
+  const [editTitle, setEditTitle] = useState('');
+  const [editCoverImage, setEditCoverImage] = useState('');
+  const [editBannerImage, setEditBannerImage] = useState('');
+  const [isSavingInfo, setIsSavingInfo] = useState(false);
 
   // New episode form
   const [newEpisodeTitle, setNewEpisodeTitle] = useState('');
@@ -129,6 +137,9 @@ export default function UploadAnimeEdit() {
     setAnime(animeData);
     setAnimeStatus(animeData.status || 'ongoing');
     setIsCrunchyroll((animeData as any).is_crunchyroll || false);
+    setEditTitle(animeData.title || '');
+    setEditCoverImage(animeData.cover_image || '');
+    setEditBannerImage(animeData.banner_image || '');
 
     // Fetch seasons
     const { data: seasonsData } = await supabase
@@ -353,8 +364,70 @@ export default function UploadAnimeEdit() {
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
           )}
         </div>
-      </div>
 
+        {/* Edit Series Name & Thumbnail */}
+        <div className="mt-4 p-4 bg-card/50 rounded-xl border border-border/50 space-y-4">
+          <h3 className="text-sm font-semibold">Edit Series Info</h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Series Title</Label>
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Anime title"
+                className="bg-muted/50"
+              />
+            </div>
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <FileUploadInput
+              label="Cover Image (Thumbnail)"
+              accept="image"
+              value={editCoverImage}
+              onChange={setEditCoverImage}
+              folder="covers"
+              placeholder="https://example.com/cover.jpg"
+            />
+            <FileUploadInput
+              label="Banner Image"
+              accept="image"
+              value={editBannerImage}
+              onChange={setEditBannerImage}
+              folder="banners"
+              placeholder="https://example.com/banner.jpg"
+            />
+          </div>
+          <Button
+            className="anime-button"
+            disabled={isSavingInfo}
+            onClick={async () => {
+              if (!editTitle.trim()) {
+                toast.error('Title is required');
+                return;
+              }
+              setIsSavingInfo(true);
+              const { error } = await supabase
+                .from('anime')
+                .update({
+                  title: editTitle.trim(),
+                  cover_image: editCoverImage.trim() || null,
+                  banner_image: editBannerImage.trim() || null,
+                })
+                .eq('id', animeId);
+              if (error) {
+                toast.error('Failed to update');
+              } else {
+                toast.success('Series info updated!');
+                setAnime(prev => prev ? { ...prev, title: editTitle.trim(), cover_image: editCoverImage.trim() || null, banner_image: editBannerImage.trim() || null } : null);
+              }
+              setIsSavingInfo(false);
+            }}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {isSavingInfo ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      </div>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-8">
           <TabsTrigger value="seasons">Seasons</TabsTrigger>
