@@ -7,8 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Key, Copy, Clock, CheckCircle, XCircle, Users, BarChart3, Power, Link2, RefreshCw, Edit2, Save } from 'lucide-react';
-import { fetchTokenSystemStatus } from '@/components/AccessBanner';
+import { Key, Copy, Clock, CheckCircle, XCircle, Users, Power, Link2, RefreshCw, Edit2, Save } from 'lucide-react';
+import { fetchTokenSystemStatus, isSuperAdmin } from '@/components/AccessBanner';
 
 interface Token {
   id: string;
@@ -27,7 +27,8 @@ interface TokenUsage {
 }
 
 export function TokenSaviDashboard() {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const canManage = isAdmin || isSuperAdmin(user?.email);
   const [unlockToken, setUnlockToken] = useState<Token | null>(null);
   const [usage, setUsage] = useState<TokenUsage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,7 +62,7 @@ export function TokenSaviDashboard() {
   };
 
   const createUnlockToken = async () => {
-    if (!isAdmin) return;
+    if (!canManage) return;
     const { data: userData } = await supabase.auth.getUser();
 
     // Delete all existing non-system tokens first (enforce single token)
@@ -82,7 +83,7 @@ export function TokenSaviDashboard() {
   };
 
   const regenerateToken = async () => {
-    if (!isAdmin || !unlockToken) return;
+    if (!canManage || !unlockToken) return;
 
     // Delete existing and create new
     await supabase.from('unlock_tokens').delete().eq('id', unlockToken.id);
@@ -103,7 +104,7 @@ export function TokenSaviDashboard() {
   };
 
   const toggleTokenActive = async () => {
-    if (!isAdmin || !unlockToken) return;
+    if (!canManage || !unlockToken) return;
     const newActive = !unlockToken.is_active;
     const { error } = await supabase
       .from('unlock_tokens')
@@ -116,7 +117,7 @@ export function TokenSaviDashboard() {
   };
 
   const saveNewSlug = async () => {
-    if (!isAdmin || !unlockToken || !newSlug.trim()) return;
+    if (!canManage || !unlockToken || !newSlug.trim()) return;
     setIsSavingSlug(true);
 
     const slug = newSlug.trim();
@@ -201,7 +202,7 @@ export function TokenSaviDashboard() {
           {!unlockToken ? (
             <div className="text-center py-6 space-y-4">
               <p className="text-muted-foreground">No unlock token exists yet.</p>
-              {isAdmin && (
+              {canManage && (
                 <Button onClick={createUnlockToken} className="bg-primary hover:bg-primary/90">
                   <Key className="h-4 w-4 mr-2" />
                   Create Unlock Token
@@ -247,7 +248,7 @@ export function TokenSaviDashboard() {
                     <code className="text-sm font-mono flex-1 truncate text-foreground">
                       {unlockToken.token}
                     </code>
-                    {isAdmin && (
+                    {canManage && (
                       <Button
                         size="sm"
                         variant="ghost"
@@ -277,7 +278,7 @@ export function TokenSaviDashboard() {
                 <Badge variant="outline" className="text-xs">
                   Created {new Date(unlockToken.created_at).toLocaleDateString()}
                 </Badge>
-                {isAdmin && (
+                {canManage && (
                   <Button size="sm" variant="outline" onClick={regenerateToken}>
                     <RefreshCw className="h-4 w-4 mr-1" />
                     Regenerate
