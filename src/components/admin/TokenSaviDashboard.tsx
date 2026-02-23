@@ -104,38 +104,6 @@ export function TokenSaviDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* System Toggle */}
-      {isAdmin && (
-        <Card className={`border-2 ${systemEnabled ? 'border-green-500/40' : 'border-destructive/40'}`}>
-          <CardContent className="flex items-center justify-between p-5">
-            <div className="flex items-center gap-3">
-              <Power className={`h-6 w-6 ${systemEnabled ? 'text-green-500' : 'text-destructive'}`} />
-              <div>
-                <p className="font-semibold text-lg">Token System</p>
-                <p className="text-sm text-muted-foreground">
-                  {systemEnabled ? 'System is active — users need tokens to access the player' : 'System is disabled — everyone can access the player freely'}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge className={systemEnabled ? 'bg-green-600' : 'bg-destructive'}>
-                {systemEnabled ? 'Enabled' : 'Disabled'}
-              </Badge>
-              <Switch
-                checked={systemEnabled}
-                onCheckedChange={async (checked) => {
-                  // Update DB toggle
-                  await supabase.from('unlock_tokens').update({ is_active: checked }).eq('token', '__system_toggle__');
-                  setTokenSystemEnabled(checked);
-                  setSystemEnabled(checked);
-                  toast.success(checked ? 'Token system enabled' : 'Token system disabled — all users have free access');
-                }}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card><CardContent className="p-4 text-center">
@@ -248,6 +216,52 @@ export function TokenSaviDashboard() {
               })}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Enable / Disable Token System — at bottom */}
+      <Card className={`border-2 ${systemEnabled ? 'border-green-500/40' : 'border-destructive/40'}`}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Power className={`h-5 w-5 ${systemEnabled ? 'text-green-500' : 'text-destructive'}`} />
+            Token System Control
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            {systemEnabled
+              ? 'The token system is currently ENABLED. Users must have a valid token to access the video player.'
+              : 'The token system is currently DISABLED. All users can access the video player freely without any token.'}
+          </p>
+          <div className="flex gap-3">
+            <Button
+              variant={systemEnabled ? 'default' : 'outline'}
+              className={systemEnabled ? 'bg-green-600 hover:bg-green-700' : ''}
+              onClick={async () => {
+                if (systemEnabled) return;
+                await supabase.from('unlock_tokens').update({ is_active: true }).eq('token', '__system_toggle__');
+                setTokenSystemEnabled(true);
+                setSystemEnabled(true);
+                toast.success('Token system enabled — users need tokens to watch');
+              }}
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Enable
+            </Button>
+            <Button
+              variant={!systemEnabled ? 'destructive' : 'outline'}
+              onClick={async () => {
+                if (!systemEnabled) return;
+                await supabase.from('unlock_tokens').update({ is_active: false }).eq('token', '__system_toggle__');
+                setTokenSystemEnabled(false);
+                setSystemEnabled(false);
+                toast.success('Token system disabled — all users have free access');
+              }}
+            >
+              <XCircle className="h-4 w-4 mr-2" />
+              Disable
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
