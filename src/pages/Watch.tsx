@@ -20,7 +20,7 @@ import { ServerStatusIndicator } from '@/components/video/ServerStatusIndicator'
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
 import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hooks/useServerAutoSelect';
 import { z } from 'zod';
-import { hasValidAccess, isSuperAdmin, isTokenSystemEnabled } from '@/components/AccessBanner';
+import { hasValidAccess, isSuperAdmin, isTokenSystemEnabled, syncTokenSystemFlag } from '@/components/AccessBanner';
 import { TokenExpiredPopup } from '@/components/TokenExpiredPopup';
 import {
   ChevronLeft,
@@ -152,7 +152,8 @@ export default function Watch() {
   const [commentNotifications, setCommentNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showTelegramPopup, setShowTelegramPopup] = useState(false);
-  const [showFreeAccessPopup, setShowFreeAccessPopup] = useState(!isTokenSystemEnabled());
+  const [showFreeAccessPopup, setShowFreeAccessPopup] = useState(false);
+  const [tokenSystemReady, setTokenSystemReady] = useState(false);
   const [initialSeekDone, setInitialSeekDone] = useState(false);
   const [showResumeNotification, setShowResumeNotification] = useState(false);
   const [savedPlaybackProgress, setSavedPlaybackProgress] = useState(0);
@@ -161,6 +162,18 @@ export default function Watch() {
 
   // Device-optimized video URL for iOS compatibility
   const deviceOptimizedVideo = useDeviceOptimizedVideo(episodeId, episode?.video_url || null);
+
+  // Sync token system flag from DB immediately on mount
+  useEffect(() => {
+    syncTokenSystemFlag().then(() => {
+      const enabled = isTokenSystemEnabled();
+      setTokenSystemReady(true);
+      if (!enabled && !isSuperAdmin(user?.email)) {
+        setShowFreeAccessPopup(true);
+      }
+    });
+  }, [user?.email]);
+
   // Check if Telegram popup should be shown (once per day)
   useEffect(() => {
     const lastShown = localStorage.getItem(TELEGRAM_POPUP_KEY);
@@ -757,6 +770,15 @@ export default function Watch() {
   }
 
   // Token access check - super admins bypass, disabled system = free access
+  // Wait for DB sync before deciding
+  if (!tokenSystemReady) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Skeleton className="w-16 h-16 rounded-full" />
+      </div>
+    );
+  }
+
   const tokenSystemActive = isTokenSystemEnabled();
   const accessValid = hasValidAccess(user?.email);
 
