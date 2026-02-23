@@ -9,48 +9,48 @@ const SUPER_ADMIN_EMAILS = [
   'savipanjeta2@gmail.com',
 ];
 
-const TOKEN_SYSTEM_KEY = 'token_system_enabled';
-
 export function isSuperAdmin(email?: string | null): boolean {
   if (!email) return false;
   return SUPER_ADMIN_EMAILS.includes(email.toLowerCase());
 }
 
-export function isTokenSystemEnabled(): boolean {
-  const val = localStorage.getItem(TOKEN_SYSTEM_KEY);
-  // Default to enabled if not set
-  return val !== 'false';
-}
-
-export function setTokenSystemEnabled(enabled: boolean) {
-  localStorage.setItem(TOKEN_SYSTEM_KEY, String(enabled));
-}
-
-/** Sync the token system flag from DB (app_settings or unlock_tokens metadata). 
- *  We use a simple approach: check a special token with token='__system_disabled__' */
-export async function syncTokenSystemFlag() {
-  const { data } = await supabase
-    .from('unlock_tokens')
-    .select('is_active')
-    .eq('token', '__system_toggle__')
-    .maybeSingle();
-  
-  if (data) {
-    // is_active=true means system is enabled, false means disabled
-    localStorage.setItem(TOKEN_SYSTEM_KEY, String(data.is_active));
+/** Always fetch token system status directly from DB — no caching */
+export async function fetchTokenSystemStatus(): Promise<boolean> {
+  try {
+    const { data } = await supabase
+      .from('unlock_tokens')
+      .select('is_active')
+      .eq('token', '__system_toggle__')
+      .maybeSingle();
+    // Default to enabled if row doesn't exist
+    return data ? data.is_active : true;
+  } catch {
+    return true; // default enabled on error
   }
 }
 
-export function hasValidAccess(email?: string | null): boolean {
+/** Legacy sync helper — now just calls fetchTokenSystemStatus */
+export async function syncTokenSystemFlag() {
+  await fetchTokenSystemStatus();
+}
+
+export function hasValidTokenAccess(email?: string | null): boolean {
   if (isSuperAdmin(email)) return true;
-  if (!isTokenSystemEnabled()) return true; // System disabled = everyone has access
   const expiresStr = localStorage.getItem('unlock_token_expires');
   if (!expiresStr) return false;
   return Date.now() < parseInt(expiresStr, 10);
 }
 
-export function getTimeRemaining(): { hours: number; minutes: number; seconds: number } | null {
-  if (!isTokenSystemEnabled()) return null;
+/** @deprecated Use fetchTokenSystemStatus + hasValidTokenAccess instead */
+export function hasValidAccess(email?: string | null): boolean {
+  if (isSuperAdmin(email)) return true;
+  const expiresStr = localStorage.getItem('unlock_token_expires');
+  if (!expiresStr) return false;
+  return Date.now() < parseInt(expiresStr, 10);
+}
+
+export function getTimeRemaining(tokenSystemEnabled: boolean): { hours: number; minutes: number; seconds: number } | null {
+  if (!tokenSystemEnabled) return null;
   const expiresStr = localStorage.getItem('unlock_token_expires');
   if (!expiresStr) return null;
   const remaining = parseInt(expiresStr, 10) - Date.now();
@@ -65,19 +65,20 @@ export function getTimeRemaining(): { hours: number; minutes: number; seconds: n
 export function AccessBanner() {
   const { user } = useAuth();
   const location = useLocation();
-  const [time, setTime] = useState(getTimeRemaining());
+  const [tokenEnabled, setTokenEnabled] = useState(true);
+  const [time, setTime] = useState<ReturnType<typeof getTimeRemaining>>(null);
   const [dismissed, setDismissed] = useState(false);
 
   const isPlayerPage = location.pathname.startsWith('/watch/');
   const superAdmin = isSuperAdmin(user?.email);
 
   useEffect(() => {
-    syncTokenSystemFlag();
+    fetchTokenSystemStatus().then(setTokenEnabled);
   }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const t = getTimeRemaining();
+      const t = getTimeRemaining(tokenEnabled);
       setTime(t);
       if (!t) {
         localStorage.removeItem('unlock_token_expires');
@@ -85,7 +86,7 @@ export function AccessBanner() {
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [tokenEnabled]);
 
   if (superAdmin || !time || isPlayerPage || dismissed) return null;
 
