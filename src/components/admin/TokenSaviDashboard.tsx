@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Key, Copy, Trash2, Plus, Clock, CheckCircle, XCircle, Users, BarChart3 } from 'lucide-react';
+import { Key, Copy, Trash2, Plus, Clock, CheckCircle, XCircle, Users, BarChart3, Power } from 'lucide-react';
+import { isTokenSystemEnabled, setTokenSystemEnabled } from '@/components/AccessBanner';
 
 interface Token {
   id: string;
@@ -33,6 +34,7 @@ export function TokenSaviDashboard() {
   const [duration, setDuration] = useState('24');
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
+  const [systemEnabled, setSystemEnabled] = useState(isTokenSystemEnabled());
 
   useEffect(() => {
     fetchData();
@@ -40,7 +42,7 @@ export function TokenSaviDashboard() {
 
   const fetchData = async () => {
     const [tokensRes, usageRes] = await Promise.all([
-      supabase.from('unlock_tokens').select('*').order('created_at', { ascending: false }),
+      supabase.from('unlock_tokens').select('*').neq('token', '__system_toggle__').order('created_at', { ascending: false }),
       supabase.from('token_usage').select('*').order('used_at', { ascending: false }),
     ]);
     if (tokensRes.data) setTokens(tokensRes.data as Token[]);
@@ -102,6 +104,38 @@ export function TokenSaviDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* System Toggle */}
+      {isAdmin && (
+        <Card className={`border-2 ${systemEnabled ? 'border-green-500/40' : 'border-destructive/40'}`}>
+          <CardContent className="flex items-center justify-between p-5">
+            <div className="flex items-center gap-3">
+              <Power className={`h-6 w-6 ${systemEnabled ? 'text-green-500' : 'text-destructive'}`} />
+              <div>
+                <p className="font-semibold text-lg">Token System</p>
+                <p className="text-sm text-muted-foreground">
+                  {systemEnabled ? 'System is active — users need tokens to access the player' : 'System is disabled — everyone can access the player freely'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge className={systemEnabled ? 'bg-green-600' : 'bg-destructive'}>
+                {systemEnabled ? 'Enabled' : 'Disabled'}
+              </Badge>
+              <Switch
+                checked={systemEnabled}
+                onCheckedChange={async (checked) => {
+                  // Update DB toggle
+                  await supabase.from('unlock_tokens').update({ is_active: checked }).eq('token', '__system_toggle__');
+                  setTokenSystemEnabled(checked);
+                  setSystemEnabled(checked);
+                  toast.success(checked ? 'Token system enabled' : 'Token system disabled — all users have free access');
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card><CardContent className="p-4 text-center">

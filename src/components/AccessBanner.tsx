@@ -2,25 +2,55 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Clock, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const SUPER_ADMIN_EMAILS = [
   'savi2570p@gmail.com',
   'savipanjeta2@gmail.com',
 ];
 
+const TOKEN_SYSTEM_KEY = 'token_system_enabled';
+
 export function isSuperAdmin(email?: string | null): boolean {
   if (!email) return false;
   return SUPER_ADMIN_EMAILS.includes(email.toLowerCase());
 }
 
+export function isTokenSystemEnabled(): boolean {
+  const val = localStorage.getItem(TOKEN_SYSTEM_KEY);
+  // Default to enabled if not set
+  return val !== 'false';
+}
+
+export function setTokenSystemEnabled(enabled: boolean) {
+  localStorage.setItem(TOKEN_SYSTEM_KEY, String(enabled));
+}
+
+/** Sync the token system flag from DB (app_settings or unlock_tokens metadata). 
+ *  We use a simple approach: check a special token with token='__system_disabled__' */
+export async function syncTokenSystemFlag() {
+  const { data } = await supabase
+    .from('unlock_tokens')
+    .select('is_active')
+    .eq('token', '__system_toggle__')
+    .maybeSingle();
+  
+  if (data) {
+    // is_active=true means system is enabled, false means disabled
+    localStorage.setItem(TOKEN_SYSTEM_KEY, String(data.is_active));
+  }
+}
+
 export function hasValidAccess(email?: string | null): boolean {
   if (isSuperAdmin(email)) return true;
+  if (!isTokenSystemEnabled()) return true; // System disabled = everyone has access
   const expiresStr = localStorage.getItem('unlock_token_expires');
   if (!expiresStr) return false;
   return Date.now() < parseInt(expiresStr, 10);
 }
 
 export function getTimeRemaining(): { hours: number; minutes: number; seconds: number } | null {
+  if (!isTokenSystemEnabled()) return null;
   const expiresStr = localStorage.getItem('unlock_token_expires');
   if (!expiresStr) return null;
   const remaining = parseInt(expiresStr, 10) - Date.now();
@@ -40,6 +70,10 @@ export function AccessBanner() {
 
   const isPlayerPage = location.pathname.startsWith('/watch/');
   const superAdmin = isSuperAdmin(user?.email);
+
+  useEffect(() => {
+    syncTokenSystemFlag();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
