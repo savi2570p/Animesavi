@@ -21,10 +21,10 @@ import { AnimeCalendar } from '@/components/AnimeCalendar';
 export default function Index() {
   const { user } = useAuth();
 
-  const stats = [
+  const stats: { icon: any; value: string; label: string; link?: string }[] = [
     { icon: Play, value: 'Latest', label: 'Series & movies upload every week' },
     { icon: Tv, value: '1,500+', label: 'Series' },
-    { icon: Clock, value: '24/7', label: 'Join Telegram group for more updates' },
+    { icon: Clock, value: '24/7', label: 'Join Telegram group for more updates', link: 'https://t.me/AnimeSaviInhindiDUB' },
     { icon: Award, value: 'Fully', label: 'Ad free' },
   ];
 
@@ -37,20 +37,24 @@ export default function Index() {
       <section className="py-6 border-b border-border/30 bg-card/20">
         <div className="container">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {stats.map((stat, index) => (
-              <div 
-                key={stat.label}
-                className="flex items-center gap-3 justify-center group cursor-default"
-              >
-                <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors duration-200">
-                  <stat.icon className="h-4 w-4 text-primary" />
+            {stats.map((stat, index) => {
+              const content = (
+                <div 
+                  key={stat.label}
+                  className={`flex items-center gap-3 justify-center group ${stat.link ? 'cursor-pointer' : 'cursor-default'}`}
+                  onClick={stat.link ? () => window.open(stat.link, '_blank') : undefined}
+                >
+                  <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors duration-200">
+                    <stat.icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold group-hover:text-primary transition-colors duration-200">{stat.value}</p>
+                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-lg font-bold group-hover:text-primary transition-colors duration-200">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
-                </div>
-              </div>
-            ))}
+              );
+              return <div key={stat.label}>{content}</div>;
+            })}
           </div>
         </div>
       </section>

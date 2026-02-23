@@ -94,7 +94,7 @@ export default function CrunchyPage() {
 
             return {
               ...anime,
-              view_count: viewCountMap[anime.title] || anime.view_count || Math.floor(Math.random() * (900000 - 100000) + 100000),
+              view_count: viewCountMap[anime.title] || anime.view_count || Math.floor(Math.random() * (9000000 - 1000000) + 1000000),
               episode_count: episodeCount,
               latest_episode_at: latestEpAt,
             };

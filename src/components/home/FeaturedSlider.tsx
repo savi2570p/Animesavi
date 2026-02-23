@@ -247,27 +247,14 @@ export function FeaturedSlider() {
           </div>
         </div>
 
-        {/* Dots Indicator */}
-        <div className="flex justify-center gap-2 mt-4">
-          {featuredAnime.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => {
-                if (isAnimating) return;
-                setIsAnimating(true);
-                setTimeout(() => {
-                  setCurrentIndex(index);
-                  setIsAnimating(false);
-                }, 300);
-              }}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentIndex
-                  ? 'bg-primary w-6'
-                  : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
+        {/* Progress Bar Indicator */}
+        <div className="mx-8 md:mx-12 mt-4">
+          <div className="w-full h-[3px] bg-muted-foreground/20 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${((currentIndex + 1) / featuredAnime.length) * 100}%` }}
             />
-          ))}
+          </div>
         </div>
       </div>
     </section>
