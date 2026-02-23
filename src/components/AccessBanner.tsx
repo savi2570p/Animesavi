@@ -90,7 +90,7 @@ export function AccessBanner() {
   if (superAdmin || !time || isPlayerPage || dismissed) return null;
 
   return (
-    <div className="sticky top-0 z-[60] bg-gradient-to-r from-orange-600 to-orange-500 text-white px-4 py-2">
+    <div className="sticky top-0 z-[60] bg-gradient-to-r from-red-700 to-red-600 text-white px-4 py-2">
       <div className="container flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-medium">
           <Clock className="h-4 w-4" />
