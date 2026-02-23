@@ -20,7 +20,7 @@ import { ServerStatusIndicator } from '@/components/video/ServerStatusIndicator'
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
 import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hooks/useServerAutoSelect';
 import { z } from 'zod';
-import { hasValidTokenAccess, isSuperAdmin, fetchTokenSystemStatus, syncTokenSystemFlag } from '@/components/AccessBanner';
+import { hasValidTokenAccess, isSuperAdmin, fetchTokenSystemStatus } from '@/components/AccessBanner';
 import { TokenExpiredPopup } from '@/components/TokenExpiredPopup';
 import {
   ChevronLeft,
@@ -826,13 +826,13 @@ export default function Watch() {
       {/* Free Access Popup — shown when token system is disabled */}
       {showFreeAccessPopup && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-green-500/30 bg-card backdrop-blur-xl shadow-2xl p-6 text-center space-y-4">
-            <div className="mx-auto w-14 h-14 rounded-full bg-green-500/20 flex items-center justify-center">
+          <div className="w-full max-w-sm rounded-2xl border border-orange-500/30 bg-card backdrop-blur-xl shadow-2xl p-6 text-center space-y-4">
+            <div className="mx-auto w-14 h-14 rounded-full bg-orange-500/20 flex items-center justify-center">
               <span className="text-2xl">🎉</span>
             </div>
-            <h2 className="text-lg font-bold text-foreground">Token System is disabled now</h2>
-            <p className="text-sm text-muted-foreground">You can play any anime episode/movie for free</p>
-            <Button className="w-full bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowFreeAccessPopup(false)}>
+            <h2 className="text-lg font-bold text-foreground">Token System Disabled</h2>
+            <p className="text-sm text-muted-foreground">Token system is disabled now. You can watch any anime episodes/movies for free.</p>
+            <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white" onClick={() => setShowFreeAccessPopup(false)}>
               OK
             </Button>
           </div>
