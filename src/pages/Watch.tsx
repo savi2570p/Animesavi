@@ -20,7 +20,7 @@ import { ServerStatusIndicator } from '@/components/video/ServerStatusIndicator'
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
 import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hooks/useServerAutoSelect';
 import { z } from 'zod';
-import { hasValidAccess, isSuperAdmin } from '@/components/AccessBanner';
+import { hasValidAccess, isSuperAdmin, isTokenSystemEnabled } from '@/components/AccessBanner';
 import { TokenExpiredPopup } from '@/components/TokenExpiredPopup';
 import {
   ChevronLeft,
@@ -152,6 +152,7 @@ export default function Watch() {
   const [commentNotifications, setCommentNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showTelegramPopup, setShowTelegramPopup] = useState(false);
+  const [showFreeAccessPopup, setShowFreeAccessPopup] = useState(!isTokenSystemEnabled());
   const [initialSeekDone, setInitialSeekDone] = useState(false);
   const [showResumeNotification, setShowResumeNotification] = useState(false);
   const [savedPlaybackProgress, setSavedPlaybackProgress] = useState(0);
@@ -755,10 +756,11 @@ export default function Watch() {
     );
   }
 
-  // Token access check - super admins bypass
+  // Token access check - super admins bypass, disabled system = free access
+  const tokenSystemActive = isTokenSystemEnabled();
   const accessValid = hasValidAccess(user?.email);
 
-  if (!accessValid) {
+  if (tokenSystemActive && !accessValid) {
     return <TokenExpiredPopup />;
   }
 
@@ -795,6 +797,22 @@ export default function Watch() {
                 OK
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Free Access Popup — shown when token system is disabled */}
+      {showFreeAccessPopup && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-green-500/30 bg-card backdrop-blur-xl shadow-2xl p-6 text-center space-y-4">
+            <div className="mx-auto w-14 h-14 rounded-full bg-green-500/20 flex items-center justify-center">
+              <span className="text-2xl">🎉</span>
+            </div>
+            <h2 className="text-lg font-bold text-foreground">Token System is disabled now</h2>
+            <p className="text-sm text-muted-foreground">You can play any anime episode/movie for free</p>
+            <Button className="w-full bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowFreeAccessPopup(false)}>
+              OK
+            </Button>
           </div>
         </div>
       )}
