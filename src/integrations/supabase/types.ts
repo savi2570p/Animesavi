@@ -576,6 +576,38 @@ export type Database = {
           },
         ]
       }
+      token_usage: {
+        Row: {
+          id: string
+          token_id: string
+          used_at: string
+          user_agent: string | null
+          user_ip: string | null
+        }
+        Insert: {
+          id?: string
+          token_id: string
+          used_at?: string
+          user_agent?: string | null
+          user_ip?: string | null
+        }
+        Update: {
+          id?: string
+          token_id?: string
+          used_at?: string
+          user_agent?: string | null
+          user_ip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "token_usage_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "unlock_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       unlock_tokens: {
         Row: {
           created_at: string

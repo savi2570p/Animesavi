@@ -37,6 +37,12 @@ export default function TokenVerify() {
         return;
       }
 
+      // Record usage
+      await supabase.from('token_usage').insert({
+        token_id: data.id,
+        user_agent: navigator.userAgent,
+      });
+
       // Calculate expiration
       const expiresAt = Date.now() + (data.duration_hours as number) * 60 * 60 * 1000;
       localStorage.setItem('unlock_token_expires', expiresAt.toString());

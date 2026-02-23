@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { ConversionHealthDashboard } from '@/components/admin/ConversionHealthDashboard';
+import { TokenSaviDashboard } from '@/components/admin/TokenSaviDashboard';
 
 import {
   Upload as UploadIcon,
@@ -22,6 +23,7 @@ import {
   Edit,
   Eye,
   Wrench,
+  Key,
 } from 'lucide-react';
 
 const genres = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports'];
@@ -335,6 +337,10 @@ export default function Upload() {
           <TabsTrigger value="tools" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
             <Wrench className="h-4 w-4 mr-2" />
             Tools
+          </TabsTrigger>
+          <TabsTrigger value="token-savi" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
+            <Key className="h-4 w-4 mr-2" />
+            Token.Savi
           </TabsTrigger>
         </TabsList>
 
@@ -830,6 +836,11 @@ export default function Upload() {
           <div className="space-y-6">
             <ConversionHealthDashboard />
           </div>
+        </TabsContent>
+
+        {/* Token.Savi Tab */}
+        <TabsContent value="token-savi">
+          <TokenSaviDashboard />
         </TabsContent>
 
       </Tabs>
