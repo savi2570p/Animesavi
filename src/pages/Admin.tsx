@@ -23,13 +23,15 @@ import {
   Zap,
   Bell,
    Activity,
+  Key,
 } from 'lucide-react';
 import { VideoEncodingDashboard } from '@/components/admin/VideoEncodingDashboard';
 import { CDNHealthDashboard } from '@/components/admin/CDNHealthDashboard';
 import { VideoConversionDashboard } from '@/components/admin/VideoConversionDashboard';
 import { HLSConversionDashboard } from '@/components/admin/HLSConversionDashboard';
 import { ConversionNotifications } from '@/components/admin/ConversionNotifications';
- import { ConversionHealthDashboard } from '@/components/admin/ConversionHealthDashboard';
+import { ConversionHealthDashboard } from '@/components/admin/ConversionHealthDashboard';
+import { TokenManager } from '@/components/admin/TokenManager';
 
 interface Application {
   id: string;
@@ -292,6 +294,10 @@ export default function Admin() {
             <Globe className="h-4 w-4" />
             CDN Health
           </TabsTrigger>
+          <TabsTrigger value="tokens" className="flex items-center gap-2">
+            <Key className="h-4 w-4" />
+            Token Manager
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="applications">
@@ -426,6 +432,10 @@ export default function Admin() {
 
         <TabsContent value="cdn">
           <CDNHealthDashboard />
+        </TabsContent>
+
+        <TabsContent value="tokens">
+          <TokenManager />
         </TabsContent>
       </Tabs>
     </div>

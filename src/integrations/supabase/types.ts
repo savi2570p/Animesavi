@@ -576,6 +576,33 @@ export type Database = {
           },
         ]
       }
+      unlock_tokens: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          duration_hours: number
+          id: string
+          is_active: boolean
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          duration_hours?: number
+          id?: string
+          is_active?: boolean
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          duration_hours?: number
+          id?: string
+          is_active?: boolean
+          token?: string
+        }
+        Relationships: []
+      }
       upload_codes: {
         Row: {
           code: string
