@@ -39,7 +39,7 @@ import LatestEpisodesPage from "./pages/LatestEpisodesPage";
 import LatestMoviesPage from "./pages/LatestMoviesPage";
 import PendingUploadPage from "./pages/PendingUploadPage";
 import CrunchyPage from "./pages/CrunchyPage";
-import ShortsPage from "./pages/Shorts";
+
 import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient({
@@ -115,7 +115,7 @@ const App = () => (
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/shorts" element={<ShortsPage />} />
+              
               <Route path="/external-player" element={<ExternalPlayer />} />
               <Route path="/embed/:episodeId" element={<EmbedPlayer />} />
               <Route element={<MainLayout />}>

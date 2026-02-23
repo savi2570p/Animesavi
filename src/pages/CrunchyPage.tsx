@@ -31,6 +31,12 @@ export default function CrunchyPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [underProgressAnime, setUnderProgressAnime] = useState<string | null>(null);
 
+  const formatViewCount = (count: number) => {
+    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+    if (count >= 1000) return `${(count / 1000).toFixed(0)}K`;
+    return count.toString();
+  };
+
   useEffect(() => {
     const fetchCrunchyAnime = async () => {
       const { data, error } = await supabase
@@ -38,6 +44,22 @@ export default function CrunchyPage() {
         .select('id, title, cover_image, type, status, view_count')
         .eq('is_crunchyroll', true as any)
         .order('title');
+
+      // Curated view count map (same as MostPopular)
+      const viewCountMap: Record<string, number> = {
+        'Your Name': 9500000,
+        'Your lie in April': 3400000,
+        'The angel next door spoils me rotten': 1200000,
+        'The Angel Next Door Spoils me Rotten': 1200000,
+        'Mechanical Marie': 977000,
+        'Solo Leveling': 730000,
+        'BOFURI: I Don\'t Want to Get Hurt, so I\'ll Max Out My Defense.': 2300000,
+        'A Gatherer\'s Adventure in Isekai': 267000,
+        'Jujutsu Kaisen': 8700000,
+        'My Dress-Up Darling': 6200000,
+        'Reborn to Master the Blade: From Hero-King to Extraordinary Squire': 1800000,
+      };
+
 
       if (!error && data) {
         const enriched = await Promise.all(
@@ -72,6 +94,7 @@ export default function CrunchyPage() {
 
             return {
               ...anime,
+              view_count: viewCountMap[anime.title] || anime.view_count || Math.floor(Math.random() * (900000 - 100000) + 100000),
               episode_count: episodeCount,
               latest_episode_at: latestEpAt,
             };
@@ -216,22 +239,30 @@ export default function CrunchyPage() {
                       <span className="text-muted-foreground">No Image</span>
                     </div>
                   )}
+                  {/* Under Progress overlay on thumbnail */}
+                  {anime.episode_count === 0 && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                      <span className="text-white text-xs font-bold bg-primary/80 px-3 py-1.5 rounded-full">Under Progress</span>
+                    </div>
+                  )}
                   {anime.type && (
                     <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-muted/90 text-[10px] font-bold uppercase">
                       {anime.type}
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                  {/* View count */}
+                  <div className="absolute bottom-2 left-2 right-2">
+                    <div className="flex items-center gap-1 text-[10px] text-white/80">
+                      <Eye className="h-3 w-3" />
+                      {formatViewCount(anime.view_count || 0)} views
+                    </div>
+                  </div>
                 </div>
                 <div className="mt-2">
                   <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
                     {anime.title}
                   </h3>
-                  {anime.episode_count === 0 && (
-                    <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded mt-1 inline-block">
-                      Under Progress
-                    </span>
-                  )}
                 </div>
               </Link>
             ))}
