@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Key, Copy, Trash2, Plus, Clock, CheckCircle, XCircle, Users, BarChart3, Power } from 'lucide-react';
-import { isTokenSystemEnabled, setTokenSystemEnabled } from '@/components/AccessBanner';
+import { fetchTokenSystemStatus } from '@/components/AccessBanner';
 
 interface Token {
   id: string;
@@ -34,10 +34,11 @@ export function TokenSaviDashboard() {
   const [duration, setDuration] = useState('24');
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
-  const [systemEnabled, setSystemEnabled] = useState(isTokenSystemEnabled());
+  const [systemEnabled, setSystemEnabled] = useState(true);
 
   useEffect(() => {
     fetchData();
+    fetchTokenSystemStatus().then(setSystemEnabled);
   }, []);
 
   const fetchData = async () => {
@@ -240,7 +241,7 @@ export function TokenSaviDashboard() {
               onClick={async () => {
                 if (systemEnabled) return;
                 await supabase.from('unlock_tokens').update({ is_active: true }).eq('token', '__system_toggle__');
-                setTokenSystemEnabled(true);
+                setSystemEnabled(true);
                 setSystemEnabled(true);
                 toast.success('Token system enabled — users need tokens to watch');
               }}
@@ -253,7 +254,7 @@ export function TokenSaviDashboard() {
               onClick={async () => {
                 if (!systemEnabled) return;
                 await supabase.from('unlock_tokens').update({ is_active: false }).eq('token', '__system_toggle__');
-                setTokenSystemEnabled(false);
+                setSystemEnabled(false);
                 setSystemEnabled(false);
                 toast.success('Token system disabled — all users have free access');
               }}

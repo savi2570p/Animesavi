@@ -20,7 +20,7 @@ import { ServerStatusIndicator } from '@/components/video/ServerStatusIndicator'
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
 import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hooks/useServerAutoSelect';
 import { z } from 'zod';
-import { hasValidAccess, isSuperAdmin, isTokenSystemEnabled, syncTokenSystemFlag } from '@/components/AccessBanner';
+import { hasValidTokenAccess, isSuperAdmin, fetchTokenSystemStatus, syncTokenSystemFlag } from '@/components/AccessBanner';
 import { TokenExpiredPopup } from '@/components/TokenExpiredPopup';
 import {
   ChevronLeft,
@@ -154,6 +154,7 @@ export default function Watch() {
   const [showTelegramPopup, setShowTelegramPopup] = useState(false);
   const [showFreeAccessPopup, setShowFreeAccessPopup] = useState(false);
   const [tokenSystemReady, setTokenSystemReady] = useState(false);
+  const [tokenSystemActive, setTokenSystemActive] = useState(true);
   const [initialSeekDone, setInitialSeekDone] = useState(false);
   const [showResumeNotification, setShowResumeNotification] = useState(false);
   const [savedPlaybackProgress, setSavedPlaybackProgress] = useState(0);
@@ -163,10 +164,10 @@ export default function Watch() {
   // Device-optimized video URL for iOS compatibility
   const deviceOptimizedVideo = useDeviceOptimizedVideo(episodeId, episode?.video_url || null);
 
-  // Sync token system flag from DB immediately on mount
+  // Fetch token system status directly from DB on every mount — no caching
   useEffect(() => {
-    syncTokenSystemFlag().then(() => {
-      const enabled = isTokenSystemEnabled();
+    fetchTokenSystemStatus().then((enabled) => {
+      setTokenSystemActive(enabled);
       setTokenSystemReady(true);
       if (!enabled && !isSuperAdmin(user?.email)) {
         setShowFreeAccessPopup(true);
@@ -779,8 +780,7 @@ export default function Watch() {
     );
   }
 
-  const tokenSystemActive = isTokenSystemEnabled();
-  const accessValid = hasValidAccess(user?.email);
+  const accessValid = hasValidTokenAccess(user?.email);
 
   if (tokenSystemActive && !accessValid) {
     return <TokenExpiredPopup />;
