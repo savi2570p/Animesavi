@@ -87,6 +87,18 @@ export function TokenExpiredPopup() {
           backdropFilter: 'blur(24px)',
         }}
       >
+        {/* Sign-in Notice */}
+        <div
+          className="px-4 py-2.5 text-center text-sm font-semibold"
+          style={{
+            background: 'linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(245,158,11,0.1) 100%)',
+            color: 'rgb(251,191,36)',
+            borderBottom: '1px solid rgba(245,158,11,0.25)',
+          }}
+        >
+          ⚠️ Please Sign-in before the Skip Ads
+        </div>
+
         {/* Language Switcher */}
         <div className="flex flex-wrap gap-1 p-3 border-b" style={{ borderColor: 'rgba(220,38,38,0.15)', background: 'rgba(0,0,0,0.4)' }}>
           {(Object.keys(langLabels) as Language[]).map((l) => (
