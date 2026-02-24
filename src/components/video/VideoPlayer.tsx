@@ -51,6 +51,7 @@ import { GestureIndicator } from './GestureIndicator';
 import { MobileMuteIndicator } from './MobileMuteIndicator';
 import { VideoPlayerInfoOverlay } from './VideoPlayerInfoOverlay';
 import { PremiumLoader } from './PremiumLoader';
+import { EncodingOverlay } from './EncodingOverlay';
 import { useVideoGestures } from '@/hooks/useVideoGestures';
 
 
@@ -94,6 +95,7 @@ interface VideoPlayerProps {
   isLoading?: boolean;
   audioLanguage?: string;
   captionsUrl?: string | null;
+  isEncoding?: boolean;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   onNextEpisode?: () => void;
   hasNextEpisode?: boolean;
@@ -215,6 +217,7 @@ export function VideoPlayer({
   isLoading = false,
   audioLanguage = 'original',
   captionsUrl,
+  isEncoding = false,
   onTimeUpdate,
   onNextEpisode,
   hasNextEpisode = false,
@@ -314,6 +317,9 @@ export function VideoPlayer({
   // Premium loading state - Netflix-style loader
   const [showPremiumLoader, setShowPremiumLoader] = useState(true);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  
+  // Encoding overlay state
+  const [showEncodingOverlay, setShowEncodingOverlay] = useState(isEncoding);
   
   // Double-tap state for mobile seek
   const lastTapRef = useRef<{ time: number; x: number }>({ time: 0, x: 0 });
@@ -2042,8 +2048,14 @@ export function VideoPlayer({
       onMouseLeave={() => isPlaying && !settingsOpen && setShowControls(false)}
     >
 
+      {/* Encoding Overlay - shows when video is being encoded */}
+      <EncodingOverlay
+        isVisible={showEncodingOverlay}
+        onComplete={() => setShowEncodingOverlay(false)}
+      />
+
       {/* Premium Loading Animation - Netflix-style loader */}
-      <PremiumLoader isVisible={showPremiumLoader && !shouldUseIframe && !!effectiveVideoUrl} />
+      <PremiumLoader isVisible={showPremiumLoader && !shouldUseIframe && !!effectiveVideoUrl && !showEncodingOverlay} />
 
       {/* Buffering Indicator - only show after initial load */}
       <BufferingIndicator 
