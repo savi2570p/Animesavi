@@ -90,10 +90,10 @@ export function WelcomePopup() {
             </div>
 
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">📂</span>
+              <span className="text-lg">🚀</span>
               <div>
-                <h4 className="font-medium text-foreground">Drag & Drop Uploads</h4>
-                <p className="text-sm text-muted-foreground">Drag video and image files directly onto upload areas</p>
+                <h4 className="font-medium text-foreground">Super Smooth Experience</h4>
+                <p className="text-sm text-muted-foreground">Faster loading, smoother animations, and improved performance across all devices</p>
               </div>
             </div>
 
