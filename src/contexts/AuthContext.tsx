@@ -61,7 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (event === 'SIGNED_IN') {
           const email = nextSession.user.email || '';
           const username = nextSession.user.user_metadata?.username || email.split('@')[0];
-          rememberAccount(email, username);
+          // Will be updated with correct max once roles load; use generous default on sign-in
+          rememberAccount(email, username, 9);
         }
         // Defer any extra backend calls.
         setTimeout(() => {

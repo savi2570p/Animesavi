@@ -40,14 +40,17 @@ function setSavedAccounts(accounts: SavedAccount[]) {
 }
 
 /** Adds or updates an account in the saved list. Always saves on successful login. */
-export function rememberAccount(email: string, username: string) {
+export function rememberAccount(email: string, username: string, maxAccounts = 2) {
   const accounts = getSavedAccounts();
   const existing = accounts.find((a) => a.email === email);
-  // Update username and lastUsed if account already exists, otherwise add new
   const filtered = accounts.filter((a) => a.email !== email);
   filtered.unshift({ email, username: username || existing?.username || email.split('@')[0], lastUsed: Date.now() });
-  // Keep at most 5 accounts
-  setSavedAccounts(filtered.slice(0, 5));
+  setSavedAccounts(filtered.slice(0, maxAccounts));
+}
+
+/** Returns the number of saved accounts. */
+export function getSavedAccountCount(): number {
+  return getSavedAccounts().length;
 }
 
 /** Removes an account from the saved list. */
@@ -61,7 +64,7 @@ interface AccountSwitcherProps {
 }
 
 export function AccountSwitcher({ trigger }: AccountSwitcherProps) {
-  const { user, signIn, signOut } = useAuth();
+  const { user, signIn, signOut, isAdmin, isUploader } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [accounts, setAccounts] = useState<SavedAccount[]>([]);
@@ -69,6 +72,8 @@ export function AccountSwitcher({ trigger }: AccountSwitcherProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const maxAccounts = (isAdmin || isUploader) ? 9 : 2;
+  const canAddMore = accounts.length < maxAccounts;
 
   useEffect(() => {
     if (open) {
@@ -267,7 +272,7 @@ export function AccountSwitcher({ trigger }: AccountSwitcherProps) {
                 </Button>
               </div>
             </form>
-          ) : (
+          ) : canAddMore ? (
             <Button
               variant="outline"
               className="w-full"
@@ -276,6 +281,10 @@ export function AccountSwitcher({ trigger }: AccountSwitcherProps) {
               <UserPlus className="h-4 w-4 mr-2" />
               Add Another Account
             </Button>
+          ) : (
+            <p className="text-xs text-center text-muted-foreground py-2">
+              Account limit reached ({maxAccounts} max). Remove an account to add a new one.
+            </p>
           )}
         </div>
       </DialogContent>
