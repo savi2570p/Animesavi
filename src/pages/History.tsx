@@ -349,60 +349,55 @@ export default function History() {
           {/* Mobile View - Compact grid with thumbnail and progress only */}
           <div className="md:hidden grid grid-cols-2 sm:grid-cols-3 gap-3">
             {history.map((item) => (
-              <Link
-                key={item.id}
-                to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
-                className="relative group"
-              >
-                <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
-                  <img
-                    src={item.anime.cover_image || '/placeholder.svg'}
-                    alt={item.anime.title}
-                    className="w-full h-full object-cover"
-                  />
-                  {/* Play overlay on hover/tap */}
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-active:opacity-100 transition-opacity">
-                    <Play className="h-8 w-8 text-white fill-current" />
-                  </div>
-                  {/* Episode badge */}
-                  <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
-                    EP {item.episode.episode_number}
-                  </div>
-                  {/* Complete watermark for finished anime */}
-                  {item.completed && (
-                    <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded bg-green-500/90 text-[8px] font-bold text-white">
-                      COMPLETE
+              <div key={item.id} className="relative group">
+                <Link
+                  to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
+                  className="block"
+                >
+                  <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+                    <img
+                      src={item.anime.cover_image || '/placeholder.svg'}
+                      alt={item.anime.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-active:opacity-100 transition-opacity">
+                      <Play className="h-8 w-8 text-white fill-current" />
                     </div>
-                  )}
-                  {/* Delete button - moved to bottom right when not completed */}
-                  {!item.completed && (
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="absolute top-1 right-1 h-6 w-6 text-white/80 hover:text-destructive bg-black/40 hover:bg-black/60 z-10"
-                      onClick={(e) => deleteHistoryItem(item.id, e)}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      onTouchEnd={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      type="button"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  )}
-                  {/* Progress bar at bottom */}
-                  {item.progress !== null && item.progress > 0 && !item.completed && (
-                    <div className="absolute bottom-0 left-0 right-0">
-                      <Progress value={item.progress} className="h-1.5 rounded-none" />
+                    <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
+                      EP {item.episode.episode_number}
                     </div>
-                  )}
-                </div>
-                {/* Title below thumbnail - 2 lines max */}
-                <p className="mt-1.5 text-xs font-medium line-clamp-2 leading-tight">
-                  {item.anime.title}
-                </p>
-              </Link>
+                    {item.completed && (
+                      <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded bg-green-500/90 text-[8px] font-bold text-white">
+                        COMPLETE
+                      </div>
+                    )}
+                    {item.progress !== null && item.progress > 0 && !item.completed && (
+                      <div className="absolute bottom-0 left-0 right-0">
+                        <Progress value={item.progress} className="h-1.5 rounded-none" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="mt-1.5 text-xs font-medium line-clamp-2 leading-tight">
+                    {item.anime.title}
+                  </p>
+                </Link>
+                {/* Delete button outside the Link */}
+                {!item.completed && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="absolute top-1 right-1 h-6 w-6 text-white/80 hover:text-destructive bg-black/40 hover:bg-black/60 z-20"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      deleteHistoryItem(item.id, e);
+                    }}
+                    type="button"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
             ))}
           </div>
         </>
