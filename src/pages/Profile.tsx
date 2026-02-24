@@ -264,8 +264,8 @@ export default function Profile() {
             <h1 className="text-3xl font-heading font-bold flex items-center gap-2">
               Profile
               {hasValidTokenAccess(user?.email) && (
-                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-500 border border-yellow-500/30">
-                  Premium
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-500 border border-yellow-500/30 animate-fade-in">
+                  ✨ Premium
                 </span>
               )}
             </h1>
