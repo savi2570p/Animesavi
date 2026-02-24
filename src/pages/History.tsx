@@ -321,9 +321,9 @@ export default function History() {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-3" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
                   <Button size="sm" variant="outline" className="self-center" asChild>
-                    <Link to={`/watch/${item.episode.id}?t=${item.progress || 0}`} onClick={(e) => e.stopPropagation()}>
+                    <Link to={`/watch/${item.episode.id}?t=${item.progress || 0}`}>
                       <Play className="h-4 w-4 mr-1 fill-current" />
                       Continue
                     </Link>
@@ -333,7 +333,7 @@ export default function History() {
                     size="icon"
                     variant="ghost"
                     className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                    onClick={(e) => deleteHistoryItem(item.id, e)}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteHistoryItem(item.id, e); }}
                     onTouchStart={(e) => e.stopPropagation()}
                     type="button"
                     title="Remove from history"

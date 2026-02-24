@@ -255,10 +255,10 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
                       <Button
                         size="sm"
                         variant="secondary"
-                        className="absolute bottom-3 right-2 h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-primary hover:bg-primary/90 text-primary-foreground text-[10px] font-medium z-10"
+                        className="absolute bottom-3 right-2 h-5 px-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-primary hover:bg-primary/90 text-primary-foreground text-[9px] font-medium z-10 rounded-sm"
                         onClick={(e) => handleMarkCompleted(e, item.id, item.anime.title)}
                       >
-                        <Check className="h-3 w-3 mr-1" />
+                        <Check className="h-2.5 w-2.5 mr-0.5" />
                         Done
                       </Button>
 
