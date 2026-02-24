@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { rememberAccount } from '@/components/AccountSwitcher';
+import { rememberAccount } from '@/lib/accountUtils';
 
 type UserRole = 'viewer' | 'uploader' | 'admin';
 
