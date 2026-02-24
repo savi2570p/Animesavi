@@ -1,44 +1,66 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 interface EncodingOverlayProps {
   isVisible: boolean;
+  episodeId: string;
   onComplete: () => void;
 }
 
 const ENCODING_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
-export function EncodingOverlay({ isVisible, onComplete }: EncodingOverlayProps) {
+function getStorageKey(episodeId: string) {
+  return `encoding_start_${episodeId}`;
+}
+
+export function EncodingOverlay({ isVisible, episodeId, onComplete }: EncodingOverlayProps) {
   const [progress, setProgress] = useState(0);
-  const startTimeRef = useRef<number>(Date.now());
+  const [remaining, setRemaining] = useState(ENCODING_DURATION_MS / 1000);
   const intervalRef = useRef<NodeJS.Timeout>();
+
+  const getStartTime = useCallback(() => {
+    const key = getStorageKey(episodeId);
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      return parseInt(stored, 10);
+    }
+    // First visit — persist the start time
+    const now = Date.now();
+    localStorage.setItem(key, now.toString());
+    return now;
+  }, [episodeId]);
 
   useEffect(() => {
     if (!isVisible) return;
 
-    startTimeRef.current = Date.now();
-    setProgress(0);
+    const startTime = getStartTime();
 
-    intervalRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTimeRef.current;
+    const tick = () => {
+      const elapsed = Date.now() - startTime;
       const pct = Math.min((elapsed / ENCODING_DURATION_MS) * 100, 100);
       setProgress(pct);
+      setRemaining(Math.max(0, Math.ceil((ENCODING_DURATION_MS - elapsed) / 1000)));
 
       if (pct >= 100) {
         clearInterval(intervalRef.current);
+        // Clean up localStorage entry
+        localStorage.removeItem(getStorageKey(episodeId));
         onComplete();
       }
-    }, 1000);
+    };
+
+    // Run immediately so the user sees current progress on revisit
+    tick();
+    intervalRef.current = setInterval(tick, 1000);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isVisible, onComplete]);
+  }, [isVisible, episodeId, onComplete, getStartTime]);
 
   if (!isVisible) return null;
 
-  const remaining = Math.max(0, Math.ceil((ENCODING_DURATION_MS - (Date.now() - startTimeRef.current)) / 1000));
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
 
