@@ -101,7 +101,16 @@ function AutoVideoScanInitializer() {
 // Sync token access from DB on app load (for PWA / home screen)
 function TokenAccessSyncInitializer() {
   useEffect(() => {
-    syncTokenAccessFromDB();
+    syncTokenAccessFromDB().then((synced) => {
+      if (synced) {
+        import('sonner').then(({ toast }) => {
+          toast.success('Access synced from your account', {
+            description: 'Your token access was restored automatically.',
+            duration: 4000,
+          });
+        });
+      }
+    });
   }, []);
   return null;
 }
