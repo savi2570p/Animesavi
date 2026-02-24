@@ -16,7 +16,7 @@ import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useNetworkSpeed } from "@/hooks/useNetworkSpeed";
 import { useBackgroundSync } from "@/hooks/useBackgroundSync";
 import { useAutoVideoScan } from "@/hooks/useAutoVideoScan";
-import { AccessBanner, syncTokenAccessFromDB } from "@/components/AccessBanner";
+import { AccessBanner, syncTokenAccessFromDB, fetchTokenAccessFromDB } from "@/components/AccessBanner";
 import TokenVerify from "./pages/TokenVerify";
 import UnlockAccess from "./pages/UnlockAccess";
 import Index from "./pages/Index";
@@ -98,17 +98,16 @@ function AutoVideoScanInitializer() {
   return null;
 }
 
-// Sync token access from DB on app load (for PWA / home screen)
+// DB-authoritative token access validation on every app load
 function TokenAccessSyncInitializer() {
   useEffect(() => {
-    // Only attempt cloud sync if user doesn't already have valid local access
-    const alreadyHasAccess = !!localStorage.getItem('unlock_token_expires') &&
-      Date.now() < parseInt(localStorage.getItem('unlock_token_expires') || '0', 10);
+    // Always fetch from DB to validate/sync access state
+    fetchTokenAccessFromDB().then((result) => {
+      // If we synced new access from DB that wasn't in localStorage before
+      const hadLocalAccess = !!localStorage.getItem('unlock_token_expires') &&
+        Date.now() < parseInt(localStorage.getItem('unlock_token_expires') || '0', 10);
 
-    if (alreadyHasAccess) return;
-
-    syncTokenAccessFromDB().then((synced) => {
-      if (synced) {
+      if (result.hasAccess && !hadLocalAccess) {
         import('sonner').then(({ toast }) => {
           toast.success('Access synced from your account', {
             description: 'Your token access was restored automatically.',

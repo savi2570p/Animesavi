@@ -39,12 +39,13 @@ export default function UnlockAccess() {
         return;
       }
 
-      // Grant 24-hour access
-      const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+      // Use duration_hours from the token record
+      const durationMs = (data.duration_hours || 24) * 60 * 60 * 1000;
+      const expiresAt = Date.now() + durationMs;
       localStorage.setItem('unlock_token_expires', expiresAt.toString());
       localStorage.setItem('unlock_token_id', data.id);
 
-      // Get current user (if logged in) and persist access to DB for PWA sync
+      // Get current user (if logged in) and persist access to DB (single source of truth)
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData?.session?.user?.id || null;
 

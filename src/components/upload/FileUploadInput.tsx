@@ -126,6 +126,50 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
 
   const Icon = accept === 'video' ? FileVideo : ImageIcon;
 
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    // Validate type
+    const validTypes = accept === 'video'
+      ? ['video/mp4', 'video/webm', 'video/x-matroska', 'video/avi', 'video/quicktime']
+      : ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!validTypes.some(t => file.type.startsWith(t.split('/')[0]))) {
+      setUploadError(`Invalid file type. Please drop a ${accept} file.`);
+      return;
+    }
+
+    setFileName(file.name);
+    setLastFile(file);
+    setUploadError(null);
+
+    if (accept === 'image') {
+      const reader = new FileReader();
+      reader.onloadend = () => setPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+
+    await runUpload(file);
+  }, [accept, runUpload]);
+
   return (
     <div className={cn('space-y-2', className)}>
       <Label>{label}</Label>
@@ -212,16 +256,24 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
         </div>
       ) : (
         <div className="space-y-2">
-          <Button
-            type="button"
-            variant="outline"
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
             onClick={triggerFileSelect}
-            className="w-full h-20 border-dashed flex flex-col gap-1"
+            className={cn(
+              'w-full h-28 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-200',
+              isDragging
+                ? 'border-primary bg-primary/10 scale-[1.02]'
+                : 'border-border hover:border-primary/50 hover:bg-muted/50'
+            )}
           >
-            <Icon className="h-5 w-5" />
-            <span className="text-sm">{accept === 'video' ? 'Select Video' : 'Select Image'}</span>
+            <Upload className={cn('h-6 w-6 transition-colors', isDragging ? 'text-primary' : 'text-muted-foreground')} />
+            <span className="text-sm font-medium">
+              {isDragging ? `Drop ${accept} here` : accept === 'video' ? 'Select or Drop Video' : 'Select or Drop Image'}
+            </span>
             <span className="text-xs text-muted-foreground">Max: {maxSizeLabel}</span>
-          </Button>
+          </div>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
