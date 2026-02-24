@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Play, Sparkles, ArrowLeft, Mail, ShieldAlert } from 'lucide-react';
 import { z } from 'zod';
-import { rememberAccount, getSavedAccountCount } from '@/components/AccountSwitcher';
+import { rememberAccount, getSavedAccountCount } from '@/lib/accountUtils';
 
 const authSchema = z.object({
   email: z.string().email('Please enter a valid email address'),

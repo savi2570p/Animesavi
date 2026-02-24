@@ -16,48 +16,9 @@ import {
 import { toast } from 'sonner';
 import { UserPlus, LogIn, X, Users } from 'lucide-react';
 
-const SAVED_ACCOUNTS_KEY = 'anime_saved_accounts';
+import { getSavedAccounts, setSavedAccounts, rememberAccount, getSavedAccountCount, forgetAccount, type SavedAccount } from '@/lib/accountUtils';
 
-interface SavedAccount {
-  email: string;
-  username: string;
-  lastUsed: number;
-}
-
-/** Reads saved accounts from localStorage. */
-function getSavedAccounts(): SavedAccount[] {
-  try {
-    const raw = localStorage.getItem(SAVED_ACCOUNTS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-/** Saves the account list to localStorage. */
-function setSavedAccounts(accounts: SavedAccount[]) {
-  localStorage.setItem(SAVED_ACCOUNTS_KEY, JSON.stringify(accounts));
-}
-
-/** Adds or updates an account in the saved list. Always saves on successful login. */
-export function rememberAccount(email: string, username: string, maxAccounts = 2) {
-  const accounts = getSavedAccounts();
-  const existing = accounts.find((a) => a.email === email);
-  const filtered = accounts.filter((a) => a.email !== email);
-  filtered.unshift({ email, username: username || existing?.username || email.split('@')[0], lastUsed: Date.now() });
-  setSavedAccounts(filtered.slice(0, maxAccounts));
-}
-
-/** Returns the number of saved accounts. */
-export function getSavedAccountCount(): number {
-  return getSavedAccounts().length;
-}
-
-/** Removes an account from the saved list. */
-function forgetAccount(email: string) {
-  const accounts = getSavedAccounts().filter((a) => a.email !== email);
-  setSavedAccounts(accounts);
-}
+export { rememberAccount, getSavedAccountCount };
 
 interface AccountSwitcherProps {
   trigger?: React.ReactNode;
