@@ -167,7 +167,7 @@ export function Header() {
                     </AvatarFallback>
                   </Avatar>
                   {(isAdmin || hasValidTokenAccess(user?.email)) && (
-                    <Crown className="absolute -top-1 -right-1 h-3.5 w-3.5 text-yellow-500 drop-shadow-[0_0_4px_rgba(234,179,8,0.6)]" />
+                    <Crown className="absolute -top-1 -right-1 h-3.5 w-3.5 text-yellow-500 animate-crown-shimmer" />
                   )}
                 </Button>
               </DropdownMenuTrigger>
