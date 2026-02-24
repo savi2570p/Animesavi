@@ -159,10 +159,29 @@ export default function Watch() {
   const [showResumeNotification, setShowResumeNotification] = useState(false);
   const [savedPlaybackProgress, setSavedPlaybackProgress] = useState(0);
   const [userProfile, setUserProfile] = useState<{ avatar_url: string | null } | null>(null);
+  const [isVideoEncoding, setIsVideoEncoding] = useState(false);
   const ensureHistoryInFlightRef = useRef(false);
 
   // Device-optimized video URL for iOS compatibility
   const deviceOptimizedVideo = useDeviceOptimizedVideo(episodeId, episode?.video_url || null);
+
+  // Check if video is still encoding
+  useEffect(() => {
+    if (!episodeId) return;
+    const checkEncoding = async () => {
+      const { data } = await supabase
+        .from('video_conversions')
+        .select('status')
+        .eq('episode_id', episodeId)
+        .maybeSingle();
+      if (data && data.status !== 'completed') {
+        setIsVideoEncoding(true);
+      } else {
+        setIsVideoEncoding(false);
+      }
+    };
+    checkEncoding();
+  }, [episodeId]);
 
   // Fetch token system status directly from DB on every mount — no caching
   useEffect(() => {
@@ -866,6 +885,7 @@ export default function Watch() {
             activeServer={activeServer}
             isLoading={serverLoading}
             audioLanguage={episode.audio_language || undefined}
+            isEncoding={isVideoEncoding}
             onTimeUpdate={updateWatchProgress}
             hasNextEpisode={!!nextEpisode}
             onNextEpisode={nextEpisode ? () => navigate(`/watch/${nextEpisode.id}`) : undefined}

@@ -146,7 +146,7 @@ export function TokenSaviDashboard() {
 
   const getUnlockUrl = () => {
     if (!unlockToken) return '';
-    return `${window.location.origin}/unlock/${unlockToken.token}`;
+    return `https://animesavi.lovable.app/unlock/${unlockToken.token}`;
   };
 
   const copyUrl = () => {
