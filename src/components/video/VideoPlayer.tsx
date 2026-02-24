@@ -2051,6 +2051,7 @@ export function VideoPlayer({
       {/* Encoding Overlay - shows when video is being encoded */}
       <EncodingOverlay
         isVisible={showEncodingOverlay}
+        episodeId={episodeId}
         onComplete={() => setShowEncodingOverlay(false)}
       />
 

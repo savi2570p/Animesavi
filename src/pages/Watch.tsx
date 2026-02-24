@@ -165,10 +165,28 @@ export default function Watch() {
   // Device-optimized video URL for iOS compatibility
   const deviceOptimizedVideo = useDeviceOptimizedVideo(episodeId, episode?.video_url || null);
 
-  // Check if video is still encoding
+  // Check if video is still encoding — only for episodes created within the last 24 hours
   useEffect(() => {
     if (!episodeId) return;
     const checkEncoding = async () => {
+      // First check if the episode was created recently (within 24 hours)
+      const { data: ep } = await supabase
+        .from('episodes')
+        .select('created_at')
+        .eq('id', episodeId)
+        .maybeSingle();
+
+      if (!ep) { setIsVideoEncoding(false); return; }
+
+      const createdAt = new Date(ep.created_at).getTime();
+      const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
+
+      if (createdAt < twentyFourHoursAgo) {
+        // Older episode — skip encoding overlay
+        setIsVideoEncoding(false);
+        return;
+      }
+
       const { data } = await supabase
         .from('video_conversions')
         .select('status')
