@@ -16,7 +16,7 @@ import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { useNetworkSpeed } from "@/hooks/useNetworkSpeed";
 import { useBackgroundSync } from "@/hooks/useBackgroundSync";
 import { useAutoVideoScan } from "@/hooks/useAutoVideoScan";
-import { AccessBanner } from "@/components/AccessBanner";
+import { AccessBanner, syncTokenAccessFromDB } from "@/components/AccessBanner";
 import TokenVerify from "./pages/TokenVerify";
 import UnlockAccess from "./pages/UnlockAccess";
 import Index from "./pages/Index";
@@ -98,6 +98,14 @@ function AutoVideoScanInitializer() {
   return null;
 }
 
+// Sync token access from DB on app load (for PWA / home screen)
+function TokenAccessSyncInitializer() {
+  useEffect(() => {
+    syncTokenAccessFromDB();
+  }, []);
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -116,6 +124,7 @@ const App = () => (
             <NetworkSpeedInitializer />
             <BackgroundSyncInitializer />
             <AutoVideoScanInitializer />
+            <TokenAccessSyncInitializer />
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
