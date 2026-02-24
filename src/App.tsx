@@ -101,6 +101,12 @@ function AutoVideoScanInitializer() {
 // Sync token access from DB on app load (for PWA / home screen)
 function TokenAccessSyncInitializer() {
   useEffect(() => {
+    // Only attempt cloud sync if user doesn't already have valid local access
+    const alreadyHasAccess = !!localStorage.getItem('unlock_token_expires') &&
+      Date.now() < parseInt(localStorage.getItem('unlock_token_expires') || '0', 10);
+
+    if (alreadyHasAccess) return;
+
     syncTokenAccessFromDB().then((synced) => {
       if (synced) {
         import('sonner').then(({ toast }) => {
