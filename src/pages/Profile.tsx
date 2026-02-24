@@ -257,7 +257,7 @@ export default function Profile() {
               </AvatarFallback>
             </Avatar>
             {hasValidTokenAccess(user?.email) && (
-              <Crown className="absolute -top-1.5 -right-1.5 h-5 w-5 text-yellow-500 drop-shadow-[0_0_6px_rgba(234,179,8,0.6)]" />
+              <Crown className="absolute -top-1.5 -right-1.5 h-5 w-5 text-yellow-500 animate-crown-shimmer" />
             )}
           </div>
           <div>
