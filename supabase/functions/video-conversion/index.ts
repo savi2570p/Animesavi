@@ -5,10 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-// ── Strict iOS Compatibility Rules ──────────────────────────────────────────
-// NEVER use file extension to determine compatibility.
-// Only real codec inspection determines playback safety.
-
 interface CompatibilityResult {
   ios_compatible: boolean;
   issues: string[];
@@ -24,31 +20,73 @@ const checkUrlPatternCompatibility = (url: string): { isMalformed: boolean; dete
   return { isMalformed: false, detectedContainer: normalizedUrl.split('.').pop()?.split('?')[0] || 'unknown' };
 };
 
-// Determine if a video LIKELY needs conversion based on URL patterns
-// This is a PRELIMINARY check - real validation happens via ffprobe in the worker
 const preliminaryNeedsConversion = (url: string): boolean => {
   const normalized = url.toLowerCase();
   const pattern = checkUrlPatternCompatibility(url);
-  
   if (pattern.isMalformed) return true;
   if (normalized.endsWith('.mkv')) return true;
   if (normalized.endsWith('.webm')) return true;
   if (normalized.endsWith('.avi')) return true;
   if (normalized.endsWith('.wmv')) return true;
   if (normalized.endsWith('.flv')) return true;
-  
-  // MP4 files need validation - mark as needs_validation, NOT as compatible
-  // The worker will run ffprobe to determine actual compatibility
   if (normalized.endsWith('.mp4') || normalized.endsWith('.m4v')) {
-    return false; // Preliminary: likely compatible, but worker must verify
+    return false;
   }
-  
-  return true; // Unknown format, assume needs conversion
+  return true;
 };
 
 const isIOSDevice = (ua: string): boolean => /iPhone|iPad|iPod/i.test(ua);
 const isAndroidDevice = (ua: string): boolean => /Android/i.test(ua);
 const isWindowsDevice = (ua: string): boolean => /Windows/i.test(ua);
+
+// ── Auth helpers ──────────────────────────────────────────────────────────
+async function authenticateUser(req: Request) {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return { user: null, roles: [] as string[] };
+  }
+
+  const authClient = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    { global: { headers: { Authorization: authHeader } } }
+  );
+
+  const token = authHeader.replace('Bearer ', '');
+  const { data, error } = await authClient.auth.getClaims(token);
+  if (error || !data?.claims) {
+    return { user: null, roles: [] as string[] };
+  }
+
+  const userId = data.claims.sub as string;
+
+  // Fetch roles using service role client (bypasses RLS)
+  const serviceClient = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
+  const { data: roleData } = await serviceClient
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId);
+
+  const roles = (roleData || []).map((r: { role: string }) => r.role);
+  return { user: { id: userId }, roles };
+}
+
+function unauthorizedResponse() {
+  return new Response(
+    JSON.stringify({ error: 'Unauthorized' }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+  );
+}
+
+function forbiddenResponse(msg = 'Forbidden') {
+  return new Response(
+    JSON.stringify({ error: msg }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+  );
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -65,10 +103,29 @@ Deno.serve(async (req) => {
     const action = url.searchParams.get('action');
     const userAgent = req.headers.get('user-agent') || '';
 
+    // ── Determine required auth level per action ──────────────────────────
+    const adminOnlyActions = ['scan-existing', 'retry-all-failed', 'fix-all-ios', 'fix-all-old'];
+    const uploaderActions = ['auto-process', 'update-status', 'retry'];
+    const authenticatedActions = ['pending', 'processing', 'stats', 'ffmpeg-command', 'health-stats'];
+    // 'get-video-url' is public (needed for video playback)
+
+    if (action && adminOnlyActions.includes(action)) {
+      const { user, roles } = await authenticateUser(req);
+      if (!user) return unauthorizedResponse();
+      if (!roles.includes('admin')) return forbiddenResponse('Admin access required');
+    } else if (action && uploaderActions.includes(action)) {
+      const { user, roles } = await authenticateUser(req);
+      if (!user) return unauthorizedResponse();
+      if (!roles.includes('admin') && !roles.includes('uploader')) return forbiddenResponse('Uploader access required');
+    } else if (action && authenticatedActions.includes(action)) {
+      const { user } = await authenticateUser(req);
+      if (!user) return unauthorizedResponse();
+    }
+    // get-video-url remains public for video playback
+
     // ── GET endpoints ─────────────────────────────────────────────────────
     if (req.method === 'GET') {
       
-      // Get video URL based on device type with safety check
       if (action === 'get-video-url') {
         const episodeId = url.searchParams.get('episodeId');
         if (!episodeId) {
@@ -95,7 +152,6 @@ Deno.serve(async (req) => {
         let servedFormat = 'original';
         let conversionStatus = conversion?.status || 'none';
 
-        // Player safety: for iOS, ONLY serve verified compatible files
         if (isIOS && conversion) {
           if (conversion.ios_compatible && conversion.ios_ready_url) {
             videoUrl = conversion.ios_ready_url;
@@ -107,7 +163,6 @@ Deno.serve(async (req) => {
             videoUrl = conversion.ios_ready_url;
             servedFormat = 'ios_ready';
           }
-          // If nothing compatible, still serve original but flag it
         }
 
         return new Response(
@@ -129,7 +184,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Get pending conversions
       if (action === 'pending') {
         const { data: pending, error } = await supabaseClient
           .from('video_conversions')
@@ -144,7 +198,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Get processing conversions
       if (action === 'processing') {
         const { data: processing, error } = await supabaseClient
           .from('video_conversions')
@@ -158,7 +211,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Stats
       if (action === 'stats') {
         const { data: stats, error } = await supabaseClient
           .from('video_conversions').select('status');
@@ -171,7 +223,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // FFmpeg command generator
       if (action === 'ffmpeg-command') {
         const conversionId = url.searchParams.get('conversionId');
         const commandType = url.searchParams.get('type') || 'cpu';
@@ -209,7 +260,6 @@ Deno.serve(async (req) => {
     if (req.method === 'POST') {
       const body = await req.json();
 
-      // Scan existing episodes
       if (action === 'scan-existing') {
         console.log('Starting smart scan of existing episodes...');
         const { data: episodes, error: fetchError } = await supabaseClient
@@ -226,8 +276,7 @@ Deno.serve(async (req) => {
             .from('video_conversions').select('id, status, ios_compatible').eq('episode_id', episode.id).single();
 
           if (!existing) {
-            // For MP4 files, mark as needs validation (pending) not auto-completed
-            const status = requiresConversion ? 'pending' : 'pending'; // ALL need ffprobe validation
+            const status = requiresConversion ? 'pending' : 'pending';
             const { error: insertError } = await supabaseClient
               .from('video_conversions')
               .insert({
@@ -264,7 +313,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Update conversion status (worker reports back)
       if (action === 'update-status') {
         const { conversionId, status } = body;
         if (!conversionId || !status) {
@@ -286,7 +334,6 @@ Deno.serve(async (req) => {
           updateData.error_message = body.errorMessage;
         }
 
-        // Map all optional fields
         const fieldMap: Record<string, string> = {
           iosReadyUrl: 'ios_ready_url',
           iosReadyPath: 'ios_ready_path',
@@ -329,7 +376,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Retry failed
       if (action === 'retry') {
         const { conversionId } = body;
         if (!conversionId) {
@@ -349,7 +395,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Retry all failed
       if (action === 'retry-all-failed') {
         const { data: updated, error } = await supabaseClient
           .from('video_conversions')
@@ -362,10 +407,8 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Fix all iOS playback issues - global revalidation
       if (action === 'fix-all-ios') {
         console.log('Starting global iOS fix...');
-        // Reset ALL completed videos that haven't been validated by ffprobe
         const { data: videos, error: fetchError } = await supabaseClient
           .from('video_conversions')
           .select('id, original_url, status, ios_compatible, needs_conversion, ios_ready_url')
@@ -401,9 +444,7 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Legacy: fix-all-old (redirect to fix-all-ios)
       if (action === 'fix-all-old') {
-        // Same as fix-all-ios
         const { data: videos, error: fetchError } = await supabaseClient
           .from('video_conversions')
           .select('id, original_url, status, ios_compatible, ios_ready_url')
@@ -434,7 +475,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Health stats
       if (action === 'health-stats') {
         const { data: conversions, error } = await supabaseClient
           .from('video_conversions')
@@ -460,7 +500,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Auto-process on upload
       if (action === 'auto-process') {
         const { episodeId, videoUrl } = body;
         if (!episodeId || !videoUrl) {
@@ -478,7 +517,7 @@ Deno.serve(async (req) => {
           await supabaseClient.from('video_conversions').update({
             original_url: videoUrl, original_path: videoUrl,
             needs_conversion: requiresConversion,
-            status: 'pending', // Always pending - worker validates
+            status: 'pending',
             error_message: null, conversion_stage: 'queued',
             ios_compatible: false,
           }).eq('id', existing.id);
