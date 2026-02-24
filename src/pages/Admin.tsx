@@ -32,6 +32,7 @@ import { HLSConversionDashboard } from '@/components/admin/HLSConversionDashboar
 import { ConversionNotifications } from '@/components/admin/ConversionNotifications';
 import { ConversionHealthDashboard } from '@/components/admin/ConversionHealthDashboard';
 import { TokenManager } from '@/components/admin/TokenManager';
+import { UserManagement } from '@/components/admin/UserManagement';
 
 interface Application {
   id: string;
@@ -298,6 +299,10 @@ export default function Admin() {
             <Key className="h-4 w-4" />
             Token Manager
           </TabsTrigger>
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Users
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="applications">
@@ -436,6 +441,10 @@ export default function Admin() {
 
         <TabsContent value="tokens">
           <TokenManager />
+        </TabsContent>
+
+        <TabsContent value="users">
+          <UserManagement />
         </TabsContent>
       </Tabs>
     </div>
