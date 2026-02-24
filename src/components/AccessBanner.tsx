@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Clock, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,28 +33,24 @@ export async function syncTokenSystemFlag() {
   await fetchTokenSystemStatus();
 }
 
-export function hasValidTokenAccess(email?: string | null): boolean {
-  if (isSuperAdmin(email)) return true;
-  const expiresStr = localStorage.getItem('unlock_token_expires');
-  if (!expiresStr) return false;
-  return Date.now() < parseInt(expiresStr, 10);
-}
-
 /**
- * Sync token access from DB → localStorage for logged-in users.
- * This ensures access persists when the PWA is added to the home screen
- * (which may have a separate localStorage from the browser).
+ * DB-authoritative token access check.
+ * Fetches the latest expiration from the database for the current user.
+ * Falls back to localStorage only for non-logged-in users.
  */
-export async function syncTokenAccessFromDB(): Promise<boolean> {
+export async function fetchTokenAccessFromDB(): Promise<{ hasAccess: boolean; expiresAt: number | null }> {
   try {
     const { data: sessionData } = await supabase.auth.getSession();
     const userId = sessionData?.session?.user?.id;
-    if (!userId) return false;
+    if (!userId) {
+      // Not logged in — fall back to localStorage
+      const expiresStr = localStorage.getItem('unlock_token_expires');
+      if (!expiresStr) return { hasAccess: false, expiresAt: null };
+      const exp = parseInt(expiresStr, 10);
+      return { hasAccess: Date.now() < exp, expiresAt: exp };
+    }
 
-    // Already have valid local access — nothing to sync
-    if (hasValidTokenAccess()) return false;
-
-    // Check DB for an active grant for this user
+    // Fetch from DB — single source of truth
     const { data } = await supabase
       .from('token_usage')
       .select('expires_at, token_id')
@@ -64,10 +60,44 @@ export async function syncTokenAccessFromDB(): Promise<boolean> {
       .maybeSingle();
 
     if (data?.expires_at && Date.now() < Number(data.expires_at)) {
+      // Sync to localStorage as cache (for offline / quick reads)
       localStorage.setItem('unlock_token_expires', data.expires_at.toString());
       localStorage.setItem('unlock_token_id', data.token_id);
+      return { hasAccess: true, expiresAt: Number(data.expires_at) };
+    }
+
+    // Expired or no grant — clear localStorage
+    localStorage.removeItem('unlock_token_expires');
+    localStorage.removeItem('unlock_token_id');
+    localStorage.removeItem('token_access_synced');
+    return { hasAccess: false, expiresAt: null };
+  } catch {
+    // On error, fall back to localStorage
+    const expiresStr = localStorage.getItem('unlock_token_expires');
+    if (!expiresStr) return { hasAccess: false, expiresAt: null };
+    const exp = parseInt(expiresStr, 10);
+    return { hasAccess: Date.now() < exp, expiresAt: exp };
+  }
+}
+
+/** Quick client-side check using localStorage cache — use for non-critical UI hints */
+export function hasValidTokenAccess(email?: string | null): boolean {
+  if (isSuperAdmin(email)) return true;
+  const expiresStr = localStorage.getItem('unlock_token_expires');
+  if (!expiresStr) return false;
+  return Date.now() < parseInt(expiresStr, 10);
+}
+
+/**
+ * Sync token access from DB → localStorage for logged-in users.
+ * This ensures access persists when the PWA is added to the home screen.
+ */
+export async function syncTokenAccessFromDB(): Promise<boolean> {
+  try {
+    const result = await fetchTokenAccessFromDB();
+    if (result.hasAccess && result.expiresAt) {
       localStorage.setItem('token_access_synced', 'true');
-      return true; // synced!
+      return true;
     }
     return false;
   } catch {
@@ -83,11 +113,12 @@ export function hasValidAccess(email?: string | null): boolean {
   return Date.now() < parseInt(expiresStr, 10);
 }
 
-export function getTimeRemaining(tokenSystemEnabled: boolean): { hours: number; minutes: number; seconds: number } | null {
+export function getTimeRemaining(tokenSystemEnabled: boolean, expiresAt?: number | null): { hours: number; minutes: number; seconds: number } | null {
   if (!tokenSystemEnabled) return null;
-  const expiresStr = localStorage.getItem('unlock_token_expires');
-  if (!expiresStr) return null;
-  const remaining = parseInt(expiresStr, 10) - Date.now();
+  // Use provided expiresAt (from DB) or fall back to localStorage
+  const exp = expiresAt ?? parseInt(localStorage.getItem('unlock_token_expires') || '0', 10);
+  if (!exp) return null;
+  const remaining = exp - Date.now();
   if (remaining <= 0) return null;
   return {
     hours: Math.floor(remaining / 3600000),
@@ -105,29 +136,47 @@ export function AccessBanner() {
   const { user } = useAuth();
   const location = useLocation();
   const [tokenEnabled, setTokenEnabled] = useState(true);
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [time, setTime] = useState<ReturnType<typeof getTimeRemaining>>(null);
   const [dismissed, setDismissed] = useState(false);
+  const [dbChecked, setDbChecked] = useState(false);
   const isSynced = wasAccessSyncedFromCloud();
 
   const isPlayerPage = location.pathname.startsWith('/watch/');
   const superAdmin = isSuperAdmin(user?.email);
 
+  // Fetch token system status once
   useEffect(() => {
     fetchTokenSystemStatus().then(setTokenEnabled);
   }, []);
 
+  // DB-authoritative fetch on every mount (page load) and when user changes
+  const checkAccessFromDB = useCallback(async () => {
+    const result = await fetchTokenAccessFromDB();
+    setExpiresAt(result.hasAccess ? result.expiresAt : null);
+    setDbChecked(true);
+  }, []);
+
   useEffect(() => {
+    checkAccessFromDB();
+  }, [checkAccessFromDB, user?.id]);
+
+  // Countdown timer — uses DB-sourced expiresAt
+  useEffect(() => {
+    if (!dbChecked) return;
     const interval = setInterval(() => {
-      const t = getTimeRemaining(tokenEnabled);
+      const t = getTimeRemaining(tokenEnabled, expiresAt);
       setTime(t);
-      if (!t) {
+      if (!t && expiresAt) {
+        // Expired — clean up
+        setExpiresAt(null);
         localStorage.removeItem('unlock_token_expires');
         localStorage.removeItem('unlock_token_id');
         localStorage.removeItem('token_access_synced');
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [tokenEnabled]);
+  }, [tokenEnabled, expiresAt, dbChecked]);
 
   if (superAdmin || !time || isPlayerPage || dismissed) return null;
 
