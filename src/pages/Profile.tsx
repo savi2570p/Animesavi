@@ -85,8 +85,14 @@ export default function Profile() {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
+    // Validate file type — be permissive for mobile galleries (some return empty MIME)
+    const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
+    const hasImageExtension = /\.(jpe?g|png|gif|webp|heic|heif|bmp|svg)$/i.test(file.name);
+    if (file.type && !validImageTypes.includes(file.type) && !file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+    if (!file.type && !hasImageExtension) {
       toast.error('Please select an image file');
       return;
     }
@@ -312,7 +318,7 @@ export default function Profile() {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/*"
                     onChange={handleFileSelect}
                     className="hidden"
                   />
