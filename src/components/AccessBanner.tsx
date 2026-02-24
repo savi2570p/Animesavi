@@ -45,14 +45,14 @@ export function hasValidTokenAccess(email?: string | null): boolean {
  * This ensures access persists when the PWA is added to the home screen
  * (which may have a separate localStorage from the browser).
  */
-export async function syncTokenAccessFromDB() {
+export async function syncTokenAccessFromDB(): Promise<boolean> {
   try {
     const { data: sessionData } = await supabase.auth.getSession();
     const userId = sessionData?.session?.user?.id;
-    if (!userId) return;
+    if (!userId) return false;
 
     // Already have valid local access — nothing to sync
-    if (hasValidTokenAccess()) return;
+    if (hasValidTokenAccess()) return false;
 
     // Check DB for an active grant for this user
     const { data } = await supabase
@@ -66,9 +66,11 @@ export async function syncTokenAccessFromDB() {
     if (data?.expires_at && Date.now() < Number(data.expires_at)) {
       localStorage.setItem('unlock_token_expires', data.expires_at.toString());
       localStorage.setItem('unlock_token_id', data.token_id);
+      return true; // synced!
     }
+    return false;
   } catch {
-    // Silently fail — non-critical
+    return false;
   }
 }
 
