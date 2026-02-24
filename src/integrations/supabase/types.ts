@@ -578,24 +578,30 @@ export type Database = {
       }
       token_usage: {
         Row: {
+          expires_at: number | null
           id: string
           token_id: string
           used_at: string
           user_agent: string | null
+          user_id: string | null
           user_ip: string | null
         }
         Insert: {
+          expires_at?: number | null
           id?: string
           token_id: string
           used_at?: string
           user_agent?: string | null
+          user_id?: string | null
           user_ip?: string | null
         }
         Update: {
+          expires_at?: number | null
           id?: string
           token_id?: string
           used_at?: string
           user_agent?: string | null
+          user_id?: string | null
           user_ip?: string | null
         }
         Relationships: [
