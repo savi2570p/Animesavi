@@ -321,22 +321,24 @@ export default function History() {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="text-muted-foreground hover:text-destructive"
-                    onClick={(e) => deleteHistoryItem(item.id, e)}
-                    onTouchStart={(e) => e.stopPropagation()}
-                    type="button"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
                   <Button size="sm" variant="outline" className="self-center" asChild>
                     <Link to={`/watch/${item.episode.id}?t=${item.progress || 0}`} onClick={(e) => e.stopPropagation()}>
                       <Play className="h-4 w-4 mr-1 fill-current" />
                       Continue
                     </Link>
+                  </Button>
+                  <div className="w-px h-6 bg-border" />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    onClick={(e) => deleteHistoryItem(item.id, e)}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    type="button"
+                    title="Remove from history"
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </Link>
