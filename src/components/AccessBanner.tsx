@@ -66,6 +66,7 @@ export async function syncTokenAccessFromDB(): Promise<boolean> {
     if (data?.expires_at && Date.now() < Number(data.expires_at)) {
       localStorage.setItem('unlock_token_expires', data.expires_at.toString());
       localStorage.setItem('unlock_token_id', data.token_id);
+      localStorage.setItem('token_access_synced', 'true');
       return true; // synced!
     }
     return false;
@@ -95,12 +96,18 @@ export function getTimeRemaining(tokenSystemEnabled: boolean): { hours: number; 
   };
 }
 
+/** Check if current token access was synced from cloud (DB) */
+export function wasAccessSyncedFromCloud(): boolean {
+  return localStorage.getItem('token_access_synced') === 'true';
+}
+
 export function AccessBanner() {
   const { user } = useAuth();
   const location = useLocation();
   const [tokenEnabled, setTokenEnabled] = useState(true);
   const [time, setTime] = useState<ReturnType<typeof getTimeRemaining>>(null);
   const [dismissed, setDismissed] = useState(false);
+  const isSynced = wasAccessSyncedFromCloud();
 
   const isPlayerPage = location.pathname.startsWith('/watch/');
   const superAdmin = isSuperAdmin(user?.email);
@@ -116,6 +123,7 @@ export function AccessBanner() {
       if (!t) {
         localStorage.removeItem('unlock_token_expires');
         localStorage.removeItem('unlock_token_id');
+        localStorage.removeItem('token_access_synced');
       }
     }, 1000);
     return () => clearInterval(interval);
@@ -145,6 +153,15 @@ export function AccessBanner() {
           >
             {String(time.hours).padStart(2, '0')}:{String(time.minutes).padStart(2, '0')}:{String(time.seconds).padStart(2, '0')}
           </span>
+          {isSynced && (
+            <span
+              className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
+              style={{ background: 'hsla(210, 80%, 50%, 0.3)', border: '1px solid hsla(210, 80%, 60%, 0.4)' }}
+              title="Access synced from your account"
+            >
+              ☁️ Synced
+            </span>
+          )}
         </div>
         <button
           onClick={() => setDismissed(true)}

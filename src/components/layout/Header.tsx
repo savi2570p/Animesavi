@@ -35,6 +35,7 @@ import { JoinPartyDialog, ViewPartyDialog } from '@/components/WatchParty';
 import { NotificationBell } from '@/components/NotificationBell';
 import { WatchLaterButton } from '@/components/WatchLater';
 import { AccountSwitcher, rememberAccount } from '@/components/AccountSwitcher';
+import { hasValidTokenAccess } from '@/components/AccessBanner';
 
 export function Header() {
   const { user, isUploader, isAdmin, signOut } = useAuth();
@@ -165,8 +166,8 @@ export function Header() {
                       {user.email?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
-                  {isAdmin && (
-                    <Crown className="absolute -top-1 -right-1 h-3 w-3 text-yellow-500" />
+                  {(isAdmin || hasValidTokenAccess(user?.email)) && (
+                    <Crown className="absolute -top-1 -right-1 h-3.5 w-3.5 text-yellow-500 drop-shadow-[0_0_4px_rgba(234,179,8,0.6)]" />
                   )}
                 </Button>
               </DropdownMenuTrigger>

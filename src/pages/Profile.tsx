@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { User, Mail, Lock, Palette, Camera, Upload, Link as LinkIcon } from 'lucide-react';
+import { User, Mail, Lock, Palette, Camera, Upload, Link as LinkIcon, Crown } from 'lucide-react';
+import { hasValidTokenAccess } from '@/components/AccessBanner';
 import { z } from 'zod';
 
 // Input validation schemas
@@ -248,14 +249,26 @@ export default function Profile() {
     <div className="container py-12 max-w-2xl">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <Avatar className="h-16 w-16 ring-2 ring-primary/50">
-            <AvatarImage src={avatarUrl} alt="Avatar" />
-            <AvatarFallback className="bg-gradient-primary text-white text-2xl">
-              {username?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="h-16 w-16 ring-2 ring-primary/50">
+              <AvatarImage src={avatarUrl} alt="Avatar" />
+              <AvatarFallback className="bg-gradient-primary text-white text-2xl">
+                {username?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            {hasValidTokenAccess(user?.email) && (
+              <Crown className="absolute -top-1.5 -right-1.5 h-5 w-5 text-yellow-500 drop-shadow-[0_0_6px_rgba(234,179,8,0.6)]" />
+            )}
+          </div>
           <div>
-            <h1 className="text-3xl font-heading font-bold">Profile</h1>
+            <h1 className="text-3xl font-heading font-bold flex items-center gap-2">
+              Profile
+              {hasValidTokenAccess(user?.email) && (
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-500 border border-yellow-500/30">
+                  Premium
+                </span>
+              )}
+            </h1>
             <p className="text-muted-foreground">Manage your account settings</p>
           </div>
         </div>
