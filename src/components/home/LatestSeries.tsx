@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Tv, ChevronRight, Play, CalendarClock } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
+import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 
 interface AnimeSeries {
   id: string;
@@ -250,6 +251,9 @@ export function LatestSeries() {
 
                   {/* Status Badge */}
                   {getStatusBadge(anime)}
+
+                  {/* Token Crown Badge */}
+                  <TokenCrownBadge />
 
                   {/* Title at bottom */}
                   <div className="absolute bottom-0 left-0 right-0 p-3">

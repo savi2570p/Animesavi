@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TrendingUp, Play, Eye, Crown } from 'lucide-react';
+import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 
 interface PopularAnime {
   id: string;
@@ -153,6 +154,9 @@ export function MostPopularSection() {
                   {anime.title}
                 </h3>
               </div>
+
+              {/* Token Crown Badge */}
+              <TokenCrownBadge />
             </div>
           </Link>
         ))}

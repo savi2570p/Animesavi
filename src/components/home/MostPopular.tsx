@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { TrendingUp, ChevronRight, Play, Eye, Filter } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { TrailerPreview } from '@/components/home/TrailerPreview';
+import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -258,6 +259,9 @@ export function MostPopular() {
                           : `${(anime.view_count / 1000).toFixed(0)}K`}
                       </div>
                     )}
+
+                    {/* Token Crown Badge */}
+                    <TokenCrownBadge />
 
                     {/* Title at bottom */}
                     <div className="absolute bottom-0 left-0 right-0 p-3 z-20">
