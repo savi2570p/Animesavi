@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, Play, ChevronRight, CalendarClock } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
+import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 
 interface Anime {
   id: string;
@@ -178,6 +179,8 @@ export function RecommendedAnime() {
                       Coming Soon
                     </Badge>
                   )}
+                  {/* Token Crown Badge */}
+                  <TokenCrownBadge />
                 </div>
                 {/* Info */}
                 <div className="p-2.5">

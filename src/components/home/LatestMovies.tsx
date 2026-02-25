@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Film, Clock, Star, ChevronRight, CalendarClock } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
+import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 
 interface Movie {
   id: string;
@@ -181,6 +182,9 @@ export function LatestMovies() {
                     <Film className="h-3 w-3" />
                     Movie
                   </div>
+
+                  {/* Token Crown Badge */}
+                  <TokenCrownBadge />
 
                   {/* NEW badge */}
                   {isNew(movie.created_at) && (

@@ -6,6 +6,7 @@ import { Play, Info, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TrailerPreview } from '@/components/home/TrailerPreview';
+import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 
 interface FeaturedAnimeItem {
   id: string;
@@ -201,6 +202,8 @@ export function FeaturedSlider() {
                     className="w-full h-full object-cover"
                   />
                 )}
+                {/* Token Crown Badge */}
+                <TokenCrownBadge />
               </div>
             </div>
 

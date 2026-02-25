@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { TrendingUp, Eye } from 'lucide-react';
 import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
+import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 
 interface CrunchyAnime {
   id: string;
@@ -190,6 +191,7 @@ export default function CrunchyPage() {
                     <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
                       🔥 Trending
                     </div>
+                    <TokenCrownBadge />
                   </div>
                   <h3 className="mt-2 text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
                     {anime.title}
@@ -258,6 +260,7 @@ export default function CrunchyPage() {
                       {formatViewCount(anime.view_count || 0)} views
                     </div>
                   </div>
+                  <TokenCrownBadge />
                 </div>
                 <div className="mt-2">
                   <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">

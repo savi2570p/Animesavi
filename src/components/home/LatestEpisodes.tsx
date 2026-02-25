@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Play, ChevronRight } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
+import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 
 interface LatestEpisode {
   id: string;
@@ -253,6 +254,9 @@ export function LatestEpisodes() {
                         NEW
                       </div>
                     )}
+
+                    {/* Token Crown Badge */}
+                    <TokenCrownBadge />
 
                     {/* Title and episode range overlay */}
                     <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent">
