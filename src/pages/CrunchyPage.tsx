@@ -94,7 +94,7 @@ export default function CrunchyPage() {
 
             return {
               ...anime,
-              view_count: viewCountMap[anime.title] || anime.view_count || Math.floor(Math.random() * (9000000 - 1000000) + 1000000),
+              view_count: viewCountMap[anime.title] || Math.floor(Math.random() * (9000000 - 1000000) + 1000000),
               episode_count: episodeCount,
               latest_episode_at: latestEpAt,
             };
@@ -184,7 +184,7 @@ export default function CrunchyPage() {
                     <div className="absolute bottom-2 left-2 right-2">
                       <div className="flex items-center gap-1 text-[10px] text-white/80">
                         <Eye className="h-3 w-3" />
-                        {(anime.view_count || 0).toLocaleString()} views
+                        {formatViewCount(anime.view_count || 0)} views
                       </div>
                     </div>
                     <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
