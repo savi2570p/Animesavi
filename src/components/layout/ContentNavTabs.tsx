@@ -1,14 +1,17 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tv, Play, Film, Clock, LayoutGrid, Cherry } from 'lucide-react';
+import museinLogo from '@/assets/musein-logo.jpg';
 
 interface NavTab {
   to: string;
   label: string;
-  icon: typeof Tv;
+  icon?: typeof Tv;
+  customIcon?: string;
   requiresAuth?: boolean;
   requiresUploader?: boolean;
+  isMuseIN?: boolean;
 }
 
 export function ContentNavTabs() {
@@ -23,6 +26,7 @@ export function ContentNavTabs() {
     { to: '/latest-episodes', label: 'Latest Episodes', icon: Play },
     { to: '/latest-movies', label: 'Latest Movies', icon: Film },
     { to: '/crunchy', label: 'Crunchy', icon: Cherry },
+    { to: '/musein', label: 'MuseIN', customIcon: museinLogo, isMuseIN: true },
     ...(isRolesLoaded && canAccessPending
       ? [{ to: '/pending-upload', label: 'Pending Upload', icon: Clock, requiresUploader: true }]
       : []),
@@ -54,7 +58,11 @@ export function ContentNavTabs() {
                     : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                 )}
               >
-                <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                {tab.customIcon ? (
+                  <img src={tab.customIcon} alt={tab.label} className="h-4 w-4 sm:h-5 sm:w-5 rounded-full object-cover" />
+                ) : Icon ? (
+                  <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                ) : null}
                 <span>{tab.label}</span>
               </Link>
             );

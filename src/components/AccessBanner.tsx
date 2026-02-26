@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Clock, X } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -134,15 +133,12 @@ export function wasAccessSyncedFromCloud(): boolean {
 
 export function AccessBanner() {
   const { user } = useAuth();
-  const location = useLocation();
   const [tokenEnabled, setTokenEnabled] = useState(true);
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [time, setTime] = useState<ReturnType<typeof getTimeRemaining>>(null);
-  const [dismissed, setDismissed] = useState(false);
   const [dbChecked, setDbChecked] = useState(false);
   const isSynced = wasAccessSyncedFromCloud();
 
-  const isPlayerPage = location.pathname.startsWith('/watch/');
   const superAdmin = isSuperAdmin(user?.email);
 
   // Fetch token system status once
@@ -178,7 +174,7 @@ export function AccessBanner() {
     return () => clearInterval(interval);
   }, [tokenEnabled, expiresAt, dbChecked]);
 
-  if (superAdmin || !time || isPlayerPage || dismissed) return null;
+  if (superAdmin || !time) return null;
 
   return (
     <div
@@ -188,7 +184,7 @@ export function AccessBanner() {
         boxShadow: '0 4px 20px hsla(0, 80%, 40%, 0.4), 0 0 40px hsla(0, 80%, 40%, 0.15)',
       }}
     >
-      <div className="container flex items-center justify-between">
+      <div className="container flex items-center justify-center">
         <div className="flex items-center gap-2.5 text-sm font-medium tracking-wide">
           <Clock className="h-4 w-4 animate-pulse" />
           <span className="opacity-90">Access expires in</span>
@@ -212,12 +208,6 @@ export function AccessBanner() {
             </span>
           )}
         </div>
-        <button
-          onClick={() => setDismissed(true)}
-          className="hover:bg-white/20 rounded-full p-1.5 transition-colors duration-200"
-        >
-          <X className="h-4 w-4" />
-        </button>
       </div>
     </div>
   );
