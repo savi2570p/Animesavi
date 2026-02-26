@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Tv, Play, Film, Clock, LayoutGrid, Cherry } from 'lucide-react';
 import museinLogo from '@/assets/musein-logo.jpg';
+import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
 
 interface NavTab {
   to: string;
@@ -25,7 +26,7 @@ export function ContentNavTabs() {
     { to: '/latest-series', label: 'Latest Series', icon: Tv },
     { to: '/latest-episodes', label: 'Latest Episodes', icon: Play },
     { to: '/latest-movies', label: 'Latest Movies', icon: Film },
-    { to: '/crunchy', label: 'Crunchy', icon: Cherry },
+    { to: '/crunchy', label: 'Crunchy', customIcon: crunchyrollLogo },
     { to: '/musein', label: 'MuseIN', customIcon: museinLogo, isMuseIN: true },
     ...(isRolesLoaded && canAccessPending
       ? [{ to: '/pending-upload', label: 'Pending Upload', icon: Clock, requiresUploader: true }]
