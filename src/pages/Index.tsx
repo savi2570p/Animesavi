@@ -25,7 +25,7 @@ export default function Index() {
 
   const stats: { icon: any; value: string; label: string; link?: string }[] = [
     { icon: Play, value: 'Latest', label: 'Series & movies upload every week' },
-    { icon: Tv, value: '1,500+', label: 'Series' },
+    { icon: Tv, value: 'Watch', label: 'Anime on my friend\'s website', link: 'https://shadow-toons.lovable.app/' },
     { icon: Clock, value: '24/7', label: 'Join Telegram group for more updates', link: 'https://t.me/AnimeSaviInhindiDUB' },
     { icon: Award, value: 'Fully', label: 'Ad free' },
   ];
