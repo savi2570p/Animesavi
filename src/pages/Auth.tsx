@@ -268,24 +268,7 @@ export default function Auth() {
             )}
           </CardHeader>
           <CardContent>
-            {accountLimitReached && !showForgotPassword ? (
-              <div className="flex flex-col items-center gap-4 py-6 text-center">
-                <div className="p-3 rounded-full bg-destructive/10">
-                  <ShieldAlert className="h-10 w-10 text-destructive" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground">Account Limit Reached</h3>
-                <p className="text-sm text-muted-foreground max-w-xs">
-                  You already have {MAX_ACCOUNTS_REGULAR} accounts saved on this device. Remove an existing account from the Account Switcher to add a new one.
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('/')}
-                  className="mt-2"
-                >
-                  Go to Homepage
-                </Button>
-              </div>
-            ) : showForgotPassword ? (
+            {showForgotPassword ? (
               <form onSubmit={handleForgotPassword} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="reset-email">Email</Label>
@@ -426,6 +409,17 @@ export default function Auth() {
               </TabsContent>
 
               <TabsContent value="signup">
+                {accountLimitReached ? (
+                  <div className="flex flex-col items-center gap-4 py-6 text-center">
+                    <div className="p-3 rounded-full bg-destructive/10">
+                      <ShieldAlert className="h-10 w-10 text-destructive" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground">Account Limit Reached</h3>
+                    <p className="text-sm text-muted-foreground max-w-xs">
+                      You already have {MAX_ACCOUNTS_REGULAR} accounts saved on this device. Remove an existing account from the Account Switcher to add a new one.
+                    </p>
+                  </div>
+                ) : (
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-username">Username</Label>
@@ -514,6 +508,7 @@ export default function Auth() {
                     {isGoogleLoading ? 'Connecting...' : 'Continue with Google'}
                   </Button>
                 </form>
+                )}
               </TabsContent>
             </Tabs>
             )}
