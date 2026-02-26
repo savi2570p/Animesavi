@@ -9,6 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
 
 export default function MuseINPage() {
   const [open, setOpen] = useState(true);
@@ -20,20 +21,23 @@ export default function MuseINPage() {
   };
 
   return (
-    <div className="container py-8">
-      <AlertDialog open={open} onOpenChange={(v) => { if (!v) handleOk(); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-center text-xl">MuseIN</AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-lg py-4">
-              Coming Soon
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="justify-center sm:justify-center">
-            <AlertDialogAction onClick={handleOk}>OK</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+    <div className="min-h-screen">
+      <ContentNavTabs />
+      <div className="container py-8">
+        <AlertDialog open={open} onOpenChange={(v) => { if (!v) handleOk(); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-center text-xl">MuseIN</AlertDialogTitle>
+              <AlertDialogDescription className="text-center text-lg py-4">
+                Coming Soon
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="justify-center sm:justify-center">
+              <AlertDialogAction onClick={handleOk}>OK</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 }
