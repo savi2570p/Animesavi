@@ -329,6 +329,11 @@ export function VideoPlayer({
   const [showMobileUnmute, setShowMobileUnmute] = useState(false);
   const [wasMutedForAutoplay, setWasMutedForAutoplay] = useState(false);
   
+  // Timeline hover time preview
+  const [hoverTime, setHoverTime] = useState<number | null>(null);
+  const [hoverPosition, setHoverPosition] = useState(0);
+  const timelineRef = useRef<HTMLDivElement>(null);
+  
   
   const features = serverConfigs[activeServer].features;
   
@@ -1349,6 +1354,18 @@ export function VideoPlayer({
       setProgress(parseFloat(e.target.value));
     }
   };
+
+  const handleTimelineHover = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const percentage = Math.max(0, Math.min(x / rect.width, 1));
+    setHoverTime(percentage * duration);
+    setHoverPosition(x);
+  }, [duration]);
+
+  const handleTimelineLeave = useCallback(() => {
+    setHoverTime(null);
+  }, []);
 
   const togglePlay = useCallback(() => {
     if (videoRef.current) {
@@ -2431,11 +2448,11 @@ export function VideoPlayer({
           {!isPlaying && showControls && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 2147483647 }}>
               <div 
-                className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
+                className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
                 onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                 style={{ pointerEvents: 'auto' }}
               >
-                <Play className="w-10 h-10 text-white fill-current ml-1" />
+                <Play className="w-7 h-7 md:w-8 md:h-8 text-white fill-current ml-0.5" />
               </div>
             </div>
           )}
@@ -2448,8 +2465,21 @@ export function VideoPlayer({
             {/* Progress bar with buffer indicator */}
             <div className="mb-3 md:mb-4 relative">
               <div className="flex items-center gap-2 md:gap-3">
-                <span className="text-white/90 text-xs md:text-sm font-mono min-w-[40px] md:min-w-[50px]">{formatTime(currentTime)}</span>
-                <div className="flex-1 relative h-1.5 md:h-2">
+                 <span className="text-white/90 text-[10px] md:text-xs font-mono min-w-[36px] md:min-w-[44px]">{formatTime(currentTime)}</span>
+                <div 
+                  className="flex-1 relative h-1 md:h-1.5"
+                  onMouseMove={handleTimelineHover}
+                  onMouseLeave={handleTimelineLeave}
+                >
+                  {/* Hover time tooltip */}
+                  {hoverTime !== null && (
+                    <div 
+                      className="absolute -top-8 transform -translate-x-1/2 bg-black/90 text-white text-[10px] font-mono px-1.5 py-0.5 rounded pointer-events-none z-10"
+                      style={{ left: `${hoverPosition}px` }}
+                    >
+                      {formatTime(hoverTime)}
+                    </div>
+                  )}
                   {/* Buffer progress (background) */}
                   <div className="absolute inset-0 bg-white/20 rounded-full" />
                   <div 
@@ -2464,11 +2494,11 @@ export function VideoPlayer({
                     value={isNaN(progress) ? 0 : progress}
                     onChange={handleSeek}
                     className="absolute inset-0 w-full h-full bg-transparent rounded-full appearance-none cursor-pointer 
-                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
-                      [&::-webkit-slider-thumb]:md:w-5 [&::-webkit-slider-thumb]:md:h-5
+                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 
+                      [&::-webkit-slider-thumb]:md:w-4 [&::-webkit-slider-thumb]:md:h-4
                       [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg
                       [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125
-                      [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:md:w-5 [&::-moz-range-thumb]:md:h-5
+                      [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:md:w-4 [&::-moz-range-thumb]:md:h-4
                       [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0
                       [&::-webkit-slider-runnable-track]:bg-transparent
                       [&::-moz-range-track]:bg-transparent"
@@ -2479,32 +2509,32 @@ export function VideoPlayer({
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
-                <span className="text-white/90 text-xs md:text-sm font-mono min-w-[40px] md:min-w-[50px]">{formatTime(duration)}</span>
+                <span className="text-white/90 text-[10px] md:text-xs font-mono min-w-[36px] md:min-w-[44px]">{formatTime(duration)}</span>
               </div>
             </div>
 
-            {/* Control buttons - Fullscreen version - Responsive */}
+            {/* Control buttons - Fullscreen version - Compact */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1 md:gap-2">
+              <div className="flex items-center gap-0.5 md:gap-1.5">
                 <button 
-                  className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); skipBackward(); }} 
                   title="Skip back 10s"
                 >
-                  <SkipBack className="w-4 h-4 md:w-5 md:h-5" />
-                </button>
-                <button 
-                  className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
-                  onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-                >
-                  {isPlaying ? <Pause className="w-5 h-5 md:w-7 md:h-7" /> : <Play className="w-5 h-5 md:w-7 md:h-7 fill-current ml-0.5" />}
+                  <SkipBack className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 </button>
                 <button 
                   className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+                >
+                  {isPlaying ? <Pause className="w-4 h-4 md:w-5 md:h-5" /> : <Play className="w-4 h-4 md:w-5 md:h-5 fill-current ml-0.5" />}
+                </button>
+                <button 
+                  className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); skipForward(); }} 
                   title="Skip forward 10s"
                 >
-                  <SkipForward className="w-4 h-4 md:w-5 md:h-5" />
+                  <SkipForward className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 </button>
                 {/* Volume Slider - Desktop */}
                 <div className="hidden md:block" onClick={(e) => e.stopPropagation()}>
@@ -2517,20 +2547,20 @@ export function VideoPlayer({
                 </div>
                 {/* Volume Button - Mobile (just mute toggle) */}
                 <button 
-                  className="md:hidden w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  className="md:hidden w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); toggleMute(); }}
                 >
-                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
                 </button>
                 {/* Next Episode Button - Only for PLAY and SHORT servers */}
                 {hasNextEpisode && onNextEpisode && (
                   <button 
-                    className="hidden md:flex w-auto px-3 h-8 md:h-10 rounded-full bg-primary/80 hover:bg-primary items-center justify-center text-white transition-colors gap-1" 
+                    className="hidden md:flex w-auto px-2.5 h-7 md:h-8 rounded-full bg-primary/80 hover:bg-primary items-center justify-center text-white transition-colors gap-1" 
                     onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
                     title="Next Episode"
                   >
-                    <span className="text-xs font-medium">Next</span>
-                    <SkipForward className="w-4 h-4" />
+                    <span className="text-[10px] font-medium">Next</span>
+                    <SkipForward className="w-3 h-3" />
                   </button>
                 )}
                 {currentBitrate > 0 && (
@@ -2541,17 +2571,17 @@ export function VideoPlayer({
                 )}
               </div>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5">
                 {/* Keyboard Shortcuts Info Button - Fullscreen */}
                 <TooltipProvider>
                   <Tooltip open={showKeyboardShortcuts} onOpenChange={setShowKeyboardShortcuts}>
                     <TooltipTrigger asChild>
                       <button 
-                        className="hidden md:flex w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
+                        className="hidden md:flex w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
                         onClick={(e) => { e.stopPropagation(); setShowKeyboardShortcuts(!showKeyboardShortcuts); }}
                         title="Keyboard Shortcuts"
                       >
-                        <Info className="w-4 h-4 md:w-5 md:h-5" />
+                        <Info className="w-3.5 h-3.5 md:w-4 md:h-4" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="bg-background/95 backdrop-blur-xl border-border/50 p-4 max-w-[280px]" style={{ zIndex: 2147483647 }}>
@@ -2602,7 +2632,7 @@ export function VideoPlayer({
                 {/* Next Episode Button Mobile */}
                 {hasNextEpisode && onNextEpisode && (
                   <button 
-                    className="md:hidden w-8 h-8 rounded-full bg-primary/80 hover:bg-primary flex items-center justify-center text-white transition-colors" 
+                    className="md:hidden w-6 h-6 rounded-full bg-primary/80 hover:bg-primary flex items-center justify-center text-white transition-colors" 
                     onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
                     title="Next Episode"
                   >
@@ -2621,7 +2651,7 @@ export function VideoPlayer({
                 >
                   <DropdownMenuTrigger asChild>
                     <button 
-                      className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
+                      className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
                       onPointerDown={(e) => { 
                         e.stopPropagation(); 
                         e.preventDefault();
@@ -2630,7 +2660,7 @@ export function VideoPlayer({
                       title="Settings"
                       style={{ touchAction: 'manipulation' }}
                     >
-                      <Settings className="w-4 h-4 md:w-5 md:h-5" />
+                      <Settings className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
@@ -2650,26 +2680,26 @@ export function VideoPlayer({
 
                 {features.includes('download') && (
                   <button 
-                    className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                    className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                     onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
                     title="Download"
                   >
-                    <Download className="w-4 h-4 md:w-5 md:h-5" />
+                    <Download className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   </button>
                 )}
                 <button 
-                  className="flex w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
+                  className="flex w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                   title="Picture-in-Picture"
                 >
-                  <PictureInPicture2 className="w-4 h-4 md:w-5 md:h-5" />
+                  <PictureInPicture2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 </button>
                 <button 
-                  className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
                   title="Exit Fullscreen"
                 >
-                  <Minimize className="w-4 h-4 md:w-5 md:h-5" />
+                  <Minimize className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 </button>
               </div>
             </div>
@@ -2692,11 +2722,11 @@ export function VideoPlayer({
           {!isPlaying && showControls && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[60]">
               <div 
-                className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
+                className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
                 onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                 style={{ pointerEvents: 'auto' }}
               >
-                <Play className="w-10 h-10 text-white fill-current ml-1" />
+                <Play className="w-7 h-7 md:w-8 md:h-8 text-white fill-current ml-0.5" />
               </div>
             </div>
           )}
@@ -2707,14 +2737,25 @@ export function VideoPlayer({
             style={{ pointerEvents: 'auto', zIndex: 60 }}
           >
           {/* Progress bar with buffer indicator */}
-          <div className="mb-4 relative">
-            <div className="flex items-center gap-3">
-              <span className="text-white/90 text-sm font-mono min-w-[50px]">{formatTime(currentTime)}</span>
-              <div className="flex-1 relative h-2">
+          <div className="mb-2 md:mb-3 relative">
+            <div className="flex items-center gap-2">
+              <span className="text-white/90 text-[10px] md:text-xs font-mono min-w-[36px] md:min-w-[44px]">{formatTime(currentTime)}</span>
+              <div 
+                className="flex-1 relative h-1 md:h-1.5"
+                onMouseMove={handleTimelineHover}
+                onMouseLeave={handleTimelineLeave}
+              >
+                {/* Hover time tooltip */}
+                {hoverTime !== null && (
+                  <div 
+                    className="absolute -top-8 transform -translate-x-1/2 bg-black/90 text-white text-[10px] font-mono px-1.5 py-0.5 rounded pointer-events-none z-10"
+                    style={{ left: `${hoverPosition}px` }}
+                  >
+                    {formatTime(hoverTime)}
+                  </div>
+                )}
                 {/* Buffer progress (background) */}
-                <div 
-                  className="absolute inset-0 bg-white/20 rounded-full"
-                />
+                <div className="absolute inset-0 bg-white/20 rounded-full" />
                 <div 
                   className="absolute top-0 left-0 h-full bg-white/40 rounded-full transition-all duration-300"
                   style={{ width: `${buffered}%` }}
@@ -2727,11 +2768,11 @@ export function VideoPlayer({
                   value={isNaN(progress) ? 0 : progress}
                   onChange={handleSeek}
                   className="absolute inset-0 w-full h-full bg-transparent rounded-full appearance-none cursor-pointer 
-                    [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
-                    [&::-webkit-slider-thumb]:md:w-5 [&::-webkit-slider-thumb]:md:h-5
+                    [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 
+                    [&::-webkit-slider-thumb]:md:w-4 [&::-webkit-slider-thumb]:md:h-4
                     [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg
                     [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125
-                    [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:md:w-5 [&::-moz-range-thumb]:md:h-5
+                    [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:md:w-4 [&::-moz-range-thumb]:md:h-4
                     [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0
                     [&::-webkit-slider-runnable-track]:bg-transparent
                     [&::-moz-range-track]:bg-transparent"
@@ -2742,37 +2783,37 @@ export function VideoPlayer({
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
-              <span className="text-white/90 text-sm font-mono min-w-[50px]">{formatTime(duration)}</span>
+              <span className="text-white/90 text-[10px] md:text-xs font-mono min-w-[36px] md:min-w-[44px]">{formatTime(duration)}</span>
             </div>
           </div>
 
-          {/* Control buttons - Responsive for mobile */}
+          {/* Control buttons - Compact */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-0.5 md:gap-2">
+            <div className="flex items-center gap-0.5 md:gap-1.5">
               {/* Skip back */}
               <button 
-                className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); skipBackward(); }} 
                 title="Skip back 10s"
               >
-                <SkipBack className="w-3.5 h-3.5 md:w-5 md:h-5" />
+                <SkipBack className="w-3 h-3 md:w-4 md:h-4" />
               </button>
 
               {/* Play/Pause */}
               <button 
-                className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); togglePlay(); }}
               >
-                {isPlaying ? <Pause className="w-4 h-4 md:w-7 md:h-7" /> : <Play className="w-4 h-4 md:w-7 md:h-7 fill-current ml-0.5" />}
+                {isPlaying ? <Pause className="w-3.5 h-3.5 md:w-5 md:h-5" /> : <Play className="w-3.5 h-3.5 md:w-5 md:h-5 fill-current ml-0.5" />}
               </button>
 
               {/* Skip forward */}
               <button 
-                className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); skipForward(); }} 
                 title="Skip forward 10s"
               >
-                <SkipForward className="w-3.5 h-3.5 md:w-5 md:h-5" />
+                <SkipForward className="w-3 h-3 md:w-4 md:h-4" />
               </button>
 
               {/* Volume Slider - Desktop */}
@@ -2786,21 +2827,21 @@ export function VideoPlayer({
               </div>
               {/* Volume Button - Mobile (just mute toggle) */}
               <button 
-                className="md:hidden w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                className="md:hidden w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); toggleMute(); }}
               >
-                {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                {isMuted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
               </button>
 
               {/* Next Episode Button Desktop */}
               {hasNextEpisode && onNextEpisode && (
                 <button 
-                  className="hidden md:flex w-auto px-3 h-8 md:h-10 rounded-full bg-primary/80 hover:bg-primary items-center justify-center text-white transition-colors gap-1" 
+                  className="hidden md:flex w-auto px-2.5 h-7 md:h-8 rounded-full bg-primary/80 hover:bg-primary items-center justify-center text-white transition-colors gap-1" 
                   onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
                   title="Next Episode"
                 >
-                  <span className="text-xs font-medium">Next</span>
-                  <SkipForward className="w-4 h-4" />
+                  <span className="text-[10px] font-medium">Next</span>
+                  <SkipForward className="w-3.5 h-3.5" />
                 </button>
               )}
 
@@ -2813,17 +2854,17 @@ export function VideoPlayer({
               )}
             </div>
 
-            <div className="flex items-center gap-0.5 md:gap-1">
+            <div className="flex items-center gap-0.5">
               {/* Keyboard Shortcuts Info Button */}
               <TooltipProvider>
                 <Tooltip open={showKeyboardShortcuts} onOpenChange={setShowKeyboardShortcuts}>
                   <TooltipTrigger asChild>
                     <button 
-                      className="hidden md:flex w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
+                      className="hidden md:flex w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
                       onClick={(e) => { e.stopPropagation(); setShowKeyboardShortcuts(!showKeyboardShortcuts); }}
                       title="Keyboard Shortcuts"
                     >
-                      <Info className="w-4 h-4 md:w-5 md:h-5" />
+                      <Info className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="bg-background/95 backdrop-blur-xl border-border/50 p-4 max-w-[280px]" style={{ zIndex: 2147483647 }}>
@@ -2874,11 +2915,11 @@ export function VideoPlayer({
               {/* Next Episode Button Mobile */}
               {hasNextEpisode && onNextEpisode && (
                 <button 
-                  className="md:hidden w-7 h-7 rounded-full bg-primary/80 hover:bg-primary flex items-center justify-center text-white transition-colors" 
+                  className="md:hidden w-6 h-6 rounded-full bg-primary/80 hover:bg-primary flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
                   title="Next Episode"
                 >
-                  <SkipForward className="w-3.5 h-3.5" />
+                  <SkipForward className="w-3 h-3" />
                 </button>
               )}
 
@@ -2893,7 +2934,7 @@ export function VideoPlayer({
               >
                 <DropdownMenuTrigger asChild>
                   <button 
-                    className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
+                    className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
                     onPointerDown={(e) => { 
                       e.stopPropagation(); 
                       e.preventDefault();
@@ -2902,7 +2943,7 @@ export function VideoPlayer({
                     title="Settings"
                     style={{ touchAction: 'manipulation' }}
                   >
-                    <Settings className="w-4 h-4 md:w-5 md:h-5" />
+                    <Settings className="w-3 h-3 md:w-4 md:h-4" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
@@ -2923,30 +2964,30 @@ export function VideoPlayer({
               {/* Download - Only for Zex server */}
               {features.includes('download') && (
                 <button 
-                  className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                  className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                   onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
                   title="Download"
                 >
-                  <Download className="w-4 h-4 md:w-5 md:h-5" />
+                  <Download className="w-3 h-3 md:w-4 md:h-4" />
                 </button>
               )}
 
-              {/* PiP - Hidden on mobile */}
+              {/* PiP */}
                 <button 
-                  className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                  className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                 onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                 title="Picture-in-Picture"
               >
-                <PictureInPicture2 className="w-4 h-4 md:w-5 md:h-5" />
+                <PictureInPicture2 className="w-3 h-3 md:w-4 md:h-4" />
               </button>
 
               {/* Fullscreen */}
                 <button 
-                  className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                  className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                 onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
                 title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
               >
-                {isFullscreen ? <Minimize className="w-4 h-4 md:w-5 md:h-5" /> : <Maximize className="w-4 h-4 md:w-5 md:h-5" />}
+                {isFullscreen ? <Minimize className="w-3 h-3 md:w-4 md:h-4" /> : <Maximize className="w-3 h-3 md:w-4 md:h-4" />}
               </button>
             </div>
           </div>
