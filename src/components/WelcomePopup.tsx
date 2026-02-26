@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-const NOTICE_VERSION = 'v3';
+const NOTICE_VERSION = 'v4';
 
 export function WelcomePopup() {
   const location = useLocation();
@@ -74,34 +74,34 @@ export function WelcomePopup() {
           
           <div className="space-y-3 pt-2">
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">👑</span>
+              <span className="text-lg">🎬</span>
               <div>
-                <h4 className="font-medium text-foreground">Premium Crown Badge</h4>
-                <p className="text-sm text-muted-foreground">Active token users now get a shimmering golden crown on their avatar</p>
+                <h4 className="font-medium text-foreground">MuseIN — Coming Soon</h4>
+                <p className="text-sm text-muted-foreground">A curated collection of Muse India anime dubbed in Hindi is on the way!</p>
               </div>
             </div>
 
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">☁️</span>
+              <span className="text-lg">🎮</span>
               <div>
-                <h4 className="font-medium text-foreground">Cloud Access Sync</h4>
-                <p className="text-sm text-muted-foreground">Token access now syncs across all devices, browsers & PWA automatically</p>
+                <h4 className="font-medium text-foreground">Compact Player Controls</h4>
+                <p className="text-sm text-muted-foreground">Sleeker, smaller video controls on both mobile and desktop for a cleaner viewing experience</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+              <span className="text-lg">⏱️</span>
+              <div>
+                <h4 className="font-medium text-foreground">Timeline Time Preview</h4>
+                <p className="text-sm text-muted-foreground">Hover over the video timeline to see the exact time before skipping — no more guessing!</p>
               </div>
             </div>
 
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
               <span className="text-lg">🚀</span>
               <div>
-                <h4 className="font-medium text-foreground">Super Smooth Experience</h4>
+                <h4 className="font-medium text-foreground">Performance Boost</h4>
                 <p className="text-sm text-muted-foreground">Faster loading, smoother animations, and improved performance across all devices</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">📱</span>
-              <div>
-                <h4 className="font-medium text-foreground">Mobile Gallery Fix</h4>
-                <p className="text-sm text-muted-foreground">Profile picture uploads now work correctly from phone galleries</p>
               </div>
             </div>
           </div>
