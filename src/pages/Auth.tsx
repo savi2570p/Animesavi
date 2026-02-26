@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Play, Sparkles, ArrowLeft, Mail, ShieldAlert } from 'lucide-react';
+import { Play, Sparkles, ArrowLeft, Mail, ShieldAlert, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { z } from 'zod';
 import { rememberAccount, getSavedAccountCount } from '@/lib/accountUtils';
 
@@ -35,6 +35,8 @@ export default function Auth() {
   const [isResetting, setIsResetting] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; username?: string }>({});
   const [accountLimitReached, setAccountLimitReached] = useState(false);
+  const [tokenStatus, setTokenStatus] = useState<'none' | 'active' | 'expired'>('none');
+  const [showExpiredPopup, setShowExpiredPopup] = useState(false);
 
   const MAX_ACCOUNTS_REGULAR = 2;
 
@@ -42,9 +44,20 @@ export default function Auth() {
     if (user) {
       navigate('/');
     }
-    // Check if account limit is reached for non-privileged users
     const savedCount = getSavedAccountCount();
     setAccountLimitReached(savedCount >= MAX_ACCOUNTS_REGULAR);
+
+    // Check localStorage token status
+    const expiresStr = localStorage.getItem('unlock_token_expires');
+    if (expiresStr) {
+      const exp = parseInt(expiresStr, 10);
+      if (Date.now() < exp) {
+        setTokenStatus('active');
+      } else {
+        setTokenStatus('expired');
+        setShowExpiredPopup(true);
+      }
+    }
   }, [user, navigate]);
 
   const validateForm = (isSignUp: boolean) => {
@@ -238,6 +251,21 @@ export default function Auth() {
                 : 'Stream your favorite anime for free'
               }
             </CardDescription>
+
+            {/* Token Status Indicator */}
+            {tokenStatus === 'active' && (
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl mb-4 animate-fade-in"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.05) 100%)',
+                  border: '1px solid rgba(34,197,94,0.3)',
+                }}
+              >
+                <ShieldCheck className="h-5 w-5 shrink-0" style={{ color: 'rgb(34,197,94)' }} />
+                <span className="text-sm font-medium" style={{ color: 'rgb(134,239,172)' }}>
+                  You have active token access
+                </span>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             {accountLimitReached && !showForgotPassword ? (
@@ -496,6 +524,51 @@ export default function Auth() {
           By continuing, you agree to our Terms of Service and Privacy Policy
         </p>
       </div>
+
+      {/* Expired Token Popup */}
+      {showExpiredPopup && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          style={{ background: 'radial-gradient(ellipse at center, rgba(180,0,0,0.15) 0%, rgba(0,0,0,0.85) 70%)' }}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl overflow-hidden animate-scale-in"
+            style={{
+              background: 'linear-gradient(165deg, rgba(30,0,0,0.95) 0%, rgba(10,10,10,0.98) 100%)',
+              border: '1px solid rgba(220,38,38,0.3)',
+              boxShadow: '0 0 60px rgba(220,38,38,0.15), 0 25px 50px rgba(0,0,0,0.6)',
+              backdropFilter: 'blur(24px)',
+            }}
+          >
+            <div className="p-6 space-y-5">
+              <div className="text-center">
+                <div
+                  className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                  style={{
+                    background: 'radial-gradient(circle, rgba(245,158,11,0.25) 0%, rgba(245,158,11,0.08) 100%)',
+                    boxShadow: '0 0 30px rgba(245,158,11,0.2)',
+                  }}
+                >
+                  <AlertTriangle className="h-8 w-8" style={{ color: 'rgb(251,191,36)' }} />
+                </div>
+                <h2 className="text-xl font-bold text-white tracking-tight mb-2">Oops! Token Expired</h2>
+                <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  Your token has expired. Please activate a new token to continue watching anime.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowExpiredPopup(false)}
+                className="w-full py-3 rounded-xl font-semibold text-white transition-all duration-200"
+                style={{
+                  background: 'linear-gradient(135deg, rgb(220,38,38) 0%, rgb(185,28,28) 100%)',
+                  boxShadow: '0 0 20px rgba(220,38,38,0.3), 0 4px 12px rgba(0,0,0,0.3)',
+                }}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
