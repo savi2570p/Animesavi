@@ -37,14 +37,21 @@ export default function TokenVerify() {
         return;
       }
 
-      // Record usage
+      // Calculate expiration
+      const expiresAt = Date.now() + (data.duration_hours as number) * 60 * 60 * 1000;
+
+      // Check if user is logged in to attach user_id
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+
+      // Record usage with user_id if available
       await supabase.from('token_usage').insert({
         token_id: data.id,
         user_agent: navigator.userAgent,
+        expires_at: expiresAt,
+        ...(userId ? { user_id: userId } : {}),
       });
 
-      // Calculate expiration
-      const expiresAt = Date.now() + (data.duration_hours as number) * 60 * 60 * 1000;
       localStorage.setItem('unlock_token_expires', expiresAt.toString());
       localStorage.setItem('unlock_token_id', data.id);
 
