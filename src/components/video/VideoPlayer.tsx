@@ -526,39 +526,39 @@ export function VideoPlayer({
           
           const hls = new Hls({
             enableWorker: true,
-            lowLatencyMode: true, // Enable for faster start
-            // FAST START: Minimal initial buffering
-            maxBufferLength: 10, // Reduced for faster playback start
+            lowLatencyMode: true,
+            // ULTRA FAST START: Minimal initial buffering
+            maxBufferLength: 5, // Reduced to 5s for near-instant playback
             maxMaxBufferLength: isMobile ? 30 : 60,
             maxBufferSize: isMobile ? 20 * 1000 * 1000 : 40 * 1000 * 1000,
-            maxBufferHole: 0.3,
-            // CRITICAL: Always start at lowest quality for instant playback
-            startLevel: 0, // Force lowest quality for fastest start
+            maxBufferHole: 0.5,
+            // Start at lowest quality for instant playback, ABR will upscale quickly
+            startLevel: 0,
             autoStartLoad: true,
             // Aggressive ABR for quick upscaling after start
-            abrEwmaDefaultEstimate: isSlowNetwork ? 500000 : 1500000,
-            abrBandWidthFactor: 0.9,
-            abrBandWidthUpFactor: 0.8,
+            abrEwmaDefaultEstimate: isSlowNetwork ? 500000 : 2000000,
+            abrBandWidthFactor: 0.95,
+            abrBandWidthUpFactor: 0.85,
             abrMaxWithRealBitrate: true,
-            backBufferLength: 5,
-            // FAST loading timeouts
-            fragLoadingTimeOut: 8000,
+            backBufferLength: 3,
+            // Faster loading timeouts
+            fragLoadingTimeOut: 6000,
             fragLoadingMaxRetry: 3,
-            fragLoadingRetryDelay: 500,
-            levelLoadingTimeOut: 6000,
+            fragLoadingRetryDelay: 300,
+            levelLoadingTimeOut: 4000,
             levelLoadingMaxRetry: 3,
-            levelLoadingRetryDelay: 500,
-            manifestLoadingTimeOut: 5000,
+            levelLoadingRetryDelay: 300,
+            manifestLoadingTimeOut: 4000,
             manifestLoadingMaxRetry: 2,
-            manifestLoadingRetryDelay: 300,
-            // XHR setup
+            manifestLoadingRetryDelay: 200,
             xhrSetup: (xhr, url) => {
               xhr.withCredentials = false;
             },
-            // Progressive for faster initial segment
             progressive: true,
             capLevelToPlayerSize: isMobile,
-            testBandwidth: false, // Skip bandwidth test for faster start
+            testBandwidth: false,
+            // Start loading immediately with first fragment
+            startFragPrefetch: true,
           });
           
           hlsRef.current = hls;
