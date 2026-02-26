@@ -16,6 +16,7 @@ import { ComingSoon } from '@/components/home/ComingSoon';
 import { SocialShare } from '@/components/home/SocialShare';
 import { MostPopular } from '@/components/home/MostPopular';
 import { AnimeCalendar } from '@/components/AnimeCalendar';
+import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
 
 
 export default function Index() {
@@ -30,6 +31,9 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Content Navigation Tabs */}
+      <ContentNavTabs />
+
       {/* Featured Anime Slider - Top section */}
       <FeaturedSlider />
 
