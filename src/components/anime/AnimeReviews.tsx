@@ -201,15 +201,15 @@ export function AnimeReviews({ animeId }: AnimeReviewsProps) {
   };
 
   return (
-    <Card className="mt-8">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+    <Card className="mt-8 overflow-hidden">
+      <CardHeader className="px-3 sm:px-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Star className="h-5 w-5 text-yellow-400 fill-yellow-400 shrink-0" />
             Reviews & Ratings
           </CardTitle>
           {reviews.length > 0 && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <StarRating value={Math.round(averageRating)} size="sm" />
               <span className="text-lg font-semibold">{averageRating.toFixed(1)}</span>
               <span className="text-muted-foreground text-sm">({reviews.length} reviews)</span>
@@ -217,18 +217,18 @@ export function AnimeReviews({ animeId }: AnimeReviewsProps) {
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 px-3 sm:px-6">
         {/* User's Review Section */}
         {user && (
-          <div className="p-4 bg-muted/50 rounded-xl border border-border/50">
+          <div className="p-3 sm:p-4 bg-muted/50 rounded-xl border border-border/50 overflow-hidden">
             {userReview && !isEditing ? (
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium">Your Review</span>
                     <StarRating value={userReview.rating} size="sm" />
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 shrink-0">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -300,7 +300,7 @@ export function AnimeReviews({ animeId }: AnimeReviewsProps) {
           {reviews.filter(r => r.user_id !== user?.id).map((review) => (
             <div
               key={review.id}
-              className="p-4 bg-card/50 rounded-xl border border-border/30"
+              className="p-3 sm:p-4 bg-card/50 rounded-xl border border-border/30 overflow-hidden"
             >
               <div className="flex items-start gap-3">
                 <UserProfileHoverCard username={review.username || null} avatarUrl={review.avatar_url || null}>
@@ -312,8 +312,8 @@ export function AnimeReviews({ animeId }: AnimeReviewsProps) {
                   </Avatar>
                 </UserProfileHoverCard>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <UserProfileHoverCard username={review.username || null} avatarUrl={review.avatar_url || null}>
                         <span className="font-medium cursor-pointer hover:text-primary transition-colors">{review.username}</span>
                       </UserProfileHoverCard>
@@ -324,7 +324,7 @@ export function AnimeReviews({ animeId }: AnimeReviewsProps) {
                     </span>
                   </div>
                   {review.review_text && (
-                    <p className="text-foreground/80 text-sm">{review.review_text}</p>
+                    <p className="text-foreground/80 text-sm break-words">{review.review_text}</p>
                   )}
                 </div>
               </div>
