@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Play, Tv, Clock, Award, ArrowRight, Film, Sparkles } from 'lucide-react';
 import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
+import museinLogo from '@/assets/musein-logo.jpg';
 import { FeaturedAnime } from '@/components/home/FeaturedAnime';
 import { FeaturedSlider } from '@/components/home/FeaturedSlider';
 import { ContinueWatching } from '@/components/home/ContinueWatching';
@@ -66,9 +67,9 @@ export default function Index() {
       {/* Continue Watching - Only shown on home page */}
       <ContinueWatching showOnHomeOnly={true} />
 
-      {/* Crunchy Link - Always visible */}
+      {/* Crunchy & MuseIN Links - Always visible */}
       <section className="py-4">
-        <div className="container">
+        <div className="container flex items-center gap-3">
           <Link
             to="/crunchy"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border bg-card/50 text-muted-foreground border-border/50 hover:bg-primary/10 hover:border-primary/50 hover:text-primary"
@@ -79,6 +80,17 @@ export default function Index() {
               className="h-5 w-auto object-contain"
             />
             Crunchy
+          </Link>
+          <Link
+            to="/musein"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border bg-card/50 text-muted-foreground border-border/50 hover:bg-primary/10 hover:border-primary/50 hover:text-primary"
+          >
+            <img
+              src={museinLogo}
+              alt="MuseIN"
+              className="h-5 w-5 rounded-full object-cover"
+            />
+            MuseIN
           </Link>
         </div>
       </section>
