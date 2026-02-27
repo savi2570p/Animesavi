@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Star, Trash2, Edit2 } from 'lucide-react';
+import { Star, Trash2, Edit2, UserRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -300,15 +300,25 @@ export function AnimeReviews({ animeId }: AnimeReviewsProps) {
               key={review.id}
               className="p-3 sm:p-4 bg-card/50 rounded-xl border border-border/30 overflow-hidden"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
-                <StarRating value={review.rating} size="sm" />
-                <span className="text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}
-                </span>
+              <div className="flex items-start gap-3">
+                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                  <UserRound className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-medium text-muted-foreground">Anonymous</span>
+                      <StarRating value={review.rating} size="sm" />
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}
+                    </span>
+                  </div>
+                  {review.review_text && (
+                    <p className="text-foreground/80 text-sm break-words mt-1">{review.review_text}</p>
+                  )}
+                </div>
               </div>
-              {review.review_text && (
-                <p className="text-foreground/80 text-sm break-words mt-2">{review.review_text}</p>
-              )}
             </div>
           ))}
 

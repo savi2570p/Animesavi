@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.grant_free_trial() CASCADE;
