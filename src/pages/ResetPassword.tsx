@@ -93,7 +93,7 @@ export default function ResetPassword() {
           <div className="p-2 rounded-xl bg-gradient-primary">
             <Play className="h-8 w-8 text-white fill-white" />
           </div>
-          <h1 className="text-3xl font-heading font-bold anime-gradient-text">AnimeStreamHub</h1>
+          <h1 className="text-3xl font-heading font-bold anime-gradient-text">AnimesaviinHindi</h1>
         </div>
 
         <Card className="glass-effect border-border/50">

@@ -235,7 +235,7 @@ export default function Auth() {
             <Play className="h-8 w-8 text-white fill-white" />
           </div>
           <h1 className="text-3xl font-heading font-bold anime-gradient-text">
-            AnimeStreamHub
+            AnimesaviinHindi
           </h1>
         </div>
 
