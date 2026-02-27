@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (event === 'SIGNED_IN') {
           const email = nextSession.user.email || '';
           const username = nextSession.user.user_metadata?.username || email.split('@')[0];
-          rememberAccount(email, username, 9);
+          rememberAccount(email, username, 5);
           // Sync any localStorage token to DB for this user
           setTimeout(() => void syncLocalTokenToUser(nextSession.user.id), 0);
         }

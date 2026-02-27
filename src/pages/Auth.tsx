@@ -38,7 +38,7 @@ export default function Auth() {
   const [tokenStatus, setTokenStatus] = useState<'none' | 'active' | 'expired'>('none');
   const [showExpiredPopup, setShowExpiredPopup] = useState(false);
 
-  const MAX_ACCOUNTS_REGULAR = 2;
+  const MAX_ACCOUNTS_REGULAR = 5;
 
   useEffect(() => {
     if (user) {
