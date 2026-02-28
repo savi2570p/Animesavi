@@ -2306,6 +2306,7 @@ export function VideoPlayer({
         onError={(e) => {
           const video = e.currentTarget;
           const error = video.error;
+          const currentSrc = effectiveVideoUrl || '';
           console.error('Video error:', {
             src: video.src,
             networkState: video.networkState,
@@ -2316,6 +2317,27 @@ export function VideoPlayer({
           // Hide loader on error
           setShowPremiumLoader(false);
           
+          // Detect unsupported format (MKV, AVI, etc.)
+          const isMkvFile = /\.mkv/i.test(currentSrc);
+          const isUnsupportedContainer = /\.(mkv|avi|flv|wmv|mov\.mkv|mkv\.mp4)/i.test(currentSrc);
+          
+          if (isMkvFile || isUnsupportedContainer) {
+            console.error('Unsupported video container format detected:', currentSrc);
+            toast.error('This video format (MKV) is not supported by browsers. Please re-upload as MP4.', { duration: 8000 });
+            setVideoError(true);
+            onVideoLoadError?.();
+            return;
+          }
+          
+          // MediaError code 4 = MEDIA_ERR_SRC_NOT_SUPPORTED (codec/container issue)
+          if (error && error.code === 4) {
+            console.error('Media source not supported - likely codec issue');
+            toast.error('Video codec not supported. Try re-uploading as H.264 MP4.', { duration: 6000 });
+            setVideoError(true);
+            onVideoLoadError?.();
+            return;
+          }
+          
           // Only show error for actual failures, not for empty src or aborted loads
           if (video.src && video.networkState === 3 && video.readyState === 0) {
             // Retry once before showing error
@@ -2324,7 +2346,6 @@ export function VideoPlayer({
                 videoRef.current.load();
                 videoRef.current.play().catch(() => {
                   setVideoError(true);
-                  // Notify parent of video load failure (triggers fallback to Zex)
                   onVideoLoadError?.();
                 });
               }
@@ -2386,8 +2407,16 @@ export function VideoPlayer({
         <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999]">
           <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4 shadow-2xl animate-scale-in">
             <h3 className="text-foreground font-semibold text-center text-lg mb-2">Video Playback Issue</h3>
+            <p className="text-muted-foreground text-sm text-center mb-2">
+              This video couldn't be played directly.
+            </p>
+            {effectiveVideoUrl && /\.(mkv|avi|flv|wmv)/i.test(effectiveVideoUrl) && (
+              <p className="text-destructive text-xs text-center mb-2 font-medium">
+                ⚠️ MKV/AVI files are not supported by browsers. Please re-upload as MP4 (H.264).
+              </p>
+            )}
             <p className="text-muted-foreground text-sm text-center mb-4">
-              This video couldn't be played directly. Try one of the options below:
+              Try one of the options below:
             </p>
             <div className="flex flex-col gap-2">
               <Button

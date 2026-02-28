@@ -18,6 +18,8 @@ import { BatchEpisodeUpload } from '@/components/upload/BatchEpisodeUpload';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
+const ALL_GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Hindi', 'English', 'Tamil', 'Telugu', 'Japanese', 'Crunchyroll', 'Muse India'];
+
 interface Anime {
   id: string;
   title: string;
@@ -26,6 +28,7 @@ interface Anime {
   banner_image: string | null;
   uploader_id: string | null;
   status: string | null;
+  genres: string[] | null;
 }
 
 interface Season {
@@ -76,6 +79,7 @@ export default function UploadAnimeEdit() {
   const [editTitle, setEditTitle] = useState('');
   const [editCoverImage, setEditCoverImage] = useState('');
   const [editBannerImage, setEditBannerImage] = useState('');
+  const [editGenres, setEditGenres] = useState<string[]>([]);
   const [isSavingInfo, setIsSavingInfo] = useState(false);
 
   // New episode form
@@ -140,6 +144,7 @@ export default function UploadAnimeEdit() {
     setEditTitle(animeData.title || '');
     setEditCoverImage(animeData.cover_image || '');
     setEditBannerImage(animeData.banner_image || '');
+    setEditGenres(animeData.genres || []);
 
     // Fetch seasons
     const { data: seasonsData } = await supabase
@@ -397,6 +402,31 @@ export default function UploadAnimeEdit() {
               placeholder="https://example.com/banner.jpg"
             />
           </div>
+          {/* Genre Selection */}
+          <div className="space-y-2">
+            <Label>Genres / Tags</Label>
+            <div className="flex flex-wrap gap-2">
+              {ALL_GENRES.map((genre) => (
+                <button
+                  key={genre}
+                  type="button"
+                  onClick={() => {
+                    setEditGenres(prev =>
+                      prev.includes(genre) ? prev.filter(g => g !== genre) : [...prev, genre]
+                    );
+                  }}
+                  className={cn(
+                    "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
+                    editGenres.includes(genre)
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-muted/50 text-muted-foreground border-border hover:border-primary/50"
+                  )}
+                >
+                  {genre}
+                </button>
+              ))}
+            </div>
+          </div>
           <Button
             className="anime-button"
             disabled={isSavingInfo}
@@ -412,13 +442,14 @@ export default function UploadAnimeEdit() {
                   title: editTitle.trim(),
                   cover_image: editCoverImage.trim() || null,
                   banner_image: editBannerImage.trim() || null,
+                  genres: editGenres.length > 0 ? editGenres : null,
                 })
                 .eq('id', animeId);
               if (error) {
                 toast.error('Failed to update');
               } else {
                 toast.success('Series info updated!');
-                setAnime(prev => prev ? { ...prev, title: editTitle.trim(), cover_image: editCoverImage.trim() || null, banner_image: editBannerImage.trim() || null } : null);
+                setAnime(prev => prev ? { ...prev, title: editTitle.trim(), cover_image: editCoverImage.trim() || null, banner_image: editBannerImage.trim() || null, genres: editGenres } : null);
               }
               setIsSavingInfo(false);
             }}
