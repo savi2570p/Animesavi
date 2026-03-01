@@ -48,6 +48,7 @@ const PendingUploadPage = lazy(() => import("./pages/PendingUploadPage"));
 const CrunchyPage = lazy(() => import("./pages/CrunchyPage"));
 const MuseINPage = lazy(() => import("./pages/MuseINPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Schedule = lazy(() => import("./pages/Schedule"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -169,6 +170,7 @@ const App = () => (
                   <Route path="/pending-upload" element={<PendingUploadPage />} />
                   <Route path="/crunchy" element={<CrunchyPage />} />
                   <Route path="/musein" element={<MuseINPage />} />
+                  <Route path="/schedule" element={<Schedule />} />
                   <Route path="/anime/:id" element={<AnimeDetail />} />
                   <Route path="/watch/:episodeId" element={<Watch />} />
                   <Route path="/favorites" element={<Favorites />} />
