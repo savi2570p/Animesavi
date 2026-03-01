@@ -30,25 +30,60 @@ export default function Schedule() {
 
   const fetchOngoingAnime = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
+    
+    // 1. Get all ongoing anime
+    const { data: ongoingAnime } = await supabase
       .from('anime_public')
       .select('id, title, cover_image, status, updated_at, genres')
       .eq('status', 'ongoing')
       .order('updated_at', { ascending: false });
 
-    if (data) {
-      setAnimeList(data);
+    if (!ongoingAnime || ongoingAnime.length === 0) {
+      setAnimeList([]);
+      setIsLoading(false);
+      return;
     }
+
+    // 2. Get seasons for these anime to find which have episodes
+    const animeIds = ongoingAnime.map(a => a.id).filter(Boolean) as string[];
+    const { data: seasons } = await supabase
+      .from('seasons')
+      .select('id, anime_id')
+      .in('anime_id', animeIds);
+
+    const seasonIds = (seasons || []).map(s => s.id);
+    const seasonToAnime = new Map((seasons || []).map(s => [s.id, s.anime_id]));
+    const animeWithEpisodes = new Set<string>();
+
+    if (seasonIds.length > 0) {
+      let offset = 0;
+      const pageSize = 1000;
+      let hasMore = true;
+      while (hasMore) {
+        const { data: episodeBatch } = await supabase
+          .from('episodes')
+          .select('season_id')
+          .in('season_id', seasonIds)
+          .range(offset, offset + pageSize - 1);
+        (episodeBatch || []).forEach(ep => {
+          const animeId = seasonToAnime.get(ep.season_id);
+          if (animeId) animeWithEpisodes.add(animeId);
+        });
+        hasMore = (episodeBatch?.length || 0) === pageSize;
+        offset += pageSize;
+      }
+    }
+
+    // 3. Only show anime that actually have episodes (exclude pending upload / zero episodes)
+    const filtered = ongoingAnime.filter(a => a.id && animeWithEpisodes.has(a.id));
+    setAnimeList(filtered);
     setIsLoading(false);
   };
 
   // Distribute anime across days based on their updated_at date
   const getAnimeForDay = (dayIndex: number) => {
-    const targetDate = addDays(weekStart, dayIndex);
-    
-    // Simple distribution: use anime ID hash to assign to a day
     return animeList.filter((anime) => {
-      const hash = anime.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const hash = (anime.id || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
       return hash % 7 === dayIndex;
     });
   };
