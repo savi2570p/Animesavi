@@ -9,7 +9,7 @@ import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { MostPopularSection } from '@/components/browse/MostPopularSection';
 import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
 
-const ALLOWED_GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Hindi', 'English', 'Tamil', 'Telugu', 'Japanese', 'Crunchyroll', 'Muse India'] as const;
+const ALLOWED_GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Mysterious', 'Anime', 'Anime Series', 'Hindi', 'English', 'Tamil', 'Telugu', 'Japanese', 'Crunchyroll', 'Muse India', 'Amazon Prime'] as const;
 const MAX_SEARCH_LENGTH = 100;
 // Allowed characters: alphanumeric, spaces, hyphens, apostrophes, and common punctuation
 const SEARCH_PATTERN = /^[a-zA-Z0-9\s\-'.,!?:]+$/;
