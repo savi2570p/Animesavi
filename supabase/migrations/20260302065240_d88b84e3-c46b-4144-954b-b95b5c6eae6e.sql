@@ -1,0 +1,1 @@
+ALTER TABLE anime ADD COLUMN schedule_day integer DEFAULT NULL;
