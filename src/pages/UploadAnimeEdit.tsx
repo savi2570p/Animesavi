@@ -74,6 +74,8 @@ export default function UploadAnimeEdit() {
   const [isSavingStatus, setIsSavingStatus] = useState(false);
   const [isCrunchyroll, setIsCrunchyroll] = useState(false);
   const [isSavingCrunchy, setIsSavingCrunchy] = useState(false);
+  const [scheduleDay, setScheduleDay] = useState<string>('auto');
+  const [isSavingSchedule, setIsSavingSchedule] = useState(false);
 
   // Anime info editing
   const [editTitle, setEditTitle] = useState('');
@@ -141,6 +143,7 @@ export default function UploadAnimeEdit() {
     setAnime(animeData);
     setAnimeStatus(animeData.status || 'ongoing');
     setIsCrunchyroll((animeData as any).is_crunchyroll || false);
+    setScheduleDay((animeData as any).schedule_day !== null && (animeData as any).schedule_day !== undefined ? String((animeData as any).schedule_day) : 'auto');
     setEditTitle(animeData.title || '');
     setEditCoverImage(animeData.cover_image || '');
     setEditBannerImage(animeData.banner_image || '');
@@ -370,7 +373,46 @@ export default function UploadAnimeEdit() {
           )}
         </div>
 
-        {/* Edit Series Name & Thumbnail */}
+        {/* Schedule Day Picker */}
+        <div className="mt-4 flex items-center gap-4 p-4 bg-card/50 rounded-xl border border-border/50">
+          <Label className="text-sm font-medium">Release Calendar Day:</Label>
+          <Select
+            value={scheduleDay}
+            onValueChange={async (val) => {
+              setScheduleDay(val);
+              setIsSavingSchedule(true);
+              const dayValue = val === 'auto' ? null : parseInt(val);
+              const { error } = await supabase
+                .from('anime')
+                .update({ schedule_day: dayValue } as any)
+                .eq('id', animeId);
+              if (error) {
+                toast.error('Failed to update schedule day');
+              } else {
+                toast.success(val === 'auto' ? 'Schedule day set to auto' : `Schedule day set to ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][parseInt(val)]}`);
+              }
+              setIsSavingSchedule(false);
+            }}
+            disabled={isSavingSchedule}
+          >
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="Select day" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">Auto (default)</SelectItem>
+              <SelectItem value="0">Sunday</SelectItem>
+              <SelectItem value="1">Monday</SelectItem>
+              <SelectItem value="2">Tuesday</SelectItem>
+              <SelectItem value="3">Wednesday</SelectItem>
+              <SelectItem value="4">Thursday</SelectItem>
+              <SelectItem value="5">Friday</SelectItem>
+              <SelectItem value="6">Saturday</SelectItem>
+            </SelectContent>
+          </Select>
+          {isSavingSchedule && (
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+          )}
+        </div>
         <div className="mt-4 p-4 bg-card/50 rounded-xl border border-border/50 space-y-4">
           <h3 className="text-sm font-semibold">Edit Series Info</h3>
           <div className="grid md:grid-cols-2 gap-4">
