@@ -14,6 +14,7 @@ interface ScheduleAnime {
   status: string | null;
   updated_at: string;
   genres: string[] | null;
+  schedule_day: number | null;
 }
 
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -33,8 +34,8 @@ export default function Schedule() {
     
     // 1. Get all ongoing anime
     const { data: ongoingAnime } = await supabase
-      .from('anime_public')
-      .select('id, title, cover_image, status, updated_at, genres')
+      .from('anime')
+      .select('id, title, cover_image, status, updated_at, genres, schedule_day')
       .eq('status', 'ongoing')
       .order('updated_at', { ascending: false });
 
@@ -83,6 +84,9 @@ export default function Schedule() {
   // Distribute anime across days based on their updated_at date
   const getAnimeForDay = (dayIndex: number) => {
     return animeList.filter((anime) => {
+      if (anime.schedule_day !== null && anime.schedule_day !== undefined) {
+        return anime.schedule_day === dayIndex;
+      }
       const hash = (anime.id || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
       return hash % 7 === dayIndex;
     });

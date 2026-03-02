@@ -62,6 +62,7 @@ export type Database = {
           is_featured: boolean | null
           like_count: number | null
           release_year: number | null
+          schedule_day: number | null
           status: string | null
           title: string
           trailer_url: string | null
@@ -81,6 +82,7 @@ export type Database = {
           is_featured?: boolean | null
           like_count?: number | null
           release_year?: number | null
+          schedule_day?: number | null
           status?: string | null
           title: string
           trailer_url?: string | null
@@ -100,6 +102,7 @@ export type Database = {
           is_featured?: boolean | null
           like_count?: number | null
           release_year?: number | null
+          schedule_day?: number | null
           status?: string | null
           title?: string
           trailer_url?: string | null
