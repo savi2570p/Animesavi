@@ -39,8 +39,8 @@ export function AnimeCalendar() {
     try {
       // Fetch ongoing anime
       const { data: animeData, error: animeError } = await supabase
-        .from('anime_public')
-        .select('id, title, cover_image, status, genres, updated_at')
+        .from('anime')
+        .select('id, title, cover_image, status, genres, updated_at, schedule_day')
         .eq('status', 'ongoing');
 
       if (animeError) throw animeError;
@@ -72,10 +72,12 @@ export function AnimeCalendar() {
           let releaseDay = 0;
           let latestEpisodeDate: string | null = null;
 
-          if (seasons && seasons.length > 0) {
+          // Use schedule_day override if set
+          if ((anime as any).schedule_day !== null && (anime as any).schedule_day !== undefined) {
+            releaseDay = (anime as any).schedule_day;
+          } else if (seasons && seasons.length > 0) {
             const seasonIds = seasons.map(s => s.id);
             
-            // Get latest episodes to determine release pattern
             const { data: episodes } = await supabase
               .from('episodes')
               .select('created_at')
@@ -85,7 +87,6 @@ export function AnimeCalendar() {
 
             if (episodes && episodes.length > 0) {
               latestEpisodeDate = episodes[0].created_at;
-              // Calculate most common release day from episode history
               const days = episodes.map(ep => getDay(parseISO(ep.created_at)));
               const dayCount = days.reduce((acc, day) => {
                 acc[day] = (acc[day] || 0) + 1;
@@ -93,7 +94,6 @@ export function AnimeCalendar() {
               }, {} as Record<number, number>);
               releaseDay = parseInt(Object.entries(dayCount).sort((a, b) => b[1] - a[1])[0]?.[0] || '0');
             } else {
-              // Use anime ID hash if no episodes
               const hash = anime.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
               releaseDay = hash % 7;
             }
