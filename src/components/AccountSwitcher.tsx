@@ -17,9 +17,9 @@ import {
 import { toast } from 'sonner';
 import { UserPlus, LogIn, X, Users, KeyRound } from 'lucide-react';
 
-import { getSavedAccounts, setSavedAccounts, rememberAccount, getSavedAccountCount, forgetAccount, type SavedAccount } from '@/lib/accountUtils';
+import { getSavedAccounts, forgetAccount, type SavedAccount } from '@/lib/accountUtils';
 
-export { rememberAccount, getSavedAccountCount };
+export { rememberAccount, getSavedAccountCount } from '@/lib/accountUtils';
 
 interface AccountSwitcherProps {
   trigger?: React.ReactNode;
@@ -37,7 +37,7 @@ export function AccountSwitcher({ trigger }: AccountSwitcherProps) {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deletePassword, setDeletePassword] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-  const maxAccounts = (isAdmin || isUploader) ? 9 : 2;
+  const maxAccounts = (isAdmin || isUploader) ? 9 : 5;
   const canAddMore = accounts.length < maxAccounts;
 
   useEffect(() => {
