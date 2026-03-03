@@ -45,7 +45,7 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
   const effectiveMaxSize =
     maxSizeGB ?? (contentType === 'movie' ? 100 : contentType === 'episode' ? 50 : accept === 'image' ? 1 : 50);
 
-  const { uploadFile, isUploading, progress, formattedSpeed } = useFileUpload({
+  const { uploadFile, isUploading, progress, formattedSpeed, abortUpload } = useFileUpload({
     bucket,
     folder,
     maxSizeGB: effectiveMaxSize,
@@ -109,6 +109,8 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
   };
 
   const handleClear = () => {
+    // Abort any active upload
+    abortUpload();
     onChange('');
     setPreview(null);
     setFileName('');

@@ -249,6 +249,17 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     return `${bytesPerSecond.toFixed(0)} B/s`;
   };
 
+  const abortUpload = useCallback(() => {
+    if (activeUploadRef.current) {
+      activeUploadRef.current.abort();
+      activeUploadRef.current = null;
+    }
+    pendingFileRef.current = null;
+    setIsUploading(false);
+    setUploadProgress(0);
+    setUploadSpeed(0);
+  }, []);
+
   return {
     uploadFile,
     isUploading,
@@ -256,6 +267,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     uploadSpeed,
     formattedSpeed: formatSpeed(uploadSpeed),
     SIZE_LIMITS,
+    abortUpload,
   };
 }
 
