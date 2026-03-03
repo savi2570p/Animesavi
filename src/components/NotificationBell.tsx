@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -118,6 +118,12 @@ export function NotificationBell() {
     return `${days} days ago`;
   };
 
+  const clearNotifications = () => {
+    setNotifications([]);
+    setUnreadCount(0);
+    setIsOpen(false);
+  };
+
   if (!user) return null;
 
   return (
@@ -140,9 +146,22 @@ export function NotificationBell() {
         align="end" 
         className="w-80 max-h-96 overflow-y-auto bg-popover/95 backdrop-blur-xl border-border/50"
       >
-        <div className="px-4 py-3 border-b border-border/50">
-          <h3 className="font-semibold text-sm">Notifications</h3>
-          <p className="text-xs text-muted-foreground">New episodes from your favorites</p>
+        <div className="px-4 py-3 border-b border-border/50 flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-sm">Notifications</h3>
+            <p className="text-xs text-muted-foreground">New episodes from your favorites</p>
+          </div>
+          {notifications.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive"
+              onClick={clearNotifications}
+            >
+              <Trash2 className="h-3 w-3 mr-1" />
+              Clear
+            </Button>
+          )}
         </div>
         
         {notifications.length === 0 ? (
