@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import * as tus from 'tus-js-client';
 
 interface UseFileUploadOptions {
-  bucket: 'anime-videos' | 'anime-thumbnails';
+  bucket: 'anime-videos' | 'anime-thumbnails' | 'movies';
   folder?: string;
   maxSizeGB?: number;
 }
