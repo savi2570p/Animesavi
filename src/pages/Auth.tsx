@@ -9,9 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Play, Sparkles, ArrowLeft, Mail, ShieldAlert, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Play, Sparkles, ArrowLeft, Mail, ShieldAlert, ShieldCheck, AlertTriangle, RotateCcw } from 'lucide-react';
 import { z } from 'zod';
-import { getSavedAccountCount } from '@/lib/accountUtils';
+import { getSavedAccountCount, setSavedAccounts } from '@/lib/accountUtils';
 
 const authSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
