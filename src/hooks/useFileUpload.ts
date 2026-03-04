@@ -94,7 +94,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
   const getMaxSize = () => {
     if (maxSizeGB) return maxSizeGB * 1024 * 1024 * 1024;
     if (bucket === 'anime-thumbnails') return SIZE_LIMITS.thumbnail * 1024 * 1024 * 1024;
-    return SIZE_LIMITS.episode * 1024 * 1024 * 1024; // Default to episode size for videos
+    if (bucket === 'movies') return SIZE_LIMITS.movie * 1024 * 1024 * 1024;
+    return SIZE_LIMITS.episode * 1024 * 1024 * 1024;
   };
 
   const formatFileSize = (bytes: number) => {
