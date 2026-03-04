@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import * as tus from 'tus-js-client';
 
 interface UseFileUploadOptions {
-  bucket: 'anime-videos' | 'anime-thumbnails';
+  bucket: 'anime-videos' | 'anime-thumbnails' | 'movies';
   folder?: string;
   maxSizeGB?: number;
 }
@@ -94,7 +94,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
   const getMaxSize = () => {
     if (maxSizeGB) return maxSizeGB * 1024 * 1024 * 1024;
     if (bucket === 'anime-thumbnails') return SIZE_LIMITS.thumbnail * 1024 * 1024 * 1024;
-    return SIZE_LIMITS.episode * 1024 * 1024 * 1024; // Default to episode size for videos
+    if (bucket === 'movies') return SIZE_LIMITS.movie * 1024 * 1024 * 1024;
+    return SIZE_LIMITS.episode * 1024 * 1024 * 1024;
   };
 
   const formatFileSize = (bytes: number) => {
@@ -240,7 +241,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
       const filePath = folder ? `${folder}/${fileName}` : fileName;
 
       // Videos: use resumable/chunked upload to support large files reliably
-      if (bucket === 'anime-videos') {
+      if (bucket === 'anime-videos' || bucket === 'movies') {
         return await uploadVideoResumable(file, filePath);
       }
 
