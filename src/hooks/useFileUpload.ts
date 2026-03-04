@@ -130,6 +130,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
       return null;
     }
 
+    console.log(`[Upload] Starting resumable upload: ${file.name}, size: ${(file.size / (1024 * 1024 * 1024)).toFixed(2)} GB (${file.size} bytes), type: ${getVideoMimeType(file)}`);
+
     try {
       setUploadProgress(0);
       await new Promise<void>((resolve, reject) => {
@@ -153,24 +155,30 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             const percentage = Math.round((bytesUploaded / bytesTotal) * 100);
             setUploadProgress(percentage);
             
-            // Calculate upload speed (bytes per second)
             const now = Date.now();
-            const timeDiff = (now - lastProgressRef.current.time) / 1000; // seconds
+            const timeDiff = (now - lastProgressRef.current.time) / 1000;
             const bytesDiff = bytesUploaded - lastProgressRef.current.bytes;
             
-            if (timeDiff > 0.5) { // Update speed every 500ms for smoother display
+            if (timeDiff > 0.5) {
               const speed = bytesDiff / timeDiff;
               setUploadSpeed(speed);
               lastProgressRef.current = { bytes: bytesUploaded, time: now };
             }
           },
           onError: (err) => {
+            console.error('[Upload] TUS error details:', {
+              message: err.message,
+              fileName: file.name,
+              fileSize: file.size,
+              filePath,
+            });
             activeUploadRef.current = null;
             pendingFileRef.current = null;
             setUploadProgress(0);
             reject(err);
           },
           onSuccess: () => {
+            console.log(`[Upload] Successfully uploaded: ${file.name}`);
             activeUploadRef.current = null;
             pendingFileRef.current = null;
             setUploadProgress(100);
@@ -178,11 +186,9 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
           },
         });
 
-        // Store reference for pause/resume
         activeUploadRef.current = upload;
         pendingFileRef.current = { file, filePath };
 
-        // Resume if possible (prevents restarting after refresh / connection drops)
         upload
           .findPreviousUploads()
           .then((previousUploads) => {
@@ -201,8 +207,14 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
       setIsUploading(false);
       return { url: urlData.publicUrl, path: filePath };
     } catch (err: unknown) {
-      console.error('Resumable upload error:', err);
-      toast.error('Failed to upload video');
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.error('[Upload] Resumable upload failed:', errMsg);
+      
+      if (errMsg.includes('413') || errMsg.includes('Maximum size exceeded')) {
+        toast.error(`File too large for storage (${(file.size / (1024 * 1024 * 1024)).toFixed(1)} GB). Contact admin to increase the bucket limit.`);
+      } else {
+        toast.error(`Upload failed: ${errMsg.substring(0, 100)}`);
+      }
       setIsUploading(false);
       return null;
     }
