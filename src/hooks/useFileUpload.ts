@@ -241,7 +241,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
       const filePath = folder ? `${folder}/${fileName}` : fileName;
 
       // Videos: use resumable/chunked upload to support large files reliably
-      if (bucket === 'anime-videos') {
+      if (bucket === 'anime-videos' || bucket === 'movies') {
         return await uploadVideoResumable(file, filePath);
       }
 
