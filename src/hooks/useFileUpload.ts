@@ -127,7 +127,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
           metadata: {
             bucketName: bucket,
             objectName: filePath,
-            contentType: file.type || 'application/octet-stream',
+            contentType: getVideoMimeType(file),
             cacheControl: '3600',
           },
           onProgress: (bytesUploaded, bytesTotal) => {
