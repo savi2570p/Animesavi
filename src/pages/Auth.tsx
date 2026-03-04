@@ -513,9 +513,28 @@ export default function Auth() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          By continuing, you agree to our Terms of Service and Privacy Policy
-        </p>
+        {/* Reset Saved Accounts Button */}
+        <div className="flex flex-col items-center gap-2 mt-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-muted-foreground hover:text-destructive"
+            onClick={() => {
+              setSavedAccounts([]);
+              setAccountLimitReached(false);
+              toast({
+                title: 'Saved accounts cleared',
+                description: 'All saved account data on this device has been reset.',
+              });
+            }}
+          >
+            <RotateCcw className="h-3 w-3 mr-1" />
+            Reset saved accounts on this device
+          </Button>
+          <p className="text-center text-sm text-muted-foreground">
+            By continuing, you agree to our Terms of Service and Privacy Policy
+          </p>
+        </div>
       </div>
 
       {/* Expired Token Popup */}
