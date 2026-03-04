@@ -28,6 +28,25 @@ const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/upl
 // 6MB chunks keeps memory stable and bypasses typical single-request body limits
 const VIDEO_CHUNK_SIZE = 6 * 1024 * 1024;
 
+// Map file extensions to MIME types for cases where the browser reports empty/generic types
+const VIDEO_MIME_MAP: Record<string, string> = {
+  mp4: 'video/mp4',
+  webm: 'video/webm',
+  mkv: 'video/x-matroska',
+  avi: 'video/x-msvideo',
+  mov: 'video/quicktime',
+  wmv: 'video/x-ms-wmv',
+  flv: 'video/x-flv',
+  ts: 'video/mp2t',
+  m4v: 'video/mp4',
+};
+
+function getVideoMimeType(file: File): string {
+  if (file.type && file.type !== 'application/octet-stream') return file.type;
+  const ext = file.name.split('.').pop()?.toLowerCase() || '';
+  return VIDEO_MIME_MAP[ext] || 'video/mp4';
+}
+
 // Hook to track online/offline status
 function useOnlineStatus() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -127,7 +146,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
           metadata: {
             bucketName: bucket,
             objectName: filePath,
-            contentType: file.type || 'application/octet-stream',
+            contentType: getVideoMimeType(file),
             cacheControl: '3600',
           },
           onProgress: (bytesUploaded, bytesTotal) => {

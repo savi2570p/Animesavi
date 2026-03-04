@@ -9,9 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Play, Sparkles, ArrowLeft, Mail, ShieldAlert, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Play, Sparkles, ArrowLeft, Mail, ShieldAlert, ShieldCheck, AlertTriangle, RotateCcw } from 'lucide-react';
 import { z } from 'zod';
-import { getSavedAccountCount } from '@/lib/accountUtils';
+import { getSavedAccountCount, setSavedAccounts } from '@/lib/accountUtils';
 
 const authSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -513,9 +513,28 @@ export default function Auth() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          By continuing, you agree to our Terms of Service and Privacy Policy
-        </p>
+        {/* Reset Saved Accounts Button */}
+        <div className="flex flex-col items-center gap-2 mt-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-muted-foreground hover:text-destructive"
+            onClick={() => {
+              setSavedAccounts([]);
+              setAccountLimitReached(false);
+              toast({
+                title: 'Saved accounts cleared',
+                description: 'All saved account data on this device has been reset.',
+              });
+            }}
+          >
+            <RotateCcw className="h-3 w-3 mr-1" />
+            Reset saved accounts on this device
+          </Button>
+          <p className="text-center text-sm text-muted-foreground">
+            By continuing, you agree to our Terms of Service and Privacy Policy
+          </p>
+        </div>
       </div>
 
       {/* Expired Token Popup */}
