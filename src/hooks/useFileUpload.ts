@@ -16,8 +16,8 @@ interface UploadResult {
 
 // Size limits in GB
 const SIZE_LIMITS = {
-  movie: 15, // 15GB for movies
-  episode: 15, // 15GB for anime episodes
+  movie: 90, // 90GB for movies
+  episode: 90, // 90GB for anime episodes
   thumbnail: 1, // 1GB for thumbnails
 };
 
