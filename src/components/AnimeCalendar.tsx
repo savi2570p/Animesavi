@@ -103,6 +103,11 @@ export function AnimeCalendar() {
             releaseDay = hash % 7;
           }
 
+          // Check if latest episode was uploaded within last 7 days
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          const hasRecentUpload = latestEpisodeDate ? parseISO(latestEpisodeDate) >= sevenDaysAgo : false;
+
           return {
             id: anime.id,
             title: anime.title || 'Unknown',
@@ -111,7 +116,8 @@ export function AnimeCalendar() {
             genres: anime.genres,
             release_day: releaseDay,
             is_favorite: userFavorites.has(anime.id),
-            latest_episode_date: latestEpisodeDate
+            latest_episode_date: latestEpisodeDate,
+            has_recent_upload: hasRecentUpload
           };
         })
       );
