@@ -251,25 +251,37 @@ export function AnimeCalendar() {
                       <Link
                         key={anime.id}
                         to={`/anime/${anime.id}`}
-                        className={`block p-1.5 rounded-lg transition-all hover:scale-[1.02] ${
-                          anime.is_favorite
-                            ? 'bg-primary/20 border border-primary/30 hover:bg-primary/30'
-                            : 'bg-muted/50 hover:bg-muted'
+                        className={`block p-1.5 rounded-lg transition-all hover:scale-[1.02] relative overflow-hidden ${
+                          anime.has_recent_upload
+                            ? 'bg-primary/25 border border-primary/50 shadow-[0_0_12px_hsl(var(--primary)/0.4)] animate-pulse-glow'
+                            : anime.is_favorite
+                              ? 'bg-primary/20 border border-primary/30 hover:bg-primary/30'
+                              : 'bg-muted/50 hover:bg-muted'
                         }`}
                       >
-                        <div className="flex items-center gap-1.5">
+                        {anime.has_recent_upload && (
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent animate-shimmer bg-[length:200%_100%] pointer-events-none" />
+                        )}
+                        <div className="flex items-center gap-1.5 relative z-10">
                           <img
                             src={anime.cover_image || '/placeholder.svg'}
                             alt={anime.title}
-                            className="w-8 h-10 object-cover rounded flex-shrink-0"
+                            className={`w-8 h-10 object-cover rounded flex-shrink-0 ${
+                              anime.has_recent_upload ? 'ring-1 ring-primary/60' : ''
+                            }`}
                           />
                           <div className="flex-1 min-w-0">
                             <p className="text-[10px] md:text-xs font-medium line-clamp-2 leading-tight">
                               {anime.title}
                             </p>
-                            {anime.is_favorite && (
-                              <Heart className="h-2.5 w-2.5 text-primary fill-primary mt-0.5" />
-                            )}
+                            <div className="flex items-center gap-1 mt-0.5">
+                              {anime.has_recent_upload && (
+                                <Sparkles className="h-2.5 w-2.5 text-primary animate-pulse" />
+                              )}
+                              {anime.is_favorite && (
+                                <Heart className="h-2.5 w-2.5 text-primary fill-primary" />
+                              )}
+                            </div>
                           </div>
                         </div>
                       </Link>
