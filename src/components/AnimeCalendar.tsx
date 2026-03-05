@@ -331,18 +331,16 @@ export function AnimeCalendar() {
                             src={anime.cover_image || '/placeholder.svg'}
                             alt={anime.title}
                             className={`w-20 h-28 object-cover rounded-lg ${
-                              anime.has_recent_upload
-                                ? 'ring-2 ring-primary shadow-[0_0_14px_hsl(var(--primary)/0.5)] animate-pulse-glow'
-                                : anime.is_favorite ? 'ring-2 ring-primary' : ''
+                              anime.is_favorite ? 'ring-2 ring-primary' : ''
                             }`}
                           />
                           {anime.has_recent_upload && (
-                            <div className="absolute -top-1 -right-1 p-0.5 bg-primary rounded-full animate-pulse">
-                              <Sparkles className="h-3 w-3 text-primary-foreground" />
+                            <div className="absolute -top-1 -right-1">
+                              <Sparkles className="h-3.5 w-3.5 text-yellow-400 animate-pulse drop-shadow-[0_0_4px_rgba(250,204,21,0.7)]" />
                             </div>
                           )}
-                          {anime.is_favorite && !anime.has_recent_upload && (
-                            <div className="absolute top-1 right-1 p-0.5 bg-primary rounded-full">
+                          {anime.is_favorite && (
+                            <div className="absolute top-1 left-1 p-0.5 bg-primary rounded-full">
                               <Heart className="h-2.5 w-2.5 text-primary-foreground fill-current" />
                             </div>
                           )}
