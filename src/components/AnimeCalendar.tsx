@@ -252,36 +252,31 @@ export function AnimeCalendar() {
                         key={anime.id}
                         to={`/anime/${anime.id}`}
                         className={`block p-1.5 rounded-lg transition-all hover:scale-[1.02] relative overflow-hidden ${
-                          anime.has_recent_upload
-                            ? 'bg-primary/25 border border-primary/50 shadow-[0_0_12px_hsl(var(--primary)/0.4)] animate-pulse-glow'
-                            : anime.is_favorite
-                              ? 'bg-primary/20 border border-primary/30 hover:bg-primary/30'
-                              : 'bg-muted/50 hover:bg-muted'
+                          anime.is_favorite
+                            ? 'bg-primary/20 border border-primary/30 hover:bg-primary/30'
+                            : 'bg-muted/50 hover:bg-muted'
                         }`}
                       >
-                        {anime.has_recent_upload && (
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent animate-shimmer bg-[length:200%_100%] pointer-events-none" />
-                        )}
                         <div className="flex items-center gap-1.5 relative z-10">
-                          <img
-                            src={anime.cover_image || '/placeholder.svg'}
-                            alt={anime.title}
-                            className={`w-8 h-10 object-cover rounded flex-shrink-0 ${
-                              anime.has_recent_upload ? 'ring-1 ring-primary/60' : ''
-                            }`}
-                          />
+                          <div className="relative flex-shrink-0">
+                            <img
+                              src={anime.cover_image || '/placeholder.svg'}
+                              alt={anime.title}
+                              className="w-8 h-10 object-cover rounded"
+                            />
+                            {anime.has_recent_upload && (
+                              <div className="absolute -top-1 -right-1">
+                                <Sparkles className="h-3 w-3 text-yellow-400 animate-pulse drop-shadow-[0_0_4px_rgba(250,204,21,0.7)]" />
+                              </div>
+                            )}
+                          </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-[10px] md:text-xs font-medium line-clamp-2 leading-tight">
                               {anime.title}
                             </p>
-                            <div className="flex items-center gap-1 mt-0.5">
-                              {anime.has_recent_upload && (
-                                <Sparkles className="h-2.5 w-2.5 text-primary animate-pulse" />
-                              )}
-                              {anime.is_favorite && (
-                                <Heart className="h-2.5 w-2.5 text-primary fill-primary" />
-                              )}
-                            </div>
+                            {anime.is_favorite && (
+                              <Heart className="h-2.5 w-2.5 text-primary fill-primary mt-0.5" />
+                            )}
                           </div>
                         </div>
                       </Link>
@@ -336,18 +331,16 @@ export function AnimeCalendar() {
                             src={anime.cover_image || '/placeholder.svg'}
                             alt={anime.title}
                             className={`w-20 h-28 object-cover rounded-lg ${
-                              anime.has_recent_upload
-                                ? 'ring-2 ring-primary shadow-[0_0_14px_hsl(var(--primary)/0.5)] animate-pulse-glow'
-                                : anime.is_favorite ? 'ring-2 ring-primary' : ''
+                              anime.is_favorite ? 'ring-2 ring-primary' : ''
                             }`}
                           />
                           {anime.has_recent_upload && (
-                            <div className="absolute -top-1 -right-1 p-0.5 bg-primary rounded-full animate-pulse">
-                              <Sparkles className="h-3 w-3 text-primary-foreground" />
+                            <div className="absolute -top-1 -right-1">
+                              <Sparkles className="h-3.5 w-3.5 text-yellow-400 animate-pulse drop-shadow-[0_0_4px_rgba(250,204,21,0.7)]" />
                             </div>
                           )}
-                          {anime.is_favorite && !anime.has_recent_upload && (
-                            <div className="absolute top-1 right-1 p-0.5 bg-primary rounded-full">
+                          {anime.is_favorite && (
+                            <div className="absolute top-1 left-1 p-0.5 bg-primary rounded-full">
                               <Heart className="h-2.5 w-2.5 text-primary-foreground fill-current" />
                             </div>
                           )}
