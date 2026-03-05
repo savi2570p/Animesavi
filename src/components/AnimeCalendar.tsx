@@ -18,6 +18,7 @@ interface ScheduleAnime {
   release_day: number; // 0-6 (Sunday-Saturday)
   is_favorite: boolean;
   latest_episode_date: string | null;
+  has_recent_upload: boolean; // uploaded within last 7 days
 }
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
