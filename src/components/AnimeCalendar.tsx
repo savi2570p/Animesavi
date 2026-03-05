@@ -265,7 +265,7 @@ export function AnimeCalendar() {
                               className="w-8 h-10 object-cover rounded"
                             />
                             {isToday && (
-                              <div className="absolute -top-1 -right-1">
+                              <div className="absolute -bottom-1 -right-1">
                                 <Sparkles className="h-3 w-3 text-yellow-400 animate-pulse drop-shadow-[0_0_4px_rgba(250,204,21,0.7)]" />
                               </div>
                             )}
