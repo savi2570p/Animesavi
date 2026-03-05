@@ -329,17 +329,24 @@ export function AnimeCalendar() {
                       <Link
                         key={anime.id}
                         to={`/anime/${anime.id}`}
-                        className="flex-shrink-0 w-20"
+                        className={`flex-shrink-0 w-20 ${anime.has_recent_upload ? 'relative' : ''}`}
                       >
                         <div className="relative">
                           <img
                             src={anime.cover_image || '/placeholder.svg'}
                             alt={anime.title}
                             className={`w-20 h-28 object-cover rounded-lg ${
-                              anime.is_favorite ? 'ring-2 ring-primary' : ''
+                              anime.has_recent_upload
+                                ? 'ring-2 ring-primary shadow-[0_0_14px_hsl(var(--primary)/0.5)] animate-pulse-glow'
+                                : anime.is_favorite ? 'ring-2 ring-primary' : ''
                             }`}
                           />
-                          {anime.is_favorite && (
+                          {anime.has_recent_upload && (
+                            <div className="absolute -top-1 -right-1 p-0.5 bg-primary rounded-full animate-pulse">
+                              <Sparkles className="h-3 w-3 text-primary-foreground" />
+                            </div>
+                          )}
+                          {anime.is_favorite && !anime.has_recent_upload && (
                             <div className="absolute top-1 right-1 p-0.5 bg-primary rounded-full">
                               <Heart className="h-2.5 w-2.5 text-primary-foreground fill-current" />
                             </div>
