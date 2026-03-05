@@ -334,7 +334,7 @@ export function AnimeCalendar() {
                               anime.is_favorite ? 'ring-2 ring-primary' : ''
                             }`}
                           />
-                          {isToday && anime.has_recent_upload && (
+                          {isToday && (
                             <div className="absolute -top-1 -right-1">
                               <Sparkles className="h-3.5 w-3.5 text-yellow-400 animate-pulse drop-shadow-[0_0_4px_rgba(250,204,21,0.7)]" />
                             </div>
