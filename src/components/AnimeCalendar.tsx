@@ -18,6 +18,7 @@ interface ScheduleAnime {
   release_day: number; // 0-6 (Sunday-Saturday)
   is_favorite: boolean;
   latest_episode_date: string | null;
+  has_recent_upload: boolean; // uploaded within last 7 days
 }
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -102,6 +103,11 @@ export function AnimeCalendar() {
             releaseDay = hash % 7;
           }
 
+          // Check if latest episode was uploaded within last 7 days
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+          const hasRecentUpload = latestEpisodeDate ? parseISO(latestEpisodeDate) >= sevenDaysAgo : false;
+
           return {
             id: anime.id,
             title: anime.title || 'Unknown',
@@ -110,7 +116,8 @@ export function AnimeCalendar() {
             genres: anime.genres,
             release_day: releaseDay,
             is_favorite: userFavorites.has(anime.id),
-            latest_episode_date: latestEpisodeDate
+            latest_episode_date: latestEpisodeDate,
+            has_recent_upload: hasRecentUpload
           };
         })
       );
@@ -244,25 +251,37 @@ export function AnimeCalendar() {
                       <Link
                         key={anime.id}
                         to={`/anime/${anime.id}`}
-                        className={`block p-1.5 rounded-lg transition-all hover:scale-[1.02] ${
-                          anime.is_favorite
-                            ? 'bg-primary/20 border border-primary/30 hover:bg-primary/30'
-                            : 'bg-muted/50 hover:bg-muted'
+                        className={`block p-1.5 rounded-lg transition-all hover:scale-[1.02] relative overflow-hidden ${
+                          anime.has_recent_upload
+                            ? 'bg-primary/25 border border-primary/50 shadow-[0_0_12px_hsl(var(--primary)/0.4)] animate-pulse-glow'
+                            : anime.is_favorite
+                              ? 'bg-primary/20 border border-primary/30 hover:bg-primary/30'
+                              : 'bg-muted/50 hover:bg-muted'
                         }`}
                       >
-                        <div className="flex items-center gap-1.5">
+                        {anime.has_recent_upload && (
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent animate-shimmer bg-[length:200%_100%] pointer-events-none" />
+                        )}
+                        <div className="flex items-center gap-1.5 relative z-10">
                           <img
                             src={anime.cover_image || '/placeholder.svg'}
                             alt={anime.title}
-                            className="w-8 h-10 object-cover rounded flex-shrink-0"
+                            className={`w-8 h-10 object-cover rounded flex-shrink-0 ${
+                              anime.has_recent_upload ? 'ring-1 ring-primary/60' : ''
+                            }`}
                           />
                           <div className="flex-1 min-w-0">
                             <p className="text-[10px] md:text-xs font-medium line-clamp-2 leading-tight">
                               {anime.title}
                             </p>
-                            {anime.is_favorite && (
-                              <Heart className="h-2.5 w-2.5 text-primary fill-primary mt-0.5" />
-                            )}
+                            <div className="flex items-center gap-1 mt-0.5">
+                              {anime.has_recent_upload && (
+                                <Sparkles className="h-2.5 w-2.5 text-primary animate-pulse" />
+                              )}
+                              {anime.is_favorite && (
+                                <Heart className="h-2.5 w-2.5 text-primary fill-primary" />
+                              )}
+                            </div>
                           </div>
                         </div>
                       </Link>
@@ -310,17 +329,24 @@ export function AnimeCalendar() {
                       <Link
                         key={anime.id}
                         to={`/anime/${anime.id}`}
-                        className="flex-shrink-0 w-20"
+                        className={`flex-shrink-0 w-20 ${anime.has_recent_upload ? 'relative' : ''}`}
                       >
                         <div className="relative">
                           <img
                             src={anime.cover_image || '/placeholder.svg'}
                             alt={anime.title}
                             className={`w-20 h-28 object-cover rounded-lg ${
-                              anime.is_favorite ? 'ring-2 ring-primary' : ''
+                              anime.has_recent_upload
+                                ? 'ring-2 ring-primary shadow-[0_0_14px_hsl(var(--primary)/0.5)] animate-pulse-glow'
+                                : anime.is_favorite ? 'ring-2 ring-primary' : ''
                             }`}
                           />
-                          {anime.is_favorite && (
+                          {anime.has_recent_upload && (
+                            <div className="absolute -top-1 -right-1 p-0.5 bg-primary rounded-full animate-pulse">
+                              <Sparkles className="h-3 w-3 text-primary-foreground" />
+                            </div>
+                          )}
+                          {anime.is_favorite && !anime.has_recent_upload && (
                             <div className="absolute top-1 right-1 p-0.5 bg-primary rounded-full">
                               <Heart className="h-2.5 w-2.5 text-primary-foreground fill-current" />
                             </div>
