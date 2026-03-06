@@ -1,9 +1,10 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { Tv, Play, Film, Clock, LayoutGrid, Cherry } from 'lucide-react';
+import { Tv, Play, Film, Clock, LayoutGrid, Cherry, ArrowLeft } from 'lucide-react';
 import museinLogo from '@/assets/musein-logo.jpg';
 import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
+import { Button } from '@/components/ui/button';
 
 interface NavTab {
   to: string;
@@ -17,6 +18,7 @@ interface NavTab {
 
 export function ContentNavTabs() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isUploader, isAdmin, isRolesLoaded } = useAuth();
 
   const canAccessPending = isUploader || isAdmin;
