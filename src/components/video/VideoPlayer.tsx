@@ -54,7 +54,7 @@ import { VideoPlayerInfoOverlay } from './VideoPlayerInfoOverlay';
 import { PremiumLoader } from './PremiumLoader';
 import { EncodingOverlay } from './EncodingOverlay';
 import { useVideoGestures } from '@/hooks/useVideoGestures';
-
+import { ScreenMirroringDialog } from './ScreenMirroringDialog';
 
 interface AudioTrackInfo {
   id: number;
