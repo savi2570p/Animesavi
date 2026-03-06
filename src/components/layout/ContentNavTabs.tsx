@@ -45,7 +45,16 @@ export function ContentNavTabs() {
   return (
     <div className="sticky top-14 z-40 bg-background/95 backdrop-blur-md border-b border-border/50 safe-area-top">
       <div className="container">
-        <nav className="flex gap-0.5 overflow-x-auto pb-px -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <nav className="flex items-center gap-0.5 overflow-x-auto pb-px -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+            onClick={() => navigate(-1)}
+            title="Go back"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = isActiveTab(tab.to);
