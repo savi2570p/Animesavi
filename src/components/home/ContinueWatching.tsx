@@ -38,11 +38,12 @@ interface Episode {
 
 interface WatchHistoryItem {
   id: string;
-  anime: Anime;
+  anime: Anime & { status?: string | null };
   episode: Episode;
   progress: number | null;
   watched_at: string;
   season?: Season;
+  hasNewEpisode?: boolean;
 }
 
 interface ContinueWatchingProps {
@@ -54,7 +55,6 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
   const [history, setHistory] = useState<WatchHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<{ username: string | null; avatar_url: string | null } | null>(null);
-  
 
   // Only show on home page if specified
   const isHomePage = typeof window !== 'undefined' && window.location.pathname === '/';
@@ -92,18 +92,34 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       .limit(12);
 
     if (data) {
-      // Fetch season info for each episode
+      // Fetch season info + check for new episodes on ongoing anime
       const itemsWithSeason = await Promise.all(
         (data as WatchHistoryItem[]).map(async (item) => {
+          let season: Season | undefined;
           if (item.episode?.season_id) {
             const { data: seasonData } = await supabase
               .from('seasons')
               .select('id, season_number')
               .eq('id', item.episode.season_id)
               .single();
-            return { ...item, season: seasonData || undefined };
+            season = seasonData || undefined;
           }
-          return item;
+
+          // Check if this ongoing anime has episodes newer than user's last watch
+          let hasNewEpisode = false;
+          if (item.anime?.status === 'ongoing') {
+            const { data: newerEps } = await supabase
+              .from('episodes')
+              .select('id')
+              .in('season_id', 
+                (await supabase.from('seasons').select('id').eq('anime_id', item.anime.id)).data?.map(s => s.id) || []
+              )
+              .gt('created_at', item.watched_at)
+              .limit(1);
+            hasNewEpisode = !!newerEps && newerEps.length > 0;
+          }
+
+          return { ...item, season, hasNewEpisode };
         })
       );
       
@@ -243,8 +259,15 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
                       </div>
 
                       {/* Season & Episode badge */}
-                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
-                        S{item.season?.season_number || 1} E{item.episode.episode_number}
+                      <div className="absolute top-2 left-2 flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
+                          S{item.season?.season_number || 1} E{item.episode.episode_number}
+                        </span>
+                        {item.hasNewEpisode && (
+                          <span className="px-1.5 py-0.5 rounded bg-green-500 text-[9px] font-bold text-white animate-pulse shadow-lg shadow-green-500/40">
+                            NEW
+                          </span>
+                        )}
                       </div>
 
                       {/* Progress percentage badge */}
