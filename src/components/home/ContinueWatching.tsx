@@ -93,18 +93,34 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       .limit(12);
 
     if (data) {
-      // Fetch season info for each episode
+      // Fetch season info + check for new episodes on ongoing anime
       const itemsWithSeason = await Promise.all(
         (data as WatchHistoryItem[]).map(async (item) => {
+          let season: Season | undefined;
           if (item.episode?.season_id) {
             const { data: seasonData } = await supabase
               .from('seasons')
               .select('id, season_number')
               .eq('id', item.episode.season_id)
               .single();
-            return { ...item, season: seasonData || undefined };
+            season = seasonData || undefined;
           }
-          return item;
+
+          // Check if this ongoing anime has episodes newer than user's last watch
+          let hasNewEpisode = false;
+          if (item.anime?.status === 'ongoing') {
+            const { data: newerEps } = await supabase
+              .from('episodes')
+              .select('id')
+              .in('season_id', 
+                (await supabase.from('seasons').select('id').eq('anime_id', item.anime.id)).data?.map(s => s.id) || []
+              )
+              .gt('created_at', item.watched_at)
+              .limit(1);
+            hasNewEpisode = !!newerEps && newerEps.length > 0;
+          }
+
+          return { ...item, season, hasNewEpisode };
         })
       );
       
