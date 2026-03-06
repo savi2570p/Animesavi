@@ -260,13 +260,15 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
                       </div>
 
                       {/* Season & Episode badge */}
-                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
-                        S{item.season?.season_number || 1} E{item.episode.episode_number}
-                      </div>
-
-                      {/* Progress percentage badge */}
-                      <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] font-medium text-white/90">
-                        {Math.round(item.progress || 0)}%
+                      <div className="absolute top-2 left-2 flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
+                          S{item.season?.season_number || 1} E{item.episode.episode_number}
+                        </span>
+                        {item.hasNewEpisode && (
+                          <span className="px-1.5 py-0.5 rounded bg-green-500 text-[9px] font-bold text-white animate-pulse shadow-lg shadow-green-500/40">
+                            NEW
+                          </span>
+                        )}
                       </div>
 
                       {/* Token Crown Badge */}
