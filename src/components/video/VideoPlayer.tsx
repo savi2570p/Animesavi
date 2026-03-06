@@ -3041,6 +3041,12 @@ export function VideoPlayer({
         videoUrl={effectiveVideoUrl || ''}
         fileName={`${animeTitle} - Episode ${episodeNumber}.mp4`}
       />
+      
+      {/* Screen Mirroring Dialog */}
+      <ScreenMirroringDialog
+        open={showMirroringDialog}
+        onOpenChange={setShowMirroringDialog}
+      />
     </div>
   );
 }
