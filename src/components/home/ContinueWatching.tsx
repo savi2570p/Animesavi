@@ -270,6 +270,11 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
                         )}
                       </div>
 
+                      {/* Progress percentage badge */}
+                      <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] font-medium text-white/90">
+                        {Math.round(item.progress || 0)}%
+                      </div>
+
                       {/* Token Crown Badge */}
                       <TokenCrownBadge />
 
