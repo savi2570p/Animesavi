@@ -25,6 +25,7 @@ import {
   FastForward,
   Info,
   Keyboard,
+  Cast,
 } from 'lucide-react';
 import { 
   getAudioTrackLabel, 
