@@ -56,11 +56,6 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
   const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<{ username: string | null; avatar_url: string | null } | null>(null);
 
-                      {/* Progress percentage badge */}
-                      <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] font-medium text-white/90">
-                        {Math.round(item.progress || 0)}%
-                      </div>
-
   // Only show on home page if specified
   const isHomePage = typeof window !== 'undefined' && window.location.pathname === '/';
   const shouldRender = showOnHomeOnly ? isHomePage : true;
