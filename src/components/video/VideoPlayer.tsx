@@ -314,7 +314,7 @@ export function VideoPlayer({
   
   // Download verification dialog state
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
-  
+  const [showMirroringDialog, setShowMirroringDialog] = useState(false);
   // Premium loading state - Netflix-style loader
   const [showPremiumLoader, setShowPremiumLoader] = useState(true);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
