@@ -283,13 +283,18 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
 
   const abortUpload = useCallback(() => {
     if (activeUploadRef.current) {
-      activeUploadRef.current.abort();
+      try {
+        activeUploadRef.current.abort(true); // true = remove from server
+      } catch (e) {
+        // Ignore abort errors
+      }
       activeUploadRef.current = null;
     }
     pendingFileRef.current = null;
     setIsUploading(false);
     setUploadProgress(0);
     setUploadSpeed(0);
+    toast.info('Upload cancelled');
   }, []);
 
   return {

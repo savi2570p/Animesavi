@@ -25,6 +25,7 @@ import {
   FastForward,
   Info,
   Keyboard,
+  Cast,
 } from 'lucide-react';
 import { 
   getAudioTrackLabel, 
@@ -53,7 +54,7 @@ import { VideoPlayerInfoOverlay } from './VideoPlayerInfoOverlay';
 import { PremiumLoader } from './PremiumLoader';
 import { EncodingOverlay } from './EncodingOverlay';
 import { useVideoGestures } from '@/hooks/useVideoGestures';
-
+import { ScreenMirroringDialog } from './ScreenMirroringDialog';
 
 interface AudioTrackInfo {
   id: number;
@@ -313,7 +314,7 @@ export function VideoPlayer({
   
   // Download verification dialog state
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
-  
+  const [showMirroringDialog, setShowMirroringDialog] = useState(false);
   // Premium loading state - Netflix-style loader
   const [showPremiumLoader, setShowPremiumLoader] = useState(true);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
@@ -2718,6 +2719,13 @@ export function VideoPlayer({
                 )}
                 <button 
                   className="flex w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
+                  onClick={(e) => { e.stopPropagation(); setShowMirroringDialog(true); }} 
+                  title="Screen Mirroring"
+                >
+                  <Cast className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                </button>
+                <button 
+                  className="flex w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                   title="Picture-in-Picture"
                 >
@@ -3001,6 +3009,15 @@ export function VideoPlayer({
                 </button>
               )}
 
+              {/* Screen Mirroring */}
+              <button 
+                className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                onClick={(e) => { e.stopPropagation(); setShowMirroringDialog(true); }} 
+                title="Screen Mirroring"
+              >
+                <Cast className="w-3 h-3 md:w-4 md:h-4" />
+              </button>
+
               {/* PiP */}
                 <button 
                   className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
@@ -3030,6 +3047,12 @@ export function VideoPlayer({
         onOpenChange={setShowDownloadDialog}
         videoUrl={effectiveVideoUrl || ''}
         fileName={`${animeTitle} - Episode ${episodeNumber}.mp4`}
+      />
+      
+      {/* Screen Mirroring Dialog */}
+      <ScreenMirroringDialog
+        open={showMirroringDialog}
+        onOpenChange={setShowMirroringDialog}
       />
     </div>
   );
