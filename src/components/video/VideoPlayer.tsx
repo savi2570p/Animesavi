@@ -3002,6 +3002,15 @@ export function VideoPlayer({
                 </button>
               )}
 
+              {/* Screen Mirroring */}
+              <button 
+                className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                onClick={(e) => { e.stopPropagation(); setShowMirroringDialog(true); }} 
+                title="Screen Mirroring"
+              >
+                <Cast className="w-3 h-3 md:w-4 md:h-4" />
+              </button>
+
               {/* PiP */}
                 <button 
                   className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
