@@ -38,11 +38,12 @@ interface Episode {
 
 interface WatchHistoryItem {
   id: string;
-  anime: Anime;
+  anime: Anime & { status?: string | null };
   episode: Episode;
   progress: number | null;
   watched_at: string;
   season?: Season;
+  hasNewEpisode?: boolean;
 }
 
 interface ContinueWatchingProps {
