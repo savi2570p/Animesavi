@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Lock, Ban, Globe, ExternalLink } from 'lucide-react';
+import { Lock, Ban, Globe, ExternalLink, RefreshCw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 type Language = 'en' | 'hinglish' | 'hi' | 'bn' | 'ta' | 'te';
 
@@ -196,7 +198,52 @@ export function TokenExpiredPopup() {
               }}
             >
               {t.howTo}
-            </a>
+           </a>
+            <button
+              onClick={async () => {
+                try {
+                  const { data: { session } } = await supabase.auth.getSession();
+                  if (!session) {
+                    toast.error('Please sign in first');
+                    return;
+                  }
+                  // Check if user now has valid token access
+                  const { data: usage } = await supabase
+                    .from('token_usage')
+                    .select('expires_at')
+                    .eq('user_id', session.user.id)
+                    .order('used_at', { ascending: false })
+                    .limit(1)
+                    .single();
+
+                  if (usage?.expires_at && usage.expires_at * 1000 > Date.now()) {
+                    toast.success('Token active! Reloading...');
+                    window.location.reload();
+                  } else {
+                    toast.error('No active token found. Please get a token first.');
+                  }
+                } catch {
+                  toast.error('Could not verify token. Try again.');
+                }
+              }}
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold transition-all duration-200"
+              style={{
+                border: '2px solid rgba(34,197,94,0.6)',
+                color: 'rgb(74,222,128)',
+                background: 'transparent',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(34,197,94,0.1)';
+                e.currentTarget.style.borderColor = 'rgba(34,197,94,0.8)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderColor = 'rgba(34,197,94,0.6)';
+              }}
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reload
+            </button>
           </div>
         </div>
       </div>
