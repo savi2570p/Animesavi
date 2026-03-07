@@ -25,7 +25,8 @@ import {
   Eye,
   Film,
   Tv,
-  TrendingUp
+  TrendingUp,
+  BadgeCheck
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -36,12 +37,14 @@ import { NotificationBell } from '@/components/NotificationBell';
 import { WatchLaterButton } from '@/components/WatchLater';
 import { AccountSwitcher, rememberAccount } from '@/components/AccountSwitcher';
 import { hasValidTokenAccess } from '@/components/AccessBanner';
+import { VerifyTokenDialog } from '@/components/VerifyTokenDialog';
 
 export function Header() {
   const { user, isUploader, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [verifyOpen, setVerifyOpen] = useState(false);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -345,6 +348,13 @@ export function Header() {
                       </Link>
                     </>
                   )}
+                  <button
+                    onClick={() => setVerifyOpen(true)}
+                    className="flex items-center gap-3 text-base font-medium py-2 px-3 rounded-lg hover:bg-card transition-colors w-full text-left"
+                  >
+                    <BadgeCheck className="h-4 w-4 text-muted-foreground" />
+                    Verify
+                  </button>
                   {canUpload() && (
                     <Button 
                       variant="outline" 
@@ -359,6 +369,7 @@ export function Header() {
               </div>
             </SheetContent>
           </Sheet>
+          <VerifyTokenDialog open={verifyOpen} onOpenChange={setVerifyOpen} />
         </div>
       </div>
     </header>

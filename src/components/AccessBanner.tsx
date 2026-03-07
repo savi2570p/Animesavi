@@ -178,33 +178,33 @@ export function AccessBanner() {
 
   return (
     <div
-      className="sticky top-0 z-[60] text-white px-4 py-2.5 animate-fade-in"
+      className="sticky top-0 z-[60] text-white px-3 py-1 animate-fade-in"
       style={{
         background: 'linear-gradient(135deg, hsl(0 72% 30%) 0%, hsl(0 80% 42%) 50%, hsl(0 72% 30%) 100%)',
-        boxShadow: '0 4px 20px hsla(0, 80%, 40%, 0.4), 0 0 40px hsla(0, 80%, 40%, 0.15)',
+        boxShadow: '0 2px 10px hsla(0, 80%, 40%, 0.3)',
       }}
     >
       <div className="container flex items-center justify-center">
-        <div className="flex items-center gap-2.5 text-sm font-medium tracking-wide">
-          <Clock className="h-4 w-4 animate-pulse" />
-          <span className="opacity-90">Access expires in</span>
+        <div className="flex items-center gap-2 text-xs font-medium tracking-wide">
+          <Clock className="h-3 w-3 animate-pulse" />
+          <span className="opacity-90">Expires</span>
           <span
-            className="font-mono font-bold text-base px-2.5 py-0.5 rounded-md"
+            className="font-mono font-bold text-xs px-1.5 py-0.5 rounded"
             style={{
               background: 'hsla(0, 0%, 0%, 0.3)',
               textShadow: '0 0 8px hsla(0, 80%, 60%, 0.6)',
-              letterSpacing: '0.1em',
+              letterSpacing: '0.08em',
             }}
           >
-            {String(time.hours).padStart(2, '0')}:{String(time.minutes).padStart(2, '0')}:{String(time.seconds).padStart(2, '0')}
+            {String(time.hours).padStart(2, '0')}:{String(time.minutes).padStart(2, '0')}
           </span>
           {isSynced && (
             <span
-              className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
-              style={{ background: 'hsla(210, 80%, 50%, 0.3)', border: '1px solid hsla(210, 80%, 60%, 0.4)' }}
-              title="Access synced from your account"
+              className="text-[10px] px-1 py-px rounded-full opacity-70"
+              style={{ background: 'hsla(210, 80%, 50%, 0.25)' }}
+              title="Synced from account"
             >
-              ☁️ Synced
+              ☁️
             </span>
           )}
         </div>
