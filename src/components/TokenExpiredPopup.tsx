@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Lock, Ban, Globe, ExternalLink } from 'lucide-react';
+import { Lock, Ban, Globe, ExternalLink, RefreshCw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 type Language = 'en' | 'hinglish' | 'hi' | 'bn' | 'ta' | 'te';
 
