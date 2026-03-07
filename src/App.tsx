@@ -143,6 +143,7 @@ const App = () => (
           <BrowserRouter>
             <ScrollToTop />
             <AccessBanner />
+            <TokenExpiredGlobalPopup />
             <OfflineIndicator />
             <WelcomePopup />
             <FloatingTelegramButton />

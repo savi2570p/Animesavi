@@ -25,7 +25,8 @@ import {
   Eye,
   Film,
   Tv,
-  TrendingUp
+  TrendingUp,
+  BadgeCheck
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -36,6 +37,7 @@ import { NotificationBell } from '@/components/NotificationBell';
 import { WatchLaterButton } from '@/components/WatchLater';
 import { AccountSwitcher, rememberAccount } from '@/components/AccountSwitcher';
 import { hasValidTokenAccess } from '@/components/AccessBanner';
+import { VerifyTokenDialog } from '@/components/VerifyTokenDialog';
 
 export function Header() {
   const { user, isUploader, isAdmin, signOut } = useAuth();
