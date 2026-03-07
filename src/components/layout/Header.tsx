@@ -348,6 +348,13 @@ export function Header() {
                       </Link>
                     </>
                   )}
+                  <button
+                    onClick={() => setVerifyOpen(true)}
+                    className="flex items-center gap-3 text-base font-medium py-2 px-3 rounded-lg hover:bg-card transition-colors w-full text-left"
+                  >
+                    <BadgeCheck className="h-4 w-4 text-muted-foreground" />
+                    Verify
+                  </button>
                   {canUpload() && (
                     <Button 
                       variant="outline" 
@@ -362,6 +369,7 @@ export function Header() {
               </div>
             </SheetContent>
           </Sheet>
+          <VerifyTokenDialog open={verifyOpen} onOpenChange={setVerifyOpen} />
         </div>
       </div>
     </header>
