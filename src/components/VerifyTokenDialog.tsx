@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,18 +15,19 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
   const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'active' | 'expired'>('loading');
 
-  const handleOpen = async (isOpen: boolean) => {
-    if (isOpen) {
-      setStatus('loading');
-      if (isSuperAdmin(user?.email)) {
-        setStatus('active');
-        return;
-      }
-      const result = await fetchTokenAccessFromDB();
-      setStatus(result.hasAccess ? 'active' : 'expired');
+  useEffect(() => {
+    if (!open) return;
+    setStatus('loading');
+
+    if (isSuperAdmin(user?.email)) {
+      setStatus('active');
+      return;
     }
-    onOpenChange(isOpen);
-  };
+
+    fetchTokenAccessFromDB().then((result) => {
+      setStatus(result.hasAccess ? 'active' : 'expired');
+    });
+  }, [open, user?.email]);
 
   const handleOk = () => {
     onOpenChange(false);
@@ -38,7 +39,7 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
   const isActive = status === 'active';
 
   return (
-    <Dialog open={open} onOpenChange={handleOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xs bg-card border-border text-center">
         <DialogTitle className="sr-only">Verify Token</DialogTitle>
         {status === 'loading' ? (
