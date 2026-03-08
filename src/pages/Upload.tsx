@@ -65,6 +65,7 @@ export default function Upload() {
   const [trailerUrl, setTrailerUrl] = useState('');
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [releaseYear, setReleaseYear] = useState('');
+  const [releaseDate, setReleaseDate] = useState<Date | undefined>(undefined);
   const [type, setType] = useState('series');
   const [status, setStatus] = useState('ongoing');
   const [isCrunchyroll, setIsCrunchyroll] = useState(false);
