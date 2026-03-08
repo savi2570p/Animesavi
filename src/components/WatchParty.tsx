@@ -74,6 +74,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
   const [showJoinDialog, setShowJoinDialog] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [partyInfo, setPartyInfo] = useState<PartyInfo | null>(null);
+  const [activeTab, setActiveTab] = useState<'party' | 'chat'>('party');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const syncIntervalRef = useRef<NodeJS.Timeout>();
 
