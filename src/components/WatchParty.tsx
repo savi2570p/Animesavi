@@ -549,6 +549,11 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     }
   };
 
+  // Check if user already joined via URL party code
+  const searchParams = new URLSearchParams(window.location.search);
+  const urlPartyCode = searchParams.get('party');
+  const isJoinedViaUrl = !!urlPartyCode && !partyCode;
+
   if (!partyCode) {
     return (
       <div className="flex items-center gap-2">
@@ -590,38 +595,41 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
           </DialogContent>
         </Dialog>
 
-        <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
-          <DialogTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-2">
-              <UserPlus className="h-4 w-4" />
-              <span className="hidden sm:inline">Join</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <UserPlus className="h-5 w-5 text-primary" />
-                Join Watch Party
-              </DialogTitle>
-              <DialogDescription>
-                Enter the party code shared by your friend
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <Input
-                placeholder="Enter 6-character code"
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                maxLength={6}
-                className="text-center text-2xl tracking-widest font-mono"
-              />
-              <Button onClick={joinParty} className="w-full gap-2" disabled={joinCode.length !== 6}>
-                <Link2 className="h-4 w-4" />
-                Join Party
+        {/* Only show Join button if user hasn't joined via URL */}
+        {!isJoinedViaUrl && (
+          <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-2">
+                <UserPlus className="h-4 w-4" />
+                <span className="hidden sm:inline">Join</span>
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <UserPlus className="h-5 w-5 text-primary" />
+                  Join Watch Party
+                </DialogTitle>
+                <DialogDescription>
+                  Enter the party code shared by your friend
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <Input
+                  placeholder="Enter 6-character code"
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                  maxLength={6}
+                  className="text-center text-2xl tracking-widest font-mono"
+                />
+                <Button onClick={joinParty} className="w-full gap-2" disabled={joinCode.length !== 6}>
+                  <Link2 className="h-4 w-4" />
+                  Join Party
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     );
   }
