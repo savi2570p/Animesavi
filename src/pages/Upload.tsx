@@ -517,19 +517,45 @@ export default function Upload() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="releaseYear">Release Year</Label>
-                    <Input
-                      id="releaseYear"
-                      type="number"
-                      placeholder="2024"
-                      value={releaseYear}
-                      onChange={(e) => setReleaseYear(e.target.value)}
-                      min="1900"
-                      max={status === 'upcoming' ? 2037 : new Date().getFullYear()}
-                      className="bg-muted/50"
-                    />
-                  </div>
+                   <div className="space-y-2">
+                     <Label htmlFor="releaseYear">
+                       {status === 'upcoming' ? 'Release Date' : 'Release Year'}
+                     </Label>
+                     {status === 'upcoming' ? (
+                       <Popover>
+                         <PopoverTrigger asChild>
+                           <Button
+                             variant="outline"
+                             className="w-full justify-start text-left font-normal bg-muted/50"
+                           >
+                             {releaseDate ? format(releaseDate, 'PPP') : 'Pick a date'}
+                           </Button>
+                         </PopoverTrigger>
+                         <PopoverContent className="w-auto p-0" align="start">
+                           <Calendar
+                             mode="single"
+                             selected={releaseDate}
+                             onSelect={setReleaseDate}
+                             disabled={(date) =>
+                               date < new Date() || date.getFullYear() > 2037
+                             }
+                             initialFocus
+                           />
+                         </PopoverContent>
+                       </Popover>
+                     ) : (
+                       <Input
+                         id="releaseYear"
+                         type="number"
+                         placeholder="2024"
+                         value={releaseYear}
+                         onChange={(e) => setReleaseYear(e.target.value)}
+                         min="1900"
+                         max={new Date().getFullYear()}
+                         className="bg-muted/50"
+                       />
+                     )}
+                   </div>
                 </div>
 
                 <div className="space-y-2">
