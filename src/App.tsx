@@ -50,6 +50,7 @@ const CrunchyPage = lazy(() => import("./pages/CrunchyPage"));
 const MuseINPage = lazy(() => import("./pages/MuseINPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Schedule = lazy(() => import("./pages/Schedule"));
+const UpcomingPage = lazy(() => import("./pages/UpcomingPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
