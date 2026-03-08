@@ -248,7 +248,8 @@ export function VideoPlayer({
   const [showControls, setShowControls] = useState(true);
   const [videoError, setVideoError] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
-  const [useIframeFallback, setUseIframeFallback] = useState(false);
+  // Auto-use iframe/embed for external URL uploads (no video_url, only external_url)
+  const [useIframeFallback, setUseIframeFallback] = useState(!videoUrl && !!externalUrl);
   const [audioTracks, setAudioTracks] = useState<AudioTrackInfo[]>([]);
   const [currentAudioTrack, setCurrentAudioTrack] = useState<number>(0);
   
@@ -383,7 +384,7 @@ export function VideoPlayer({
   // Reset state when video URL or server changes
   useEffect(() => {
     setVideoError(false);
-    setUseIframeFallback(false);
+    setUseIframeFallback(!videoUrl && !!externalUrl);
     setAudioTracks([]);
     setCurrentAudioTrack(0);
     setSubtitleTracks([]);
