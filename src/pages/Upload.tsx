@@ -517,7 +517,7 @@ export default function Upload() {
                       value={releaseYear}
                       onChange={(e) => setReleaseYear(e.target.value)}
                       min="1900"
-                      max={status === 'upcoming' ? 2099 : new Date().getFullYear()}
+                      max={status === 'upcoming' ? 2037 : new Date().getFullYear()}
                       className="bg-muted/50"
                     />
                   </div>
