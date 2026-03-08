@@ -985,6 +985,21 @@ export function ViewPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
     navigate(`/watch/${party.episode_id}?party=${party.code}`);
   };
 
+  const handleEndParty = async (e: React.MouseEvent, partyId: string) => {
+    e.stopPropagation();
+    try {
+      await supabase
+        .from('watch_parties')
+        .update({ is_active: false })
+        .eq('id', partyId);
+      toast.success('Party ended');
+      loadJoinedParties();
+    } catch (error) {
+      console.error('Error ending party:', error);
+      toast.error('Failed to end party');
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -1039,10 +1054,21 @@ export function ViewPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
                         Season {party.season_number} • Episode {party.episode_number}
                       </p>
                     </div>
-                    <Button size="sm" variant="outline" className="gap-1">
-                      <Play className="h-3 w-3" />
-                      Join
-                    </Button>
+                    <div className="flex flex-col gap-1">
+                      <Button size="sm" variant="outline" className="gap-1">
+                        <Play className="h-3 w-3" />
+                        Watch
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="gap-1"
+                        onClick={(e) => handleEndParty(e, party.id)}
+                      >
+                        <X className="h-3 w-3" />
+                        End
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
