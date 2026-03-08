@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CalendarClock, ChevronRight, Bell } from 'lucide-react';
+import { CalendarClock, ChevronRight } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
+import { UpcomingCountdownDialog } from '@/components/home/UpcomingCountdownDialog';
 
 interface UpcomingAnime {
   id: string;

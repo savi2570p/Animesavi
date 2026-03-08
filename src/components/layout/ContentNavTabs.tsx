@@ -28,6 +28,7 @@ export function ContentNavTabs() {
     { to: '/latest-series', label: 'Latest Series', icon: Tv },
     { to: '/latest-episodes', label: 'Latest Episodes', icon: Play },
     { to: '/latest-movies', label: 'Latest Movies', icon: Film },
+    { to: '/upcoming', label: 'Upcoming', icon: Cherry },
     { to: '/crunchy', label: 'Crunchy', customIcon: crunchyrollLogo },
     { to: '/musein', label: 'MuseIN', customIcon: museinLogo, isMuseIN: true },
     ...(isRolesLoaded && canAccessPending
