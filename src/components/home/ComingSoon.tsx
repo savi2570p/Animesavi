@@ -19,6 +19,7 @@ interface UpcomingAnime {
 export function ComingSoon() {
   const [animeList, setAnimeList] = useState<UpcomingAnime[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedAnime, setSelectedAnime] = useState<UpcomingAnime | null>(null);
 
   useEffect(() => {
     fetchUpcomingAnime();
