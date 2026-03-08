@@ -724,6 +724,7 @@ export default function Upload() {
                                date < new Date() || date.getFullYear() > 2037
                              }
                              initialFocus
+                             className="p-3 pointer-events-auto"
                            />
                          </PopoverContent>
                        </Popover>

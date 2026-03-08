@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-const NOTICE_VERSION = 'v5';
+const NOTICE_VERSION = 'v6';
 
 export function WelcomePopup() {
   const location = useLocation();
