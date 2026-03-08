@@ -232,6 +232,7 @@ export default function Upload() {
       setTrailerUrl('');
       setSelectedGenres([]);
       setReleaseYear('');
+      setReleaseDate(undefined);
       setType('series');
       setStatus('ongoing');
       // Refresh list
