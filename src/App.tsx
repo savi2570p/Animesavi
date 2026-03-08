@@ -50,6 +50,7 @@ const CrunchyPage = lazy(() => import("./pages/CrunchyPage"));
 const MuseINPage = lazy(() => import("./pages/MuseINPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Schedule = lazy(() => import("./pages/Schedule"));
+const UpcomingPage = lazy(() => import("./pages/UpcomingPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -173,6 +174,7 @@ const App = () => (
                   <Route path="/crunchy" element={<CrunchyPage />} />
                   <Route path="/musein" element={<MuseINPage />} />
                   <Route path="/schedule" element={<Schedule />} />
+                  <Route path="/upcoming" element={<UpcomingPage />} />
                   <Route path="/anime/:id" element={<AnimeDetail />} />
                   <Route path="/watch/:episodeId" element={<Watch />} />
                   <Route path="/favorites" element={<Favorites />} />
