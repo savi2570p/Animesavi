@@ -180,7 +180,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
         .single();
 
       if (error || !party) {
-        toast.error('Party not found or has ended');
+        toast.error('Offline', { description: 'This party code is not available or has ended.' });
         return;
       }
 

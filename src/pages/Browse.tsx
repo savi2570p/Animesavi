@@ -683,8 +683,8 @@ export default function Browse() {
           </div>
         </div>
 
-        {/* Top 10 Most Popular Section - Independent section, always visible */}
-        {!searchParams.get('genre') && (sortBy === 'newest' || isSearchMode) && (
+        {/* Top 10 Most Popular Section - Only in Browse Mode, hidden when searching */}
+        {!isSearchMode && !searchParams.get('genre') && sortBy === 'newest' && (
           <MostPopularSection />
         )}
 
