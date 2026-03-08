@@ -78,7 +78,7 @@ export function WelcomePopup() {
         <DialogContent className="sm:max-w-lg border-primary/20">
           <DialogHeader>
             <DialogTitle className="text-xl font-heading text-center">
-              ✨ What's New — v5
+              ✨ What's New — v6
             </DialogTitle>
             <DialogDescription className="text-center text-sm text-muted-foreground">
               Here's what we've been cooking up for you
@@ -87,10 +87,10 @@ export function WelcomePopup() {
           
           <div className="space-y-3 pt-2">
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">📅</span>
+              <span className="text-lg">⚡</span>
               <div>
-                <h4 className="font-medium text-foreground">Upcoming Anime Tab</h4>
-                <p className="text-sm text-muted-foreground">See what's coming next with a live countdown timer for every upcoming anime release!</p>
+                <h4 className="font-medium text-foreground">Super Smooth Experience</h4>
+                <p className="text-sm text-muted-foreground">Faster page loads, optimized video buffering, and smoother navigation across the entire platform!</p>
               </div>
             </div>
 
