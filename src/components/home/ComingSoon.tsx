@@ -66,7 +66,7 @@ export function ComingSoon() {
             </span>
           </div>
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/browse?status=upcoming" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
+            <Link to="/upcoming" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
               See All
               <ChevronRight className="h-4 w-4" />
             </Link>
