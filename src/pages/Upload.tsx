@@ -197,6 +197,10 @@ export default function Upload() {
 
     setIsSubmitting(true);
 
+    const yearToStore = status === 'upcoming' && releaseDate 
+      ? releaseDate.getFullYear() 
+      : (releaseYear ? parseInt(releaseYear) : null);
+
     const { data, error } = await supabase
       .from('anime')
       .insert({
@@ -206,7 +210,7 @@ export default function Upload() {
         banner_image: bannerImage.trim() || null,
         trailer_url: trailerUrl.trim() || null,
         genres: selectedGenres.length > 0 ? selectedGenres : null,
-        release_year: releaseYear ? parseInt(releaseYear) : null,
+        release_year: yearToStore,
         type,
         status,
         uploader_id: user.id,
