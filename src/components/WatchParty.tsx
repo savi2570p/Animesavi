@@ -635,8 +635,6 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     );
   }
 
-  const [activeTab, setActiveTab] = useState<'party' | 'chat'>('party');
-
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <div className="flex items-center gap-1">
