@@ -634,17 +634,31 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     );
   }
 
+  const [activeTab, setActiveTab] = useState<'party' | 'chat'>('party');
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2 bg-primary/10 border-primary/30">
-          <Users className="h-4 w-4" />
-          <span className="hidden sm:inline">Party</span>
-          <span className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full">
-            {participants.length}
-          </span>
+      <div className="flex items-center gap-1">
+        <SheetTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2 bg-primary/10 border-primary/30">
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">Party</span>
+            <span className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full">
+              {participants.length}
+            </span>
+          </Button>
+        </SheetTrigger>
+        {/* Desktop-only Chat tab button */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 hidden sm:inline-flex"
+          onClick={() => { setActiveTab('chat'); setIsOpen(true); }}
+        >
+          <MessageSquare className="h-4 w-4" />
+          Chat
         </Button>
-      </SheetTrigger>
+      </div>
       <SheetContent side="right" className="w-full sm:w-96 p-0 flex flex-col">
         <SheetHeader className="p-4 border-b bg-card">
           <div className="flex items-center justify-between">
