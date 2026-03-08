@@ -706,118 +706,149 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
           )}
         </SheetHeader>
 
-        {/* Participants */}
-        <div className="p-3 border-b bg-muted/50">
-          <p className="text-xs text-muted-foreground mb-2">Participants ({participants.length})</p>
-          <div className="flex flex-wrap gap-2">
-            {participants.map(p => (
-              <div 
-                key={p.id} 
-                className="flex items-center gap-1.5 bg-background rounded-full px-2 py-1 text-xs"
-              >
-                {p.isHost && <Crown className="h-3 w-3 text-yellow-500" />}
-                <span>{p.name}</span>
-              </div>
-            ))}
-          </div>
+        {/* Tab switcher */}
+        <div className="flex border-b">
+          <button
+            onClick={() => setActiveTab('party')}
+            className={`flex-1 py-2 text-sm font-medium text-center transition-colors ${
+              activeTab === 'party' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Users className="h-4 w-4 inline mr-1" />
+            Party
+          </button>
+          <button
+            onClick={() => setActiveTab('chat')}
+            className={`flex-1 py-2 text-sm font-medium text-center transition-colors ${
+              activeTab === 'chat' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <MessageSquare className="h-4 w-4 inline mr-1" />
+            Chat
+          </button>
         </div>
 
-        {/* Chat messages */}
-        <ScrollArea className="flex-1 p-4">
-          <div className="space-y-3">
-            {messages.map(msg => (
-              <div key={msg.id} className={`flex gap-2 group ${msg.userId === 'system' || msg.username === 'System' ? 'justify-center' : ''}`}>
-                {msg.userId !== 'system' && msg.username !== 'System' && (
-                  <Avatar className="h-7 w-7">
-                    <AvatarFallback className="text-xs bg-primary/20">
-                      {msg.username.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                )}
-                <div className={`${msg.userId === 'system' || msg.username === 'System' ? 'text-center' : ''}`}>
-                  {msg.userId === 'system' || msg.username === 'System' ? (
-                    <p className="text-xs text-muted-foreground bg-muted rounded-full px-3 py-1">
-                      {msg.message}
-                    </p>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-medium">{msg.username}</span>
-                        {msg.isHost && <Crown className="h-3 w-3 text-yellow-500" />}
-                        <span className="text-[10px] text-muted-foreground">
-                          {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <p className="text-sm bg-muted rounded-lg px-3 py-1.5 inline-block">
+        {activeTab === 'party' ? (
+          <>
+            {/* Participants */}
+            <div className="p-3 border-b bg-muted/50">
+              <p className="text-xs text-muted-foreground mb-2">Participants ({participants.length})</p>
+              <div className="flex flex-wrap gap-2">
+                {participants.map(p => (
+                  <div 
+                    key={p.id} 
+                    className="flex items-center gap-1.5 bg-background rounded-full px-2 py-1 text-xs"
+                  >
+                    {p.isHost && <Crown className="h-3 w-3 text-yellow-500" />}
+                    <span>{p.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm p-4">
+              <p className="text-center">Switch to the <strong>Chat</strong> tab to send messages and react with your friends!</p>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Chat messages */}
+            <ScrollArea className="flex-1 p-4">
+              <div className="space-y-3">
+                {messages.map(msg => (
+                  <div key={msg.id} className={`flex gap-2 group ${msg.userId === 'system' || msg.username === 'System' ? 'justify-center' : ''}`}>
+                    {msg.userId !== 'system' && msg.username !== 'System' && (
+                      <Avatar className="h-7 w-7">
+                        <AvatarFallback className="text-xs bg-primary/20">
+                          {msg.username.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div className={`${msg.userId === 'system' || msg.username === 'System' ? 'text-center' : ''}`}>
+                      {msg.userId === 'system' || msg.username === 'System' ? (
+                        <p className="text-xs text-muted-foreground bg-muted rounded-full px-3 py-1">
                           {msg.message}
                         </p>
-                        
-                        {/* Emoji reaction button */}
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <button className="opacity-0 group-hover:opacity-100 hover:bg-muted rounded p-1 transition-all">
-                              <SmilePlus className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                            </button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-2" side="top" align="start">
-                            <div className="flex gap-1">
-                              {EMOJI_OPTIONS.map(emoji => (
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-medium">{msg.username}</span>
+                            {msg.isHost && <Crown className="h-3 w-3 text-yellow-500" />}
+                            <span className="text-[10px] text-muted-foreground">
+                              {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-sm bg-muted rounded-lg px-3 py-1.5 inline-block">
+                              {msg.message}
+                            </p>
+                            
+                            {/* Emoji reaction button */}
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button className="opacity-0 group-hover:opacity-100 hover:bg-muted rounded p-1 transition-all">
+                                  <SmilePlus className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-2" side="top" align="start">
+                                <div className="flex gap-1">
+                                  {EMOJI_OPTIONS.map(emoji => (
+                                    <button
+                                      key={emoji}
+                                      onClick={() => addReaction(msg.id, emoji)}
+                                      className="text-lg hover:bg-muted rounded p-1 transition-colors"
+                                    >
+                                      {emoji}
+                                    </button>
+                                  ))}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                          
+                          {/* Reaction display */}
+                          {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {Object.entries(msg.reactions).map(([emoji, users]) => (
                                 <button
                                   key={emoji}
                                   onClick={() => addReaction(msg.id, emoji)}
-                                  className="text-lg hover:bg-muted rounded p-1 transition-colors"
+                                  className={`text-xs px-1.5 py-0.5 rounded-full border transition-colors ${
+                                    users.includes(user?.id || '') 
+                                      ? 'bg-primary/20 border-primary/50' 
+                                      : 'bg-muted/50 border-border hover:bg-muted'
+                                  }`}
                                 >
-                                  {emoji}
+                                  {emoji} {users.length}
                                 </button>
                               ))}
                             </div>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                      
-                      {/* Reaction display */}
-                      {msg.reactions && Object.keys(msg.reactions).length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {Object.entries(msg.reactions).map(([emoji, users]) => (
-                            <button
-                              key={emoji}
-                              onClick={() => addReaction(msg.id, emoji)}
-                              className={`text-xs px-1.5 py-0.5 rounded-full border transition-colors ${
-                                users.includes(user?.id || '') 
-                                  ? 'bg-primary/20 border-primary/50' 
-                                  : 'bg-muted/50 border-border hover:bg-muted'
-                              }`}
-                            >
-                              {emoji} {users.length}
-                            </button>
-                          ))}
-                        </div>
+                          )}
+                        </>
                       )}
-                    </>
-                  )}
-                </div>
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
               </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
+            </ScrollArea>
 
-        {/* Chat input */}
-        <div className="p-3 border-t bg-card">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Type a message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="flex-1"
-            />
-            <Button size="icon" onClick={sendMessage} disabled={!newMessage.trim()}>
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+            {/* Chat input */}
+            <div className="p-3 border-t bg-card">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Type a message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="flex-1"
+                />
+                <Button size="icon" onClick={sendMessage} disabled={!newMessage.trim()}>
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </SheetContent>
     </Sheet>
   );
