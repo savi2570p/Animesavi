@@ -384,7 +384,7 @@ export function VideoPlayer({
   // Reset state when video URL or server changes
   useEffect(() => {
     setVideoError(false);
-    setUseIframeFallback(false);
+    setUseIframeFallback(!videoUrl && !!externalUrl);
     setAudioTracks([]);
     setCurrentAudioTrack(0);
     setSubtitleTracks([]);
