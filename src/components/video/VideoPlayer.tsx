@@ -1831,16 +1831,16 @@ export function VideoPlayer({
   const renderSettingsContent = () => {
     switch (settingsMenu) {
       case 'quality': {
-        // Build quality options: merge HLS levels with standard presets
-        const availableQualities = STANDARD_QUALITIES.map(sq => {
-          // Find the closest HLS level for this standard quality
-          const hlsLevel = qualityLevels.find(l => l.height === sq.height) 
-            || qualityLevels.find(l => Math.abs(l.height - sq.height) <= 30);
-          return { ...sq, hlsLevel };
-        }).filter(sq => sq.hlsLevel); // Only show qualities that have a matching HLS level
+        // Helper to get badge info for a height
+        const getBadge = (height: number) => {
+          if (height >= 2160) return { badge: '4K', cls: 'bg-gradient-to-r from-violet-500 to-purple-500 text-white' };
+          if (height >= 1440) return { badge: '2K', cls: 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' };
+          if (height >= 720) return { badge: 'HD', cls: 'bg-primary/20 text-primary' };
+          return null;
+        };
 
-        // If no HLS levels at all, show standard options that trigger auto
-        const showStandardFallback = qualityLevels.length === 0;
+        // Always show all available HLS quality levels directly
+        const sortedLevels = [...qualityLevels].sort((a, b) => b.height - a.height);
 
         return (
           <div className="py-1 max-h-[300px] overflow-y-auto">
@@ -1863,49 +1863,31 @@ export function VideoPlayer({
               <span className="text-sm">Auto</span>
               {isAutoQuality && <Check className="w-4 h-4 text-primary" />}
             </button>
-            {/* Quality levels from HLS mapped to standard labels */}
-            {availableQualities.length > 0 ? (
-              availableQualities.map((q) => {
-                const isActive = !isAutoQuality && q.hlsLevel && currentQualityLevel === q.hlsLevel.id;
+            {sortedLevels.length > 0 ? (
+              sortedLevels.map((level) => {
+                const isActive = !isAutoQuality && currentQualityLevel === level.id;
+                const badgeInfo = getBadge(level.height);
                 return (
                   <button
-                    key={q.height}
+                    key={level.id}
                     type="button"
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (q.hlsLevel) switchQualityLevel(q.hlsLevel.id); }}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); switchQualityLevel(level.id); }}
                     className={`${isActive ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm`}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-sm">{q.label}</span>
-                      {q.badge && (
-                        <span className={`text-[10px] font-bold px-1 py-0.5 rounded ${q.badgeClass}`}>{q.badge}</span>
+                      <span className="text-sm">{level.height}p</span>
+                      {badgeInfo && (
+                        <span className={`text-[10px] font-bold px-1 py-0.5 rounded ${badgeInfo.cls}`}>{badgeInfo.badge}</span>
                       )}
                     </div>
                     {isActive && <Check className="w-4 h-4 text-primary" />}
                   </button>
                 );
               })
-            ) : showStandardFallback ? (
-              <div className="px-2 py-2 text-xs text-muted-foreground">
-                Auto quality active
-              </div>
             ) : (
-              /* Show actual HLS levels if they don't match standard presets */
-              qualityLevels.map((level) => (
-                <button
-                  key={level.id}
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); switchQualityLevel(level.id); }}
-                  className={`${!isAutoQuality && currentQualityLevel === level.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">{level.height}p</span>
-                    {level.height >= 1080 && (
-                      <span className="text-[10px] font-bold bg-primary/20 text-primary px-1 py-0.5 rounded">HD</span>
-                    )}
-                  </div>
-                  {!isAutoQuality && currentQualityLevel === level.id && <Check className="w-4 h-4 text-primary" />}
-                </button>
-              ))
+              <div className="px-2 py-2 text-xs text-muted-foreground">
+                Quality options available for HLS streams
+              </div>
             )}
           </div>
         );
