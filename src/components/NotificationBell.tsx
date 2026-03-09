@@ -76,6 +76,9 @@ export function NotificationBell() {
         .limit(20);
 
       if (recentEpisodes) {
+        // Get cleared notification IDs from localStorage
+        const clearedIds: string[] = JSON.parse(localStorage.getItem(`cleared_notifications_${user.id}`) || '[]');
+
         const filteredNotifications: Notification[] = recentEpisodes
           .filter((ep: any) => ep.season?.anime && animeIds.includes(ep.season.anime.id))
           .map((ep: any) => ({
@@ -87,7 +90,8 @@ export function NotificationBell() {
             season_number: ep.season.season_number,
             episode_id: ep.id,
             created_at: ep.created_at,
-          }));
+          }))
+          .filter((n: Notification) => !clearedIds.includes(n.id));
 
         setNotifications(filteredNotifications);
         
