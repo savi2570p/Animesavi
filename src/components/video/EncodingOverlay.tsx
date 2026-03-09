@@ -8,7 +8,7 @@ interface EncodingOverlayProps {
   onComplete: () => void;
 }
 
-const ENCODING_DURATION_MS = 3 * 60 * 1000; // 3 minutes
+const ENCODING_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
 function getStorageKey(episodeId: string) {
   return `encoding_start_${episodeId}`;

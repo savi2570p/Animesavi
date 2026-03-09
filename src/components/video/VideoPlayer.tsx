@@ -1697,9 +1697,25 @@ export function VideoPlayer({
     }
   }, [skipForward, skipBackward, togglePlay]);
 
+  // Standard quality presets for manual selection (like YouTube)
+  const STANDARD_QUALITIES = [
+    { height: 2160, label: '2160p (4K)', badge: '4K', badgeClass: 'bg-gradient-to-r from-violet-500 to-purple-500 text-white' },
+    { height: 1440, label: '1440p (2K)', badge: '2K', badgeClass: 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' },
+    { height: 1080, label: '1080p', badge: 'HD', badgeClass: 'bg-primary/20 text-primary' },
+    { height: 720, label: '720p', badge: 'HD', badgeClass: 'bg-primary/20 text-primary' },
+    { height: 480, label: '480p', badge: null, badgeClass: '' },
+    { height: 360, label: '360p', badge: null, badgeClass: '' },
+    { height: 240, label: '240p', badge: null, badgeClass: '' },
+    { height: 144, label: '144p', badge: null, badgeClass: '' },
+  ];
+
   // Get current quality/audio/subtitle labels for display
   const getCurrentQualityLabel = () => {
-    if (isAutoQuality) return 'Auto (1080p)';
+    if (isAutoQuality) {
+      const currentLevel = qualityLevels.find(l => l.id === currentQualityLevel);
+      if (currentLevel) return `Auto (${currentLevel.height}p)`;
+      return 'Auto';
+    }
     const level = qualityLevels.find(l => l.id === currentQualityLevel);
     return level ? `${level.height}p` : 'Auto';
   };
@@ -1814,9 +1830,20 @@ export function VideoPlayer({
   // Render settings menu content - Fixed click handling
   const renderSettingsContent = () => {
     switch (settingsMenu) {
-      case 'quality':
+      case 'quality': {
+        // Build quality options: merge HLS levels with standard presets
+        const availableQualities = STANDARD_QUALITIES.map(sq => {
+          // Find the closest HLS level for this standard quality
+          const hlsLevel = qualityLevels.find(l => l.height === sq.height) 
+            || qualityLevels.find(l => Math.abs(l.height - sq.height) <= 30);
+          return { ...sq, hlsLevel };
+        }).filter(sq => sq.hlsLevel); // Only show qualities that have a matching HLS level
+
+        // If no HLS levels at all, show standard options that trigger auto
+        const showStandardFallback = qualityLevels.length === 0;
+
         return (
-          <div className="py-1">
+          <div className="py-1 max-h-[300px] overflow-y-auto">
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('main'); }}
@@ -1827,15 +1854,42 @@ export function VideoPlayer({
             </button>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground">Quality</DropdownMenuLabel>
+            {/* Auto option */}
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); switchQualityLevel(-1); }}
               className={`${isAutoQuality ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm`}
             >
-              <span className="text-sm">Auto (1080p)</span>
+              <span className="text-sm">Auto</span>
               {isAutoQuality && <Check className="w-4 h-4 text-primary" />}
             </button>
-            {qualityLevels.length > 0 ? (
+            {/* Quality levels from HLS mapped to standard labels */}
+            {availableQualities.length > 0 ? (
+              availableQualities.map((q) => {
+                const isActive = !isAutoQuality && q.hlsLevel && currentQualityLevel === q.hlsLevel.id;
+                return (
+                  <button
+                    key={q.height}
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (q.hlsLevel) switchQualityLevel(q.hlsLevel.id); }}
+                    className={`${isActive ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">{q.label}</span>
+                      {q.badge && (
+                        <span className={`text-[10px] font-bold px-1 py-0.5 rounded ${q.badgeClass}`}>{q.badge}</span>
+                      )}
+                    </div>
+                    {isActive && <Check className="w-4 h-4 text-primary" />}
+                  </button>
+                );
+              })
+            ) : showStandardFallback ? (
+              <div className="px-2 py-2 text-xs text-muted-foreground">
+                Auto quality active
+              </div>
+            ) : (
+              /* Show actual HLS levels if they don't match standard presets */
               qualityLevels.map((level) => (
                 <button
                   key={level.id}
@@ -1852,13 +1906,10 @@ export function VideoPlayer({
                   {!isAutoQuality && currentQualityLevel === level.id && <Check className="w-4 h-4 text-primary" />}
                 </button>
               ))
-            ) : (
-              <div className="px-2 py-2 text-xs text-muted-foreground">
-                Auto quality active
-              </div>
             )}
           </div>
         );
+      }
       
       case 'audio':
         return (
