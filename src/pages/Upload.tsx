@@ -40,6 +40,7 @@ interface Anime {
   status: string | null;
   type: string | null;
   created_at: string;
+  release_year: number | null;
 }
 
 interface Season {
