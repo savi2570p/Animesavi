@@ -429,6 +429,42 @@ export default function UploadAnimeEdit() {
                 className="bg-muted/50"
               />
             </div>
+            <div className="space-y-2">
+              <Label>{animeStatus === 'upcoming' ? 'Release Date' : 'Release Year'}</Label>
+              {animeStatus === 'upcoming' ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal bg-muted/50">
+                      <CalendarIcon className="h-4 w-4 mr-2" />
+                      {editReleaseDate ? format(editReleaseDate, 'PPP') : (editReleaseYear ? editReleaseYear : 'Pick a date')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={editReleaseDate}
+                      onSelect={(d) => {
+                        setEditReleaseDate(d);
+                        if (d) setEditReleaseYear(String(d.getFullYear()));
+                      }}
+                      disabled={(date) => date < new Date() || date.getFullYear() > 2037}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <Input
+                  type="number"
+                  placeholder="2024"
+                  value={editReleaseYear}
+                  onChange={(e) => setEditReleaseYear(e.target.value)}
+                  min="1900"
+                  max="2099"
+                  className="bg-muted/50"
+                />
+              )}
+            </div>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <FileUploadInput
