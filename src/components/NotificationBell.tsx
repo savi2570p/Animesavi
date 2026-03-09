@@ -123,6 +123,12 @@ export function NotificationBell() {
   };
 
   const clearNotifications = () => {
+    if (user) {
+      // Save cleared notification IDs to localStorage
+      const currentCleared: string[] = JSON.parse(localStorage.getItem(`cleared_notifications_${user.id}`) || '[]');
+      const allIds = [...new Set([...currentCleared, ...notifications.map(n => n.id)])];
+      localStorage.setItem(`cleared_notifications_${user.id}`, JSON.stringify(allIds));
+    }
     setNotifications([]);
     setUnreadCount(0);
     setIsOpen(false);

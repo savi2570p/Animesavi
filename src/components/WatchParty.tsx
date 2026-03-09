@@ -988,12 +988,20 @@ export function ViewPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
   const handleEndParty = async (e: React.MouseEvent, partyId: string) => {
     e.stopPropagation();
     try {
-      await supabase
+      const { error } = await supabase
         .from('watch_parties')
         .update({ is_active: false })
         .eq('id', partyId);
+      
+      if (error) {
+        console.error('Error ending party:', error);
+        toast.error('Failed to end party');
+        return;
+      }
+      
       toast.success('Party ended');
-      loadJoinedParties();
+      // Remove from local state immediately
+      setParties(prev => prev.filter(p => p.id !== partyId));
     } catch (error) {
       console.error('Error ending party:', error);
       toast.error('Failed to end party');
