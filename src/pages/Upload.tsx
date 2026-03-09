@@ -433,7 +433,7 @@ export default function Upload() {
 
         {/* My Movies Tab */}
         <TabsContent value="my-movies">
-          {myAnime.filter(a => a.type === 'movie').length === 0 ? (
+          {myAnime.filter(a => a.type === 'movie' && a.status !== 'upcoming').length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Film className="h-12 w-12 text-muted-foreground mb-4" />
