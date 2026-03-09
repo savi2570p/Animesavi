@@ -913,6 +913,11 @@ export default function Upload() {
           <TokenSaviDashboard />
         </TabsContent>
 
+        {/* Upcoming Tab */}
+        <TabsContent value="upcoming">
+          <UpcomingTabContent anime={myAnime} allAnime={allAnime} isAdmin={isAdmin} />
+        </TabsContent>
+
       </Tabs>
     </div>
   );
