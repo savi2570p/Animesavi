@@ -502,13 +502,13 @@ def generate_hls(input_file: str, output_dir: str, use_gpu: bool,
     # For multi-audio: each video quality maps to a separate audio group entry
     var_entries = []
     audio_idx = 0
-    for vq in range(3):  # 3 video qualities
+    for vq in range(num_qualities):  # dynamic quality count
         for tidx, track in enumerate(audio_tracks):
             name_safe = track['label'].replace(' ', '_').lower()
             default_str = 'YES' if track['default'] else 'NO'
             lang = track['lang'][:3] if len(track['lang']) >= 3 else track['lang']
             var_entries.append(
-                f'v:{vq},a:{audio_idx},agroup:audio,name:{name_safe}_{vq}p,language:{lang},default:{default_str}'
+                f'v:{vq},a:{audio_idx},agroup:audio,name:{name_safe}_{quality_tiers[vq]["label"]},language:{lang},default:{default_str}'
             )
             audio_idx += 1
 
