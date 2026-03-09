@@ -83,6 +83,8 @@ export default function UploadAnimeEdit() {
   const [editCoverImage, setEditCoverImage] = useState('');
   const [editBannerImage, setEditBannerImage] = useState('');
   const [editGenres, setEditGenres] = useState<string[]>([]);
+  const [editReleaseYear, setEditReleaseYear] = useState('');
+  const [editReleaseDate, setEditReleaseDate] = useState<Date | undefined>(undefined);
   const [isSavingInfo, setIsSavingInfo] = useState(false);
 
   // New episode form
