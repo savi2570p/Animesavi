@@ -518,6 +518,9 @@ export default function UploadAnimeEdit() {
                 return;
               }
               setIsSavingInfo(true);
+              const yearToStore = animeStatus === 'upcoming' && editReleaseDate
+                ? editReleaseDate.getFullYear()
+                : (editReleaseYear ? parseInt(editReleaseYear) : null);
               const { error } = await supabase
                 .from('anime')
                 .update({
@@ -525,13 +528,14 @@ export default function UploadAnimeEdit() {
                   cover_image: editCoverImage.trim() || null,
                   banner_image: editBannerImage.trim() || null,
                   genres: editGenres.length > 0 ? editGenres : null,
+                  release_year: yearToStore,
                 })
                 .eq('id', animeId);
               if (error) {
                 toast.error('Failed to update');
               } else {
                 toast.success('Series info updated!');
-                setAnime(prev => prev ? { ...prev, title: editTitle.trim(), cover_image: editCoverImage.trim() || null, banner_image: editBannerImage.trim() || null, genres: editGenres } : null);
+                setAnime(prev => prev ? { ...prev, title: editTitle.trim(), cover_image: editCoverImage.trim() || null, banner_image: editBannerImage.trim() || null, genres: editGenres, release_year: yearToStore } : null);
               }
               setIsSavingInfo(false);
             }}
