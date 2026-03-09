@@ -483,7 +483,7 @@ def generate_hls(input_file: str, output_dir: str, use_gpu: bool,
     # Map each audio track separately for each video quality level
     audio_stream_idx = 0
     for track in audio_tracks:
-        for _vq in range(3):  # one audio per video quality
+        for _vq in range(num_qualities):  # one audio per video quality
             cmd += ['-map', f'0:a:{track["idx"]}', f'-c:a:{audio_stream_idx}', 'aac',
                     f'-b:a:{audio_stream_idx}', '128k', f'-ac:{audio_stream_idx}', '2']
             audio_stream_idx += 1
