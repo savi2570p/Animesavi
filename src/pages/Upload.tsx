@@ -27,7 +27,9 @@ import {
   Eye,
   Wrench,
   Key,
+  CalendarClock,
 } from 'lucide-react';
+import { UpcomingCountdownDialog } from '@/components/home/UpcomingCountdownDialog';
 
 const genres = ['Action', 'Adventure', 'Animation', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Mysterious', 'Anime', 'Anime Series', 'Hindi', 'English', 'Tamil', 'Telugu', 'Japanese', 'Crunchyroll', 'Muse India', 'Amazon Prime'];
 
@@ -38,6 +40,7 @@ interface Anime {
   status: string | null;
   type: string | null;
   created_at: string;
+  release_year: number | null;
 }
 
 interface Season {
@@ -350,6 +353,10 @@ export default function Upload() {
           <TabsTrigger value="token-savi" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
             <Key className="h-4 w-4 mr-2" />
             Token.Savi
+          </TabsTrigger>
+          <TabsTrigger value="upcoming" className="rounded-lg data-[state=active]:bg-orange-500 data-[state=active]:text-white">
+            <CalendarClock className="h-4 w-4 mr-2" />
+            Upcoming
           </TabsTrigger>
         </TabsList>
 
@@ -906,7 +913,112 @@ export default function Upload() {
           <TokenSaviDashboard />
         </TabsContent>
 
+        {/* Upcoming Tab */}
+        <TabsContent value="upcoming">
+          <UpcomingTabContent anime={myAnime} allAnime={allAnime} isAdmin={isAdmin} />
+        </TabsContent>
+
       </Tabs>
     </div>
+  );
+}
+
+function UpcomingTabContent({ anime, allAnime, isAdmin }: { anime: Anime[]; allAnime: Anime[]; isAdmin: boolean }) {
+  const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
+  const [countdowns, setCountdowns] = useState<Record<string, string>>({});
+
+  // Show user's upcoming + (if admin) all upcoming
+  const upcomingList = isAdmin
+    ? allAnime.filter(a => a.status === 'upcoming')
+    : anime.filter(a => a.status === 'upcoming');
+
+  useEffect(() => {
+    if (upcomingList.length === 0) return;
+
+    const update = () => {
+      const now = new Date();
+      const map: Record<string, string> = {};
+      upcomingList.forEach(a => {
+        const year = a.release_year || now.getFullYear() + 1;
+        const target = new Date(year, 0, 1, 0, 0, 0);
+        const diff = target.getTime() - now.getTime();
+        if (diff <= 0) {
+          map[a.id] = 'Released!';
+        } else {
+          const d = Math.floor(diff / 86400000);
+          const h = Math.floor((diff % 86400000) / 3600000);
+          const m = Math.floor((diff % 3600000) / 60000);
+          const s = Math.floor((diff % 60000) / 1000);
+          map[a.id] = `${d}d ${h}h ${m}m ${s}s`;
+        }
+      });
+      setCountdowns(map);
+    };
+
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [upcomingList.length]);
+
+  return (
+    <>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 rounded-lg bg-orange-500/10">
+          <CalendarClock className="h-5 w-5 text-orange-500" />
+        </div>
+        <h2 className="text-xl font-heading font-bold">Upcoming Anime</h2>
+        <Badge variant="outline" className="text-orange-500 border-orange-500/30">
+          {upcomingList.length} titles
+        </Badge>
+      </div>
+
+      {upcomingList.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <CalendarClock className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No upcoming anime</h3>
+            <p className="text-muted-foreground">Anime marked as "Upcoming" will appear here</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {upcomingList.map((a) => (
+            <div
+              key={a.id}
+              className="group cursor-pointer"
+              onClick={() => setSelectedAnime(a)}
+            >
+              <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+                {a.cover_image ? (
+                  <img src={a.cover_image} alt={a.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20">
+                    <span className="text-muted-foreground text-xs">No Image</span>
+                  </div>
+                )}
+                <div className="absolute inset-x-0 bottom-0 bg-black/70 backdrop-blur-sm p-2">
+                  <p className="text-orange-400 text-xs font-mono font-bold text-center">
+                    {countdowns[a.id] || '...'}
+                  </p>
+                </div>
+                {a.release_year && (
+                  <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-orange-500/90 text-[10px] font-bold text-white">
+                    {a.release_year}
+                  </div>
+                )}
+              </div>
+              <h3 className="mt-2 text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                {a.title}
+              </h3>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <UpcomingCountdownDialog
+        anime={selectedAnime ? { ...selectedAnime, created_at: selectedAnime.created_at, release_year: selectedAnime.release_year } : null}
+        onClose={() => setSelectedAnime(null)}
+      />
+    </>
   );
 }

@@ -29,6 +29,7 @@ interface Anime {
   uploader_id: string | null;
   status: string | null;
   genres: string[] | null;
+  release_year: number | null;
 }
 
 interface Season {
@@ -82,6 +83,8 @@ export default function UploadAnimeEdit() {
   const [editCoverImage, setEditCoverImage] = useState('');
   const [editBannerImage, setEditBannerImage] = useState('');
   const [editGenres, setEditGenres] = useState<string[]>([]);
+  const [editReleaseYear, setEditReleaseYear] = useState('');
+  const [editReleaseDate, setEditReleaseDate] = useState<Date | undefined>(undefined);
   const [isSavingInfo, setIsSavingInfo] = useState(false);
 
   // New episode form
@@ -148,6 +151,7 @@ export default function UploadAnimeEdit() {
     setEditCoverImage(animeData.cover_image || '');
     setEditBannerImage(animeData.banner_image || '');
     setEditGenres(animeData.genres || []);
+    setEditReleaseYear(animeData.release_year ? String(animeData.release_year) : '');
 
     // Fetch seasons
     const { data: seasonsData } = await supabase
@@ -425,6 +429,42 @@ export default function UploadAnimeEdit() {
                 className="bg-muted/50"
               />
             </div>
+            <div className="space-y-2">
+              <Label>{animeStatus === 'upcoming' ? 'Release Date' : 'Release Year'}</Label>
+              {animeStatus === 'upcoming' ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal bg-muted/50">
+                      <CalendarIcon className="h-4 w-4 mr-2" />
+                      {editReleaseDate ? format(editReleaseDate, 'PPP') : (editReleaseYear ? editReleaseYear : 'Pick a date')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={editReleaseDate}
+                      onSelect={(d) => {
+                        setEditReleaseDate(d);
+                        if (d) setEditReleaseYear(String(d.getFullYear()));
+                      }}
+                      disabled={(date) => date < new Date() || date.getFullYear() > 2037}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <Input
+                  type="number"
+                  placeholder="2024"
+                  value={editReleaseYear}
+                  onChange={(e) => setEditReleaseYear(e.target.value)}
+                  min="1900"
+                  max="2099"
+                  className="bg-muted/50"
+                />
+              )}
+            </div>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <FileUploadInput
@@ -478,6 +518,9 @@ export default function UploadAnimeEdit() {
                 return;
               }
               setIsSavingInfo(true);
+              const yearToStore = animeStatus === 'upcoming' && editReleaseDate
+                ? editReleaseDate.getFullYear()
+                : (editReleaseYear ? parseInt(editReleaseYear) : null);
               const { error } = await supabase
                 .from('anime')
                 .update({
@@ -485,13 +528,14 @@ export default function UploadAnimeEdit() {
                   cover_image: editCoverImage.trim() || null,
                   banner_image: editBannerImage.trim() || null,
                   genres: editGenres.length > 0 ? editGenres : null,
+                  release_year: yearToStore,
                 })
                 .eq('id', animeId);
               if (error) {
                 toast.error('Failed to update');
               } else {
                 toast.success('Series info updated!');
-                setAnime(prev => prev ? { ...prev, title: editTitle.trim(), cover_image: editCoverImage.trim() || null, banner_image: editBannerImage.trim() || null, genres: editGenres } : null);
+                setAnime(prev => prev ? { ...prev, title: editTitle.trim(), cover_image: editCoverImage.trim() || null, banner_image: editBannerImage.trim() || null, genres: editGenres, release_year: yearToStore } : null);
               }
               setIsSavingInfo(false);
             }}
