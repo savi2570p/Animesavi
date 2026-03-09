@@ -1697,9 +1697,25 @@ export function VideoPlayer({
     }
   }, [skipForward, skipBackward, togglePlay]);
 
+  // Standard quality presets for manual selection (like YouTube)
+  const STANDARD_QUALITIES = [
+    { height: 2160, label: '2160p (4K)', badge: '4K', badgeClass: 'bg-gradient-to-r from-violet-500 to-purple-500 text-white' },
+    { height: 1440, label: '1440p (2K)', badge: '2K', badgeClass: 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' },
+    { height: 1080, label: '1080p', badge: 'HD', badgeClass: 'bg-primary/20 text-primary' },
+    { height: 720, label: '720p', badge: 'HD', badgeClass: 'bg-primary/20 text-primary' },
+    { height: 480, label: '480p', badge: null, badgeClass: '' },
+    { height: 360, label: '360p', badge: null, badgeClass: '' },
+    { height: 240, label: '240p', badge: null, badgeClass: '' },
+    { height: 144, label: '144p', badge: null, badgeClass: '' },
+  ];
+
   // Get current quality/audio/subtitle labels for display
   const getCurrentQualityLabel = () => {
-    if (isAutoQuality) return 'Auto (1080p)';
+    if (isAutoQuality) {
+      const currentLevel = qualityLevels.find(l => l.id === currentQualityLevel);
+      if (currentLevel) return `Auto (${currentLevel.height}p)`;
+      return 'Auto';
+    }
     const level = qualityLevels.find(l => l.id === currentQualityLevel);
     return level ? `${level.height}p` : 'Auto';
   };
