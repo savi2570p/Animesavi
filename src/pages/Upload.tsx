@@ -981,36 +981,52 @@ function UpcomingTabContent({ anime, allAnime, isAdmin }: { anime: Anime[]; allA
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="grid gap-4">
           {upcomingList.map((a) => (
-            <div
-              key={a.id}
-              className="group cursor-pointer"
-              onClick={() => setSelectedAnime(a)}
-            >
-              <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-muted">
-                {a.cover_image ? (
-                  <img src={a.cover_image} alt={a.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20">
-                    <span className="text-muted-foreground text-xs">No Image</span>
-                  </div>
-                )}
-                <div className="absolute inset-x-0 bottom-0 bg-black/70 backdrop-blur-sm p-2">
-                  <p className="text-orange-400 text-xs font-mono font-bold text-center">
-                    {countdowns[a.id] || '...'}
-                  </p>
+            <Card key={a.id}>
+              <CardContent className="flex items-center gap-4 p-4">
+                <div className="relative w-16 h-20 rounded overflow-hidden bg-muted shrink-0">
+                  {a.cover_image ? (
+                    <img src={a.cover_image} alt={a.title} className="w-full h-full object-cover" loading="lazy" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20">
+                      <Film className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                  )}
                 </div>
-                {a.release_year && (
-                  <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-orange-500/90 text-[10px] font-bold text-white">
-                    {a.release_year}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold truncate">{a.title}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className="text-orange-500 border-orange-500/30 text-xs">
+                      Upcoming
+                    </Badge>
+                    {a.release_year && (
+                      <span className="text-xs text-muted-foreground">{a.release_year}</span>
+                    )}
+                    <span className="text-orange-400 text-xs font-mono font-bold">
+                      {countdowns[a.id] || '...'}
+                    </span>
                   </div>
-                )}
-              </div>
-              <h3 className="mt-2 text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                {a.title}
-              </h3>
-            </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-orange-500 border-orange-500/30 hover:bg-orange-500/10"
+                    onClick={() => setSelectedAnime(a)}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    Countdown
+                  </Button>
+                  <Link to={`/upload/anime/${a.id}/edit`}>
+                    <Button variant="outline" size="sm">
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}
