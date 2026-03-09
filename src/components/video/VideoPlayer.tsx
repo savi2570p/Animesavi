@@ -2627,8 +2627,33 @@ export function VideoPlayer({
                     <SkipForward className="w-3 h-3" />
                   </button>
                 )}
+                {/* Persistent Quality Badge */}
+                <button
+                  className="flex items-center gap-1 ml-1 px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  onClick={(e) => { e.stopPropagation(); setSettingsOpen(true); setSettingsMenu('quality'); }}
+                  title="Change Quality"
+                >
+                  <span className="text-[10px] md:text-xs font-bold">
+                    {(() => {
+                      const level = qualityLevels.find(l => l.id === currentQualityLevel);
+                      const height = level?.height || 0;
+                      if (isAutoQuality) {
+                        return level ? `${height}p` : 'Auto';
+                      }
+                      return `${height}p`;
+                    })()}
+                  </span>
+                  {(() => {
+                    const level = qualityLevels.find(l => l.id === currentQualityLevel);
+                    const height = level?.height || 0;
+                    if (height >= 2160) return <span className="text-[8px] font-bold bg-gradient-to-r from-violet-500 to-purple-500 text-white px-1 rounded">4K</span>;
+                    if (height >= 1440) return <span className="text-[8px] font-bold bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-1 rounded">2K</span>;
+                    if (height >= 720) return <span className="text-[8px] font-bold bg-primary/30 text-primary px-1 rounded">HD</span>;
+                    return null;
+                  })()}
+                </button>
                 {currentBitrate > 0 && (
-                  <div className="hidden lg:flex items-center gap-1.5 ml-3 px-2 py-1 rounded bg-white/10 text-white/80">
+                  <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded bg-white/10 text-white/80">
                     <Gauge className="w-3.5 h-3.5" />
                     <span className="text-xs font-mono">{(currentBitrate / 1000000).toFixed(1)} Mbps</span>
                   </div>
