@@ -432,22 +432,53 @@ def generate_hls(input_file: str, output_dir: str, use_gpu: bool,
     # ── Build ffmpeg command ──
     cmd = ['ffmpeg', '-y', '-i', input_file]
 
-    # Video filter complex for ABR
-    cmd += [
-        '-filter_complex',
-        '[0:v]split=3[v1][v2][v3];'
-        '[v1]scale=w=640:h=360:force_original_aspect_ratio=decrease[v360];'
-        '[v2]scale=w=1280:h=720:force_original_aspect_ratio=decrease[v720];'
-        '[v3]scale=w=1920:h=1080:force_original_aspect_ratio=decrease[v1080]',
-    ]
+    # Detect source resolution to determine which quality tiers to include
+    probe_cmd = ['ffprobe', '-v', 'error', '-select_streams', 'v:0',
+                 '-show_entries', 'stream=height', '-of', 'csv=p=0', input_file]
+    try:
+        source_height = int(subprocess.check_output(probe_cmd, text=True).strip())
+    except Exception:
+        source_height = 1080  # default assumption
 
-    # Map video streams (3 quality levels)
-    cmd += ['-map', '[v360]', '-c:v:0', encoder, *encoder_opts,
-            '-b:v:0', '800k', '-maxrate:v:0', '856k', '-bufsize:v:0', '1200k']
-    cmd += ['-map', '[v720]', '-c:v:1', encoder, *encoder_opts,
-            '-b:v:1', '2800k', '-maxrate:v:1', '2996k', '-bufsize:v:1', '4200k']
-    cmd += ['-map', '[v1080]', '-c:v:2', encoder, *encoder_opts,
-            '-b:v:2', '5000k', '-maxrate:v:2', '5350k', '-bufsize:v:2', '7500k']
+    log(f"HLS: Source resolution height = {source_height}p")
+
+    # Build quality tiers based on source resolution (low to high)
+    quality_tiers = []
+    all_tiers = [
+        {'height': 144,  'width': 256,  'bitrate': '200k',  'maxrate': '214k',  'bufsize': '300k',  'label': '144p'},
+        {'height': 240,  'width': 426,  'bitrate': '400k',  'maxrate': '428k',  'bufsize': '600k',  'label': '240p'},
+        {'height': 360,  'width': 640,  'bitrate': '800k',  'maxrate': '856k',  'bufsize': '1200k', 'label': '360p'},
+        {'height': 480,  'width': 854,  'bitrate': '1400k', 'maxrate': '1498k', 'bufsize': '2100k', 'label': '480p'},
+        {'height': 720,  'width': 1280, 'bitrate': '2800k', 'maxrate': '2996k', 'bufsize': '4200k', 'label': '720p'},
+        {'height': 1080, 'width': 1920, 'bitrate': '5000k', 'maxrate': '5350k', 'bufsize': '7500k', 'label': '1080p'},
+        {'height': 1440, 'width': 2560, 'bitrate': '8000k', 'maxrate': '8560k', 'bufsize': '12000k','label': '1440p'},
+        {'height': 2160, 'width': 3840, 'bitrate': '14000k','maxrate': '14980k','bufsize': '21000k','label': '2160p'},
+    ]
+    for tier in all_tiers:
+        if tier['height'] <= source_height:
+            quality_tiers.append(tier)
+    # Ensure at least 360p, 720p, 1080p if source is >= 1080p
+    if not quality_tiers:
+        quality_tiers = [all_tiers[2]]  # at least 360p
+
+    num_qualities = len(quality_tiers)
+    log(f"HLS: Generating {num_qualities} quality tiers: {[t['label'] for t in quality_tiers]}")
+
+    # Video filter complex for ABR
+    split_labels = ''.join([f'[v{i}]' for i in range(num_qualities)])
+    scale_filters = ';'.join([
+        f'[v{i}]scale=w={t["width"]}:h={t["height"]}:force_original_aspect_ratio=decrease[v{t["height"]}]'
+        for i, t in enumerate(quality_tiers)
+    ])
+    filter_complex = f'[0:v]split={num_qualities}{split_labels};{scale_filters}'
+
+    cmd += ['-filter_complex', filter_complex]
+
+    # Map video streams
+    for i, tier in enumerate(quality_tiers):
+        cmd += ['-map', f'[v{tier["height"]}]', f'-c:v:{i}', encoder, *encoder_opts,
+                f'-b:v:{i}', tier['bitrate'], f'-maxrate:v:{i}', tier['maxrate'],
+                f'-bufsize:v:{i}', tier['bufsize']]
 
     # Map each audio track separately for each video quality level
     audio_stream_idx = 0
