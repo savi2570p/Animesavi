@@ -447,7 +447,7 @@ export default function Upload() {
             </Card>
           ) : (
             <div className="grid gap-4">
-              {myAnime.filter(a => a.type === 'movie').map((anime) => (
+              {myAnime.filter(a => a.type === 'movie' && a.status !== 'upcoming').map((anime) => (
                 <Card key={anime.id}>
                   <CardContent className="flex items-center gap-4 p-4">
                     <img
