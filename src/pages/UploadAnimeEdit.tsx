@@ -29,6 +29,7 @@ interface Anime {
   uploader_id: string | null;
   status: string | null;
   genres: string[] | null;
+  release_year: number | null;
 }
 
 interface Season {
