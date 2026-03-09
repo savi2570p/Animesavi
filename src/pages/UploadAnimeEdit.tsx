@@ -151,6 +151,7 @@ export default function UploadAnimeEdit() {
     setEditCoverImage(animeData.cover_image || '');
     setEditBannerImage(animeData.banner_image || '');
     setEditGenres(animeData.genres || []);
+    setEditReleaseYear(animeData.release_year ? String(animeData.release_year) : '');
 
     // Fetch seasons
     const { data: seasonsData } = await supabase
