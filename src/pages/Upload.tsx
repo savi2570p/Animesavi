@@ -371,7 +371,7 @@ export default function Upload() {
             />
           </div>
           {(() => {
-            const filteredAnime = myAnime.filter(a => a.type !== 'movie' && a.title.toLowerCase().includes(animeSearchQuery.toLowerCase()));
+            const filteredAnime = myAnime.filter(a => a.type !== 'movie' && a.status !== 'upcoming' && a.title.toLowerCase().includes(animeSearchQuery.toLowerCase()));
             return filteredAnime.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
