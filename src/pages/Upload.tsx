@@ -354,6 +354,10 @@ export default function Upload() {
             <Key className="h-4 w-4 mr-2" />
             Token.Savi
           </TabsTrigger>
+          <TabsTrigger value="upcoming" className="rounded-lg data-[state=active]:bg-orange-500 data-[state=active]:text-white">
+            <CalendarClock className="h-4 w-4 mr-2" />
+            Upcoming
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="my-anime">
