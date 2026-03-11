@@ -118,7 +118,7 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
   },
   SHORT: { 
     name: 'SAVI.IN', 
-    features: ['watch', 'quality'],
+    features: ['watch', 'quality', 'download'],
     playerStyle: 'standard'
   },
   Zex: { 
