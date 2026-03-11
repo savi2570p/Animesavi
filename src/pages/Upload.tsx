@@ -915,7 +915,7 @@ export default function Upload() {
 
         {/* Upcoming Tab */}
         <TabsContent value="upcoming">
-          <UpcomingTabContent anime={myAnime} allAnime={allAnime} isAdmin={isAdmin} />
+          <UpcomingTabContent anime={myAnime} allAnime={allAnime} isAdmin={isAdmin} onDelete={handleDeleteAnime} />
         </TabsContent>
 
       </Tabs>
@@ -923,7 +923,7 @@ export default function Upload() {
   );
 }
 
-function UpcomingTabContent({ anime, allAnime, isAdmin }: { anime: Anime[]; allAnime: Anime[]; isAdmin: boolean }) {
+function UpcomingTabContent({ anime, allAnime, isAdmin, onDelete }: { anime: Anime[]; allAnime: Anime[]; isAdmin: boolean; onDelete: (id: string) => void }) {
   const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
   const [countdowns, setCountdowns] = useState<Record<string, string>>({});
 
@@ -1018,12 +1018,20 @@ function UpcomingTabContent({ anime, allAnime, isAdmin }: { anime: Anime[]; allA
                     <Eye className="h-4 w-4 mr-1" />
                     Countdown
                   </Button>
-                  <Link to={`/upload/anime/${a.id}/edit`}>
+                  <Link to={`/upload/anime/${a.id}`}>
                     <Button variant="outline" size="sm">
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
                     </Button>
                   </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => onDelete(a.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
