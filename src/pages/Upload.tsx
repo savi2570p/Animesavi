@@ -1018,12 +1018,20 @@ function UpcomingTabContent({ anime, allAnime, isAdmin, onDelete }: { anime: Ani
                     <Eye className="h-4 w-4 mr-1" />
                     Countdown
                   </Button>
-                  <Link to={`/upload/anime/${a.id}/edit`}>
+                  <Link to={`/upload/anime/${a.id}`}>
                     <Button variant="outline" size="sm">
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
                     </Button>
                   </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => onDelete(a.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
