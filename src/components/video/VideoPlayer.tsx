@@ -2889,7 +2889,7 @@ export function VideoPlayer({
         open={showDownloadDialog}
         onOpenChange={setShowDownloadDialog}
         videoUrl={effectiveVideoUrl || ''}
-        fileName={`${animeTitle} - Episode ${episodeNumber}.mp4`}
+        fileName={isMovie ? `${animeTitle} - AnimeSavi.mp4` : `${animeTitle} - S${String(seasonNumber).padStart(2, '0')}E${String(episodeNumber).padStart(2, '0')} - AnimeSavi.mp4`}
       />
       
       {/* Screen Mirroring Dialog */}
