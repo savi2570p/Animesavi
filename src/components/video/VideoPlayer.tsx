@@ -2577,9 +2577,9 @@ export function VideoPlayer({
               </div>
             </div>
 
-            {/* Control buttons - Fullscreen version - Compact */}
+            {/* Control buttons - Fullscreen - Clean & Compact */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-0.5 md:gap-1.5">
+              <div className="flex items-center gap-1 md:gap-1.5">
                 <button 
                   className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); skipBackward(); }} 
@@ -2609,127 +2609,17 @@ export function VideoPlayer({
                     onMuteToggle={toggleMute}
                   />
                 </div>
-                {/* Volume Button - Mobile (just mute toggle) */}
+                {/* Volume Button - Mobile */}
                 <button 
                   className="md:hidden w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); toggleMute(); }}
                 >
                   {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
                 </button>
-                {/* Next Episode Button - Only for PLAY and SHORT servers */}
-                {hasNextEpisode && onNextEpisode && (
-                  <button 
-                    className="hidden md:flex w-auto px-2.5 h-7 md:h-8 rounded-full bg-primary/80 hover:bg-primary items-center justify-center text-white transition-colors gap-1" 
-                    onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
-                    title="Next Episode"
-                  >
-                    <span className="text-[10px] font-medium">Next</span>
-                    <SkipForward className="w-3 h-3" />
-                  </button>
-                )}
-                {/* Persistent Quality Badge */}
-                <button
-                  className="flex items-center gap-1 ml-1 px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-white transition-colors"
-                  onClick={(e) => { e.stopPropagation(); setSettingsOpen(true); setSettingsMenu('quality'); }}
-                  title="Change Quality"
-                >
-                  <span className="text-[10px] md:text-xs font-bold">
-                    {(() => {
-                      const level = qualityLevels.find(l => l.id === currentQualityLevel);
-                      const height = level?.height || 0;
-                      if (isAutoQuality) {
-                        return level ? `${height}p` : 'Auto';
-                      }
-                      return `${height}p`;
-                    })()}
-                  </span>
-                  {(() => {
-                    const level = qualityLevels.find(l => l.id === currentQualityLevel);
-                    const height = level?.height || 0;
-                    if (height >= 2160) return <span className="text-[8px] font-bold bg-gradient-to-r from-violet-500 to-purple-500 text-white px-1 rounded">4K</span>;
-                    if (height >= 1440) return <span className="text-[8px] font-bold bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-1 rounded">2K</span>;
-                    if (height >= 720) return <span className="text-[8px] font-bold bg-primary/30 text-primary px-1 rounded">HD</span>;
-                    return null;
-                  })()}
-                </button>
-                {currentBitrate > 0 && (
-                  <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded bg-white/10 text-white/80">
-                    <Gauge className="w-3.5 h-3.5" />
-                    <span className="text-xs font-mono">{(currentBitrate / 1000000).toFixed(1)} Mbps</span>
-                  </div>
-                )}
               </div>
 
-              <div className="flex items-center gap-0.5">
-                {/* Keyboard Shortcuts Info Button - Fullscreen */}
-                <TooltipProvider>
-                  <Tooltip open={showKeyboardShortcuts} onOpenChange={setShowKeyboardShortcuts}>
-                    <TooltipTrigger asChild>
-                      <button 
-                        className="hidden md:flex w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
-                        onClick={(e) => { e.stopPropagation(); setShowKeyboardShortcuts(!showKeyboardShortcuts); }}
-                        title="Keyboard Shortcuts"
-                      >
-                        <Info className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="bg-background/95 backdrop-blur-xl border-border/50 p-4 max-w-[280px]" style={{ zIndex: 2147483647 }}>
-                      <div className="space-y-2">
-                        <h4 className="font-semibold text-sm flex items-center gap-2">
-                          <Keyboard className="w-4 h-4" />
-                          Keyboard Shortcuts
-                        </h4>
-                        <div className="grid gap-1.5 text-xs">
-                          <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Play/Pause</span>
-                            <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">Space</kbd>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Seek Forward 10s</span>
-                            <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">→</kbd>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Seek Backward 10s</span>
-                            <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">←</kbd>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Fullscreen</span>
-                            <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">F</kbd>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Mute</span>
-                            <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">M</kbd>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Volume Up</span>
-                            <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">↑</kbd>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Volume Down</span>
-                            <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">↓</kbd>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Picture-in-Picture</span>
-                            <kbd className="px-2 py-0.5 bg-muted rounded text-foreground font-mono">P</kbd>
-                          </div>
-                        </div>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                {/* Next Episode Button Mobile */}
-                {hasNextEpisode && onNextEpisode && (
-                  <button 
-                    className="md:hidden w-6 h-6 rounded-full bg-primary/80 hover:bg-primary flex items-center justify-center text-white transition-colors" 
-                    onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
-                    title="Next Episode"
-                  >
-                    <SkipForward className="w-4 h-4" />
-                  </button>
-                )}
-                
-                {/* Settings Menu - Fullscreen Compatible - Uses container prop to render inside fullscreen */}
+              <div className="flex items-center gap-0.5 md:gap-1">
+                {/* Settings */}
                 <DropdownMenu 
                   modal={false} 
                   open={settingsOpen}
@@ -2766,30 +2656,23 @@ export function VideoPlayer({
                     {renderSettingsContent()}
                   </DropdownMenuContent>
                 </DropdownMenu>
-
-                {features.includes('download') && (
-                  <button 
-                    className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
-                    onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
-                    title="Download"
-                  >
-                    <Download className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  </button>
-                )}
+                {/* Screen Mirroring */}
                 <button 
-                  className="flex w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
+                  className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); setShowMirroringDialog(true); }} 
                   title="Screen Mirroring"
                 >
                   <Cast className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 </button>
+                {/* PiP */}
                 <button 
-                  className="flex w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-white transition-colors" 
+                  className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                   title="Picture-in-Picture"
                 >
                   <PictureInPicture2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 </button>
+                {/* Fullscreen */}
                 <button 
                   className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
