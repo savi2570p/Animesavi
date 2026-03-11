@@ -915,7 +915,7 @@ export default function Upload() {
 
         {/* Upcoming Tab */}
         <TabsContent value="upcoming">
-          <UpcomingTabContent anime={myAnime} allAnime={allAnime} isAdmin={isAdmin} />
+          <UpcomingTabContent anime={myAnime} allAnime={allAnime} isAdmin={isAdmin} onDelete={handleDeleteAnime} />
         </TabsContent>
 
       </Tabs>
