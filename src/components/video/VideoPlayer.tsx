@@ -2581,13 +2581,6 @@ export function VideoPlayer({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1 md:gap-1.5">
                 <button 
-                  className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
-                  onClick={(e) => { e.stopPropagation(); skipBackward(); }} 
-                  title="Skip back 10s"
-                >
-                  <SkipBack className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                </button>
-                <button 
                   className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                 >
