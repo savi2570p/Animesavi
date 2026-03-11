@@ -923,7 +923,7 @@ export default function Upload() {
   );
 }
 
-function UpcomingTabContent({ anime, allAnime, isAdmin }: { anime: Anime[]; allAnime: Anime[]; isAdmin: boolean }) {
+function UpcomingTabContent({ anime, allAnime, isAdmin, onDelete }: { anime: Anime[]; allAnime: Anime[]; isAdmin: boolean; onDelete: (id: string) => void }) {
   const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
   const [countdowns, setCountdowns] = useState<Record<string, string>>({});
 
