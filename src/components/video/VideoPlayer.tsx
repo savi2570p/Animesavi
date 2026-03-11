@@ -118,7 +118,7 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
   },
   SHORT: { 
     name: 'SAVI.IN', 
-    features: ['watch', 'quality'],
+    features: ['watch', 'quality', 'download'],
     playerStyle: 'standard'
   },
   Zex: { 
@@ -2508,8 +2508,8 @@ export function VideoPlayer({
           {/* Top gradient */}
           <div className="h-24 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
 
-          {/* Center Play/Pause Button */}
-          {!isPlaying && showControls && (
+          {/* Center Play/Pause Button - only show when paused and not loading */}
+          {!isPlaying && showControls && !showPremiumLoader && !isLoading && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 2147483647 }}>
               <div 
                 className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
@@ -2581,13 +2581,6 @@ export function VideoPlayer({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1 md:gap-1.5">
                 <button 
-                  className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
-                  onClick={(e) => { e.stopPropagation(); skipBackward(); }} 
-                  title="Skip back 10s"
-                >
-                  <SkipBack className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                </button>
-                <button 
                   className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                 >
@@ -2619,6 +2612,16 @@ export function VideoPlayer({
               </div>
 
               <div className="flex items-center gap-0.5 md:gap-1">
+                {/* Download - for RIP X and SAVI.IN */}
+                {features.includes('download') && (
+                  <button 
+                    className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                    onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
+                    title="Download"
+                  >
+                    <Download className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  </button>
+                )}
                 {/* Settings */}
                 <DropdownMenu 
                   modal={false} 
@@ -2697,8 +2700,8 @@ export function VideoPlayer({
           {/* Top gradient */}
           <div className="h-24 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
 
-          {/* Center Play/Pause Button */}
-          {!isPlaying && showControls && (
+          {/* Center Play/Pause Button - only show when paused and not loading */}
+          {!isPlaying && showControls && !showPremiumLoader && !isLoading && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[60]">
               <div 
                 className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
@@ -2769,15 +2772,6 @@ export function VideoPlayer({
           {/* Control buttons - Clean & Compact */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-0.5 md:gap-1.5">
-              {/* Skip back */}
-              <button 
-                className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
-                onClick={(e) => { e.stopPropagation(); skipBackward(); }} 
-                title="Skip back 10s"
-              >
-                <SkipBack className="w-3 h-3 md:w-4 md:h-4" />
-              </button>
-
               {/* Play/Pause */}
               <button 
                 className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
@@ -2814,6 +2808,16 @@ export function VideoPlayer({
             </div>
 
             <div className="flex items-center gap-0.5 md:gap-1">
+              {/* Download - for RIP X and SAVI.IN */}
+              {features.includes('download') && (
+                <button 
+                  className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
+                  title="Download"
+                >
+                  <Download className="w-3 h-3 md:w-4 md:h-4" />
+                </button>
+              )}
               {/* Settings Menu */}
               <DropdownMenu 
                 modal={false} 
@@ -2889,7 +2893,7 @@ export function VideoPlayer({
         open={showDownloadDialog}
         onOpenChange={setShowDownloadDialog}
         videoUrl={effectiveVideoUrl || ''}
-        fileName={`${animeTitle} - Episode ${episodeNumber}.mp4`}
+        fileName={isMovie ? `${animeTitle} - AnimeSavi.mp4` : `${animeTitle} - S${String(seasonNumber).padStart(2, '0')}E${String(episodeNumber).padStart(2, '0')} - AnimeSavi.mp4`}
       />
       
       {/* Screen Mirroring Dialog */}
