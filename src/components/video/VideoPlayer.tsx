@@ -2697,8 +2697,8 @@ export function VideoPlayer({
           {/* Top gradient */}
           <div className="h-24 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
 
-          {/* Center Play/Pause Button */}
-          {!isPlaying && showControls && (
+          {/* Center Play/Pause Button - only show when paused and not loading */}
+          {!isPlaying && showControls && !showPremiumLoader && !isLoading && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[60]">
               <div 
                 className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
