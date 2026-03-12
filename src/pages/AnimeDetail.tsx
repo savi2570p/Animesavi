@@ -520,27 +520,13 @@ export default function AnimeDetail() {
                 <Heart className={cn("h-5 w-5 mr-2", isFavorite && 'fill-current')} />
                 {isFavorite ? 'In Favorites' : 'Add to Favorites'}
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline"
+              <ShareEmbedPopup
+                type="series"
+                pageUrl={window.location.pathname}
+                animeTitle={anime.title}
+                size="lg"
                 className="h-14 px-6 border-2"
-                onClick={() => {
-                  // Use current page URL (will be slug-based after replaceState)
-                  const shareUrl = window.location.href;
-                  if (navigator.share) {
-                    navigator.share({ url: shareUrl }).catch(() => {
-                      navigator.clipboard.writeText(shareUrl);
-                      toast.success('Link copied!');
-                    });
-                  } else {
-                    navigator.clipboard.writeText(shareUrl);
-                    toast.success('Link copied!');
-                  }
-                }}
-              >
-                <Share2 className="h-5 w-5 mr-2" />
-                Share
-              </Button>
+              />
               
               {/* Batch Download Button */}
               {episodes.length > 0 && (
