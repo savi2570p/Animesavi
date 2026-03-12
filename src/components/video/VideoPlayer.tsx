@@ -2888,19 +2888,27 @@ export function VideoPlayer({
       </div>
       )}
       
-      {/* Download Verification Dialog */}
-      <DownloadVerificationDialog
-        open={showDownloadDialog}
-        onOpenChange={setShowDownloadDialog}
-        videoUrl={effectiveVideoUrl || ''}
-        fileName={isMovie ? `${animeTitle} - AnimeSavi.mp4` : `${animeTitle} - S${String(seasonNumber).padStart(2, '0')}E${String(episodeNumber).padStart(2, '0')} - AnimeSavi.mp4`}
-      />
+      {/* Download Verification Dialog - portal to body for fullscreen support */}
+      {createPortal(
+        <DownloadVerificationDialog
+          open={showDownloadDialog}
+          onOpenChange={setShowDownloadDialog}
+          videoUrl={effectiveVideoUrl || ''}
+          fileName={isMovie ? `${animeTitle} - AnimeSavi.mp4` : `${animeTitle} - S${String(seasonNumber).padStart(2, '0')}E${String(episodeNumber).padStart(2, '0')} - AnimeSavi.mp4`}
+          animeTitle={animeTitle}
+          episodeLabel={isMovie ? 'Movie' : `Season ${seasonNumber} - Episode ${episodeNumber}`}
+        />,
+        document.body
+      )}
       
-      {/* Screen Mirroring Dialog */}
-      <ScreenMirroringDialog
-        open={showMirroringDialog}
-        onOpenChange={setShowMirroringDialog}
-      />
+      {/* Screen Mirroring Dialog - portal to body for fullscreen support */}
+      {createPortal(
+        <ScreenMirroringDialog
+          open={showMirroringDialog}
+          onOpenChange={setShowMirroringDialog}
+        />,
+        document.body
+      )}
     </div>
   );
 }
