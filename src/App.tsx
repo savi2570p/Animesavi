@@ -51,6 +51,7 @@ const MuseINPage = lazy(() => import("./pages/MuseINPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Schedule = lazy(() => import("./pages/Schedule"));
 const UpcomingPage = lazy(() => import("./pages/UpcomingPage"));
+const EmbedSlugPlayer = lazy(() => import("./pages/EmbedSlugPlayer"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -164,6 +165,7 @@ const App = () => (
                 
                 <Route path="/external-player" element={<ExternalPlayer />} />
                 <Route path="/embed/:episodeId" element={<EmbedPlayer />} />
+                <Route path="/embed/:animeSlug/:episodeSlug" element={<EmbedSlugPlayer />} />
                 <Route element={<MainLayout />}>
                   <Route path="/" element={<Index />} />
                   <Route path="/browse" element={<Browse />} />

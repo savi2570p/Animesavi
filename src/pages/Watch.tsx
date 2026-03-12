@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { ShareEmbedPopup } from '@/components/ShareEmbedPopup';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -27,7 +28,7 @@ import {
   ChevronRight,
   MessageSquare,
   Send,
-  Share2,
+  
   Edit,
   Server,
   X,
@@ -1084,35 +1085,22 @@ export default function Watch() {
               isIOSDevice={deviceOptimizedVideo.device === 'iOS'}
             />
             
-            <Button
-              variant="outline"
-              onClick={() => {
-                // Create clean URL with anime name, season, and episode number
-                const animeSlug = anime?.title
-                  ? anime.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-                  : '';
-                const seasonNum = currentSeason?.season_number || 1;
-                const shareUrl = `${window.location.origin}/${animeSlug}/season-${seasonNum}-episode-${episode.episode_number}`;
-                const shareText = `Watch "${anime?.title}" - S${seasonNum} E${episode.episode_number}: ${episode.title} on AnimeSavi!`;
-
-                if (navigator.share) {
-                  navigator.share({
-                    title: `${anime?.title} - S${seasonNum} E${episode.episode_number}`,
-                    text: shareText,
-                    url: shareUrl,
-                  }).catch(() => {
-                    navigator.clipboard.writeText(shareUrl);
-                    toast.success('Link copied to clipboard!');
-                  });
-                } else {
-                  navigator.clipboard.writeText(shareUrl);
-                  toast.success('Link copied to clipboard!');
-                }
-              }}
-            >
-              <Share2 className="h-4 w-4 mr-2" />
-              Share Episode
-            </Button>
+            {(() => {
+              const animeSlug = anime?.title
+                ? anime.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+                : '';
+              const seasonNum = currentSeason?.season_number || 1;
+              const pageUrl = `/${animeSlug}/season-${seasonNum}-episode-${episode.episode_number}`;
+              const embedUrl = `/embed/${animeSlug}/episode-${episode.episode_number}`;
+              return (
+                <ShareEmbedPopup
+                  type="episode"
+                  pageUrl={pageUrl}
+                  embedUrl={embedUrl}
+                  animeTitle={anime?.title || 'Episode'}
+                />
+              );
+            })()}
           </div>
 
           {/* Comments */}
