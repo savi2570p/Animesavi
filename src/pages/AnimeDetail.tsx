@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { BatchDownload } from '@/components/download/BatchDownload';
 import { AnimeReviews } from '@/components/anime/AnimeReviews';
+import { ShareEmbedPopup } from '@/components/ShareEmbedPopup';
 import {
   Play,
   Heart,
