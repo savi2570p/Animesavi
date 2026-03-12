@@ -28,7 +28,7 @@ import {
   ChevronRight,
   MessageSquare,
   Send,
-  Share2,
+  
   Edit,
   Server,
   X,
