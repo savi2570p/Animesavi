@@ -51,6 +51,7 @@ const MuseINPage = lazy(() => import("./pages/MuseINPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Schedule = lazy(() => import("./pages/Schedule"));
 const UpcomingPage = lazy(() => import("./pages/UpcomingPage"));
+const EmbedSlugPlayer = lazy(() => import("./pages/EmbedSlugPlayer"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
