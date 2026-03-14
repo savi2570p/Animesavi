@@ -973,21 +973,21 @@ export default function Watch() {
 
           {/* Season Switcher */}
           {allSeasons.length > 1 && (
-            <div className="flex items-center gap-3 ml-auto">
-              <span className="text-muted-foreground font-medium">Season:</span>
-              <div className="flex gap-2 overflow-x-auto">
+            <div className="flex items-center gap-2 md:gap-3 ml-auto min-w-0">
+              <span className="text-muted-foreground font-medium text-sm md:text-base shrink-0">Season:</span>
+              <div className="flex gap-1.5 md:gap-2 overflow-x-auto no-scrollbar pb-1">
                 {allSeasons.map((season) => (
                   <Button
                     key={season.id}
                     size="sm"
                     variant={currentSeason?.id === season.id ? 'default' : 'outline'}
                     onClick={() => handleSeasonChange(season.id)}
-                    className={`shrink-0 ${currentSeason?.id === season.id ? 'anime-button' : ''}`}
+                    className={`shrink-0 min-w-fit px-2.5 md:px-3 text-xs md:text-sm h-7 md:h-8 ${currentSeason?.id === season.id ? 'anime-button' : ''}`}
                     title={season.title || `Season ${season.season_number}`}
                   >
                     S{season.season_number}
                     {season.episode_count !== undefined && (
-                      <span className="ml-1 text-xs opacity-70">({season.episode_count})</span>
+                      <span className="ml-1 text-[10px] md:text-xs opacity-70">({season.episode_count})</span>
                     )}
                   </Button>
                 ))}
