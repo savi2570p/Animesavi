@@ -14,7 +14,7 @@ const translations: Record<Language, {
   howTo: string;
 }> = {
   en: {
-    title: 'Access Expired or Restricted',
+    title: 'Your access token has expired. Please renew access.',
     feature1: 'Unlock High-Quality Player',
     feature2: 'Ad-Free Viewing Experience',
     feature3: 'Multi-Language Audio Support',
@@ -22,7 +22,7 @@ const translations: Record<Language, {
     howTo: 'How to Skip Ads',
   },
   hinglish: {
-    title: 'Access Khatam ya Restricted Hai',
+    title: 'Aapka access token expire ho gaya hai. Please renew karein.',
     feature1: 'High-Quality Player Unlock Karo',
     feature2: 'Ad-Free Dekhne Ka Maza',
     feature3: 'Multi-Language Audio Support',
@@ -30,7 +30,7 @@ const translations: Record<Language, {
     howTo: 'Ads Kaise Skip Kare',
   },
   hi: {
-    title: 'एक्सेस समाप्त या प्रतिबंधित',
+    title: 'आपका एक्सेस टोकन समाप्त हो गया है। कृपया एक्सेस नवीनीकृत करें।',
     feature1: 'उच्च गुणवत्ता प्लेयर अनलॉक करें',
     feature2: 'विज्ञापन-मुक्त अनुभव',
     feature3: 'बहु-भाषा ऑडियो सपोर्ट',
@@ -38,7 +38,7 @@ const translations: Record<Language, {
     howTo: 'विज्ञापन कैसे छोड़ें',
   },
   bn: {
-    title: 'অ্যাক্সেস মেয়াদ শেষ বা সীমাবদ্ধ',
+    title: 'আপনার অ্যাক্সেস টোকেনের মেয়াদ শেষ হয়ে গেছে। অনুগ্রহ করে পুনর্নবীকরণ করুন।',
     feature1: 'উচ্চ-মানের প্লেয়ার আনলক করুন',
     feature2: 'বিজ্ঞাপন-মুক্ত দেখার অভিজ্ঞতা',
     feature3: 'বহু-ভাষা অডিও সাপোর্ট',
@@ -46,7 +46,7 @@ const translations: Record<Language, {
     howTo: 'কিভাবে বিজ্ঞাপন এড়াবেন',
   },
   ta: {
-    title: 'அணுகல் காலாவதியானது அல்லது கட்டுப்படுத்தப்பட்டது',
+    title: 'உங்கள் அணுகல் டோக்கன் காலாவதியானது. புதுப்பிக்கவும்.',
     feature1: 'உயர்தர பிளேயரை அன்லாக் செய்',
     feature2: 'விளம்பரமில்லா பார்வை அனுபவம்',
     feature3: 'பல-மொழி ஆடியோ ஆதரவு',
@@ -54,7 +54,7 @@ const translations: Record<Language, {
     howTo: 'எப்படி விளம்பரத்தைத் தவிர்ப்பது',
   },
   te: {
-    title: 'యాక్సెస్ గడువు ముగిసింది లేదా పరిమితం',
+    title: 'మీ యాక్సెస్ టోకెన్ గడువు ముగిసింది. దయచేసి పునరుద్ధరించండి.',
     feature1: 'హై-క్వాలిటీ ప్లేయర్ అన్‌లాక్',
     feature2: 'యాడ్-ఫ్రీ వీక్షణ అనుభవం',
     feature3: 'మల్టీ-లాంగ్వేజ్ ఆడియో సపోర్ట్',
