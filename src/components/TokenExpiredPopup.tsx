@@ -216,7 +216,7 @@ export function TokenExpiredPopup() {
                     .limit(1)
                     .single();
 
-                  if (usage?.expires_at && usage.expires_at * 1000 > Date.now()) {
+                  if (usage?.expires_at && Number(usage.expires_at) > Date.now()) {
                     toast.success('Token active! Reloading...');
                     window.location.reload();
                   } else {
