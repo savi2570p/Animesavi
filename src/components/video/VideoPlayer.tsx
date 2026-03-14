@@ -2579,19 +2579,29 @@ export function VideoPlayer({
 
             {/* Control buttons - Fullscreen - Clean & Compact */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1 md:gap-1.5">
+              <div className="flex items-center gap-0.5 md:gap-1.5">
                 <button 
-                  className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                 >
-                  {isPlaying ? <Pause className="w-4 h-4 md:w-5 md:h-5" /> : <Play className="w-4 h-4 md:w-5 md:h-5 fill-current ml-0.5" />}
+                  {isPlaying ? <Pause className="w-3.5 h-3.5 md:w-5 md:h-5" /> : <Play className="w-3.5 h-3.5 md:w-5 md:h-5 fill-current ml-0.5" />}
                 </button>
+                {/* Next Episode - in controls */}
+                {hasNextEpisode && onNextEpisode && !isMovie && (
+                  <button 
+                    className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                    onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
+                    title="Next Episode"
+                  >
+                    <SkipForward className="w-3 h-3 md:w-4 md:h-4" />
+                  </button>
+                )}
                 <button 
-                  className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); skipForward(); }} 
                   title="Skip forward 10s"
                 >
-                  <SkipForward className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <FastForward className="w-3 h-3 md:w-4 md:h-4" />
                 </button>
                 {/* Volume Slider - Desktop */}
                 <div className="hidden md:block" onClick={(e) => e.stopPropagation()}>
@@ -2604,10 +2614,10 @@ export function VideoPlayer({
                 </div>
                 {/* Volume Button - Mobile */}
                 <button 
-                  className="md:hidden w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  className="md:hidden w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); toggleMute(); }}
                 >
-                  {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                  {isMuted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
                 </button>
               </div>
 
