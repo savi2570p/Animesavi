@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -8,7 +9,7 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
-import { Download } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DownloadVerificationDialogProps {
@@ -28,6 +29,7 @@ export function DownloadVerificationDialog({
   animeTitle,
   episodeLabel,
 }: DownloadVerificationDialogProps) {
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownload = async () => {
     if (!videoUrl) {
@@ -35,46 +37,44 @@ export function DownloadVerificationDialog({
       return;
     }
 
-    try {
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const isAndroid = /Android/.test(navigator.userAgent);
-      const isMobile = isIOS || isAndroid;
+    setIsDownloading(true);
 
-      if (isMobile) {
-        toast.info('Preparing download...');
-        try {
-          const response = await fetch(videoUrl, { mode: 'cors' });
-          if (!response.ok) throw new Error('Download failed');
-          const blob = await response.blob();
-          const blobUrl = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = blobUrl;
-          link.download = fileName;
-          link.style.display = 'none';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-          toast.success('Download started! Check your downloads or gallery.');
-        } catch {
-          window.open(videoUrl, '_blank');
-          toast.info('Video opened in new tab. Long press to save to gallery.');
-        }
-      } else {
+    try {
+      toast.info('Preparing download...');
+
+      // Attempt blob download for proper filename control
+      try {
+        const response = await fetch(videoUrl, { mode: 'cors' });
+        if (!response.ok) throw new Error('Fetch failed');
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.href = videoUrl;
+        link.href = blobUrl;
         link.download = fileName;
-        link.target = '_blank';
+        link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        toast.success('Download started! Check your file manager.');
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+        toast.success('Download started! Check your downloads.');
+      } catch {
+        // Fallback: use download attribute directly (may not rename on cross-origin)
+        const link = document.createElement('a');
+        link.href = videoUrl;
+        link.download = fileName;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('Download started!');
       }
 
       onOpenChange(false);
     } catch (error) {
       console.error('Download error:', error);
       toast.error('Failed to start download. Please try again.');
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -107,10 +107,15 @@ export function DownloadVerificationDialog({
           </AlertDialogCancel>
           <Button
             onClick={handleDownload}
+            disabled={isDownloading}
             className="flex-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground gap-2"
           >
-            <Download className="w-4 h-4" />
-            Download
+            {isDownloading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
+            {isDownloading ? 'Downloading...' : 'Download'}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

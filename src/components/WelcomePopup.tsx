@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-const NOTICE_VERSION = 'v6';
+const NOTICE_VERSION = 'v7';
 
 export function WelcomePopup() {
   const location = useLocation();
@@ -78,43 +78,43 @@ export function WelcomePopup() {
         <DialogContent className="sm:max-w-lg border-primary/20">
           <DialogHeader>
             <DialogTitle className="text-xl font-heading text-center">
-              ✨ What's New — v6
+              ✨ What's New — v7
             </DialogTitle>
             <DialogDescription className="text-center text-sm text-muted-foreground">
-              Here's what we've been cooking up for you
+              Fresh updates just dropped — here's what changed
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-3 pt-2">
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">⚡</span>
+              <span className="text-lg">📥</span>
               <div>
-                <h4 className="font-medium text-foreground">Super Smooth Experience</h4>
-                <p className="text-sm text-muted-foreground">Faster page loads, optimized video buffering, and smoother navigation across the entire platform!</p>
+                <h4 className="font-medium text-foreground">Instant Downloads</h4>
+                <p className="text-sm text-muted-foreground">Downloads now start immediately with proper filenames — no more random names or new tabs opening!</p>
               </div>
             </div>
 
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">🎉</span>
+              <span className="text-lg">📺</span>
               <div>
-                <h4 className="font-medium text-foreground">Watch Party Upgraded</h4>
-                <p className="text-sm text-muted-foreground">Dedicated chat tab, see who's watching with you, and anyone can end inactive parties</p>
+                <h4 className="font-medium text-foreground">Cast to Any Device</h4>
+                <p className="text-sm text-muted-foreground">Chromecast, AirPlay & Smart TV casting now works seamlessly — no more "Access Expired" errors</p>
               </div>
             </div>
 
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">🔍</span>
+              <span className="text-lg">🔗</span>
               <div>
-                <h4 className="font-medium text-foreground">Better Search</h4>
-                <p className="text-sm text-muted-foreground">Search results now appear first — no more scrolling past popular titles</p>
+                <h4 className="font-medium text-foreground">Share & Embed</h4>
+                <p className="text-sm text-muted-foreground">Share episodes via WhatsApp, copy embed links, or generate iframe codes for external sites</p>
               </div>
             </div>
 
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">▶️</span>
+              <span className="text-lg">📱</span>
               <div>
-                <h4 className="font-medium text-foreground">Auto Embed Player</h4>
-                <p className="text-sm text-muted-foreground">URL-based episodes now auto-play in the embed player — zero extra clicks</p>
+                <h4 className="font-medium text-foreground">Mobile Player Revamp</h4>
+                <p className="text-sm text-muted-foreground">Compact controls, next episode button, and fixed season selector for a smoother mobile experience</p>
               </div>
             </div>
           </div>
