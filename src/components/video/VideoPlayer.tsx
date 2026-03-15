@@ -2245,37 +2245,38 @@ export function VideoPlayer({
         </div>
       )}
       
-      {/* Resume Overlay - Skip/Resume choice */}
-      {showResumeOverlay && savedProgress > 5 && savedProgress < 95 && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-[150] animate-fade-in">
-          <div className="bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl p-8 max-w-md mx-4 shadow-2xl animate-scale-in text-center">
-            <div className="mb-4">
-              <Play className="w-16 h-16 text-primary mx-auto" />
+      {/* Resume Overlay - rendered via portal so it doesn't cover the video player */}
+      {showResumeOverlay && savedProgress > 5 && savedProgress < 95 && createPortal(
+        <div className="fixed inset-0 flex items-end justify-center pb-24 sm:items-center sm:pb-0 bg-black/60 z-[9999] animate-fade-in">
+          <div className="bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl animate-scale-in text-center">
+            <div className="mb-3">
+              <Play className="w-12 h-12 text-primary mx-auto" />
             </div>
-            <h3 className="text-foreground font-heading font-bold text-xl mb-2">
+            <h3 className="text-foreground font-heading font-bold text-lg mb-1">
               Resume Watching?
             </h3>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-muted-foreground text-sm mb-4">
               You were {Math.round(savedProgress)}% through this episode
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="flex gap-3 justify-center">
               <Button
                 onClick={(e) => { e.stopPropagation(); handleResumeChoice(true); }}
-                className="anime-button px-6"
+                className="anime-button px-5 text-sm"
               >
-                <Play className="w-4 h-4 mr-2 fill-current" />
-                Resume from {Math.round(savedProgress)}%
+                <Play className="w-4 h-4 mr-1.5 fill-current" />
+                Resume
               </Button>
               <Button
                 onClick={(e) => { e.stopPropagation(); handleResumeChoice(false); }}
                 variant="outline"
-                className="px-6"
+                className="px-5 text-sm"
               >
-                Start from Beginning
+                Start Over
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <video
