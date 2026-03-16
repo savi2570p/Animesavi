@@ -908,6 +908,7 @@ export default function Watch() {
             isEncoding={isVideoEncoding}
             onTimeUpdate={updateWatchProgress}
             hasNextEpisode={!!nextEpisode}
+            lockedQuality={(anime as any)?.is_crunchyroll ? 2160 : undefined}
             onNextEpisode={nextEpisode ? () => navigate(`/watch/${nextEpisode.id}`) : undefined}
             introStartTime={episode.intro_start_time}
             introEndTime={episode.intro_end_time}

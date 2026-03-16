@@ -689,12 +689,10 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
               <span className="text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full">LIVE</span>
             </SheetTitle>
             <div className="flex items-center gap-2">
-              {isHost && (
-                <Button variant="destructive" size="sm" onClick={endParty} className="gap-1">
-                  <X className="h-3 w-3" />
-                  End Party
-                </Button>
-              )}
+              <Button variant="destructive" size="sm" onClick={endParty} className="gap-1">
+                <X className="h-3 w-3" />
+                End Party
+              </Button>
               <Button variant="ghost" size="icon" onClick={leaveParty}>
                 <X className="h-4 w-4" />
               </Button>
