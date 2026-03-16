@@ -517,24 +517,46 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     setIsOpen(false);
   };
 
-  // End party (host only)
+  // End party (host or any authenticated member)
   const endParty = async () => {
-    if (!partyId || !isHost) return;
+    if (!partyId) return;
     
-    await supabase
-      .from('watch_parties')
-      .update({ is_active: false })
-      .eq('id', partyId);
-    
-    if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
-    setPartyCode(null);
-    setPartyId(null);
-    setIsHost(false);
-    setParticipants([]);
-    setMessages([]);
-    setPartyInfo(null);
-    setIsOpen(false);
-    toast.success('Watch party ended');
+    try {
+      // Try updating as host first
+      const { error: hostError } = await supabase
+        .from('watch_parties')
+        .update({ is_active: false })
+        .eq('id', partyId)
+        .eq('host_id', user?.id || '');
+
+      // If host update didn't match (not the host), try deleting the party
+      if (hostError) {
+        // Fallback: try as member via the "Members can end parties" RLS policy
+        const { error: memberError } = await supabase
+          .from('watch_parties')
+          .update({ is_active: false })
+          .eq('id', partyId);
+
+        if (memberError) {
+          console.error('Error ending party:', memberError);
+          toast.error('Failed to end party');
+          return;
+        }
+      }
+
+      if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
+      setPartyCode(null);
+      setPartyId(null);
+      setIsHost(false);
+      setParticipants([]);
+      setMessages([]);
+      setPartyInfo(null);
+      setIsOpen(false);
+      toast.success('Watch party ended');
+    } catch (error) {
+      console.error('Error ending party:', error);
+      toast.error('Failed to end party');
+    }
   };
 
   // Scroll to bottom on new messages
