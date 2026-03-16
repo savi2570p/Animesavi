@@ -638,44 +638,54 @@ export function VideoPlayer({
               setQualityLevels(levels);
               console.log('Quality levels detected:', levels);
               
-              // Check for anime-specific quality override first
-              const animeQualityOverride = Object.entries(ANIME_QUALITY_OVERRIDES).find(
-                ([key]) => animeTitle.toLowerCase().includes(key)
-              );
-              
-              if (animeQualityOverride) {
-                const targetHeight = animeQualityOverride[1];
-                const matchingLevel = levels.find(l => l.height === targetHeight);
-                if (matchingLevel) {
-                  hls.currentLevel = matchingLevel.id;
+              // If quality is locked (e.g. Crunchy content), force highest available
+              if (lockedQuality) {
+                const highestLevel = levels[0]; // Already sorted descending
+                if (highestLevel) {
+                  hls.currentLevel = highestLevel.id;
                   setIsAutoQuality(false);
-                  setCurrentQualityLevel(matchingLevel.id);
-                } else {
-                  setIsAutoQuality(true);
-                  setCurrentQualityLevel(-1);
+                  setCurrentQualityLevel(highestLevel.id);
                 }
               } else {
-                // Check for saved quality preference
-                const savedQuality = localStorage.getItem(QUALITY_PREFERENCE_KEY);
-                if (savedQuality !== null) {
-                  const preferredLevel = parseInt(savedQuality, 10);
-                  if (preferredLevel === -1) {
+                // Check for anime-specific quality override first
+                const animeQualityOverride = Object.entries(ANIME_QUALITY_OVERRIDES).find(
+                  ([key]) => animeTitle.toLowerCase().includes(key)
+                );
+                
+                if (animeQualityOverride) {
+                  const targetHeight = animeQualityOverride[1];
+                  const matchingLevel = levels.find(l => l.height === targetHeight);
+                  if (matchingLevel) {
+                    hls.currentLevel = matchingLevel.id;
+                    setIsAutoQuality(false);
+                    setCurrentQualityLevel(matchingLevel.id);
+                  } else {
                     setIsAutoQuality(true);
                     setCurrentQualityLevel(-1);
-                  } else {
-                    const matchingLevel = levels.find(l => l.height === preferredLevel);
-                    if (matchingLevel) {
-                      hls.currentLevel = matchingLevel.id;
-                      setIsAutoQuality(false);
-                      setCurrentQualityLevel(matchingLevel.id);
-                    } else {
-                      setIsAutoQuality(true);
-                      setCurrentQualityLevel(-1);
-                    }
                   }
                 } else {
-                  setIsAutoQuality(true);
-                  setCurrentQualityLevel(-1);
+                  // Check for saved quality preference
+                  const savedQuality = localStorage.getItem(QUALITY_PREFERENCE_KEY);
+                  if (savedQuality !== null) {
+                    const preferredLevel = parseInt(savedQuality, 10);
+                    if (preferredLevel === -1) {
+                      setIsAutoQuality(true);
+                      setCurrentQualityLevel(-1);
+                    } else {
+                      const matchingLevel = levels.find(l => l.height === preferredLevel);
+                      if (matchingLevel) {
+                        hls.currentLevel = matchingLevel.id;
+                        setIsAutoQuality(false);
+                        setCurrentQualityLevel(matchingLevel.id);
+                      } else {
+                        setIsAutoQuality(true);
+                        setCurrentQualityLevel(-1);
+                      }
+                    }
+                  } else {
+                    setIsAutoQuality(true);
+                    setCurrentQualityLevel(-1);
+                  }
                 }
               }
             }
