@@ -890,6 +890,7 @@ export function VideoPlayer({
 
   // Switch quality level - HLS.js only, with preference saving
   const switchQualityLevel = useCallback((levelId: number) => {
+    if (lockedQuality) return; // Quality is locked, ignore switches
     if (hlsRef.current) {
       if (levelId === -1) {
         // Auto quality
