@@ -231,6 +231,7 @@ export function VideoPlayer({
   onResumeChoice,
   onVideoLoadSuccess,
   onVideoLoadError,
+  lockedQuality,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
