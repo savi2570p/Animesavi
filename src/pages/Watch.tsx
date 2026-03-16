@@ -77,6 +77,7 @@ interface Anime {
   cover_image: string | null;
   type: string | null;
   uploader_id: string | null;
+  is_crunchyroll?: boolean;
 }
 
 interface CommentLike {
