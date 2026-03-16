@@ -2033,7 +2033,8 @@ export function VideoPlayer({
               </div>
             </button>
             
-            {/* Quality option */}
+            {/* Quality option - hidden when locked */}
+            {!lockedQuality && (
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('quality'); }}
@@ -2048,6 +2049,7 @@ export function VideoPlayer({
                 <ChevronRight className="w-4 h-4" />
               </div>
             </button>
+            )}
             
             {/* Audio option */}
             <button
