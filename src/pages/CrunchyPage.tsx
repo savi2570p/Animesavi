@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
+
 import {
   Dialog,
   DialogContent,
@@ -133,7 +133,6 @@ export default function CrunchyPage() {
 
   return (
     <div className="min-h-screen">
-      <ContentNavTabs />
 
       {/* Header */}
       <div className="relative py-12 px-4 overflow-hidden">

@@ -108,6 +108,7 @@ interface VideoPlayerProps {
   onResumeChoice?: (resume: boolean) => void;
   onVideoLoadSuccess?: () => void;
   onVideoLoadError?: () => void;
+  lockedQuality?: number; // Lock to specific resolution height (e.g. 2160 for 4K)
 }
 
 const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
@@ -230,6 +231,7 @@ export function VideoPlayer({
   onResumeChoice,
   onVideoLoadSuccess,
   onVideoLoadError,
+  lockedQuality,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -636,44 +638,54 @@ export function VideoPlayer({
               setQualityLevels(levels);
               console.log('Quality levels detected:', levels);
               
-              // Check for anime-specific quality override first
-              const animeQualityOverride = Object.entries(ANIME_QUALITY_OVERRIDES).find(
-                ([key]) => animeTitle.toLowerCase().includes(key)
-              );
-              
-              if (animeQualityOverride) {
-                const targetHeight = animeQualityOverride[1];
-                const matchingLevel = levels.find(l => l.height === targetHeight);
-                if (matchingLevel) {
-                  hls.currentLevel = matchingLevel.id;
+              // If quality is locked (e.g. Crunchy content), force highest available
+              if (lockedQuality) {
+                const highestLevel = levels[0]; // Already sorted descending
+                if (highestLevel) {
+                  hls.currentLevel = highestLevel.id;
                   setIsAutoQuality(false);
-                  setCurrentQualityLevel(matchingLevel.id);
-                } else {
-                  setIsAutoQuality(true);
-                  setCurrentQualityLevel(-1);
+                  setCurrentQualityLevel(highestLevel.id);
                 }
               } else {
-                // Check for saved quality preference
-                const savedQuality = localStorage.getItem(QUALITY_PREFERENCE_KEY);
-                if (savedQuality !== null) {
-                  const preferredLevel = parseInt(savedQuality, 10);
-                  if (preferredLevel === -1) {
+                // Check for anime-specific quality override first
+                const animeQualityOverride = Object.entries(ANIME_QUALITY_OVERRIDES).find(
+                  ([key]) => animeTitle.toLowerCase().includes(key)
+                );
+                
+                if (animeQualityOverride) {
+                  const targetHeight = animeQualityOverride[1];
+                  const matchingLevel = levels.find(l => l.height === targetHeight);
+                  if (matchingLevel) {
+                    hls.currentLevel = matchingLevel.id;
+                    setIsAutoQuality(false);
+                    setCurrentQualityLevel(matchingLevel.id);
+                  } else {
                     setIsAutoQuality(true);
                     setCurrentQualityLevel(-1);
-                  } else {
-                    const matchingLevel = levels.find(l => l.height === preferredLevel);
-                    if (matchingLevel) {
-                      hls.currentLevel = matchingLevel.id;
-                      setIsAutoQuality(false);
-                      setCurrentQualityLevel(matchingLevel.id);
-                    } else {
-                      setIsAutoQuality(true);
-                      setCurrentQualityLevel(-1);
-                    }
                   }
                 } else {
-                  setIsAutoQuality(true);
-                  setCurrentQualityLevel(-1);
+                  // Check for saved quality preference
+                  const savedQuality = localStorage.getItem(QUALITY_PREFERENCE_KEY);
+                  if (savedQuality !== null) {
+                    const preferredLevel = parseInt(savedQuality, 10);
+                    if (preferredLevel === -1) {
+                      setIsAutoQuality(true);
+                      setCurrentQualityLevel(-1);
+                    } else {
+                      const matchingLevel = levels.find(l => l.height === preferredLevel);
+                      if (matchingLevel) {
+                        hls.currentLevel = matchingLevel.id;
+                        setIsAutoQuality(false);
+                        setCurrentQualityLevel(matchingLevel.id);
+                      } else {
+                        setIsAutoQuality(true);
+                        setCurrentQualityLevel(-1);
+                      }
+                    }
+                  } else {
+                    setIsAutoQuality(true);
+                    setCurrentQualityLevel(-1);
+                  }
                 }
               }
             }
@@ -878,6 +890,7 @@ export function VideoPlayer({
 
   // Switch quality level - HLS.js only, with preference saving
   const switchQualityLevel = useCallback((levelId: number) => {
+    if (lockedQuality) return; // Quality is locked, ignore switches
     if (hlsRef.current) {
       if (levelId === -1) {
         // Auto quality
@@ -2020,7 +2033,8 @@ export function VideoPlayer({
               </div>
             </button>
             
-            {/* Quality option */}
+            {/* Quality option - hidden when locked */}
+            {!lockedQuality && (
             <button
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('quality'); }}
@@ -2035,6 +2049,7 @@ export function VideoPlayer({
                 <ChevronRight className="w-4 h-4" />
               </div>
             </button>
+            )}
             
             {/* Audio option */}
             <button

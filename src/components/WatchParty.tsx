@@ -517,24 +517,46 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     setIsOpen(false);
   };
 
-  // End party (host only)
+  // End party (host or any authenticated member)
   const endParty = async () => {
-    if (!partyId || !isHost) return;
+    if (!partyId) return;
     
-    await supabase
-      .from('watch_parties')
-      .update({ is_active: false })
-      .eq('id', partyId);
-    
-    if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
-    setPartyCode(null);
-    setPartyId(null);
-    setIsHost(false);
-    setParticipants([]);
-    setMessages([]);
-    setPartyInfo(null);
-    setIsOpen(false);
-    toast.success('Watch party ended');
+    try {
+      // Try updating as host first
+      const { error: hostError } = await supabase
+        .from('watch_parties')
+        .update({ is_active: false })
+        .eq('id', partyId)
+        .eq('host_id', user?.id || '');
+
+      // If host update didn't match (not the host), try deleting the party
+      if (hostError) {
+        // Fallback: try as member via the "Members can end parties" RLS policy
+        const { error: memberError } = await supabase
+          .from('watch_parties')
+          .update({ is_active: false })
+          .eq('id', partyId);
+
+        if (memberError) {
+          console.error('Error ending party:', memberError);
+          toast.error('Failed to end party');
+          return;
+        }
+      }
+
+      if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
+      setPartyCode(null);
+      setPartyId(null);
+      setIsHost(false);
+      setParticipants([]);
+      setMessages([]);
+      setPartyInfo(null);
+      setIsOpen(false);
+      toast.success('Watch party ended');
+    } catch (error) {
+      console.error('Error ending party:', error);
+      toast.error('Failed to end party');
+    }
   };
 
   // Scroll to bottom on new messages
@@ -667,12 +689,10 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
               <span className="text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full">LIVE</span>
             </SheetTitle>
             <div className="flex items-center gap-2">
-              {isHost && (
-                <Button variant="destructive" size="sm" onClick={endParty} className="gap-1">
-                  <X className="h-3 w-3" />
-                  End Party
-                </Button>
-              )}
+              <Button variant="destructive" size="sm" onClick={endParty} className="gap-1">
+                <X className="h-3 w-3" />
+                End Party
+              </Button>
               <Button variant="ghost" size="icon" onClick={leaveParty}>
                 <X className="h-4 w-4" />
               </Button>
