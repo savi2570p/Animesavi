@@ -108,6 +108,7 @@ interface VideoPlayerProps {
   onResumeChoice?: (resume: boolean) => void;
   onVideoLoadSuccess?: () => void;
   onVideoLoadError?: () => void;
+  lockedQuality?: number; // Lock to specific resolution height (e.g. 2160 for 4K)
 }
 
 const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
