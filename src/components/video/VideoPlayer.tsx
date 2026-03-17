@@ -2819,7 +2819,7 @@ export function VideoPlayer({
 
               {/* Skip forward 10s */}
               <button 
-                className="w-4.5 h-4.5 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                className="w-[18px] h-[18px] md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); skipForward(); }} 
                 title="Skip forward 10s"
               >
