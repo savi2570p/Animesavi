@@ -2837,7 +2837,7 @@ export function VideoPlayer({
               </div>
               {/* Volume Button - Mobile */}
               <button 
-                className="md:hidden w-4.5 h-4.5 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                className="md:hidden w-[18px] h-[18px] rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                 onClick={(e) => { e.stopPropagation(); toggleMute(); }}
               >
                 {isMuted ? <VolumeX className="w-2 h-2" /> : <Volume2 className="w-2 h-2" />}
