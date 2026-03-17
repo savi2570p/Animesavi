@@ -2848,7 +2848,7 @@ export function VideoPlayer({
               {/* Download - for RIP X and SAVI.IN */}
               {features.includes('download') && (
                 <button 
-                  className="w-4.5 h-4.5 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  className="w-[18px] h-[18px] md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
                   title="Download"
                 >
@@ -2866,7 +2866,7 @@ export function VideoPlayer({
               >
                 <DropdownMenuTrigger asChild>
                   <button 
-                    className="w-4.5 h-4.5 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
+                    className="w-[18px] h-[18px] md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
                     onPointerDown={(e) => { 
                       e.stopPropagation(); 
                       e.preventDefault();
@@ -2895,7 +2895,7 @@ export function VideoPlayer({
 
               {/* Screen Mirroring */}
               <button 
-                className="w-4.5 h-4.5 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-[18px] h-[18px] md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                 onClick={(e) => { e.stopPropagation(); setShowMirroringDialog(true); }} 
                 title="Screen Mirroring"
               >
@@ -2904,7 +2904,7 @@ export function VideoPlayer({
 
               {/* PiP */}
               <button 
-                className="w-4.5 h-4.5 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-[18px] h-[18px] md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                 onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                 title="Picture-in-Picture"
               >
@@ -2913,7 +2913,7 @@ export function VideoPlayer({
 
               {/* Fullscreen */}
               <button 
-                className="w-4.5 h-4.5 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-[18px] h-[18px] md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                 onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
                 title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
               >
