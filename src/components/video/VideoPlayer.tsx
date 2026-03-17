@@ -2848,11 +2848,11 @@ export function VideoPlayer({
               {/* Download - for RIP X and SAVI.IN */}
               {features.includes('download') && (
                 <button 
-                  className="w-5 h-5 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  className="w-4.5 h-4.5 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
                   onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
                   title="Download"
                 >
-                  <Download className="w-2.5 h-2.5 md:w-4 md:h-4" />
+                  <Download className="w-2 h-2 md:w-4 md:h-4" />
                 </button>
               )}
               {/* Settings Menu */}
@@ -2866,7 +2866,7 @@ export function VideoPlayer({
               >
                 <DropdownMenuTrigger asChild>
                   <button 
-                    className="w-5 h-5 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
+                    className="w-4.5 h-4.5 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors relative"
                     onPointerDown={(e) => { 
                       e.stopPropagation(); 
                       e.preventDefault();
@@ -2875,7 +2875,7 @@ export function VideoPlayer({
                     title="Settings"
                     style={{ touchAction: 'manipulation' }}
                   >
-                    <Settings className="w-2.5 h-2.5 md:w-4 md:h-4" />
+                    <Settings className="w-2 h-2 md:w-4 md:h-4" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
@@ -2895,29 +2895,29 @@ export function VideoPlayer({
 
               {/* Screen Mirroring */}
               <button 
-                className="w-5 h-5 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-4.5 h-4.5 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                 onClick={(e) => { e.stopPropagation(); setShowMirroringDialog(true); }} 
                 title="Screen Mirroring"
               >
-                <Cast className="w-2.5 h-2.5 md:w-4 md:h-4" />
+                <Cast className="w-2 h-2 md:w-4 md:h-4" />
               </button>
 
               {/* PiP */}
               <button 
-                className="w-5 h-5 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-4.5 h-4.5 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                 onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                 title="Picture-in-Picture"
               >
-                <PictureInPicture2 className="w-2.5 h-2.5 md:w-4 md:h-4" />
+                <PictureInPicture2 className="w-2 h-2 md:w-4 md:h-4" />
               </button>
 
               {/* Fullscreen */}
               <button 
-                className="w-5 h-5 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="w-4.5 h-4.5 md:w-8 md:h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                 onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
                 title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
               >
-                {isFullscreen ? <Minimize className="w-2.5 h-2.5 md:w-4 md:h-4" /> : <Maximize className="w-2.5 h-2.5 md:w-4 md:h-4" />}
+                {isFullscreen ? <Minimize className="w-2 h-2 md:w-4 md:h-4" /> : <Maximize className="w-2 h-2 md:w-4 md:h-4" />}
               </button>
             </div>
           </div>
