@@ -886,6 +886,9 @@ export default function Watch() {
             episodes={allEpisodes}
             currentEpisodeId={episodeId || ''}
             className="sticky top-16 max-h-[60vh]"
+            onEpisodeSelect={(newEpId) => navigate(`/watch/${newEpId}`, { replace: true })}
+            animeTitle={anime?.title}
+            seasonNumber={currentSeason?.season_number}
           />
         </div>
 
@@ -908,8 +911,8 @@ export default function Watch() {
             isEncoding={isVideoEncoding}
             onTimeUpdate={updateWatchProgress}
             hasNextEpisode={!!nextEpisode}
-            lockedQuality={(anime as any)?.is_crunchyroll ? 2160 : undefined}
-            onNextEpisode={nextEpisode ? () => navigate(`/watch/${nextEpisode.id}`) : undefined}
+            lockedQuality={2160}
+            onNextEpisode={nextEpisode ? () => navigate(`/watch/${nextEpisode.id}`, { replace: true }) : undefined}
             introStartTime={episode.intro_start_time}
             introEndTime={episode.intro_end_time}
             outroStartTime={episode.outro_start_time}
@@ -932,6 +935,9 @@ export default function Watch() {
           episodes={allEpisodes}
           currentEpisodeId={episodeId || ''}
           className="max-h-[250px]"
+          onEpisodeSelect={(newEpId) => navigate(`/watch/${newEpId}`, { replace: true })}
+          animeTitle={anime?.title}
+          seasonNumber={currentSeason?.season_number}
         />
       </div>
       {/* Below Player - Server Selection & Season Switcher */}
@@ -974,7 +980,7 @@ export default function Watch() {
           </div>
 
           {/* Season Switcher */}
-          {allSeasons.length > 1 && (
+          {allSeasons.length > 0 && (
             <div className="flex items-center gap-2 md:gap-3 ml-auto min-w-0">
               <span className="text-muted-foreground font-medium text-sm md:text-base shrink-0">Season:</span>
               <div className="flex gap-1.5 md:gap-2 overflow-x-auto no-scrollbar pb-1">

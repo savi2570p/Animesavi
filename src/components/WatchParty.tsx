@@ -519,29 +519,19 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
 
   // End party (host or any authenticated member)
   const endParty = async () => {
-    if (!partyId) return;
+    if (!partyId || !user) return;
     
     try {
-      // Try updating as host first
-      const { error: hostError } = await supabase
+      // Use simple update - RLS "Members can end parties" policy handles authorization
+      const { error } = await supabase
         .from('watch_parties')
         .update({ is_active: false })
-        .eq('id', partyId)
-        .eq('host_id', user?.id || '');
+        .eq('id', partyId);
 
-      // If host update didn't match (not the host), try deleting the party
-      if (hostError) {
-        // Fallback: try as member via the "Members can end parties" RLS policy
-        const { error: memberError } = await supabase
-          .from('watch_parties')
-          .update({ is_active: false })
-          .eq('id', partyId);
-
-        if (memberError) {
-          console.error('Error ending party:', memberError);
-          toast.error('Failed to end party');
-          return;
-        }
+      if (error) {
+        console.error('Error ending party:', error);
+        toast.error('Failed to end party');
+        return;
       }
 
       if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);

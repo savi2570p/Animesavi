@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { Search, Play, Clock } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Search, Play, Clock, Link2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,12 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
 
 interface Episode {
   id: string;
@@ -19,9 +25,12 @@ interface EpisodeListProps {
   episodes: Episode[];
   currentEpisodeId: string;
   className?: string;
+  onEpisodeSelect?: (episodeId: string) => void;
+  animeTitle?: string;
+  seasonNumber?: number;
 }
 
-export function EpisodeList({ episodes, currentEpisodeId, className }: EpisodeListProps) {
+export function EpisodeList({ episodes, currentEpisodeId, className, onEpisodeSelect, animeTitle, seasonNumber = 1 }: EpisodeListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const { user } = useAuth();
 
@@ -44,7 +53,6 @@ export function EpisodeList({ episodes, currentEpisodeId, className }: EpisodeLi
     }
 
     try {
-      // Check if already exists
       const { data: existing } = await supabase
         .from('watch_later')
         .select('id')
@@ -72,6 +80,22 @@ export function EpisodeList({ episodes, currentEpisodeId, className }: EpisodeLi
     }
   };
 
+  const handleEpisodeClick = (e: React.MouseEvent, episodeId: string) => {
+    if (onEpisodeSelect) {
+      e.preventDefault();
+      onEpisodeSelect(episodeId);
+    }
+  };
+
+  const copyEmbedLink = (episode: Episode) => {
+    const slug = animeTitle
+      ? animeTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+      : 'anime';
+    const embedUrl = `${window.location.origin}/embed/${slug}/episode-${episode.episode_number}`;
+    navigator.clipboard.writeText(embedUrl);
+    toast.success('Embed link copied!');
+  };
+
   return (
     <div className={cn("flex flex-col bg-card/95 backdrop-blur-sm border border-border/50 rounded-lg overflow-hidden", className)}>
       {/* Header with search */}
@@ -92,46 +116,56 @@ export function EpisodeList({ episodes, currentEpisodeId, className }: EpisodeLi
         </div>
       </div>
 
-      {/* Episode list - scrollable on mobile */}
+      {/* Episode list */}
       <ScrollArea className="flex-1 max-h-[40vh] md:max-h-none overflow-y-auto touch-pan-y">
         <div className="p-1">
           {filteredEpisodes.map((episode) => {
             const isActive = episode.id === currentEpisodeId;
             return (
-              <div
-                key={episode.id}
-                className={cn(
-                  "flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors text-xs group",
-                  isActive 
-                    ? "bg-primary/20 text-primary" 
-                    : "hover:bg-muted/50 text-foreground/80 hover:text-foreground"
-                )}
-              >
-                <Link
-                  to={`/watch/${episode.id}`}
-                  className="flex items-center gap-2 flex-1 min-w-0"
-                >
-                  <span className="text-muted-foreground w-5 text-right shrink-0 text-[10px]">
-                    {episode.episode_number}
-                  </span>
-                  <span className="flex-1 truncate">
-                    {episode.title}
-                  </span>
-                  {isActive && (
-                    <Play className="h-3 w-3 text-primary fill-primary shrink-0" />
-                  )}
-                </Link>
-                {/* Watch Later button */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                  onClick={(e) => handleAddToWatchLater(e, episode.id)}
-                  title="Add to Watch Later"
-                >
-                  <Clock className="h-3 w-3" />
-                </Button>
-              </div>
+              <ContextMenu key={episode.id}>
+                <ContextMenuTrigger asChild>
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors text-xs group",
+                      isActive 
+                        ? "bg-primary/20 text-primary" 
+                        : "hover:bg-muted/50 text-foreground/80 hover:text-foreground"
+                    )}
+                  >
+                    <Link
+                      to={`/watch/${episode.id}`}
+                      onClick={(e) => handleEpisodeClick(e, episode.id)}
+                      className="flex items-center gap-2 flex-1 min-w-0"
+                    >
+                      <span className="text-muted-foreground w-5 text-right shrink-0 text-[10px]">
+                        {episode.episode_number}
+                      </span>
+                      <span className="flex-1 truncate">
+                        {episode.title}
+                      </span>
+                      {isActive && (
+                        <Play className="h-3 w-3 text-primary fill-primary shrink-0" />
+                      )}
+                    </Link>
+                    {/* Watch Later button */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                      onClick={(e) => handleAddToWatchLater(e, episode.id)}
+                      title="Add to Watch Later"
+                    >
+                      <Clock className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                  <ContextMenuItem onClick={() => copyEmbedLink(episode)} className="gap-2">
+                    <Link2 className="h-4 w-4" />
+                    Copy embed link
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
             );
           })}
           {filteredEpisodes.length === 0 && (
