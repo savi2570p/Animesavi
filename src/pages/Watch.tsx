@@ -980,7 +980,7 @@ export default function Watch() {
           </div>
 
           {/* Season Switcher */}
-          {allSeasons.length > 1 && (
+          {allSeasons.length > 0 && (
             <div className="flex items-center gap-2 md:gap-3 ml-auto min-w-0">
               <span className="text-muted-foreground font-medium text-sm md:text-base shrink-0">Season:</span>
               <div className="flex gap-1.5 md:gap-2 overflow-x-auto no-scrollbar pb-1">
