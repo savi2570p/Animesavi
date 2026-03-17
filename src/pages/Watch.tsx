@@ -886,6 +886,9 @@ export default function Watch() {
             episodes={allEpisodes}
             currentEpisodeId={episodeId || ''}
             className="sticky top-16 max-h-[60vh]"
+            onEpisodeSelect={(newEpId) => navigate(`/watch/${newEpId}`, { replace: true })}
+            animeTitle={anime?.title}
+            seasonNumber={currentSeason?.season_number}
           />
         </div>
 
@@ -909,7 +912,7 @@ export default function Watch() {
             onTimeUpdate={updateWatchProgress}
             hasNextEpisode={!!nextEpisode}
             lockedQuality={2160}
-            onNextEpisode={nextEpisode ? () => navigate(`/watch/${nextEpisode.id}`) : undefined}
+            onNextEpisode={nextEpisode ? () => navigate(`/watch/${nextEpisode.id}`, { replace: true }) : undefined}
             introStartTime={episode.intro_start_time}
             introEndTime={episode.intro_end_time}
             outroStartTime={episode.outro_start_time}
@@ -932,6 +935,9 @@ export default function Watch() {
           episodes={allEpisodes}
           currentEpisodeId={episodeId || ''}
           className="max-h-[250px]"
+          onEpisodeSelect={(newEpId) => navigate(`/watch/${newEpId}`, { replace: true })}
+          animeTitle={anime?.title}
+          seasonNumber={currentSeason?.season_number}
         />
       </div>
       {/* Below Player - Server Selection & Season Switcher */}
