@@ -545,7 +545,7 @@ export default function AnimeDetail() {
                 <span className="w-1.5 h-8 bg-primary rounded-full" />
                 Episodes
               </h2>
-              {seasons.length > 1 && (
+              {seasons.length > 0 && (
                 <TabsList className="bg-secondary/50 p-1.5 rounded-xl">
                   {seasons.map((season) => (
                     <TabsTrigger 
@@ -553,7 +553,8 @@ export default function AnimeDetail() {
                       value={season.id}
                       className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg px-4 py-2"
                     >
-                      {season.title || `Season ${season.season_number}`}
+                      <span className="hidden md:inline">{season.title || `Season ${season.season_number}`}</span>
+                      <span className="md:hidden">S{season.season_number}</span>
                     </TabsTrigger>
                   ))}
                 </TabsList>
