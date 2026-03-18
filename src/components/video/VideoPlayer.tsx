@@ -2033,11 +2033,10 @@ export function VideoPlayer({
               </div>
             </button>
             
-            {/* Quality option - hidden when locked */}
-            {!lockedQuality && (
+            {/* Quality option - show locked label when locked */}
             <button
               type="button"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('quality'); }}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!lockedQuality) setSettingsMenu('quality'); }}
               className="flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm"
             >
               <div className="flex items-center gap-2">
@@ -2045,11 +2044,13 @@ export function VideoPlayer({
                 <span className="text-sm">Quality</span>
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
-                <span className="text-xs">{getCurrentQualityLabel()}</span>
-                <ChevronRight className="w-4 h-4" />
+                <span className="text-xs">{lockedQuality ? '4K' : getCurrentQualityLabel()}</span>
+                {lockedQuality && (
+                  <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white">4K</span>
+                )}
+                {!lockedQuality && <ChevronRight className="w-4 h-4" />}
               </div>
             </button>
-            )}
             
             {/* Audio option */}
             <button
