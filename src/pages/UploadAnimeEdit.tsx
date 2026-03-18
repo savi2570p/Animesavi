@@ -393,7 +393,7 @@ export default function UploadAnimeEdit() {
               if (error) {
                 toast.error('Failed to update schedule day');
               } else {
-                toast.success(val === 'auto' ? 'Schedule day set to auto' : `Schedule day set to ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][parseInt(val)]}`);
+                toast.success(val === 'auto' ? 'Schedule day set to auto' : parseInt(val) === 7 ? 'Schedule day set to Everyday' : `Schedule day set to ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][parseInt(val)]}`);
               }
               setIsSavingSchedule(false);
             }}

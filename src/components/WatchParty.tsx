@@ -517,20 +517,21 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     setIsOpen(false);
   };
 
-  // End party (host or any authenticated member)
+  // End party (host or any authenticated member) - uses SECURITY DEFINER function
   const endParty = async () => {
     if (!partyId || !user) return;
     
     try {
-      // Use simple update - RLS "Members can end parties" policy handles authorization
-      const { error } = await supabase
-        .from('watch_parties')
-        .update({ is_active: false })
-        .eq('id', partyId);
+      const { data, error } = await supabase.rpc('end_watch_party', { party_uuid: partyId });
 
       if (error) {
         console.error('Error ending party:', error);
         toast.error('Failed to end party');
+        return;
+      }
+
+      if (!data) {
+        toast.error('You are not a member of this party');
         return;
       }
 
