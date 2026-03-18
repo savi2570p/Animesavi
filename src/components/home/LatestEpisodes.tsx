@@ -225,6 +225,10 @@ export function LatestEpisodes() {
                       className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
                       loading="lazy"
                     />
+                    {/* 4K Badge */}
+                    <div className="absolute top-2 right-2 z-10">
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg">4K</span>
+                    </div>
                     
                     {/* Gradient overlay on hover */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
