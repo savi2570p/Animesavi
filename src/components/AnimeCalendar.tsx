@@ -132,7 +132,7 @@ export function AnimeCalendar() {
 
   const getAnimeForDay = (dayIndex: number) => {
     return animeList
-      .filter(anime => anime.release_day === dayIndex)
+      .filter(anime => anime.release_day === dayIndex || anime.release_day === 7) // 7 = Everyday
       .sort((a, b) => {
         // Sort favorites first
         if (a.is_favorite && !b.is_favorite) return -1;
