@@ -404,6 +404,7 @@ export default function UploadAnimeEdit() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="auto">Auto (default)</SelectItem>
+              <SelectItem value="7">Everyday</SelectItem>
               <SelectItem value="0">Sunday</SelectItem>
               <SelectItem value="1">Monday</SelectItem>
               <SelectItem value="2">Tuesday</SelectItem>
