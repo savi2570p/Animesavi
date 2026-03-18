@@ -1180,6 +1180,7 @@ export type Database = {
       }
     }
     Functions: {
+      end_watch_party: { Args: { party_uuid: string }; Returns: boolean }
       get_token_system_status: { Args: never; Returns: boolean }
       has_role: {
         Args: {
