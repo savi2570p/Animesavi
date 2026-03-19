@@ -1070,19 +1070,15 @@ export default function Watch() {
           {/* Episode Navigation */}
           <div className="flex flex-wrap items-center gap-4">
             {prevEpisode && (
-              <Button variant="outline" asChild>
-                <Link to={`/watch/${prevEpisode.id}`}>
-                  <ChevronLeft className="h-4 w-4 mr-2" />
-                  Previous Episode
-                </Link>
+              <Button variant="outline" onClick={() => navigate(`/watch/${prevEpisode.id}`, { replace: true })}>
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Previous Episode
               </Button>
             )}
             {nextEpisode && (
-              <Button asChild className="anime-button">
-                <Link to={`/watch/${nextEpisode.id}`}>
-                  Next Episode
-                  <ChevronRight className="h-4 w-4 ml-2" />
-                </Link>
+              <Button className="anime-button" onClick={() => navigate(`/watch/${nextEpisode.id}`, { replace: true })}>
+                Next Episode
+                <ChevronRight className="h-4 w-4 ml-2" />
               </Button>
             )}
             
