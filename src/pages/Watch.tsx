@@ -244,11 +244,21 @@ export default function Watch() {
     handleServerSwitch(server);
   }, [handleServerSwitch]);
 
+  const prevEpisodeIdRef = useRef<string | undefined>(undefined);
+
   useEffect(() => {
     if (episodeId) {
-      fetchEpisodeData();
+      const isSwitch = !!prevEpisodeIdRef.current && prevEpisodeIdRef.current !== episodeId;
+      prevEpisodeIdRef.current = episodeId;
+      // Reset watch history for new episode
+      if (isSwitch) {
+        setWatchHistoryId(null);
+        ensureHistoryInFlightRef.current = false;
+        setInitialSeekDone(false);
+        setSavedPlaybackProgress(0);
+      }
+      fetchEpisodeData(isSwitch);
       fetchComments();
-      // Start fallback timer for the current server when episode loads
       startFallbackTimer();
     }
   }, [episodeId, commentSort]);
@@ -400,8 +410,8 @@ export default function Watch() {
     }
   }, [user, episodeId, anime, watchHistoryId, resumeProgress, initialSeekDone]);
 
-  const fetchEpisodeData = async () => {
-    setIsLoading(true);
+  const fetchEpisodeData = async (isEpisodeSwitch = false) => {
+    if (!isEpisodeSwitch) setIsLoading(true);
 
     const { data: episodeData, error } = await supabase
       .from('episodes')
@@ -1067,19 +1077,15 @@ export default function Watch() {
           {/* Episode Navigation */}
           <div className="flex flex-wrap items-center gap-4">
             {prevEpisode && (
-              <Button variant="outline" asChild>
-                <Link to={`/watch/${prevEpisode.id}`}>
-                  <ChevronLeft className="h-4 w-4 mr-2" />
-                  Previous Episode
-                </Link>
+              <Button variant="outline" onClick={() => navigate(`/watch/${prevEpisode.id}`, { replace: true })}>
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Previous Episode
               </Button>
             )}
             {nextEpisode && (
-              <Button asChild className="anime-button">
-                <Link to={`/watch/${nextEpisode.id}`}>
-                  Next Episode
-                  <ChevronRight className="h-4 w-4 ml-2" />
-                </Link>
+              <Button className="anime-button" onClick={() => navigate(`/watch/${nextEpisode.id}`, { replace: true })}>
+                Next Episode
+                <ChevronRight className="h-4 w-4 ml-2" />
               </Button>
             )}
             

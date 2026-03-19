@@ -598,9 +598,14 @@ export default function AnimeDetail() {
                               </div>
                             </div>
                             
+                            {/* 4K Badge - bottom right */}
+                            <div className="absolute bottom-2 right-2 z-10">
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg">4K</span>
+                            </div>
+                            
                             {/* Duration badge */}
                             {episode.duration && (
-                              <span className="absolute bottom-2 right-2 px-2 py-1 text-xs font-medium bg-black/80 text-white rounded-md backdrop-blur-sm">
+                              <span className="absolute bottom-2 left-2 px-2 py-1 text-xs font-medium bg-black/80 text-white rounded-md backdrop-blur-sm">
                                 {formatDuration(episode.duration)}
                               </span>
                             )}
