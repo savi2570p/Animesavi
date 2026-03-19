@@ -250,6 +250,13 @@ export default function Watch() {
     if (episodeId) {
       const isSwitch = !!prevEpisodeIdRef.current && prevEpisodeIdRef.current !== episodeId;
       prevEpisodeIdRef.current = episodeId;
+      // Reset watch history for new episode
+      if (isSwitch) {
+        setWatchHistoryId(null);
+        ensureHistoryInFlightRef.current = false;
+        setInitialSeekDone(false);
+        setSavedPlaybackProgress(0);
+      }
       fetchEpisodeData(isSwitch);
       fetchComments();
       startFallbackTimer();
