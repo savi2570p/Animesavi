@@ -244,11 +244,14 @@ export default function Watch() {
     handleServerSwitch(server);
   }, [handleServerSwitch]);
 
+  const prevEpisodeIdRef = useRef<string | undefined>(undefined);
+
   useEffect(() => {
     if (episodeId) {
-      fetchEpisodeData();
+      const isSwitch = !!prevEpisodeIdRef.current && prevEpisodeIdRef.current !== episodeId;
+      prevEpisodeIdRef.current = episodeId;
+      fetchEpisodeData(isSwitch);
       fetchComments();
-      // Start fallback timer for the current server when episode loads
       startFallbackTimer();
     }
   }, [episodeId, commentSort]);
