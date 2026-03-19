@@ -400,8 +400,8 @@ export default function Watch() {
     }
   }, [user, episodeId, anime, watchHistoryId, resumeProgress, initialSeekDone]);
 
-  const fetchEpisodeData = async () => {
-    setIsLoading(true);
+  const fetchEpisodeData = async (isEpisodeSwitch = false) => {
+    if (!isEpisodeSwitch) setIsLoading(true);
 
     const { data: episodeData, error } = await supabase
       .from('episodes')
