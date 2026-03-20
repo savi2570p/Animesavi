@@ -1805,6 +1805,16 @@ export function VideoPlayer({
         </div>
       );
     }
+
+    // YouTube URLs — use smart embed with fallback
+    if (isYouTubeUrl(anyVideoUrl)) {
+      return (
+        <YouTubeEmbed
+          url={anyVideoUrl}
+          title={`${animeTitle} - Episode ${episodeNumber}`}
+        />
+      );
+    }
     
     return (
       <div 
