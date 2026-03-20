@@ -55,6 +55,7 @@ import { PremiumLoader } from './PremiumLoader';
 import { EncodingOverlay } from './EncodingOverlay';
 import { useVideoGestures } from '@/hooks/useVideoGestures';
 import { ScreenMirroringDialog } from './ScreenMirroringDialog';
+import { YouTubeEmbed, isYouTubeUrl } from './YouTubeEmbed';
 
 interface AudioTrackInfo {
   id: number;
