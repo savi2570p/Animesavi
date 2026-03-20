@@ -216,7 +216,7 @@ export function LatestSeries() {
             >
               <Link
                 to={`/anime/${anime.id}`}
-                className={`group relative block stagger-${Math.min(index + 1, 4)} animate-fade-in w-[140px] md:w-auto shrink-0`}
+                className={`group relative block stagger-${Math.min(index + 1, 4)} animate-fade-in w-[140px] md:w-[160px] lg:w-[180px] shrink-0`}
               >
                 {/* Cover Image - Smaller */}
                 <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-muted shadow-md group-hover:shadow-xl transition-all duration-500">

@@ -215,7 +215,7 @@ export function LatestEpisodes() {
               >
                 <Link
                   to={`/watch/${group.latestEpisodeId}`}
-                  className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in w-[200px] md:w-auto shrink-0`}
+                  className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in w-[200px] md:w-[260px] lg:w-[300px] shrink-0`}
                 >
                   {/* Thumbnail with hover effects */}
                   <div className="relative aspect-video rounded-xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl transition-all duration-500">

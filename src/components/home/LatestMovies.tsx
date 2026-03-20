@@ -156,7 +156,7 @@ export function LatestMovies() {
             >
               <Link
                 to={movie.firstEpisodeId ? `/watch/${movie.firstEpisodeId}` : `/anime/${movie.id}`}
-                className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in gpu-accelerate w-[140px] md:w-auto shrink-0`}
+                className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in gpu-accelerate w-[140px] md:w-[160px] lg:w-[180px] shrink-0`}
               >
                 {/* Poster with enhanced hover */}
                 <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted mb-3 shadow-lg transition-all duration-500 group-hover:shadow-2xl group-hover:scale-[1.03] group-hover:-translate-y-2">

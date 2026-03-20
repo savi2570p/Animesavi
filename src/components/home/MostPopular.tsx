@@ -211,7 +211,7 @@ export function MostPopular() {
               >
                 <Link
                   to={`/anime/${anime.id}`}
-                  className={`group relative block stagger-${Math.min(index + 1, 4)} animate-fade-in w-[140px] md:w-auto shrink-0`}
+                  className={`group relative block stagger-${Math.min(index + 1, 4)} animate-fade-in w-[140px] md:w-[180px] lg:w-[200px] shrink-0`}
                   onMouseEnter={() => handleMouseEnter(anime.id)}
                   onMouseLeave={handleMouseLeave}
                 >
