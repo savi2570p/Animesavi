@@ -206,7 +206,7 @@ export function LatestSeries() {
           </Button>
         </div>
 
-        <div className="flex md:grid md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
+        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
           {series.slice(0, 12).map((anime, index) => (
             <AnimeCardContextMenu
               key={anime.id}
