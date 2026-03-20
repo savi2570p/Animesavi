@@ -201,8 +201,8 @@ export function MostPopular() {
             </Button>
           </div>
         ) : (
-          <div className="flex md:grid md:grid-cols-4 gap-3 md:gap-4 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
-            {filteredList.slice(0, 4).map((anime, index) => (
+          <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+            {filteredList.slice(0, 8).map((anime, index) => (
               <AnimeCardContextMenu
                 key={anime.id}
                 animeTitle={anime.title}
