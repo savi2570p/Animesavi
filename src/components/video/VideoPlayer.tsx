@@ -55,6 +55,7 @@ import { PremiumLoader } from './PremiumLoader';
 import { EncodingOverlay } from './EncodingOverlay';
 import { useVideoGestures } from '@/hooks/useVideoGestures';
 import { ScreenMirroringDialog } from './ScreenMirroringDialog';
+import { YouTubeEmbed, isYouTubeUrl } from './YouTubeEmbed';
 
 interface AudioTrackInfo {
   id: number;
@@ -1802,6 +1803,16 @@ export function VideoPlayer({
             </Button>
           </div>
         </div>
+      );
+    }
+
+    // YouTube URLs — use smart embed with fallback
+    if (isYouTubeUrl(anyVideoUrl)) {
+      return (
+        <YouTubeEmbed
+          url={anyVideoUrl}
+          title={`${animeTitle} - Episode ${episodeNumber}`}
+        />
       );
     }
     
