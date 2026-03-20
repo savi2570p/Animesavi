@@ -146,7 +146,7 @@ export function RecentlyCompleted() {
           </Button>
         </div>
 
-        <div className="flex md:grid md:grid-cols-4 gap-4 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
+        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="space-y-2 w-[140px] md:w-auto shrink-0">
@@ -159,7 +159,7 @@ export function RecentlyCompleted() {
               <Link
                 key={anime.id}
                 to={`/anime/${anime.id}`}
-                className="group relative w-[140px] md:w-auto shrink-0"
+                className="group relative w-[140px] md:w-[160px] lg:w-[180px] shrink-0"
               >
                 <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-muted">
                   {anime.cover_image ? (

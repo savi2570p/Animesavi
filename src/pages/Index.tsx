@@ -1,10 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Play, Tv, Clock, Award, ArrowRight, Film, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
 import museinLogo from '@/assets/musein-logo.jpg';
-import { FeaturedAnime } from '@/components/home/FeaturedAnime';
 import { FeaturedSlider } from '@/components/home/FeaturedSlider';
 import { ContinueWatching } from '@/components/home/ContinueWatching';
 import { RecommendedAnime } from '@/components/home/RecommendedAnime';
@@ -18,83 +17,38 @@ import { SocialShare } from '@/components/home/SocialShare';
 import { MostPopular } from '@/components/home/MostPopular';
 import { AnimeCalendar } from '@/components/AnimeCalendar';
 
-
-
 export default function Index() {
   const { user } = useAuth();
 
-  const stats: { icon: any; value: string; label: string; link?: string }[] = [
-    { icon: Play, value: 'Latest', label: 'Series & movies upload every week' },
-    { icon: Tv, value: 'Watch', label: 'Anime on my friend\'s website', link: 'https://shadow-toons.lovable.app/' },
-    { icon: Clock, value: '24/7', label: 'Join Telegram group for more updates', link: 'https://t.me/AnimeSaviInhindiDUB' },
-    { icon: Award, value: 'Fully', label: 'Ad free' },
-  ];
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Featured Anime Slider - Top section */}
-
-      {/* Featured Anime Slider - Top section */}
+      {/* Hero Banner */}
       <FeaturedSlider />
 
-      {/* Quick Stats Bar */}
-      <section className="py-6 border-b border-border/30 bg-card/20">
-        <div className="container">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {stats.map((stat, index) => {
-              const content = (
-                <div 
-                  key={stat.label}
-                  className={`flex items-center gap-3 justify-center group ${stat.link ? 'cursor-pointer' : 'cursor-default'}`}
-                  onClick={stat.link ? () => window.open(stat.link, '_blank') : undefined}
-                >
-                  <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors duration-200">
-                    <stat.icon className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold group-hover:text-primary transition-colors duration-200">{stat.value}</p>
-                    <p className="text-xs text-muted-foreground">{stat.label}</p>
-                  </div>
-                </div>
-              );
-              return <div key={stat.label}>{content}</div>;
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Continue Watching - Only shown on home page */}
+      {/* Continue Watching */}
       <ContinueWatching showOnHomeOnly={true} />
 
-      {/* Crunchy & MuseIN Links - Always visible */}
-      <section className="py-4">
+      {/* Platform Links */}
+      <section className="py-3">
         <div className="container flex items-center gap-3">
           <Link
             to="/crunchy"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border bg-card/50 text-muted-foreground border-border/50 hover:bg-primary/10 hover:border-primary/50 hover:text-primary"
           >
-            <img
-              src={crunchyrollLogo}
-              alt="Crunchy"
-              className="h-5 w-auto object-contain"
-            />
+            <img src={crunchyrollLogo} alt="Crunchy" className="h-5 w-auto object-contain" />
             Crunchy
           </Link>
           <Link
             to="/musein"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border bg-card/50 text-muted-foreground border-border/50 hover:bg-primary/10 hover:border-primary/50 hover:text-primary"
           >
-            <img
-              src={museinLogo}
-              alt="MuseIN"
-              className="h-5 w-5 rounded-full object-cover"
-            />
+            <img src={museinLogo} alt="MuseIN" className="h-5 w-5 rounded-full object-cover" />
             MuseIN
           </Link>
         </div>
       </section>
 
-      {/* Recommended Anime */}
+      {/* Recommended / Popular */}
       <RecommendedAnime />
 
       {/* Most Popular */}
@@ -106,30 +60,29 @@ export default function Index() {
       {/* Latest Episodes */}
       <LatestEpisodes />
 
-      {/* Coming Soon - Upcoming anime */}
+      {/* Coming Soon */}
       <ComingSoon />
 
       {/* Release Calendar */}
       <AnimeCalendar />
 
-      {/* Pending Upload - Anime with no episodes yet */}
+      {/* Pending Upload */}
       <EpisodeProgress />
 
       {/* Latest Movies */}
       <LatestMovies />
 
-
       {/* Recently Completed */}
       <RecentlyCompleted />
 
-      {/* Social Share Section */}
+      {/* Social Share */}
       <section className="py-8">
         <div className="container">
           <SocialShare />
         </div>
       </section>
 
-      {/* CTA Section - Simplified */}
+      {/* CTA */}
       <section className="py-16">
         <div className="container">
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-transparent border border-primary/20 p-8 md:p-12">
@@ -138,20 +91,14 @@ export default function Index() {
                 <Sparkles className="h-5 w-5 text-primary" />
                 <span className="text-sm font-medium text-primary">Start Watching Today</span>
               </div>
-              
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
                 Ready to Start Your Anime Journey?
               </h2>
               <p className="text-muted-foreground mb-6 max-w-xl">
                 Sign up now and get access to thousands of anime series and movies for free. No credit card required.
               </p>
-              
               <div className="flex flex-wrap gap-3">
-                <Button 
-                  asChild 
-                  size="lg" 
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
-                >
+                <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
                   <Link to={user ? '/browse' : '/auth'}>
                     {user ? 'Browse Anime' : 'Get Started Free'}
                     <ArrowRight className="h-4 w-4 ml-2" />

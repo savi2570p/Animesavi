@@ -206,7 +206,7 @@ export function LatestSeries() {
           </Button>
         </div>
 
-        <div className="flex md:grid md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
+        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
           {series.slice(0, 12).map((anime, index) => (
             <AnimeCardContextMenu
               key={anime.id}
@@ -216,7 +216,7 @@ export function LatestSeries() {
             >
               <Link
                 to={`/anime/${anime.id}`}
-                className={`group relative block stagger-${Math.min(index + 1, 4)} animate-fade-in w-[140px] md:w-auto shrink-0`}
+                className={`group relative block stagger-${Math.min(index + 1, 4)} animate-fade-in w-[140px] md:w-[160px] lg:w-[180px] shrink-0`}
               >
                 {/* Cover Image - Smaller */}
                 <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-muted shadow-md group-hover:shadow-xl transition-all duration-500">

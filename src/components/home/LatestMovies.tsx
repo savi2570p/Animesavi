@@ -146,8 +146,8 @@ export function LatestMovies() {
           </Button>
         </div>
 
-        <div className="flex md:grid md:grid-cols-4 gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
-          {(showAll ? movies : movies.slice(0, 4)).map((movie, index) => (
+        <div className="flex gap-4 md:gap-5 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+          {movies.slice(0, 8).map((movie, index) => (
             <AnimeCardContextMenu
               key={movie.id}
               animeTitle={movie.title}
@@ -156,7 +156,7 @@ export function LatestMovies() {
             >
               <Link
                 to={movie.firstEpisodeId ? `/watch/${movie.firstEpisodeId}` : `/anime/${movie.id}`}
-                className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in gpu-accelerate w-[140px] md:w-auto shrink-0`}
+                className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in gpu-accelerate w-[140px] md:w-[160px] lg:w-[180px] shrink-0`}
               >
                 {/* Poster with enhanced hover */}
                 <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted mb-3 shadow-lg transition-all duration-500 group-hover:shadow-2xl group-hover:scale-[1.03] group-hover:-translate-y-2">
