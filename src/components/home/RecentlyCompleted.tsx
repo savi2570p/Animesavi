@@ -159,7 +159,7 @@ export function RecentlyCompleted() {
               <Link
                 key={anime.id}
                 to={`/anime/${anime.id}`}
-                className="group relative w-[140px] md:w-auto shrink-0"
+                className="group relative w-[140px] md:w-[160px] lg:w-[180px] shrink-0"
               >
                 <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-muted">
                   {anime.cover_image ? (

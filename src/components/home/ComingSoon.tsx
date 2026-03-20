@@ -91,7 +91,7 @@ export function ComingSoon() {
               >
                 <div
                   onClick={() => setSelectedAnime(anime)}
-                  className="group relative w-[140px] md:w-auto shrink-0 cursor-pointer"
+                  className="group relative w-[140px] md:w-[160px] lg:w-[180px] shrink-0 cursor-pointer"
                 >
                   <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-muted">
                     {anime.cover_image ? (
