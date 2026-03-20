@@ -25,8 +25,8 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/upload/resumable` : '';
 
-// 6MB chunks keeps memory stable and bypasses typical single-request body limits
-const VIDEO_CHUNK_SIZE = 6 * 1024 * 1024;
+// 10MB chunks for maximum throughput with parallel upload
+const VIDEO_CHUNK_SIZE = 10 * 1024 * 1024;
 
 // Map file extensions to MIME types for cases where the browser reports empty/generic types
 const VIDEO_MIME_MAP: Record<string, string> = {
