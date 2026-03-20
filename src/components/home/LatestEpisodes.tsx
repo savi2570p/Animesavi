@@ -200,8 +200,8 @@ export function LatestEpisodes() {
           </Button>
         </div>
 
-        <div className="flex md:grid md:grid-cols-4 gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
-          {groupedEpisodes.slice(0, 4).map((group, index) => {
+        <div className="flex gap-4 md:gap-5 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+          {groupedEpisodes.slice(0, 8).map((group, index) => {
             const displayImage = group.thumbnail || group.coverImage || '/placeholder.svg';
             const episodeRangeText = formatEpisodeRange(group.episodeMin, group.episodeMax, group.episodeCount);
             const hasMultipleEpisodes = group.episodeMin !== group.episodeMax;
