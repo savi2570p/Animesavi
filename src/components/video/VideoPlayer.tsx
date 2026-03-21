@@ -114,7 +114,7 @@ interface VideoPlayerProps {
 
 const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
   PLAY: { 
-    name: 'PLAY', 
+    name: 'H.Savi', 
     features: ['watch'],
     playerStyle: 'basic'
   },
@@ -124,7 +124,7 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
     playerStyle: 'standard'
   },
   Zex: { 
-    name: 'Zex', 
+    name: 'Multi.Savi', 
     features: ['watch', 'quality', 'download'],
     playerStyle: 'advanced'
   },
