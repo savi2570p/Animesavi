@@ -124,7 +124,7 @@ export function FeaturedSlider() {
     return (
       <section className="relative w-full overflow-hidden">
         {/* Background hero image */}
-        <div className="relative w-full aspect-[21/9] min-h-[480px] max-h-[680px]">
+        <div className="relative w-full aspect-[16/9]">
           {featuredAnime.map((anime, idx) => (
             <div
               key={anime.id}
