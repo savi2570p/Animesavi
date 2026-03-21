@@ -12,12 +12,22 @@ import { Button } from '@/components/ui/button';
 
 const NOTICE_VERSION = 'v7';
 
-export function WelcomePopup() {
+interface WelcomePopupProps {
+  showNoticeOnly?: boolean;
+  onNoticeClose?: () => void;
+}
+
+export function WelcomePopup({ showNoticeOnly = false, onNoticeClose }: WelcomePopupProps) {
   const location = useLocation();
   const [showWelcome, setShowWelcome] = useState(false);
   const [showNotice, setShowNotice] = useState(false);
 
   useEffect(() => {
+    if (showNoticeOnly) {
+      setShowNotice(true);
+      return;
+    }
+
     if (location.pathname !== '/') return;
 
     const hasSeenWelcome = localStorage.getItem('has_seen_welcome');
@@ -28,7 +38,7 @@ export function WelcomePopup() {
     } else if (seenNoticeVersion !== NOTICE_VERSION) {
       setShowNotice(true);
     }
-  }, [location.pathname]);
+  }, [location.pathname, showNoticeOnly]);
 
   const handleWelcomeClose = () => {
     localStorage.setItem('has_seen_welcome', 'true');
@@ -40,8 +50,11 @@ export function WelcomePopup() {
   };
 
   const handleNoticeClose = () => {
-    localStorage.setItem('notice_popup_seen_version', NOTICE_VERSION);
+    if (!showNoticeOnly) {
+      localStorage.setItem('notice_popup_seen_version', NOTICE_VERSION);
+    }
     setShowNotice(false);
+    onNoticeClose?.();
   };
 
   return (

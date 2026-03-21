@@ -26,7 +26,8 @@ import {
   Film,
   Tv,
   TrendingUp,
-  BadgeCheck
+  BadgeCheck,
+  Sparkles
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -38,6 +39,7 @@ import { WatchLaterButton } from '@/components/WatchLater';
 import { AccountSwitcher, rememberAccount } from '@/components/AccountSwitcher';
 import { hasValidTokenAccess } from '@/components/AccessBanner';
 import { VerifyTokenDialog } from '@/components/VerifyTokenDialog';
+import { WelcomePopup } from '@/components/WelcomePopup';
 
 export function Header() {
   const { user, isUploader, isAdmin, signOut } = useAuth();
@@ -45,6 +47,7 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
+  const [showWhatsNew, setShowWhatsNew] = useState(false);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +56,6 @@ export function Header() {
     }
   };
 
-  // Remember current account before sign out
   const handleSignOut = async () => {
     if (user?.email) {
       rememberAccount(user.email, user.user_metadata?.username || user.email.split('@')[0]);
@@ -153,10 +155,7 @@ export function Header() {
 
         {/* User Menu */}
         <div className="flex items-center gap-2">
-          {/* Watch Later Button */}
           {user && <WatchLaterButton />}
-          
-          {/* Notification Bell */}
           {user && <NotificationBell />}
           
           {user ? (
@@ -355,6 +354,13 @@ export function Header() {
                     <BadgeCheck className="h-4 w-4 text-muted-foreground" />
                     Verify
                   </button>
+                  <button
+                    onClick={() => setShowWhatsNew(true)}
+                    className="flex items-center gap-3 text-base font-medium py-2 px-3 rounded-lg hover:bg-card transition-colors w-full text-left"
+                  >
+                    <Sparkles className="h-4 w-4 text-muted-foreground" />
+                    What's New
+                  </button>
                   {canUpload() && (
                     <Button 
                       variant="outline" 
@@ -370,6 +376,7 @@ export function Header() {
             </SheetContent>
           </Sheet>
           <VerifyTokenDialog open={verifyOpen} onOpenChange={setVerifyOpen} />
+          <WelcomePopup showNoticeOnly={showWhatsNew} onNoticeClose={() => setShowWhatsNew(false)} />
         </div>
       </div>
     </header>
