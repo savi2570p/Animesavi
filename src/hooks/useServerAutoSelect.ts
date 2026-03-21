@@ -14,7 +14,7 @@ interface ServerConfig {
 export const SERVER_CONFIGS: Record<ServerType, ServerConfig> = {
   PLAY: {
     id: 'PLAY',
-    name: 'GTR XS',
+    name: 'H.Savi',
     description: 'Recommended for iOS',
     features: ['HLS streaming', 'iOS optimized'],
     supportedPlatforms: ['ios', 'android', 'desktop'],
@@ -28,7 +28,7 @@ export const SERVER_CONFIGS: Record<ServerType, ServerConfig> = {
   },
   Zex: {
     id: 'Zex',
-    name: 'RIP X',
+    name: 'Multi.Savi',
     description: 'Backup',
     features: ['Fallback server', 'Download support'],
     supportedPlatforms: ['ios', 'android', 'desktop'],
