@@ -139,6 +139,12 @@ export function AccessBanner() {
   const [dbChecked, setDbChecked] = useState(false);
   const isSynced = wasAccessSyncedFromCloud();
 
+  // Skip entirely on embed routes
+  const isEmbedRoute = typeof window !== 'undefined' && (
+    window.location.pathname.startsWith('/embed/') ||
+    new URLSearchParams(window.location.search).get('embed') === 'true'
+  );
+
   const superAdmin = isSuperAdmin(user?.email);
 
   // Fetch token system status once
@@ -174,7 +180,7 @@ export function AccessBanner() {
     return () => clearInterval(interval);
   }, [tokenEnabled, expiresAt, dbChecked]);
 
-  if (superAdmin || !time) return null;
+  if (isEmbedRoute || superAdmin || !time) return null;
 
   return (
     <div
