@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-const NOTICE_VERSION = 'v7';
+const NOTICE_VERSION = 'v8';
 
 interface WelcomePopupProps {
   showNoticeOnly?: boolean;
@@ -86,24 +86,48 @@ export function WelcomePopup({ showNoticeOnly = false, onNoticeClose }: WelcomeP
         </DialogContent>
       </Dialog>
 
-      {/* What's New Popup */}
+      {/* What's New Popup — v8 */}
       <Dialog open={showNotice} onOpenChange={(open) => { if (!open) handleNoticeClose(); }}>
-        <DialogContent className="sm:max-w-lg border-primary/20">
+        <DialogContent className="sm:max-w-lg border-primary/20 max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-heading text-center">
-              ✨ What's New — v7
+              ✨ What's New — v8
             </DialogTitle>
             <DialogDescription className="text-center text-sm text-muted-foreground">
-              Fresh updates just dropped — here's what changed
+              Fresh updates just dropped — here's everything new
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-3 pt-2">
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+              <span className="text-lg">🏠</span>
+              <div>
+                <h4 className="font-medium text-foreground">New Landing Page</h4>
+                <p className="text-sm text-muted-foreground">A modern anime-inspired welcome page with quick search, featured anime carousel, and easy navigation to all sections.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+              <span className="text-lg">🎬</span>
+              <div>
+                <h4 className="font-medium text-foreground">OTT-Style Homepage</h4>
+                <p className="text-sm text-muted-foreground">Desktop homepage redesigned with cinematic hero banners, horizontal scroll sections, and Netflix-style browsing experience.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+              <span className="text-lg">⚡</span>
+              <div>
+                <h4 className="font-medium text-foreground">Instant Episode Switching</h4>
+                <p className="text-sm text-muted-foreground">Episodes and seasons now switch instantly without page reload — smooth SPA experience like Netflix and Crunchyroll.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
               <span className="text-lg">📥</span>
               <div>
                 <h4 className="font-medium text-foreground">Instant Downloads</h4>
-                <p className="text-sm text-muted-foreground">Downloads now start immediately with proper filenames — no more random names or new tabs opening!</p>
+                <p className="text-sm text-muted-foreground">Downloads start immediately with proper filenames — no more random names or new tabs opening!</p>
               </div>
             </div>
 
@@ -111,7 +135,7 @@ export function WelcomePopup({ showNoticeOnly = false, onNoticeClose }: WelcomeP
               <span className="text-lg">📺</span>
               <div>
                 <h4 className="font-medium text-foreground">Cast to Any Device</h4>
-                <p className="text-sm text-muted-foreground">Chromecast, AirPlay & Smart TV casting now works seamlessly — no more "Access Expired" errors</p>
+                <p className="text-sm text-muted-foreground">Chromecast, AirPlay & Smart TV casting now works seamlessly — no more "Access Expired" errors.</p>
               </div>
             </div>
 
@@ -119,7 +143,15 @@ export function WelcomePopup({ showNoticeOnly = false, onNoticeClose }: WelcomeP
               <span className="text-lg">🔗</span>
               <div>
                 <h4 className="font-medium text-foreground">Share & Embed</h4>
-                <p className="text-sm text-muted-foreground">Share episodes via WhatsApp, copy embed links, or generate iframe codes for external sites</p>
+                <p className="text-sm text-muted-foreground">Share episodes via WhatsApp, copy embed links, or generate iframe codes for external sites.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+              <span className="text-lg">🎛️</span>
+              <div>
+                <h4 className="font-medium text-foreground">Server Rebrand</h4>
+                <p className="text-sm text-muted-foreground">Servers renamed: GTR → H.Savi, RIP X → Multi.Savi for clearer identification.</p>
               </div>
             </div>
 
@@ -127,7 +159,15 @@ export function WelcomePopup({ showNoticeOnly = false, onNoticeClose }: WelcomeP
               <span className="text-lg">📱</span>
               <div>
                 <h4 className="font-medium text-foreground">Mobile Player Revamp</h4>
-                <p className="text-sm text-muted-foreground">Compact controls, next episode button, and fixed season selector for a smoother mobile experience</p>
+                <p className="text-sm text-muted-foreground">Compact controls (30px buttons, 15px icons), next episode button, and refined spacing for smoother mobile viewing.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+              <span className="text-lg">🔒</span>
+              <div>
+                <h4 className="font-medium text-foreground">Clean Embed Player</h4>
+                <p className="text-sm text-muted-foreground">Embed links now work without premium popups — clean, minimal player for external websites.</p>
               </div>
             </div>
           </div>
