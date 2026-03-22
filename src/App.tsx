@@ -52,6 +52,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Schedule = lazy(() => import("./pages/Schedule"));
 const UpcomingPage = lazy(() => import("./pages/UpcomingPage"));
 const EmbedSlugPlayer = lazy(() => import("./pages/EmbedSlugPlayer"));
+const Welcome = lazy(() => import("./pages/Welcome"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
