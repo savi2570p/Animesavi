@@ -31,7 +31,7 @@ export function TokenExpiredGlobalPopup() {
 
     check();
     return () => { cancelled = true; };
-  }, [user?.email, user?.id]);
+  }, [user?.email, user?.id, isEmbedRoute]);
 
   if (!show) return null;
 
