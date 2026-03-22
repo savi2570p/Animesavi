@@ -180,7 +180,7 @@ export function AccessBanner() {
     return () => clearInterval(interval);
   }, [tokenEnabled, expiresAt, dbChecked]);
 
-  if (superAdmin || !time) return null;
+  if (isEmbedRoute || superAdmin || !time) return null;
 
   return (
     <div
