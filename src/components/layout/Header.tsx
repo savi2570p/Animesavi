@@ -94,17 +94,19 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b border-border/50 safe-area-top">
       <div className="container flex h-14 items-center justify-between gap-2 sm:gap-4">
         {/* Logo */}
-        <Link to="/welcome" className="flex items-center gap-2 flex-shrink-0 group">
-          <img 
-            src={logo} 
-            alt="Anime Savi" 
-            className="h-8 w-8 rounded-lg object-contain" 
-          />
-          <span className="hidden sm:inline-block text-lg font-bold">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Link to="/welcome" className="flex-shrink-0">
+            <img 
+              src={logo} 
+              alt="Anime Savi" 
+              className="h-8 w-8 rounded-lg object-contain hover:scale-110 transition-transform duration-200" 
+            />
+          </Link>
+          <Link to="/" className="hidden sm:inline-block text-lg font-bold hover:opacity-80 transition-opacity">
             <span className="text-primary">Anime</span>
             <span className="text-foreground ml-1">Savi</span>
-          </span>
-        </Link>
+          </Link>
+        </div>
 
         {/* Navigation - Desktop */}
         <nav className="hidden lg:flex items-center gap-1">
