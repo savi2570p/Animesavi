@@ -7,7 +7,14 @@ export function TokenExpiredGlobalPopup() {
   const { user } = useAuth();
   const [show, setShow] = useState(false);
 
+  // Skip premium checks entirely on embed routes
+  const isEmbedRoute = typeof window !== 'undefined' && (
+    window.location.pathname.startsWith('/embed/') ||
+    new URLSearchParams(window.location.search).get('embed') === 'true'
+  );
+
   useEffect(() => {
+    if (isEmbedRoute) return;
     let cancelled = false;
 
     async function check() {
