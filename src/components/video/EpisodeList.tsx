@@ -91,7 +91,7 @@ export function EpisodeList({ episodes, currentEpisodeId, className, onEpisodeSe
     const slug = animeTitle
       ? animeTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
       : 'anime';
-    const embedUrl = `${window.location.origin}/embed/${slug}/episode-${episode.episode_number}`;
+    const embedUrl = `${window.location.origin}/embed/${slug}/season-${seasonNumber}/episode-${episode.episode_number}`;
     navigator.clipboard.writeText(embedUrl);
     toast.success('Embed link copied!');
   };
