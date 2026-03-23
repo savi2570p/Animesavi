@@ -229,6 +229,7 @@ export function OfflineDownloadButton({
       setIsIOSOptimized(isOptimized);
       
       const formatLabel = isOptimized ? ' (iOS Optimized)' : '';
+      window.dispatchEvent(new CustomEvent('offline-download-progress', { detail: { title: episodeTitle, progress: 100, done: true } }));
       toast.success(`Video saved for offline viewing!${formatLabel}`, {
         description: `${episodeTitle} (${formatBytes(receivedLength)})`,
       });
