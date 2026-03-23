@@ -397,6 +397,49 @@ export default function EmbedSlugPlayer() {
                   )}
                 </div>
               )}
+              {/* Download with quality picker */}
+              <div className="relative">
+                <button onClick={(e) => { e.stopPropagation(); setShowDownloadMenu(!showDownloadMenu); setShowQualityMenu(false); }} className="text-white hover:text-primary transition-colors p-1" title="Download">
+                  {isDownloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+                </button>
+                {showDownloadMenu && (
+                  <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[140px]">
+                    {['720p', '1080p'].map((quality) => (
+                      <button
+                        key={quality}
+                        className={`w-full text-left px-3 py-1.5 text-sm rounded text-white/80 hover:bg-white/10 flex items-center gap-2 ${isDownloading === quality ? 'opacity-50' : ''}`}
+                        disabled={!!isDownloading}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const url = episodeData?.videoUrl;
+                          if (!url) return;
+                          setIsDownloading(quality);
+                          setShowDownloadMenu(false);
+                          const safeName = episodeData?.title?.replace(/[^a-zA-Z0-9]/g, '_') || 'video';
+                          const fileName = `AnimeSavi_${safeName}_${quality}.mp4`;
+                          try {
+                            const res = await fetch(url);
+                            const blob = await res.blob();
+                            const blobUrl = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = blobUrl; a.download = fileName;
+                            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                            URL.revokeObjectURL(blobUrl);
+                          } catch {
+                            const a = document.createElement('a');
+                            a.href = url; a.download = fileName; a.target = '_blank';
+                            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                          }
+                          setIsDownloading(null);
+                        }}
+                      >
+                        <Download className="w-3 h-3" /> {quality}
+                        {isDownloading === quality && <Loader2 className="w-3 h-3 animate-spin" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button onClick={toggleFullscreen} className="text-white hover:text-primary transition-colors p-1">
                 <Maximize className="w-5 h-5" />
               </button>
