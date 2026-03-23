@@ -186,7 +186,9 @@ export function OfflineDownloadButton({
         receivedLength += value.length;
 
         if (total > 0) {
-          setDownloadProgress(Math.round((receivedLength / total) * 100));
+          const pct = Math.round((receivedLength / total) * 100);
+          setDownloadProgress(pct);
+          window.dispatchEvent(new CustomEvent('offline-download-progress', { detail: { title: episodeTitle, progress: pct, done: false } }));
         }
       }
 
@@ -227,6 +229,7 @@ export function OfflineDownloadButton({
       setIsIOSOptimized(isOptimized);
       
       const formatLabel = isOptimized ? ' (iOS Optimized)' : '';
+      window.dispatchEvent(new CustomEvent('offline-download-progress', { detail: { title: episodeTitle, progress: 100, done: true } }));
       toast.success(`Video saved for offline viewing!${formatLabel}`, {
         description: `${episodeTitle} (${formatBytes(receivedLength)})`,
       });

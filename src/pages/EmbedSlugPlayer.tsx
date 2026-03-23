@@ -4,7 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   Play, Pause, Volume2, VolumeX, Maximize,
   SkipForward, Loader2, AlertTriangle, RefreshCw,
-  Settings, Check, ShieldAlert, Download, Headphones
+  Settings, Check, ShieldAlert, Download, Headphones,
+  List, ChevronRight, X
 } from 'lucide-react';
 import Hls from 'hls.js';
 
@@ -58,6 +59,14 @@ export default function EmbedSlugPlayer() {
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [audioTracks, setAudioTracks] = useState<{ id: number; name: string; lang: string }[]>([]);
   const [currentAudioTrack, setCurrentAudioTrack] = useState(0);
+
+  // Episode selection state
+  const [allEpisodes, setAllEpisodes] = useState<{ id: string; title: string; episode_number: number; season_number: number; season_id: string }[]>([]);
+  const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(0);
+  const [showEpisodePanel, setShowEpisodePanel] = useState(false);
+  const [currentSeasonNumber, setCurrentSeasonNumber] = useState(1);
+  const [currentEpisodeNumber, setCurrentEpisodeNumber] = useState(1);
+  const [resolvedAnimeId, setResolvedAnimeId] = useState<string | null>(null);
 
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   const deviceInfo = detectDeviceInfo();
@@ -146,10 +155,74 @@ export default function EmbedSlugPlayer() {
       if (!url) { setFetchError('No video available'); return; }
 
       setEpisodeData({ title: ep.title, videoUrl: url, animeTitle: anime.title || '' });
+      setResolvedAnimeId(anime.id || null);
+      setCurrentSeasonNumber(seasonNumber);
+      setCurrentEpisodeNumber(episodeNumber);
+
+      // Fetch all episodes for episode selector
+      const allEps: typeof allEpisodes = [];
+      for (const s of seasons) {
+        const { data: eps } = await supabase
+          .from('episodes').select('id, title, episode_number')
+          .eq('season_id', s.id).order('episode_number');
+        if (eps) {
+          allEps.push(...eps.map(e => ({ ...e, season_number: s.season_number, season_id: s.id })));
+        }
+      }
+      setAllEpisodes(allEps);
+      const idx = allEps.findIndex(e => e.episode_number === episodeNumber && e.season_number === seasonNumber);
+      setCurrentEpisodeIndex(idx >= 0 ? idx : 0);
     };
 
     resolveEpisode();
   }, [animeSlug, seasonSlug, episodeSlug, domainAllowed]);
+
+  // Switch episode handler
+  const switchToEpisode = useCallback(async (ep: typeof allEpisodes[0]) => {
+    setShowEpisodePanel(false);
+    setIsLoading(true);
+    setError(null);
+    const { data } = await supabase.from('episodes').select('video_url, external_url, title').eq('id', ep.id).single();
+    if (!data) { setError('Episode failed to load'); return; }
+    const url = data.video_url || data.external_url;
+    if (!url) { setError('No video available'); return; }
+    setEpisodeData(prev => ({ title: data.title, videoUrl: url, animeTitle: prev?.animeTitle || '' }));
+    setCurrentSeasonNumber(ep.season_number);
+    setCurrentEpisodeNumber(ep.episode_number);
+    const idx = allEpisodes.findIndex(e => e.id === ep.id);
+    if (idx >= 0) setCurrentEpisodeIndex(idx);
+  }, [allEpisodes]);
+
+  // Keyboard shortcuts (Space, F, M)
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).tagName === 'INPUT') return;
+      switch (e.key.toLowerCase()) {
+        case ' ':
+          e.preventDefault();
+          if (videoRef.current) isPlaying ? videoRef.current.pause() : videoRef.current.play();
+          break;
+        case 'f':
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+        case 'm':
+          e.preventDefault();
+          toggleMute();
+          break;
+        case 'arrowright':
+          e.preventDefault();
+          if (videoRef.current) videoRef.current.currentTime = Math.min(videoRef.current.currentTime + 10, duration);
+          break;
+        case 'arrowleft':
+          e.preventDefault();
+          if (videoRef.current) videoRef.current.currentTime = Math.max(videoRef.current.currentTime - 10, 0);
+          break;
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isPlaying, duration]);
 
   // Video playback setup
   useEffect(() => {
@@ -396,10 +469,73 @@ export default function EmbedSlugPlayer() {
         className={`controls-area absolute inset-0 flex flex-col justify-end transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Title */}
-        <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black/80 to-transparent">
-          <p className="text-white text-sm font-medium truncate">{episodeData.title}</p>
+        {/* Title + Episode selector button */}
+        <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black/80 to-transparent flex items-center justify-between">
+          <div className="min-w-0 flex-1">
+            <p className="text-white text-xs font-medium truncate">
+              <span className="text-primary">S{currentSeasonNumber} E{currentEpisodeNumber}</span>
+              <span className="mx-1.5 text-white/40">•</span>
+              {episodeData.title}
+            </p>
+          </div>
+          {allEpisodes.length > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowEpisodePanel(!showEpisodePanel); closeAllMenus(); }}
+              className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white text-[10px] font-medium transition-colors ml-2 shrink-0"
+            >
+              <List className="w-3 h-3" /> Episodes
+            </button>
+          )}
         </div>
+
+        {/* Episode panel overlay */}
+        {showEpisodePanel && (
+          <div className="absolute inset-0 z-50 bg-black/95 flex flex-col animate-fade-in" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-3 border-b border-white/10">
+              <h3 className="text-white text-sm font-semibold">{episodeData.animeTitle} — Episodes</h3>
+              <button onClick={() => setShowEpisodePanel(false)} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              {allEpisodes.map((ep, idx) => (
+                <button
+                  key={ep.id}
+                  onClick={() => switchToEpisode(ep)}
+                  className={`flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-all ${
+                    idx === currentEpisodeIndex
+                      ? 'bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.4)]'
+                      : 'bg-white/5 text-white/70 hover:bg-white/15 hover:text-white'
+                  }`}
+                >
+                  <span className="text-[10px] text-white/40">S{ep.season_number}</span>
+                  <span>Ep {ep.episode_number}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Episode strip (horizontal scroll) */}
+        {allEpisodes.length > 1 && showControls && !showEpisodePanel && (
+          <div className="absolute bottom-[90px] sm:bottom-[100px] left-0 right-0 px-3 z-40">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+              {allEpisodes.map((ep, idx) => (
+                <button
+                  key={ep.id}
+                  onClick={(e) => { e.stopPropagation(); switchToEpisode(ep); }}
+                  className={`shrink-0 px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
+                    idx === currentEpisodeIndex
+                      ? 'bg-primary text-primary-foreground shadow-[0_0_8px_hsl(var(--primary)/0.4)]'
+                      : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
+                  }`}
+                >
+                  S{ep.season_number}E{ep.episode_number}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className={`bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-16 ${deviceInfo.isMobile ? 'pb-2 px-3' : 'pb-3 px-4'}`}>
           {/* Progress bar */}

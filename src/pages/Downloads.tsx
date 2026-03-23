@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Trash2, Play, HardDrive, WifiOff, AlertCircle, ArrowLeft, Maximize, Minimize, Pause, RotateCw, Volume2, VolumeX } from 'lucide-react';
+import { Download, Trash2, Play, HardDrive, WifiOff, AlertCircle, ArrowLeft, Maximize, Minimize, Pause, RotateCw, Volume2, VolumeX, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Slider } from '@/components/ui/slider';
+import { Progress } from '@/components/ui/progress';
 
 const OFFLINE_CACHE_NAME = 'anime-offline-videos';
 const OFFLINE_INDEX_KEY = 'offline_video_index';
@@ -213,6 +214,23 @@ export default function Downloads() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [totalSize, setTotalSize] = useState(0);
   const [playingEntry, setPlayingEntry] = useState<OfflineVideoEntry | null>(null);
+  const [activeDownloads, setActiveDownloads] = useState<{ title: string; progress: number }[]>([]);
+
+  // Listen for download progress events from OfflineDownloadButton
+  useEffect(() => {
+    const handler = (e: CustomEvent) => {
+      const { title, progress: pct, done } = e.detail;
+      setActiveDownloads(prev => {
+        if (done) return prev.filter(d => d.title !== title);
+        const existing = prev.find(d => d.title === title);
+        if (existing) return prev.map(d => d.title === title ? { ...d, progress: pct } : d);
+        return [...prev, { title, progress: pct }];
+      });
+      if (done) loadDownloads();
+    };
+    window.addEventListener('offline-download-progress', handler as EventListener);
+    return () => window.removeEventListener('offline-download-progress', handler as EventListener);
+  }, []);
 
   const loadDownloads = useCallback(async () => {
     try {
@@ -306,7 +324,23 @@ export default function Downloads() {
         </div>
       </div>
 
-      {downloads.length === 0 ? (
+      {/* Active downloads progress */}
+      {activeDownloads.length > 0 && (
+        <div className="mb-4 flex flex-col gap-2">
+          {activeDownloads.map((dl) => (
+            <div key={dl.title} className="p-3 rounded-xl bg-card border border-primary/20 animate-fade-in">
+              <div className="flex items-center gap-2 mb-2">
+                <Loader2 className="w-4 h-4 text-primary animate-spin shrink-0" />
+                <p className="text-xs font-medium text-foreground truncate flex-1">{dl.title}</p>
+                <span className="text-[10px] text-primary font-semibold">{Math.round(dl.progress)}%</span>
+              </div>
+              <Progress value={dl.progress} className="h-1.5" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {downloads.length === 0 && activeDownloads.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <HardDrive className="w-12 h-12 text-muted-foreground/30 mb-4" />
           <h2 className="text-lg font-semibold text-foreground mb-2">No Downloads Yet</h2>
