@@ -2540,11 +2540,11 @@ export function VideoPlayer({
           {!isPlaying && showControls && !showPremiumLoader && !isLoading && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 2147483647 }}>
               <div 
-                className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
+                className="w-10 h-10 md:w-16 md:h-16 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
                 onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                 style={{ pointerEvents: 'auto' }}
               >
-                <Play className="w-7 h-7 md:w-8 md:h-8 text-white fill-current ml-0.5" />
+                <Play className="w-5 h-5 md:w-8 md:h-8 text-white fill-current ml-0.5" />
               </div>
             </div>
           )}
@@ -2607,29 +2607,29 @@ export function VideoPlayer({
 
             {/* Control buttons - Fullscreen - Netflix-style Clean & Compact */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-[6px] md:gap-3">
+              <div className="flex items-center gap-1 md:gap-3">
                 <button 
-                  className="w-[30px] h-[30px] md:w-10 md:h-10 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
+                  className="w-6 h-6 md:w-10 md:h-10 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                 >
-                  {isPlaying ? <Pause className="w-[15px] h-[15px] md:w-5 md:h-5" /> : <Play className="w-[15px] h-[15px] md:w-5 md:h-5 fill-current ml-0.5" />}
+                  {isPlaying ? <Pause className="w-3 h-3 md:w-5 md:h-5" /> : <Play className="w-3 h-3 md:w-5 md:h-5 fill-current ml-0.5" />}
                 </button>
                 {/* Next Episode - in controls */}
                 {hasNextEpisode && onNextEpisode && !isMovie && (
                   <button 
-                    className="w-[30px] h-[30px] md:w-9 md:h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
+                    className="w-6 h-6 md:w-9 md:h-9 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
                     onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
                     title="Next Episode"
                   >
-                    <SkipForward className="w-[15px] h-[15px] md:w-[18px] md:h-[18px]" />
+                    <SkipForward className="w-3 h-3 md:w-[18px] md:h-[18px]" />
                   </button>
                 )}
                 <button 
-                  className="w-[30px] h-[30px] md:w-9 md:h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
+                  className="w-6 h-6 md:w-9 md:h-9 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); skipForward(); }} 
                   title="Skip forward 10s"
                 >
-                  <FastForward className="w-[15px] h-[15px] md:w-[18px] md:h-[18px]" />
+                  <FastForward className="w-3 h-3 md:w-[18px] md:h-[18px]" />
                 </button>
                 {/* Volume Slider - Desktop */}
                 <div className="hidden md:block" onClick={(e) => e.stopPropagation()}>
@@ -2642,22 +2642,22 @@ export function VideoPlayer({
                 </div>
                 {/* Volume Button - Mobile */}
                 <button 
-                  className="md:hidden w-[30px] h-[30px] rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
+                  className="md:hidden w-6 h-6 rounded-md bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); toggleMute(); }}
                 >
-                  {isMuted ? <VolumeX className="w-[15px] h-[15px]" /> : <Volume2 className="w-[15px] h-[15px]" />}
+                  {isMuted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
                 </button>
               </div>
 
-              <div className="flex items-center gap-[6px] md:gap-2.5">
+              <div className="flex items-center gap-1 md:gap-2.5">
                 {/* Download - for Multi.Savi and SAVI.IN */}
                 {features.includes('download') && (
                   <button 
-                    className="w-[30px] h-[30px] md:w-9 md:h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
+                    className="w-6 h-6 md:w-9 md:h-9 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
                     onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
                     title="Download"
                   >
-                    <Download className="w-[15px] h-[15px] md:w-[18px] md:h-[18px]" />
+                    <Download className="w-3 h-3 md:w-[18px] md:h-[18px]" />
                   </button>
                 )}
                 {/* Settings */}
@@ -2671,7 +2671,7 @@ export function VideoPlayer({
                 >
                   <DropdownMenuTrigger asChild>
                     <button 
-                      className="w-[30px] h-[30px] md:w-9 md:h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200 relative"
+                      className="w-6 h-6 md:w-9 md:h-9 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200 relative"
                       onPointerDown={(e) => { 
                         e.stopPropagation(); 
                         e.preventDefault();
@@ -2680,7 +2680,7 @@ export function VideoPlayer({
                       title="Settings"
                       style={{ touchAction: 'manipulation' }}
                     >
-                      <Settings className="w-[15px] h-[15px] md:w-[18px] md:h-[18px]" />
+                      <Settings className="w-3 h-3 md:w-[18px] md:h-[18px]" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
@@ -2699,27 +2699,27 @@ export function VideoPlayer({
                 </DropdownMenu>
                 {/* Screen Mirroring */}
                 <button 
-                  className="w-[30px] h-[30px] md:w-9 md:h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
+                  className="w-6 h-6 md:w-9 md:h-9 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); setShowMirroringDialog(true); }} 
                   title="Screen Mirroring"
                 >
-                  <Cast className="w-[15px] h-[15px] md:w-[18px] md:h-[18px]" />
+                  <Cast className="w-3 h-3 md:w-[18px] md:h-[18px]" />
                 </button>
                 {/* PiP */}
                 <button 
-                  className="w-[30px] h-[30px] md:w-9 md:h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
+                  className="w-6 h-6 md:w-9 md:h-9 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                   title="Picture-in-Picture"
                 >
-                  <PictureInPicture2 className="w-[15px] h-[15px] md:w-[18px] md:h-[18px]" />
+                  <PictureInPicture2 className="w-3 h-3 md:w-[18px] md:h-[18px]" />
                 </button>
                 {/* Fullscreen */}
                 <button 
-                  className="w-[30px] h-[30px] md:w-9 md:h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
+                  className="w-6 h-6 md:w-9 md:h-9 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
                   title="Exit Fullscreen"
                 >
-                  <Minimize className="w-[15px] h-[15px] md:w-[18px] md:h-[18px]" />
+                  <Minimize className="w-3 h-3 md:w-[18px] md:h-[18px]" />
                 </button>
               </div>
             </div>
@@ -2742,11 +2742,11 @@ export function VideoPlayer({
           {!isPlaying && showControls && !showPremiumLoader && !isLoading && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[60]">
               <div 
-                className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
+                className="w-10 h-10 md:w-16 md:h-16 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
                 onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                 style={{ pointerEvents: 'auto' }}
               >
-                <Play className="w-7 h-7 md:w-8 md:h-8 text-white fill-current ml-0.5" />
+                <Play className="w-5 h-5 md:w-8 md:h-8 text-white fill-current ml-0.5" />
               </div>
             </div>
           )}
@@ -2809,33 +2809,33 @@ export function VideoPlayer({
 
           {/* Control buttons - Netflix-style Clean & Compact */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 md:gap-3">
+             <div className="flex items-center gap-1 md:gap-3">
               {/* Play/Pause */}
               <button 
-                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
+                className="w-6 h-6 md:w-10 md:h-10 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
                 onClick={(e) => { e.stopPropagation(); togglePlay(); }}
               >
-                {isPlaying ? <Pause className="w-4 h-4 md:w-5 md:h-5" /> : <Play className="w-4 h-4 md:w-5 md:h-5 fill-current ml-0.5" />}
+                {isPlaying ? <Pause className="w-3 h-3 md:w-5 md:h-5" /> : <Play className="w-3 h-3 md:w-5 md:h-5 fill-current ml-0.5" />}
               </button>
 
               {/* Next Episode */}
               {hasNextEpisode && onNextEpisode && !isMovie && (
                 <button 
-                  className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
+                  className="w-6 h-6 md:w-9 md:h-9 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
                   title="Next Episode"
                 >
-                  <SkipForward className="w-3.5 h-3.5 md:w-[18px] md:h-[18px]" />
+                  <SkipForward className="w-3 h-3 md:w-[18px] md:h-[18px]" />
                 </button>
               )}
 
               {/* Skip forward 10s */}
               <button 
-                className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
+                className="w-6 h-6 md:w-9 md:h-9 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
                 onClick={(e) => { e.stopPropagation(); skipForward(); }} 
                 title="Skip forward 10s"
               >
-                <FastForward className="w-3.5 h-3.5 md:w-[18px] md:h-[18px]" />
+                <FastForward className="w-3 h-3 md:w-[18px] md:h-[18px]" />
               </button>
 
               {/* Volume Slider - Desktop */}
@@ -2849,22 +2849,22 @@ export function VideoPlayer({
               </div>
               {/* Volume Button - Mobile */}
               <button 
-                className="md:hidden w-7 h-7 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
+                className="md:hidden w-6 h-6 rounded-md bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
                 onClick={(e) => { e.stopPropagation(); toggleMute(); }}
               >
-                {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                {isMuted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
               </button>
             </div>
 
-            <div className="flex items-center gap-1.5 md:gap-2.5">
+            <div className="flex items-center gap-1 md:gap-2.5">
               {/* Download - for RIP X and SAVI.IN */}
               {features.includes('download') && (
                 <button 
-                  className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
+                  className="w-6 h-6 md:w-9 md:h-9 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
                   title="Download"
                 >
-                  <Download className="w-3.5 h-3.5 md:w-[18px] md:h-[18px]" />
+                  <Download className="w-3 h-3 md:w-[18px] md:h-[18px]" />
                 </button>
               )}
               {/* Settings Menu */}
@@ -2878,7 +2878,7 @@ export function VideoPlayer({
               >
                 <DropdownMenuTrigger asChild>
                   <button 
-                    className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200 relative"
+                    className="w-6 h-6 md:w-9 md:h-9 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200 relative"
                     onPointerDown={(e) => { 
                       e.stopPropagation(); 
                       e.preventDefault();
@@ -2887,7 +2887,7 @@ export function VideoPlayer({
                     title="Settings"
                     style={{ touchAction: 'manipulation' }}
                   >
-                    <Settings className="w-3.5 h-3.5 md:w-[18px] md:h-[18px]" />
+                    <Settings className="w-3 h-3 md:w-[18px] md:h-[18px]" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
@@ -2907,29 +2907,29 @@ export function VideoPlayer({
 
               {/* Screen Mirroring */}
               <button 
-                className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200"
+                className="w-6 h-6 md:w-9 md:h-9 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200"
                 onClick={(e) => { e.stopPropagation(); setShowMirroringDialog(true); }} 
                 title="Screen Mirroring"
               >
-                <Cast className="w-3.5 h-3.5 md:w-[18px] md:h-[18px]" />
+                <Cast className="w-3 h-3 md:w-[18px] md:h-[18px]" />
               </button>
 
               {/* PiP */}
               <button 
-                className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200"
+                className="w-6 h-6 md:w-9 md:h-9 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200"
                 onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                 title="Picture-in-Picture"
               >
-                <PictureInPicture2 className="w-3.5 h-3.5 md:w-[18px] md:h-[18px]" />
+                <PictureInPicture2 className="w-3 h-3 md:w-[18px] md:h-[18px]" />
               </button>
 
               {/* Fullscreen */}
               <button 
-                className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200"
+                className="w-6 h-6 md:w-9 md:h-9 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200"
                 onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
                 title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
               >
-                {isFullscreen ? <Minimize className="w-3.5 h-3.5 md:w-[18px] md:h-[18px]" /> : <Maximize className="w-3.5 h-3.5 md:w-[18px] md:h-[18px]" />}
+                {isFullscreen ? <Minimize className="w-3 h-3 md:w-[18px] md:h-[18px]" /> : <Maximize className="w-3 h-3 md:w-[18px] md:h-[18px]" />}
               </button>
             </div>
           </div>
