@@ -27,7 +27,8 @@ import {
   Tv,
   TrendingUp,
   BadgeCheck,
-  Sparkles
+  Sparkles,
+  Home
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -92,16 +93,27 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b border-border/50 safe-area-top">
-      <div className="container flex h-14 items-center justify-between gap-2 sm:gap-4">
-        {/* Logo */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="container flex h-12 sm:h-14 items-center justify-between gap-1.5 sm:gap-4">
+        {/* Logo + Home Button (mobile) */}
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
           <Link to="/welcome" className="flex-shrink-0">
             <img 
               src={logo} 
               alt="Anime Savi" 
-              className="h-8 w-8 rounded-lg object-contain hover:scale-110 transition-transform duration-200" 
+              className="h-6 w-6 sm:h-8 sm:w-8 rounded-lg object-contain hover:scale-110 transition-transform duration-200" 
             />
           </Link>
+          {/* Mobile Home Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            asChild
+            className="lg:hidden h-7 w-7 sm:h-8 sm:w-8"
+          >
+            <Link to="/">
+              <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+            </Link>
+          </Button>
           <Link to="/" className="hidden sm:inline-block text-lg font-bold hover:opacity-80 transition-opacity">
             <span className="text-primary">Anime</span>
             <span className="text-foreground ml-1">Savi</span>
@@ -156,22 +168,22 @@ export function Header() {
         </form>
 
         {/* User Menu */}
-        <div className="flex items-center gap-2">
-          {user && <WatchLaterButton />}
-          {user && <NotificationBell />}
+        <div className="flex items-center gap-1 sm:gap-2">
+          {user && <div className="[&_button]:h-7 [&_button]:w-7 sm:[&_button]:h-9 sm:[&_button]:w-9 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4"><WatchLaterButton /></div>}
+          {user && <div className="[&_button]:h-7 [&_button]:w-7 sm:[&_button]:h-9 sm:[&_button]:w-9 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4"><NotificationBell /></div>}
           
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                  <Avatar className="h-9 w-9">
+                <Button variant="ghost" className="relative h-7 w-7 sm:h-9 sm:w-9 rounded-full p-0">
+                  <Avatar className="h-7 w-7 sm:h-9 sm:w-9">
                     <AvatarImage src={user.user_metadata?.avatar_url} alt="Avatar" />
-                    <AvatarFallback className="bg-primary text-primary-foreground font-medium text-sm">
+                    <AvatarFallback className="bg-primary text-primary-foreground font-medium text-xs sm:text-sm">
                       {user.email?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   {(isAdmin || hasValidTokenAccess(user?.email)) && (
-                    <Crown className="absolute -top-1 -right-1 h-3.5 w-3.5 text-yellow-500 animate-crown-shimmer" />
+                    <Crown className="absolute -top-1 -right-1 h-3 w-3 sm:h-3.5 sm:w-3.5 text-yellow-500 animate-crown-shimmer" />
                   )}
                 </Button>
               </DropdownMenuTrigger>
@@ -240,7 +252,7 @@ export function Header() {
               <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex text-sm px-3">
                 <Link to="/auth">Sign In</Link>
               </Button>
-              <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 text-sm px-3 sm:px-4">
+              <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 text-xs sm:text-sm px-2 sm:px-4 h-7 sm:h-9">
                 <Link to="/auth">
                   <span className="hidden xs:inline">Get Started</span>
                   <span className="xs:hidden">Sign In</span>
@@ -252,13 +264,13 @@ export function Header() {
           {/* Mobile Search Button */}
           <form onSubmit={handleSearch} className="md:hidden flex-shrink-0">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-20 pl-8 pr-2 h-8 bg-card border-border focus:w-28 transition-all duration-200 rounded-lg text-xs"
+                className="w-16 sm:w-20 pl-6 pr-1 h-7 sm:h-8 bg-card border-border focus:w-24 sm:focus:w-28 transition-all duration-200 rounded-lg text-xs"
               />
             </div>
           </form>
@@ -266,8 +278,8 @@ export function Header() {
           {/* Mobile Menu */}
           <Sheet>
             <SheetTrigger asChild className="lg:hidden flex-shrink-0">
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Menu className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8">
+                <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-72 bg-background border-border">
