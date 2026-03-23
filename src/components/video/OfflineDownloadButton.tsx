@@ -219,6 +219,7 @@ export function OfflineDownloadButton({
         cachedAt: new Date().toISOString(),
         size: receivedLength,
         isIOSOptimized: isOptimized,
+        thumbnail: thumbnail || undefined,
       });
 
       setIsCached(true);

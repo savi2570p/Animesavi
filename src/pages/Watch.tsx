@@ -1096,6 +1096,7 @@ export default function Watch() {
               episodeId={episode.id}
               episodeTitle={episode.title}
               animeTitle={anime?.title || 'Unknown'}
+              thumbnail={episode.thumbnail}
               isIOSDevice={deviceOptimizedVideo.device === 'iOS'}
             />
             
