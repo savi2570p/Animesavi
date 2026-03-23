@@ -53,7 +53,9 @@ export default function EmbedPlayer() {
   const [episodeData, setEpisodeData] = useState<{ title: string; videoUrl: string | null } | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [showQualityMenu, setShowQualityMenu] = useState(false);
-  
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [isDownloading, setIsDownloading] = useState<string | null>(null);
+
   // Playback state
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -626,39 +628,63 @@ export default function EmbedPlayer() {
                 </div>
               )}
 
-              {/* Download button */}
-              <button 
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  const url = episodeData?.videoUrl;
-                  if (!url) return;
-                  try {
-                    const res = await fetch(url);
-                    const blob = await res.blob();
-                    const blobUrl = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = blobUrl;
-                    a.download = `AnimeSavi_${episodeData?.title?.replace(/[^a-zA-Z0-9]/g, '_') || 'video'}.mp4`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(blobUrl);
-                  } catch {
-                    // Fallback: direct link download
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `AnimeSavi_${episodeData?.title?.replace(/[^a-zA-Z0-9]/g, '_') || 'video'}.mp4`;
-                    a.target = '_blank';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                  }
-                }}
-                title="Download"
-              >
-                <Download className="w-5 h-5" />
-              </button>
+              {/* Download button with quality picker */}
+              <div className="relative">
+                <button 
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
+                  onClick={(e) => { e.stopPropagation(); setShowDownloadMenu(!showDownloadMenu); setShowQualityMenu(false); }}
+                  title="Download"
+                >
+                  {isDownloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+                </button>
+                {showDownloadMenu && (
+                  <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-sm rounded-lg py-2 min-w-[140px] shadow-xl">
+                    {['720p', '1080p'].map((quality) => (
+                      <button
+                        key={quality}
+                        className={`w-full px-4 py-2.5 text-left text-sm hover:bg-white/10 text-white flex items-center justify-between ${isDownloading === quality ? 'opacity-50' : ''}`}
+                        disabled={!!isDownloading}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const url = episodeData?.videoUrl;
+                          if (!url) return;
+                          setIsDownloading(quality);
+                          setShowDownloadMenu(false);
+                          const safeName = episodeData?.title?.replace(/[^a-zA-Z0-9]/g, '_') || 'video';
+                          const fileName = `AnimeSavi_${safeName}_${quality}.mp4`;
+                          try {
+                            const res = await fetch(url);
+                            const blob = await res.blob();
+                            const blobUrl = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = blobUrl;
+                            a.download = fileName;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(blobUrl);
+                          } catch {
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = fileName;
+                            a.target = '_blank';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                          }
+                          setIsDownloading(null);
+                        }}
+                      >
+                        <span className="flex items-center gap-2">
+                          <Download className="w-4 h-4" />
+                          {quality}
+                        </span>
+                        {isDownloading === quality && <Loader2 className="w-3 h-3 animate-spin" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <button 
                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors" 
