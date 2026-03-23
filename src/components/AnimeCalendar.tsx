@@ -216,33 +216,29 @@ export function AnimeCalendar() {
               >
                 {/* Left: Date column */}
                 <div
-                  className={`shrink-0 w-16 md:w-24 flex flex-col items-center justify-center py-3 border-r ${
+                  className={`shrink-0 w-12 md:w-20 flex flex-col items-center justify-center py-1.5 md:py-2 border-r ${
                     isToday
                       ? 'bg-primary text-primary-foreground border-primary'
                       : 'bg-muted/30 border-border/30'
                   }`}
                 >
-                  <span className="text-[10px] md:text-xs font-medium uppercase tracking-wider opacity-80">
+                  <span className="text-[8px] md:text-[10px] font-medium uppercase tracking-wider opacity-80">
                     {DAYS_OF_WEEK[dayIndex]}
                   </span>
-                  <span className="text-xl md:text-2xl font-bold leading-none mt-0.5">
+                  <span className="text-base md:text-xl font-bold leading-none mt-0.5">
                     {format(date, 'd')}
                   </span>
-                  <span className="text-[9px] md:text-[10px] opacity-60 mt-0.5">
-                    {format(date, 'MMM')}
-                  </span>
                   {isToday && (
-                    <Badge variant="default" className="text-[8px] px-1 py-0 mt-1 h-3.5">
+                    <Badge variant="default" className="text-[7px] px-1 py-0 mt-0.5 h-3">
                       TODAY
                     </Badge>
                   )}
                 </div>
 
-                {/* Right: Anime horizontal scroll */}
-                <div className="flex-1 min-w-0 py-2 px-2 md:px-3">
+                <div className="flex-1 min-w-0 py-1 px-1.5 md:px-2">
                   {dayAnime.length === 0 ? (
-                    <div className="flex items-center h-full text-muted-foreground text-xs px-2">
-                      No releases
+                    <div className="flex items-center h-full text-muted-foreground text-[10px] px-2">
+                      —
                     </div>
                   ) : (
                     <div className="flex gap-2 md:gap-3 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
@@ -252,12 +248,12 @@ export function AnimeCalendar() {
                           to={`/anime/${anime.id}`}
                           className="shrink-0 group"
                         >
-                          <div className="relative w-[70px] md:w-[90px]">
+                          <div className="relative w-[55px] md:w-[70px]">
                             <div className="relative">
                               <img
                                 src={anime.cover_image || '/placeholder.svg'}
                                 alt={anime.title}
-                                className={`w-[70px] h-[95px] md:w-[90px] md:h-[120px] object-cover rounded-md transition-transform duration-200 group-hover:scale-105 ${
+                                className={`w-[55px] h-[75px] md:w-[70px] md:h-[95px] object-cover rounded transition-transform duration-200 group-hover:scale-105 ${
                                   anime.is_favorite ? 'ring-2 ring-primary' : ''
                                 }`}
                                 loading="lazy"
@@ -276,7 +272,7 @@ export function AnimeCalendar() {
                                 <div className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                               )}
                             </div>
-                            <p className="text-[9px] md:text-[10px] font-medium line-clamp-2 mt-1 leading-tight text-center group-hover:text-primary transition-colors">
+                            <p className="text-[8px] md:text-[9px] font-medium line-clamp-1 mt-0.5 leading-tight text-center group-hover:text-primary transition-colors">
                               {anime.title}
                             </p>
                           </div>
