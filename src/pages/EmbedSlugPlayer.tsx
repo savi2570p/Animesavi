@@ -52,6 +52,8 @@ export default function EmbedSlugPlayer() {
   const [hlsLevels, setHlsLevels] = useState<{ id: number; height: number; label: string }[]>([]);
   const [currentLevel, setCurrentLevel] = useState(-1);
   const [showQualityMenu, setShowQualityMenu] = useState(false);
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   const deviceInfo = detectDeviceInfo();
