@@ -13,7 +13,8 @@ import {
   AlertTriangle,
   RefreshCw,
   Settings,
-  Check
+  Check,
+  Download
 } from 'lucide-react';
 import Hls from 'hls.js';
 
