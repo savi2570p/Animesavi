@@ -889,3 +889,9 @@ img[loading="lazy"] {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Slider fill animation for hero progress bar */
+@keyframes slider-fill {
+  from { width: 0%; }
+  to { width: 100%; }
+}
