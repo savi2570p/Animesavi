@@ -516,8 +516,26 @@ export default function EmbedSlugPlayer() {
           </div>
         )}
 
-        {/* Episode strip at bottom (horizontal scroll) */}
+        {/* Episode strip (horizontal scroll) */}
         {allEpisodes.length > 1 && showControls && !showEpisodePanel && (
+          <div className="absolute bottom-[90px] sm:bottom-[100px] left-0 right-0 px-3 z-40">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+              {allEpisodes.map((ep, idx) => (
+                <button
+                  key={ep.id}
+                  onClick={(e) => { e.stopPropagation(); switchToEpisode(ep); }}
+                  className={`shrink-0 px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
+                    idx === currentEpisodeIndex
+                      ? 'bg-primary text-primary-foreground shadow-[0_0_8px_hsl(var(--primary)/0.4)]'
+                      : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
+                  }`}
+                >
+                  S{ep.season_number}E{ep.episode_number}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className={`bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-16 ${deviceInfo.isMobile ? 'pb-2 px-3' : 'pb-3 px-4'}`}>
           {/* Progress bar */}
