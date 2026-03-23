@@ -86,34 +86,34 @@ export function ContinueWatchingNotification() {
   if (!isVisible || !lastWatched) return null;
 
   return (
-    <div className="fixed bottom-20 right-4 z-50 max-w-sm animate-slide-in-up">
-      <div className="bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl overflow-hidden">
+    <div className="fixed bottom-16 sm:bottom-20 right-2 sm:right-4 z-50 max-w-[260px] sm:max-w-sm animate-slide-in-up">
+      <div className="bg-card/95 backdrop-blur-xl border border-border/50 rounded-lg sm:rounded-xl shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-3 border-b border-border/50 bg-primary/10">
-          <div className="flex items-center gap-2 text-sm font-medium text-primary">
-            <Clock className="h-4 w-4" />
+        <div className="flex items-center justify-between px-2.5 py-1.5 sm:p-3 border-b border-border/50 bg-primary/10">
+          <div className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-primary">
+            <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
             Continue Watching
           </div>
           <button
             onClick={handleDismiss}
-            className="p-1 rounded-full hover:bg-muted/50 transition-colors"
+            className="p-0.5 sm:p-1 rounded-full hover:bg-muted/50 transition-colors"
           >
-            <X className="h-4 w-4 text-muted-foreground" />
+            <X className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-3">
-          <div className="flex gap-3">
+        <div className="p-2 sm:p-3">
+          <div className="flex gap-2 sm:gap-3">
             {/* Thumbnail */}
-            <div className="relative w-24 h-14 rounded-lg overflow-hidden shrink-0">
+            <div className="relative w-16 h-10 sm:w-24 sm:h-14 rounded-md sm:rounded-lg overflow-hidden shrink-0">
               <img
                 src={lastWatched.episode.thumbnail || lastWatched.anime.cover_image || '/placeholder.svg'}
                 alt={lastWatched.anime.title}
                 className="w-full h-full object-cover"
               />
               {/* Progress bar */}
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/50">
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 sm:h-1 bg-black/50">
                 <div
                   className="h-full bg-primary"
                   style={{ width: `${lastWatched.progress || 0}%` }}
@@ -123,20 +123,20 @@ export function ContinueWatchingNotification() {
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <h4 className="font-medium text-sm line-clamp-1">{lastWatched.anime.title}</h4>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                S{lastWatched.season?.season_number || 1} E{lastWatched.episode.episode_number} • {Math.round(lastWatched.progress || 0)}% watched
+              <h4 className="font-medium text-xs sm:text-sm line-clamp-1">{lastWatched.anime.title}</h4>
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+                S{lastWatched.season?.season_number || 1} E{lastWatched.episode.episode_number} • {Math.round(lastWatched.progress || 0)}%
               </p>
             </div>
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-2 mt-3">
+          <div className="flex gap-1.5 sm:gap-2 mt-2 sm:mt-3">
             <Button
               variant="outline"
               size="sm"
               onClick={handleDismiss}
-              className="flex-1 text-xs"
+              className="flex-1 text-[10px] sm:text-xs h-7 sm:h-8"
             >
               Not Now
             </Button>
@@ -144,10 +144,10 @@ export function ContinueWatchingNotification() {
               size="sm"
               asChild
               onClick={handleResume}
-              className="flex-1 anime-button text-xs"
+              className="flex-1 anime-button text-[10px] sm:text-xs h-7 sm:h-8"
             >
               <Link to={`/watch/${lastWatched.episode.id}?t=${lastWatched.progress || 0}`}>
-                <Play className="h-3 w-3 mr-1 fill-current" />
+                <Play className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 fill-current" />
                 Resume
               </Link>
             </Button>
