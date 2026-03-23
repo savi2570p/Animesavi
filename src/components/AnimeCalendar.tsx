@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, Clock, Play, ChevronLeft, ChevronRight, Heart, Sparkles } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Heart, Sparkles } from 'lucide-react';
 import { format, startOfWeek, addDays, isSameDay, parseISO, getDay } from 'date-fns';
 
 interface ScheduleAnime {
@@ -15,10 +14,10 @@ interface ScheduleAnime {
   cover_image: string | null;
   status: string | null;
   genres: string[] | null;
-  release_day: number; // 0-6 (Sunday-Saturday)
+  release_day: number;
   is_favorite: boolean;
   latest_episode_date: string | null;
-  has_recent_upload: boolean; // uploaded within last 7 days
+  has_recent_upload: boolean;
 }
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -38,7 +37,6 @@ export function AnimeCalendar() {
   const fetchScheduleData = async () => {
     setIsLoading(true);
     try {
-      // Fetch ongoing anime
       const { data: animeData, error: animeError } = await supabase
         .from('anime')
         .select('id, title, cover_image, status, genres, updated_at, schedule_day')
@@ -46,21 +44,18 @@ export function AnimeCalendar() {
 
       if (animeError) throw animeError;
 
-      // Fetch user favorites if logged in
       let userFavorites = new Set<string>();
       if (user) {
         const { data: favData } = await supabase
           .from('user_favorites')
           .select('anime_id')
           .eq('user_id', user.id);
-        
         if (favData) {
           userFavorites = new Set(favData.map(f => f.anime_id));
         }
       }
       setFavorites(userFavorites);
 
-      // Get latest episode dates for each anime to determine release pattern
       const animeWithSchedule = await Promise.all(
         (animeData || []).map(async (anime) => {
           if (!anime.id) return null;
@@ -73,12 +68,10 @@ export function AnimeCalendar() {
           let releaseDay = 0;
           let latestEpisodeDate: string | null = null;
 
-          // Use schedule_day override if set
           if ((anime as any).schedule_day !== null && (anime as any).schedule_day !== undefined) {
             releaseDay = (anime as any).schedule_day;
           } else if (seasons && seasons.length > 0) {
             const seasonIds = seasons.map(s => s.id);
-            
             const { data: episodes } = await supabase
               .from('episodes')
               .select('created_at')
@@ -103,7 +96,6 @@ export function AnimeCalendar() {
             releaseDay = hash % 7;
           }
 
-          // Check if latest episode was uploaded within last 7 days
           const sevenDaysAgo = new Date();
           sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
           const hasRecentUpload = latestEpisodeDate ? parseISO(latestEpisodeDate) >= sevenDaysAgo : false;
@@ -132,9 +124,8 @@ export function AnimeCalendar() {
 
   const getAnimeForDay = (dayIndex: number) => {
     return animeList
-      .filter(anime => anime.release_day === dayIndex || anime.release_day === 7) // 7 = Everyday
+      .filter(anime => anime.release_day === dayIndex || anime.release_day === 7)
       .sort((a, b) => {
-        // Sort favorites first
         if (a.is_favorite && !b.is_favorite) return -1;
         if (!a.is_favorite && b.is_favorite) return 1;
         return a.title.localeCompare(b.title);
@@ -163,11 +154,15 @@ export function AnimeCalendar() {
             </div>
             <h2 className="text-2xl font-heading font-bold">Release Calendar</h2>
           </div>
-          <div className="grid grid-cols-7 gap-2">
+          <div className="space-y-3">
             {Array(7).fill(0).map((_, i) => (
-              <div key={i} className="space-y-2">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-32 w-full" />
+              <div key={i} className="flex gap-3">
+                <Skeleton className="h-16 w-24 shrink-0" />
+                <div className="flex gap-2 flex-1">
+                  <Skeleton className="h-16 w-28" />
+                  <Skeleton className="h-16 w-28" />
+                  <Skeleton className="h-16 w-28" />
+                </div>
               </div>
             ))}
           </div>
@@ -206,153 +201,100 @@ export function AnimeCalendar() {
           </div>
         </div>
 
-        {/* Legend */}
-        <div className="flex items-center gap-4 mb-4 text-sm">
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-primary" />
-            <span className="text-muted-foreground">Today</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-muted-foreground/50" />
-            <span className="text-muted-foreground">Tomorrow / Yesterday</span>
-          </div>
-        </div>
-
-        {/* Weekly Grid */}
-        <div className="grid grid-cols-7 gap-1 md:gap-2">
+        {/* Row-based layout: Date on left, anime scrolling horizontally */}
+        <div className="space-y-1">
           {weekDates.map((date, dayIndex) => {
             const isToday = isSameDay(date, today);
             const dayAnime = getAnimeForDay(dayIndex);
-            
+
             return (
-              <div key={dayIndex} className="min-h-[200px]">
-                {/* Day Header */}
+              <div
+                key={dayIndex}
+                className={`flex items-stretch rounded-lg overflow-hidden transition-colors ${
+                  isToday ? 'bg-primary/5 ring-1 ring-primary/30' : 'bg-card/30 hover:bg-card/50'
+                }`}
+              >
+                {/* Left: Date column */}
                 <div
-                  className={`text-center p-2 rounded-t-lg border-b ${
-                    isToday 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'bg-card/50'
+                  className={`shrink-0 w-16 md:w-24 flex flex-col items-center justify-center py-3 border-r ${
+                    isToday
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-muted/30 border-border/30'
                   }`}
                 >
-                  <span className="text-xs font-medium block">{DAYS_OF_WEEK[dayIndex]}</span>
-                  <span className={`text-lg font-bold ${isToday ? '' : 'text-foreground'}`}>
+                  <span className="text-[10px] md:text-xs font-medium uppercase tracking-wider opacity-80">
+                    {DAYS_OF_WEEK[dayIndex]}
+                  </span>
+                  <span className="text-xl md:text-2xl font-bold leading-none mt-0.5">
                     {format(date, 'd')}
                   </span>
+                  <span className="text-[9px] md:text-[10px] opacity-60 mt-0.5">
+                    {format(date, 'MMM')}
+                  </span>
+                  {isToday && (
+                    <Badge variant="default" className="text-[8px] px-1 py-0 mt-1 h-3.5">
+                      TODAY
+                    </Badge>
+                  )}
                 </div>
 
-                {/* Anime List */}
-                <div className="space-y-1 p-1 bg-card/30 rounded-b-lg min-h-[160px]">
+                {/* Right: Anime horizontal scroll */}
+                <div className="flex-1 min-w-0 py-2 px-2 md:px-3">
                   {dayAnime.length === 0 ? (
-                    <div className="flex items-center justify-center h-20 text-muted-foreground text-xs">
+                    <div className="flex items-center h-full text-muted-foreground text-xs px-2">
                       No releases
                     </div>
                   ) : (
-                    dayAnime.slice(0, 5).map((anime) => (
-                      <Link
-                        key={anime.id}
-                        to={`/anime/${anime.id}`}
-                        className={`block p-1.5 rounded-lg transition-all hover:scale-[1.02] relative overflow-hidden ${
-                          anime.is_favorite
-                            ? 'bg-primary/20 border border-primary/30 hover:bg-primary/30'
-                            : 'bg-muted/50 hover:bg-muted'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1.5 relative z-10">
-                          <div className="relative flex-shrink-0">
-                            <img
-                              src={anime.cover_image || '/placeholder.svg'}
-                              alt={anime.title}
-                              className="w-8 h-10 object-cover rounded"
-                            />
-                            {isToday && (
-                              <div className="absolute -bottom-1 -right-1">
-                                <Sparkles className="h-3 w-3 text-yellow-400 animate-pulse drop-shadow-[0_0_4px_rgba(250,204,21,0.7)]" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[10px] md:text-xs font-medium line-clamp-2 leading-tight">
+                    <div className="flex gap-2 md:gap-3 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+                      {dayAnime.map((anime) => (
+                        <Link
+                          key={anime.id}
+                          to={`/anime/${anime.id}`}
+                          className="shrink-0 group"
+                        >
+                          <div className="relative w-[70px] md:w-[90px]">
+                            <div className="relative">
+                              <img
+                                src={anime.cover_image || '/placeholder.svg'}
+                                alt={anime.title}
+                                className={`w-[70px] h-[95px] md:w-[90px] md:h-[120px] object-cover rounded-md transition-transform duration-200 group-hover:scale-105 ${
+                                  anime.is_favorite ? 'ring-2 ring-primary' : ''
+                                }`}
+                                loading="lazy"
+                              />
+                              {isToday && (
+                                <div className="absolute -bottom-1 -right-1">
+                                  <Sparkles className="h-3 w-3 text-yellow-400 animate-pulse drop-shadow-[0_0_4px_rgba(250,204,21,0.7)]" />
+                                </div>
+                              )}
+                              {anime.is_favorite && (
+                                <div className="absolute top-1 left-1 p-0.5 bg-primary rounded-full">
+                                  <Heart className="h-2 w-2 text-primary-foreground fill-current" />
+                                </div>
+                              )}
+                              {anime.has_recent_upload && (
+                                <div className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                              )}
+                            </div>
+                            <p className="text-[9px] md:text-[10px] font-medium line-clamp-2 mt-1 leading-tight text-center group-hover:text-primary transition-colors">
                               {anime.title}
                             </p>
-                            {anime.is_favorite && (
-                              <Heart className="h-2.5 w-2.5 text-primary fill-primary mt-0.5" />
-                            )}
                           </div>
-                        </div>
-                      </Link>
-                    ))
-                  )}
-                  {dayAnime.length > 5 && (
-                    <div className="text-center text-xs text-muted-foreground py-1">
-                      +{dayAnime.length - 5} more
+                        </Link>
+                      ))}
                     </div>
                   )}
                 </div>
-              </div>
-            );
-          })}
-        </div>
 
-        {/* Mobile View - Scrollable */}
-        <div className="md:hidden mt-4 space-y-3">
-          {weekDates.map((date, dayIndex) => {
-            const isToday = isSameDay(date, today);
-            const dayAnime = getAnimeForDay(dayIndex);
-            
-            if (dayAnime.length === 0) return null;
-            
-            return (
-              <Card key={dayIndex} className={isToday ? 'border-primary' : ''}>
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-sm font-bold ${isToday ? 'text-primary' : ''}`}>
-                        {FULL_DAYS[dayIndex]}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {format(date, 'MMM d')}
-                      </span>
-                      {isToday && (
-                        <Badge variant="default" className="text-xs">Today</Badge>
-                      )}
-                    </div>
-                    <Badge variant="outline">{dayAnime.length}</Badge>
+                {/* Count badge */}
+                {dayAnime.length > 0 && (
+                  <div className="shrink-0 flex items-center pr-2 md:pr-3">
+                    <Badge variant="outline" className="text-[10px] h-5">
+                      {dayAnime.length}
+                    </Badge>
                   </div>
-                  
-                  <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
-                    {dayAnime.map((anime) => (
-                      <Link
-                        key={anime.id}
-                        to={`/anime/${anime.id}`}
-                        className={`flex-shrink-0 w-20 ${anime.has_recent_upload ? 'relative' : ''}`}
-                      >
-                        <div className="relative">
-                          <img
-                            src={anime.cover_image || '/placeholder.svg'}
-                            alt={anime.title}
-                            className={`w-20 h-28 object-cover rounded-lg ${
-                              anime.is_favorite ? 'ring-2 ring-primary' : ''
-                            }`}
-                          />
-                          {isToday && (
-                            <div className="absolute -bottom-1 -right-1">
-                              <Sparkles className="h-3.5 w-3.5 text-yellow-400 animate-pulse drop-shadow-[0_0_4px_rgba(250,204,21,0.7)]" />
-                            </div>
-                          )}
-                          {anime.is_favorite && (
-                            <div className="absolute top-1 left-1 p-0.5 bg-primary rounded-full">
-                              <Heart className="h-2.5 w-2.5 text-primary-foreground fill-current" />
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-[10px] font-medium line-clamp-2 mt-1 text-center">
-                          {anime.title}
-                        </p>
-                      </Link>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                )}
+              </div>
             );
           })}
         </div>
