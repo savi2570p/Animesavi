@@ -36,6 +36,7 @@ interface OfflineVideoEntry {
   cachedAt: string;
   size: number;
   isIOSOptimized?: boolean;
+  thumbnail?: string;
 }
 
 export function OfflineDownloadButton({
