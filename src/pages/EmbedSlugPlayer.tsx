@@ -155,10 +155,74 @@ export default function EmbedSlugPlayer() {
       if (!url) { setFetchError('No video available'); return; }
 
       setEpisodeData({ title: ep.title, videoUrl: url, animeTitle: anime.title || '' });
+      setResolvedAnimeId(anime.id || null);
+      setCurrentSeasonNumber(seasonNumber);
+      setCurrentEpisodeNumber(episodeNumber);
+
+      // Fetch all episodes for episode selector
+      const allEps: typeof allEpisodes = [];
+      for (const s of seasons) {
+        const { data: eps } = await supabase
+          .from('episodes').select('id, title, episode_number')
+          .eq('season_id', s.id).order('episode_number');
+        if (eps) {
+          allEps.push(...eps.map(e => ({ ...e, season_number: s.season_number, season_id: s.id })));
+        }
+      }
+      setAllEpisodes(allEps);
+      const idx = allEps.findIndex(e => e.episode_number === episodeNumber && e.season_number === seasonNumber);
+      setCurrentEpisodeIndex(idx >= 0 ? idx : 0);
     };
 
     resolveEpisode();
   }, [animeSlug, seasonSlug, episodeSlug, domainAllowed]);
+
+  // Switch episode handler
+  const switchToEpisode = useCallback(async (ep: typeof allEpisodes[0]) => {
+    setShowEpisodePanel(false);
+    setIsLoading(true);
+    setError(null);
+    const { data } = await supabase.from('episodes').select('video_url, external_url, title').eq('id', ep.id).single();
+    if (!data) { setError('Episode failed to load'); return; }
+    const url = data.video_url || data.external_url;
+    if (!url) { setError('No video available'); return; }
+    setEpisodeData(prev => ({ title: data.title, videoUrl: url, animeTitle: prev?.animeTitle || '' }));
+    setCurrentSeasonNumber(ep.season_number);
+    setCurrentEpisodeNumber(ep.episode_number);
+    const idx = allEpisodes.findIndex(e => e.id === ep.id);
+    if (idx >= 0) setCurrentEpisodeIndex(idx);
+  }, [allEpisodes]);
+
+  // Keyboard shortcuts (Space, F, M)
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).tagName === 'INPUT') return;
+      switch (e.key.toLowerCase()) {
+        case ' ':
+          e.preventDefault();
+          if (videoRef.current) isPlaying ? videoRef.current.pause() : videoRef.current.play();
+          break;
+        case 'f':
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+        case 'm':
+          e.preventDefault();
+          toggleMute();
+          break;
+        case 'arrowright':
+          e.preventDefault();
+          if (videoRef.current) videoRef.current.currentTime = Math.min(videoRef.current.currentTime + 10, duration);
+          break;
+        case 'arrowleft':
+          e.preventDefault();
+          if (videoRef.current) videoRef.current.currentTime = Math.max(videoRef.current.currentTime - 10, 0);
+          break;
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isPlaying, duration]);
 
   // Video playback setup
   useEffect(() => {
