@@ -272,7 +272,7 @@ export function AnimeCalendar() {
                                 <div className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                               )}
                             </div>
-                            <p className="text-[9px] md:text-[10px] font-medium line-clamp-2 mt-1 leading-tight text-center group-hover:text-primary transition-colors">
+                            <p className="text-[8px] md:text-[9px] font-medium line-clamp-1 mt-0.5 leading-tight text-center group-hover:text-primary transition-colors">
                               {anime.title}
                             </p>
                           </div>
