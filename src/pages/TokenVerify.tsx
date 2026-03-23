@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Shield, CheckCircle, XCircle, Clock, Zap } from 'lucide-react';
+import { Shield, CheckCircle, XCircle, Clock, Zap, Download, Globe, Users, Smartphone, Play, Star } from 'lucide-react';
 
 export default function TokenVerify() {
   const [searchParams] = useSearchParams();
@@ -9,6 +9,7 @@ export default function TokenVerify() {
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
   const [errorMsg, setErrorMsg] = useState('');
   const [durationHours, setDurationHours] = useState<number | null>(null);
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
 
   useEffect(() => {
     window.history.replaceState(null, '', '/secure-verify');
@@ -37,7 +38,7 @@ export default function TokenVerify() {
       }
 
       const hours = data.duration_hours as number;
-      const expiresAt = Date.now() + hours * 60 * 60 * 1000;
+      const expiry = Date.now() + hours * 60 * 60 * 1000;
 
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData?.session?.user?.id;
@@ -45,24 +46,49 @@ export default function TokenVerify() {
       await supabase.from('token_usage').insert({
         token_id: data.id,
         user_agent: navigator.userAgent,
-        expires_at: expiresAt,
+        expires_at: expiry,
         ...(userId ? { user_id: userId } : {}),
       });
 
-      localStorage.setItem('unlock_token_expires', expiresAt.toString());
+      localStorage.setItem('unlock_token_expires', expiry.toString());
       localStorage.setItem('unlock_token_id', data.id);
 
       setDurationHours(hours);
+      setExpiresAt(expiry);
       setStatus('success');
-      setTimeout(() => navigate('/'), 2500);
+      setTimeout(() => navigate('/'), 3500);
     } catch {
       setStatus('error');
       setErrorMsg('Verification failed. Please try again.');
     }
   };
 
+  const formatDuration = (hours: number) => {
+    if (hours >= 720) return `${Math.round(hours / 720)} months`;
+    if (hours >= 168) return `${Math.round(hours / 168)} weeks`;
+    if (hours >= 24) return `${Math.round(hours / 24)} days`;
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+  };
+
+  const formatExpiry = (ts: number) => {
+    return new Date(ts).toLocaleString('en-IN', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+  };
+
+  const includedFeatures = [
+    { icon: Zap, text: 'Ad-free streaming on all devices' },
+    { icon: Play, text: 'Full access to all episodes & movies' },
+    { icon: Download, text: 'Unlimited direct downloads' },
+    { icon: Globe, text: 'Hindi dubbed & subbed content' },
+    { icon: Smartphone, text: 'Mobile, tablet & TV optimized' },
+    { icon: Users, text: 'Watch party hosting & joining' },
+    { icon: Star, text: 'Early access to new releases' },
+  ];
+
   return (
-    <div className="fixed inset-0 bg-background flex flex-col items-center justify-center z-50 px-4">
+    <div className="fixed inset-0 bg-background flex flex-col items-center justify-center z-50 px-4 overflow-y-auto">
       {/* Animated background glow */}
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full opacity-20 pointer-events-none"
@@ -103,7 +129,7 @@ export default function TokenVerify() {
       )}
 
       {/* Content */}
-      <div className="relative text-center max-w-sm">
+      <div className="relative text-center max-w-md w-full">
         {status === 'verifying' && (
           <>
             <h2 className="text-xl font-bold text-primary mb-2">Verifying Access…</h2>
@@ -112,31 +138,43 @@ export default function TokenVerify() {
         )}
 
         {status === 'success' && (
-          <div className="animate-fade-in space-y-4">
+          <div className="animate-fade-in space-y-5">
             <h2 className="text-2xl font-bold text-green-500">Access Granted!</h2>
             <p className="text-muted-foreground text-sm">Your premium access has been activated successfully.</p>
             
+            {/* Duration & Expiry */}
             {durationHours && (
-              <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-green-500/10 border border-green-500/20">
-                <Clock className="w-4 h-4 text-green-400" />
-                <span className="text-sm text-green-400 font-medium">
-                  Valid for {durationHours} {durationHours === 1 ? 'hour' : 'hours'}
-                </span>
+              <div className="space-y-2">
+                <div className="flex items-center justify-center gap-2 p-3 rounded-xl bg-green-500/10 border border-green-500/20">
+                  <Clock className="w-4 h-4 text-green-400" />
+                  <span className="text-sm text-green-400 font-semibold">
+                    Valid for {formatDuration(durationHours)}
+                  </span>
+                </div>
+                {expiresAt && (
+                  <p className="text-xs text-muted-foreground">
+                    Expires: {formatExpiry(expiresAt)}
+                  </p>
+                )}
               </div>
             )}
 
-            <div className="space-y-2 pt-2">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Zap className="w-3 h-3 text-primary" />
-                <span>Ad-free streaming unlocked</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Shield className="w-3 h-3 text-primary" />
-                <span>All episodes & downloads available</span>
+            {/* What's included */}
+            <div className="text-left bg-card/50 rounded-2xl border border-border/30 p-4 space-y-3">
+              <p className="text-sm font-semibold text-foreground text-center">What's Included</p>
+              <div className="space-y-2.5">
+                {includedFeatures.map((f, i) => (
+                  <div key={i} className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <f.icon className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    <span>{f.text}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <p className="text-muted-foreground/60 text-xs pt-2">Redirecting to homepage…</p>
+            <p className="text-muted-foreground/60 text-xs pt-1">Redirecting to homepage…</p>
           </div>
         )}
 
@@ -151,6 +189,15 @@ export default function TokenVerify() {
                 <li>Token has already been used or expired</li>
                 <li>Token link is incomplete or corrupted</li>
                 <li>Token was deactivated by admin</li>
+              </ul>
+            </div>
+
+            <div className="bg-card/50 rounded-xl border border-border/30 p-3 text-left mt-2">
+              <p className="text-xs text-muted-foreground font-medium mb-2">What to do:</p>
+              <ul className="space-y-1 text-xs text-muted-foreground/70 list-disc list-inside">
+                <li>Contact admin for a fresh token link</li>
+                <li>Make sure you're using the full URL</li>
+                <li>Check if your current access is still active</li>
               </ul>
             </div>
 
