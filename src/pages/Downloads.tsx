@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Trash2, Play, HardDrive, WifiOff, AlertCircle, ArrowLeft, Maximize, Minimize, Pause, RotateCw, Volume2, VolumeX } from 'lucide-react';
+import { Download, Trash2, Play, HardDrive, WifiOff, AlertCircle, ArrowLeft, Maximize, Minimize, Pause, RotateCw, Volume2, VolumeX, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Slider } from '@/components/ui/slider';
+import { Progress } from '@/components/ui/progress';
 
 const OFFLINE_CACHE_NAME = 'anime-offline-videos';
 const OFFLINE_INDEX_KEY = 'offline_video_index';
