@@ -16,10 +16,11 @@ import { cn } from '@/lib/utils';
 
 interface OfflineDownloadButtonProps {
   videoUrl: string | null;
-  iosVideoUrl?: string | null; // iOS-converted video URL
+  iosVideoUrl?: string | null;
   episodeId: string;
   episodeTitle: string;
   animeTitle: string;
+  thumbnail?: string | null;
   className?: string;
   isIOSDevice?: boolean;
 }
