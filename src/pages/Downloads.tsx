@@ -214,6 +214,23 @@ export default function Downloads() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [totalSize, setTotalSize] = useState(0);
   const [playingEntry, setPlayingEntry] = useState<OfflineVideoEntry | null>(null);
+  const [activeDownloads, setActiveDownloads] = useState<{ title: string; progress: number }[]>([]);
+
+  // Listen for download progress events from OfflineDownloadButton
+  useEffect(() => {
+    const handler = (e: CustomEvent) => {
+      const { title, progress: pct, done } = e.detail;
+      setActiveDownloads(prev => {
+        if (done) return prev.filter(d => d.title !== title);
+        const existing = prev.find(d => d.title === title);
+        if (existing) return prev.map(d => d.title === title ? { ...d, progress: pct } : d);
+        return [...prev, { title, progress: pct }];
+      });
+      if (done) loadDownloads();
+    };
+    window.addEventListener('offline-download-progress', handler as EventListener);
+    return () => window.removeEventListener('offline-download-progress', handler as EventListener);
+  }, []);
 
   const loadDownloads = useCallback(async () => {
     try {
