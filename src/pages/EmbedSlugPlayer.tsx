@@ -4,13 +4,14 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   Play, Pause, Volume2, VolumeX, Maximize,
   SkipForward, Loader2, AlertTriangle, RefreshCw,
-  Settings, Check, ShieldAlert, Download
+  Settings, Check, ShieldAlert, Download, Headphones
 } from 'lucide-react';
 import Hls from 'hls.js';
 
 const ALLOWED_ORIGINS = [
   'https://crunchysavi.lovable.app',
   'https://animesavi.lovable.app',
+  'https://shaodw-arise.lovable.app',
 ];
 
 function isHlsUrl(url: string | null): boolean {
@@ -30,13 +31,13 @@ const createSlug = (title: string): string =>
   title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
 export default function EmbedSlugPlayer() {
-  const { animeSlug, episodeSlug } = useParams<{ animeSlug: string; episodeSlug?: string }>();
+  const { animeSlug, seasonSlug, episodeSlug } = useParams<{ animeSlug: string; seasonSlug?: string; episodeSlug?: string }>();
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
 
   const [domainAllowed, setDomainAllowed] = useState<boolean | null>(null);
-  const [episodeData, setEpisodeData] = useState<{ title: string; videoUrl: string | null } | null>(null);
+  const [episodeData, setEpisodeData] = useState<{ title: string; videoUrl: string | null; animeTitle: string } | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,6 +55,9 @@ export default function EmbedSlugPlayer() {
   const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
+  const [showAudioMenu, setShowAudioMenu] = useState(false);
+  const [audioTracks, setAudioTracks] = useState<{ id: number; name: string; lang: string }[]>([]);
+  const [currentAudioTrack, setCurrentAudioTrack] = useState(0);
 
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   const deviceInfo = detectDeviceInfo();
@@ -63,45 +67,30 @@ export default function EmbedSlugPlayer() {
     const referrer = document.referrer;
     const isInIframe = window.self !== window.top;
 
-    // Allow if opened from an allowed origin via referrer
     if (referrer && ALLOWED_ORIGINS.some(origin => referrer.startsWith(origin))) {
-      setDomainAllowed(true);
-      return;
+      setDomainAllowed(true); return;
     }
-
-    // Allow if same-origin direct access (for development/testing on animesavi itself)
-    if (!isInIframe && window.location.origin === 'https://animesavi.lovable.app') {
-      setDomainAllowed(true);
-      return;
+    if (!isInIframe && ALLOWED_ORIGINS.some(o => window.location.origin === o)) {
+      setDomainAllowed(true); return;
     }
-
-    // Allow for local development
     if (window.location.hostname === 'localhost' || window.location.hostname.includes('lovable.app')) {
-      setDomainAllowed(true);
-      return;
+      setDomainAllowed(true); return;
     }
-
-    // Block everything else
     setDomainAllowed(false);
   }, []);
 
-  // Disable right-click and inspect shortcuts
+  // Disable right-click
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => e.preventDefault();
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.shiftKey && e.key === 'J')) {
-        e.preventDefault();
-      }
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J'))) e.preventDefault();
     };
     document.addEventListener('contextmenu', handleContextMenu);
     document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('contextmenu', handleContextMenu);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
+    return () => { document.removeEventListener('contextmenu', handleContextMenu); document.removeEventListener('keydown', handleKeyDown); };
   }, []);
 
-  // Resolve anime slug + episode slug to video URL
+  // Resolve anime slug + season slug + episode slug
   useEffect(() => {
     if (domainAllowed !== true) return;
 
@@ -114,11 +103,22 @@ export default function EmbedSlugPlayer() {
       const anime = animeList.find(a => a.title && createSlug(a.title) === animeSlug);
       if (!anime) { setFetchError('Anime not found'); return; }
 
-      // Parse episode slug
+      // Parse season and episode from URL params
       let seasonNumber = 1;
       let episodeNumber = 1;
 
-      if (episodeSlug) {
+      // Check if seasonSlug is provided (3-segment URL: /embed/:anime/:season/:episode)
+      if (seasonSlug && episodeSlug) {
+        // seasonSlug: "season-2" or "s2"
+        const seasonMatch = seasonSlug.match(/^(?:season-?)?(\d+)$/i) || seasonSlug.match(/^s(\d+)$/i);
+        if (seasonMatch) seasonNumber = +seasonMatch[1];
+
+        // episodeSlug: "episode-1" or "e1"
+        const epMatch = episodeSlug.match(/^(?:episode-?)?(\d+)$/i) || episodeSlug.match(/^e(\d+)$/i);
+        if (epMatch) episodeNumber = +epMatch[1];
+      } else if (episodeSlug && !seasonSlug) {
+        // 2-segment URL: /embed/:anime/:episodeSlug
+        // episodeSlug can be: "season-2-episode-3", "s2e3", "episode-5"
         const fullMatch = episodeSlug.match(/^season-(\d+)-episode-(\d+)$/i);
         const shortMatch = episodeSlug.match(/^s(\d+)-?e(\d+)$/i);
         const epOnly = episodeSlug.match(/^episode-(\d+)$/i);
@@ -140,16 +140,16 @@ export default function EmbedSlugPlayer() {
         .from('episodes').select('id, title, video_url, external_url')
         .eq('season_id', targetSeason.id).eq('episode_number', episodeNumber).single();
 
-      if (!ep) { setFetchError('Episode not found'); return; }
+      if (!ep) { setFetchError(`S${seasonNumber}E${episodeNumber} not found`); return; }
 
       const url = ep.video_url || ep.external_url;
       if (!url) { setFetchError('No video available'); return; }
 
-      setEpisodeData({ title: ep.title, videoUrl: url });
+      setEpisodeData({ title: ep.title, videoUrl: url, animeTitle: anime.title || '' });
     };
 
     resolveEpisode();
-  }, [animeSlug, episodeSlug, domainAllowed]);
+  }, [animeSlug, seasonSlug, episodeSlug, domainAllowed]);
 
   // Video playback setup
   useEffect(() => {
@@ -177,12 +177,20 @@ export default function EmbedSlugPlayer() {
           if (data.levels?.length > 0) {
             setHlsLevels(data.levels.map((l, i) => ({
               id: i, height: l.height,
-              label: l.height >= 2160 ? '4K' : l.height >= 1080 ? '1080p' : l.height >= 720 ? '720p' : `${l.height}p`
+              label: l.height >= 2160 ? '4K' : l.height >= 1080 ? '1080p' : l.height >= 720 ? '720p' : l.height >= 480 ? '480p' : `${l.height}p`
             })));
+          }
+          // Detect audio tracks
+          if (hls.audioTracks?.length > 1) {
+            setAudioTracks(hls.audioTracks.map((t, i) => ({
+              id: i, name: t.name || `Audio ${i + 1}`, lang: t.lang || ''
+            })));
+            setCurrentAudioTrack(hls.audioTrack);
           }
           video.play().catch(() => {});
         });
         hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => setCurrentLevel(data.level));
+        hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (_, data) => setCurrentAudioTrack(data.id));
         hls.on(Hls.Events.ERROR, (_, data) => { if (data.fatal) setError('Playback error'); });
       }
     } else {
@@ -223,6 +231,33 @@ export default function EmbedSlugPlayer() {
     if (videoRef.current) videoRef.current.currentTime = Math.min(videoRef.current.currentTime + 10, duration);
   }, [duration]);
 
+  const switchAudioTrack = (trackId: number) => {
+    if (hlsRef.current) {
+      hlsRef.current.audioTrack = trackId;
+      setCurrentAudioTrack(trackId);
+    }
+    setShowAudioMenu(false);
+  };
+
+  const handleDirectDownload = (quality: string) => {
+    const url = episodeData?.videoUrl;
+    if (!url) return;
+    setIsDownloading(quality);
+    setShowDownloadMenu(false);
+    const safeName = episodeData?.title?.replace(/[^a-zA-Z0-9]/g, '_') || 'video';
+    const fileName = `AnimeSavi_${safeName}_${quality}.mp4`;
+    // Direct URL download - no blob fetch, instant start
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setIsDownloading(null);
+  };
+
   const toggleFullscreen = async () => {
     const c = containerRef.current;
     if (!c) return;
@@ -246,9 +281,15 @@ export default function EmbedSlugPlayer() {
     return () => { document.removeEventListener('fullscreenchange', h); document.removeEventListener('webkitfullscreenchange', h); };
   }, []);
 
+  // Auto-hide controls after 3s
   useEffect(() => {
     if (isPlaying) {
-      controlsTimeoutRef.current = setTimeout(() => { setShowControls(false); setShowQualityMenu(false); }, 3000);
+      controlsTimeoutRef.current = setTimeout(() => {
+        setShowControls(false);
+        setShowQualityMenu(false);
+        setShowDownloadMenu(false);
+        setShowAudioMenu(false);
+      }, 3000);
     }
     return () => { if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current); };
   }, [isPlaying, showControls]);
@@ -256,7 +297,12 @@ export default function EmbedSlugPlayer() {
   const handleMouseMove = useCallback(() => {
     setShowControls(true);
     if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
-    if (isPlaying) controlsTimeoutRef.current = setTimeout(() => { setShowControls(false); setShowQualityMenu(false); }, 3000);
+    if (isPlaying) controlsTimeoutRef.current = setTimeout(() => {
+      setShowControls(false);
+      setShowQualityMenu(false);
+      setShowDownloadMenu(false);
+      setShowAudioMenu(false);
+    }, 3000);
   }, [isPlaying]);
 
   const formatTime = (s: number) => {
@@ -267,24 +313,27 @@ export default function EmbedSlugPlayer() {
     return hrs > 0 ? `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}` : `${mins}:${String(secs).padStart(2, '0')}`;
   };
 
-  // Blocked domain screen
+  const closeAllMenus = () => {
+    setShowQualityMenu(false);
+    setShowDownloadMenu(false);
+    setShowAudioMenu(false);
+  };
+
+  // Mobile compact sizes
+  const btnSize = deviceInfo.isMobile ? 'w-[30px] h-[30px]' : 'w-9 h-9';
+  const iconSize = deviceInfo.isMobile ? 'w-[15px] h-[15px]' : 'w-5 h-5';
+  const gapSize = deviceInfo.isMobile ? 'gap-[6px]' : 'gap-2';
+
+  // Blocked domain
   if (domainAllowed === false) {
     return (
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-6 p-6 text-center">
         <ShieldAlert className="w-16 h-16 text-destructive" />
         <h2 className="text-white text-xl font-bold">Playback Restricted</h2>
-        <p className="text-white/70 max-w-md">
-          {document.referrer
-            ? 'Embedded playback is restricted. This player can only be used on CrunchySavi.'
-            : 'Direct playback not allowed. Please watch from CrunchySavi.'}
-        </p>
-        <a
-          href="https://crunchysavi.lovable.app"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-        >
-          Go to CrunchySavi
+        <p className="text-white/70 max-w-md">Embedded playback is restricted to authorized domains only.</p>
+        <a href="https://animesavi.lovable.app" target="_blank" rel="noopener noreferrer"
+          className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+          Go to AnimeSavi
         </a>
       </div>
     );
@@ -327,7 +376,7 @@ export default function EmbedSlugPlayer() {
       className="fixed inset-0 bg-black"
       onMouseMove={handleMouseMove}
       onTouchStart={() => setShowControls(true)}
-      onClick={(e) => { if (!(e.target as HTMLElement).closest('.controls-area')) togglePlay(); }}
+      onClick={(e) => { if (!(e.target as HTMLElement).closest('.controls-area')) { togglePlay(); closeAllMenus(); } }}
     >
       {(isLoading || isBuffering) && (
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
@@ -347,9 +396,14 @@ export default function EmbedSlugPlayer() {
         className={`controls-area absolute inset-0 flex flex-col justify-end transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-20 pb-3 px-4">
+        {/* Title */}
+        <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black/80 to-transparent">
+          <p className="text-white text-sm font-medium truncate">{episodeData.title}</p>
+        </div>
+
+        <div className={`bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-16 ${deviceInfo.isMobile ? 'pb-2 px-3' : 'pb-3 px-4'}`}>
           {/* Progress bar */}
-          <div className="relative w-full h-1.5 bg-white/20 rounded-full mb-3 cursor-pointer group"
+          <div className={`relative w-full ${deviceInfo.isMobile ? 'h-[3px]' : 'h-1.5'} bg-white/20 rounded-full mb-2 cursor-pointer group`}
             onClick={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               const pct = ((e.clientX - rect.left) / rect.width) * 100;
@@ -357,39 +411,63 @@ export default function EmbedSlugPlayer() {
             }}>
             <div className="absolute inset-y-0 left-0 bg-white/30 rounded-full" style={{ width: `${bufferedProgress}%` }} />
             <div className="absolute inset-y-0 left-0 bg-primary rounded-full" style={{ width: `${progress}%` }} />
-            <div className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ left: `${progress}%`, marginLeft: '-7px' }} />
+            <div className={`absolute top-1/2 -translate-y-1/2 ${deviceInfo.isMobile ? 'w-2.5 h-2.5' : 'w-3.5 h-3.5'} bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-opacity`}
+              style={{ left: `${progress}%`, marginLeft: deviceInfo.isMobile ? '-5px' : '-7px' }} />
           </div>
 
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <button onClick={togglePlay} className="text-white hover:text-primary transition-colors p-1">
-                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+          {/* Time + Controls */}
+          <div className={`flex items-center justify-between ${gapSize}`}>
+            <div className={`flex items-center ${gapSize}`}>
+              <button onClick={togglePlay} className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`}>
+                {isPlaying ? <Pause className={iconSize} /> : <Play className={`${iconSize} ml-0.5`} />}
               </button>
-              <button onClick={skipForward} className="text-white hover:text-primary transition-colors p-1">
-                <SkipForward className="w-5 h-5" />
+              <button onClick={skipForward} className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`}>
+                <SkipForward className={iconSize} />
               </button>
-              <button onClick={toggleMute} className="text-white hover:text-primary transition-colors p-1">
-                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              <button onClick={toggleMute} className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`}>
+                {isMuted ? <VolumeX className={iconSize} /> : <Volume2 className={iconSize} />}
               </button>
-              <span className="text-white/80 text-xs ml-1">{formatTime(currentTime)} / {formatTime(duration)}</span>
+              <span className="text-white/80 text-[10px] sm:text-xs ml-1">{formatTime(currentTime)} / {formatTime(duration)}</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className={`flex items-center ${gapSize}`}>
+              {/* Audio switch */}
+              {audioTracks.length > 1 && (
+                <div className="relative">
+                  <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowAudioMenu(!showAudioMenu); }}
+                    className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`} title="Audio Track">
+                    <Headphones className={iconSize} />
+                  </button>
+                  {showAudioMenu && (
+                    <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[130px] z-50">
+                      {audioTracks.map(t => (
+                        <button key={t.id} onClick={() => switchAudioTrack(t.id)}
+                          className={`w-full text-left px-3 py-1.5 text-xs rounded flex items-center gap-2 ${currentAudioTrack === t.id ? 'text-primary' : 'text-white/80'} hover:bg-white/10`}>
+                          {currentAudioTrack === t.id && <Check className="w-3 h-3" />}
+                          {t.name || t.lang || `Audio ${t.id + 1}`}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Quality */}
               {hlsLevels.length > 0 && (
                 <div className="relative">
-                  <button onClick={() => setShowQualityMenu(!showQualityMenu)} className="text-white hover:text-primary transition-colors p-1">
-                    <Settings className="w-5 h-5" />
+                  <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowQualityMenu(!showQualityMenu); }}
+                    className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`}>
+                    <Settings className={iconSize} />
                   </button>
                   {showQualityMenu && (
-                    <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[120px]">
+                    <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[120px] z-50">
                       <button onClick={() => { if (hlsRef.current) hlsRef.current.currentLevel = -1; setCurrentLevel(-1); setShowQualityMenu(false); }}
-                        className={`w-full text-left px-3 py-1.5 text-sm rounded ${currentLevel === -1 ? 'text-primary' : 'text-white/80'} hover:bg-white/10 flex items-center gap-2`}>
+                        className={`w-full text-left px-3 py-1.5 text-xs rounded ${currentLevel === -1 ? 'text-primary' : 'text-white/80'} hover:bg-white/10 flex items-center gap-2`}>
                         {currentLevel === -1 && <Check className="w-3 h-3" />} Auto
                       </button>
                       {hlsLevels.map(l => (
                         <button key={l.id} onClick={() => { if (hlsRef.current) hlsRef.current.currentLevel = l.id; setCurrentLevel(l.id); setShowQualityMenu(false); }}
-                          className={`w-full text-left px-3 py-1.5 text-sm rounded ${currentLevel === l.id ? 'text-primary' : 'text-white/80'} hover:bg-white/10 flex items-center gap-2`}>
+                          className={`w-full text-left px-3 py-1.5 text-xs rounded ${currentLevel === l.id ? 'text-primary' : 'text-white/80'} hover:bg-white/10 flex items-center gap-2`}>
                           {currentLevel === l.id && <Check className="w-3 h-3" />} {l.label}
                         </button>
                       ))}
@@ -397,51 +475,29 @@ export default function EmbedSlugPlayer() {
                   )}
                 </div>
               )}
-              {/* Download with quality picker */}
+
+              {/* Download with 480p/720p/1080p */}
               <div className="relative">
-                <button onClick={(e) => { e.stopPropagation(); setShowDownloadMenu(!showDownloadMenu); setShowQualityMenu(false); }} className="text-white hover:text-primary transition-colors p-1" title="Download">
-                  {isDownloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+                <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowDownloadMenu(!showDownloadMenu); }}
+                  className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`} title="Download">
+                  {isDownloading ? <Loader2 className={`${iconSize} animate-spin`} /> : <Download className={iconSize} />}
                 </button>
                 {showDownloadMenu && (
-                  <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[140px]">
-                    {['720p', '1080p'].map((quality) => (
-                      <button
-                        key={quality}
-                        className={`w-full text-left px-3 py-1.5 text-sm rounded text-white/80 hover:bg-white/10 flex items-center gap-2 ${isDownloading === quality ? 'opacity-50' : ''}`}
-                        disabled={!!isDownloading}
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          const url = episodeData?.videoUrl;
-                          if (!url) return;
-                          setIsDownloading(quality);
-                          setShowDownloadMenu(false);
-                          const safeName = episodeData?.title?.replace(/[^a-zA-Z0-9]/g, '_') || 'video';
-                          const fileName = `AnimeSavi_${safeName}_${quality}.mp4`;
-                          try {
-                            const res = await fetch(url);
-                            const blob = await res.blob();
-                            const blobUrl = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = blobUrl; a.download = fileName;
-                            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                            URL.revokeObjectURL(blobUrl);
-                          } catch {
-                            const a = document.createElement('a');
-                            a.href = url; a.download = fileName; a.target = '_blank';
-                            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                          }
-                          setIsDownloading(null);
-                        }}
-                      >
-                        <Download className="w-3 h-3" /> {quality}
-                        {isDownloading === quality && <Loader2 className="w-3 h-3 animate-spin" />}
+                  <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[130px] z-50">
+                    {['480p', '720p', '1080p'].map((q) => (
+                      <button key={q} onClick={(e) => { e.stopPropagation(); handleDirectDownload(q); }}
+                        className={`w-full text-left px-3 py-1.5 text-xs rounded text-white/80 hover:bg-white/10 flex items-center gap-2 ${isDownloading === q ? 'opacity-50' : ''}`}
+                        disabled={!!isDownloading}>
+                        <Download className="w-3 h-3" /> {q}
+                        {isDownloading === q && <Loader2 className="w-3 h-3 animate-spin" />}
                       </button>
                     ))}
                   </div>
                 )}
               </div>
-              <button onClick={toggleFullscreen} className="text-white hover:text-primary transition-colors p-1">
-                <Maximize className="w-5 h-5" />
+
+              <button onClick={toggleFullscreen} className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`}>
+                <Maximize className={iconSize} />
               </button>
             </div>
           </div>

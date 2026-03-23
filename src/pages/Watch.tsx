@@ -1105,7 +1105,7 @@ export default function Watch() {
                 : '';
               const seasonNum = currentSeason?.season_number || 1;
               const pageUrl = `/${animeSlug}/season-${seasonNum}-episode-${episode.episode_number}`;
-              const embedUrl = `/embed/${animeSlug}/episode-${episode.episode_number}`;
+              const embedUrl = `/embed/${animeSlug}/season-${seasonNum}/episode-${episode.episode_number}`;
               return (
                 <ShareEmbedPopup
                   type="episode"
