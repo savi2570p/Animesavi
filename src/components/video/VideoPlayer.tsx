@@ -2809,33 +2809,33 @@ export function VideoPlayer({
 
           {/* Control buttons - Netflix-style Clean & Compact */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 md:gap-3">
+             <div className="flex items-center gap-1 md:gap-3">
               {/* Play/Pause */}
               <button 
-                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
+                className="w-6 h-6 md:w-10 md:h-10 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
                 onClick={(e) => { e.stopPropagation(); togglePlay(); }}
               >
-                {isPlaying ? <Pause className="w-4 h-4 md:w-5 md:h-5" /> : <Play className="w-4 h-4 md:w-5 md:h-5 fill-current ml-0.5" />}
+                {isPlaying ? <Pause className="w-3 h-3 md:w-5 md:h-5" /> : <Play className="w-3 h-3 md:w-5 md:h-5 fill-current ml-0.5" />}
               </button>
 
               {/* Next Episode */}
               {hasNextEpisode && onNextEpisode && !isMovie && (
                 <button 
-                  className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
+                  className="w-6 h-6 md:w-9 md:h-9 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
                   title="Next Episode"
                 >
-                  <SkipForward className="w-3.5 h-3.5 md:w-[18px] md:h-[18px]" />
+                  <SkipForward className="w-3 h-3 md:w-[18px] md:h-[18px]" />
                 </button>
               )}
 
               {/* Skip forward 10s */}
               <button 
-                className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
+                className="w-6 h-6 md:w-9 md:h-9 rounded-md md:rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
                 onClick={(e) => { e.stopPropagation(); skipForward(); }} 
                 title="Skip forward 10s"
               >
-                <FastForward className="w-3.5 h-3.5 md:w-[18px] md:h-[18px]" />
+                <FastForward className="w-3 h-3 md:w-[18px] md:h-[18px]" />
               </button>
 
               {/* Volume Slider - Desktop */}
@@ -2849,10 +2849,10 @@ export function VideoPlayer({
               </div>
               {/* Volume Button - Mobile */}
               <button 
-                className="md:hidden w-7 h-7 rounded-full bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
+                className="md:hidden w-6 h-6 rounded-md bg-white/[0.08] hover:bg-white/[0.18] hover:scale-105 flex items-center justify-center text-white transition-all duration-200" 
                 onClick={(e) => { e.stopPropagation(); toggleMute(); }}
               >
-                {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                {isMuted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
               </button>
             </div>
 
