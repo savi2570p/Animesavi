@@ -248,12 +248,12 @@ export function AnimeCalendar() {
                           to={`/anime/${anime.id}`}
                           className="shrink-0 group"
                         >
-                          <div className="relative w-[70px] md:w-[90px]">
+                          <div className="relative w-[55px] md:w-[70px]">
                             <div className="relative">
                               <img
                                 src={anime.cover_image || '/placeholder.svg'}
                                 alt={anime.title}
-                                className={`w-[70px] h-[95px] md:w-[90px] md:h-[120px] object-cover rounded-md transition-transform duration-200 group-hover:scale-105 ${
+                                className={`w-[55px] h-[75px] md:w-[70px] md:h-[95px] object-cover rounded transition-transform duration-200 group-hover:scale-105 ${
                                   anime.is_favorite ? 'ring-2 ring-primary' : ''
                                 }`}
                                 loading="lazy"
