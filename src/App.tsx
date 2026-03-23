@@ -166,6 +166,7 @@ const App = () => (
                 
                 <Route path="/external-player" element={<ExternalPlayer />} />
                 <Route path="/embed/:episodeId" element={<EmbedPlayer />} />
+                <Route path="/embed/:animeSlug/:seasonSlug/:episodeSlug" element={<EmbedSlugPlayer />} />
                 <Route path="/embed/:animeSlug/:episodeSlug" element={<EmbedSlugPlayer />} />
                 <Route path="/welcome" element={<Welcome />} />
                 <Route element={<MainLayout />}>
