@@ -4,7 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   Play, Pause, Volume2, VolumeX, Maximize,
   SkipForward, Loader2, AlertTriangle, RefreshCw,
-  Settings, Check, ShieldAlert, Download, Headphones
+  Settings, Check, ShieldAlert, Download, Headphones,
+  List, ChevronRight, X
 } from 'lucide-react';
 import Hls from 'hls.js';
 
