@@ -16,10 +16,11 @@ import { cn } from '@/lib/utils';
 
 interface OfflineDownloadButtonProps {
   videoUrl: string | null;
-  iosVideoUrl?: string | null; // iOS-converted video URL
+  iosVideoUrl?: string | null;
   episodeId: string;
   episodeTitle: string;
   animeTitle: string;
+  thumbnail?: string | null;
   className?: string;
   isIOSDevice?: boolean;
 }
@@ -35,6 +36,7 @@ interface OfflineVideoEntry {
   cachedAt: string;
   size: number;
   isIOSOptimized?: boolean;
+  thumbnail?: string;
 }
 
 export function OfflineDownloadButton({
@@ -43,6 +45,7 @@ export function OfflineDownloadButton({
   episodeId,
   episodeTitle,
   animeTitle,
+  thumbnail,
   className,
   isIOSDevice = false,
 }: OfflineDownloadButtonProps) {
@@ -216,6 +219,7 @@ export function OfflineDownloadButton({
         cachedAt: new Date().toISOString(),
         size: receivedLength,
         isIOSOptimized: isOptimized,
+        thumbnail: thumbnail || undefined,
       });
 
       setIsCached(true);
