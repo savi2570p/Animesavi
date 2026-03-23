@@ -216,6 +216,11 @@ export function Header() {
                     <History className="h-4 w-4" /> Watch History
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/downloads" className="flex items-center gap-2 py-2">
+                    <Download className="h-4 w-4" /> Downloads
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {canUpload() && (
                   <DropdownMenuItem asChild>
