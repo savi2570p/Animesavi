@@ -28,7 +28,8 @@ import {
   TrendingUp,
   BadgeCheck,
   Sparkles,
-  Home
+  Home,
+  Download
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
