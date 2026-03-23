@@ -237,8 +237,8 @@ export function AnimeCalendar() {
 
                 <div className="flex-1 min-w-0 py-1 px-1.5 md:px-2">
                   {dayAnime.length === 0 ? (
-                    <div className="flex items-center h-full text-muted-foreground text-xs px-2">
-                      No releases
+                    <div className="flex items-center h-full text-muted-foreground text-[10px] px-2">
+                      —
                     </div>
                   ) : (
                     <div className="flex gap-2 md:gap-3 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
