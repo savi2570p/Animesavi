@@ -169,8 +169,8 @@ export function Header() {
 
         {/* User Menu */}
         <div className="flex items-center gap-1 sm:gap-2">
-          {user && <WatchLaterButton className="h-7 w-7 sm:h-9 sm:w-9 [&_svg]:h-3.5 [&_svg]:sm:h-4 [&_svg]:w-3.5 [&_svg]:sm:w-4" />}
-          {user && <NotificationBell className="h-7 w-7 sm:h-9 sm:w-9 [&_svg]:h-3.5 [&_svg]:sm:h-4 [&_svg]:w-3.5 [&_svg]:sm:w-4" />}
+          {user && <div className="[&_button]:h-7 [&_button]:w-7 sm:[&_button]:h-9 sm:[&_button]:w-9 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4"><WatchLaterButton /></div>}
+          {user && <div className="[&_button]:h-7 [&_button]:w-7 sm:[&_button]:h-9 sm:[&_button]:w-9 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4"><NotificationBell /></div>}
           
           {user ? (
             <DropdownMenu>
