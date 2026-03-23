@@ -28,7 +28,8 @@ import {
   TrendingUp,
   BadgeCheck,
   Sparkles,
-  Home
+  Home,
+  Download
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -215,6 +216,11 @@ export function Header() {
                     <History className="h-4 w-4" /> Watch History
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/downloads" className="flex items-center gap-2 py-2">
+                    <Download className="h-4 w-4" /> Downloads
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {canUpload() && (
                   <DropdownMenuItem asChild>
@@ -358,6 +364,13 @@ export function Header() {
                       >
                         <History className="h-4 w-4 text-muted-foreground" />
                         Watch History
+                      </Link>
+                      <Link 
+                        to="/downloads" 
+                        className="flex items-center gap-3 text-base font-medium py-2 px-3 rounded-lg hover:bg-card transition-colors"
+                      >
+                        <Download className="h-4 w-4 text-muted-foreground" />
+                        Downloads
                       </Link>
                     </>
                   )}

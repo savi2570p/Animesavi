@@ -53,6 +53,7 @@ const Schedule = lazy(() => import("./pages/Schedule"));
 const UpcomingPage = lazy(() => import("./pages/UpcomingPage"));
 const EmbedSlugPlayer = lazy(() => import("./pages/EmbedSlugPlayer"));
 const Welcome = lazy(() => import("./pages/Welcome"));
+const Downloads = lazy(() => import("./pages/Downloads"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -191,6 +192,7 @@ const App = () => (
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/stats" element={<UserStats />} />
+                  <Route path="/downloads" element={<Downloads />} />
                   <Route path="/:animeSlug/:episodeSlug" element={<AnimeSlugRedirect />} />
                   <Route path="/:animeSlug" element={<AnimeSlugRedirect />} />
                 </Route>

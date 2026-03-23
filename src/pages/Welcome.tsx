@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Home, Play, Star, TrendingUp, Sparkles, Shield, Zap, Download, Smartphone, Globe, Users, Swords, Heart, Wand2, Ghost, Laugh, Brain, ChevronRight, Clock, Monitor, Headphones, Subtitles, Film, Tv } from 'lucide-react';
+import { Search, Home, Play, Star, TrendingUp, Sparkles, Shield, Zap, Download, Smartphone, Globe, Users, Swords, Heart, Wand2, Ghost, Laugh, Brain, ChevronRight, Clock, Monitor, Headphones, Subtitles, Film, Tv, MessageSquare, Quote } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import logo from '@/assets/logo.png';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -444,8 +445,80 @@ export default function Welcome() {
           </div>
         </div>
 
+        {/* Testimonials Section */}
+        <div className="w-full max-w-4xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '850ms' }}>
+          <div className="text-center mb-10">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">
+              Community
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">What Our Users Say</h2>
+            <p className="text-muted-foreground text-sm mt-2">Trusted by thousands of anime fans across India</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { name: 'Arjun K.', rating: 5, text: 'Best anime site in India! Hindi dubs are amazing and no ads at all. Switched from Crunchyroll and never looked back.', time: '2 weeks ago' },
+              { name: 'Priya S.', rating: 5, text: 'The download feature is a lifesaver. I download episodes on WiFi and watch during my commute. Love the 1080p quality!', time: '1 month ago' },
+              { name: 'Rahul M.', rating: 4, text: 'Watch parties with friends are so fun! We watch Jujutsu Kaisen together every week. Great feature.', time: '3 weeks ago' },
+              { name: 'Sneha D.', rating: 5, text: 'Finally an anime site that works perfectly on my phone. Controls are smooth and video loads instantly.', time: '1 week ago' },
+              { name: 'Vikram P.', rating: 5, text: 'Multi-audio switching is incredible. I can switch between Hindi and Japanese mid-episode without any buffering.', time: '2 months ago' },
+              { name: 'Ananya R.', rating: 4, text: 'Clean UI, fast streaming, and the library keeps growing. This is what every anime platform should be like.', time: '1 month ago' },
+            ].map((review, i) => (
+              <div
+                key={i}
+                className="relative p-5 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/20 transition-all duration-300"
+              >
+                <Quote className="absolute top-3 right-3 w-5 h-5 text-primary/15" />
+                <div className="flex items-center gap-1 mb-3">
+                  {Array.from({ length: 5 }).map((_, si) => (
+                    <Star key={si} className={`w-3.5 h-3.5 ${si < review.rating ? 'text-yellow-500 fill-yellow-500' : 'text-muted-foreground/30'}`} />
+                  ))}
+                </div>
+                <p className="text-sm text-foreground/80 leading-relaxed mb-4">"{review.text}"</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-foreground">{review.name}</span>
+                  <span className="text-[10px] text-muted-foreground">{review.time}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* FAQ Section */}
+        <div className="w-full max-w-3xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '900ms' }}>
+          <div className="text-center mb-10">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">
+              FAQ
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Frequently Asked Questions</h2>
+            <p className="text-muted-foreground text-sm mt-2">Got questions? We've got answers.</p>
+          </div>
+
+          <Accordion type="single" collapsible className="space-y-2">
+            {[
+              { q: 'Is AnimeSavi really free?', a: 'Yes, 100% free! No subscriptions, no hidden fees, no premium plans. All anime, all episodes, completely free to watch and download.' },
+              { q: 'Are there any ads on AnimeSavi?', a: 'Absolutely zero ads. No popups, no banners, no video ads before episodes. We believe anime should be enjoyed without interruptions.' },
+              { q: 'Can I watch anime in Hindi?', a: 'Yes! We provide official Hindi dubbed versions of all anime. You can also switch to English or Japanese audio using the multi-audio feature.' },
+              { q: 'Can I download anime for offline viewing?', a: 'Yes! You can download episodes in 480p, 720p, or 1080p quality. Downloaded anime works completely offline — no internet needed to watch.' },
+              { q: 'Does AnimeSavi work on mobile?', a: 'AnimeSavi is designed mobile-first. It works perfectly on all phones with compact controls, gesture navigation, and can be installed as a PWA app on your home screen.' },
+              { q: 'What is a Watch Party?', a: 'Watch Parties let you watch anime together with friends in real-time. You can sync playback, chat, and react together — even if you\'re in different locations.' },
+              { q: 'How often is new anime added?', a: 'We add new episodes and series regularly. Check the Release Calendar to see upcoming releases and set reminders for your favorite shows.' },
+              { q: 'Is my data safe on AnimeSavi?', a: 'We take privacy seriously. Your watch history and preferences are stored securely. We never sell user data or track you with third-party analytics.' },
+            ].map((faq, i) => (
+              <AccordionItem key={i} value={`faq-${i}`} className="border border-border/30 rounded-xl px-4 overflow-hidden bg-card/20">
+                <AccordionTrigger className="text-sm sm:text-base font-medium text-foreground hover:no-underline py-4">
+                  {faq.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground leading-relaxed pb-4">
+                  {faq.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+
         {/* Final CTA */}
-        <div className="w-full max-w-2xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '900ms' }}>
+        <div className="w-full max-w-2xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '950ms' }}>
           <div className="text-center p-8 sm:p-12 rounded-3xl border border-border/30" style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.05), hsl(var(--card) / 0.5))' }}>
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">Ready to Watch?</h2>
             <p className="text-muted-foreground text-sm sm:text-base mb-6 max-w-md mx-auto">
