@@ -620,7 +620,7 @@ export default function EmbedSlugPlayer() {
                 </button>
                 {showDownloadMenu && (
                   <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[130px] z-50">
-                    {['480p', '720p', '1080p'].map((q) => (
+                    {['480p', '720p', '1080p', '2160p (4K)'].map((q) => (
                       <button key={q} onClick={(e) => { e.stopPropagation(); handleDirectDownload(q); }}
                         className={`w-full text-left px-3 py-1.5 text-xs rounded text-white/80 hover:bg-white/10 flex items-center gap-2 ${isDownloading === q ? 'opacity-50' : ''}`}
                         disabled={!!isDownloading}>

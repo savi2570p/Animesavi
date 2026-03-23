@@ -9,7 +9,7 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DownloadVerificationDialogProps {
@@ -21,6 +21,13 @@ interface DownloadVerificationDialogProps {
   episodeLabel?: string;
 }
 
+const QUALITY_OPTIONS = [
+  { label: '480p', tag: 'SD' },
+  { label: '720p', tag: 'HD' },
+  { label: '1080p', tag: 'FHD' },
+  { label: '2160p', tag: '4K' },
+];
+
 export function DownloadVerificationDialog({
   open,
   onOpenChange,
@@ -30,19 +37,27 @@ export function DownloadVerificationDialog({
   episodeLabel,
 }: DownloadVerificationDialogProps) {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [selectedQuality, setSelectedQuality] = useState<string | null>(null);
 
   const handleDownload = async () => {
     if (!videoUrl) {
       toast.error('No video available for download');
       return;
     }
+    if (!selectedQuality) {
+      toast.error('Please select a quality');
+      return;
+    }
 
     setIsDownloading(true);
+
+    // Build filename with quality
+    const base = fileName.replace(/\.mp4$/i, '');
+    const qualityFileName = `${base}_${selectedQuality}.mp4`;
 
     try {
       toast.info('Preparing download...');
 
-      // Attempt blob download for proper filename control
       try {
         const response = await fetch(videoUrl, { mode: 'cors' });
         if (!response.ok) throw new Error('Fetch failed');
@@ -50,7 +65,7 @@ export function DownloadVerificationDialog({
         const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = blobUrl;
-        link.download = fileName;
+        link.download = qualityFileName;
         link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
@@ -58,10 +73,9 @@ export function DownloadVerificationDialog({
         setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
         toast.success('Download started! Check your downloads.');
       } catch {
-        // Fallback: use download attribute directly (may not rename on cross-origin)
         const link = document.createElement('a');
         link.href = videoUrl;
-        link.download = fileName;
+        link.download = qualityFileName;
         link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
@@ -70,6 +84,7 @@ export function DownloadVerificationDialog({
       }
 
       onOpenChange(false);
+      setSelectedQuality(null);
     } catch (error) {
       console.error('Download error:', error);
       toast.error('Failed to start download. Please try again.');
@@ -79,7 +94,7 @@ export function DownloadVerificationDialog({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) setSelectedQuality(null); }}>
       <AlertDialogContent className="sm:max-w-md">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
@@ -87,7 +102,7 @@ export function DownloadVerificationDialog({
             Download Confirmation
           </AlertDialogTitle>
           <AlertDialogDescription asChild>
-            <div className="space-y-2 pt-2">
+            <div className="space-y-3 pt-2">
               <p className="text-sm text-muted-foreground">You are downloading:</p>
               <div className="rounded-lg bg-muted/50 p-3 space-y-1">
                 {animeTitle && (
@@ -98,6 +113,32 @@ export function DownloadVerificationDialog({
                 )}
                 <p className="text-xs font-medium text-primary">AnimeSavi</p>
               </div>
+
+              {/* Quality Selection */}
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">Select Quality:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {QUALITY_OPTIONS.map((q) => (
+                    <button
+                      key={q.label}
+                      onClick={() => setSelectedQuality(q.label)}
+                      className={`relative flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                        selectedQuality === q.label
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border bg-muted/30 text-foreground hover:border-primary/50 hover:bg-muted/50'
+                      }`}
+                    >
+                      <span>{q.label}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                        selectedQuality === q.label ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                      }`}>{q.tag}</span>
+                      {selectedQuality === q.label && (
+                        <Check className="absolute -top-1 -right-1 w-4 h-4 text-primary-foreground bg-primary rounded-full p-0.5" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -107,7 +148,7 @@ export function DownloadVerificationDialog({
           </AlertDialogCancel>
           <Button
             onClick={handleDownload}
-            disabled={isDownloading}
+            disabled={isDownloading || !selectedQuality}
             className="flex-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground gap-2"
           >
             {isDownloading ? (
@@ -115,7 +156,7 @@ export function DownloadVerificationDialog({
             ) : (
               <Download className="w-4 h-4" />
             )}
-            {isDownloading ? 'Downloading...' : 'Download'}
+            {isDownloading ? 'Downloading...' : selectedQuality ? `Download ${selectedQuality}` : 'Select Quality'}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
