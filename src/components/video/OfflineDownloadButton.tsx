@@ -186,7 +186,9 @@ export function OfflineDownloadButton({
         receivedLength += value.length;
 
         if (total > 0) {
-          setDownloadProgress(Math.round((receivedLength / total) * 100));
+          const pct = Math.round((receivedLength / total) * 100);
+          setDownloadProgress(pct);
+          window.dispatchEvent(new CustomEvent('offline-download-progress', { detail: { title: episodeTitle, progress: pct, done: false } }));
         }
       }
 
