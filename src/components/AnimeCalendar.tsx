@@ -235,8 +235,7 @@ export function AnimeCalendar() {
                   )}
                 </div>
 
-                {/* Right: Anime horizontal scroll */}
-                <div className="flex-1 min-w-0 py-2 px-2 md:px-3">
+                <div className="flex-1 min-w-0 py-1 px-1.5 md:px-2">
                   {dayAnime.length === 0 ? (
                     <div className="flex items-center h-full text-muted-foreground text-xs px-2">
                       No releases
