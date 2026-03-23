@@ -2540,11 +2540,11 @@ export function VideoPlayer({
           {!isPlaying && showControls && !showPremiumLoader && !isLoading && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 2147483647 }}>
               <div 
-                className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
+                className="w-10 h-10 md:w-16 md:h-16 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
                 onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                 style={{ pointerEvents: 'auto' }}
               >
-                <Play className="w-7 h-7 md:w-8 md:h-8 text-white fill-current ml-0.5" />
+                <Play className="w-5 h-5 md:w-8 md:h-8 text-white fill-current ml-0.5" />
               </div>
             </div>
           )}
