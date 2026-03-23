@@ -217,17 +217,26 @@ export function FeaturedSlider() {
           </button>
         </div>
 
-        {/* Progress dots */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2">
+        {/* Slim progress bar */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 w-[280px] flex items-center gap-1">
           {featuredAnime.map((_, idx) => (
             <button
               key={idx}
               onClick={() => { setCurrentIndex(idx); }}
-              className={`h-1 rounded-full transition-all duration-500 ${
-                idx === currentIndex ? 'w-8 bg-primary' : 'w-2 bg-foreground/30 hover:bg-foreground/50'
-              }`}
+              className="flex-1 h-[3px] rounded-full bg-foreground/20 overflow-hidden relative"
               aria-label={`Go to slide ${idx + 1}`}
-            />
+            >
+              <div
+                className={`absolute inset-y-0 left-0 rounded-full transition-all ${
+                  idx === currentIndex
+                    ? 'bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)] animate-[slider-fill_5s_linear]'
+                    : idx < currentIndex
+                    ? 'bg-primary w-full'
+                    : 'w-0'
+                }`}
+                style={idx === currentIndex ? { animation: 'slider-fill 5s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
+              />
+            </button>
           ))}
         </div>
       </section>
