@@ -45,6 +45,7 @@ export function OfflineDownloadButton({
   episodeId,
   episodeTitle,
   animeTitle,
+  thumbnail,
   className,
   isIOSDevice = false,
 }: OfflineDownloadButtonProps) {
