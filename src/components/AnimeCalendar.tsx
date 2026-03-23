@@ -216,23 +216,20 @@ export function AnimeCalendar() {
               >
                 {/* Left: Date column */}
                 <div
-                  className={`shrink-0 w-16 md:w-24 flex flex-col items-center justify-center py-3 border-r ${
+                  className={`shrink-0 w-12 md:w-20 flex flex-col items-center justify-center py-1.5 md:py-2 border-r ${
                     isToday
                       ? 'bg-primary text-primary-foreground border-primary'
                       : 'bg-muted/30 border-border/30'
                   }`}
                 >
-                  <span className="text-[10px] md:text-xs font-medium uppercase tracking-wider opacity-80">
+                  <span className="text-[8px] md:text-[10px] font-medium uppercase tracking-wider opacity-80">
                     {DAYS_OF_WEEK[dayIndex]}
                   </span>
-                  <span className="text-xl md:text-2xl font-bold leading-none mt-0.5">
+                  <span className="text-base md:text-xl font-bold leading-none mt-0.5">
                     {format(date, 'd')}
                   </span>
-                  <span className="text-[9px] md:text-[10px] opacity-60 mt-0.5">
-                    {format(date, 'MMM')}
-                  </span>
                   {isToday && (
-                    <Badge variant="default" className="text-[8px] px-1 py-0 mt-1 h-3.5">
+                    <Badge variant="default" className="text-[7px] px-1 py-0 mt-0.5 h-3">
                       TODAY
                     </Badge>
                   )}
