@@ -60,6 +60,14 @@ export default function EmbedSlugPlayer() {
   const [audioTracks, setAudioTracks] = useState<{ id: number; name: string; lang: string }[]>([]);
   const [currentAudioTrack, setCurrentAudioTrack] = useState(0);
 
+  // Episode selection state
+  const [allEpisodes, setAllEpisodes] = useState<{ id: string; title: string; episode_number: number; season_number: number; season_id: string }[]>([]);
+  const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(0);
+  const [showEpisodePanel, setShowEpisodePanel] = useState(false);
+  const [currentSeasonNumber, setCurrentSeasonNumber] = useState(1);
+  const [currentEpisodeNumber, setCurrentEpisodeNumber] = useState(1);
+  const [resolvedAnimeId, setResolvedAnimeId] = useState<string | null>(null);
+
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   const deviceInfo = detectDeviceInfo();
 
