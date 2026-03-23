@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Home, Play, Star, TrendingUp, Sparkles, Shield, Zap, Download, Smartphone, Globe, Users } from 'lucide-react';
+import { Search, Home, Play, Star, TrendingUp, Sparkles, Shield, Zap, Download, Smartphone, Globe, Users, Swords, Heart, Wand2, Ghost, Laugh, Brain } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -11,12 +11,22 @@ interface AnimePreview {
   genres: string[] | null;
 }
 
+const GENRES = [
+  { name: 'Action', icon: Swords, gradient: 'from-red-600/80 to-orange-600/60' },
+  { name: 'Romance', icon: Heart, gradient: 'from-pink-600/80 to-rose-500/60' },
+  { name: 'Fantasy', icon: Wand2, gradient: 'from-purple-600/80 to-violet-500/60' },
+  { name: 'Horror', icon: Ghost, gradient: 'from-gray-800/90 to-gray-600/60' },
+  { name: 'Comedy', icon: Laugh, gradient: 'from-yellow-600/80 to-amber-500/60' },
+  { name: 'Sci-Fi', icon: Brain, gradient: 'from-cyan-600/80 to-blue-500/60' },
+];
+
 export default function Welcome() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [featuredAnime, setFeaturedAnime] = useState<AnimePreview[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [genreCovers, setGenreCovers] = useState<Record<string, string>>({});
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -28,7 +38,25 @@ export default function Welcome() {
         .limit(6);
       if (data?.length) setFeaturedAnime(data);
     };
+
+    const fetchGenreCovers = async () => {
+      const { data } = await supabase
+        .from('anime')
+        .select('cover_image, genres')
+        .not('cover_image', 'is', null)
+        .limit(100);
+      if (data) {
+        const covers: Record<string, string> = {};
+        for (const genre of GENRES) {
+          const match = data.find(a => a.genres?.includes(genre.name) && a.cover_image);
+          if (match?.cover_image) covers[genre.name] = match.cover_image;
+        }
+        setGenreCovers(covers);
+      }
+    };
+
     fetchFeatured();
+    fetchGenreCovers();
   }, []);
 
   useEffect(() => {
@@ -236,6 +264,42 @@ export default function Welcome() {
           >
             Start Watching
           </button>
+        </div>
+
+        {/* Genre Explorer Section */}
+        <div className="w-full max-w-4xl mx-auto mt-20 animate-fade-in" style={{ animationDelay: '700ms' }}>
+          <h2 className="text-xl sm:text-2xl font-bold text-center text-foreground mb-2">Explore by Genre</h2>
+          <p className="text-center text-muted-foreground text-sm mb-8">Find your next favorite anime by genre</p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+            {GENRES.map((genre) => (
+              <button
+                key={genre.name}
+                onClick={() => navigate(`/browse?genre=${encodeURIComponent(genre.name)}`)}
+                className="relative group h-28 sm:h-36 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.04] hover:shadow-xl"
+              >
+                {/* Background image */}
+                {genreCovers[genre.name] ? (
+                  <img
+                    src={genreCovers[genre.name]}
+                    alt={genre.name}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-card" />
+                )}
+                {/* Gradient overlay */}
+                <div className={`absolute inset-0 bg-gradient-to-t ${genre.gradient} to-transparent`} />
+                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-300" />
+                {/* Content */}
+                <div className="relative z-10 h-full flex flex-col items-center justify-center gap-2">
+                  <genre.icon className="w-7 h-7 sm:w-8 sm:h-8 text-white drop-shadow-lg" />
+                  <span className="text-white font-bold text-sm sm:text-base drop-shadow-lg">{genre.name}</span>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Features section */}

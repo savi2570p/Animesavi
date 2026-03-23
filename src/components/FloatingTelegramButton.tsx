@@ -2,6 +2,14 @@ import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function FloatingTelegramButton() {
+  // Hide on embed routes
+  const isEmbed = typeof window !== 'undefined' && (
+    window.location.pathname.startsWith('/embed/') ||
+    new URLSearchParams(window.location.search).get('embed') === 'true'
+  );
+
+  if (isEmbed) return null;
+
   const handleClick = () => {
     window.open('https://t.me/Lv_Savi', '_blank');
   };
