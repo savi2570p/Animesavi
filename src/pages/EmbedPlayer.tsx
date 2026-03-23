@@ -53,7 +53,9 @@ export default function EmbedPlayer() {
   const [episodeData, setEpisodeData] = useState<{ title: string; videoUrl: string | null } | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [showQualityMenu, setShowQualityMenu] = useState(false);
-  
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [isDownloading, setIsDownloading] = useState<string | null>(null);
+
   // Playback state
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
