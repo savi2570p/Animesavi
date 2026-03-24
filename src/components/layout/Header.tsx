@@ -281,16 +281,16 @@ export function Header() {
             </div>
           </form>
 
-          {/* Mobile Menu */}
+          {/* Hamburger Menu - All Screens */}
           <Sheet>
-            <SheetTrigger asChild className="lg:hidden flex-shrink-0">
+            <SheetTrigger asChild className="flex-shrink-0">
               <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8">
                 <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-72 bg-background border-border">
-              <div className="flex flex-col gap-4 mt-6">
-                {/* Mobile Search */}
+            <SheetContent side="right" className="w-64 sm:w-72 bg-background border-border">
+              <div className="flex flex-col gap-3 mt-6">
+                {/* Search */}
                 <form onSubmit={handleSearch}>
                   <div className="relative">
                     <Input
@@ -298,51 +298,49 @@ export function Header() {
                       placeholder="Search anime..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-4 pr-10 bg-card border-border rounded-lg"
+                      className="pl-3 pr-9 bg-card border-border rounded-lg h-8 text-xs"
                       autoFocus={false}
                       tabIndex={-1}
                     />
                     <Button 
                       type="submit" 
                       size="icon" 
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 bg-primary"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 bg-primary"
                     >
-                      <Search className="h-4 w-4" />
+                      <Search className="h-3 w-3" />
                     </Button>
                   </div>
                 </form>
 
-                {/* Mobile Nav Links */}
-                <nav className="flex flex-col gap-1">
+                {/* Nav Links */}
+                <nav className="flex flex-col gap-0.5">
                   {navLinks.map((link) => (
                     <Link 
                       key={link.label}
                       to={link.to} 
-                      className="flex items-center gap-3 text-base font-medium py-2 px-3 rounded-lg hover:bg-card transition-colors"
+                      className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors"
                     >
-                      {link.icon && <link.icon className="h-4 w-4 text-muted-foreground" />}
+                      {link.icon && <link.icon className="h-3.5 w-3.5 text-muted-foreground" />}
                       {link.label}
                     </Link>
                   ))}
                   
-                  {/* Join Party Option */}
-                  <div className="py-2 px-3">
+                  <div className="py-1.5 px-2.5">
                     <JoinPartyDialog 
                       trigger={
-                        <button className="flex items-center gap-3 text-base font-medium hover:text-primary transition-colors w-full text-left">
-                          <Users className="h-4 w-4 text-muted-foreground" />
+                        <button className="flex items-center gap-2.5 text-[13px] font-medium hover:text-primary transition-colors w-full text-left">
+                          <Users className="h-3.5 w-3.5 text-muted-foreground" />
                           Join Party
                         </button>
                       }
                     />
                   </div>
                   
-                  {/* View Party Option */}
-                  <div className="py-2 px-3">
+                  <div className="py-1.5 px-2.5">
                     <ViewPartyDialog 
                       trigger={
-                        <button className="flex items-center gap-3 text-base font-medium hover:text-primary transition-colors w-full text-left">
-                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        <button className="flex items-center gap-2.5 text-[13px] font-medium hover:text-primary transition-colors w-full text-left">
+                          <Eye className="h-3.5 w-3.5 text-muted-foreground" />
                           View Parties
                         </button>
                       }
@@ -353,48 +351,49 @@ export function Header() {
                     <>
                       <Link 
                         to="/favorites" 
-                        className="flex items-center gap-3 text-base font-medium py-2 px-3 rounded-lg hover:bg-card transition-colors"
+                        className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors"
                       >
-                        <Heart className="h-4 w-4 text-muted-foreground" />
+                        <Heart className="h-3.5 w-3.5 text-muted-foreground" />
                         Favorites
                       </Link>
                       <Link 
                         to="/history" 
-                        className="flex items-center gap-3 text-base font-medium py-2 px-3 rounded-lg hover:bg-card transition-colors"
+                        className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors"
                       >
-                        <History className="h-4 w-4 text-muted-foreground" />
+                        <History className="h-3.5 w-3.5 text-muted-foreground" />
                         Watch History
                       </Link>
                       <Link 
                         to="/downloads" 
-                        className="flex items-center gap-3 text-base font-medium py-2 px-3 rounded-lg hover:bg-card transition-colors"
+                        className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors"
                       >
-                        <Download className="h-4 w-4 text-muted-foreground" />
+                        <Download className="h-3.5 w-3.5 text-muted-foreground" />
                         Downloads
                       </Link>
                     </>
                   )}
                   <button
                     onClick={() => setVerifyOpen(true)}
-                    className="flex items-center gap-3 text-base font-medium py-2 px-3 rounded-lg hover:bg-card transition-colors w-full text-left"
+                    className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors w-full text-left"
                   >
-                    <BadgeCheck className="h-4 w-4 text-muted-foreground" />
+                    <BadgeCheck className="h-3.5 w-3.5 text-muted-foreground" />
                     Verify
                   </button>
                   <button
                     onClick={() => setShowWhatsNew(true)}
-                    className="flex items-center gap-3 text-base font-medium py-2 px-3 rounded-lg hover:bg-card transition-colors w-full text-left"
+                    className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors w-full text-left"
                   >
-                    <Sparkles className="h-4 w-4 text-muted-foreground" />
+                    <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
                     What's New
                   </button>
                   {canUpload() && (
                     <Button 
                       variant="outline" 
+                      size="sm"
                       onClick={handleUploadClick}
-                      className="flex items-center gap-2 justify-start mt-2 border-primary/30 text-primary"
+                      className="flex items-center gap-2 justify-start mt-2 border-primary/30 text-primary text-xs"
                     >
-                      <Upload className="h-4 w-4" />
+                      <Upload className="h-3.5 w-3.5" />
                       Upload Anime
                     </Button>
                   )}
