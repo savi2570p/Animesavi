@@ -102,92 +102,37 @@ export function WelcomePopup({ showNoticeOnly = false, onNoticeClose }: WelcomeP
 
       {/* What's New Popup — v9 */}
       <Dialog open={showNotice} onOpenChange={(open) => { if (!open) handleNoticeClose(); }}>
-        <DialogContent className="sm:max-w-lg border-primary/20 max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-heading text-center">
+        <DialogContent className="sm:max-w-sm border-primary/20 p-4">
+          <DialogHeader className="pb-1">
+            <DialogTitle className="text-base font-heading text-center">
               ✨ What's New — v9
             </DialogTitle>
-            <DialogDescription className="text-center text-sm text-muted-foreground">
-              Fresh updates just dropped — here's everything new
-            </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-3 pt-2">
-            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">📥</span>
-              <div>
-                <h4 className="font-medium text-foreground">4K Downloads</h4>
-                <p className="text-sm text-muted-foreground">Download episodes in 480p, 720p, 1080p, or 2160p (4K) — choose your quality before downloading.</p>
+          <div className="space-y-1.5 max-h-[50vh] overflow-y-auto pr-1">
+            {[
+              { icon: '📥', title: '4K Downloads', desc: 'Download in 480p, 720p, 1080p or 4K' },
+              { icon: '📴', title: 'Offline Playback', desc: 'Save & watch episodes without internet' },
+              { icon: '🎬', title: 'Advanced Embed Player', desc: 'Episode selector, audio switch & shortcuts' },
+              { icon: '🏠', title: 'New Landing Page', desc: 'Genre explorer, testimonials & FAQ' },
+              { icon: '📺', title: 'Hero Slider Upgrade', desc: 'Netflix-style animated progress bar' },
+              { icon: '📅', title: 'Compact Calendar', desc: 'Dates on left, anime scroll horizontally' },
+              { icon: '📱', title: 'Mobile Compact UI', desc: 'Smaller controls & compact popups' },
+              { icon: '🔗', title: 'Multi-Season Embeds', desc: 'Correct season in embed links' },
+              { icon: '⚡', title: 'Faster Downloads', desc: 'Instant download start, no delays' },
+            ].map((item) => (
+              <div key={item.title} className="flex items-center gap-2.5 p-2 bg-muted/40 rounded-md">
+                <span className="text-sm shrink-0">{item.icon}</span>
+                <div className="min-w-0">
+                  <h4 className="text-xs font-semibold text-foreground leading-tight">{item.title}</h4>
+                  <p className="text-[10px] text-muted-foreground leading-tight">{item.desc}</p>
+                </div>
               </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">📴</span>
-              <div>
-                <h4 className="font-medium text-foreground">Offline Playback</h4>
-                <p className="text-sm text-muted-foreground">Save episodes offline and watch them without internet using the built-in player with full controls.</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">🎬</span>
-              <div>
-                <h4 className="font-medium text-foreground">Advanced Embed Player</h4>
-                <p className="text-sm text-muted-foreground">Episode selector, audio switching, keyboard shortcuts (Space/F/M), and multi-season support built into the embed player.</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">🏠</span>
-              <div>
-                <h4 className="font-medium text-foreground">Revamped Landing Page</h4>
-                <p className="text-sm text-muted-foreground">New /welcome page with genre explorer, feature grid, testimonials, FAQ, and how-it-works section.</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">📺</span>
-              <div>
-                <h4 className="font-medium text-foreground">Hero Slider Upgrade</h4>
-                <p className="text-sm text-muted-foreground">Netflix-style animated progress bar replaced bulky dots — with a glowing active indicator.</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">📅</span>
-              <div>
-                <h4 className="font-medium text-foreground">Compact Calendar</h4>
-                <p className="text-sm text-muted-foreground">Release calendar redesigned with dates on the left and anime scrolling horizontally for easy browsing.</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">📱</span>
-              <div>
-                <h4 className="font-medium text-foreground">Mobile Compact UI</h4>
-                <p className="text-sm text-muted-foreground">Smaller header icons, home button, compact player controls, and a smaller continue-watching popup for mobile.</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">🔗</span>
-              <div>
-                <h4 className="font-medium text-foreground">Multi-Season Embeds</h4>
-                <p className="text-sm text-muted-foreground">Embed links now include season info — Season 2 episodes play correctly without defaulting to Season 1.</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <span className="text-lg">⚡</span>
-              <div>
-                <h4 className="font-medium text-foreground">Faster Downloads</h4>
-                <p className="text-sm text-muted-foreground">Embed player uses direct URLs for instant download start — no more 20-30 second wait times.</p>
-              </div>
-            </div>
+            ))}
           </div>
 
-          <DialogFooter className="flex-col sm:flex-row gap-2 pt-4">
-            <Button variant="default" className="anime-button flex-1" onClick={handleNoticeClose}>Got it! 👍</Button>
+          <DialogFooter className="pt-2">
+            <Button variant="default" size="sm" className="anime-button w-full" onClick={handleNoticeClose}>Got it! 👍</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
