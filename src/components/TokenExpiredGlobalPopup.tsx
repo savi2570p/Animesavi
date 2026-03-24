@@ -17,6 +17,10 @@ export function TokenExpiredGlobalPopup() {
     if (isEmbedRoute) return;
     let cancelled = false;
 
+    // Only show once per session
+    const alreadyShown = sessionStorage.getItem('token_expired_popup_shown');
+    if (alreadyShown) return;
+
     async function check() {
       if (isSuperAdmin(user?.email)) return;
 
@@ -25,6 +29,7 @@ export function TokenExpiredGlobalPopup() {
 
       const result = await fetchTokenAccessFromDB();
       if (!cancelled && !result.hasAccess) {
+        sessionStorage.setItem('token_expired_popup_shown', 'true');
         setShow(true);
       }
     }
