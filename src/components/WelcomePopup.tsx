@@ -63,21 +63,21 @@ export function WelcomePopup() {
         <DialogContent className="sm:max-w-sm border-primary/20 p-4" style={{ zIndex: 9998 }}>
           <DialogHeader className="pb-1">
             <DialogTitle className="text-base font-heading text-center">
-              ✨ What's New — v9
+              ✨ What's New — v10
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-1.5 max-h-[50vh] overflow-y-auto pr-1">
             {[
-              { icon: '📥', title: '4K Downloads', desc: 'Download in 480p, 720p, 1080p or 4K' },
-              { icon: '📴', title: 'Offline Playback', desc: 'Save & watch episodes without internet' },
-              { icon: '🎬', title: 'Advanced Embed Player', desc: 'Episode selector, audio switch & shortcuts' },
-              { icon: '🏠', title: 'New Landing Page', desc: 'Genre explorer, testimonials & FAQ' },
-              { icon: '📺', title: 'Hero Slider Upgrade', desc: 'Netflix-style animated progress bar' },
-              { icon: '📅', title: 'Compact Calendar', desc: 'Dates on left, anime scroll horizontally' },
-              { icon: '📱', title: 'Mobile Compact UI', desc: 'Smaller controls & compact popups' },
-              { icon: '🔗', title: 'Multi-Season Embeds', desc: 'Correct season in embed links' },
-              { icon: '⚡', title: 'Faster Downloads', desc: 'Instant download start, no delays' },
+              { icon: '⚠️', title: 'Report Button', desc: 'Send issues directly via Telegram' },
+              { icon: '🔔', title: 'Smart Popup Queue', desc: 'No overlapping popups, priority-based' },
+              { icon: '📱', title: 'Compact Mobile Controls', desc: 'Smaller server icons & player buttons' },
+              { icon: '📥', title: 'Offline Quality Picker', desc: 'Choose 480p, 720p, 1080p or 4K' },
+              { icon: '✨', title: 'Video Enhancement', desc: 'Sharper, crystal-clear 4K playback' },
+              { icon: '🚫', title: 'PiP Removed on Mobile', desc: 'Cleaner controls for small screens' },
+              { icon: '🖥️', title: 'Server Status Redesign', desc: 'H.Savi, SAVI.IN & Multi.Savi badges' },
+              { icon: '🎯', title: 'Hero Banner 16:9', desc: 'Widescreen slider with slim progress bars' },
+              { icon: '🔒', title: 'Branding Update', desc: 'AnimeSavi unified across all pages' },
             ].map((item) => (
               <div key={item.title} className="flex items-center gap-2.5 p-2 bg-muted/40 rounded-md">
                 <span className="text-sm shrink-0">{item.icon}</span>
