@@ -38,7 +38,7 @@ export function ServerStatusIndicator({
         {isServerLoading ? (
           <Wifi className="h-2.5 w-2.5 animate-pulse" />
         ) : fallbackOccurred ? (
-          <ArrowRightLeft className="h-3 w-3" />
+          <ArrowRightLeft className="h-2.5 w-2.5" />
         ) : (
           <CheckCircle2 className="h-3 w-3" />
         )}
