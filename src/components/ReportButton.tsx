@@ -14,6 +14,14 @@ export function ReportButton() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
 
+  // Hide on embed routes
+  const isEmbed = typeof window !== 'undefined' && (
+    window.location.pathname.startsWith('/embed/') ||
+    new URLSearchParams(window.location.search).get('embed') === 'true'
+  );
+
+  if (isEmbed) return null;
+
   const handleSend = () => {
     if (!message.trim()) {
       toast.error('Please describe your issue');

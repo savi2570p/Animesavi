@@ -940,17 +940,6 @@ export default function Watch() {
         </div>
       </div>
 
-      {/* Mobile Episode List - Below Player */}
-      <div className="lg:hidden container py-4 border-b border-border/30">
-        <EpisodeList
-          episodes={allEpisodes}
-          currentEpisodeId={episodeId || ''}
-          className="max-h-[250px]"
-          onEpisodeSelect={(newEpId) => navigate(`/watch/${newEpId}`, { replace: true })}
-          animeTitle={anime?.title}
-          seasonNumber={currentSeason?.season_number}
-        />
-      </div>
       {/* Below Player - Server Selection & Season Switcher */}
       <div className="container py-4 border-b border-border/30">
         <div className="flex flex-wrap items-center gap-4">
@@ -1014,6 +1003,18 @@ export default function Watch() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Mobile Episode List - Below Server/Season Selection */}
+      <div className="lg:hidden container py-4 border-b border-border/30">
+        <EpisodeList
+          episodes={allEpisodes}
+          currentEpisodeId={episodeId || ''}
+          className="max-h-[250px]"
+          onEpisodeSelect={(newEpId) => navigate(`/watch/${newEpId}`, { replace: true })}
+          animeTitle={anime?.title}
+          seasonNumber={currentSeason?.season_number}
+        />
       </div>
 
       {/* Episode Info & Navigation */}
