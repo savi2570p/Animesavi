@@ -341,17 +341,18 @@ export function FeaturedSlider() {
         </button>
       </div>
 
-      {/* Slim progress bar */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 w-[200px] flex items-center gap-0.5">
+      {/* Slim progress bar - cross-platform consistent */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 w-[200px] flex items-center gap-1">
         {featuredAnime.map((_, idx) => (
           <button
             key={idx}
             onClick={() => { setCurrentIndex(idx); }}
-            className="flex-1 h-[2px] rounded-full bg-foreground/20 overflow-hidden relative"
+            className="flex-1 h-[2px] rounded-[1px] bg-foreground/20 overflow-hidden relative"
+            style={{ WebkitAppearance: 'none', minHeight: '2px', maxHeight: '2px' }}
             aria-label={`Go to slide ${idx + 1}`}
           >
             <div
-              className={`absolute inset-y-0 left-0 rounded-full ${
+              className={`absolute inset-y-0 left-0 rounded-[1px] ${
                 idx === currentIndex
                   ? 'bg-primary shadow-[0_0_6px_hsl(var(--primary)/0.5)]'
                   : idx < currentIndex
