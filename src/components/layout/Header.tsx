@@ -41,7 +41,7 @@ import { WatchLaterButton } from '@/components/WatchLater';
 import { AccountSwitcher, rememberAccount } from '@/components/AccountSwitcher';
 import { hasValidTokenAccess } from '@/components/AccessBanner';
 import { VerifyTokenDialog } from '@/components/VerifyTokenDialog';
-import { WelcomePopup } from '@/components/WelcomePopup';
+import { usePopupQueue } from '@/contexts/PopupQueueContext';
 
 export function Header() {
   const { user, isUploader, isAdmin, signOut } = useAuth();
@@ -49,7 +49,7 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
-  const [showWhatsNew, setShowWhatsNew] = useState(false);
+  const { showWhatsNewManually } = usePopupQueue();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -380,7 +380,7 @@ export function Header() {
                      Verify
                   </button>
                   <button
-                    onClick={() => setShowWhatsNew(true)}
+                    onClick={() => showWhatsNewManually()}
                     className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors w-full text-left"
                   >
                     <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
@@ -402,7 +402,7 @@ export function Header() {
             </SheetContent>
           </Sheet>
           <VerifyTokenDialog open={verifyOpen} onOpenChange={setVerifyOpen} />
-          <WelcomePopup showNoticeOnly={showWhatsNew} onNoticeClose={() => setShowWhatsNew(false)} />
+          
         </div>
       </div>
     </header>

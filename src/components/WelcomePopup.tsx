@@ -1,5 +1,3 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -9,59 +7,19 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { usePopupQueue } from '@/contexts/PopupQueueContext';
 
-const NOTICE_VERSION = 'v9';
+export function WelcomePopup() {
+  const { activePopup, dismissPopup } = usePopupQueue();
 
-interface WelcomePopupProps {
-  showNoticeOnly?: boolean;
-  onNoticeClose?: () => void;
-}
-
-export function WelcomePopup({ showNoticeOnly = false, onNoticeClose }: WelcomePopupProps) {
-  const location = useLocation();
-  const [showWelcome, setShowWelcome] = useState(false);
-  const [showNotice, setShowNotice] = useState(false);
-
-  useEffect(() => {
-    if (showNoticeOnly) {
-      setShowNotice(true);
-      return;
-    }
-
-    if (location.pathname !== '/') return;
-
-    const hasSeenWelcome = localStorage.getItem('has_seen_welcome');
-    const seenNoticeVersion = localStorage.getItem('notice_popup_seen_version');
-    
-    if (!hasSeenWelcome) {
-      setShowWelcome(true);
-    } else if (seenNoticeVersion !== NOTICE_VERSION) {
-      setShowNotice(true);
-    }
-  }, [location.pathname, showNoticeOnly]);
-
-  const handleWelcomeClose = () => {
-    localStorage.setItem('has_seen_welcome', 'true');
-    setShowWelcome(false);
-    const seenNoticeVersion = localStorage.getItem('notice_popup_seen_version');
-    if (seenNoticeVersion !== NOTICE_VERSION) {
-      setShowNotice(true);
-    }
-  };
-
-  const handleNoticeClose = () => {
-    if (!showNoticeOnly) {
-      localStorage.setItem('notice_popup_seen_version', NOTICE_VERSION);
-    }
-    setShowNotice(false);
-    onNoticeClose?.();
-  };
+  const showWelcome = activePopup === 'welcome';
+  const showNotice = activePopup === 'whatsNew';
 
   return (
     <>
       {/* Welcome Popup */}
-      <Dialog open={showWelcome} onOpenChange={(open) => { if (!open) handleWelcomeClose(); }}>
-        <DialogContent className="sm:max-w-md border-primary/20">
+      <Dialog open={showWelcome} onOpenChange={(open) => { if (!open) dismissPopup(); }}>
+        <DialogContent className="sm:max-w-md border-primary/20" style={{ zIndex: 9997 }}>
           <DialogHeader>
             <div className="flex justify-center mb-3">
               <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl">
@@ -69,7 +27,7 @@ export function WelcomePopup({ showNoticeOnly = false, onNoticeClose }: WelcomeP
               </div>
             </div>
             <DialogTitle className="text-2xl font-heading text-center">
-              Welcome to <span className="anime-gradient-text">Anime.Savi</span>! 
+              Welcome to <span className="anime-gradient-text">AnimeSavi</span>! 
             </DialogTitle>
             <DialogDescription className="text-center text-base pt-3 space-y-3">
               <p>Hey there! 👋 Welcome to your new home for anime.</p>
@@ -95,14 +53,14 @@ export function WelcomePopup({ showNoticeOnly = false, onNoticeClose }: WelcomeP
             <p className="text-sm text-muted-foreground">New episodes added regularly. Bookmark us & never miss an update!</p>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2 pt-4">
-            <Button variant="default" className="anime-button flex-1" onClick={handleWelcomeClose}>Let's Go! 🚀</Button>
+            <Button variant="default" className="anime-button flex-1" onClick={dismissPopup}>Let's Go! 🚀</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* What's New Popup — v9 */}
-      <Dialog open={showNotice} onOpenChange={(open) => { if (!open) handleNoticeClose(); }}>
-        <DialogContent className="sm:max-w-sm border-primary/20 p-4">
+      <Dialog open={showNotice} onOpenChange={(open) => { if (!open) dismissPopup(); }}>
+        <DialogContent className="sm:max-w-sm border-primary/20 p-4" style={{ zIndex: 9998 }}>
           <DialogHeader className="pb-1">
             <DialogTitle className="text-base font-heading text-center">
               ✨ What's New — v9
@@ -132,7 +90,7 @@ export function WelcomePopup({ showNoticeOnly = false, onNoticeClose }: WelcomeP
           </div>
 
           <DialogFooter className="pt-2">
-            <Button variant="default" size="sm" className="anime-button w-full" onClick={handleNoticeClose}>Got it! 👍</Button>
+            <Button variant="default" size="sm" className="anime-button w-full" onClick={dismissPopup}>Got it! 👍</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
