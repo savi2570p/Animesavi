@@ -43,6 +43,8 @@ export default function EmbedPlayer() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   
+  const [domainAllowed, setDomainAllowed] = useState<boolean | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [episodeData, setEpisodeData] = useState<{ title: string; videoUrl: string | null } | null>(null);
@@ -66,6 +68,55 @@ export default function EmbedPlayer() {
   const [hlsLevels, setHlsLevels] = useState<{ id: number; height: number; label: string }[]>([]);
   const [currentLevel, setCurrentLevel] = useState(-1);
   const [isHlsActive, setIsHlsActive] = useState(false);
+  
+  const controlsTimeoutRef = useRef<NodeJS.Timeout>();
+  const lastTapRef = useRef<{ time: number; x: number }>({ time: 0, x: 0 });
+  const [doubleTapSide, setDoubleTapSide] = useState<'left' | 'right' | null>(null);
+
+  const deviceInfo = detectDeviceInfo();
+
+  // Domain + admin validation
+  useEffect(() => {
+    const checkAccess = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+        setIsAdmin(true);
+        setDomainAllowed(true);
+        return;
+      }
+
+      const hostname = window.location.hostname;
+      if (hostname === 'localhost' || ALLOWED_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d))) {
+        setDomainAllowed(true); return;
+      }
+      const referrer = document.referrer;
+      if (referrer) {
+        try {
+          const refHost = new URL(referrer).hostname;
+          if (ALLOWED_DOMAINS.some(d => refHost === d || refHost.endsWith('.' + d))) {
+            setDomainAllowed(true); return;
+          }
+        } catch {}
+      }
+      if (hostname.includes('lovable.app')) {
+        setDomainAllowed(true); return;
+      }
+      setDomainAllowed(false);
+    };
+    checkAccess();
+  }, []);
+
+  // Disable right-click + inspect for non-admins
+  useEffect(() => {
+    if (isAdmin) return;
+    const handleContextMenu = (e: MouseEvent) => e.preventDefault();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) || (e.ctrlKey && e.key === 'u')) e.preventDefault();
+    };
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => { document.removeEventListener('contextmenu', handleContextMenu); document.removeEventListener('keydown', handleKeyDown); };
+  }, [isAdmin]);
   
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   const lastTapRef = useRef<{ time: number; x: number }>({ time: 0, x: 0 });
