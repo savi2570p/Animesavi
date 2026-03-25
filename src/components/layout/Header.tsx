@@ -376,8 +376,8 @@ export function Header() {
                     onClick={() => setVerifyOpen(true)}
                     className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors w-full text-left"
                   >
-                    <BadgeCheck className="h-3.5 w-3.5 text-muted-foreground" />
-                    Verify
+                     <BadgeCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                     Member
                   </button>
                   <button
                     onClick={() => setShowWhatsNew(true)}

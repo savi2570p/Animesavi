@@ -18,7 +18,7 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [durationHours, setDurationHours] = useState<number | null>(null);
   const [activatedAt, setActivatedAt] = useState<string | null>(null);
-  const [role, setRole] = useState<string>('viewer');
+  const [role, setRole] = useState<string>('Member');
 
   useEffect(() => {
     if (!open) return;
