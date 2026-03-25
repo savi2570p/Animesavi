@@ -166,6 +166,8 @@ export default function AnimeDetail() {
     }
 
     setAnime(animeData);
+    // Preload cover and banner for instant display
+    preloadImages([animeData.cover_image, animeData.banner_image]);
 
     // Replace URL with slug-based URL for clean sharing
     if (animeData.title) {
