@@ -430,10 +430,6 @@ export default function Welcome() {
               Join Telegram Channel
               <ExternalLink className="w-3 h-3 opacity-60" />
             </a>
-            <button onClick={() => navigate('/auth')} className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold bg-card/60 border border-primary/30 text-foreground hover:bg-primary/10 hover:border-primary/50 transition-all duration-200 hover:scale-105">
-              <Crown className="w-4 h-4 text-primary" />
-              Create Free Account
-            </button>
           </div>
         </div>
 
