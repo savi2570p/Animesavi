@@ -307,7 +307,7 @@ export default function Downloads() {
             Downloads
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            {downloads.length} video{downloads.length !== 1 ? 's' : ''} • {formatBytes(totalSize)}
+            {downloads.length} video{downloads.length !== 1 ? 's' : ''} • {formatBytes(totalSize)} • Always available offline
           </p>
         </div>
         <div className="flex items-center gap-2">
