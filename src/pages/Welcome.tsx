@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Home, Play, Star, TrendingUp, Sparkles, Shield, Zap, Download, Smartphone, Globe, Users, Swords, Heart, Wand2, Ghost, Laugh, Brain, ChevronRight, Clock, Monitor, Headphones, Subtitles, Film, Tv, MessageSquare, Quote } from 'lucide-react';
+import { Search, Home, Play, Star, TrendingUp, Sparkles, Shield, Zap, Download, Smartphone, Globe, Users, Swords, Heart, Wand2, Ghost, Laugh, Brain, ChevronRight, Clock, Monitor, Headphones, Subtitles, Film, Tv, MessageSquare, Quote, Trophy, BookOpen, Bell, Wifi, Share2, ThumbsUp, MessageCircle, Crown, Flame } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import logo from '@/assets/logo.png';
 import { supabase } from '@/integrations/supabase/client';
@@ -445,11 +445,71 @@ export default function Welcome() {
           </div>
         </div>
 
-        {/* Testimonials Section */}
-        <div className="w-full max-w-4xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '850ms' }}>
+        {/* Community Section */}
+        <div className="w-full max-w-5xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '850ms' }}>
           <div className="text-center mb-10">
             <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">
               Community
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Join the AnimeSavi Community</h2>
+            <p className="text-muted-foreground text-sm mt-2 max-w-lg mx-auto">
+              Be part of India's fastest growing anime community. Connect, discuss, and watch together.
+            </p>
+          </div>
+
+          {/* Community Stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
+            {[
+              { icon: Users, label: 'Active Users', value: '50K+', color: 'text-blue-400' },
+              { icon: MessageCircle, label: 'Discussions', value: '12K+', color: 'text-green-400' },
+              { icon: ThumbsUp, label: 'Reviews', value: '8K+', color: 'text-yellow-400' },
+              { icon: Share2, label: 'Watch Parties', value: '3K+', color: 'text-pink-400' },
+            ].map((stat, i) => (
+              <div key={i} className="flex flex-col items-center gap-2 p-4 sm:p-5 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/20 transition-all duration-300">
+                <stat.icon className={`w-6 h-6 sm:w-7 sm:h-7 ${stat.color}`} />
+                <span className="text-xl sm:text-2xl font-extrabold text-foreground">{stat.value}</span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">{stat.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Community Features */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { icon: Users, title: 'Watch Parties', desc: 'Host or join real-time watch sessions with friends. Sync playback, chat live, and react together.', gradient: 'from-primary/10 to-primary/5' },
+              { icon: MessageSquare, title: 'Reviews & Ratings', desc: 'Rate anime, write reviews, and read what others think before starting a new series.', gradient: 'from-yellow-500/10 to-yellow-500/5' },
+              { icon: Bell, title: 'Release Alerts', desc: 'Get notified when new episodes drop. Set reminders for your favorite ongoing series.', gradient: 'from-blue-500/10 to-blue-500/5' },
+            ].map((feature, i) => (
+              <div
+                key={i}
+                className={`p-5 sm:p-6 rounded-2xl border border-border/30 hover:border-primary/20 transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br ${feature.gradient}`}
+              >
+                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <feature.icon className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="text-base font-bold text-foreground mb-2">{feature.title}</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Join CTA */}
+          <div className="mt-8 text-center">
+            <button
+              onClick={() => navigate('/auth')}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold bg-card/60 border border-primary/30 text-foreground hover:bg-primary/10 hover:border-primary/50 transition-all duration-200 hover:scale-105"
+            >
+              <Crown className="w-4 h-4 text-primary" />
+              Create Free Account
+            </button>
+          </div>
+        </div>
+
+        {/* Testimonials Section */}
+        <div className="w-full max-w-4xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '900ms' }}>
+          <div className="text-center mb-10">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">
+              Testimonials
             </span>
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">What Our Users Say</h2>
             <p className="text-muted-foreground text-sm mt-2">Trusted by thousands of anime fans across India</p>
@@ -463,6 +523,9 @@ export default function Welcome() {
               { name: 'Sneha D.', rating: 5, text: 'Finally an anime site that works perfectly on my phone. Controls are smooth and video loads instantly.', time: '1 week ago' },
               { name: 'Vikram P.', rating: 5, text: 'Multi-audio switching is incredible. I can switch between Hindi and Japanese mid-episode without any buffering.', time: '2 months ago' },
               { name: 'Ananya R.', rating: 4, text: 'Clean UI, fast streaming, and the library keeps growing. This is what every anime platform should be like.', time: '1 month ago' },
+              { name: 'Karan T.', rating: 5, text: 'I was paying for premium on other sites. AnimeSavi gives everything for free with ZERO ads. Unreal.', time: '5 days ago' },
+              { name: 'Meera J.', rating: 5, text: 'The release calendar and notification system is perfect. I never miss a new episode of my favorite shows.', time: '3 weeks ago' },
+              { name: 'Rohit B.', rating: 4, text: 'Casting to my TV works flawlessly. The picture-in-picture mode is also super handy when multitasking.', time: '2 weeks ago' },
             ].map((review, i) => (
               <div
                 key={i}
@@ -484,8 +547,8 @@ export default function Welcome() {
           </div>
         </div>
 
-        {/* FAQ Section */}
-        <div className="w-full max-w-3xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '900ms' }}>
+        {/* FAQ Section - Expanded */}
+        <div className="w-full max-w-3xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '950ms' }}>
           <div className="text-center mb-10">
             <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">
               FAQ
@@ -499,11 +562,17 @@ export default function Welcome() {
               { q: 'Is AnimeSavi really free?', a: 'Yes, 100% free! No subscriptions, no hidden fees, no premium plans. All anime, all episodes, completely free to watch and download.' },
               { q: 'Are there any ads on AnimeSavi?', a: 'Absolutely zero ads. No popups, no banners, no video ads before episodes. We believe anime should be enjoyed without interruptions.' },
               { q: 'Can I watch anime in Hindi?', a: 'Yes! We provide official Hindi dubbed versions of all anime. You can also switch to English or Japanese audio using the multi-audio feature.' },
-              { q: 'Can I download anime for offline viewing?', a: 'Yes! You can download episodes in 480p, 720p, or 1080p quality. Downloaded anime works completely offline — no internet needed to watch.' },
+              { q: 'Can I download anime for offline viewing?', a: 'Yes! You can download episodes in 480p, 720p, 1080p, or even 4K quality. Downloaded anime works completely offline — no internet needed to watch.' },
               { q: 'Does AnimeSavi work on mobile?', a: 'AnimeSavi is designed mobile-first. It works perfectly on all phones with compact controls, gesture navigation, and can be installed as a PWA app on your home screen.' },
               { q: 'What is a Watch Party?', a: 'Watch Parties let you watch anime together with friends in real-time. You can sync playback, chat, and react together — even if you\'re in different locations.' },
               { q: 'How often is new anime added?', a: 'We add new episodes and series regularly. Check the Release Calendar to see upcoming releases and set reminders for your favorite shows.' },
               { q: 'Is my data safe on AnimeSavi?', a: 'We take privacy seriously. Your watch history and preferences are stored securely. We never sell user data or track you with third-party analytics.' },
+              { q: 'Can I cast anime to my TV?', a: 'Yes! AnimeSavi supports Chromecast, AirPlay, and screen mirroring to any Smart TV. You can watch on the big screen without any extra apps.' },
+              { q: 'Do I need to create an account?', a: 'You can browse and watch without an account. However, creating a free account lets you save favorites, track watch history, join watch parties, and get release notifications.' },
+              { q: 'What video qualities are available?', a: 'We offer 480p, 720p, 1080p, and 2160p (4K) depending on the source. The player automatically selects the best quality for your connection.' },
+              { q: 'Can I request new anime to be added?', a: 'Yes! You can apply to become an uploader or submit requests through the community. We prioritize the most requested shows.' },
+              { q: 'Does AnimeSavi have subtitles?', a: 'Yes, we support subtitles in multiple languages. Subtitles are embedded in the video player and can be toggled on or off.' },
+              { q: 'Is AnimeSavi available outside India?', a: 'AnimeSavi is available worldwide! While our primary focus is Hindi dubbed anime, our platform works from anywhere in the world.' },
             ].map((faq, i) => (
               <AccordionItem key={i} value={`faq-${i}`} className="border border-border/30 rounded-xl px-4 overflow-hidden bg-card/20">
                 <AccordionTrigger className="text-sm sm:text-base font-medium text-foreground hover:no-underline py-4">
