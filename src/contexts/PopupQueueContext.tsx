@@ -37,7 +37,7 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
   const isHomeRoute = location.pathname === '/';
 
   useEffect(() => {
-    if (isEmbedRoute) {
+    if (isEmbedRoute || !isHomeRoute) {
       setReady(true);
       return;
     }
