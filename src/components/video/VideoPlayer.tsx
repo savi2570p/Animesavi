@@ -2594,6 +2594,7 @@ export function VideoPlayer({
                     type="range"
                     min="0"
                     max="100"
+                    step="any"
                     value={isNaN(progress) ? 0 : progress}
                     onChange={handleSeek}
                     className="absolute inset-0 w-full h-full bg-transparent rounded-full appearance-none cursor-pointer 
