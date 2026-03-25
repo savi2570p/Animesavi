@@ -142,7 +142,7 @@ export default function EmbedPlayer() {
       }
     };
     fetchEpisode();
-  }, [episodeId]);
+  }, [episodeId, domainAllowed]);
 
   // Video playback setup
   useEffect(() => {
