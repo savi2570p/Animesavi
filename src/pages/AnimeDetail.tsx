@@ -219,6 +219,8 @@ export default function AnimeDetail() {
 
     if (data) {
       setEpisodes(data);
+      // Preload first 8 episode thumbnails
+      preloadImages(data.slice(0, 8).map(ep => ep.thumbnail));
     }
   };
 
