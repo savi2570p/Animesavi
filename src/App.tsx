@@ -204,6 +204,7 @@ const App = () => (
           </BrowserRouter>
         </TooltipProvider>
       </MiniPlayerProvider>
+    </PopupQueueProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
