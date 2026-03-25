@@ -2922,13 +2922,13 @@ export function VideoPlayer({
                 <Cast className="w-3 h-3 md:w-[18px] md:h-[18px]" />
               </button>
 
-              {/* PiP */}
+              {/* PiP - Desktop only */}
               <button 
-                className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200"
+                className="hidden md:flex w-9 h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 items-center justify-center text-white transition-all duration-200"
                 onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                 title="Picture-in-Picture"
               >
-                <PictureInPicture2 className="w-3 h-3 md:w-[18px] md:h-[18px]" />
+                <PictureInPicture2 className="w-[18px] h-[18px]" />
               </button>
 
               {/* Fullscreen */}

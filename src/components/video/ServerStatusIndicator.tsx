@@ -27,7 +27,7 @@ export function ServerStatusIndicator({
       <Badge
         variant="outline"
         className={cn(
-          'gap-1.5 px-2.5 py-1 font-medium transition-all',
+          'gap-1 px-2 py-0.5 text-xs font-medium transition-all',
           isServerLoading
             ? 'border-yellow-500/50 text-yellow-400 animate-pulse'
             : fallbackOccurred
