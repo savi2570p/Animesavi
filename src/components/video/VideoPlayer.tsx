@@ -2617,7 +2617,7 @@ export function VideoPlayer({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5 md:gap-3">
                 <button 
-                  className="w-[34px] h-[34px] md:w-10 md:h-10 rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                  className="w-[28px] h-[28px] md:w-10 md:h-10 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                 >
                   {isPlaying ? <Pause className="w-4 h-4 md:w-5 md:h-5" /> : <Play className="w-4 h-4 md:w-5 md:h-5 fill-current ml-0.5" />}
@@ -2625,7 +2625,7 @@ export function VideoPlayer({
                 {/* Next Episode - in controls */}
                 {hasNextEpisode && onNextEpisode && !isMovie && (
                   <button 
-                    className="w-[34px] h-[34px] md:w-9 md:h-9 rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                    className="w-[28px] h-[28px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
                     onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
                     title="Next Episode"
                   >
@@ -2633,7 +2633,7 @@ export function VideoPlayer({
                   </button>
                 )}
                 <button 
-                  className="w-[34px] h-[34px] md:w-9 md:h-9 rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                  className="w-[28px] h-[28px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); skipForward(); }} 
                   title="Skip forward 10s"
                 >
@@ -2650,7 +2650,7 @@ export function VideoPlayer({
                 </div>
                 {/* Volume Button - Mobile */}
                 <button 
-                  className="md:hidden w-[34px] h-[34px] rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                  className="md:hidden w-[28px] h-[28px] rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); toggleMute(); }}
                 >
                   {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -2661,7 +2661,7 @@ export function VideoPlayer({
                 {/* Download - for Multi.Savi and SAVI.IN */}
                 {features.includes('download') && (
                   <button 
-                    className="w-[34px] h-[34px] md:w-9 md:h-9 rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                    className="w-[28px] h-[28px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
                     onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
                     title="Download"
                   >
@@ -2679,7 +2679,7 @@ export function VideoPlayer({
                 >
                   <DropdownMenuTrigger asChild>
                     <button 
-                      className="w-[34px] h-[34px] md:w-9 md:h-9 rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200 relative"
+                      className="w-[28px] h-[28px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200 relative"
                       onPointerDown={(e) => { 
                         e.stopPropagation(); 
                         e.preventDefault();
@@ -2707,7 +2707,7 @@ export function VideoPlayer({
                 </DropdownMenu>
                 {/* Screen Mirroring */}
                 <button 
-                  className="w-[34px] h-[34px] md:w-9 md:h-9 rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                  className="w-[28px] h-[28px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); setShowMirroringDialog(true); }} 
                   title="Screen Mirroring"
                 >
@@ -2715,7 +2715,7 @@ export function VideoPlayer({
                 </button>
                 {/* PiP */}
                 <button 
-                  className="w-[34px] h-[34px] md:w-9 md:h-9 rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                  className="w-[28px] h-[28px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                   title="Picture-in-Picture"
                 >
@@ -2723,7 +2723,7 @@ export function VideoPlayer({
                 </button>
                 {/* Fullscreen */}
                 <button 
-                  className="w-[34px] h-[34px] md:w-9 md:h-9 rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                  className="w-[28px] h-[28px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
                   title="Exit Fullscreen"
                 >
@@ -2820,7 +2820,7 @@ export function VideoPlayer({
              <div className="flex items-center gap-2.5 md:gap-3">
               {/* Play/Pause */}
               <button 
-                className="w-[34px] h-[34px] md:w-10 md:h-10 rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                className="w-[28px] h-[28px] md:w-10 md:h-10 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
                 onClick={(e) => { e.stopPropagation(); togglePlay(); }}
               >
                 {isPlaying ? <Pause className="w-4 h-4 md:w-5 md:h-5" /> : <Play className="w-4 h-4 md:w-5 md:h-5 fill-current ml-0.5" />}
@@ -2829,7 +2829,7 @@ export function VideoPlayer({
               {/* Next Episode */}
               {hasNextEpisode && onNextEpisode && !isMovie && (
                 <button 
-                  className="w-[34px] h-[34px] md:w-9 md:h-9 rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                  className="w-[28px] h-[28px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
                   title="Next Episode"
                 >
@@ -2839,7 +2839,7 @@ export function VideoPlayer({
 
               {/* Skip forward 10s */}
               <button 
-                className="w-[34px] h-[34px] md:w-9 md:h-9 rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                className="w-[28px] h-[28px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
                 onClick={(e) => { e.stopPropagation(); skipForward(); }} 
                 title="Skip forward 10s"
               >
@@ -2857,7 +2857,7 @@ export function VideoPlayer({
               </div>
               {/* Volume Button - Mobile */}
               <button 
-                className="md:hidden w-[34px] h-[34px] rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                className="md:hidden w-[28px] h-[28px] rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
                 onClick={(e) => { e.stopPropagation(); toggleMute(); }}
               >
                 {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -2868,7 +2868,7 @@ export function VideoPlayer({
               {/* Download - for RIP X and SAVI.IN */}
               {features.includes('download') && (
                 <button 
-                  className="w-[34px] h-[34px] md:w-9 md:h-9 rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                  className="w-[28px] h-[28px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
                   title="Download"
                 >
@@ -2886,7 +2886,7 @@ export function VideoPlayer({
               >
                 <DropdownMenuTrigger asChild>
                   <button 
-                    className="w-[34px] h-[34px] md:w-9 md:h-9 rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200 relative"
+                    className="w-[28px] h-[28px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200 relative"
                     onPointerDown={(e) => { 
                       e.stopPropagation(); 
                       e.preventDefault();
@@ -2915,7 +2915,7 @@ export function VideoPlayer({
 
               {/* Screen Mirroring */}
               <button 
-                className="w-[34px] h-[34px] md:w-9 md:h-9 rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200"
+                className="w-[28px] h-[28px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200"
                 onClick={(e) => { e.stopPropagation(); setShowMirroringDialog(true); }} 
                 title="Screen Mirroring"
               >
@@ -2924,7 +2924,7 @@ export function VideoPlayer({
 
               {/* PiP */}
               <button 
-                className="w-[34px] h-[34px] md:w-9 md:h-9 rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200"
+                className="w-[28px] h-[28px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200"
                 onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                 title="Picture-in-Picture"
               >
@@ -2933,7 +2933,7 @@ export function VideoPlayer({
 
               {/* Fullscreen */}
               <button 
-                className="w-[34px] h-[34px] md:w-9 md:h-9 rounded-full bg-white/[0.08] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200"
+                className="w-[28px] h-[28px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200"
                 onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
                 title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
               >

@@ -250,7 +250,7 @@ export function FeaturedSlider() {
   // ─── MOBILE: Taller cinematic slider ───
   return (
     <section className="relative w-full overflow-hidden">
-      <div className="relative w-full" style={{ aspectRatio: '3/4' }}>
+      <div className="relative w-full aspect-[16/9]">
         {featuredAnime.map((anime, idx) => (
           <div
             key={anime.id}
