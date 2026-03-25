@@ -32,7 +32,7 @@ const TESTIMONIALS = [
   { name: 'Karan T.', rating: 5, text: 'I was paying for premium on other sites. AnimeSavi gives everything for free with ZERO ads. Unreal.', time: '5 days ago' },
   { name: 'Meera J.', rating: 5, text: 'The release calendar and notification system is perfect. I never miss a new episode of my favorite shows.', time: '3 weeks ago' },
   { name: 'Rohit B.', rating: 4, text: 'Casting to my TV works flawlessly. The picture-in-picture mode is also super handy when multitasking.', time: '2 weeks ago' },
-  { name: 'Deepak N.', rating: 5, text: 'The 4K quality is stunning! Watching Dragon Ball Super in UHD on my big screen was an amazing experience.', time: '1 week ago' },
+  { name: 'Deepak N.', rating: 5, text: '{ name: 'Deepak N.', rating: 5, text: 'The 4K quality is stunning! Watching Jujutsu Kaisen, Death Note, Solo Leveling in UHD on my big screen was an amazing experience.', time: '1 week ago' },', time: '1 week ago' },
   { name: 'Simran L.', rating: 5, text: 'I love the PWA feature — installed it on my phone and it feels like a native app. So convenient!', time: '4 days ago' },
   { name: 'Aditya G.', rating: 4, text: 'The search works really well. I can find any anime in seconds. The genre filters are also very helpful.', time: '2 weeks ago' },
   { name: 'Pooja V.', rating: 5, text: 'My entire friend group uses AnimeSavi now. The watch party feature brought us together during lockdown.', time: '3 months ago' },
