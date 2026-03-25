@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { preloadFirstN } from '@/lib/imageOptimization';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -83,6 +84,8 @@ export function LatestEpisodes() {
       });
       
       setEpisodes(filteredEpisodes as unknown as LatestEpisode[]);
+      // Preload first 6 thumbnails for instant grid display
+      preloadFirstN(filteredEpisodes.slice(0, 6).map((ep: any) => ({ thumbnail: ep.thumbnail || ep.season?.anime?.cover_image })), 6);
     } catch (error) {
       console.error('Error fetching latest episodes:', error);
     } finally {

@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { preloadImages } from '@/lib/imageOptimization';
 import { BatchDownload } from '@/components/download/BatchDownload';
 import { AnimeReviews } from '@/components/anime/AnimeReviews';
 import { ShareEmbedPopup } from '@/components/ShareEmbedPopup';
@@ -165,6 +166,8 @@ export default function AnimeDetail() {
     }
 
     setAnime(animeData);
+    // Preload cover and banner for instant display
+    preloadImages([animeData.cover_image, animeData.banner_image]);
 
     // Replace URL with slug-based URL for clean sharing
     if (animeData.title) {
@@ -216,6 +219,8 @@ export default function AnimeDetail() {
 
     if (data) {
       setEpisodes(data);
+      // Preload first 8 episode thumbnails
+      preloadImages(data.slice(0, 8).map(ep => ep.thumbnail));
     }
   };
 

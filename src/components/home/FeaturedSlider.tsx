@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { preloadImages } from '@/lib/imageOptimization';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -63,7 +64,7 @@ export function FeaturedSlider() {
         if (error) throw error;
 
         if (data && data.length > 0) {
-          setFeaturedAnime(data.map(anime => ({
+          const items = data.map(anime => ({
             id: anime.id,
             title: anime.title,
             description: anime.description,
@@ -72,7 +73,10 @@ export function FeaturedSlider() {
             genres: anime.genres || [],
             views: getViewCount(anime.title, anime.view_count),
             status: anime.status,
-          })));
+          }));
+          setFeaturedAnime(items);
+          // Preload first 3 banner/cover images for instant slider
+          preloadImages(items.slice(0, 3).map(a => a.banner || a.thumbnail));
         }
       } catch (error) {
         console.error('Error fetching featured anime:', error);
