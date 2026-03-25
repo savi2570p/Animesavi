@@ -281,7 +281,13 @@ export default function EmbedPlayer() {
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (videoRef.current && duration) videoRef.current.currentTime = (parseFloat(e.target.value) / 100) * duration;
+    if (videoRef.current && duration) {
+      const val = parseFloat(e.target.value);
+      const time = (val / 100) * duration;
+      videoRef.current.currentTime = time;
+      setProgress(val);
+      setCurrentTime(time);
+    }
   };
 
   const toggleFullscreen = async () => {
@@ -437,11 +443,11 @@ export default function EmbedPlayer() {
               <span className="text-white/90 text-xs font-mono min-w-[40px]">{formatTime(currentTime)}</span>
               <div className="flex-1 relative">
                 <div className="absolute inset-0 h-1.5 bg-white/20 rounded-full pointer-events-none" style={{ width: `${bufferedProgress}%` }} />
-                <input type="range" min="0" max="100" value={progress} onChange={handleSeek}
+                <input type="range" min="0" max="100" step="any" value={progress} onChange={handleSeek}
                   className="w-full h-1.5 bg-white/30 rounded-full appearance-none cursor-pointer relative z-10
                     [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
                     [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg"
-                  style={{ background: `linear-gradient(to right, hsl(var(--primary)) ${progress}%, rgba(255,255,255,0.3) ${progress}%)` }}
+                  style={{ background: `linear-gradient(to right, hsl(var(--primary)) ${progress}%, rgba(255,255,255,0.3) ${progress}%)`, touchAction: 'none' }}
                 />
               </div>
               <span className="text-white/90 text-xs font-mono min-w-[40px]">{formatTime(duration)}</span>

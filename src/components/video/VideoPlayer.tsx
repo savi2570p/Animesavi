@@ -1252,6 +1252,7 @@ export function VideoPlayer({
     if (videoRef.current) {
       const current = videoRef.current.currentTime;
       const dur = videoRef.current.duration;
+      if (!dur || isNaN(dur)) return;
       const prog = (current / dur) * 100;
       setProgress(prog);
       setCurrentTime(current);
@@ -1372,10 +1373,12 @@ export function VideoPlayer({
   }, [showControls, duration, currentTime, hasNextEpisode, isMovie]);
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (videoRef.current) {
-      const time = (parseFloat(e.target.value) / 100) * videoRef.current.duration;
+    if (videoRef.current && videoRef.current.duration) {
+      const val = parseFloat(e.target.value);
+      const time = (val / 100) * videoRef.current.duration;
       videoRef.current.currentTime = time;
-      setProgress(parseFloat(e.target.value));
+      setProgress(val);
+      setCurrentTime(time);
     }
   };
 
@@ -2583,7 +2586,7 @@ export function VideoPlayer({
                   {/* Buffer progress (background) */}
                   <div className="absolute inset-0 bg-white/20 rounded-full" />
                   <div 
-                    className="absolute top-0 left-0 h-full bg-white/40 rounded-full transition-all duration-300"
+                    className="absolute top-0 left-0 h-full bg-white/40 rounded-full"
                     style={{ width: `${buffered}%` }}
                   />
                   {/* Playback progress (foreground) */}
@@ -2591,6 +2594,7 @@ export function VideoPlayer({
                     type="range"
                     min="0"
                     max="100"
+                    step="any"
                     value={isNaN(progress) ? 0 : progress}
                     onChange={handleSeek}
                     className="absolute inset-0 w-full h-full bg-transparent rounded-full appearance-none cursor-pointer 
@@ -2785,7 +2789,7 @@ export function VideoPlayer({
                 {/* Buffer progress (background) */}
                 <div className="absolute inset-0 bg-white/20 rounded-full" />
                 <div 
-                  className="absolute top-0 left-0 h-full bg-white/40 rounded-full transition-all duration-300"
+                  className="absolute top-0 left-0 h-full bg-white/40 rounded-full"
                   style={{ width: `${buffered}%` }}
                 />
                 {/* Playback progress (foreground) */}
@@ -2793,6 +2797,7 @@ export function VideoPlayer({
                   type="range"
                   min="0"
                   max="100"
+                  step="any"
                   value={isNaN(progress) ? 0 : progress}
                   onChange={handleSeek}
                   className="absolute inset-0 w-full h-full bg-transparent rounded-full appearance-none cursor-pointer 
