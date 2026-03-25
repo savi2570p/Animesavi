@@ -1373,10 +1373,12 @@ export function VideoPlayer({
   }, [showControls, duration, currentTime, hasNextEpisode, isMovie]);
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (videoRef.current) {
-      const time = (parseFloat(e.target.value) / 100) * videoRef.current.duration;
+    if (videoRef.current && videoRef.current.duration) {
+      const val = parseFloat(e.target.value);
+      const time = (val / 100) * videoRef.current.duration;
       videoRef.current.currentTime = time;
-      setProgress(parseFloat(e.target.value));
+      setProgress(val);
+      setCurrentTime(time);
     }
   };
 
