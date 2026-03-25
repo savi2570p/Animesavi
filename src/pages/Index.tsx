@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
@@ -19,6 +20,16 @@ import { AnimeCalendar } from '@/components/AnimeCalendar';
 
 export default function Index() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect first-time visitors to /welcome
+  useEffect(() => {
+    const hasVisited = localStorage.getItem('has_visited_home');
+    if (!hasVisited) {
+      localStorage.setItem('has_visited_home', 'true');
+      navigate('/welcome', { replace: true });
+    }
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-background">
