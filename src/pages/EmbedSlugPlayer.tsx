@@ -9,10 +9,15 @@ import {
 } from 'lucide-react';
 import Hls from 'hls.js';
 
-const ALLOWED_ORIGINS = [
-  'https://crunchysavi.lovable.app',
-  'https://animesavi.lovable.app',
-  'https://shaodw-arise.lovable.app',
+const ALLOWED_DOMAINS = [
+  'shadow-arise.lovable.app',
+  'crunchysavi.lovable.app',
+  'animesavi.lovable.app',
+];
+
+const ADMIN_EMAILS = [
+  'savi2570p@gmail.com',
+  'shadowtoonsindia@gmail.com',
 ];
 
 function isHlsUrl(url: string | null): boolean {

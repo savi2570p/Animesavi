@@ -4,9 +4,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   Play, Pause, Volume2, VolumeX, Maximize, 
   SkipForward, SkipBack, Loader2, AlertTriangle,
-  RefreshCw, Settings, Check, Download, Headphones
+  RefreshCw, Settings, Check, Download, Headphones, ShieldAlert
 } from 'lucide-react';
 import Hls from 'hls.js';
+
+const ALLOWED_DOMAINS = [
+  'shadow-arise.lovable.app',
+  'crunchysavi.lovable.app',
+  'animesavi.lovable.app',
+];
+
+const ADMIN_EMAILS = [
+  'savi2570p@gmail.com',
+  'shadowtoonsindia@gmail.com',
+];
 
 function detectDeviceInfo() {
   if (typeof window === 'undefined') return { isMobile: false, isIOS: false, isAndroid: false, isSafari: false };
