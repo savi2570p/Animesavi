@@ -238,6 +238,13 @@ img, video {
     backface-visibility: hidden;
   }
 
+  /* Crystal clear video enhancement */
+  video {
+    filter: contrast(1.03) saturate(1.05);
+    -webkit-filter: contrast(1.03) saturate(1.05);
+    image-rendering: high-quality;
+  }
+
   /* Smoother transitions globally */
   *, *::before, *::after {
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);

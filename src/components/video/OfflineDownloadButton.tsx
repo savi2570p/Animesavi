@@ -7,12 +7,21 @@ import {
   Trash2, 
   Loader2, 
   HardDrive,
-  Wifi,
   WifiOff,
-  Smartphone 
+  Smartphone,
+  Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 
 interface OfflineDownloadButtonProps {
   videoUrl: string | null;
@@ -28,6 +37,13 @@ interface OfflineDownloadButtonProps {
 const OFFLINE_CACHE_NAME = 'anime-offline-videos';
 const OFFLINE_INDEX_KEY = 'offline_video_index';
 
+const QUALITY_OPTIONS = [
+  { label: '480p', tag: 'SD' },
+  { label: '720p', tag: 'HD' },
+  { label: '1080p', tag: 'FHD' },
+  { label: '2160p', tag: '4K' },
+];
+
 interface OfflineVideoEntry {
   episodeId: string;
   episodeTitle: string;
@@ -37,6 +53,7 @@ interface OfflineVideoEntry {
   size: number;
   isIOSOptimized?: boolean;
   thumbnail?: string;
+  quality?: string;
 }
 
 export function OfflineDownloadButton({
@@ -55,20 +72,18 @@ export function OfflineDownloadButton({
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [cacheSize, setCacheSize] = useState<string>('');
   const [isIOSOptimized, setIsIOSOptimized] = useState(false);
+  const [showQualityDialog, setShowQualityDialog] = useState(false);
+  const [selectedQuality, setSelectedQuality] = useState<string | null>(null);
 
-  // Determine the best video URL to download (prefer iOS-optimized on iOS devices)
   const effectiveVideoUrl = (isIOSDevice && iosVideoUrl) ? iosVideoUrl : videoUrl;
 
-  // Check if video is already cached
   useEffect(() => {
     const checkCache = async () => {
       if (!('caches' in window)) return;
-
       try {
         const cache = await caches.open(OFFLINE_CACHE_NAME);
         const index = getOfflineIndex();
         const entry = index.find(e => e.episodeId === episodeId);
-        
         if (entry) {
           const response = await cache.match(entry.videoUrl);
           if (response) {
@@ -76,7 +91,6 @@ export function OfflineDownloadButton({
             setCacheSize(formatBytes(entry.size));
             setIsIOSOptimized(entry.isIOSOptimized || false);
           } else {
-            // Entry exists but video is not cached - clean up
             removeFromIndex(episodeId);
           }
         }
@@ -84,18 +98,14 @@ export function OfflineDownloadButton({
         console.error('Error checking cache:', error);
       }
     };
-
     checkCache();
   }, [episodeId, effectiveVideoUrl]);
 
-  // Monitor online status
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
-
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -135,43 +145,33 @@ export function OfflineDownloadButton({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const downloadForOffline = useCallback(async () => {
+  const downloadForOffline = useCallback(async (quality: string) => {
     const urlToDownload = effectiveVideoUrl;
-    
     if (!urlToDownload) {
       toast.error('No video URL available');
       return;
     }
-
     if (!('caches' in window)) {
       toast.error('Offline caching is not supported on this device');
       return;
     }
-
     if (!isOnline) {
       toast.error('You need to be online to download');
       return;
     }
 
+    setShowQualityDialog(false);
     setIsDownloading(true);
     setDownloadProgress(0);
 
     try {
       const cache = await caches.open(OFFLINE_CACHE_NAME);
-
-      // Fetch with progress tracking
       const response = await fetch(urlToDownload);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const contentLength = response.headers.get('content-length');
       const total = contentLength ? parseInt(contentLength, 10) : 0;
-      
-      if (!response.body) {
-        throw new Error('Response body is not available');
-      }
+      if (!response.body) throw new Error('Response body is not available');
 
       const reader = response.body.getReader();
       const chunks: Uint8Array[] = [];
@@ -179,12 +179,9 @@ export function OfflineDownloadButton({
 
       while (true) {
         const { done, value } = await reader.read();
-
         if (done) break;
-
         chunks.push(value);
         receivedLength += value.length;
-
         if (total > 0) {
           const pct = Math.round((receivedLength / total) * 100);
           setDownloadProgress(pct);
@@ -192,7 +189,6 @@ export function OfflineDownloadButton({
         }
       }
 
-      // Create blob from chunks - convert Uint8Array to ArrayBuffer
       const allChunks = new Uint8Array(receivedLength);
       let position = 0;
       for (const chunk of chunks) {
@@ -200,8 +196,7 @@ export function OfflineDownloadButton({
         position += chunk.length;
       }
       const blob = new Blob([allChunks.buffer]);
-      
-      // Store in cache
+
       const cacheResponse = new Response(blob, {
         headers: {
           'Content-Type': response.headers.get('Content-Type') || 'video/mp4',
@@ -211,7 +206,6 @@ export function OfflineDownloadButton({
 
       await cache.put(urlToDownload, cacheResponse);
 
-      // Save to index with iOS optimization flag
       const isOptimized = isIOSDevice && iosVideoUrl === urlToDownload;
       saveToIndex({
         episodeId,
@@ -222,15 +216,15 @@ export function OfflineDownloadButton({
         size: receivedLength,
         isIOSOptimized: isOptimized,
         thumbnail: thumbnail || undefined,
+        quality,
       });
 
       setIsCached(true);
       setCacheSize(formatBytes(receivedLength));
       setIsIOSOptimized(isOptimized);
-      
-      const formatLabel = isOptimized ? ' (iOS Optimized)' : '';
+
       window.dispatchEvent(new CustomEvent('offline-download-progress', { detail: { title: episodeTitle, progress: 100, done: true } }));
-      toast.success(`Video saved for offline viewing!${formatLabel}`, {
+      toast.success(`Saved offline in ${quality}!`, {
         description: `${episodeTitle} (${formatBytes(receivedLength)})`,
       });
     } catch (error) {
@@ -239,12 +233,12 @@ export function OfflineDownloadButton({
     } finally {
       setIsDownloading(false);
       setDownloadProgress(0);
+      setSelectedQuality(null);
     }
-  }, [effectiveVideoUrl, iosVideoUrl, episodeId, episodeTitle, animeTitle, isOnline, isIOSDevice]);
+  }, [effectiveVideoUrl, iosVideoUrl, episodeId, episodeTitle, animeTitle, isOnline, isIOSDevice, thumbnail]);
 
   const removeOfflineVideo = useCallback(async () => {
     if (!effectiveVideoUrl) return;
-
     try {
       const cache = await caches.open(OFFLINE_CACHE_NAME);
       await cache.delete(effectiveVideoUrl);
@@ -259,9 +253,7 @@ export function OfflineDownloadButton({
     }
   }, [effectiveVideoUrl, episodeId]);
 
-  if (!('caches' in window)) {
-    return null; // Don't show button if caching isn't supported
-  }
+  if (!('caches' in window)) return null;
 
   if (isDownloading) {
     return (
@@ -269,9 +261,6 @@ export function OfflineDownloadButton({
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span>Downloading... {downloadProgress}%</span>
-          {isIOSDevice && iosVideoUrl && (
-            <span className="text-xs text-primary">(iOS Optimized)</span>
-          )}
         </div>
         <Progress value={downloadProgress} className="h-2" />
       </div>
@@ -281,23 +270,13 @@ export function OfflineDownloadButton({
   if (isCached) {
     return (
       <div className={cn("flex items-center gap-2", className)}>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2 text-primary border-primary/30 bg-primary/10"
-          disabled
-        >
+        <Button variant="outline" size="sm" className="gap-2 text-primary border-primary/30 bg-primary/10" disabled>
           <CheckCircle2 className="h-4 w-4" />
           Saved Offline
           {isIOSOptimized && <Smartphone className="h-3 w-3" />}
           {cacheSize && <span className="text-xs opacity-70">({cacheSize})</span>}
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={removeOfflineVideo}
-          className="text-destructive hover:text-destructive"
-        >
+        <Button variant="ghost" size="sm" onClick={removeOfflineVideo} className="text-destructive hover:text-destructive">
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
@@ -305,33 +284,78 @@ export function OfflineDownloadButton({
   }
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={downloadForOffline}
-      disabled={!isOnline || !effectiveVideoUrl}
-      className={cn("gap-2", className)}
-    >
-      {isOnline ? (
-        <>
-          {isIOSDevice && iosVideoUrl ? (
-            <>
-              <Smartphone className="h-4 w-4" />
-              Save Offline (iOS)
-            </>
-          ) : (
-            <>
-              <HardDrive className="h-4 w-4" />
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setShowQualityDialog(true)}
+        disabled={!isOnline || !effectiveVideoUrl}
+        className={cn("gap-2", className)}
+      >
+        {isOnline ? (
+          <>
+            <HardDrive className="h-4 w-4" />
+            Save Offline
+          </>
+        ) : (
+          <>
+            <WifiOff className="h-4 w-4" />
+            Offline
+          </>
+        )}
+      </Button>
+
+      <AlertDialog open={showQualityDialog} onOpenChange={(v) => { setShowQualityDialog(v); if (!v) setSelectedQuality(null); }}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <HardDrive className="w-5 h-5 text-primary" />
               Save Offline
-            </>
-          )}
-        </>
-      ) : (
-        <>
-          <WifiOff className="h-4 w-4" />
-          Offline
-        </>
-      )}
-    </Button>
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 pt-2">
+                <p className="text-sm text-muted-foreground">Select quality for offline download:</p>
+                <div className="rounded-lg bg-muted/50 p-3 space-y-1">
+                  <p className="text-sm font-semibold text-foreground">{animeTitle}</p>
+                  <p className="text-sm text-muted-foreground">{episodeTitle}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {QUALITY_OPTIONS.map((q) => (
+                    <button
+                      key={q.label}
+                      onClick={() => setSelectedQuality(q.label)}
+                      className={`relative flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                        selectedQuality === q.label
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border bg-muted/30 text-foreground hover:border-primary/50 hover:bg-muted/50'
+                      }`}
+                    >
+                      <span>{q.label}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                        selectedQuality === q.label ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                      }`}>{q.tag}</span>
+                      {selectedQuality === q.label && (
+                        <Check className="absolute -top-1 -right-1 w-4 h-4 text-primary-foreground bg-primary rounded-full p-0.5" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-2 sm:gap-2">
+            <AlertDialogCancel className="flex-1 mt-0">Cancel</AlertDialogCancel>
+            <Button
+              onClick={() => selectedQuality && downloadForOffline(selectedQuality)}
+              disabled={!selectedQuality}
+              className="flex-1 gap-2"
+            >
+              <Download className="w-4 h-4" />
+              {selectedQuality ? `Save ${selectedQuality}` : 'Select Quality'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
