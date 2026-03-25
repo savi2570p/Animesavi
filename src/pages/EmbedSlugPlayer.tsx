@@ -426,13 +426,13 @@ export default function EmbedSlugPlayer() {
   // Blocked domain
   if (domainAllowed === false) {
     return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-6 p-6 text-center">
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-6 p-6 text-center select-none" style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}>
         <ShieldAlert className="w-16 h-16 text-destructive" />
         <h2 className="text-white text-xl font-bold">Playback Restricted</h2>
-        <p className="text-white/70 max-w-md">Embedded playback is restricted to authorized domains only.</p>
+        <p className="text-white/70 max-w-md">These links are restricted only for authorized websites. For more visit</p>
         <a href="https://animesavi.lovable.app" target="_blank" rel="noopener noreferrer"
-          className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
-          Go to AnimeSavi
+          className="px-8 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold text-lg">
+          AnimeSavi
         </a>
       </div>
     );
