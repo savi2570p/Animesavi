@@ -4,9 +4,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   Play, Pause, Volume2, VolumeX, Maximize, 
   SkipForward, SkipBack, Loader2, AlertTriangle,
-  RefreshCw, Settings, Check, Download, Headphones
+  RefreshCw, Settings, Check, Download, Headphones, ShieldAlert
 } from 'lucide-react';
 import Hls from 'hls.js';
+
+const ALLOWED_DOMAINS = [
+  'shadow-arise.lovable.app',
+  'crunchysavi.lovable.app',
+  'animesavi.lovable.app',
+];
+
+const ADMIN_EMAILS = [
+  'savi2570p@gmail.com',
+  'shadowtoonsindia@gmail.com',
+];
 
 function detectDeviceInfo() {
   if (typeof window === 'undefined') return { isMobile: false, isIOS: false, isAndroid: false, isSafari: false };
@@ -32,6 +43,8 @@ export default function EmbedPlayer() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   
+  const [domainAllowed, setDomainAllowed] = useState<boolean | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [episodeData, setEpisodeData] = useState<{ title: string; videoUrl: string | null } | null>(null);
@@ -62,13 +75,58 @@ export default function EmbedPlayer() {
 
   const deviceInfo = detectDeviceInfo();
 
+  // Domain + admin validation
+  useEffect(() => {
+    const checkAccess = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+        setIsAdmin(true);
+        setDomainAllowed(true);
+        return;
+      }
+
+      const hostname = window.location.hostname;
+      if (hostname === 'localhost' || ALLOWED_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d))) {
+        setDomainAllowed(true); return;
+      }
+      const referrer = document.referrer;
+      if (referrer) {
+        try {
+          const refHost = new URL(referrer).hostname;
+          if (ALLOWED_DOMAINS.some(d => refHost === d || refHost.endsWith('.' + d))) {
+            setDomainAllowed(true); return;
+          }
+        } catch {}
+      }
+      if (hostname.includes('lovable.app')) {
+        setDomainAllowed(true); return;
+      }
+      setDomainAllowed(false);
+    };
+    checkAccess();
+  }, []);
+
+  // Disable right-click + inspect for non-admins
+  useEffect(() => {
+    if (isAdmin) return;
+    const handleContextMenu = (e: MouseEvent) => e.preventDefault();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) || (e.ctrlKey && e.key === 'u')) e.preventDefault();
+    };
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => { document.removeEventListener('contextmenu', handleContextMenu); document.removeEventListener('keydown', handleKeyDown); };
+  }, [isAdmin]);
+  
+
   // Mobile compact sizes
   const btnSize = deviceInfo.isMobile ? 'w-[30px] h-[30px]' : 'w-10 h-10';
   const iconSize = deviceInfo.isMobile ? 'w-[15px] h-[15px]' : 'w-5 h-5';
   const gapSize = deviceInfo.isMobile ? 'gap-[6px]' : 'gap-2';
 
-  // Fetch episode data
+  // Fetch episode data (only if domain allowed)
   useEffect(() => {
+    if (domainAllowed !== true) return;
     const fetchEpisode = async () => {
       if (!episodeId) { setFetchError('No episode ID provided'); return; }
       try {
@@ -84,7 +142,7 @@ export default function EmbedPlayer() {
       }
     };
     fetchEpisode();
-  }, [episodeId]);
+  }, [episodeId, domainAllowed]);
 
   // Video playback setup
   useEffect(() => {
@@ -265,7 +323,26 @@ export default function EmbedPlayer() {
 
   const closeAllMenus = () => { setShowQualityMenu(false); setShowDownloadMenu(false); setShowAudioMenu(false); };
 
-  if (fetchError) {
+  // Blocked domain
+  if (domainAllowed === false) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-6 p-6 text-center select-none" style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}>
+        <ShieldAlert className="w-16 h-16 text-destructive" />
+        <h2 className="text-white text-xl font-bold">Playback Restricted</h2>
+        <p className="text-white/70 max-w-md">These links are restricted only for authorized websites. For more visit</p>
+        <a href="https://animesavi.lovable.app" target="_blank" rel="noopener noreferrer"
+          className="px-8 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold text-lg">
+          AnimeSavi
+        </a>
+      </div>
+    );
+  }
+
+  if (domainAllowed === null) {
+    return <div className="fixed inset-0 bg-black flex items-center justify-center"><Loader2 className="w-12 h-12 text-primary animate-spin" /></div>;
+  }
+
+
     return (
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 p-4">
         <AlertTriangle className="w-12 h-12 text-destructive" />
