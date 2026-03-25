@@ -27,7 +27,7 @@ export function ServerStatusIndicator({
       <Badge
         variant="outline"
         className={cn(
-          'gap-1.5 px-2.5 py-1 font-medium transition-all',
+          'gap-1 px-2 py-0.5 text-xs font-medium transition-all',
           isServerLoading
             ? 'border-yellow-500/50 text-yellow-400 animate-pulse'
             : fallbackOccurred
@@ -36,11 +36,11 @@ export function ServerStatusIndicator({
         )}
       >
         {isServerLoading ? (
-          <Wifi className="h-3 w-3 animate-pulse" />
+          <Wifi className="h-2.5 w-2.5 animate-pulse" />
         ) : fallbackOccurred ? (
-          <ArrowRightLeft className="h-3 w-3" />
+          <ArrowRightLeft className="h-2.5 w-2.5" />
         ) : (
-          <CheckCircle2 className="h-3 w-3" />
+          <CheckCircle2 className="h-2.5 w-2.5" />
         )}
         {config.name}
         {isServerLoading && ' …'}

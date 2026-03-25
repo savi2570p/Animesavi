@@ -62,7 +62,7 @@ function PrivacyPolicyButton() {
               
               <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
                 <p className="text-foreground font-medium text-center">
-                  Anime.Savi.me does not store any files on its own server. We only index links from the internet which are hosted on third-party services. We index links just like Google.
+                  AnimeSavi does not store any files on its own server. We only index links from the internet which are hosted on third-party services. We index links just like Google.
                 </p>
               </div>
               
@@ -156,7 +156,7 @@ function TermsOfServiceButton() {
               
               <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
                 <p className="text-foreground font-medium text-center">
-                  Anime.Savi.me does not store any files on its own server. We only index links from the internet which are hosted on third-party services. We index links just like Google.
+                  AnimeSavi does not store any files on its own server. We only index links from the internet which are hosted on third-party services. We index links just like Google.
                 </p>
               </div>
               
