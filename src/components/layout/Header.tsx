@@ -41,7 +41,7 @@ import { WatchLaterButton } from '@/components/WatchLater';
 import { AccountSwitcher, rememberAccount } from '@/components/AccountSwitcher';
 import { hasValidTokenAccess } from '@/components/AccessBanner';
 import { VerifyTokenDialog } from '@/components/VerifyTokenDialog';
-import { WelcomePopup } from '@/components/WelcomePopup';
+import { usePopupQueue } from '@/contexts/PopupQueueContext';
 
 export function Header() {
   const { user, isUploader, isAdmin, signOut } = useAuth();
