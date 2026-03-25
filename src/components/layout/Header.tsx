@@ -49,7 +49,7 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
-  const [showWhatsNew, setShowWhatsNew] = useState(false);
+  const { showWhatsNewManually } = usePopupQueue();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
