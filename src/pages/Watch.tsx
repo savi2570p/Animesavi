@@ -1005,6 +1005,18 @@ export default function Watch() {
         </div>
       </div>
 
+      {/* Mobile Episode List - Below Server/Season Selection */}
+      <div className="lg:hidden container py-4 border-b border-border/30">
+        <EpisodeList
+          episodes={allEpisodes}
+          currentEpisodeId={episodeId || ''}
+          className="max-h-[250px]"
+          onEpisodeSelect={(newEpId) => navigate(`/watch/${newEpId}`, { replace: true })}
+          animeTitle={anime?.title}
+          seasonNumber={currentSeason?.season_number}
+        />
+      </div>
+
       {/* Episode Info & Navigation */}
       <div className="container py-6">
         <div className="flex flex-col gap-8">
