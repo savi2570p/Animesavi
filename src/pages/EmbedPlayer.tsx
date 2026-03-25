@@ -541,5 +541,5 @@ export default function EmbedPlayer() {
         </div>
       </div>
     </div>
-  );
 }
+
