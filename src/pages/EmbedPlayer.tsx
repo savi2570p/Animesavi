@@ -124,8 +124,9 @@ export default function EmbedPlayer() {
   const iconSize = deviceInfo.isMobile ? 'w-[15px] h-[15px]' : 'w-5 h-5';
   const gapSize = deviceInfo.isMobile ? 'gap-[6px]' : 'gap-2';
 
-  // Fetch episode data
+  // Fetch episode data (only if domain allowed)
   useEffect(() => {
+    if (domainAllowed !== true) return;
     const fetchEpisode = async () => {
       if (!episodeId) { setFetchError('No episode ID provided'); return; }
       try {
