@@ -402,7 +402,7 @@ export function Header() {
             </SheetContent>
           </Sheet>
           <VerifyTokenDialog open={verifyOpen} onOpenChange={setVerifyOpen} />
-          <WelcomePopup showNoticeOnly={showWhatsNew} onNoticeClose={() => setShowWhatsNew(false)} />
+          
         </div>
       </div>
     </header>
