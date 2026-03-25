@@ -9,11 +9,13 @@ const NOTICE_VERSION = 'v9';
 interface PopupQueueContextType {
   activePopup: PopupType | null;
   dismissPopup: () => void;
+  showWhatsNewManually: () => void;
 }
 
 const PopupQueueContext = createContext<PopupQueueContextType>({
   activePopup: null,
   dismissPopup: () => {},
+  showWhatsNewManually: () => {},
 });
 
 export const usePopupQueue = () => useContext(PopupQueueContext);
@@ -22,8 +24,8 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [queue, setQueue] = useState<PopupType[]>([]);
   const [ready, setReady] = useState(false);
+  const [manualWhatsNew, setManualWhatsNew] = useState(false);
 
-  // Skip on embed routes
   const isEmbedRoute = typeof window !== 'undefined' && (
     window.location.pathname.startsWith('/embed/') ||
     new URLSearchParams(window.location.search).get('embed') === 'true'
@@ -40,7 +42,7 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
     async function buildQueue() {
       const popups: PopupType[] = [];
 
-      // 1. Check expired access (highest priority)
+      // 1. Expired access (highest priority)
       const alreadyShownExpired = sessionStorage.getItem('token_expired_popup_shown');
       if (!alreadyShownExpired && !isSuperAdmin(user?.email)) {
         try {
@@ -58,7 +60,7 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
 
       if (cancelled) return;
 
-      // 2. Check What's New
+      // 2. What's New
       const hasSeenWelcome = localStorage.getItem('has_seen_welcome');
       const seenNoticeVersion = localStorage.getItem('notice_popup_seen_version');
 
@@ -66,7 +68,7 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
         popups.push('whatsNew');
       }
 
-      // 3. Check first visit (Welcome)
+      // 3. Welcome (first visit)
       if (!hasSeenWelcome) {
         popups.push('welcome');
       }
@@ -82,6 +84,11 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
   }, [user?.email, user?.id, isEmbedRoute]);
 
   const dismissPopup = useCallback(() => {
+    if (manualWhatsNew) {
+      setManualWhatsNew(false);
+      return;
+    }
+
     setQueue((prev) => {
       const current = prev[0];
       if (current === 'expired') {
@@ -92,8 +99,7 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('has_seen_welcome', 'true');
       }
       const next = prev.slice(1);
-      // If welcome was dismissed and whatsNew is next, that's fine
-      // But if welcome was dismissed and whatsNew wasn't in queue, check if we need it
+      // After welcome dismiss, check if whatsNew should follow
       if (current === 'welcome' && !next.includes('whatsNew')) {
         const seenNoticeVersion = localStorage.getItem('notice_popup_seen_version');
         if (seenNoticeVersion !== NOTICE_VERSION) {
@@ -102,11 +108,21 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
       }
       return next;
     });
+  }, [manualWhatsNew]);
+
+  const showWhatsNewManually = useCallback(() => {
+    setManualWhatsNew(true);
   }, []);
 
-  const activePopup = ready && queue.length > 0 ? queue[0] : null;
+  // Determine active popup: manual whatsNew takes precedence if no queue popup
+  let activePopup: PopupType | null = null;
+  if (ready && queue.length > 0) {
+    activePopup = queue[0];
+  } else if (manualWhatsNew) {
+    activePopup = 'whatsNew';
+  }
 
-  // Lock scroll when popup is active
+  // Lock scroll
   useEffect(() => {
     if (activePopup) {
       document.body.style.overflow = 'hidden';
@@ -117,7 +133,7 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
   }, [activePopup]);
 
   return (
-    <PopupQueueContext.Provider value={{ activePopup, dismissPopup }}>
+    <PopupQueueContext.Provider value={{ activePopup, dismissPopup, showWhatsNewManually }}>
       {children}
     </PopupQueueContext.Provider>
   );
