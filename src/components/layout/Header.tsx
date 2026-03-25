@@ -380,11 +380,7 @@ export function Header() {
                      Verify
                   </button>
                   <button
-                    onClick={() => {
-                      import('@/contexts/PopupQueueContext').then(({ usePopupQueue }) => {});
-                      // Use the context from the header's scope
-                      showWhatsNewManuallyRef();
-                    }}
+                    onClick={() => showWhatsNewManually()}
                     className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors w-full text-left"
                   >
                     <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
