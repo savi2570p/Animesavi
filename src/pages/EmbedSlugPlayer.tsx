@@ -76,21 +76,36 @@ export default function EmbedSlugPlayer() {
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   const deviceInfo = detectDeviceInfo();
 
-  // Domain validation
+  // Domain + admin validation
   useEffect(() => {
-    const referrer = document.referrer;
-    const isInIframe = window.self !== window.top;
+    const checkAccess = async () => {
+      // Check admin bypass first
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+        setDomainAllowed(true); return;
+      }
 
-    if (referrer && ALLOWED_ORIGINS.some(origin => referrer.startsWith(origin))) {
-      setDomainAllowed(true); return;
-    }
-    if (!isInIframe && ALLOWED_ORIGINS.some(o => window.location.origin === o)) {
-      setDomainAllowed(true); return;
-    }
-    if (window.location.hostname === 'localhost' || window.location.hostname.includes('lovable.app')) {
-      setDomainAllowed(true); return;
-    }
-    setDomainAllowed(false);
+      const referrer = document.referrer;
+      const hostname = window.location.hostname;
+
+      if (hostname === 'localhost' || ALLOWED_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d))) {
+        setDomainAllowed(true); return;
+      }
+      if (referrer) {
+        try {
+          const refHost = new URL(referrer).hostname;
+          if (ALLOWED_DOMAINS.some(d => refHost === d || refHost.endsWith('.' + d))) {
+            setDomainAllowed(true); return;
+          }
+        } catch {}
+      }
+      // Allow lovable.app preview domains
+      if (hostname.includes('lovable.app')) {
+        setDomainAllowed(true); return;
+      }
+      setDomainAllowed(false);
+    };
+    checkAccess();
   }, []);
 
   // Disable right-click
