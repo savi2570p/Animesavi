@@ -23,6 +23,7 @@ export const usePopupQueue = () => useContext(PopupQueueContext);
 
 export function PopupQueueProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const location = useLocation();
   const [queue, setQueue] = useState<PopupType[]>([]);
   const [ready, setReady] = useState(false);
   const [manualWhatsNew, setManualWhatsNew] = useState(false);
@@ -31,6 +32,9 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
     window.location.pathname.startsWith('/embed/') ||
     new URLSearchParams(window.location.search).get('embed') === 'true'
   );
+
+  // Only show auto popups on "/" route
+  const isHomeRoute = location.pathname === '/';
 
   useEffect(() => {
     if (isEmbedRoute) {
