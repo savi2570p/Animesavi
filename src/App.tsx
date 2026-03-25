@@ -19,6 +19,7 @@ import { useBackgroundSync } from "@/hooks/useBackgroundSync";
 import { useAutoVideoScan } from "@/hooks/useAutoVideoScan";
 import { AccessBanner, fetchTokenAccessFromDB } from "@/components/AccessBanner";
 import { TokenExpiredGlobalPopup } from "@/components/TokenExpiredGlobalPopup";
+import { ReportButton } from "@/components/ReportButton";
 
 // Critical pages loaded eagerly for instant navigation
 import Index from "./pages/Index";
