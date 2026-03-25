@@ -2789,7 +2789,7 @@ export function VideoPlayer({
                 {/* Buffer progress (background) */}
                 <div className="absolute inset-0 bg-white/20 rounded-full" />
                 <div 
-                  className="absolute top-0 left-0 h-full bg-white/40 rounded-full transition-all duration-300"
+                  className="absolute top-0 left-0 h-full bg-white/40 rounded-full"
                   style={{ width: `${buffered}%` }}
                 />
                 {/* Playback progress (foreground) */}
