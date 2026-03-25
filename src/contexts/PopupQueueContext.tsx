@@ -86,7 +86,7 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
 
     buildQueue();
     return () => { cancelled = true; };
-  }, [user?.email, user?.id, isEmbedRoute]);
+  }, [user?.email, user?.id, isEmbedRoute, isHomeRoute]);
 
   const dismissPopup = useCallback(() => {
     if (manualWhatsNew) {
