@@ -281,7 +281,13 @@ export default function EmbedPlayer() {
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (videoRef.current && duration) videoRef.current.currentTime = (parseFloat(e.target.value) / 100) * duration;
+    if (videoRef.current && duration) {
+      const val = parseFloat(e.target.value);
+      const time = (val / 100) * duration;
+      videoRef.current.currentTime = time;
+      setProgress(val);
+      setCurrentTime(time);
+    }
   };
 
   const toggleFullscreen = async () => {
