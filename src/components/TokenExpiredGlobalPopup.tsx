@@ -1,48 +1,14 @@
-import { useState, useEffect } from 'react';
 import { AlertTriangle, ExternalLink, X } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { fetchTokenAccessFromDB, fetchTokenSystemStatus, isSuperAdmin } from '@/components/AccessBanner';
+import { usePopupQueue } from '@/contexts/PopupQueueContext';
 
 export function TokenExpiredGlobalPopup() {
-  const { user } = useAuth();
-  const [show, setShow] = useState(false);
+  const { activePopup, dismissPopup } = usePopupQueue();
 
-  // Skip premium checks entirely on embed routes
-  const isEmbedRoute = typeof window !== 'undefined' && (
-    window.location.pathname.startsWith('/embed/') ||
-    new URLSearchParams(window.location.search).get('embed') === 'true'
-  );
-
-  useEffect(() => {
-    if (isEmbedRoute) return;
-    let cancelled = false;
-
-    // Only show once per session
-    const alreadyShown = sessionStorage.getItem('token_expired_popup_shown');
-    if (alreadyShown) return;
-
-    async function check() {
-      if (isSuperAdmin(user?.email)) return;
-
-      const enabled = await fetchTokenSystemStatus();
-      if (!enabled || cancelled) return;
-
-      const result = await fetchTokenAccessFromDB();
-      if (!cancelled && !result.hasAccess) {
-        sessionStorage.setItem('token_expired_popup_shown', 'true');
-        setShow(true);
-      }
-    }
-
-    check();
-    return () => { cancelled = true; };
-  }, [user?.email, user?.id, isEmbedRoute]);
-
-  if (!show) return null;
+  if (activePopup !== 'expired') return null;
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       style={{ background: 'radial-gradient(ellipse at center, hsla(0, 60%, 10%, 0.4) 0%, hsla(0, 0%, 0%, 0.88) 70%)' }}
     >
       <div
@@ -82,7 +48,7 @@ export function TokenExpiredGlobalPopup() {
               Reactivate
             </a>
             <button
-              onClick={() => setShow(false)}
+              onClick={dismissPopup}
               className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl font-medium text-sm transition-all duration-200"
               style={{
                 border: '1px solid hsla(0, 0%, 100%, 0.15)',
