@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchTokenAccessFromDB, fetchTokenSystemStatus, isSuperAdmin } from '@/components/AccessBanner';
 
@@ -22,6 +23,7 @@ export const usePopupQueue = () => useContext(PopupQueueContext);
 
 export function PopupQueueProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const location = useLocation();
   const [queue, setQueue] = useState<PopupType[]>([]);
   const [ready, setReady] = useState(false);
   const [manualWhatsNew, setManualWhatsNew] = useState(false);
@@ -31,8 +33,11 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
     new URLSearchParams(window.location.search).get('embed') === 'true'
   );
 
+  // Only show auto popups on "/" route
+  const isHomeRoute = location.pathname === '/';
+
   useEffect(() => {
-    if (isEmbedRoute) {
+    if (isEmbedRoute || !isHomeRoute) {
       setReady(true);
       return;
     }
@@ -81,7 +86,7 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
 
     buildQueue();
     return () => { cancelled = true; };
-  }, [user?.email, user?.id, isEmbedRoute]);
+  }, [user?.email, user?.id, isEmbedRoute, isHomeRoute]);
 
   const dismissPopup = useCallback(() => {
     if (manualWhatsNew) {

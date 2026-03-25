@@ -19,6 +19,7 @@ import { useBackgroundSync } from "@/hooks/useBackgroundSync";
 import { useAutoVideoScan } from "@/hooks/useAutoVideoScan";
 import { AccessBanner, fetchTokenAccessFromDB } from "@/components/AccessBanner";
 import { TokenExpiredGlobalPopup } from "@/components/TokenExpiredGlobalPopup";
+import { ReportButton } from "@/components/ReportButton";
 
 // Critical pages loaded eagerly for instant navigation
 import Index from "./pages/Index";
@@ -141,70 +142,70 @@ function TokenAccessSyncInitializer() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <PopupQueueProvider>
-        <MiniPlayerProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+      <MiniPlayerProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <PopupQueueProvider>
               <ScrollToTop />
               <AccessBanner />
               <TokenExpiredGlobalPopup />
               <OfflineIndicator />
               <WelcomePopup />
-            <FloatingTelegramButton />
-            <MiniPlayer />
-            <PWAInstallPrompt />
-            <NetworkSpeedInitializer />
-            <BackgroundSyncInitializer />
-            <AutoVideoScanInitializer />
-            <TokenAccessSyncInitializer />
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/verify" element={<TokenVerify />} />
-                <Route path="/secure-verify" element={<TokenVerify />} />
-                <Route path="/unlock/:token" element={<UnlockAccess />} />
-                
-                <Route path="/external-player" element={<ExternalPlayer />} />
-                <Route path="/embed/:episodeId" element={<EmbedPlayer />} />
-                <Route path="/embed/:animeSlug/:seasonSlug/:episodeSlug" element={<EmbedSlugPlayer />} />
-                <Route path="/embed/:animeSlug/:episodeSlug" element={<EmbedSlugPlayer />} />
-                <Route path="/welcome" element={<Welcome />} />
-                <Route element={<MainLayout />}>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/browse" element={<Browse />} />
-                  <Route path="/latest-series" element={<LatestSeriesPage />} />
-                  <Route path="/latest-episodes" element={<LatestEpisodesPage />} />
-                  <Route path="/latest-movies" element={<LatestMoviesPage />} />
-                  <Route path="/pending-upload" element={<PendingUploadPage />} />
-                  <Route path="/crunchy" element={<CrunchyPage />} />
-                  <Route path="/musein" element={<MuseINPage />} />
-                  <Route path="/schedule" element={<Schedule />} />
-                  <Route path="/upcoming" element={<UpcomingPage />} />
-                  <Route path="/anime/:id" element={<AnimeDetail />} />
-                  <Route path="/watch/:episodeId" element={<Watch />} />
-                  <Route path="/favorites" element={<Favorites />} />
-                  <Route path="/history" element={<History />} />
-                  <Route path="/upload" element={<Upload />} />
-                  <Route path="/upload/anime/:animeId" element={<UploadAnimeEdit />} />
-                  <Route path="/upload/anime/:animeId/episode/:episodeId/edit" element={<EpisodeEdit />} />
-                  <Route path="/admin" element={<Admin />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/stats" element={<UserStats />} />
-                  <Route path="/downloads" element={<Downloads />} />
-                  <Route path="/:animeSlug/:episodeSlug" element={<AnimeSlugRedirect />} />
-                  <Route path="/:animeSlug" element={<AnimeSlugRedirect />} />
-                </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
+              <FloatingTelegramButton />
+              <ReportButton />
+              <MiniPlayer />
+              <PWAInstallPrompt />
+              <NetworkSpeedInitializer />
+              <BackgroundSyncInitializer />
+              <AutoVideoScanInitializer />
+              <TokenAccessSyncInitializer />
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/verify" element={<TokenVerify />} />
+                  <Route path="/secure-verify" element={<TokenVerify />} />
+                  <Route path="/unlock/:token" element={<UnlockAccess />} />
+                  <Route path="/external-player" element={<ExternalPlayer />} />
+                  <Route path="/embed/:episodeId" element={<EmbedPlayer />} />
+                  <Route path="/embed/:animeSlug/:seasonSlug/:episodeSlug" element={<EmbedSlugPlayer />} />
+                  <Route path="/embed/:animeSlug/:episodeSlug" element={<EmbedSlugPlayer />} />
+                  <Route path="/welcome" element={<Welcome />} />
+                  <Route element={<MainLayout />}>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/browse" element={<Browse />} />
+                    <Route path="/latest-series" element={<LatestSeriesPage />} />
+                    <Route path="/latest-episodes" element={<LatestEpisodesPage />} />
+                    <Route path="/latest-movies" element={<LatestMoviesPage />} />
+                    <Route path="/pending-upload" element={<PendingUploadPage />} />
+                    <Route path="/crunchy" element={<CrunchyPage />} />
+                    <Route path="/musein" element={<MuseINPage />} />
+                    <Route path="/schedule" element={<Schedule />} />
+                    <Route path="/upcoming" element={<UpcomingPage />} />
+                    <Route path="/anime/:id" element={<AnimeDetail />} />
+                    <Route path="/watch/:episodeId" element={<Watch />} />
+                    <Route path="/favorites" element={<Favorites />} />
+                    <Route path="/history" element={<History />} />
+                    <Route path="/upload" element={<Upload />} />
+                    <Route path="/upload/anime/:animeId" element={<UploadAnimeEdit />} />
+                    <Route path="/upload/anime/:animeId/episode/:episodeId/edit" element={<EpisodeEdit />} />
+                    <Route path="/admin" element={<Admin />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/stats" element={<UserStats />} />
+                    <Route path="/downloads" element={<Downloads />} />
+                    <Route path="/:animeSlug/:episodeSlug" element={<AnimeSlugRedirect />} />
+                    <Route path="/:animeSlug" element={<AnimeSlugRedirect />} />
+                  </Route>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </PopupQueueProvider>
           </BrowserRouter>
         </TooltipProvider>
       </MiniPlayerProvider>
-    </PopupQueueProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
