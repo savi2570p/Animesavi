@@ -22,12 +22,12 @@ export function ServerStatusIndicator({
   const hasFailed = failedServers.size > 0;
 
   return (
-    <div className="flex items-center gap-2 text-sm">
+    <div className="flex items-center gap-1.5 md:gap-2 text-sm">
       {/* Active server badge */}
       <Badge
         variant="outline"
         className={cn(
-          'gap-1 px-2 py-0.5 text-xs font-medium transition-all',
+          'gap-0.5 md:gap-1 px-1.5 md:px-2 py-0 md:py-0.5 text-[9px] md:text-xs font-medium transition-all',
           isServerLoading
             ? 'border-yellow-500/50 text-yellow-400 animate-pulse'
             : fallbackOccurred
@@ -36,11 +36,11 @@ export function ServerStatusIndicator({
         )}
       >
         {isServerLoading ? (
-          <Wifi className="h-2.5 w-2.5 animate-pulse" />
+          <Wifi className="h-2 w-2 md:h-2.5 md:w-2.5 animate-pulse" />
         ) : fallbackOccurred ? (
-          <ArrowRightLeft className="h-2.5 w-2.5" />
+          <ArrowRightLeft className="h-2 w-2 md:h-2.5 md:w-2.5" />
         ) : (
-          <CheckCircle2 className="h-2.5 w-2.5" />
+          <CheckCircle2 className="h-2 w-2 md:h-2.5 md:w-2.5" />
         )}
         {config.name}
         {isServerLoading && ' …'}
