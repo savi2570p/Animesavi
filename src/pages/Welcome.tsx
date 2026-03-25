@@ -156,7 +156,7 @@ export default function Welcome() {
   const features = [
     { icon: Zap, title: 'Lightning Fast', desc: 'Stream any episode instantly with zero buffering. Our CDN delivers content at blazing speed worldwide.', highlight: true },
     { icon: Shield, title: '100% Ad-Free', desc: 'No ads, no popups, no interruptions. Just pure, uninterrupted anime watching experience from start to finish.', highlight: true },
-    { icon: Download, title: 'Smart Downloads', desc: 'Download in 480p, 720p, or 1080p with proper episode names. Pick your quality and save for offline viewing.' },
+    { icon: Download, title: 'Smart Downloads', desc: '{ icon: Download, title: 'Smart Downloads', desc: 'Download in 480p, 720p, 1080p or even 2160 (4K) with proper episode names. Pick your quality and save for offline viewing.' },' },
     { icon: Smartphone, title: 'Mobile First', desc: 'Designed for phones with compact controls, gesture navigation, and picture-in-picture support.' },
     { icon: Globe, title: 'Hindi Dubbed', desc: 'Official Hindi DUB available for all anime — completely free, anytime, anywhere in the world.' },
     { icon: Users, title: 'Watch Parties', desc: 'Invite friends to watch together with real-time sync. Chat, react, and enjoy anime as a group.' },
