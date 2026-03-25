@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { preloadImages } from '@/lib/imageOptimization';
 import { BatchDownload } from '@/components/download/BatchDownload';
 import { AnimeReviews } from '@/components/anime/AnimeReviews';
 import { ShareEmbedPopup } from '@/components/ShareEmbedPopup';
