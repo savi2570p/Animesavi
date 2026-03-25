@@ -141,16 +141,17 @@ function TokenAccessSyncInitializer() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <MiniPlayerProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <ScrollToTop />
-            <AccessBanner />
-            <TokenExpiredGlobalPopup />
-            <OfflineIndicator />
-            <WelcomePopup />
+      <PopupQueueProvider>
+        <MiniPlayerProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <ScrollToTop />
+              <AccessBanner />
+              <TokenExpiredGlobalPopup />
+              <OfflineIndicator />
+              <WelcomePopup />
             <FloatingTelegramButton />
             <MiniPlayer />
             <PWAInstallPrompt />
