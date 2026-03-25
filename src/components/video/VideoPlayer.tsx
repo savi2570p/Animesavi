@@ -1252,6 +1252,7 @@ export function VideoPlayer({
     if (videoRef.current) {
       const current = videoRef.current.currentTime;
       const dur = videoRef.current.duration;
+      if (!dur || isNaN(dur)) return;
       const prog = (current / dur) * 100;
       setProgress(prog);
       setCurrentTime(current);
