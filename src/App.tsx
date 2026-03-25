@@ -154,6 +154,7 @@ const App = () => (
               <OfflineIndicator />
               <WelcomePopup />
             <FloatingTelegramButton />
+              <ReportButton />
             <MiniPlayer />
             <PWAInstallPrompt />
             <NetworkSpeedInitializer />
