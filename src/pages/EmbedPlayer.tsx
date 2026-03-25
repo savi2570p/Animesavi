@@ -118,11 +118,6 @@ export default function EmbedPlayer() {
     return () => { document.removeEventListener('contextmenu', handleContextMenu); document.removeEventListener('keydown', handleKeyDown); };
   }, [isAdmin]);
   
-  const controlsTimeoutRef = useRef<NodeJS.Timeout>();
-  const lastTapRef = useRef<{ time: number; x: number }>({ time: 0, x: 0 });
-  const [doubleTapSide, setDoubleTapSide] = useState<'left' | 'right' | null>(null);
-
-  const deviceInfo = detectDeviceInfo();
 
   // Mobile compact sizes
   const btnSize = deviceInfo.isMobile ? 'w-[30px] h-[30px]' : 'w-10 h-10';
