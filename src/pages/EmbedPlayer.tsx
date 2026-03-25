@@ -342,7 +342,7 @@ export default function EmbedPlayer() {
     return <div className="fixed inset-0 bg-black flex items-center justify-center"><Loader2 className="w-12 h-12 text-primary animate-spin" /></div>;
   }
 
-
+  if (fetchError) {
     return (
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 p-4">
         <AlertTriangle className="w-12 h-12 text-destructive" />
@@ -543,3 +543,4 @@ export default function EmbedPlayer() {
     </div>
   );
 }
+
