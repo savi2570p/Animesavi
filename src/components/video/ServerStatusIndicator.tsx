@@ -62,7 +62,7 @@ export function ServerStatusIndicator({
               variant="outline"
               className="gap-0.5 md:gap-1 px-1 md:px-1.5 py-0 md:py-0.5 text-[8px] md:text-[10px] border-red-500/30 text-red-400/70"
             >
-              <WifiOff className="h-2.5 w-2.5" />
+              <WifiOff className="h-2 w-2 md:h-2.5 md:w-2.5" />
               {SERVER_CONFIGS[server]?.name}
             </Badge>
           ))}
