@@ -1,22 +1,22 @@
-import { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles } from 'lucide-react';
-import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
-import museinLogo from '@/assets/musein-logo.jpg';
-import { FeaturedSlider } from '@/components/home/FeaturedSlider';
-import { ContinueWatching } from '@/components/home/ContinueWatching';
-import { RecommendedAnime } from '@/components/home/RecommendedAnime';
-import { LatestEpisodes } from '@/components/home/LatestEpisodes';
-import { LatestMovies } from '@/components/home/LatestMovies';
-import { LatestSeries } from '@/components/home/LatestSeries';
-import { RecentlyCompleted } from '@/components/home/RecentlyCompleted';
-import { EpisodeProgress } from '@/components/home/EpisodeProgress';
-import { ComingSoon } from '@/components/home/ComingSoon';
-import { SocialShare } from '@/components/home/SocialShare';
-import { MostPopular } from '@/components/home/MostPopular';
-import { AnimeCalendar } from '@/components/AnimeCalendar';
+import { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Sparkles } from "lucide-react";
+import crunchyrollLogo from "@/assets/crunchyroll-logo.png";
+import museinLogo from "@/assets/musein-logo.jpg";
+import { FeaturedSlider } from "@/components/home/FeaturedSlider";
+import { ContinueWatching } from "@/components/home/ContinueWatching";
+import { RecommendedAnime } from "@/components/home/RecommendedAnime";
+import { LatestEpisodes } from "@/components/home/LatestEpisodes";
+import { LatestMovies } from "@/components/home/LatestMovies";
+import { LatestSeries } from "@/components/home/LatestSeries";
+import { RecentlyCompleted } from "@/components/home/RecentlyCompleted";
+import { EpisodeProgress } from "@/components/home/EpisodeProgress";
+import { ComingSoon } from "@/components/home/ComingSoon";
+import { SocialShare } from "@/components/home/SocialShare";
+import { MostPopular } from "@/components/home/MostPopular";
+import { AnimeCalendar } from "@/components/AnimeCalendar";
 
 export default function Index() {
   const { user } = useAuth();
@@ -24,10 +24,10 @@ export default function Index() {
 
   // Redirect first-time visitors to /welcome
   useEffect(() => {
-    const hasVisited = localStorage.getItem('has_visited_home');
+    const hasVisited = localStorage.getItem("has_visited_home");
     if (!hasVisited) {
-      localStorage.setItem('has_visited_home', 'true');
-      navigate('/welcome', { replace: true });
+      localStorage.setItem("has_visited_home", "true");
+      navigate("/welcome", { replace: true });
     }
   }, [navigate]);
 
@@ -96,22 +96,20 @@ export default function Index() {
       {/* CTA */}
       <section className="py-16">
         <div className="container">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-transparent border border-primary/20 p-8 md:p-12">
+          <div className="relative overflow-visible rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-transparent border border-primary/20 p-8 md:p-12">
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="h-5 w-5 text-primary" />
                 <span className="text-sm font-medium text-primary">Start Watching Today</span>
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                Ready to Start Your Anime Journey?
-              </h2>
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to Start Your Anime Journey?</h2>
               <p className="text-muted-foreground mb-6 max-w-xl">
                 Sign up now and get access to thousands of anime series and movies for free. No credit card required.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                  <Link to={user ? '/browse' : '/auth'}>
-                    {user ? 'Browse Anime' : 'Get Started Free'}
+                  <Link to={user ? "/browse" : "/auth"}>
+                    {user ? "Browse Anime" : "Get Started Free"}
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Link>
                 </Button>
