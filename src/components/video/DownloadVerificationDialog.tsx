@@ -51,9 +51,10 @@ export function DownloadVerificationDialog({
 
     setIsDownloading(true);
 
-    // Build filename with quality
-    const base = fileName.replace(/\.mp4$/i, '');
-    const qualityFileName = `${base}_${selectedQuality}.mp4`;
+    // Build filename: {anime name}, {season and episode}, {quality} x264 WEB-DL [Multi Audio] ESub.mkv
+    const title = animeTitle || 'AnimeSavi';
+    const ep = episodeLabel || '';
+    const qualityFileName = `${title}, ${ep}, ${selectedQuality} x264 WEB-DL [Multi Audio] ESub.mkv`;
 
     try {
       toast.info('Preparing download...');
