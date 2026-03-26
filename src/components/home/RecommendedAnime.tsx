@@ -139,7 +139,7 @@ export function RecommendedAnime() {
         </div>
 
         {/* Anime Row - Horizontal scroll on all devices */}
-        <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 snap-row scrollbar-none">
+        <div className="flex gap-2.5 overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory scrollbar-none">
           {recommendations.map((anime, index) => (
             <AnimeCardContextMenu
               key={anime.id}
@@ -149,47 +149,62 @@ export function RecommendedAnime() {
             >
               <Link 
                 to={`/anime/${anime.id}`} 
-                className={`anime-card group stagger-${Math.min(index + 1, 6)} opacity-0 animate-fade-in shrink-0 w-[140px] lg:w-[180px] xl:w-[200px]`}
+                className={`anime-card group stagger-${Math.min(index + 1, 6)} opacity-0 animate-fade-in shrink-0 snap-start`}
+                style={{ width: 120 }}
               >
-                <div className="relative overflow-hidden rounded-xl bg-black/80 h-[210px] lg:h-[270px] xl:h-[300px] flex items-center justify-center">
+                <div
+                  className="relative overflow-hidden rounded-xl"
+                  style={{ width: 120, height: 180, background: '#0f0f0f' }}
+                >
+                  {/* Blurred background layer */}
+                  {anime.cover_image && (
+                    <img
+                      src={anime.cover_image}
+                      alt=""
+                      aria-hidden="true"
+                      className="absolute inset-0 w-full h-full object-cover"
+                      style={{ filter: 'blur(20px) brightness(0.4)' }}
+                    />
+                  )}
+                  {/* Foreground image */}
                   <img
                     src={anime.cover_image || '/placeholder.svg'}
                     alt={anime.title || ''}
-                    className="w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-105"
+                    className="relative z-[2] w-full h-full object-contain"
                     loading="lazy"
                   />
                   {/* 4K Badge */}
                   <div className="absolute bottom-1.5 right-1.5 z-10">
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg">4K</span>
                   </div>
-                  {/* Overlay on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-0 left-0 right-0 p-3">
-                      <Button size="sm" className="w-full anime-button text-xs py-2">
-                        <Play className="h-3 w-3 mr-1.5 fill-current" /> Watch Now
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 z-[3] bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute bottom-0 left-0 right-0 p-2">
+                      <Button size="sm" className="w-full anime-button text-[10px] py-1.5">
+                        <Play className="h-3 w-3 mr-1 fill-current" /> Watch
                       </Button>
                     </div>
                   </div>
                   {/* Status Badge */}
                   {anime.status === 'ongoing' && (
-                    <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px] font-semibold uppercase tracking-wide">
+                    <Badge className="absolute top-2 left-2 z-[4] bg-primary text-primary-foreground text-[9px] font-semibold uppercase tracking-wide">
                       Ongoing
                     </Badge>
                   )}
                   {anime.status === 'upcoming' && (
-                    <Badge className="absolute top-2 left-2 bg-orange-500 text-white text-[10px] font-semibold uppercase tracking-wide flex items-center gap-1 animate-pulse">
+                    <Badge className="absolute top-2 left-2 z-[4] bg-orange-500 text-white text-[9px] font-semibold uppercase tracking-wide flex items-center gap-1 animate-pulse">
                       <CalendarClock className="h-3 w-3" />
-                      Coming Soon
+                      Soon
                     </Badge>
                   )}
                   <TokenCrownBadge />
                 </div>
-                {/* Info */}
-                <div className="pt-2 px-0.5">
-                  <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors duration-200 truncate">
+                {/* Info - fixed height */}
+                <div className="pt-1.5 px-0.5" style={{ height: 44 }}>
+                  <h3 className="font-semibold text-xs leading-tight line-clamp-2 group-hover:text-primary transition-colors duration-200">
                     {anime.title}
                   </h3>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-muted-foreground truncate">
                     {anime.release_year && <span>{anime.release_year}</span>}
                     {anime.genres && anime.genres.length > 0 && (
                       <>
