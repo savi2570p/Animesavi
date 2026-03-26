@@ -268,6 +268,9 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
                             NEW
                           </span>
                         )}
+                        <span className="px-1.5 py-0.5 rounded bg-amber-500 text-[9px] font-bold text-white shadow-md">
+                          H-DUB
+                        </span>
                       </div>
 
                       {/* Progress percentage badge */}
