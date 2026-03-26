@@ -263,6 +263,9 @@ export default function CrunchyPage() {
                     </div>
                   </div>
                   <TokenCrownBadge />
+                  <div className="absolute top-2 right-2 px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-lg shadow-md">
+                    H-DUB
+                  </div>
                 </div>
                 <div className="mt-2">
                   <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">

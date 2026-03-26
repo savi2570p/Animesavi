@@ -495,6 +495,9 @@ export default function AnimeDetail() {
                   {anime.status}
                 </Badge>
               )}
+              <Badge className="px-3 py-1.5 bg-amber-500 text-white hover:bg-amber-600">
+                H-DUB
+              </Badge>
             </div>
 
             {/* Description */}
