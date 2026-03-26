@@ -74,9 +74,9 @@ export function WelcomePopup() {
               { icon: '📱', title: 'Compact Mobile Controls', desc: 'Smaller server icons & player buttons' },
               { icon: '📥', title: 'Offline Quality Picker', desc: 'Choose 480p, 720p, 1080p or 4K' },
               { icon: '✨', title: 'Video Enhancement', desc: 'Sharper, crystal-clear 4K playback' },
-              { icon: '🚫', title: 'PiP Removed on Mobile', desc: 'Cleaner controls for small screens' },
+              { icon: '🛡️', title: 'Content Moderation', desc: 'Auto-filter & 24h ban for violations' },
               { icon: '🖥️', title: 'Server Status Redesign', desc: 'H.Savi, SAVI.IN & Multi.Savi badges' },
-              { icon: '🎯', title: 'Hero Banner 16:9', desc: 'Widescreen slider with slim progress bars' },
+              { icon: '🎯', title: 'Smooth Scrolling', desc: 'Netflix-like snap & scroll on mobile' },
               { icon: '🔒', title: 'Branding Update', desc: 'AnimeSavi unified across all pages' },
             ].map((item) => (
               <div key={item.title} className="flex items-center gap-2.5 p-2 bg-muted/40 rounded-md">

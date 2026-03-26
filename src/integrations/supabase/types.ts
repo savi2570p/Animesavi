@@ -701,6 +701,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_bans: {
+        Row: {
+          banned_at: string
+          created_at: string
+          expires_at: string
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          banned_at?: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          reason?: string
+          user_id: string
+        }
+        Update: {
+          banned_at?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_favorites: {
         Row: {
           anime_id: string
