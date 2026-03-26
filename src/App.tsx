@@ -173,6 +173,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <PopupQueueProvider>
+              <BanGuard />
               <ScrollRecoveryInitializer />
               <ScrollToTop />
               <AccessBanner />
