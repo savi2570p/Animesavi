@@ -40,6 +40,14 @@ body.scroll-locked {
   box-sizing: border-box;
 }
 
+/* GPU-accelerated cards for smooth scroll & transitions */
+.anime-card,
+.snap-row > * {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
 img, video {
   content-visibility: auto;
   max-width: 100%;
