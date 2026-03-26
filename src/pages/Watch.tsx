@@ -637,6 +637,28 @@ export default function Watch() {
       return;
     }
 
+    // Profanity filter — block adult content and ban user
+    const { isCommentClean } = await import('@/lib/profanityFilter');
+    if (!isCommentClean(trimmedComment)) {
+      // Clear the comment input
+      if (parentId) {
+        setReplyContent('');
+        setReplyingTo(null);
+      } else {
+        setNewComment('');
+      }
+      
+      // Ban user for 24 hours
+      const { banUser } = await import('@/lib/banUtils');
+      await banUser(user.id);
+      
+      toast.error('You are trying to promote adult content. You have been banned for 24 hours.', { duration: 8000 });
+      
+      // Force reload to show ban screen
+      setTimeout(() => window.location.reload(), 2000);
+      return;
+    }
+
     const { error } = await supabase.from('comments').insert({
       user_id: user.id,
       episode_id: episodeId,
