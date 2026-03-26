@@ -228,11 +228,16 @@ export default function LatestEpisodesPage() {
                         </div>
                       )}
 
-                      {isNew(group.latestCreatedAt) && (
-                        <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-lg shadow-md animate-pulse">
-                          NEW
+                      <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                        {isNew(group.latestCreatedAt) && (
+                          <div className="px-2 py-0.5 text-xs font-bold bg-green-500 text-white rounded-lg shadow-md animate-pulse">
+                            NEW
+                          </div>
+                        )}
+                        <div className="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-lg shadow-md">
+                          H-DUB
                         </div>
-                      )}
+                      </div>
 
                       <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent">
                         <h3 className="text-sm font-semibold text-white line-clamp-1 drop-shadow-lg">

@@ -223,11 +223,16 @@ export default function LatestSeriesPage() {
                       {anime.episode_count} EP{anime.episode_count !== 1 ? 'S' : ''}
                     </div>
 
-                    {isNew(anime) && (
-                      <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-lg shadow-md animate-pulse">
-                        NEW
+                    <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                      {isNew(anime) && (
+                        <div className="px-2 py-0.5 text-xs font-bold bg-green-500 text-white rounded-lg shadow-md animate-pulse">
+                          NEW
+                        </div>
+                      )}
+                      <div className="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-lg shadow-md">
+                        H-DUB
                       </div>
-                    )}
+                    </div>
 
                     {getStatusBadge(anime)}
 

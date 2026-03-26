@@ -146,6 +146,7 @@ export default function UploadAnimeEdit() {
     setAnime(animeData);
     setAnimeStatus(animeData.status || 'ongoing');
     setIsCrunchyroll((animeData as any).is_crunchyroll || false);
+    setIsMuse((animeData as any).is_muse || false);
     setScheduleDay((animeData as any).schedule_day !== null && (animeData as any).schedule_day !== undefined ? String((animeData as any).schedule_day) : 'auto');
     setEditTitle(animeData.title || '');
     setEditCoverImage(animeData.cover_image || '');

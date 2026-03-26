@@ -255,12 +255,17 @@ export function LatestEpisodes() {
                       </div>
                     )}
 
-                    {/* NEW badge */}
-                    {isNew(group.latestCreatedAt) && (
-                      <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-lg shadow-md animate-pulse">
-                        NEW
+                    {/* NEW + H-DUB badges */}
+                    <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                      {isNew(group.latestCreatedAt) && (
+                        <div className="px-2 py-0.5 text-xs font-bold bg-green-500 text-white rounded-lg shadow-md animate-pulse">
+                          NEW
+                        </div>
+                      )}
+                      <div className="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-lg shadow-md">
+                        H-DUB
                       </div>
-                    )}
+                    </div>
 
                     {/* Token Crown Badge */}
                     <TokenCrownBadge />
