@@ -139,7 +139,7 @@ export function RecommendedAnime() {
         </div>
 
         {/* Anime Row - Horizontal scroll on all devices */}
-        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-row scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
           {recommendations.map((anime, index) => (
             <AnimeCardContextMenu
               key={anime.id}

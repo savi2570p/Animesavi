@@ -146,7 +146,7 @@ export function LatestMovies() {
           </Button>
         </div>
 
-        <div className="flex gap-4 md:gap-5 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+        <div className="flex gap-4 md:gap-5 overflow-x-auto pb-4 -mx-4 px-4 snap-row scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
           {movies.slice(0, 8).map((movie, index) => (
             <AnimeCardContextMenu
               key={movie.id}

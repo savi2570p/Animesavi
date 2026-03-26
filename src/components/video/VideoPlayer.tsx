@@ -1490,6 +1490,12 @@ export function VideoPlayer({
         } else if ((document as any).msExitFullscreen) {
           (document as any).msExitFullscreen();
         }
+        // Unlock orientation on exit
+        try {
+          if (screen.orientation && (screen.orientation as any).unlock) {
+            (screen.orientation as any).unlock();
+          }
+        } catch {}
         setIsFullscreen(false);
       } else {
         // ENTER FULLSCREEN
@@ -1517,6 +1523,13 @@ export function VideoPlayer({
         } else if ((container as any).msRequestFullscreen) {
           (container as any).msRequestFullscreen();
         }
+
+        // Auto-rotate to landscape on Android/Chrome
+        try {
+          if (screen.orientation && (screen.orientation as any).lock) {
+            await (screen.orientation as any).lock('landscape').catch(() => {});
+          }
+        } catch {}
         
         setIsFullscreen(true);
         setShowControls(true);
