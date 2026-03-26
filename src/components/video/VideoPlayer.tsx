@@ -1490,6 +1490,12 @@ export function VideoPlayer({
         } else if ((document as any).msExitFullscreen) {
           (document as any).msExitFullscreen();
         }
+        // Unlock orientation on exit
+        try {
+          if (screen.orientation && (screen.orientation as any).unlock) {
+            (screen.orientation as any).unlock();
+          }
+        } catch {}
         setIsFullscreen(false);
       } else {
         // ENTER FULLSCREEN

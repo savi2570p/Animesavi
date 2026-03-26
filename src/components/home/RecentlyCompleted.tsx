@@ -146,7 +146,7 @@ export function RecentlyCompleted() {
           </Button>
         </div>
 
-        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-row scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="space-y-2 w-[140px] md:w-auto shrink-0">

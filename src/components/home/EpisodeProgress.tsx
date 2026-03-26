@@ -161,7 +161,7 @@ export function EpisodeProgress() {
           </Button>
         </div>
 
-        <div className="flex md:grid md:grid-cols-4 lg:grid-cols-4 gap-4 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
+        <div className="flex md:grid md:grid-cols-4 lg:grid-cols-4 gap-4 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible snap-row">
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="anime-card-uniform space-y-2 shrink-0">
