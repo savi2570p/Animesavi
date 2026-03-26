@@ -267,6 +267,11 @@ export function MostPopular() {
                     {/* Token Crown Badge */}
                     <TokenCrownBadge />
 
+                    {/* H-DUB Badge */}
+                    <div className="absolute bottom-8 left-2 px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-lg shadow-md z-20">
+                      H-DUB
+                    </div>
+
                     {/* Title at bottom */}
                     <div className="absolute bottom-0 left-0 right-0 p-3 z-20">
                       <h3 className="text-sm md:text-base font-semibold text-white line-clamp-2 drop-shadow-lg">
