@@ -75,6 +75,8 @@ export default function UploadAnimeEdit() {
   const [isSavingStatus, setIsSavingStatus] = useState(false);
   const [isCrunchyroll, setIsCrunchyroll] = useState(false);
   const [isSavingCrunchy, setIsSavingCrunchy] = useState(false);
+  const [isMuse, setIsMuse] = useState(false);
+  const [isSavingMuse, setIsSavingMuse] = useState(false);
   const [scheduleDay, setScheduleDay] = useState<string>('auto');
   const [isSavingSchedule, setIsSavingSchedule] = useState(false);
 
@@ -146,6 +148,7 @@ export default function UploadAnimeEdit() {
     setAnime(animeData);
     setAnimeStatus(animeData.status || 'ongoing');
     setIsCrunchyroll((animeData as any).is_crunchyroll || false);
+    setIsMuse((animeData as any).is_muse || false);
     setScheduleDay((animeData as any).schedule_day !== null && (animeData as any).schedule_day !== undefined ? String((animeData as any).schedule_day) : 'auto');
     setEditTitle(animeData.title || '');
     setEditCoverImage(animeData.cover_image || '');

@@ -72,6 +72,7 @@ export default function Upload() {
   const [type, setType] = useState('series');
   const [status, setStatus] = useState('ongoing');
   const [isCrunchyroll, setIsCrunchyroll] = useState(false);
+  const [isMuse, setIsMuse] = useState(false);
 
   // Existing upload state
   const [selectedAnimeId, setSelectedAnimeId] = useState<string>('');
@@ -218,6 +219,7 @@ export default function Upload() {
         status,
         uploader_id: user.id,
         is_crunchyroll: isCrunchyroll,
+        is_muse: isMuse,
       } as any)
       .select()
       .single();
@@ -670,6 +672,19 @@ export default function Upload() {
                   />
                   <Label htmlFor="is_crunchyroll" className="cursor-pointer">
                     Add to Crunchy Tab
+                  </Label>
+                </div>
+
+                <div className="flex items-center gap-3 p-4 rounded-lg border border-border bg-muted/30">
+                  <input
+                    type="checkbox"
+                    id="is_muse"
+                    checked={isMuse}
+                    onChange={(e) => setIsMuse(e.target.checked)}
+                    className="h-4 w-4 rounded border-primary text-primary focus:ring-primary"
+                  />
+                  <Label htmlFor="is_muse" className="cursor-pointer">
+                    Add to MUSE
                   </Label>
                 </div>
 

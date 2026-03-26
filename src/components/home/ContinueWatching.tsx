@@ -229,7 +229,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
         >
           <CarouselContent className="-ml-2 md:-ml-4">
             {history.map((item, index) => (
-              <CarouselItem key={item.id} className="pl-2 md:pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/6">
+              <CarouselItem key={item.id} className="pl-2 md:pl-4 basis-[85%] sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
                 <Link
                   to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
                   className="group relative block"

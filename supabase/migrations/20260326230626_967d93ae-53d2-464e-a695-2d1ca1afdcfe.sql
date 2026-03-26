@@ -1,0 +1,1 @@
+ALTER TABLE public.anime ADD COLUMN is_muse boolean NOT NULL DEFAULT false;

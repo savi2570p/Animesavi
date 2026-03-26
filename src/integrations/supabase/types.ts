@@ -60,6 +60,7 @@ export type Database = {
           id: string
           is_crunchyroll: boolean
           is_featured: boolean | null
+          is_muse: boolean
           like_count: number | null
           release_year: number | null
           schedule_day: number | null
@@ -80,6 +81,7 @@ export type Database = {
           id?: string
           is_crunchyroll?: boolean
           is_featured?: boolean | null
+          is_muse?: boolean
           like_count?: number | null
           release_year?: number | null
           schedule_day?: number | null
@@ -100,6 +102,7 @@ export type Database = {
           id?: string
           is_crunchyroll?: boolean
           is_featured?: boolean | null
+          is_muse?: boolean
           like_count?: number | null
           release_year?: number | null
           schedule_day?: number | null
