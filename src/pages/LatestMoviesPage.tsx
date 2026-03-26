@@ -157,11 +157,16 @@ export default function LatestMoviesPage() {
                       Movie
                     </div>
 
-                    {isNew(movie.created_at) && (
-                      <div className="absolute top-2 right-2 px-2 py-1 text-xs font-bold bg-green-500 text-white rounded-md animate-pulse shadow-md">
-                        NEW
+                    <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                      {isNew(movie.created_at) && (
+                        <div className="px-2 py-0.5 text-xs font-bold bg-green-500 text-white rounded-md animate-pulse shadow-md">
+                          NEW
+                        </div>
+                      )}
+                      <div className="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-lg shadow-md">
+                        H-DUB
                       </div>
-                    )}
+                    </div>
 
                     {movie.status === 'upcoming' && (
                       <div className="absolute top-10 left-2 px-2 py-1 text-xs font-bold bg-orange-500 text-white rounded-md animate-pulse shadow-md flex items-center gap-1">
