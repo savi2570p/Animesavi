@@ -675,6 +675,19 @@ export default function Upload() {
                   </Label>
                 </div>
 
+                <div className="flex items-center gap-3 p-4 rounded-lg border border-border bg-muted/30">
+                  <input
+                    type="checkbox"
+                    id="is_muse"
+                    checked={isMuse}
+                    onChange={(e) => setIsMuse(e.target.checked)}
+                    className="h-4 w-4 rounded border-primary text-primary focus:ring-primary"
+                  />
+                  <Label htmlFor="is_muse" className="cursor-pointer">
+                    Add to MUSE
+                  </Label>
+                </div>
+
                 <Button type="submit" disabled={isSubmitting} className="anime-button">
                   {isSubmitting ? 'Creating...' : 'Create Anime & Add Episodes'}
                 </Button>
