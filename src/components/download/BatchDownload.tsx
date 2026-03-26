@@ -89,7 +89,7 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
       } catch {
         const link = document.createElement('a');
         link.href = videoUrl;
-        link.download = `${animeTitle} - Episode ${episode.episode_number}.mp4`;
+        link.download = `${animeTitle}, Episode ${episode.episode_number}, 720p x264 WEB-DL [Multi Audio] ESub.mkv`;
         link.target = '_blank';
         document.body.appendChild(link);
         link.click();
