@@ -3,18 +3,23 @@
 @tailwind utilities;
 
 /* Smooth scrolling & global performance */
-html {
+html, body {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 * {
   -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
 }
 
 img, video {
   content-visibility: auto;
+  max-width: 100%;
+  height: auto;
 }
 
 /* Crunchyroll-Inspired Design System - Premium Dark Theme */

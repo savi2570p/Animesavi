@@ -271,30 +271,30 @@ export function FeaturedSlider() {
         <div className="absolute inset-x-0 bottom-0 h-1/2 z-20 bg-gradient-to-t from-background to-transparent" />
 
         {/* Content overlay */}
-        <div className="absolute inset-0 z-30 flex items-end pb-14 px-4">
-          <div className="w-full space-y-2.5">
+        <div className="absolute inset-0 z-30 flex items-end pb-12 px-3">
+          <div className="w-full space-y-1.5 max-w-full overflow-hidden">
             {/* Status & views */}
             <div className="flex items-center gap-2">
               {current.status === 'ongoing' && (
-                <Badge className="bg-primary text-primary-foreground text-[10px] uppercase tracking-wider px-2.5 py-0.5 font-bold">
+                <Badge className="bg-primary text-primary-foreground text-[9px] uppercase tracking-wider px-2 py-0.5 font-bold">
                   Ongoing
                 </Badge>
               )}
-              <div className="flex items-center gap-1 text-xs text-foreground/90 font-medium">
-                <Eye className="h-3.5 w-3.5" />
+              <div className="flex items-center gap-1 text-[11px] text-foreground/90 font-medium">
+                <Eye className="h-3 w-3" />
                 {formatViews(current.views)} views
               </div>
             </div>
 
             {/* Title */}
-            <h2 className="text-xl font-heading font-extrabold leading-tight line-clamp-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+            <h2 className="text-lg font-heading font-extrabold leading-tight line-clamp-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
               {current.title}
             </h2>
 
             {/* Genres */}
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1">
               {current.genres.slice(0, 3).map((genre, i) => (
-                <span key={i} className="text-xs text-foreground/80 font-medium">
+                <span key={i} className="text-[11px] text-foreground/80 font-medium">
                   {i > 0 && <span className="mr-1">•</span>}
                   {genre}
                 </span>
@@ -302,21 +302,21 @@ export function FeaturedSlider() {
             </div>
 
             {/* Description */}
-            <p className="text-xs text-foreground/70 line-clamp-2 leading-relaxed drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+            <p className="text-[12px] text-foreground/70 line-clamp-2 leading-relaxed drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
               {current.description || 'No description available.'}
             </p>
 
             {/* Action buttons */}
-            <div className="flex items-center gap-2.5 pt-1">
-              <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 text-sm px-5 h-9 rounded-lg shadow-lg shadow-primary/30 font-semibold">
+            <div className="flex items-center gap-2 pt-1">
+              <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 text-xs px-4 h-8 rounded-lg shadow-lg shadow-primary/30 font-semibold">
                 <Link to={`/anime/${current.id}`}>
-                  <Play className="h-4 w-4 mr-1.5 fill-current" />
+                  <Play className="h-3.5 w-3.5 mr-1 fill-current" />
                   Watch Now
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="sm" className="border-foreground/40 text-foreground hover:bg-foreground/10 h-9 px-4 rounded-lg backdrop-blur-md text-sm font-semibold">
+              <Button asChild variant="outline" size="sm" className="border-foreground/40 text-foreground hover:bg-foreground/10 h-8 px-3 rounded-lg backdrop-blur-md text-xs font-semibold">
                 <Link to={`/anime/${current.id}`}>
-                  <Info className="h-4 w-4 mr-1.5" />
+                  <Info className="h-3.5 w-3.5 mr-1" />
                   Info
                 </Link>
               </Button>
