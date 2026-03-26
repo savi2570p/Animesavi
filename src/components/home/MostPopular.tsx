@@ -254,15 +254,6 @@ export function MostPopular() {
                       #{index + 1}
                     </div>
 
-                    {/* View Count */}
-                    {anime.view_count && anime.view_count > 0 && (
-                      <div className="absolute top-2 right-2 px-2 py-1 text-xs font-medium bg-black/60 text-white rounded-lg flex items-center gap-1 z-20">
-                        <Eye className="h-3 w-3" />
-                        {anime.view_count >= 1000000 
-                          ? `${(anime.view_count / 1000000).toFixed(1)}M` 
-                          : `${(anime.view_count / 1000).toFixed(0)}K`}
-                      </div>
-                    )}
 
                      {/* Token Crown Badge */}
                      <TokenCrownBadge />
