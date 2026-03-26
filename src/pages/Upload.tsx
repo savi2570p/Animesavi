@@ -219,6 +219,7 @@ export default function Upload() {
         status,
         uploader_id: user.id,
         is_crunchyroll: isCrunchyroll,
+        is_muse: isMuse,
       } as any)
       .select()
       .single();
