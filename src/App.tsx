@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { MiniPlayerProvider } from "@/contexts/MiniPlayerContext";
 import { PopupQueueProvider } from "@/contexts/PopupQueueContext";
@@ -139,6 +139,30 @@ function TokenAccessSyncInitializer() {
   return null;
 }
 
+function ScrollRecoveryInitializer() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const hasActiveOverlay = Boolean(
+        document.querySelector('[role="dialog"][data-state="open"], [data-scroll-lock="active"]')
+      );
+
+      if (!hasActiveOverlay) {
+        document.documentElement.classList.remove('scroll-locked');
+        document.body.classList.remove('scroll-locked');
+        document.body.style.overflow = 'auto';
+        document.documentElement.style.overflow = 'auto';
+        document.body.style.position = 'static';
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.pathname]);
+
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -148,6 +172,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <PopupQueueProvider>
+              <ScrollRecoveryInitializer />
               <ScrollToTop />
               <AccessBanner />
               <TokenExpiredGlobalPopup />
