@@ -75,6 +75,8 @@ export default function UploadAnimeEdit() {
   const [isSavingStatus, setIsSavingStatus] = useState(false);
   const [isCrunchyroll, setIsCrunchyroll] = useState(false);
   const [isSavingCrunchy, setIsSavingCrunchy] = useState(false);
+  const [isMuse, setIsMuse] = useState(false);
+  const [isSavingMuse, setIsSavingMuse] = useState(false);
   const [scheduleDay, setScheduleDay] = useState<string>('auto');
   const [isSavingSchedule, setIsSavingSchedule] = useState(false);
 
