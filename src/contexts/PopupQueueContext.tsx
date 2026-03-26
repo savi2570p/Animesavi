@@ -127,14 +127,22 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
     activePopup = 'whatsNew';
   }
 
-  // Lock scroll
+  // Lock scroll only when popup is active
   useEffect(() => {
     if (activePopup) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+    };
   }, [activePopup]);
 
   return (
