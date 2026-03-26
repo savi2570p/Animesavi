@@ -73,7 +73,7 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
+    <div className="relative min-h-screen overflow-x-hidden overflow-y-visible bg-background flex items-center justify-center">
       <Button
         variant="ghost"
         onClick={() => navigate('/auth')}

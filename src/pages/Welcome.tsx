@@ -168,7 +168,7 @@ export default function Welcome() {
   const heroAnime = featuredAnime[activeIndex];
 
   return (
-    <div className="relative min-h-screen bg-background overflow-hidden">
+    <div className="relative min-h-screen overflow-x-hidden overflow-y-visible bg-background">
       {/* Hero background */}
       <div className="absolute inset-0 overflow-hidden">
         {heroAnime?.cover_image && (

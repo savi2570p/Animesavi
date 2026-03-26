@@ -179,7 +179,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
   }
 
   return (
-    <section className="py-10 md:py-14 relative overflow-hidden">
+    <section className="relative overflow-x-hidden overflow-y-visible py-10 md:py-14">
       {/* Background glow effect */}
       <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none" />
       

@@ -129,17 +129,27 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
 
   // Lock scroll only when popup is active
   useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+
     if (activePopup) {
-      document.body.style.overflow = 'hidden';
+      html.classList.add('scroll-locked');
+      body.classList.add('scroll-locked');
+      html.style.overflow = 'hidden';
+      body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = 'auto';
-      document.documentElement.style.overflow = 'auto';
-      document.body.style.position = 'static';
+      html.classList.remove('scroll-locked');
+      body.classList.remove('scroll-locked');
+      body.style.overflow = 'auto';
+      html.style.overflow = 'auto';
+      body.style.position = 'static';
     }
     return () => {
-      document.body.style.overflow = 'auto';
-      document.documentElement.style.overflow = 'auto';
-      document.body.style.position = 'static';
+      html.classList.remove('scroll-locked');
+      body.classList.remove('scroll-locked');
+      body.style.overflow = 'auto';
+      html.style.overflow = 'auto';
+      body.style.position = 'static';
     };
   }, [activePopup]);
 

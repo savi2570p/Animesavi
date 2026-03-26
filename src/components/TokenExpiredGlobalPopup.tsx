@@ -8,6 +8,7 @@ export function TokenExpiredGlobalPopup() {
 
   return (
     <div
+      data-scroll-lock="active"
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       style={{ background: 'radial-gradient(ellipse at center, hsla(0, 60%, 10%, 0.4) 0%, hsla(0, 0%, 0%, 0.88) 70%)' }}
     >

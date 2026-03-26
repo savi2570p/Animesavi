@@ -126,7 +126,7 @@ export function FeaturedSlider() {
   // ─── DESKTOP: Full-width cinematic hero ───
   if (!isMobile) {
     return (
-      <section className="relative w-full overflow-hidden">
+      <section className="relative w-full overflow-x-hidden overflow-y-visible">
         {/* Background hero image */}
         <div className="relative w-full aspect-[16/9]">
           {featuredAnime.map((anime, idx) => (
@@ -249,7 +249,7 @@ export function FeaturedSlider() {
 
   // ─── MOBILE: Taller cinematic slider ───
   return (
-    <section className="relative w-full overflow-hidden">
+    <section className="relative w-full overflow-x-hidden overflow-y-visible">
       <div className="relative w-full aspect-[16/9]">
         {featuredAnime.map((anime, idx) => (
           <div
