@@ -20,6 +20,7 @@ import { useAutoVideoScan } from "@/hooks/useAutoVideoScan";
 import { AccessBanner, fetchTokenAccessFromDB } from "@/components/AccessBanner";
 import { TokenExpiredGlobalPopup } from "@/components/TokenExpiredGlobalPopup";
 import { ReportButton } from "@/components/ReportButton";
+import { BanGuard } from "@/components/BanGuard";
 
 // Critical pages loaded eagerly for instant navigation
 import Index from "./pages/Index";
