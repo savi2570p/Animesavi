@@ -264,20 +264,28 @@ export function MostPopular() {
                       </div>
                     )}
 
-                    {/* Token Crown Badge */}
-                    <TokenCrownBadge />
+                     {/* Token Crown Badge */}
+                     <TokenCrownBadge />
 
-                    {/* H-DUB Badge */}
-                    <div className="absolute bottom-8 left-2 px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-lg shadow-md z-20">
-                      H-DUB
-                    </div>
-
-                    {/* Title at bottom */}
-                    <div className="absolute bottom-0 left-0 right-0 p-3 z-20">
-                      <h3 className="text-sm md:text-base font-semibold text-white line-clamp-2 drop-shadow-lg">
-                        {anime.title}
-                      </h3>
-                    </div>
+                     {/* Title at bottom */}
+                     <div className="absolute bottom-0 left-0 right-0 p-3 z-20">
+                       <h3 className="text-sm md:text-base font-semibold text-white line-clamp-2 drop-shadow-lg">
+                         {anime.title}
+                       </h3>
+                       <div className="flex items-center gap-2 mt-1">
+                         {anime.view_count && anime.view_count > 0 && (
+                           <span className="text-[10px] text-white/70 flex items-center gap-1">
+                             <Eye className="h-3 w-3" />
+                             {anime.view_count >= 1000000 
+                               ? `${(anime.view_count / 1000000).toFixed(1)}M` 
+                               : `${(anime.view_count / 1000).toFixed(0)}K`}
+                           </span>
+                         )}
+                         <span className="px-1.5 py-0.5 text-[9px] font-bold bg-amber-500 text-white rounded shadow-sm">
+                           H-DUB
+                         </span>
+                       </div>
+                     </div>
                   </div>
                 </Link>
               </AnimeCardContextMenu>
