@@ -65,17 +65,24 @@ export function useAutoVideoScan() {
         
         const { data: { session } } = await supabase.auth.getSession();
         const token = session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/video-conversion?action=scan-existing`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({}),
-          }
-        );
+        let response: Response;
+        try {
+          response = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/video-conversion?action=scan-existing`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+              body: JSON.stringify({}),
+            }
+          );
+        } catch {
+          // Network error (offline, CORS, etc.) — silently skip
+          console.log('[AutoVideoScan] Network unavailable, skipping scan');
+          return;
+        }
 
         const result = await response.json();
 
