@@ -139,7 +139,7 @@ export function RecommendedAnime() {
         </div>
 
         {/* Anime Row - Horizontal scroll on all devices */}
-        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-row scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+        <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 snap-row scrollbar-none">
           {recommendations.map((anime, index) => (
             <AnimeCardContextMenu
               key={anime.id}
@@ -149,13 +149,13 @@ export function RecommendedAnime() {
             >
               <Link 
                 to={`/anime/${anime.id}`} 
-                className={`anime-card group stagger-${Math.min(index + 1, 6)} opacity-0 animate-fade-in w-[120px] md:w-[140px] shrink-0`}
+                className={`anime-card group stagger-${Math.min(index + 1, 6)} opacity-0 animate-fade-in shrink-0 w-[140px] lg:w-[180px] xl:w-[200px]`}
               >
-                <div className="aspect-[3/4] relative overflow-hidden rounded-lg">
+                <div className="relative overflow-hidden rounded-xl bg-black/80 h-[210px] lg:h-[270px] xl:h-[300px] flex items-center justify-center">
                   <img
                     src={anime.cover_image || '/placeholder.svg'}
                     alt={anime.title || ''}
-                    className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+                    className="w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-105"
                     loading="lazy"
                   />
                   {/* 4K Badge */}
@@ -176,22 +176,20 @@ export function RecommendedAnime() {
                       Ongoing
                     </Badge>
                   )}
-                  {/* Coming Soon Badge for upcoming */}
                   {anime.status === 'upcoming' && (
                     <Badge className="absolute top-2 left-2 bg-orange-500 text-white text-[10px] font-semibold uppercase tracking-wide flex items-center gap-1 animate-pulse">
                       <CalendarClock className="h-3 w-3" />
                       Coming Soon
                     </Badge>
                   )}
-                  {/* Token Crown Badge */}
                   <TokenCrownBadge />
                 </div>
                 {/* Info */}
-                <div className="p-2.5">
-                  <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors duration-200">
+                <div className="pt-2 px-0.5">
+                  <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors duration-200 truncate">
                     {anime.title}
                   </h3>
-                  <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                     {anime.release_year && <span>{anime.release_year}</span>}
                     {anime.genres && anime.genres.length > 0 && (
                       <>
