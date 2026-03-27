@@ -276,7 +276,7 @@ export function FeaturedSlider() {
             {/* Status & views */}
             <div className="flex items-center gap-2">
               {current.status === 'ongoing' && (
-                <Badge className="bg-primary text-primary-foreground text-[9px] uppercase tracking-wider px-2 py-0.5 font-bold">
+                <Badge className="bg-primary text-primary-foreground text-[8px] uppercase tracking-wider px-1.5 py-0.5 font-bold">
                   Ongoing
                 </Badge>
               )}
