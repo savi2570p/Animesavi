@@ -49,6 +49,7 @@ interface Anime {
   id: string;
   title: string;
   uploader_id: string | null;
+  is_muse: boolean;
 }
 
 export default function EpisodeEdit() {
