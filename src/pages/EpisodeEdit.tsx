@@ -100,7 +100,7 @@ export default function EpisodeEdit() {
     // Fetch anime
     const { data: animeData, error: animeError } = await supabase
       .from('anime')
-      .select('id, title, uploader_id')
+      .select('id, title, uploader_id, is_muse')
       .eq('id', animeId)
       .single();
 
