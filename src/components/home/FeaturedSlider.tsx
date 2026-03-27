@@ -32,7 +32,7 @@ const VIEW_COUNT_MAP: Record<string, number> = {
   'The angel next door spoils me rotten': 1200000,
   'Mechanical Marie': 977000,
   'Solo Leveling': 730000,
-  "BOFURI: I Don't Want to Get Hurt, so I'll Max Out My Defense.": 2300000,
+  'My Hero Academia': 8100000,
   "A Gatherer's Adventure in Isekai": 267000,
   'Jujutsu Kaisen': 8700000,
   'My Dress-Up Darling': 6200000,
@@ -155,7 +155,7 @@ export function FeaturedSlider() {
                 {/* Status & views */}
                 <div className="flex items-center gap-3">
                   {current.status === 'ongoing' && (
-                    <Badge className="bg-primary text-primary-foreground text-xs uppercase tracking-wider px-3 py-1">
+                    <Badge className="bg-primary text-primary-foreground text-[10px] uppercase tracking-wider px-2 py-0.5">
                       Ongoing
                     </Badge>
                   )}
@@ -276,7 +276,7 @@ export function FeaturedSlider() {
             {/* Status & views */}
             <div className="flex items-center gap-2">
               {current.status === 'ongoing' && (
-                <Badge className="bg-primary text-primary-foreground text-[9px] uppercase tracking-wider px-2 py-0.5 font-bold">
+                <Badge className="bg-primary text-primary-foreground text-[8px] uppercase tracking-wider px-1.5 py-0.5 font-bold">
                   Ongoing
                 </Badge>
               )}
