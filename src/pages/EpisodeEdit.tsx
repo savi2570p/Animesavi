@@ -49,6 +49,7 @@ interface Anime {
   id: string;
   title: string;
   uploader_id: string | null;
+  is_muse: boolean;
 }
 
 export default function EpisodeEdit() {
@@ -60,6 +61,8 @@ export default function EpisodeEdit() {
   const [episode, setEpisode] = useState<Episode | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isMuse, setIsMuse] = useState(false);
+  const [isSavingMuse, setIsSavingMuse] = useState(false);
 
   const isAuthReady = !isAuthLoading && isRolesLoaded;
 
@@ -98,7 +101,7 @@ export default function EpisodeEdit() {
     // Fetch anime
     const { data: animeData, error: animeError } = await supabase
       .from('anime')
-      .select('id, title, uploader_id')
+      .select('id, title, uploader_id, is_muse')
       .eq('id', animeId)
       .single();
 
@@ -115,7 +118,8 @@ export default function EpisodeEdit() {
       return;
     }
 
-    setAnime(animeData);
+    setAnime(animeData as Anime);
+    setIsMuse((animeData as any).is_muse || false);
 
     // Fetch episode
     const { data: episodeData, error: episodeError } = await supabase
@@ -344,6 +348,38 @@ export default function EpisodeEdit() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Add to MUSE Toggle */}
+      <div className="mt-6 flex items-center gap-4 p-4 bg-card/50 rounded-xl border border-border/50">
+        <label htmlFor="ep_is_muse" className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            id="ep_is_muse"
+            checked={isMuse}
+            onChange={async (e) => {
+              const val = e.target.checked;
+              setIsMuse(val);
+              setIsSavingMuse(true);
+              const { error } = await supabase
+                .from('anime')
+                .update({ is_muse: val } as any)
+                .eq('id', animeId);
+              if (error) {
+                toast.error('Failed to update MUSE status');
+                setIsMuse(!val);
+              } else {
+                toast.success(val ? 'Added to MUSE tab' : 'Removed from MUSE tab');
+              }
+              setIsSavingMuse(false);
+            }}
+            className="w-5 h-5 rounded border-border accent-primary"
+          />
+          <span className="text-sm font-medium">Add to MUSE Tab</span>
+        </label>
+        {isSavingMuse && (
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+        )}
+      </div>
 
       {/* Intro/Outro Editor */}
       <div className="mt-8">
