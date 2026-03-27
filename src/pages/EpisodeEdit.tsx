@@ -117,7 +117,8 @@ export default function EpisodeEdit() {
       return;
     }
 
-    setAnime(animeData);
+    setAnime(animeData as Anime);
+    setIsMuse((animeData as any).is_muse || false);
 
     // Fetch episode
     const { data: episodeData, error: episodeError } = await supabase
