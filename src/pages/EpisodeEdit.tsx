@@ -349,6 +349,38 @@ export default function EpisodeEdit() {
         </CardContent>
       </Card>
 
+      {/* Add to MUSE Toggle */}
+      <div className="mt-6 flex items-center gap-4 p-4 bg-card/50 rounded-xl border border-border/50">
+        <label htmlFor="ep_is_muse" className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            id="ep_is_muse"
+            checked={isMuse}
+            onChange={async (e) => {
+              const val = e.target.checked;
+              setIsMuse(val);
+              setIsSavingMuse(true);
+              const { error } = await supabase
+                .from('anime')
+                .update({ is_muse: val } as any)
+                .eq('id', animeId);
+              if (error) {
+                toast.error('Failed to update MUSE status');
+                setIsMuse(!val);
+              } else {
+                toast.success(val ? 'Added to MUSE tab' : 'Removed from MUSE tab');
+              }
+              setIsSavingMuse(false);
+            }}
+            className="w-5 h-5 rounded border-border accent-primary"
+          />
+          <span className="text-sm font-medium">Add to MUSE Tab</span>
+        </label>
+        {isSavingMuse && (
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+        )}
+      </div>
+
       {/* Intro/Outro Editor */}
       <div className="mt-8">
         <IntroOutroEditor
