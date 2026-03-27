@@ -60,6 +60,7 @@ export default function EpisodeEdit() {
   const [anime, setAnime] = useState<Anime | null>(null);
   const [episode, setEpisode] = useState<Episode | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [isMuse, setIsMuse] = useState(false);
   const [isSavingMuse, setIsSavingMuse] = useState(false);
 
