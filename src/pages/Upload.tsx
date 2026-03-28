@@ -173,9 +173,17 @@ export default function Upload() {
   };
 
   const toggleGenre = (genre: string) => {
-    setSelectedGenres((prev) =>
-      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
-    );
+    setSelectedGenres((prev) => {
+      const updated = prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre];
+      // Auto-set MUSE/Crunchy flags based on genre selection
+      if (genre === 'Muse India') {
+        setIsMuse(updated.includes('Muse India'));
+      }
+      if (genre === 'Crunchyroll') {
+        setIsCrunchyroll(updated.includes('Crunchyroll'));
+      }
+      return updated;
+    });
   };
 
   const handleSubmitAnime = async (e: React.FormEvent) => {

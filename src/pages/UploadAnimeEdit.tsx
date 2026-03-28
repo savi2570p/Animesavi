@@ -528,9 +528,17 @@ export default function UploadAnimeEdit() {
                   key={genre}
                   type="button"
                   onClick={() => {
-                    setEditGenres(prev =>
-                      prev.includes(genre) ? prev.filter(g => g !== genre) : [...prev, genre]
-                    );
+                    setEditGenres(prev => {
+                      const updated = prev.includes(genre) ? prev.filter(g => g !== genre) : [...prev, genre];
+                      // Auto-sync MUSE/Crunchy flags based on genre
+                      if (genre === 'Muse India') {
+                        supabase.from('anime').update({ is_muse: updated.includes('Muse India') } as any).eq('id', animeId);
+                      }
+                      if (genre === 'Crunchyroll') {
+                        supabase.from('anime').update({ is_crunchyroll: updated.includes('Crunchyroll') } as any).eq('id', animeId);
+                      }
+                      return updated;
+                    });
                   }}
                   className={cn(
                     "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
