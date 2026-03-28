@@ -69,14 +69,14 @@ export function WelcomePopup() {
           
           <div className="space-y-1.5 max-h-[50vh] overflow-y-auto pr-1">
             {[
-              { icon: '🎌', title: 'MuseIN Tab', desc: 'Dedicated Muse India Hindi dub section' },
-              { icon: '🏷️', title: 'Smart Genre Tagging', desc: 'Auto-add to MUSE/Crunchy by genre' },
-              { icon: '🛡️', title: 'Content Moderation', desc: 'Auto-filter & 24h ban for violations' },
-              { icon: '🎯', title: 'Scroll Bug Fixed', desc: 'Smooth scrolling on all devices' },
-              { icon: '⚡', title: 'Server-side Loading', desc: 'Faster page loads & CDN boost' },
-              { icon: '📥', title: 'Download Naming', desc: 'Pro filename format with codec info' },
-              { icon: '✨', title: 'UI Polish', desc: 'Netflix-style scrollbar & larger cards' },
-              { icon: '🔖', title: 'H-DUB Badges', desc: 'Hindi dub tags across all sections' },
+              { icon: '🎌', title: 'MuseIN Coming Soon', desc: 'Dedicated Muse India page with preview' },
+              { icon: '🏷️', title: 'Smart Genre Tagging', desc: 'Select Muse India/Crunchyroll genre to auto-add' },
+              { icon: '🔖', title: 'H-DUB Badges', desc: 'Hindi dub tags on every section & tab' },
+              { icon: '📥', title: 'Download Format', desc: 'Pro filenames with codec & quality info' },
+              { icon: '🖼️', title: 'Thumbnail Overhaul', desc: 'Uniform cards, larger on desktop' },
+              { icon: '🎯', title: 'Scroll & UI Fixes', desc: 'Red scrollbar, no more stuck pages' },
+              { icon: '⚡', title: 'Performance Boost', desc: 'Faster CDN delivery & smoother loading' },
+              { icon: '🛡️', title: 'Content Moderation', desc: 'Auto-filter profanity & 24h bans' },
             ].map((item) => (
               <div key={item.title} className="flex items-center gap-2.5 p-2 bg-muted/40 rounded-md">
                 <span className="text-sm shrink-0">{item.icon}</span>
