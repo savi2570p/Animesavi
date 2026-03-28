@@ -63,7 +63,7 @@ export function WelcomePopup() {
         <DialogContent className="sm:max-w-sm border-primary/20 p-4" style={{ zIndex: 9998 }}>
           <DialogHeader className="pb-1">
             <DialogTitle className="text-base font-heading text-center">
-              ✨ What's New — v10
+              ✨ What's New — v11
             </DialogTitle>
           </DialogHeader>
           
