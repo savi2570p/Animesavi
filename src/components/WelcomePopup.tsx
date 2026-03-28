@@ -69,15 +69,14 @@ export function WelcomePopup() {
           
           <div className="space-y-1.5 max-h-[50vh] overflow-y-auto pr-1">
             {[
-              { icon: '⚠️', title: 'Report Button', desc: 'Send issues directly via Telegram' },
-              { icon: '🔔', title: 'Smart Popup Queue', desc: 'No overlapping popups, priority-based' },
-              { icon: '📱', title: 'Compact Mobile Controls', desc: 'Smaller server icons & player buttons' },
-              { icon: '📥', title: 'Offline Quality Picker', desc: 'Choose 480p, 720p, 1080p or 4K' },
-              { icon: '✨', title: 'Video Enhancement', desc: 'Sharper, crystal-clear 4K playback' },
+              { icon: '🎌', title: 'MuseIN Tab', desc: 'Dedicated Muse India Hindi dub section' },
+              { icon: '🏷️', title: 'Smart Genre Tagging', desc: 'Auto-add to MUSE/Crunchy by genre' },
               { icon: '🛡️', title: 'Content Moderation', desc: 'Auto-filter & 24h ban for violations' },
-              { icon: '🖥️', title: 'Server Status Redesign', desc: 'H.Savi, SAVI.IN & Multi.Savi badges' },
-              { icon: '🎯', title: 'Smooth Scrolling', desc: 'Netflix-like snap & scroll on mobile' },
-              { icon: '🔒', title: 'Branding Update', desc: 'AnimeSavi unified across all pages' },
+              { icon: '🎯', title: 'Scroll Bug Fixed', desc: 'Smooth scrolling on all devices' },
+              { icon: '⚡', title: 'Server-side Loading', desc: 'Faster page loads & CDN boost' },
+              { icon: '📥', title: 'Download Naming', desc: 'Pro filename format with codec info' },
+              { icon: '✨', title: 'UI Polish', desc: 'Netflix-style scrollbar & larger cards' },
+              { icon: '🔖', title: 'H-DUB Badges', desc: 'Hindi dub tags across all sections' },
             ].map((item) => (
               <div key={item.title} className="flex items-center gap-2.5 p-2 bg-muted/40 rounded-md">
                 <span className="text-sm shrink-0">{item.icon}</span>
