@@ -99,6 +99,7 @@ export default function Welcome() {
         .from('anime')
         .select('id, title, cover_image, genres, view_count')
         .eq('is_featured', true)
+        .neq('title', 'My Hero Academia')
         .limit(8);
       if (data?.length) setFeaturedAnime(data);
     };

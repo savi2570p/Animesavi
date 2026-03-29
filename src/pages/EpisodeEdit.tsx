@@ -13,6 +13,7 @@ import { ArrowLeft, Save, Film, Volume2 } from 'lucide-react';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { IntroOutroEditor } from '@/components/upload/IntroOutroEditor';
 import { VideoFormatConverter } from '@/components/upload/VideoFormatConverter';
+import { SubtitleEditor } from '@/components/upload/SubtitleEditor';
 
 const AUDIO_LANGUAGES = [
   { value: 'original', label: 'Original (Japanese)' },
