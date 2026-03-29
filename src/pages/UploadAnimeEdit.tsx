@@ -794,7 +794,7 @@ export default function UploadAnimeEdit() {
                             size="sm"
                             asChild
                           >
-                            <a href={`/upload/anime/${animeId}/episode/${episode.id}`}>
+                            <a href={`/upload/anime/${animeId}/episode/${episode.id}/edit`}>
                               <Edit className="h-4 w-4 mr-1" />
                               <span className="hidden sm:inline text-xs">Edit / CC</span>
                             </a>
