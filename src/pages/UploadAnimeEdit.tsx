@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { toast } from 'sonner';
-import { Plus, Trash2, Film, Tv, ArrowLeft, Save, CalendarIcon } from 'lucide-react';
+import { Plus, Trash2, Film, Tv, ArrowLeft, Save, CalendarIcon, Edit, Subtitles } from 'lucide-react';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { BatchEpisodeUpload } from '@/components/upload/BatchEpisodeUpload';
 import { format } from 'date-fns';
@@ -788,14 +788,26 @@ export default function UploadAnimeEdit() {
                             <span className="ml-2 font-medium">{episode.title}</span>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => handleDeleteEpisode(episode.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            asChild
+                          >
+                            <a href={`/upload/anime/${animeId}/episode/${episode.id}/edit`}>
+                              <Edit className="h-4 w-4 mr-1" />
+                              <span className="hidden sm:inline text-xs">Edit / CC</span>
+                            </a>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteEpisode(episode.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

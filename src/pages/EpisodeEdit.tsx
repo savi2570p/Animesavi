@@ -13,6 +13,7 @@ import { ArrowLeft, Save, Film, Volume2 } from 'lucide-react';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { IntroOutroEditor } from '@/components/upload/IntroOutroEditor';
 import { VideoFormatConverter } from '@/components/upload/VideoFormatConverter';
+import { SubtitleEditor } from '@/components/upload/SubtitleEditor';
 
 const AUDIO_LANGUAGES = [
   { value: 'original', label: 'Original (Japanese)' },
@@ -327,6 +328,40 @@ export default function EpisodeEdit() {
           <VideoFormatConverter
             showAsCard={false}
             compact={true}
+          />
+
+          {/* CC Subtitle Editor */}
+          <SubtitleEditor
+            compact={true}
+            onSave={async (vttContent) => {
+              // Upload VTT to storage
+              const fileName = `anime/${animeId}/subtitles/ep_${episodeId}.vtt`;
+              const blob = new Blob([vttContent], { type: 'text/vtt' });
+              const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('anime-subtitles')
+                .upload(fileName, blob, { upsert: true });
+              
+              if (uploadError) {
+                toast.error('Failed to upload subtitles');
+                return;
+              }
+              
+              const { data: urlData } = supabase.storage
+                .from('anime-subtitles')
+                .getPublicUrl(fileName);
+              
+              // Save URL to episode
+              const { error } = await supabase
+                .from('episodes')
+                .update({ captions_url: urlData.publicUrl })
+                .eq('id', episodeId);
+              
+              if (error) {
+                toast.error('Failed to save subtitle URL');
+              } else {
+                toast.success('Subtitles saved successfully!');
+              }
+            }}
           />
 
           <div className="flex gap-4 pt-4">
