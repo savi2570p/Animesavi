@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { toast } from 'sonner';
-import { Plus, Trash2, Film, Tv, ArrowLeft, Save, CalendarIcon } from 'lucide-react';
+import { Plus, Trash2, Film, Tv, ArrowLeft, Save, CalendarIcon, Edit, Subtitles } from 'lucide-react';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { BatchEpisodeUpload } from '@/components/upload/BatchEpisodeUpload';
 import { format } from 'date-fns';
