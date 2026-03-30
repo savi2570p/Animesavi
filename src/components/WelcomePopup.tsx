@@ -58,25 +58,24 @@ export function WelcomePopup() {
         </DialogContent>
       </Dialog>
 
-      {/* What's New Popup — v9 */}
+      {/* What's New Popup — v12 */}
       <Dialog open={showNotice} onOpenChange={(open) => { if (!open) dismissPopup(); }}>
         <DialogContent className="sm:max-w-sm border-primary/20 p-4" style={{ zIndex: 9998 }}>
           <DialogHeader className="pb-1">
             <DialogTitle className="text-base font-heading text-center">
-              ✨ What's New — v11
+              ✨ What's New — v12
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-1.5 max-h-[50vh] overflow-y-auto pr-1">
             {[
-              { icon: '🎌', title: 'MuseIN Coming Soon', desc: 'Dedicated Muse India page with preview' },
-              { icon: '🏷️', title: 'Smart Genre Tagging', desc: 'Select Muse India/Crunchyroll genre to auto-add' },
-              { icon: '🔖', title: 'H-DUB Badges', desc: 'Hindi dub tags on every section & tab' },
-              { icon: '📥', title: 'Download Format', desc: 'Pro filenames with codec & quality info' },
-              { icon: '🖼️', title: 'Thumbnail Overhaul', desc: 'Uniform cards, larger on desktop' },
-              { icon: '🎯', title: 'Scroll & UI Fixes', desc: 'Red scrollbar, no more stuck pages' },
-              { icon: '⚡', title: 'Performance Boost', desc: 'Faster CDN delivery & smoother loading' },
-              { icon: '🛡️', title: 'Content Moderation', desc: 'Auto-filter profanity & 24h bans' },
+              { icon: '🎬', title: 'Episode Panel Redesign', desc: 'Slide-in episode selector in embed player' },
+              { icon: '📐', title: 'Compact Episode Cards', desc: 'Smaller, cleaner episode grid on detail pages' },
+              { icon: '🎯', title: 'MuseIN Exclusive Nav', desc: 'Dedicated navigation when viewing MuseIN' },
+              { icon: '🔒', title: 'Smart Tab Visibility', desc: 'Crunchy & MuseIN tabs shown only on their pages' },
+              { icon: '📝', title: 'CC Subtitle Editor', desc: 'Manual subtitle creation with timing controls' },
+              { icon: '🎌', title: 'MuseIN Countdown', desc: '7-day countdown with live DD:HH:MM:SS timer' },
+              { icon: '⚡', title: 'Performance & Stability', desc: 'Smoother scrolling and faster page loads' },
             ].map((item) => (
               <div key={item.title} className="flex items-center gap-2.5 p-2 bg-muted/40 rounded-md">
                 <span className="text-sm shrink-0">{item.icon}</span>
