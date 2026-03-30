@@ -455,10 +455,59 @@ export default function EmbedPlayer() {
         className={`controls-area absolute inset-0 flex flex-col justify-end transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Title bar */}
-        <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/80 to-transparent">
-          <h1 className="text-white font-medium truncate">{episodeData.title}</h1>
+        {/* Title bar + Episodes button */}
+        <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black/80 to-transparent flex items-center justify-between">
+          <h1 className="text-white font-medium truncate min-w-0 flex-1">{episodeData.title}</h1>
+          {allEpisodes.length > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowEpisodePanel(!showEpisodePanel); }}
+              className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white text-[10px] font-medium transition-colors ml-2 shrink-0"
+            >
+              <List className="w-3 h-3" /> Episodes
+            </button>
+          )}
         </div>
+
+        {/* Episode panel - slides from right */}
+        {showEpisodePanel && (
+          <>
+            <div className="absolute inset-0 z-40 bg-black/60" onClick={(e) => { e.stopPropagation(); setShowEpisodePanel(false); }} />
+            <div
+              className="absolute top-0 right-0 bottom-0 z-50 w-[280px] sm:w-[320px] bg-black/95 backdrop-blur-md border-l border-white/10 flex flex-col"
+              style={{ animation: 'slideInRight 0.25s ease-out' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-3 border-b border-white/10">
+                <h3 className="text-white text-sm font-semibold truncate">Episodes</h3>
+                <button onClick={() => setShowEpisodePanel(false)} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 shrink-0">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-3 grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {allEpisodes.map((ep, idx) => (
+                  <button
+                    key={ep.id}
+                    onClick={() => switchToEpisode(ep)}
+                    className={`flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-all ${
+                      idx === currentEpisodeIndex
+                        ? 'bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.4)]'
+                        : 'bg-white/5 text-white/70 hover:bg-white/15 hover:text-white'
+                    }`}
+                  >
+                    <span className="text-[10px] text-white/40">S{ep.season_number}</span>
+                    <span>Ep {ep.episode_number}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <style>{`
+              @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+              }
+            `}</style>
+          </>
+        )}
 
         {/* Center play button */}
         {!isPlaying && showControls && !isLoading && (
