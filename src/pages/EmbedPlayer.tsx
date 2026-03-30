@@ -4,7 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { 
   Play, Pause, Volume2, VolumeX, Maximize, 
   SkipForward, SkipBack, Loader2, AlertTriangle,
-  RefreshCw, Settings, Check, Download, Headphones, ShieldAlert
+  RefreshCw, Settings, Check, Download, Headphones, ShieldAlert,
+  List, X
 } from 'lucide-react';
 import Hls from 'hls.js';
 
@@ -55,6 +56,9 @@ export default function EmbedPlayer() {
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [audioTracks, setAudioTracks] = useState<{ id: number; name: string; lang: string }[]>([]);
   const [currentAudioTrack, setCurrentAudioTrack] = useState(0);
+  const [showEpisodePanel, setShowEpisodePanel] = useState(false);
+  const [allEpisodes, setAllEpisodes] = useState<{ id: string; title: string; episode_number: number; season_number: number }[]>([]);
+  const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(0);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -131,12 +135,30 @@ export default function EmbedPlayer() {
       if (!episodeId) { setFetchError('No episode ID provided'); return; }
       try {
         const { data, error } = await supabase
-          .from('episodes').select('video_url, external_url, title')
+          .from('episodes').select('video_url, external_url, title, season_id, episode_number')
           .eq('id', episodeId).single();
         if (error || !data) { setFetchError('Episode not found'); return; }
         const url = data.video_url || data.external_url;
         if (!url) { setFetchError('No video available'); return; }
         setEpisodeData({ title: data.title, videoUrl: url });
+
+        // Fetch sibling episodes for episode selector
+        if (data.season_id) {
+          const { data: season } = await supabase.from('seasons').select('id, season_number, anime_id').eq('id', data.season_id).single();
+          if (season) {
+            const { data: allSeasons } = await supabase.from('seasons').select('id, season_number').eq('anime_id', season.anime_id).order('season_number');
+            if (allSeasons) {
+              const allEps: typeof allEpisodes = [];
+              for (const s of allSeasons) {
+                const { data: eps } = await supabase.from('episodes').select('id, title, episode_number').eq('season_id', s.id).order('episode_number');
+                if (eps) allEps.push(...eps.map(e => ({ ...e, season_number: s.season_number })));
+              }
+              setAllEpisodes(allEps);
+              const idx = allEps.findIndex(e => e.id === episodeId);
+              if (idx >= 0) setCurrentEpisodeIndex(idx);
+            }
+          }
+        }
       } catch {
         setFetchError('Failed to load episode');
       }
@@ -327,7 +349,20 @@ export default function EmbedPlayer() {
     }
   };
 
-  const closeAllMenus = () => { setShowQualityMenu(false); setShowDownloadMenu(false); setShowAudioMenu(false); };
+  const closeAllMenus = () => { setShowQualityMenu(false); setShowDownloadMenu(false); setShowAudioMenu(false); setShowEpisodePanel(false); };
+
+  const switchToEpisode = useCallback(async (ep: typeof allEpisodes[0]) => {
+    setShowEpisodePanel(false);
+    setIsLoading(true);
+    setError(null);
+    const { data } = await supabase.from('episodes').select('video_url, external_url, title').eq('id', ep.id).single();
+    if (!data) { setError('Episode failed to load'); return; }
+    const url = data.video_url || data.external_url;
+    if (!url) { setError('No video available'); return; }
+    setEpisodeData({ title: data.title, videoUrl: url });
+    const idx = allEpisodes.findIndex(e => e.id === ep.id);
+    if (idx >= 0) setCurrentEpisodeIndex(idx);
+  }, [allEpisodes]);
 
   // Blocked domain
   if (domainAllowed === false) {
@@ -420,10 +455,59 @@ export default function EmbedPlayer() {
         className={`controls-area absolute inset-0 flex flex-col justify-end transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Title bar */}
-        <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/80 to-transparent">
-          <h1 className="text-white font-medium truncate">{episodeData.title}</h1>
+        {/* Title bar + Episodes button */}
+        <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black/80 to-transparent flex items-center justify-between">
+          <h1 className="text-white font-medium truncate min-w-0 flex-1">{episodeData.title}</h1>
+          {allEpisodes.length > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowEpisodePanel(!showEpisodePanel); }}
+              className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white text-[10px] font-medium transition-colors ml-2 shrink-0"
+            >
+              <List className="w-3 h-3" /> Episodes
+            </button>
+          )}
         </div>
+
+        {/* Episode panel - slides from right */}
+        {showEpisodePanel && (
+          <>
+            <div className="absolute inset-0 z-40 bg-black/60" onClick={(e) => { e.stopPropagation(); setShowEpisodePanel(false); }} />
+            <div
+              className="absolute top-0 right-0 bottom-0 z-50 w-[280px] sm:w-[320px] bg-black/95 backdrop-blur-md border-l border-white/10 flex flex-col"
+              style={{ animation: 'slideInRight 0.25s ease-out' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-3 border-b border-white/10">
+                <h3 className="text-white text-sm font-semibold truncate">Episodes</h3>
+                <button onClick={() => setShowEpisodePanel(false)} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 shrink-0">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-3 grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {allEpisodes.map((ep, idx) => (
+                  <button
+                    key={ep.id}
+                    onClick={() => switchToEpisode(ep)}
+                    className={`flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-all ${
+                      idx === currentEpisodeIndex
+                        ? 'bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.4)]'
+                        : 'bg-white/5 text-white/70 hover:bg-white/15 hover:text-white'
+                    }`}
+                  >
+                    <span className="text-[10px] text-white/40">S{ep.season_number}</span>
+                    <span>Ep {ep.episode_number}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <style>{`
+              @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+              }
+            `}</style>
+          </>
+        )}
 
         {/* Center play button */}
         {!isPlaying && showControls && !isLoading && (
