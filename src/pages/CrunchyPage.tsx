@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { TrendingUp, Eye } from 'lucide-react';
 import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
+import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
 
 interface CrunchyAnime {
   id: string;
