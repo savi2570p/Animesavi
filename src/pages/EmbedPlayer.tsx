@@ -349,7 +349,20 @@ export default function EmbedPlayer() {
     }
   };
 
-  const closeAllMenus = () => { setShowQualityMenu(false); setShowDownloadMenu(false); setShowAudioMenu(false); };
+  const closeAllMenus = () => { setShowQualityMenu(false); setShowDownloadMenu(false); setShowAudioMenu(false); setShowEpisodePanel(false); };
+
+  const switchToEpisode = useCallback(async (ep: typeof allEpisodes[0]) => {
+    setShowEpisodePanel(false);
+    setIsLoading(true);
+    setError(null);
+    const { data } = await supabase.from('episodes').select('video_url, external_url, title').eq('id', ep.id).single();
+    if (!data) { setError('Episode failed to load'); return; }
+    const url = data.video_url || data.external_url;
+    if (!url) { setError('No video available'); return; }
+    setEpisodeData({ title: data.title, videoUrl: url });
+    const idx = allEpisodes.findIndex(e => e.id === ep.id);
+    if (idx >= 0) setCurrentEpisodeIndex(idx);
+  }, [allEpisodes]);
 
   // Blocked domain
   if (domainAllowed === false) {
