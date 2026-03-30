@@ -23,14 +23,17 @@ export function ContentNavTabs() {
 
   const canAccessPending = isUploader || isAdmin;
 
+  const isOnCrunchy = location.pathname === '/crunchy';
+  const isOnMuseIN = location.pathname === '/musein';
+
   const tabs: NavTab[] = [
     { to: '/browse', label: 'Browse', icon: LayoutGrid },
     { to: '/latest-series', label: 'Latest Series', icon: Tv },
     { to: '/latest-episodes', label: 'Latest Episodes', icon: Play },
     { to: '/latest-movies', label: 'Latest Movies', icon: Film },
     { to: '/upcoming', label: 'Upcoming', icon: Cherry },
-    { to: '/crunchy', label: 'Crunchy', customIcon: crunchyrollLogo },
-    { to: '/musein', label: 'MuseIN', customIcon: museinLogo, isMuseIN: true },
+    ...(isOnCrunchy ? [{ to: '/crunchy', label: 'Crunchy', customIcon: crunchyrollLogo }] : []),
+    ...(isOnMuseIN ? [{ to: '/musein', label: 'MuseIN', customIcon: museinLogo, isMuseIN: true }] : []),
     ...(isRolesLoaded && canAccessPending
       ? [{ to: '/pending-upload', label: 'Pending Upload', icon: Clock, requiresUploader: true }]
       : []),

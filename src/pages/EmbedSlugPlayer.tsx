@@ -514,53 +514,45 @@ export default function EmbedSlugPlayer() {
           )}
         </div>
 
-        {/* Episode panel overlay */}
+        {/* Episode panel - slides from right */}
         {showEpisodePanel && (
-          <div className="absolute inset-0 z-50 bg-black/95 flex flex-col animate-fade-in" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-3 border-b border-white/10">
-              <h3 className="text-white text-sm font-semibold">{episodeData.animeTitle} — Episodes</h3>
-              <button onClick={() => setShowEpisodePanel(false)} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-3 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
-              {allEpisodes.map((ep, idx) => (
-                <button
-                  key={ep.id}
-                  onClick={() => switchToEpisode(ep)}
-                  className={`flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-all ${
-                    idx === currentEpisodeIndex
-                      ? 'bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.4)]'
-                      : 'bg-white/5 text-white/70 hover:bg-white/15 hover:text-white'
-                  }`}
-                >
-                  <span className="text-[10px] text-white/40">S{ep.season_number}</span>
-                  <span>Ep {ep.episode_number}</span>
+          <>
+            <div className="absolute inset-0 z-40 bg-black/60" onClick={(e) => { e.stopPropagation(); setShowEpisodePanel(false); }} />
+            <div
+              className="absolute top-0 right-0 bottom-0 z-50 w-[280px] sm:w-[320px] bg-black/95 backdrop-blur-md border-l border-white/10 flex flex-col"
+              style={{ animation: 'slideInRight 0.25s ease-out' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-3 border-b border-white/10">
+                <h3 className="text-white text-sm font-semibold truncate">{episodeData.animeTitle} — Episodes</h3>
+                <button onClick={() => setShowEpisodePanel(false)} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 shrink-0">
+                  <X className="w-4 h-4" />
                 </button>
-              ))}
+              </div>
+              <div className="flex-1 overflow-y-auto p-3 grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {allEpisodes.map((ep, idx) => (
+                  <button
+                    key={ep.id}
+                    onClick={() => switchToEpisode(ep)}
+                    className={`flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-all ${
+                      idx === currentEpisodeIndex
+                        ? 'bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.4)]'
+                        : 'bg-white/5 text-white/70 hover:bg-white/15 hover:text-white'
+                    }`}
+                  >
+                    <span className="text-[10px] text-white/40">S{ep.season_number}</span>
+                    <span>Ep {ep.episode_number}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* Episode strip (horizontal scroll) */}
-        {allEpisodes.length > 1 && showControls && !showEpisodePanel && (
-          <div className="absolute bottom-[90px] sm:bottom-[100px] left-0 right-0 px-3 z-40">
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-              {allEpisodes.map((ep, idx) => (
-                <button
-                  key={ep.id}
-                  onClick={(e) => { e.stopPropagation(); switchToEpisode(ep); }}
-                  className={`shrink-0 px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
-                    idx === currentEpisodeIndex
-                      ? 'bg-primary text-primary-foreground shadow-[0_0_8px_hsl(var(--primary)/0.4)]'
-                      : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
-                  }`}
-                >
-                  S{ep.season_number}E{ep.episode_number}
-                </button>
-              ))}
-            </div>
-          </div>
+            <style>{`
+              @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+              }
+            `}</style>
+          </>
         )}
 
         <div className={`bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-16 ${deviceInfo.isMobile ? 'pb-2 px-3' : 'pb-3 px-4'}`}>
