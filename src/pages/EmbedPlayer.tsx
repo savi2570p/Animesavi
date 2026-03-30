@@ -56,6 +56,10 @@ export default function EmbedPlayer() {
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [audioTracks, setAudioTracks] = useState<{ id: number; name: string; lang: string }[]>([]);
   const [currentAudioTrack, setCurrentAudioTrack] = useState(0);
+  const [showEpisodePanel, setShowEpisodePanel] = useState(false);
+  const [allEpisodes, setAllEpisodes] = useState<{ id: string; title: string; episode_number: number; season_number: number }[]>([]);
+  const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(0);
+  const [currentAudioTrack, setCurrentAudioTrack] = useState(0);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
