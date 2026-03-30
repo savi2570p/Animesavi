@@ -578,7 +578,7 @@ export default function AnimeDetail() {
                     <p className="text-muted-foreground/70 text-sm mt-2">Check back soon for new episodes!</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                     {episodes.map((episode, index) => {
                       const progress = getEpisodeProgress(episode.id);
                       const completed = isEpisodeCompleted(episode.id);
@@ -588,7 +588,7 @@ export default function AnimeDetail() {
                           key={episode.id}
                           to={`/watch/${episode.id}`}
                           className="episode-card group animate-fade-in"
-                          style={{ animationDelay: `${index * 50}ms` }}
+                          style={{ animationDelay: `${index * 30}ms` }}
                         >
                           {/* Thumbnail */}
                           <div className="relative aspect-video overflow-hidden rounded-t-lg">
@@ -601,46 +601,46 @@ export default function AnimeDetail() {
                             
                             {/* Play overlay */}
                             <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                              <div className="w-14 h-14 rounded-full bg-primary/90 flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300">
-                                <Play className="w-6 h-6 text-white fill-current ml-0.5" />
+                              <div className="w-10 h-10 rounded-full bg-primary/90 flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300">
+                                <Play className="w-4 h-4 text-white fill-current ml-0.5" />
                               </div>
                             </div>
                             
-                            {/* 4K Badge - bottom right */}
-                            <div className="absolute bottom-2 right-2 z-10">
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg">4K</span>
+                            {/* 4K Badge */}
+                            <div className="absolute bottom-1 right-1 z-10">
+                              <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg">4K</span>
                             </div>
                             
                             {/* Duration badge */}
                             {episode.duration && (
-                              <span className="absolute bottom-2 left-2 px-2 py-1 text-xs font-medium bg-black/80 text-white rounded-md backdrop-blur-sm">
+                              <span className="absolute bottom-1 left-1 px-1.5 py-0.5 text-[10px] font-medium bg-black/80 text-white rounded backdrop-blur-sm">
                                 {formatDuration(episode.duration)}
                               </span>
                             )}
                             
                             {/* Completed badge */}
                             {completed && (
-                              <div className="absolute top-2 right-2 p-1.5 bg-green-500/90 rounded-full">
-                                <CheckCircle2 className="w-4 h-4 text-white" />
+                              <div className="absolute top-1 right-1 p-1 bg-green-500/90 rounded-full">
+                                <CheckCircle2 className="w-3 h-3 text-white" />
                               </div>
                             )}
                             
                             {/* Mark as Watched button */}
                             <button
                               onClick={(e) => markAsWatched(episode.id, e)}
-                              className="absolute top-2 left-2 p-1.5 bg-black/70 hover:bg-black/90 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 z-10"
+                              className="absolute top-1 left-1 p-1 bg-black/70 hover:bg-black/90 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 z-10"
                               title={completed ? 'Mark as unwatched' : 'Mark as watched'}
                             >
                               {completed ? (
-                                <EyeOff className="w-4 h-4 text-white" />
+                                <EyeOff className="w-3 h-3 text-white" />
                               ) : (
-                                <Eye className="w-4 h-4 text-white" />
+                                <Eye className="w-3 h-3 text-white" />
                               )}
                             </button>
                             
                             {/* Progress bar */}
                             {progress > 0 && !completed && (
-                              <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/50">
+                              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black/50">
                                 <div 
                                   className="h-full bg-primary transition-all duration-300"
                                   style={{ width: `${Math.min(progress, 100)}%` }}
@@ -650,18 +650,18 @@ export default function AnimeDetail() {
                           </div>
                           
                           {/* Info */}
-                          <div className="p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">
-                                S{seasons.find(s => s.id === selectedSeason)?.season_number || 1} [EP {episode.episode_number}]
+                          <div className="p-2">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                                EP {episode.episode_number}
                               </span>
                               {progress > 0 && !completed && (
-                                <span className="text-xs text-muted-foreground">
-                                  {Math.round(progress)}% watched
+                                <span className="text-[10px] text-muted-foreground">
+                                  {Math.round(progress)}%
                                 </span>
                               )}
                             </div>
-                            <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                            <h3 className="font-medium text-xs line-clamp-1 group-hover:text-primary transition-colors">
                               {episode.title}
                             </h3>
                           </div>

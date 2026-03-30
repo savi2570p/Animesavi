@@ -26,18 +26,20 @@ export function ContentNavTabs() {
   const isOnCrunchy = location.pathname === '/crunchy';
   const isOnMuseIN = location.pathname === '/musein';
 
-  const tabs: NavTab[] = [
-    { to: '/browse', label: 'Browse', icon: LayoutGrid },
-    { to: '/latest-series', label: 'Latest Series', icon: Tv },
-    { to: '/latest-episodes', label: 'Latest Episodes', icon: Play },
-    { to: '/latest-movies', label: 'Latest Movies', icon: Film },
-    { to: '/upcoming', label: 'Upcoming', icon: Cherry },
-    ...(isOnCrunchy ? [{ to: '/crunchy', label: 'Crunchy', customIcon: crunchyrollLogo }] : []),
-    ...(isOnMuseIN ? [{ to: '/musein', label: 'MuseIN', customIcon: museinLogo, isMuseIN: true }] : []),
-    ...(isRolesLoaded && canAccessPending
-      ? [{ to: '/pending-upload', label: 'Pending Upload', icon: Clock, requiresUploader: true }]
-      : []),
-  ];
+  // On MuseIN page, only show MuseIN tab
+  const tabs: NavTab[] = isOnMuseIN
+    ? [{ to: '/musein', label: 'MuseIN', customIcon: museinLogo, isMuseIN: true }]
+    : [
+        { to: '/browse', label: 'Browse', icon: LayoutGrid },
+        { to: '/latest-series', label: 'Latest Series', icon: Tv },
+        { to: '/latest-episodes', label: 'Latest Episodes', icon: Play },
+        { to: '/latest-movies', label: 'Latest Movies', icon: Film },
+        { to: '/upcoming', label: 'Upcoming', icon: Cherry },
+        ...(isOnCrunchy ? [{ to: '/crunchy', label: 'Crunchy', customIcon: crunchyrollLogo }] : []),
+        ...(isRolesLoaded && canAccessPending
+          ? [{ to: '/pending-upload', label: 'Pending Upload', icon: Clock, requiresUploader: true }]
+          : []),
+      ];
 
   const isActiveTab = (path: string) => {
     if (path === '/browse') {

@@ -157,13 +157,13 @@ export default function Welcome() {
   const features = [
     { icon: Zap, title: 'Lightning Fast', desc: 'Stream any episode instantly with zero buffering. Our CDN delivers content at blazing speed worldwide.', highlight: true },
     { icon: Shield, title: '100% Ad-Free', desc: 'No ads, no popups, no interruptions. Just pure, uninterrupted anime watching experience from start to finish.', highlight: true },
-    { icon: Download, title: 'Smart Downloads', desc: 'Download in 480p, 720p, 1080p or even 2160p (4K) with proper episode names. Pick your quality and save for offline viewing.' },
+    { icon: Download, title: 'Smart Downloads', desc: 'Download in 480p, 720p, 1080p or even 2160p (4K) with proper episode names, codec info & quality tags.' },
     { icon: Smartphone, title: 'Mobile First', desc: 'Designed for phones with compact controls, gesture navigation, and picture-in-picture support.' },
     { icon: Globe, title: 'Hindi Dubbed', desc: 'Official Hindi DUB available for all anime — completely free, anytime, anywhere in the world.' },
     { icon: Users, title: 'Watch Parties', desc: 'Invite friends to watch together with real-time sync. Chat, react, and enjoy anime as a group.' },
     { icon: Headphones, title: 'Multi-Audio', desc: 'Switch between Hindi, English, and Japanese audio tracks on the fly without reloading the video.' },
-    { icon: Subtitles, title: 'Subtitles Support', desc: 'Built-in subtitle support with multiple languages so you never miss a word of dialogue.' },
-    { icon: Monitor, title: 'Cast & Mirror', desc: 'Cast to Chromecast, AirPlay, or any Smart TV seamlessly — no more "Access Expired" errors.' },
+    { icon: Subtitles, title: 'CC & Subtitles', desc: 'Built-in CC subtitle editor with manual timing controls. Import VTT/SRT or create custom captions.' },
+    { icon: Monitor, title: 'MuseIN & Crunchy', desc: 'Dedicated tabs for Muse India and Crunchyroll content with smart auto-tagging from genres.' },
   ];
 
   const heroAnime = featuredAnime[activeIndex];
