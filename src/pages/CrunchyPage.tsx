@@ -134,6 +134,7 @@ export default function CrunchyPage() {
 
   return (
     <div className="min-h-screen">
+      <ContentNavTabs />
 
       {/* Header */}
       <div className="relative overflow-x-hidden overflow-y-visible px-4 py-12">
