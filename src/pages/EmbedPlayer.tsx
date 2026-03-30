@@ -135,12 +135,30 @@ export default function EmbedPlayer() {
       if (!episodeId) { setFetchError('No episode ID provided'); return; }
       try {
         const { data, error } = await supabase
-          .from('episodes').select('video_url, external_url, title')
+          .from('episodes').select('video_url, external_url, title, season_id, episode_number')
           .eq('id', episodeId).single();
         if (error || !data) { setFetchError('Episode not found'); return; }
         const url = data.video_url || data.external_url;
         if (!url) { setFetchError('No video available'); return; }
         setEpisodeData({ title: data.title, videoUrl: url });
+
+        // Fetch sibling episodes for episode selector
+        if (data.season_id) {
+          const { data: season } = await supabase.from('seasons').select('id, season_number, anime_id').eq('id', data.season_id).single();
+          if (season) {
+            const { data: allSeasons } = await supabase.from('seasons').select('id, season_number').eq('anime_id', season.anime_id).order('season_number');
+            if (allSeasons) {
+              const allEps: typeof allEpisodes = [];
+              for (const s of allSeasons) {
+                const { data: eps } = await supabase.from('episodes').select('id, title, episode_number').eq('season_id', s.id).order('episode_number');
+                if (eps) allEps.push(...eps.map(e => ({ ...e, season_number: s.season_number })));
+              }
+              setAllEpisodes(allEps);
+              const idx = allEps.findIndex(e => e.id === episodeId);
+              if (idx >= 0) setCurrentEpisodeIndex(idx);
+            }
+          }
+        }
       } catch {
         setFetchError('Failed to load episode');
       }
