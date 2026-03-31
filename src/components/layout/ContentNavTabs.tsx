@@ -26,16 +26,17 @@ export function ContentNavTabs() {
   const isOnCrunchy = location.pathname === '/crunchy';
   const isOnMuseIN = location.pathname === '/musein';
 
-  // On MuseIN page, only show MuseIN tab
+  // On MuseIN or Crunchy page, only show that single tab
   const tabs: NavTab[] = isOnMuseIN
     ? [{ to: '/musein', label: 'MuseIN', customIcon: museinLogo, isMuseIN: true }]
+    : isOnCrunchy
+    ? [{ to: '/crunchy', label: 'Crunchy', customIcon: crunchyrollLogo }]
     : [
         { to: '/browse', label: 'Browse', icon: LayoutGrid },
         { to: '/latest-series', label: 'Latest Series', icon: Tv },
         { to: '/latest-episodes', label: 'Latest Episodes', icon: Play },
         { to: '/latest-movies', label: 'Latest Movies', icon: Film },
         { to: '/upcoming', label: 'Upcoming', icon: Cherry },
-        ...(isOnCrunchy ? [{ to: '/crunchy', label: 'Crunchy', customIcon: crunchyrollLogo }] : []),
         ...(isRolesLoaded && canAccessPending
           ? [{ to: '/pending-upload', label: 'Pending Upload', icon: Clock, requiresUploader: true }]
           : []),
