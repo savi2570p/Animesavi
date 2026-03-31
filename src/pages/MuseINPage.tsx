@@ -62,6 +62,23 @@ function useCountdown(targetDate: Date): { timeLeft: TimeLeft; isExpired: boolea
 // ─── Countdown (Coming Soon) View ───
 function ComingSoonView({ timeLeft }: { timeLeft: TimeLeft }) {
   const pad = (n: number) => String(n).padStart(2, '0');
+  const [museCount, setMuseCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from('anime')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_muse', true);
+      setMuseCount(count || 0);
+    };
+    fetchCount();
+  }, []);
+
+  // Calculate progress percentage (7 days total)
+  const totalMs = 7 * 24 * 60 * 60 * 1000;
+  const remainingMs = (timeLeft.days * 86400 + timeLeft.hours * 3600 + timeLeft.minutes * 60 + timeLeft.seconds) * 1000;
+  const progressPct = Math.max(0, Math.min(100, ((totalMs - remainingMs) / totalMs) * 100));
 
   return (
     <div className="container py-16 md:py-24 flex flex-col items-center text-center">
@@ -81,7 +98,7 @@ function ComingSoonView({ timeLeft }: { timeLeft: TimeLeft }) {
       </div>
 
       {/* Countdown Timer */}
-      <div className="flex items-center gap-3 md:gap-5 mb-10">
+      <div className="flex items-center gap-3 md:gap-5 mb-6">
         {[
           { value: timeLeft.days, label: 'Days' },
           { value: timeLeft.hours, label: 'Hours' },
@@ -100,6 +117,29 @@ function ComingSoonView({ timeLeft }: { timeLeft: TimeLeft }) {
             {i < 3 && <span className="text-xl md:text-2xl font-bold text-muted-foreground/50 -mt-5">:</span>}
           </div>
         ))}
+      </div>
+
+      {/* Progress bar */}
+      <div className="w-full max-w-md mb-3">
+        <div className="h-2 rounded-full bg-muted/60 overflow-hidden">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-1000"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-1.5">{Math.round(progressPct)}% ready</p>
+      </div>
+
+      {/* Stats badges */}
+      <div className="flex items-center gap-3 mb-8">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border/40">
+          <Film className="h-3.5 w-3.5 text-primary" />
+          <span className="text-xs font-medium">{museCount} Anime Queued</span>
+        </div>
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border/40">
+          <Globe className="h-3.5 w-3.5 text-primary" />
+          <span className="text-xs font-medium">Hindi Dubbed</span>
+        </div>
       </div>
 
       <p className="max-w-lg text-muted-foreground mb-10">

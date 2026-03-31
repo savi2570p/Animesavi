@@ -26,11 +26,11 @@ export function ContentNavTabs() {
   const isOnCrunchy = location.pathname === '/crunchy';
   const isOnMuseIN = location.pathname === '/musein';
 
-  // On MuseIN or Crunchy page, only show that single tab
-  const tabs: NavTab[] = isOnMuseIN
-    ? [{ to: '/musein', label: 'MuseIN', customIcon: museinLogo, isMuseIN: true }]
-    : isOnCrunchy
-    ? [{ to: '/crunchy', label: 'Crunchy', customIcon: crunchyrollLogo }]
+  // On MuseIN or Crunchy pages, show NO tabs — only back button
+  const hideAllTabs = isOnMuseIN || isOnCrunchy;
+
+  const tabs: NavTab[] = hideAllTabs
+    ? []
     : [
         { to: '/browse', label: 'Browse', icon: LayoutGrid },
         { to: '/latest-series', label: 'Latest Series', icon: Tv },
