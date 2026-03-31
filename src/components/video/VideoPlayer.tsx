@@ -532,43 +532,42 @@ export function VideoPlayer({
           const hls = new Hls({
             enableWorker: true,
             lowLatencyMode: true,
-            // INSTANT START: Minimal buffering before play
-            maxBufferLength: 2, // Only 2s needed to start playing
-            maxMaxBufferLength: isMobile ? 30 : 60,
-            maxBufferSize: isMobile ? 30 * 1000 * 1000 : 60 * 1000 * 1000,
-            maxBufferHole: 0.3,
-            // Start at lowest for instant first frame
-            startLevel: 0,
+            // INSTANT START: Minimal initial buffer, then grow aggressively
+            maxBufferLength: 4,
+            maxMaxBufferLength: isMobile ? 45 : 120,
+            maxBufferSize: isMobile ? 50 * 1000 * 1000 : 120 * 1000 * 1000,
+            maxBufferHole: 0.2,
+            // Start at highest available for 4K priority
+            startLevel: -1,
             autoStartLoad: true,
-            // Aggressive ABR — upscale fast after start
-            abrEwmaDefaultEstimate: isSlowNetwork ? 500000 : 3000000,
-            abrEwmaFastLive: 3,
-            abrEwmaSlowLive: 9,
-            abrEwmaFastVoD: 3,
-            abrEwmaSlowVoD: 9,
-            abrBandWidthFactor: 0.95,
-            abrBandWidthUpFactor: 0.9,
+            // ABR: Favor highest quality aggressively
+            abrEwmaDefaultEstimate: isSlowNetwork ? 500000 : 8000000,
+            abrEwmaFastLive: 2,
+            abrEwmaSlowLive: 6,
+            abrEwmaFastVoD: 2,
+            abrEwmaSlowVoD: 6,
+            abrBandWidthFactor: 0.98,
+            abrBandWidthUpFactor: 0.95,
             abrMaxWithRealBitrate: true,
-            backBufferLength: 0, // No back buffer — save memory
-            // Aggressive timeouts for faster failover
-            fragLoadingTimeOut: 4000,
-            fragLoadingMaxRetry: 4,
-            fragLoadingRetryDelay: 200,
-            levelLoadingTimeOut: 3000,
-            levelLoadingMaxRetry: 3,
-            levelLoadingRetryDelay: 200,
-            manifestLoadingTimeOut: 3000,
-            manifestLoadingMaxRetry: 2,
+            backBufferLength: isMobile ? 15 : 30,
+            // Faster fragment loading
+            fragLoadingTimeOut: 6000,
+            fragLoadingMaxRetry: 5,
+            fragLoadingRetryDelay: 150,
+            levelLoadingTimeOut: 4000,
+            levelLoadingMaxRetry: 4,
+            levelLoadingRetryDelay: 150,
+            manifestLoadingTimeOut: 4000,
+            manifestLoadingMaxRetry: 3,
             manifestLoadingRetryDelay: 100,
             xhrSetup: (xhr, url) => {
               xhr.withCredentials = false;
             },
             progressive: true,
-            capLevelToPlayerSize: isMobile,
+            capLevelToPlayerSize: false,
             testBandwidth: false,
-            // Prefetch first fragment immediately
+            // Prefetch for instant playback
             startFragPrefetch: true,
-            // Faster initial loading
             initialLiveManifestSize: 1,
             nudgeOffset: 0.1,
             nudgeMaxRetry: 5,
