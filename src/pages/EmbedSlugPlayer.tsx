@@ -529,21 +529,26 @@ export default function EmbedSlugPlayer() {
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-3 grid grid-cols-3 sm:grid-cols-4 gap-2">
-                {allEpisodes.map((ep, idx) => (
-                  <button
-                    key={ep.id}
-                    onClick={() => switchToEpisode(ep)}
-                    className={`flex flex-col items-center justify-center p-2 rounded-lg text-xs font-medium transition-all ${
-                      idx === currentEpisodeIndex
-                        ? 'bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.4)]'
-                        : 'bg-white/5 text-white/70 hover:bg-white/15 hover:text-white'
-                    }`}
-                  >
-                    <span className="text-[10px] text-white/40">S{ep.season_number}</span>
-                    <span>Ep {ep.episode_number}</span>
-                  </button>
-                ))}
+              <div className="flex-1 overflow-y-auto p-2.5 scrollbar-none" style={{ maxHeight: '250px' }}>
+                <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))' }}>
+                  {allEpisodes.map((ep, idx) => (
+                    <button
+                      key={ep.id}
+                      onClick={() => switchToEpisode(ep)}
+                      className="flex items-center justify-center rounded-[10px] text-[10px] font-semibold transition-all duration-200 hover:scale-105"
+                      style={{
+                        aspectRatio: '1 / 1',
+                        maxWidth: '60px',
+                        maxHeight: '60px',
+                        background: idx === currentEpisodeIndex ? 'hsl(var(--primary))' : 'rgba(255,255,255,0.05)',
+                        color: idx === currentEpisodeIndex ? 'white' : 'rgba(255,255,255,0.7)',
+                        boxShadow: idx === currentEpisodeIndex ? '0 0 12px hsl(var(--primary) / 0.5)' : 'none',
+                      }}
+                    >
+                      S{ep.season_number} EP{ep.episode_number}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
             <style>{`
