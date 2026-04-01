@@ -79,7 +79,7 @@ export function MostPopular() {
       
       const animeWithViews = (data || []).map(anime => ({
         ...anime,
-        view_count: viewCountMap[anime.title] || Math.floor(Math.random() * (900000 - 100000) + 100000)
+        view_count: viewCountMap[anime.title] || Math.floor(Math.random() * (9000000 - 1000000) + 1000000)
       }));
       
       // Sort by view count after assigning values (highest first)
