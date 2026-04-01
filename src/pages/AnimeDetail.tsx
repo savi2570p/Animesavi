@@ -531,19 +531,17 @@ export default function AnimeDetail() {
                 </Badge>
               )}
               {anime.status && (
-                <Badge className={cn(
-                  "px-3 py-1.5",
-                  anime.status === 'ongoing' 
-                    ? 'bg-anime-orange text-white' 
-                    : 'bg-primary text-primary-foreground'
+                <span className={cn(
+                  anime.status === 'ongoing' ? 'badge-glass-og' : 
+                  anime.status === 'completed' ? 'badge-glass-com' : 
+                  'bg-primary text-primary-foreground px-3 py-1.5'
                 )}>
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  {anime.status}
-                </Badge>
+                  {anime.status === 'ongoing' ? 'OG' : anime.status === 'completed' ? 'COM' : anime.status}
+                </span>
               )}
-              <Badge className="px-3 py-1.5 bg-amber-500 text-white hover:bg-amber-600">
+              <span className="badge-glass-hdub">
                 H-DUB
-              </Badge>
+              </span>
             </div>
 
             {/* Description */}
