@@ -25,6 +25,7 @@ import {
   Eye,
   EyeOff,
   Download,
+  ListVideo,
 } from 'lucide-react';
 
 // Helper to create slug from title
@@ -79,6 +80,7 @@ export default function AnimeDetail() {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [selectedSeason, setSelectedSeason] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isInWatchList, setIsInWatchList] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [recommendations, setRecommendations] = useState<Anime[]>([]);
   const [watchProgress, setWatchProgress] = useState<Map<string, WatchProgress>>(new Map());
@@ -149,6 +151,12 @@ export default function AnimeDetail() {
       fetchEpisodes(selectedSeason);
     }
   }, [selectedSeason]);
+
+  useEffect(() => {
+    if (user && episodes.length > 0) {
+      checkWatchList();
+    }
+  }, [episodes, user]);
 
   const fetchAnimeDetails = async () => {
     setIsLoading(true);
@@ -277,6 +285,44 @@ export default function AnimeDetail() {
         .insert({ user_id: user.id, anime_id: id });
       setIsFavorite(true);
       toast.success('Added to favorites');
+    }
+  };
+
+  const checkWatchList = async () => {
+    if (!user || episodes.length === 0) return;
+    const firstEp = episodes[0];
+    if (!firstEp) return;
+    const { data } = await supabase
+      .from('watch_later')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('episode_id', firstEp.id)
+      .maybeSingle();
+    setIsInWatchList(!!data);
+  };
+
+  const toggleWatchList = async () => {
+    if (!user) {
+      toast.error('Please sign in to use Watch List');
+      return;
+    }
+    const firstEp = episodes[0];
+    if (!firstEp) return;
+
+    if (isInWatchList) {
+      await supabase
+        .from('watch_later')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('episode_id', firstEp.id);
+      setIsInWatchList(false);
+      toast.success('Removed from Watch List');
+    } else {
+      await supabase
+        .from('watch_later')
+        .insert({ user_id: user.id, episode_id: firstEp.id });
+      setIsInWatchList(true);
+      toast.success('Added to Watch List');
     }
   };
 
@@ -537,6 +583,24 @@ export default function AnimeDetail() {
                 className="h-14 px-6 border-2"
               />
               
+              {/* Watch List Button */}
+              {nextEpisode && (
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={toggleWatchList}
+                  className={cn(
+                    "h-14 px-6 border-2 transition-all duration-300",
+                    isInWatchList
+                      ? 'text-primary border-primary bg-primary/10 hover:bg-primary/20'
+                      : 'hover:border-primary hover:text-primary'
+                  )}
+                >
+                  <ListVideo className={cn("h-5 w-5 mr-2")} />
+                  {isInWatchList ? 'In Watch List' : 'Add to Watch List'}
+                </Button>
+              )}
+
               {/* Batch Download Button */}
               {episodes.length > 0 && (
                 <BatchDownload episodes={episodes} animeTitle={anime.title} />

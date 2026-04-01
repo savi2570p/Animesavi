@@ -29,7 +29,8 @@ import {
   BadgeCheck,
   Sparkles,
   Home,
-  Download
+  Download,
+  ListVideo
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -221,6 +222,11 @@ export function Header() {
                     <Download className="h-4 w-4" /> Downloads
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/watchlist" className="flex items-center gap-2 py-2">
+                    <ListVideo className="h-4 w-4" /> Watch List
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {canUpload() && (
                   <DropdownMenuItem asChild>
@@ -369,6 +375,13 @@ export function Header() {
                       >
                         <Download className="h-3.5 w-3.5 text-muted-foreground" />
                         Downloads
+                      </Link>
+                      <Link 
+                        to="/watchlist" 
+                        className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors"
+                      >
+                        <ListVideo className="h-3.5 w-3.5 text-muted-foreground" />
+                        Watch List
                       </Link>
                     </>
                   )}
