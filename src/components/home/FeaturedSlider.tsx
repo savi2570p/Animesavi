@@ -42,7 +42,7 @@ const VIEW_COUNT_MAP: Record<string, number> = {
 const getViewCount = (title: string, dbViewCount: number | null): number => {
   if (VIEW_COUNT_MAP[title]) return VIEW_COUNT_MAP[title];
   if (dbViewCount && dbViewCount > 0) return dbViewCount;
-  return Math.floor(Math.random() * (900000 - 100000) + 100000);
+  return Math.floor(Math.random() * (9000000 - 1000000) + 1000000);
 };
 
 export function FeaturedSlider() {
@@ -155,9 +155,9 @@ export function FeaturedSlider() {
                 {/* Status & views */}
                 <div className="flex items-center gap-3">
                   {current.status === 'ongoing' && (
-                    <Badge className="bg-primary text-primary-foreground text-[10px] uppercase tracking-wider px-2 py-0.5">
-                      Ongoing
-                    </Badge>
+                    <span className="badge-glass-og text-[10px] uppercase tracking-wider">
+                      OG
+                    </span>
                   )}
                   <div className="flex items-center gap-1.5 text-sm text-foreground/80">
                     <Eye className="h-4 w-4" />
@@ -276,9 +276,9 @@ export function FeaturedSlider() {
             {/* Status & views */}
             <div className="flex items-center gap-2">
               {current.status === 'ongoing' && (
-                <Badge className="bg-primary text-primary-foreground text-[8px] uppercase tracking-wider px-1.5 py-0.5 font-bold">
-                  Ongoing
-                </Badge>
+                <span className="badge-glass-og text-[8px] uppercase tracking-wider font-bold">
+                  OG
+                </span>
               )}
               <div className="flex items-center gap-1 text-[11px] text-foreground/90 font-medium">
                 <Eye className="h-3 w-3" />

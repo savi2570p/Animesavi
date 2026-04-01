@@ -756,9 +756,8 @@ export default function Browse() {
                   
                   {/* Status badge */}
                   {anime.status === 'ongoing' && (
-                    <div className="browse-card-badge">
-                      <Sparkles className="w-3 h-3 mr-1 inline" />
-                      Ongoing
+                    <div className="browse-card-badge badge-glass-og">
+                      OG
                     </div>
                   )}
                   
@@ -772,20 +771,19 @@ export default function Browse() {
                   
                   {/* Completed badge */}
                   {anime.status === 'completed' && (
-                    <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-green-600 text-white rounded-md flex items-center gap-1 z-10">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Completed
+                    <div className="absolute top-2 left-2 badge-glass-com z-10">
+                      COM
                     </div>
                   )}
 
                   {/* NEW + H-DUB badges */}
                   <div className="absolute top-2 right-2 flex flex-col gap-1 items-end z-10">
                     {isNew(anime.created_at) && (
-                      <div className="px-2 py-0.5 text-xs font-bold bg-green-500 text-white rounded-md animate-pulse">
+                      <div className="badge-glass-new animate-pulse">
                         NEW
                       </div>
                     )}
-                    <div className="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-lg shadow-md">
+                    <div className="badge-glass-hdub">
                       H-DUB
                     </div>
                   </div>

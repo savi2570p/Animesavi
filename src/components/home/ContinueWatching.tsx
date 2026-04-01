@@ -264,11 +264,11 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
                           S{item.season?.season_number || 1} E{item.episode.episode_number}
                         </span>
                         {item.hasNewEpisode && (
-                          <span className="px-1.5 py-0.5 rounded bg-green-500 text-[9px] font-bold text-white animate-pulse shadow-lg shadow-green-500/40">
+                          <span className="badge-glass-new animate-pulse shadow-lg shadow-green-500/40">
                             NEW
                           </span>
                         )}
-                        <span className="px-1.5 py-0.5 rounded bg-amber-500 text-[9px] font-bold text-white shadow-md">
+                        <span className="badge-glass-hdub">
                           H-DUB
                         </span>
                       </div>
