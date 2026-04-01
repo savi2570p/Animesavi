@@ -57,6 +57,7 @@ const UpcomingPage = lazy(() => import("./pages/UpcomingPage"));
 const EmbedSlugPlayer = lazy(() => import("./pages/EmbedSlugPlayer"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const Downloads = lazy(() => import("./pages/Downloads"));
+const WatchList = lazy(() => import("./pages/WatchList"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
