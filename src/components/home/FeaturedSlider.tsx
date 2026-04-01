@@ -42,7 +42,7 @@ const VIEW_COUNT_MAP: Record<string, number> = {
 const getViewCount = (title: string, dbViewCount: number | null): number => {
   if (VIEW_COUNT_MAP[title]) return VIEW_COUNT_MAP[title];
   if (dbViewCount && dbViewCount > 0) return dbViewCount;
-  return Math.floor(Math.random() * (900000 - 100000) + 100000);
+  return Math.floor(Math.random() * (9000000 - 1000000) + 1000000);
 };
 
 export function FeaturedSlider() {
