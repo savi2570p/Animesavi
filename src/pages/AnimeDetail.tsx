@@ -25,6 +25,7 @@ import {
   Eye,
   EyeOff,
   Download,
+  ListVideo,
 } from 'lucide-react';
 
 // Helper to create slug from title

@@ -224,6 +224,7 @@ const App = () => (
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/stats" element={<UserStats />} />
                     <Route path="/downloads" element={<Downloads />} />
+                    <Route path="/watchlist" element={<WatchList />} />
                     <Route path="/:animeSlug/:episodeSlug" element={<AnimeSlugRedirect />} />
                     <Route path="/:animeSlug" element={<AnimeSlugRedirect />} />
                   </Route>
