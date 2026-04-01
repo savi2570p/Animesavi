@@ -11,21 +11,10 @@ interface WatchListItem {
   id: string;
   episode_id: string;
   created_at: string;
-  episode?: {
-    id: string;
-    title: string;
-    episode_number: number;
-    thumbnail: string | null;
-    duration: number | null;
-    season?: {
-      season_number: number;
-      anime?: {
-        id: string;
-        title: string;
-        cover_image: string | null;
-      };
-    };
-  };
+  animeId?: string;
+  animeTitle?: string;
+  coverImage?: string | null;
+  totalSeasons?: number;
 }
 
 export default function WatchList() {
