@@ -80,6 +80,7 @@ export default function AnimeDetail() {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [selectedSeason, setSelectedSeason] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isInWatchList, setIsInWatchList] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [recommendations, setRecommendations] = useState<Anime[]>([]);
   const [watchProgress, setWatchProgress] = useState<Map<string, WatchProgress>>(new Map());
