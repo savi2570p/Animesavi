@@ -151,8 +151,15 @@ export function LatestSeries() {
     }
     if (anime.status === 'completed') {
       return (
-        <div className="absolute top-10 left-2 px-2 py-1 text-xs font-bold bg-green-600 text-white rounded-lg shadow-md">
-          COMPLETE
+        <div className="absolute top-10 left-2 badge-glass-com">
+          COM
+        </div>
+      );
+    }
+    if (anime.status === 'ongoing') {
+      return (
+        <div className="absolute top-10 left-2 badge-glass-og">
+          OG
         </div>
       );
     }
