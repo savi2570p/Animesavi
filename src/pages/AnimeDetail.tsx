@@ -539,6 +539,24 @@ export default function AnimeDetail() {
                 className="h-14 px-6 border-2"
               />
               
+              {/* Watch List Button */}
+              {nextEpisode && (
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={toggleWatchList}
+                  className={cn(
+                    "h-14 px-6 border-2 transition-all duration-300",
+                    isInWatchList
+                      ? 'text-primary border-primary bg-primary/10 hover:bg-primary/20'
+                      : 'hover:border-primary hover:text-primary'
+                  )}
+                >
+                  <ListVideo className={cn("h-5 w-5 mr-2")} />
+                  {isInWatchList ? 'In Watch List' : 'Add to Watch List'}
+                </Button>
+              )}
+
               {/* Batch Download Button */}
               {episodes.length > 0 && (
                 <BatchDownload episodes={episodes} animeTitle={anime.title} />
