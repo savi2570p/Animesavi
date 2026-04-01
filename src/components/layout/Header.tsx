@@ -222,6 +222,11 @@ export function Header() {
                     <Download className="h-4 w-4" /> Downloads
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/watchlist" className="flex items-center gap-2 py-2">
+                    <ListVideo className="h-4 w-4" /> Watch List
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {canUpload() && (
                   <DropdownMenuItem asChild>
