@@ -39,7 +39,7 @@ export default function WatchList() {
       .select(`
         id, episode_id, created_at,
         episodes!watch_later_episode_id_fkey (
-          id, title, episode_number, thumbnail, duration,
+          id,
           seasons!episodes_season_id_fkey (
             season_number,
             anime!seasons_anime_id_fkey ( id, title, cover_image )
@@ -50,19 +50,30 @@ export default function WatchList() {
       .order('created_at', { ascending: false });
 
     if (data) {
-      const mapped = data.map((item: any) => ({
-        id: item.id,
-        episode_id: item.episode_id,
-        created_at: item.created_at,
-        episode: item.episodes ? {
-          ...item.episodes,
-          season: item.episodes.seasons ? {
-            ...item.episodes.seasons,
-            anime: item.episodes.seasons.anime,
-          } : undefined,
-        } : undefined,
-      }));
-      setItems(mapped);
+      // Deduplicate by anime and count seasons
+      const animeMap = new Map<string, WatchListItem>();
+      for (const item of data as any[]) {
+        const anime = item.episodes?.seasons?.anime;
+        if (!anime) continue;
+        if (animeMap.has(anime.id)) continue;
+        
+        // Count total seasons for this anime
+        const { count } = await supabase
+          .from('seasons')
+          .select('id', { count: 'exact', head: true })
+          .eq('anime_id', anime.id);
+
+        animeMap.set(anime.id, {
+          id: item.id,
+          episode_id: item.episode_id,
+          created_at: item.created_at,
+          animeId: anime.id,
+          animeTitle: anime.title,
+          coverImage: anime.cover_image,
+          totalSeasons: count || 1,
+        });
+      }
+      setItems(Array.from(animeMap.values()));
     }
     if (error) console.error('Error fetching watch list:', error);
     setIsLoading(false);
