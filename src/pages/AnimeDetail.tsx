@@ -282,6 +282,44 @@ export default function AnimeDetail() {
     }
   };
 
+  const checkWatchList = async () => {
+    if (!user || episodes.length === 0) return;
+    const firstEp = episodes[0];
+    if (!firstEp) return;
+    const { data } = await supabase
+      .from('watch_later')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('episode_id', firstEp.id)
+      .maybeSingle();
+    setIsInWatchList(!!data);
+  };
+
+  const toggleWatchList = async () => {
+    if (!user) {
+      toast.error('Please sign in to use Watch List');
+      return;
+    }
+    const firstEp = episodes[0];
+    if (!firstEp) return;
+
+    if (isInWatchList) {
+      await supabase
+        .from('watch_later')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('episode_id', firstEp.id);
+      setIsInWatchList(false);
+      toast.success('Removed from Watch List');
+    } else {
+      await supabase
+        .from('watch_later')
+        .insert({ user_id: user.id, episode_id: firstEp.id });
+      setIsInWatchList(true);
+      toast.success('Added to Watch List');
+    }
+  };
+
   const formatDuration = (minutes: number | null) => {
     if (!minutes) return '';
     return `${minutes} min`;
