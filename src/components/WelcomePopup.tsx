@@ -58,24 +58,24 @@ export function WelcomePopup() {
         </DialogContent>
       </Dialog>
 
-      {/* What's New Popup — v12 */}
+      {/* What's New Popup — v13 */}
       <Dialog open={showNotice} onOpenChange={(open) => { if (!open) dismissPopup(); }}>
         <DialogContent className="sm:max-w-sm border-primary/20 p-4" style={{ zIndex: 9998 }}>
           <DialogHeader className="pb-1">
             <DialogTitle className="text-base font-heading text-center">
-              ✨ What's New — v12
+              ✨ What's New — v13
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-1.5 max-h-[50vh] overflow-y-auto pr-1">
             {[
-              { icon: '🎬', title: 'Episode Panel Redesign', desc: 'Slide-in episode selector in embed player' },
-              { icon: '📐', title: 'Compact Episode Cards', desc: 'Smaller, cleaner episode grid on detail pages' },
-              { icon: '🎯', title: 'MuseIN Exclusive Nav', desc: 'Dedicated navigation when viewing MuseIN' },
-              { icon: '🔒', title: 'Smart Tab Visibility', desc: 'Crunchy & MuseIN tabs shown only on their pages' },
-              { icon: '📝', title: 'CC Subtitle Editor', desc: 'Manual subtitle creation with timing controls' },
-              { icon: '🎌', title: 'MuseIN Countdown', desc: '7-day countdown with live DD:HH:MM:SS timer' },
-              { icon: '⚡', title: 'Performance & Stability', desc: 'Smoother scrolling and faster page loads' },
+              { icon: '📋', title: 'Watch List Revamp', desc: 'Shows anime name & total seasons only — cleaner layout' },
+              { icon: '🏷️', title: 'Glassy iOS Badges', desc: 'NEW, H-DUB, OG, COM badges with frosted glass look' },
+              { icon: '🔖', title: 'OG & COM Tags', desc: 'Ongoing → OG, Completed → COM — compact status tags' },
+              { icon: '📊', title: 'View Count Fix', desc: 'All anime now show 1M–10M views, no more 0K glitch' },
+              { icon: '🎬', title: 'Episode Panel Grid', desc: 'Compact square grid in embed player' },
+              { icon: '🎯', title: 'Smart Nav Tabs', desc: 'Crunchy & MuseIN pages show only back button' },
+              { icon: '⚡', title: 'Faster Video Loading', desc: 'Optimized HLS for quicker 4K startup' },
             ].map((item) => (
               <div key={item.title} className="flex items-center gap-2.5 p-2 bg-muted/40 rounded-md">
                 <span className="text-sm shrink-0">{item.icon}</span>
