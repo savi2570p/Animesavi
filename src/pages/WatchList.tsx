@@ -87,12 +87,6 @@ export default function WatchList() {
     }
   };
 
-  const formatDuration = (seconds: number | null) => {
-    if (!seconds) return '';
-    const m = Math.floor(seconds / 60);
-    return `${m} min`;
-  };
-
   if (!user) return null;
 
   return (
@@ -104,52 +98,47 @@ export default function WatchList() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-32 rounded-xl bg-muted animate-pulse" />
+            <div key={i} className="aspect-[3/4] rounded-xl bg-muted animate-pulse" />
           ))}
         </div>
       ) : items.length === 0 ? (
         <div className="text-center py-20">
           <ListVideo className="w-16 h-16 text-muted-foreground/40 mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2">Your Watch List is empty</h2>
-          <p className="text-muted-foreground mb-6">Add episodes to your watch list from any anime detail page</p>
+          <p className="text-muted-foreground mb-6">Add anime to your watch list from any anime detail page</p>
           <Button asChild>
             <Link to="/browse">Browse Anime</Link>
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {items.map((item) => {
-            const ep = item.episode;
-            const anime = ep?.season?.anime;
-            const img = ep?.thumbnail || anime?.cover_image || '/placeholder.svg';
+            const img = item.coverImage || '/placeholder.svg';
 
             return (
-              <Card key={item.id} className="overflow-hidden group hover:border-primary/50 transition-colors">
-                <Link to={`/watch/${item.episode_id}`} className="flex gap-3 p-3">
-                  <div className="relative w-28 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                    <img src={img} alt={ep?.title} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Play className="w-6 h-6 text-white fill-current" />
+              <Card key={item.id} className="overflow-hidden group hover:border-primary/50 transition-colors rounded-xl">
+                <Link to={`/anime/${item.animeId}`} className="block">
+                  <div className="relative aspect-[3/4] overflow-hidden">
+                    <img src={img} alt={item.animeTitle} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="p-3 rounded-full bg-primary/90 shadow-lg">
+                        <Play className="w-5 h-5 text-primary-foreground fill-current" />
+                      </div>
                     </div>
-                    {ep?.duration && (
-                      <span className="absolute bottom-1 right-1 text-[10px] bg-black/70 text-white px-1.5 py-0.5 rounded">
-                        {formatDuration(ep.duration)}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-primary font-medium truncate">{anime?.title}</p>
-                    <p className="text-sm font-semibold truncate mt-0.5">
-                      S{ep?.season?.season_number || 1} EP{ep?.episode_number} - {ep?.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Added {new Date(item.created_at).toLocaleDateString()}
-                    </p>
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <h3 className="text-sm font-semibold text-white line-clamp-2 drop-shadow-lg">
+                        {item.animeTitle}
+                      </h3>
+                      <p className="text-xs text-white/70 mt-1">
+                        {item.totalSeasons} Season{(item.totalSeasons || 1) > 1 ? 's' : ''}
+                      </p>
+                    </div>
                   </div>
                 </Link>
-                <div className="px-3 pb-3 flex justify-end">
+                <div className="p-2 flex justify-end">
                   <Button
                     variant="ghost"
                     size="sm"
