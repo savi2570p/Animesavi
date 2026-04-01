@@ -152,6 +152,12 @@ export default function AnimeDetail() {
     }
   }, [selectedSeason]);
 
+  useEffect(() => {
+    if (user && episodes.length > 0) {
+      checkWatchList();
+    }
+  }, [episodes, user]);
+
   const fetchAnimeDetails = async () => {
     setIsLoading(true);
     
