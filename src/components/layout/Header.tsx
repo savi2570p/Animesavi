@@ -29,7 +29,8 @@ import {
   BadgeCheck,
   Sparkles,
   Home,
-  Download
+  Download,
+  ListVideo
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
