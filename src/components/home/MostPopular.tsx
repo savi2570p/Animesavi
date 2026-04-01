@@ -272,9 +272,9 @@ export function MostPopular() {
                                : `${(anime.view_count / 1000).toFixed(0)}K`}
                            </span>
                          )}
-                         <span className="px-1.5 py-0.5 text-[9px] font-bold bg-amber-500 text-white rounded shadow-sm">
-                           H-DUB
-                         </span>
+                         <span className="badge-glass-hdub">
+                            H-DUB
+                          </span>
                        </div>
                      </div>
                   </div>
