@@ -30,65 +30,60 @@ export default function LatestSeriesPage() {
     try {
       const { data: animeData, error: animeError } = await supabase
         .from('anime')
-        .select(`
-          id,
-          title,
-          cover_image,
-          created_at,
-          updated_at,
-          type,
-          status
-        `)
+        .select('id, title, cover_image, created_at, updated_at, type, status')
         .eq('type', 'series')
         .order('updated_at', { ascending: false })
         .limit(100);
 
       if (animeError) throw animeError;
+      if (!animeData || animeData.length === 0) { setSeries([]); return; }
 
-      const animeIds = (animeData || []).map(a => a.id);
-      
+      const animeIds = animeData.map(a => a.id);
+
       const { data: allSeasons } = await supabase
         .from('seasons')
         .select('id, anime_id')
         .in('anime_id', animeIds);
 
+      if (!allSeasons || allSeasons.length === 0) { setSeries([]); return; }
+
       const seasonsByAnime = new Map<string, string[]>();
-      (allSeasons || []).forEach(season => {
-        const existing = seasonsByAnime.get(season.anime_id) || [];
-        existing.push(season.id);
-        seasonsByAnime.set(season.anime_id, existing);
+      allSeasons.forEach(s => {
+        const arr = seasonsByAnime.get(s.anime_id) || [];
+        arr.push(s.id);
+        seasonsByAnime.set(s.anime_id, arr);
       });
 
-      const allSeasonIds = (allSeasons || []).map(s => s.id);
+      const allSeasonIds = allSeasons.map(s => s.id);
 
-      // Paginate episodes to avoid 1000-row limit
+      // Batch fetch episodes in chunks of 50 season IDs to avoid query limits
       const allEpisodes: { id: string; season_id: string; created_at: string }[] = [];
-      if (allSeasonIds.length > 0) {
+      const chunkSize = 50;
+      for (let i = 0; i < allSeasonIds.length; i += chunkSize) {
+        const chunk = allSeasonIds.slice(i, i + chunkSize);
         let offset = 0;
-        const pageSize = 1000;
         let hasMore = true;
         while (hasMore) {
           const { data: batch } = await supabase
             .from('episodes')
             .select('id, season_id, created_at')
-            .in('season_id', allSeasonIds)
+            .in('season_id', chunk)
             .order('created_at', { ascending: false })
-            .range(offset, offset + pageSize - 1);
+            .range(offset, offset + 999);
           if (batch) allEpisodes.push(...batch);
-          hasMore = (batch?.length || 0) === pageSize;
-          offset += pageSize;
+          hasMore = (batch?.length || 0) === 1000;
+          offset += 1000;
         }
       }
 
       const episodesByAnime = new Map<string, { count: number; latestDate: string | null }>();
-      
-      allEpisodes.forEach(episode => {
+      allEpisodes.forEach(ep => {
         for (const [animeId, seasonIds] of seasonsByAnime.entries()) {
-          if (seasonIds.includes(episode.season_id)) {
+          if (seasonIds.includes(ep.season_id)) {
             const existing = episodesByAnime.get(animeId) || { count: 0, latestDate: null };
             existing.count++;
-            if (!existing.latestDate || new Date(episode.created_at) > new Date(existing.latestDate)) {
-              existing.latestDate = episode.created_at;
+            if (!existing.latestDate || new Date(ep.created_at) > new Date(existing.latestDate)) {
+              existing.latestDate = ep.created_at;
             }
             episodesByAnime.set(animeId, existing);
             break;
@@ -96,16 +91,12 @@ export default function LatestSeriesPage() {
         }
       });
 
-      const seriesWithData: AnimeSeries[] = (animeData || [])
-        .map((anime) => {
-          const episodeData = episodesByAnime.get(anime.id) || { count: 0, latestDate: null };
-          return {
-            ...anime,
-            episode_count: episodeData.count,
-            latest_episode_date: episodeData.latestDate
-          };
+      const seriesWithData: AnimeSeries[] = animeData
+        .map(anime => {
+          const epData = episodesByAnime.get(anime.id) || { count: 0, latestDate: null };
+          return { ...anime, episode_count: epData.count, latest_episode_date: epData.latestDate };
         })
-        .filter(anime => anime.episode_count > 0);
+        .filter(a => a.episode_count > 0);
 
       seriesWithData.sort((a, b) => {
         const dateA = a.latest_episode_date || a.updated_at || a.created_at;
