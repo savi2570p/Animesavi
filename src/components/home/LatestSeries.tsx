@@ -42,7 +42,7 @@ export function LatestSeries() {
         `)
         .eq('type', 'series')
         .order('updated_at', { ascending: false })
-        .limit(100); // Increased limit to get more anime
+        .limit(500);
 
       if (animeError) throw animeError;
 
