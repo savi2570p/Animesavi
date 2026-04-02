@@ -33,7 +33,7 @@ export default function LatestSeriesPage() {
         .select('id, title, cover_image, created_at, updated_at, type, status')
         .eq('type', 'series')
         .order('updated_at', { ascending: false })
-        .limit(100);
+        .limit(500);
 
       if (animeError) throw animeError;
       if (!animeData || animeData.length === 0) { setSeries([]); return; }
