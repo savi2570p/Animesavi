@@ -17,6 +17,7 @@ import { ComingSoon } from "@/components/home/ComingSoon";
 import { SocialShare } from "@/components/home/SocialShare";
 import { MostPopular } from "@/components/home/MostPopular";
 import { AnimeCalendar } from "@/components/AnimeCalendar";
+import { TrendingBanner } from "@/components/home/TrendingBanner";
 
 export default function Index() {
   const { user } = useAuth();
@@ -35,6 +36,9 @@ export default function Index() {
     <div className="min-h-screen bg-background">
       {/* Hero Banner */}
       <FeaturedSlider />
+
+      {/* Trending Now */}
+      <TrendingBanner />
 
       {/* Continue Watching */}
       <ContinueWatching showOnHomeOnly={true} />
