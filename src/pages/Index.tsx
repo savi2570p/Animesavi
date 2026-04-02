@@ -37,6 +37,9 @@ export default function Index() {
       {/* Hero Banner */}
       <FeaturedSlider />
 
+      {/* Trending Now */}
+      <TrendingBanner />
+
       {/* Continue Watching */}
       <ContinueWatching showOnHomeOnly={true} />
 
