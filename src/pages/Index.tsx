@@ -17,6 +17,7 @@ import { ComingSoon } from "@/components/home/ComingSoon";
 import { SocialShare } from "@/components/home/SocialShare";
 import { MostPopular } from "@/components/home/MostPopular";
 import { AnimeCalendar } from "@/components/AnimeCalendar";
+import { TrendingBanner } from "@/components/home/TrendingBanner";
 
 export default function Index() {
   const { user } = useAuth();
