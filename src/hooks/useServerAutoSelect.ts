@@ -127,9 +127,8 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
     setActiveServer(server);
     localStorage.setItem(SERVER_PREF_KEY, server);
 
-    // Manual switches get a much longer timeout before fallback
-    // H.Savi on iOS never times out
-    if (isIOSDevice() && server === IOS_NO_TIMEOUT_SERVER) {
+    // Fallback timers only on desktop; H.Savi on iOS never times out
+    if (!isDesktopDevice() || (isIOSDevice() && server === IOS_NO_TIMEOUT_SERVER)) {
       requestAnimationFrame(() => { setTimeout(() => setIsServerLoading(false), 500); });
       return;
     }
