@@ -38,6 +38,11 @@ export const SERVER_CONFIGS: Record<ServerType, ServerConfig> = {
 const AUTO_FALLBACK_TIMEOUT_MS = 3000;
 const MANUAL_FALLBACK_TIMEOUT_MS = 15000;
 const IOS_NO_TIMEOUT_SERVER: ServerType = 'PLAY'; // H.Savi never times out on iOS
+
+function isDesktopDevice(): boolean {
+  if (typeof window === 'undefined') return true;
+  return !/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
 const SERVER_PREF_KEY = 'preferred_video_server';
 
 /**
@@ -122,9 +127,8 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
     setActiveServer(server);
     localStorage.setItem(SERVER_PREF_KEY, server);
 
-    // Manual switches get a much longer timeout before fallback
-    // H.Savi on iOS never times out
-    if (isIOSDevice() && server === IOS_NO_TIMEOUT_SERVER) {
+    // Fallback timers only on desktop; H.Savi on iOS never times out
+    if (!isDesktopDevice() || (isIOSDevice() && server === IOS_NO_TIMEOUT_SERVER)) {
       requestAnimationFrame(() => { setTimeout(() => setIsServerLoading(false), 500); });
       return;
     }
@@ -183,8 +187,9 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
     clearFallbackTimer();
     videoLoadedRef.current = false;
 
-    if (activeServer === 'Zex') return; // No fallback from Zex
-    // H.Savi never times out on iOS
+    if (activeServer === 'Zex') return;
+    // Fallback timers only on desktop; H.Savi on iOS never times out
+    if (!isDesktopDevice()) return;
     if (isIOSDevice() && activeServer === IOS_NO_TIMEOUT_SERVER) return;
 
     fallbackTimerRef.current = setTimeout(() => {
