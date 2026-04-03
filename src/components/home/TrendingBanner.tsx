@@ -142,14 +142,14 @@ export function TrendingBanner() {
             </motion.div>
           </AnimatePresence>
 
-          {/* Dots */}
-          <div className="absolute bottom-3 right-4 z-20 flex gap-1.5">
+          {/* Slim indicator bars */}
+          <div className="absolute bottom-2.5 right-4 z-20 flex gap-1">
             {trending.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setActiveIndex(i)}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  i === activeIndex ? 'bg-primary w-5' : 'bg-white/40 hover:bg-white/60'
+                className={`h-[3px] rounded-full transition-all duration-400 ease-in-out ${
+                  i === activeIndex ? 'bg-primary w-6' : 'bg-white/30 w-3 hover:bg-white/50'
                 }`}
               />
             ))}
