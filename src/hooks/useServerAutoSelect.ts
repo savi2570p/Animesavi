@@ -187,8 +187,9 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
     clearFallbackTimer();
     videoLoadedRef.current = false;
 
-    if (activeServer === 'Zex') return; // No fallback from Zex
-    // H.Savi never times out on iOS
+    if (activeServer === 'Zex') return;
+    // Fallback timers only on desktop; H.Savi on iOS never times out
+    if (!isDesktopDevice()) return;
     if (isIOSDevice() && activeServer === IOS_NO_TIMEOUT_SERVER) return;
 
     fallbackTimerRef.current = setTimeout(() => {
