@@ -38,6 +38,11 @@ export const SERVER_CONFIGS: Record<ServerType, ServerConfig> = {
 const AUTO_FALLBACK_TIMEOUT_MS = 3000;
 const MANUAL_FALLBACK_TIMEOUT_MS = 15000;
 const IOS_NO_TIMEOUT_SERVER: ServerType = 'PLAY'; // H.Savi never times out on iOS
+
+function isDesktopDevice(): boolean {
+  if (typeof window === 'undefined') return true;
+  return !/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
 const SERVER_PREF_KEY = 'preferred_video_server';
 
 /**
