@@ -123,6 +123,11 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
     localStorage.setItem(SERVER_PREF_KEY, server);
 
     // Manual switches get a much longer timeout before fallback
+    // H.Savi on iOS never times out
+    if (isIOSDevice() && server === IOS_NO_TIMEOUT_SERVER) {
+      requestAnimationFrame(() => { setTimeout(() => setIsServerLoading(false), 500); });
+      return;
+    }
     fallbackTimerRef.current = setTimeout(() => {
       if (!videoLoadedRef.current && server !== 'Zex') {
         console.log(`Server ${server} did not respond in ${MANUAL_FALLBACK_TIMEOUT_MS}ms after manual switch, switching to Zex`);

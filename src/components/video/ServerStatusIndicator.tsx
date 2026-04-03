@@ -72,7 +72,7 @@ export function ServerStatusIndicator({
                 key={server}
                 variant="outline"
                 className="gap-0.5 px-1 py-0 text-[7px] md:text-[9px] border-red-500/25 text-red-400/60 cursor-pointer hover:border-red-500/50 transition-colors"
-                onClick={() => handleFailedClick(server)}
+                onClick={(e) => { e.stopPropagation(); handleFailedClick(server); }}
               >
                 <WifiOff className="h-1.5 w-1.5 md:h-2 md:w-2" />
                 {SERVER_CONFIGS[server]?.name}
