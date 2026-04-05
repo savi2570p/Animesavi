@@ -58,25 +58,25 @@ export function WelcomePopup() {
         </DialogContent>
       </Dialog>
 
-      {/* What's New Popup — v13 */}
+      {/* What's New Popup — v15 */}
       <Dialog open={showNotice} onOpenChange={(open) => { if (!open) dismissPopup(); }}>
         <DialogContent className="sm:max-w-sm border-primary/20 p-4" style={{ zIndex: 9998 }}>
           <DialogHeader className="pb-1">
             <DialogTitle className="text-base font-heading text-center">
-              ✨ What's New — v14
+              ✨ What's New — v15
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-1.5 max-h-[50vh] overflow-y-auto pr-1">
             {[
-              { icon: '🔥', title: 'Trending Now Banner', desc: 'Animated top 3 most viewed anime on homepage' },
+              { icon: '⚙️', title: 'Click-Outside Settings', desc: 'Player settings now close when tapping outside — smoother UX' },
+              { icon: '🔧', title: 'Server Maintenance', desc: 'Timed-out server shows maintenance dialog instead of auto-switching' },
+              { icon: '📱', title: 'iOS H.Savi Priority', desc: 'H.Savi never times out on iOS for uninterrupted playback' },
+              { icon: '🖥️', title: 'Desktop-Only Timers', desc: 'Auto-fallback & manual switch timers run on desktop only' },
+              { icon: '🔥', title: 'Trending Now Banner', desc: 'Animated top 3 most viewed anime with slim indicator bars' },
               { icon: '📋', title: 'Watch List Revamp', desc: 'Shows anime name & total seasons only — cleaner layout' },
-              { icon: '🏷️', title: 'Ultra-Glass Badges', desc: 'More transparent frosted glass badges everywhere' },
-              { icon: '🔖', title: 'OG & COM Tags', desc: 'Ongoing → OG, Completed → COM — compact status tags' },
-              { icon: '🎬', title: 'Episode Panel Grid', desc: 'Compact square grid in embed player' },
-              { icon: '🎯', title: 'Smart Nav Tabs', desc: 'Crunchy & MuseIN pages show only back button' },
-              { icon: '⚡', title: 'Faster Video Loading', desc: 'Optimized HLS for quicker 4K startup' },
-              { icon: '📺', title: 'Latest Series Fix', desc: 'Improved data loading & pagination' },
+              { icon: '🏷️', title: 'Ultra-Glass Badges', desc: 'More transparent frosted glass OG/COM badges everywhere' },
+              { icon: '🎬', title: 'Episode Grid Picker', desc: 'Compact Netflix-style square grid in embed player' },
             ].map((item) => (
               <div key={item.title} className="flex items-center gap-2.5 p-2 bg-muted/40 rounded-md">
                 <span className="text-sm shrink-0">{item.icon}</span>
