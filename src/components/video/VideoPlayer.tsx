@@ -2714,7 +2714,7 @@ export function VideoPlayer({
                     sideOffset={12}
                     style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                     onCloseAutoFocus={(e) => e.preventDefault()}
-                    onPointerDownOutside={(e) => e.preventDefault()}
+                    onPointerDownOutside={() => { setSettingsOpen(false); setSettingsMenu('main'); }}
                     forceMount={settingsOpen ? true : undefined}
                     container={containerRef.current || undefined}
                   >
@@ -2922,7 +2922,7 @@ export function VideoPlayer({
                   sideOffset={12}
                   style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                   onCloseAutoFocus={(e) => e.preventDefault()}
-                  onPointerDownOutside={(e) => e.preventDefault()}
+                  onPointerDownOutside={() => { setSettingsOpen(false); setSettingsMenu('main'); }}
                   forceMount={settingsOpen ? true : undefined}
                   container={containerRef.current || undefined}
                 >
