@@ -23,22 +23,22 @@ const GENRES = [
 ];
 
 const TESTIMONIALS = [
-  { name: 'Arjun K.', rating: 5, text: 'Best anime site in India! Hindi dubs are amazing and no ads at all. Switched from Crunchyroll and never looked back.', time: '2 weeks ago' },
-  { name: 'Priya S.', rating: 5, text: 'The download feature is a lifesaver. I download episodes on WiFi and watch during my commute. Love the 1080p quality!', time: '1 month ago' },
-  { name: 'Rahul M.', rating: 4, text: 'Watch parties with friends are so fun! We watch Jujutsu Kaisen together every week. Great feature.', time: '3 weeks ago' },
-  { name: 'Sneha D.', rating: 5, text: 'Finally an anime site that works perfectly on my phone. Controls are smooth and video loads instantly.', time: '1 week ago' },
-  { name: 'Vikram P.', rating: 5, text: 'Multi-audio switching is incredible. I can switch between Hindi and Japanese mid-episode without any buffering.', time: '2 months ago' },
-  { name: 'Ananya R.', rating: 4, text: 'Clean UI, fast streaming, and the library keeps growing. This is what every anime platform should be like.', time: '1 month ago' },
-  { name: 'Karan T.', rating: 5, text: 'I was paying for premium on other sites. AnimeSavi gives everything for free with ZERO ads. Unreal.', time: '5 days ago' },
-  { name: 'Meera J.', rating: 5, text: 'The release calendar and notification system is perfect. I never miss a new episode of my favorite shows.', time: '3 weeks ago' },
-  { name: 'Rohit B.', rating: 4, text: 'Casting to my TV works flawlessly. The picture-in-picture mode is also super handy when multitasking.', time: '2 weeks ago' },
-  { name: 'Deepak N.', rating: 5, text: 'The 4K quality is stunning! Watching Jujutsu Kaisen, Death Note, Solo Leveling in UHD on my big screen was an amazing experience.', time: '1 week ago' },
-  { name: 'Simran L.', rating: 5, text: 'I love the PWA feature — installed it on my phone and it feels like a native app. So convenient!', time: '4 days ago' },
-  { name: 'Aditya G.', rating: 4, text: 'The search works really well. I can find any anime in seconds. The genre filters are also very helpful.', time: '2 weeks ago' },
-  { name: 'Pooja V.', rating: 5, text: 'My entire friend group uses AnimeSavi now. The watch party feature brought us together during lockdown.', time: '3 months ago' },
-  { name: 'Nikhil R.', rating: 5, text: 'Continue watching feature is brilliant. I can pick up exactly where I left off on any device. No progress lost!', time: '1 month ago' },
-  { name: 'Kavya M.', rating: 4, text: 'The embed player is so clean and minimal. I share episode links with friends and they can watch without signing up.', time: '2 weeks ago' },
-  { name: 'Saurabh P.', rating: 5, text: 'AnimeSavi loads faster than any other anime site I\'ve tried. Even on slow 3G it works smoothly. Impressive!', time: '6 days ago' },
+  { name: 'Arjun K.', rating: 5, text: 'Best anime site in India! Hindi dubs are amazing and no ads at all. The Watch List feature keeps me organized.', time: '1 week ago' },
+  { name: 'Priya S.', rating: 5, text: 'The download feature is a lifesaver. I download episodes on WiFi and watch during my commute. Love the 4K quality!', time: '2 weeks ago' },
+  { name: 'Rahul M.', rating: 4, text: 'Watch parties with friends are so fun! The Trending Now banner helps us pick what to watch together.', time: '1 week ago' },
+  { name: 'Sneha D.', rating: 5, text: 'Finally an anime site that works perfectly on my phone. The glassy OG/COM badges look so premium!', time: '3 days ago' },
+  { name: 'Vikram P.', rating: 5, text: 'Multi-audio switching is incredible. The server auto-select picks the fastest one every time. No buffering!', time: '1 month ago' },
+  { name: 'Ananya R.', rating: 5, text: 'Clean UI, fast streaming, and the MuseIN countdown is so exciting! Can\'t wait for new Hindi dub drops.', time: '5 days ago' },
+  { name: 'Karan T.', rating: 5, text: 'I was paying for premium on other sites. AnimeSavi gives everything for free with ZERO ads. The slim scrollbar looks clean!', time: '2 days ago' },
+  { name: 'Meera J.', rating: 5, text: 'The release calendar and notification system is perfect. CC subtitle editor is a game-changer for fans.', time: '1 week ago' },
+  { name: 'Rohit B.', rating: 4, text: 'Three server options and smart auto-switch means I never face buffering. H.Savi on my iPhone is flawless.', time: '4 days ago' },
+  { name: 'Deepak N.', rating: 5, text: 'The 4K quality is stunning on my big screen. Trending Now banner makes discovering new anime effortless.', time: '3 days ago' },
+  { name: 'Simran L.', rating: 5, text: 'I love the PWA feature — installed it on my phone and it feels like a native app. Watch List is super handy!', time: '2 days ago' },
+  { name: 'Aditya G.', rating: 4, text: 'The search works great. Genre filters + Crunchy & MuseIN tabs make browsing so organized.', time: '1 week ago' },
+  { name: 'Pooja V.', rating: 5, text: 'My entire friend group uses AnimeSavi now. The embed player with episode grid is perfect for sharing.', time: '2 months ago' },
+  { name: 'Nikhil R.', rating: 5, text: 'Continue watching feature is brilliant. Server maintenance popup is clear when a server is down — no confusion!', time: '3 days ago' },
+  { name: 'Kavya M.', rating: 4, text: 'The embed player is so clean. Episode selector grid like Netflix makes it easy to jump between episodes.', time: '1 week ago' },
+  { name: 'Saurabh P.', rating: 5, text: 'AnimeSavi loads faster than any other anime site. Even on slow 3G, H.Savi server works smoothly. Impressive!', time: '1 day ago' },
 ];
 
 const FAQ_ITEMS = [
@@ -155,15 +155,15 @@ export default function Welcome() {
   ];
 
   const features = [
-    { icon: Zap, title: 'Lightning Fast', desc: 'Stream any episode instantly with zero buffering. Our CDN delivers content at blazing speed worldwide.', highlight: true },
+    { icon: Zap, title: 'Lightning Fast', desc: 'Stream instantly with 3 servers (H.Savi, SAVI.IN, Multi.Savi) and smart auto-switch for zero buffering.', highlight: true },
     { icon: Shield, title: '100% Ad-Free', desc: 'No ads, no popups, no interruptions. Just pure, uninterrupted anime watching experience from start to finish.', highlight: true },
     { icon: Download, title: 'Smart Downloads', desc: 'Download in 480p, 720p, 1080p or even 2160p (4K) with proper episode names, codec info & quality tags.' },
-    { icon: Smartphone, title: 'Mobile First', desc: 'Designed for phones with compact controls, gesture navigation, and picture-in-picture support.' },
+    { icon: Smartphone, title: 'Mobile First', desc: 'Designed for phones with compact controls, gesture navigation, PiP, and iOS-optimized H.Savi server.' },
     { icon: Globe, title: 'Hindi Dubbed', desc: 'Official Hindi DUB available for all anime — completely free, anytime, anywhere in the world.' },
     { icon: Users, title: 'Watch Parties', desc: 'Invite friends to watch together with real-time sync. Chat, react, and enjoy anime as a group.' },
     { icon: Headphones, title: 'Multi-Audio', desc: 'Switch between Hindi, English, and Japanese audio tracks on the fly without reloading the video.' },
     { icon: Subtitles, title: 'CC & Subtitles', desc: 'Built-in CC subtitle editor with manual timing controls. Import VTT/SRT or create custom captions.' },
-    { icon: Monitor, title: 'MuseIN & Crunchy', desc: 'Dedicated tabs for Muse India and Crunchyroll content with smart auto-tagging from genres.' },
+    { icon: Monitor, title: 'MuseIN & Crunchy', desc: 'Dedicated tabs for Muse India and Crunchyroll content with smart auto-tagging and Watch List support.' },
   ];
 
   const heroAnime = featuredAnime[activeIndex];
