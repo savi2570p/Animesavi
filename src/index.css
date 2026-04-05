@@ -136,9 +136,9 @@ img, video {
     --font-heading: 'Outfit', sans-serif;
     --font-body: 'Inter', sans-serif;
 
-    /* Light mode (rarely used - dark by default) */
-    --background: 0 0% 100%;
-    --foreground: 265 4% 12.9%;
+    /* Default to dark mode to prevent white flash */
+    --background: 0 0% 5%;
+    --foreground: 0 0% 95%;
 
     --card: 0 0% 100%;
     --card-foreground: 265 4% 12.9%;
