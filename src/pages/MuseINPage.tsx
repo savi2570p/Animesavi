@@ -268,16 +268,14 @@ function LiveListingView() {
 
   return (
     <>
-      {/* Header */}
-      <div className="relative overflow-x-hidden overflow-y-visible px-4 py-12">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-        <div className="absolute top-0 right-1/3 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="container relative">
-          <div className="flex items-center gap-4 mb-4">
-            <img src={museinLogo} alt="MuseIN" className="h-10 md:h-12 w-10 md:w-12 rounded-full object-cover" />
+      {/* Header - sticky */}
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/30 px-4 py-3">
+        <div className="container">
+          <div className="flex items-center gap-3">
+            <img src={museinLogo} alt="MuseIN" className="h-9 md:h-10 w-9 md:w-10 rounded-full object-cover" />
             <div>
-              <h1 className="text-3xl md:text-4xl font-heading font-bold">MuseIN</h1>
-              <p className="text-muted-foreground">Hindi dubbed anime by Muse India</p>
+              <h1 className="text-xl md:text-2xl font-heading font-bold leading-tight">MuseIN</h1>
+              <p className="text-xs text-muted-foreground">Hindi dubbed anime by Muse India</p>
             </div>
           </div>
         </div>
