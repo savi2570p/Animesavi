@@ -70,13 +70,13 @@ export function WelcomePopup() {
           <div className="space-y-1.5 max-h-[50vh] overflow-y-auto pr-1">
             {[
               { icon: '⚙️', title: 'Click-Outside Settings', desc: 'Player settings now close when tapping outside — smoother UX' },
-              { icon: '🔧', title: 'Server Maintenance', desc: 'Timed-out server shows maintenance dialog instead of auto-switching' },
-              { icon: '📱', title: 'iOS H.Savi Priority', desc: 'H.Savi never times out on iOS for uninterrupted playback' },
-              { icon: '🖥️', title: 'Desktop-Only Timers', desc: 'Auto-fallback & manual switch timers run on desktop only' },
               { icon: '🔥', title: 'Trending Now Banner', desc: 'Animated top 3 most viewed anime with slim indicator bars' },
               { icon: '📋', title: 'Watch List Revamp', desc: 'Shows anime name & total seasons only — cleaner layout' },
               { icon: '🏷️', title: 'Ultra-Glass Badges', desc: 'More transparent frosted glass OG/COM badges everywhere' },
               { icon: '🎬', title: 'Episode Grid Picker', desc: 'Compact Netflix-style square grid in embed player' },
+              { icon: '🌙', title: 'Dark Mode First', desc: 'No more white screen flash — page loads dark instantly' },
+              { icon: '📝', title: 'CC Subtitle Editor', desc: 'Add & trim subtitles manually with precise timing controls' },
+              { icon: '🎌', title: 'MuseIN & Crunchy', desc: 'Auto-tag anime by genre to MuseIN or Crunchyroll collections' },
             ].map((item) => (
               <div key={item.title} className="flex items-center gap-2.5 p-2 bg-muted/40 rounded-md">
                 <span className="text-sm shrink-0">{item.icon}</span>
