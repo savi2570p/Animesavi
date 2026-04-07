@@ -99,21 +99,10 @@ interface UseServerAutoSelectOptions {
 export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
   const [activeServer, setActiveServer] = useState<ServerType>(() => getDefaultServer());
   const [isServerLoading, setIsServerLoading] = useState(false);
-  const [failedServers, setFailedServers] = useState<Set<ServerType>>(new Set());
-  const [fallbackOccurred, setFallbackOccurred] = useState(false);
-  const [fallbackFrom, setFallbackFrom] = useState<ServerType | null>(null);
-  const fallbackTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [failedServers] = useState<Set<ServerType>>(new Set());
+  const [fallbackOccurred] = useState(false);
+  const [fallbackFrom] = useState<ServerType | null>(null);
   const videoLoadedRef = useRef(false);
-
-  const availableServers = getAvailableServers();
-
-  // Clear fallback timer
-  const clearFallbackTimer = useCallback(() => {
-    if (fallbackTimerRef.current) {
-      clearTimeout(fallbackTimerRef.current);
-      fallbackTimerRef.current = null;
-    }
-  }, []);
 
   /**
    * Switch to a different server manually. No timeouts or auto-fallback.
