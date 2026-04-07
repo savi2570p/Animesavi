@@ -2455,7 +2455,18 @@ export function VideoPlayer({
         muted={isMobile}
         controlsList="nodownload noremoteplayback"
         disablePictureInPicture={false}
-      />
+        crossOrigin="anonymous"
+      >
+        {captionsUrl && (
+          <track 
+            kind="captions" 
+            src={captionsUrl} 
+            srcLang="en" 
+            label="English" 
+            default 
+          />
+        )}
+      </video>
       
       {/* Mobile Mute Indicator - shows when video is muted for autoplay */}
       {isMobile && (
@@ -2665,6 +2676,8 @@ export function VideoPlayer({
                         if (subtitleTracks.length > 0) {
                           const nextTrack = currentSubtitleTrack === -1 ? 0 : (currentSubtitleTrack + 1 > subtitleTracks.length - 1 ? -1 : currentSubtitleTrack + 1);
                           switchSubtitleTrack(nextTrack);
+                        } else {
+                          toast.info('No subtitles available for this episode');
                         }
                       }}
                       title="Subtitles / CC"
@@ -2934,6 +2947,8 @@ export function VideoPlayer({
                       if (subtitleTracks.length > 0) {
                         const nextTrack = currentSubtitleTrack === -1 ? 0 : (currentSubtitleTrack + 1 > subtitleTracks.length - 1 ? -1 : currentSubtitleTrack + 1);
                         switchSubtitleTrack(nextTrack);
+                      } else {
+                        toast.info('No subtitles available for this episode');
                       }
                     }}
                     title="Subtitles / CC"
