@@ -128,6 +128,11 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
     features: ['watch', 'quality', 'download'],
     playerStyle: 'advanced'
   },
+  XPLUS: {
+    name: 'X-PLUS',
+    features: ['watch', 'quality', 'download', 'cc'],
+    playerStyle: 'xplus'
+  },
 };
 
 // Playback speed options
@@ -2629,8 +2634,78 @@ export function VideoPlayer({
               </div>
             </div>
 
-            {/* Control buttons - Fullscreen - Netflix-style Clean & Compact */}
+            {/* Control buttons - Fullscreen */}
             <div className="flex items-center justify-between">
+              {activeServer === 'XPLUS' ? (
+                /* X-PLUS: Flat minimal controls - Fullscreen */
+                <>
+                  <div className="flex items-center gap-3 md:gap-5">
+                    <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
+                      {isPlaying ? <Pause className="w-5 h-5 md:w-7 md:h-7" /> : <Play className="w-5 h-5 md:w-7 md:h-7 fill-current" />}
+                    </button>
+                    <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); skipBackward(); }} title="Skip back 10s">
+                      <SkipBack className="w-5 h-5 md:w-6 md:h-6" />
+                    </button>
+                    <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); skipForward(); }} title="Skip forward 10s">
+                      <SkipForward className="w-5 h-5 md:w-6 md:h-6" />
+                    </button>
+                    <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); toggleMute(); }}>
+                      {isMuted ? <VolumeX className="w-5 h-5 md:w-6 md:h-6" /> : <Volume2 className="w-5 h-5 md:w-6 md:h-6" />}
+                    </button>
+                    <span className="text-white/90 text-xs md:text-sm font-mono">{formatTime(currentTime)} / {formatTime(duration)}</span>
+                  </div>
+                  <div className="flex items-center gap-3 md:gap-5">
+                    <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); handleDownload(); }} title="Download">
+                      <Download className="w-5 h-5 md:w-6 md:h-6" />
+                    </button>
+                    <button 
+                      className="text-white hover:text-white/80 transition-colors" 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        if (subtitleTracks.length > 0) {
+                          const nextTrack = currentSubtitleTrack === -1 ? 0 : (currentSubtitleTrack + 1 > subtitleTracks.length - 1 ? -1 : currentSubtitleTrack + 1);
+                          switchSubtitleTrack(nextTrack);
+                        }
+                      }}
+                      title="Subtitles / CC"
+                    >
+                      <Subtitles className={`w-5 h-5 md:w-6 md:h-6 ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`} />
+                    </button>
+                    <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
+                      <DropdownMenuTrigger asChild>
+                        <button 
+                          className="text-white hover:text-white/80 transition-colors"
+                          onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); setSettingsOpen(prev => !prev); }}
+                          title="Settings"
+                          style={{ touchAction: 'manipulation' }}
+                        >
+                          <Settings className="w-5 h-5 md:w-6 md:h-6" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent 
+                        align="end" side="top"
+                        className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] md:min-w-[220px] max-h-[350px] overflow-y-auto"
+                        sideOffset={12}
+                        style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
+                        onCloseAutoFocus={(e) => e.preventDefault()}
+                        onPointerDownOutside={() => { setSettingsOpen(false); setSettingsMenu('main'); }}
+                        forceMount={settingsOpen ? true : undefined}
+                        container={containerRef.current || undefined}
+                      >
+                        {renderSettingsContent()}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <button className="hidden md:block text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); togglePiP(); }} title="Picture-in-Picture">
+                      <PictureInPicture2 className="w-5 h-5 md:w-6 md:h-6" />
+                    </button>
+                    <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} title="Exit Fullscreen">
+                      <Minimize className="w-5 h-5 md:w-6 md:h-6" />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                /* Default fullscreen controls */
+                <>
               <div className="flex items-center gap-2.5 md:gap-3">
                 <button 
                   className="w-[24px] h-[24px] md:w-10 md:h-10 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
@@ -2638,7 +2713,6 @@ export function VideoPlayer({
                 >
                   {isPlaying ? <Pause className="w-3.5 h-3.5 md:w-5 md:h-5" /> : <Play className="w-3.5 h-3.5 md:w-5 md:h-5 fill-current ml-0.5" />}
                 </button>
-                {/* Next Episode - in controls */}
                 {hasNextEpisode && onNextEpisode && !isMovie && (
                   <button 
                     className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
@@ -2655,16 +2729,9 @@ export function VideoPlayer({
                 >
                   <FastForward className="w-3 h-3 md:w-[18px] md:h-[18px]" />
                 </button>
-                {/* Volume Slider - Desktop */}
                 <div className="hidden md:block" onClick={(e) => e.stopPropagation()}>
-                  <VolumeSlider
-                    volume={volume}
-                    isMuted={isMuted}
-                    onVolumeChange={handleVolumeChange}
-                    onMuteToggle={toggleMute}
-                  />
+                  <VolumeSlider volume={volume} isMuted={isMuted} onVolumeChange={handleVolumeChange} onMuteToggle={toggleMute} />
                 </div>
-                {/* Volume Button - Mobile */}
                 <button 
                   className="md:hidden w-[24px] h-[24px] rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); toggleMute(); }}
@@ -2672,9 +2739,7 @@ export function VideoPlayer({
                   {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                 </button>
               </div>
-
               <div className="flex items-center gap-2 md:gap-2.5">
-                {/* Download - for Multi.Savi and SAVI.IN */}
                 {features.includes('download') && (
                   <button 
                     className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
@@ -2684,23 +2749,11 @@ export function VideoPlayer({
                     <Download className="w-3 h-3 md:w-[18px] md:h-[18px]" />
                   </button>
                 )}
-                {/* Settings */}
-                <DropdownMenu 
-                  modal={false} 
-                  open={settingsOpen}
-                  onOpenChange={(open) => { 
-                    setSettingsOpen(open);
-                    if (!open) setSettingsMenu('main'); 
-                  }}
-                >
+                <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
                   <DropdownMenuTrigger asChild>
                     <button 
                       className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200 relative"
-                      onPointerDown={(e) => { 
-                        e.stopPropagation(); 
-                        e.preventDefault();
-                        setSettingsOpen(prev => !prev); 
-                      }}
+                      onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); setSettingsOpen(prev => !prev); }}
                       title="Settings"
                       style={{ touchAction: 'manipulation' }}
                     >
@@ -2708,8 +2761,7 @@ export function VideoPlayer({
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
-                    align="end" 
-                    side="top"
+                    align="end" side="top"
                     className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] md:min-w-[220px] max-h-[350px] overflow-y-auto"
                     sideOffset={12}
                     style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
@@ -2721,7 +2773,6 @@ export function VideoPlayer({
                     {renderSettingsContent()}
                   </DropdownMenuContent>
                 </DropdownMenu>
-                {/* Screen Mirroring */}
                 <button 
                   className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); setShowMirroringDialog(true); }} 
@@ -2729,7 +2780,6 @@ export function VideoPlayer({
                 >
                   <Cast className="w-3 h-3 md:w-[18px] md:h-[18px]" />
                 </button>
-                {/* PiP - Desktop only */}
                 <button 
                   className="hidden md:flex w-9 h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
@@ -2737,7 +2787,6 @@ export function VideoPlayer({
                 >
                   <PictureInPicture2 className="w-[18px] h-[18px]" />
                 </button>
-                {/* Fullscreen */}
                 <button 
                   className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
                   onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
@@ -2746,6 +2795,8 @@ export function VideoPlayer({
                   <Minimize className="w-3 h-3 md:w-[18px] md:h-[18px]" />
                 </button>
               </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -2832,8 +2883,118 @@ export function VideoPlayer({
             </div>
           </div>
 
-          {/* Control buttons - Netflix-style Clean & Compact */}
+          {/* Control buttons */}
           <div className="flex items-center justify-between">
+            {activeServer === 'XPLUS' ? (
+              /* X-PLUS: Flat minimal controls like a cinema player */
+              <>
+                <div className="flex items-center gap-3 md:gap-4">
+                  <button 
+                    className="text-white hover:text-white/80 transition-colors" 
+                    onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+                    title={isPlaying ? 'Pause' : 'Play'}
+                  >
+                    {isPlaying ? <Pause className="w-5 h-5 md:w-6 md:h-6" /> : <Play className="w-5 h-5 md:w-6 md:h-6 fill-current" />}
+                  </button>
+                  <button 
+                    className="text-white hover:text-white/80 transition-colors" 
+                    onClick={(e) => { e.stopPropagation(); skipBackward(); }}
+                    title="Skip back 10s"
+                  >
+                    <SkipBack className="w-4.5 h-4.5 md:w-5 md:h-5" />
+                  </button>
+                  <button 
+                    className="text-white hover:text-white/80 transition-colors" 
+                    onClick={(e) => { e.stopPropagation(); skipForward(); }}
+                    title="Skip forward 10s"
+                  >
+                    <SkipForward className="w-4.5 h-4.5 md:w-5 md:h-5" />
+                  </button>
+                  <button 
+                    className="text-white hover:text-white/80 transition-colors" 
+                    onClick={(e) => { e.stopPropagation(); toggleMute(); }}
+                    title={isMuted ? 'Unmute' : 'Mute'}
+                  >
+                    {isMuted ? <VolumeX className="w-4.5 h-4.5 md:w-5 md:h-5" /> : <Volume2 className="w-4.5 h-4.5 md:w-5 md:h-5" />}
+                  </button>
+                  <span className="text-white/90 text-xs md:text-sm font-mono">{formatTime(currentTime)} / {formatTime(duration)}</span>
+                </div>
+                <div className="flex items-center gap-3 md:gap-4">
+                  <button 
+                    className="text-white hover:text-white/80 transition-colors" 
+                    onClick={(e) => { e.stopPropagation(); handleDownload(); }}
+                    title="Download"
+                  >
+                    <Download className="w-4.5 h-4.5 md:w-5 md:h-5" />
+                  </button>
+                  <button 
+                    className="text-white hover:text-white/80 transition-colors" 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      if (subtitleTracks.length > 0) {
+                        const nextTrack = currentSubtitleTrack === -1 ? 0 : (currentSubtitleTrack + 1 > subtitleTracks.length - 1 ? -1 : currentSubtitleTrack + 1);
+                        switchSubtitleTrack(nextTrack);
+                      }
+                    }}
+                    title="Subtitles / CC"
+                  >
+                    <Subtitles className={`w-4.5 h-4.5 md:w-5 md:h-5 ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`} />
+                  </button>
+                  <DropdownMenu 
+                    modal={false} 
+                    open={settingsOpen}
+                    onOpenChange={(open) => { 
+                      setSettingsOpen(open);
+                      if (!open) setSettingsMenu('main'); 
+                    }}
+                  >
+                    <DropdownMenuTrigger asChild>
+                      <button 
+                        className="text-white hover:text-white/80 transition-colors"
+                        onPointerDown={(e) => { 
+                          e.stopPropagation(); 
+                          e.preventDefault();
+                          setSettingsOpen(prev => !prev); 
+                        }}
+                        title="Settings"
+                        style={{ touchAction: 'manipulation' }}
+                      >
+                        <Settings className="w-4.5 h-4.5 md:w-5 md:h-5" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent 
+                      align="end" 
+                      side="top"
+                      className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] md:min-w-[220px] max-h-[350px] overflow-y-auto"
+                      sideOffset={12}
+                      style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
+                      onCloseAutoFocus={(e) => e.preventDefault()}
+                      onPointerDownOutside={() => { setSettingsOpen(false); setSettingsMenu('main'); }}
+                      forceMount={settingsOpen ? true : undefined}
+                      container={containerRef.current || undefined}
+                    >
+                      {renderSettingsContent()}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <button 
+                    className="hidden md:block text-white hover:text-white/80 transition-colors"
+                    onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
+                    title="Picture-in-Picture"
+                  >
+                    <PictureInPicture2 className="w-5 h-5" />
+                  </button>
+                  <button 
+                    className="text-white hover:text-white/80 transition-colors"
+                    onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
+                    title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                  >
+                    {isFullscreen ? <Minimize className="w-4.5 h-4.5 md:w-5 md:h-5" /> : <Maximize className="w-4.5 h-4.5 md:w-5 md:h-5" />}
+                  </button>
+                </div>
+              </>
+            ) : (
+              /* Default controls for other servers */
+              <>
              <div className="flex items-center gap-2.5 md:gap-3">
               {/* Play/Pause */}
               <button 
@@ -2957,6 +3118,8 @@ export function VideoPlayer({
                 {isFullscreen ? <Minimize className="w-3 h-3 md:w-[18px] md:h-[18px]" /> : <Maximize className="w-3 h-3 md:w-[18px] md:h-[18px]" />}
               </button>
             </div>
+              </>
+            )}
           </div>
         </div>
       </div>
