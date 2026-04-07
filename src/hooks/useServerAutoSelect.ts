@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { isIOSDevice } from '@/lib/deviceUtils';
 
-export type ServerType = 'PLAY' | 'SHORT' | 'Zex';
+export type ServerType = 'PLAY' | 'SHORT' | 'Zex' | 'XPLUS';
 
 interface ServerConfig {
   id: ServerType;
@@ -31,6 +31,13 @@ export const SERVER_CONFIGS: Record<ServerType, ServerConfig> = {
     name: 'Multi.Savi',
     description: 'Backup',
     features: ['Fallback server', 'Download support'],
+    supportedPlatforms: ['ios', 'android', 'desktop'],
+  },
+  XPLUS: {
+    id: 'XPLUS',
+    name: 'X-PLUS',
+    description: 'Cinematic player',
+    features: ['Flat controls', 'Download support', 'CC support'],
     supportedPlatforms: ['ios', 'android', 'desktop'],
   },
 };
