@@ -42,9 +42,8 @@ export const SERVER_CONFIGS: Record<ServerType, ServerConfig> = {
   },
 };
 
-const AUTO_FALLBACK_TIMEOUT_MS = 3000;
-const MANUAL_FALLBACK_TIMEOUT_MS = 15000;
-const IOS_NO_TIMEOUT_SERVER: ServerType = 'PLAY'; // H.Savi never times out on iOS
+// All server timeouts and auto-switching are fully disabled.
+// Users can freely choose any server without being forced to switch.
 
 function isDesktopDevice(): boolean {
   if (typeof window === 'undefined') return true;
@@ -117,7 +116,7 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
   }, []);
 
   /**
-   * Switch to a different server manually.
+   * Switch to a different server manually. No timeouts or auto-fallback.
    */
   const switchServer = useCallback((server: ServerType) => {
     if (server === activeServer) return;
@@ -128,36 +127,16 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
       return;
     }
 
-    clearFallbackTimer();
     videoLoadedRef.current = false;
     setIsServerLoading(true);
     setActiveServer(server);
     localStorage.setItem(SERVER_PREF_KEY, server);
 
-    // Fallback timers only on desktop; H.Savi on iOS never times out
-    if (!isDesktopDevice() || (isIOSDevice() && server === IOS_NO_TIMEOUT_SERVER)) {
-      requestAnimationFrame(() => { setTimeout(() => setIsServerLoading(false), 500); });
-      return;
-    }
-    fallbackTimerRef.current = setTimeout(() => {
-      if (!videoLoadedRef.current && server !== 'Zex') {
-        console.log(`Server ${server} did not respond in ${MANUAL_FALLBACK_TIMEOUT_MS}ms after manual switch, switching to Zex`);
-        setFailedServers(prev => new Set(prev).add(server));
-        setFallbackOccurred(true);
-        setFallbackFrom(server);
-        setActiveServer('Zex');
-        setIsServerLoading(false);
-        options?.onServerSwitch?.(server, 'Zex', 'timeout');
-      }
-    }, MANUAL_FALLBACK_TIMEOUT_MS);
-
-    // Clear loading state after transition
+    // Clear loading state after brief transition
     requestAnimationFrame(() => {
-      setTimeout(() => {
-        setIsServerLoading(false);
-      }, 500);
+      setTimeout(() => setIsServerLoading(false), 500);
     });
-  }, [activeServer, availableServers, clearFallbackTimer, options]);
+  }, [activeServer, availableServers]);
 
   /**
    * Call this when video has successfully started loading/playing.
@@ -170,47 +149,18 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
 
   /**
    * Call this when video fails to load on the current server.
-   * Triggers immediate fallback to Zex.
+   * No auto-fallback — user stays on their chosen server.
    */
   const onVideoLoadError = useCallback(() => {
-    clearFallbackTimer();
-    
-    if (activeServer !== 'Zex') {
-      console.log(`Server ${activeServer} failed, falling back to Zex`);
-      setFailedServers(prev => new Set(prev).add(activeServer));
-      setFallbackOccurred(true);
-      setFallbackFrom(activeServer);
-      const previousServer = activeServer;
-      setActiveServer('Zex');
-      options?.onServerSwitch?.(previousServer, 'Zex', 'error');
-    }
-  }, [activeServer, clearFallbackTimer, options]);
+    console.log(`Server ${activeServer} encountered an error`);
+  }, [activeServer]);
 
   /**
-   * Start the fallback timer for the current server.
-   * Call this when a new video starts loading.
+   * No-op. Fallback timers are fully disabled.
    */
   const startFallbackTimer = useCallback(() => {
-    clearFallbackTimer();
     videoLoadedRef.current = false;
-
-    if (activeServer === 'Zex') return;
-    // Fallback timers only on desktop; H.Savi on iOS never times out
-    if (!isDesktopDevice()) return;
-    if (isIOSDevice() && activeServer === IOS_NO_TIMEOUT_SERVER) return;
-
-    fallbackTimerRef.current = setTimeout(() => {
-      if (!videoLoadedRef.current) {
-        console.log(`Server ${activeServer} timeout after ${AUTO_FALLBACK_TIMEOUT_MS}ms, switching to Zex`);
-        setFailedServers(prev => new Set(prev).add(activeServer));
-        setFallbackOccurred(true);
-        setFallbackFrom(activeServer);
-        const previousServer = activeServer;
-        setActiveServer('Zex');
-        options?.onServerSwitch?.(previousServer, 'Zex', 'timeout');
-      }
-    }, AUTO_FALLBACK_TIMEOUT_MS);
-  }, [activeServer, clearFallbackTimer, options]);
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
