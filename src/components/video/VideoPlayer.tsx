@@ -2887,7 +2887,7 @@ export function VideoPlayer({
                       e.stopPropagation(); 
                       if (subtitleTracks.length > 0) {
                         const nextTrack = currentSubtitleTrack === -1 ? 0 : (currentSubtitleTrack + 1 > subtitleTracks.length - 1 ? -1 : currentSubtitleTrack + 1);
-                        handleSubtitleChange(nextTrack);
+                        switchSubtitleTrack(nextTrack);
                       }
                     }}
                     title="Subtitles / CC"
