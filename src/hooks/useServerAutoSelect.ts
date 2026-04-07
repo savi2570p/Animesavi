@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { isIOSDevice } from '@/lib/deviceUtils';
 
 export type ServerType = 'PLAY' | 'SHORT' | 'Zex' | 'XPLUS';
@@ -42,13 +42,6 @@ export const SERVER_CONFIGS: Record<ServerType, ServerConfig> = {
   },
 };
 
-// All server timeouts and auto-switching are fully disabled.
-// Users can freely choose any server without being forced to switch.
-
-function isDesktopDevice(): boolean {
-  if (typeof window === 'undefined') return true;
-  return !/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-}
 const SERVER_PREF_KEY = 'preferred_video_server';
 
 /**
@@ -70,22 +63,15 @@ export function getDefaultServer(): ServerType {
   const isIOS = isIOSDevice();
   const isMobile = typeof window !== 'undefined' && /Android/i.test(navigator.userAgent);
 
-  // Check saved preference first
   const saved = localStorage.getItem(SERVER_PREF_KEY) as ServerType | null;
   if (saved) {
-    // Don't allow iOS users to use SAVI.IN even if saved
-    if (isIOS && saved === 'SHORT') {
-      return 'PLAY';
-    }
-    if (['PLAY', 'SHORT', 'Zex', 'XPLUS'].includes(saved)) {
-      return saved;
-    }
+    if (isIOS && saved === 'SHORT') return 'PLAY';
+    if (['PLAY', 'SHORT', 'Zex', 'XPLUS'].includes(saved)) return saved;
   }
 
-  // Device-based auto-select
   if (isIOS) return 'PLAY';
-  if (isMobile) return 'SHORT'; // Android → SAVI.IN
-  return 'SHORT'; // Desktop → SAVI.IN
+  if (isMobile) return 'SHORT';
+  return 'SHORT';
 }
 
 interface UseServerAutoSelectOptions {
@@ -93,10 +79,10 @@ interface UseServerAutoSelectOptions {
 }
 
 /**
- * Hook that manages server auto-selection with device detection and
- * automatic fallback to Zex if the primary server fails to load within 3 seconds.
+ * Hook that manages server selection. All timeouts and auto-fallback are disabled.
+ * Users can freely switch between any available server.
  */
-export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
+export function useServerAutoSelect(_options?: UseServerAutoSelectOptions) {
   const [activeServer, setActiveServer] = useState<ServerType>(() => getDefaultServer());
   const [isServerLoading, setIsServerLoading] = useState(false);
   const [failedServers] = useState<Set<ServerType>>(new Set());
@@ -104,57 +90,35 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
   const [fallbackFrom] = useState<ServerType | null>(null);
   const videoLoadedRef = useRef(false);
 
-  /**
-   * Switch to a different server manually. No timeouts or auto-fallback.
-   */
+  const availableServers = getAvailableServers();
+
   const switchServer = useCallback((server: ServerType) => {
     if (server === activeServer) return;
-
-    // Validate server is available for this platform
-    if (!availableServers.includes(server)) {
+    const servers = getAvailableServers();
+    if (!servers.includes(server)) {
       console.warn(`Server ${server} not available on this platform`);
       return;
     }
-
     videoLoadedRef.current = false;
     setIsServerLoading(true);
     setActiveServer(server);
     localStorage.setItem(SERVER_PREF_KEY, server);
-
-    // Clear loading state after brief transition
     requestAnimationFrame(() => {
       setTimeout(() => setIsServerLoading(false), 500);
     });
-  }, [activeServer, availableServers]);
+  }, [activeServer]);
 
-  /**
-   * Call this when video has successfully started loading/playing.
-   * Cancels the fallback timer.
-   */
   const onVideoLoadSuccess = useCallback(() => {
     videoLoadedRef.current = true;
-    clearFallbackTimer();
-  }, [clearFallbackTimer]);
+  }, []);
 
-  /**
-   * Call this when video fails to load on the current server.
-   * No auto-fallback — user stays on their chosen server.
-   */
   const onVideoLoadError = useCallback(() => {
     console.log(`Server ${activeServer} encountered an error`);
   }, [activeServer]);
 
-  /**
-   * No-op. Fallback timers are fully disabled.
-   */
   const startFallbackTimer = useCallback(() => {
     videoLoadedRef.current = false;
   }, []);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => clearFallbackTimer();
-  }, [clearFallbackTimer]);
 
   return {
     activeServer,
