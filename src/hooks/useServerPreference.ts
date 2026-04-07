@@ -23,7 +23,7 @@ export function useServerPreference() {
   useEffect(() => {
     try {
       const savedServer = localStorage.getItem(SERVER_PREFERENCE_KEY) as ServerType | null;
-      if (savedServer && ['PLAY', 'SHORT', 'Zex'].includes(savedServer)) {
+      if (savedServer && ['PLAY', 'SHORT', 'Zex', 'XPLUS'].includes(savedServer)) {
         setPreferredServer(savedServer);
       }
 

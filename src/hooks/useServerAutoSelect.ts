@@ -59,9 +59,9 @@ const SERVER_PREF_KEY = 'preferred_video_server';
 export function getAvailableServers(): ServerType[] {
   const isIOS = isIOSDevice();
   if (isIOS) {
-    return ['PLAY', 'Zex'];
+    return ['PLAY', 'Zex', 'XPLUS'];
   }
-  return ['PLAY', 'SHORT', 'Zex'];
+  return ['PLAY', 'SHORT', 'Zex', 'XPLUS'];
 }
 
 /**
@@ -78,7 +78,7 @@ export function getDefaultServer(): ServerType {
     if (isIOS && saved === 'SHORT') {
       return 'PLAY';
     }
-    if (['PLAY', 'SHORT', 'Zex'].includes(saved)) {
+    if (['PLAY', 'SHORT', 'Zex', 'XPLUS'].includes(saved)) {
       return saved;
     }
   }

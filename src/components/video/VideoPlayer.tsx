@@ -128,6 +128,11 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
     features: ['watch', 'quality', 'download'],
     playerStyle: 'advanced'
   },
+  XPLUS: {
+    name: 'X-PLUS',
+    features: ['watch', 'quality', 'download', 'cc'],
+    playerStyle: 'xplus'
+  },
 };
 
 // Playback speed options
