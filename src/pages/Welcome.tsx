@@ -27,11 +27,11 @@ const TESTIMONIALS = [
   { name: 'Priya S.', rating: 5, text: 'The download feature is a lifesaver. I download episodes on WiFi and watch during my commute. Love the 4K quality!', time: '2 weeks ago' },
   { name: 'Rahul M.', rating: 4, text: 'Watch parties with friends are so fun! The Trending Now banner helps us pick what to watch together.', time: '1 week ago' },
   { name: 'Sneha D.', rating: 5, text: 'Finally an anime site that works perfectly on my phone. The glassy OG/COM badges look so premium!', time: '3 days ago' },
-  { name: 'Vikram P.', rating: 5, text: 'Multi-audio switching is incredible. The server auto-select picks the fastest one every time. No buffering!', time: '1 month ago' },
+  { name: 'Vikram P.', rating: 5, text: 'Multi-audio switching is incredible. E-sub toggling works great and I can keep my favorite server selected.', time: '1 month ago' },
   { name: 'Ananya R.', rating: 5, text: 'Clean UI, fast streaming, and the MuseIN countdown is so exciting! Can\'t wait for new Hindi dub drops.', time: '5 days ago' },
   { name: 'Karan T.', rating: 5, text: 'I was paying for premium on other sites. AnimeSavi gives everything for free with ZERO ads. The slim scrollbar looks clean!', time: '2 days ago' },
   { name: 'Meera J.', rating: 5, text: 'The release calendar and notification system is perfect. CC subtitle editor is a game-changer for fans.', time: '1 week ago' },
-  { name: 'Rohit B.', rating: 4, text: 'Three server options and smart auto-switch means I never face buffering. H.Savi on my iPhone is flawless.', time: '4 days ago' },
+  { name: 'Rohit B.', rating: 4, text: 'Four server options and no forced switching means I can choose what works best. H.Savi on my iPhone is flawless.', time: '4 days ago' },
   { name: 'Deepak N.', rating: 5, text: 'The 4K quality is stunning on my big screen. Trending Now banner makes discovering new anime effortless.', time: '3 days ago' },
   { name: 'Simran L.', rating: 5, text: 'I love the PWA feature — installed it on my phone and it feels like a native app. Watch List is super handy!', time: '2 days ago' },
   { name: 'Aditya G.', rating: 4, text: 'The search works great. Genre filters + Crunchy & MuseIN tabs make browsing so organized.', time: '1 week ago' },
@@ -155,7 +155,7 @@ export default function Welcome() {
   ];
 
   const features = [
-    { icon: Zap, title: 'Lightning Fast', desc: 'Stream instantly with 3 servers (H.Savi, SAVI.IN, Multi.Savi) and smart auto-switch for zero buffering.', highlight: true },
+    { icon: Zap, title: 'Lightning Fast', desc: 'Stream instantly with H.Savi, SAVI.IN, Multi.Savi, and X-PLUS. Pick your favorite server anytime with no forced switching.', highlight: true },
     { icon: Shield, title: '100% Ad-Free', desc: 'No ads, no popups, no interruptions. Just pure, uninterrupted anime watching experience from start to finish.', highlight: true },
     { icon: Download, title: 'Smart Downloads', desc: 'Download in 480p, 720p, 1080p or even 2160p (4K) with proper episode names, codec info & quality tags.' },
     { icon: Smartphone, title: 'Mobile First', desc: 'Designed for phones with compact controls, gesture navigation, PiP, and iOS-optimized H.Savi server.' },
@@ -419,8 +419,8 @@ export default function Welcome() {
             ))}
           </div>
 
-          {/* Telegram + YouTube CTA */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
+          {/* Telegram CTA */}
+          <div className="flex items-center justify-center gap-3 mt-6">
             <a
               href="https://t.me/AnimeSaviInhindiDUB"
               target="_blank"
@@ -431,14 +431,6 @@ export default function Welcome() {
               Join Telegram Channel
               <ExternalLink className="w-3 h-3 opacity-60" />
             </a>
-            <button
-              onClick={() => window.open("https://youtube.com/@anime-savi-official?si=4hhAJLdVctT1s6WL", "_blank", "noopener,noreferrer")}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-200 hover:scale-105 bg-[#FF0000]/15 border border-[#FF0000]/30 text-[#FF0000] hover:bg-[#FF0000]/25 cursor-pointer"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-              Subscribe for more updates
-              <ExternalLink className="w-3 h-3 opacity-60" />
-            </button>
           </div>
         </div>
 

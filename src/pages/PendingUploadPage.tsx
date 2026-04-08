@@ -16,10 +16,28 @@ interface NoEpisodesPopupProps {
 
 function NoEpisodesPopup({ isOpen, onClose, animeTitle }: NoEpisodesPopupProps) {
   if (!isOpen) return null;
+
+  const details = [
+    {
+      icon: '🎬',
+      title: 'Episode upload queue',
+      desc: 'Season links, posters and first episode files are still being added.',
+    },
+    {
+      icon: '🎧',
+      title: 'Audio + E-sub check',
+      desc: 'Multi-audio tracks and subtitle timing are verified before release.',
+    },
+    {
+      icon: '⚡',
+      title: 'Watch page polish',
+      desc: 'Playback, controls and stream quality are tested before it goes live.',
+    },
+  ];
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4 shadow-xl animate-scale-in">
+      <div className="bg-card border border-border rounded-xl p-6 max-w-md mx-4 shadow-xl animate-scale-in">
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">
@@ -28,9 +46,25 @@ function NoEpisodesPopup({ isOpen, onClose, animeTitle }: NoEpisodesPopupProps) 
             <h3 className="text-lg font-bold text-foreground">Episodes Coming Soon</h3>
           </div>
         </div>
-        <p className="text-muted-foreground mb-6">
-          The episodes for "<span className="text-foreground font-medium">{animeTitle}</span>" are currently under progress. Please check back later!
+        <p className="text-sm text-muted-foreground mb-4">
+          <span className="text-foreground font-medium">{animeTitle}</span> is still under progress, so the watch page is not open yet.
         </p>
+        <div className="space-y-2.5 mb-4">
+          {details.map((item) => (
+            <div key={item.title} className="flex items-start gap-3 rounded-lg border border-border/50 bg-muted/40 p-3">
+              <span className="text-base leading-none">{item.icon}</span>
+              <div>
+                <p className="text-sm font-medium text-foreground">{item.title}</p>
+                <p className="text-xs text-muted-foreground">{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mb-6 rounded-lg border border-border/50 bg-muted/50 p-3">
+          <p className="text-xs text-muted-foreground">
+            We’ll unlock this anime here as soon as the first episode pack is ready for watching.
+          </p>
+        </div>
         <Button 
           onClick={onClose}
           className="w-full"

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { isIOSDevice } from '@/lib/deviceUtils';
 
 export type ServerType = 'PLAY' | 'SHORT' | 'Zex' | 'XPLUS';
@@ -85,36 +85,85 @@ interface UseServerAutoSelectOptions {
 export function useServerAutoSelect(_options?: UseServerAutoSelectOptions) {
   const [activeServer, setActiveServer] = useState<ServerType>(() => getDefaultServer());
   const [isServerLoading, setIsServerLoading] = useState(false);
-  const [failedServers] = useState<Set<ServerType>>(new Set());
+  const [failedServers, setFailedServers] = useState<Set<ServerType>>(new Set());
   const [fallbackOccurred] = useState(false);
   const [fallbackFrom] = useState<ServerType | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
   const videoLoadedRef = useRef(false);
+  const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const availableServers = getAvailableServers();
 
+  const clearLoadingState = useCallback(() => {
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
+    }
+    setIsServerLoading(false);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const switchServer = useCallback((server: ServerType) => {
-    if (server === activeServer) return;
     const servers = getAvailableServers();
     if (!servers.includes(server)) {
       console.warn(`Server ${server} not available on this platform`);
       return;
     }
+
     videoLoadedRef.current = false;
     setIsServerLoading(true);
-    setActiveServer(server);
+    setFailedServers((prev) => {
+      if (!prev.has(server)) return prev;
+      const next = new Set(prev);
+      next.delete(server);
+      return next;
+    });
     localStorage.setItem(SERVER_PREF_KEY, server);
+
+    if (server === activeServer) {
+      setReloadToken((prev) => prev + 1);
+    } else {
+      setActiveServer(server);
+    }
+
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
+
     requestAnimationFrame(() => {
-      setTimeout(() => setIsServerLoading(false), 500);
+      loadingTimeoutRef.current = setTimeout(() => {
+        setIsServerLoading(false);
+      }, 1500);
     });
   }, [activeServer]);
 
   const onVideoLoadSuccess = useCallback(() => {
     videoLoadedRef.current = true;
-  }, []);
+    clearLoadingState();
+    setFailedServers((prev) => {
+      if (!prev.has(activeServer)) return prev;
+      const next = new Set(prev);
+      next.delete(activeServer);
+      return next;
+    });
+  }, [activeServer, clearLoadingState]);
 
   const onVideoLoadError = useCallback(() => {
+    clearLoadingState();
+    setFailedServers((prev) => {
+      const next = new Set(prev);
+      next.add(activeServer);
+      return next;
+    });
     console.log(`Server ${activeServer} encountered an error`);
-  }, [activeServer]);
+  }, [activeServer, clearLoadingState]);
 
   const startFallbackTimer = useCallback(() => {
     videoLoadedRef.current = false;
@@ -127,6 +176,7 @@ export function useServerAutoSelect(_options?: UseServerAutoSelectOptions) {
     failedServers,
     fallbackOccurred,
     fallbackFrom,
+    reloadToken,
     switchServer,
     onVideoLoadSuccess,
     onVideoLoadError,
