@@ -57,6 +57,7 @@ interface Episode {
   duration: number | null;
   season_id: string;
   audio_language: string | null;
+  captions_url: string | null;
   thumbnail: string | null;
   intro_start_time: number | null;
   intro_end_time: number | null;
@@ -136,6 +137,7 @@ export default function Watch() {
     failedServers,
     fallbackOccurred,
     fallbackFrom,
+    reloadToken,
     switchServer: handleServerSwitch,
     onVideoLoadSuccess,
     onVideoLoadError,
@@ -928,7 +930,7 @@ export default function Watch() {
         {/* Video Player */}
         <div className="flex-1">
           <VideoPlayer
-            key={`${episodeId}-${activeServer}`}
+            key={`${episodeId}-${activeServer}-${reloadToken}`}
             videoUrl={deviceOptimizedVideo.videoUrl || episode.video_url}
             externalUrl={episode.external_url}
             title={episode.title}
@@ -941,6 +943,7 @@ export default function Watch() {
             activeServer={activeServer}
             isLoading={serverLoading}
             audioLanguage={episode.audio_language || undefined}
+            captionsUrl={episode.captions_url}
             isEncoding={isVideoEncoding}
             onTimeUpdate={updateWatchProgress}
             hasNextEpisode={!!nextEpisode}

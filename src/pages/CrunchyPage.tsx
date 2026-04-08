@@ -285,10 +285,30 @@ export default function CrunchyPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-heading text-center">Under Progress</DialogTitle>
-            <DialogDescription className="text-center text-base pt-2">
-              The episodes of <span className="font-semibold text-foreground">{underProgressAnime}</span> is under progress
+            <DialogDescription className="text-center text-sm pt-2">
+              <span className="font-semibold text-foreground">{underProgressAnime}</span> is still being prepared for the Crunchy tab.
             </DialogDescription>
           </DialogHeader>
+          <div className="space-y-2.5">
+            {[
+              { icon: '📦', title: 'Episode sync in progress', desc: 'Season entries are ready, but the first episode files are still being linked.' },
+              { icon: '🎧', title: 'Audio + E-sub QA', desc: 'Multi-audio tracks, English subtitles and CC support are being checked.' },
+              { icon: '✨', title: 'Final watch-page review', desc: 'Posters, playback quality and player controls are being verified before release.' },
+            ].map((item) => (
+              <div key={item.title} className="flex items-start gap-3 rounded-lg border border-border/50 bg-muted/40 p-3">
+                <span className="text-base leading-none">{item.icon}</span>
+                <div>
+                  <p className="text-sm font-medium text-foreground">{item.title}</p>
+                  <p className="text-xs text-muted-foreground">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-lg border border-border/50 bg-muted/50 p-3">
+            <p className="text-xs text-muted-foreground text-center">
+              This title will open automatically once the first Crunchy episode pack is ready.
+            </p>
+          </div>
           <DialogFooter className="pt-4">
             <Button variant="default" className="anime-button w-full" onClick={() => setUnderProgressAnime(null)}>
               OK
