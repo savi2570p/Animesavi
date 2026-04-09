@@ -20,6 +20,13 @@ const formatViews = (count: number) => {
   return String(count);
 };
 
+// Hardcoded trending titles in priority order
+const TRENDING_TITLES = [
+  'Jujutsu Kaisen',
+  'Invincible',
+  'Attack on Titan',
+];
+
 export function TrendingBanner() {
   const [trending, setTrending] = useState<TrendingAnime[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -43,16 +50,41 @@ export function TrendingBanner() {
         .from('anime_public')
         .select('id, title, cover_image, banner_image, view_count, genres, status')
         .order('view_count', { ascending: false })
-        .limit(3);
+        .limit(50);
 
       if (data && data.length > 0) {
-        const withViews = data.map((a) => ({
-          ...a,
-          view_count: a.view_count && a.view_count > 100000
-            ? a.view_count
-            : Math.floor(Math.random() * 9_000_000) + 1_000_000,
-        }));
-        setTrending(withViews as TrendingAnime[]);
+        // Try to match hardcoded trending titles
+        const matched: TrendingAnime[] = [];
+        for (const targetTitle of TRENDING_TITLES) {
+          const found = data.find(a => 
+            a.title?.toLowerCase().includes(targetTitle.toLowerCase())
+          );
+          if (found) {
+            matched.push({
+              ...found,
+              view_count: found.view_count && found.view_count > 100000
+                ? found.view_count
+                : Math.floor(Math.random() * 9_000_000) + 1_000_000,
+            } as TrendingAnime);
+          }
+        }
+
+        // If we couldn't find all 3, fill from top viewed
+        if (matched.length < 3) {
+          const matchedIds = new Set(matched.map(m => m.id));
+          for (const a of data) {
+            if (matched.length >= 3) break;
+            if (matchedIds.has(a.id!)) continue;
+            matched.push({
+              ...a,
+              view_count: a.view_count && a.view_count > 100000
+                ? a.view_count
+                : Math.floor(Math.random() * 9_000_000) + 1_000_000,
+            } as TrendingAnime);
+          }
+        }
+
+        setTrending(matched.slice(0, 3));
       }
     } catch (e) {
       console.error('Trending fetch error:', e);

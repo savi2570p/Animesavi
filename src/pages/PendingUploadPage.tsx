@@ -21,17 +21,27 @@ function NoEpisodesPopup({ isOpen, onClose, animeTitle }: NoEpisodesPopupProps) 
     {
       icon: '🎬',
       title: 'Episode upload queue',
-      desc: 'Season links, posters and first episode files are still being added.',
+      desc: 'Season links, posters and first episode files are still being added by the upload team.',
     },
     {
       icon: '🎧',
       title: 'Audio + E-sub check',
-      desc: 'Multi-audio tracks and subtitle timing are verified before release.',
+      desc: 'Multi-audio tracks (Hindi, English, Japanese) and subtitle timing are verified before release.',
     },
     {
-      icon: '⚡',
-      title: 'Watch page polish',
-      desc: 'Playback, controls and stream quality are tested before it goes live.',
+      icon: '🔄',
+      title: 'HLS conversion & encoding',
+      desc: 'Episodes are being converted to adaptive streaming format (480p → 4K) for smooth playback.',
+    },
+    {
+      icon: '📺',
+      title: 'Server deployment',
+      desc: 'Video files are being distributed across H.Savi, SAVI.IN, Multi.Savi and X-PLUS servers.',
+    },
+    {
+      icon: '✅',
+      title: 'Quality assurance',
+      desc: 'Playback is tested on mobile, desktop and TV to ensure buffer-free streaming experience.',
     },
   ];
   

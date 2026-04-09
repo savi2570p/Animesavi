@@ -10,9 +10,22 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 
+const REPORT_CATEGORIES = [
+  { label: '🐛 Bug / Glitch', value: 'Bug' },
+  { label: '▶️ Video not playing', value: 'Video Issue' },
+  { label: '🔇 Audio / Subtitle issue', value: 'Audio/Sub Issue' },
+  { label: '📱 UI / Design issue', value: 'UI Issue' },
+  { label: '⚡ Slow / Laggy', value: 'Performance' },
+  { label: '💡 Feature request', value: 'Feature Request' },
+  { label: '🔒 Login / Access issue', value: 'Auth Issue' },
+  { label: '📺 Server / Streaming issue', value: 'Server Issue' },
+  { label: '🔄 Other', value: 'Other' },
+];
+
 export function ReportButton() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
+  const [category, setCategory] = useState('');
 
   // Hide on embed routes
   const isEmbed = typeof window !== 'undefined' && (
@@ -23,17 +36,22 @@ export function ReportButton() {
   if (isEmbed) return null;
 
   const handleSend = () => {
+    if (!category) {
+      toast.error('Please select a category');
+      return;
+    }
     if (!message.trim()) {
       toast.error('Please describe your issue');
       return;
     }
 
-    const text = `🚨 Report from AnimeSavi\n\nPage: ${window.location.pathname}\n\n${message.trim()}`;
+    const text = `🚨 Report from AnimeSavi\n\n📂 Category: ${category}\n📄 Page: ${window.location.pathname}\n📱 Device: ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}\n\n${message.trim()}`;
     const url = `https://t.me/Lv_Savi?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
 
     toast.success('Opening Telegram to send your report');
     setMessage('');
+    setCategory('');
     setOpen(false);
   };
 
@@ -54,6 +72,24 @@ export function ReportButton() {
               ⚠️ Report an Issue
             </DialogTitle>
           </DialogHeader>
+
+          {/* Category selector */}
+          <div className="flex flex-wrap gap-1.5">
+            {REPORT_CATEGORIES.map((cat) => (
+              <button
+                key={cat.value}
+                onClick={() => setCategory(cat.value)}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border ${
+                  category === cat.value
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-muted/50 text-muted-foreground border-border/50 hover:bg-muted'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
           <Textarea
             placeholder="Describe the problem you're facing..."
             value={message}
@@ -61,6 +97,11 @@ export function ReportButton() {
             className="min-h-[100px] resize-none"
             maxLength={500}
           />
+
+          <p className="text-[10px] text-muted-foreground">
+            Your report will be sent via Telegram with page & device info attached.
+          </p>
+
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
               Cancel
