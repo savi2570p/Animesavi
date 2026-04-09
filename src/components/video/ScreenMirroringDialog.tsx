@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Wifi, Monitor, Tv, Loader2, Cast, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Wifi, Monitor, Tv, Loader2, Cast, CheckCircle2, AlertCircle, Airplay } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ScreenMirroringDialogProps {
@@ -13,25 +13,25 @@ type MirrorStatus = 'idle' | 'scanning' | 'connecting' | 'connected' | 'error';
 
 export function ScreenMirroringDialog({ open, onOpenChange }: ScreenMirroringDialogProps) {
   const [status, setStatus] = useState<MirrorStatus>('idle');
-  const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
 
-  // Reset state when dialog opens
+  const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isAndroid = typeof navigator !== 'undefined' && /Android/.test(navigator.userAgent);
+
   useEffect(() => {
     if (open) {
       setStatus('idle');
-      setSelectedDevice(null);
     }
   }, [open]);
 
   const handleMirror = useCallback(async () => {
-    // Use the browser's Presentation API or Remote Playback API
+    // Try Presentation API first (Chrome / Edge)
     if ('presentation' in navigator && (navigator as any).presentation) {
       try {
         setStatus('scanning');
         const request = new (window as any).PresentationRequest([window.location.href]);
         const connection = await request.start();
         setStatus('connected');
-        toast.success('Screen mirroring started!');
+        toast.success('Casting mode enabled — video will play natively on your TV');
         
         connection.addEventListener('close', () => {
           setStatus('idle');
@@ -42,26 +42,47 @@ export function ScreenMirroringDialog({ open, onOpenChange }: ScreenMirroringDia
           setStatus('idle');
         } else {
           setStatus('error');
-          toast.error('Could not connect to device');
         }
       }
-    } else {
-      // Fallback: try native screen sharing / casting
-      try {
-        setStatus('scanning');
-        // Attempt to use the Cast API if available (Chrome)
-        if ((window as any).chrome?.cast) {
-          toast.info('Use the Cast icon in your browser toolbar to select a device');
-          setStatus('idle');
-        } else {
-          // No native API available - guide user
+      return;
+    }
+
+    // For iOS: Guide to use AirPlay
+    if (isIOS) {
+      setStatus('connected');
+      toast.success('Use the AirPlay icon in Control Center to mirror to your TV');
+      // Try to trigger AirPlay picker on the video element
+      const video = document.querySelector('video');
+      if (video && (video as any).webkitShowPlaybackTargetPicker) {
+        (video as any).webkitShowPlaybackTargetPicker();
+      }
+      return;
+    }
+
+    // For Android: Try Remote Playback API
+    if (isAndroid) {
+      const video = document.querySelector('video');
+      if (video && (video as any).remote) {
+        try {
+          setStatus('scanning');
+          await (video as any).remote.prompt();
+          setStatus('connected');
+          toast.success('Casting mode enabled');
+        } catch {
           setStatus('error');
         }
-      } catch {
-        setStatus('error');
+        return;
       }
     }
-  }, []);
+
+    // Fallback: Chrome Cast API
+    if ((window as any).chrome?.cast) {
+      toast.info('Use the Cast icon in your browser toolbar to select a device');
+      setStatus('idle');
+    } else {
+      setStatus('error');
+    }
+  }, [isIOS, isAndroid]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -85,6 +106,14 @@ export function ScreenMirroringDialog({ open, onOpenChange }: ScreenMirroringDia
             </p>
           </div>
 
+          {/* Smart casting info */}
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+            <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />
+            <div className="text-sm text-foreground">
+              <strong>Smart Casting:</strong> When casting is detected, the player automatically switches to native mode — no overlays, no restrictions, just smooth playback on your TV.
+            </div>
+          </div>
+
           {status === 'idle' && (
             <div className="text-center space-y-4 py-4">
               <div className="flex justify-center gap-4">
@@ -102,10 +131,18 @@ export function ScreenMirroringDialog({ open, onOpenChange }: ScreenMirroringDia
                   <span className="text-xs text-muted-foreground">TV / Display</span>
                 </div>
               </div>
-              <Button onClick={handleMirror} className="w-full gap-2">
-                <Cast className="h-4 w-4" />
-                Mirror
-              </Button>
+
+              <div className="space-y-2">
+                <Button onClick={handleMirror} className="w-full gap-2">
+                  <Cast className="h-4 w-4" />
+                  {isIOS ? 'Start AirPlay' : isAndroid ? 'Cast to TV' : 'Mirror Screen'}
+                </Button>
+                {isIOS && (
+                  <p className="text-xs text-muted-foreground">
+                    You can also swipe down from top-right and tap the AirPlay / Screen Mirroring icon.
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -116,19 +153,15 @@ export function ScreenMirroringDialog({ open, onOpenChange }: ScreenMirroringDia
             </div>
           )}
 
-          {status === 'connecting' && (
-            <div className="text-center space-y-3 py-4">
-              <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-              <p className="text-sm text-muted-foreground">Connecting to {selectedDevice}...</p>
-            </div>
-          )}
-
           {status === 'connected' && (
             <div className="text-center space-y-3 py-4">
               <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto" />
-              <p className="text-sm font-medium text-foreground">Connected! Mirroring to your device.</p>
+              <p className="text-sm font-medium text-foreground">Casting mode enabled!</p>
+              <p className="text-xs text-muted-foreground">
+                Video is playing in native mode for smooth TV playback. All overlays and restrictions are disabled.
+              </p>
               <Button variant="outline" onClick={() => { setStatus('idle'); onOpenChange(false); }}>
-                Disconnect
+                Done
               </Button>
             </div>
           )}

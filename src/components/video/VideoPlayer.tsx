@@ -324,6 +324,7 @@ export function VideoPlayer({
   // Download verification dialog state
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
   const [showMirroringDialog, setShowMirroringDialog] = useState(false);
+  const [isCasting, setIsCasting] = useState(false);
   // Premium loading state - Netflix-style loader
   const [showPremiumLoader, setShowPremiumLoader] = useState(true);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
@@ -1033,7 +1034,7 @@ export function VideoPlayer({
     const video = videoRef.current;
     
     // Try HLS.js first
-    if (hlsRef.current) {
+    if (hlsRef.current && hlsRef.current.subtitleTracks.length > 0) {
       hlsRef.current.subtitleTrack = trackId;
       if (trackId === -1) {
         toast.success('Subtitles: Off');
@@ -1046,7 +1047,7 @@ export function VideoPlayer({
       return;
     }
     
-    // Fallback to native textTracks API
+    // Fallback to native textTracks API (also handles captionsUrl <track> element)
     if (video) {
       const nativeTextTracks = video.textTracks;
       if (nativeTextTracks && nativeTextTracks.length > 0) {
@@ -1057,6 +1058,10 @@ export function VideoPlayer({
           }
         }
         if (trackId === -1) {
+          // Turn all off
+          for (let i = 0; i < nativeTextTracks.length; i++) {
+            nativeTextTracks[i].mode = 'hidden';
+          }
           toast.success('Subtitles: Off');
         } else {
           const track = nativeTextTracks[trackId];
@@ -1127,6 +1132,69 @@ export function VideoPlayer({
       }
     };
   }, [activeServer, videoError, isProcessing]);
+
+  // Detect casting / AirPlay / screen mirroring
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // AirPlay detection (Safari / iOS)
+    const onAirPlayChange = () => {
+      const presenting = (video as any).webkitCurrentPlaybackTargetIsWireless === true;
+      setIsCasting(presenting);
+      if (presenting) {
+        toast.success('Casting mode enabled');
+        // Switch to native player mode - remove restrictions
+        video.controls = true;
+        (video as any).playsInline = false;
+      } else {
+        video.controls = false;
+        (video as any).playsInline = true;
+      }
+    };
+    video.addEventListener('webkitcurrentplaybacktargetiswirelesschanged', onAirPlayChange);
+
+    // Remote Playback API (Chromecast / Android)
+    if ((video as any).remote) {
+      const remote = (video as any).remote;
+      const onConnecting = () => { setIsCasting(true); toast.info('Connecting to cast device...'); };
+      const onConnect = () => { 
+        setIsCasting(true); 
+        toast.success('Casting mode enabled');
+        video.controls = true;
+      };
+      const onDisconnect = () => { 
+        setIsCasting(false); 
+        video.controls = false;
+      };
+      remote.addEventListener('connecting', onConnecting);
+      remote.addEventListener('connect', onConnect);
+      remote.addEventListener('disconnect', onDisconnect);
+      return () => {
+        video.removeEventListener('webkitcurrentplaybacktargetiswirelesschanged', onAirPlayChange);
+        remote.removeEventListener('connecting', onConnecting);
+        remote.removeEventListener('connect', onConnect);
+        remote.removeEventListener('disconnect', onDisconnect);
+      };
+    }
+
+    return () => {
+      video.removeEventListener('webkitcurrentplaybacktargetiswirelesschanged', onAirPlayChange);
+    };
+  }, [effectiveVideoUrl]);
+
+  // Populate subtitle tracks from captionsUrl when no HLS subtitles found
+  useEffect(() => {
+    if (!captionsUrl || subtitleTracks.length > 0) return;
+    // If we have a captionsUrl but no HLS subtitle tracks, add it as a track option
+    const esub: SubtitleTrackInfo = {
+      id: 0,
+      label: 'English (E-Sub)',
+      language: 'en',
+      enabled: false,
+    };
+    setSubtitleTracks([esub]);
+  }, [captionsUrl, subtitleTracks.length]);
 
   // CRITICAL: Cleanup video on unmount
   useEffect(() => {
@@ -2444,16 +2512,16 @@ export function VideoPlayer({
           }
         }}
         autoPlay
-        playsInline
-        webkit-playsinline="true"
+        playsInline={!isCasting}
+        webkit-playsinline={isCasting ? "false" : "true"}
         x-webkit-airplay="allow"
         x5-video-player-type="h5-page"
         x5-video-player-fullscreen="true"
         x5-video-orientation="landscape"
-        x5-playsinline="true"
+        x5-playsinline={isCasting ? "false" : "true"}
         preload="auto"
-        muted={isMobile}
-        controlsList="nodownload noremoteplayback"
+        muted={isMobile && !isCasting}
+        controlsList={isCasting ? "nodownload" : "nodownload noremoteplayback"}
         disablePictureInPicture={false}
         crossOrigin="anonymous"
       >
