@@ -33,7 +33,7 @@ export default function Index() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background [&_section]:py-2 [&_section]:md:py-4 [&_.container]:px-3 [&_.container]:md:px-4">
       {/* Hero Banner */}
       <FeaturedSlider />
 
@@ -44,7 +44,7 @@ export default function Index() {
       <ContinueWatching showOnHomeOnly={true} />
 
       {/* Platform Links */}
-      <section className="py-3">
+      <section className="py-2 md:py-3">
         <div className="container flex items-center gap-3">
           <Link
             to="/crunchy"
@@ -91,14 +91,14 @@ export default function Index() {
       <RecentlyCompleted />
 
       {/* Social Share */}
-      <section className="py-8">
+      <section className="py-4 md:py-8">
         <div className="container">
           <SocialShare />
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-16">
+      <section className="py-8 md:py-16">
         <div className="container">
           <div className="relative overflow-visible rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-transparent border border-primary/20 p-8 md:p-12">
             <div className="relative z-10">
