@@ -355,6 +355,7 @@ export function VideoPlayer({
   
   // Detect if mobile device (MUST be before hooks that use it)
   const isMobile = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
   
   
   // Gesture controls hook for mobile
