@@ -2719,24 +2719,24 @@ export function VideoPlayer({
               {activeServer === 'XPLUS' ? (
                 /* X-PLUS: Flat minimal controls - Fullscreen */
                 <>
-                  <div className="flex items-center gap-3 md:gap-5">
+                  <div className="flex items-center gap-2 md:gap-5">
                     <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
-                      {isPlaying ? <Pause className="w-5 h-5 md:w-7 md:h-7" /> : <Play className="w-5 h-5 md:w-7 md:h-7 fill-current" />}
+                      {isPlaying ? <Pause className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-7 md:h-7"} /> : <Play className={isIOS ? "w-4 h-4 fill-current" : "w-5 h-5 md:w-7 md:h-7 fill-current"} />}
                     </button>
                     <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); skipBackward(); }} title="Skip back 10s">
-                      <SkipBack className="w-5 h-5 md:w-6 md:h-6" />
+                      <SkipBack className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                     <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); skipForward(); }} title="Skip forward 10s">
-                      <SkipForward className="w-5 h-5 md:w-6 md:h-6" />
+                      <SkipForward className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                     <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); toggleMute(); }}>
-                      {isMuted ? <VolumeX className="w-5 h-5 md:w-6 md:h-6" /> : <Volume2 className="w-5 h-5 md:w-6 md:h-6" />}
+                      {isMuted ? <VolumeX className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} /> : <Volume2 className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />}
                     </button>
-                    <span className="text-white/90 text-xs md:text-sm font-mono">{formatTime(currentTime)} / {formatTime(duration)}</span>
+                    <span className={`text-white/90 font-mono ${isIOS ? 'text-[10px]' : 'text-xs md:text-sm'}`}>{formatTime(currentTime)} / {formatTime(duration)}</span>
                   </div>
-                  <div className="flex items-center gap-3 md:gap-5">
+                  <div className="flex items-center gap-2 md:gap-5">
                     <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); handleDownload(); }} title="Download">
-                      <Download className="w-5 h-5 md:w-6 md:h-6" />
+                      <Download className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                     <button 
                       className="text-white hover:text-white/80 transition-colors" 
@@ -2751,7 +2751,7 @@ export function VideoPlayer({
                       }}
                       title="Subtitles / CC"
                     >
-                      <Subtitles className={`w-5 h-5 md:w-6 md:h-6 ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`} />
+                      <Subtitles className={`${isIOS ? 'w-3.5 h-3.5' : 'w-5 h-5 md:w-6 md:h-6'} ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`} />
                     </button>
                     <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
                       <DropdownMenuTrigger asChild>
@@ -2761,7 +2761,7 @@ export function VideoPlayer({
                           title="Settings"
                           style={{ touchAction: 'manipulation' }}
                         >
-                          <Settings className="w-5 h-5 md:w-6 md:h-6" />
+                          <Settings className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent 
@@ -2778,10 +2778,10 @@ export function VideoPlayer({
                       </DropdownMenuContent>
                     </DropdownMenu>
                     <button className="hidden md:block text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); togglePiP(); }} title="Picture-in-Picture">
-                      <PictureInPicture2 className="w-5 h-5 md:w-6 md:h-6" />
+                      <PictureInPicture2 className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                     <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} title="Exit Fullscreen">
-                      <Minimize className="w-5 h-5 md:w-6 md:h-6" />
+                      <Minimize className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                   </div>
                 </>
