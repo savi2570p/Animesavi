@@ -40,6 +40,7 @@ interface Episode {
   duration: number | null;
   season_id: string;
   audio_language: string | null;
+  captions_url: string | null;
   intro_start_time: number | null;
   intro_end_time: number | null;
   outro_start_time: number | null;
