@@ -355,6 +355,7 @@ export function VideoPlayer({
   
   // Detect if mobile device (MUST be before hooks that use it)
   const isMobile = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
   
   
   // Gesture controls hook for mobile
@@ -2718,24 +2719,24 @@ export function VideoPlayer({
               {activeServer === 'XPLUS' ? (
                 /* X-PLUS: Flat minimal controls - Fullscreen */
                 <>
-                  <div className="flex items-center gap-3 md:gap-5">
+                  <div className="flex items-center gap-2 md:gap-5">
                     <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
-                      {isPlaying ? <Pause className="w-5 h-5 md:w-7 md:h-7" /> : <Play className="w-5 h-5 md:w-7 md:h-7 fill-current" />}
+                      {isPlaying ? <Pause className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-7 md:h-7"} /> : <Play className={isIOS ? "w-4 h-4 fill-current" : "w-5 h-5 md:w-7 md:h-7 fill-current"} />}
                     </button>
                     <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); skipBackward(); }} title="Skip back 10s">
-                      <SkipBack className="w-5 h-5 md:w-6 md:h-6" />
+                      <SkipBack className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                     <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); skipForward(); }} title="Skip forward 10s">
-                      <SkipForward className="w-5 h-5 md:w-6 md:h-6" />
+                      <SkipForward className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                     <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); toggleMute(); }}>
-                      {isMuted ? <VolumeX className="w-5 h-5 md:w-6 md:h-6" /> : <Volume2 className="w-5 h-5 md:w-6 md:h-6" />}
+                      {isMuted ? <VolumeX className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} /> : <Volume2 className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />}
                     </button>
-                    <span className="text-white/90 text-xs md:text-sm font-mono">{formatTime(currentTime)} / {formatTime(duration)}</span>
+                    <span className={`text-white/90 font-mono ${isIOS ? 'text-[10px]' : 'text-xs md:text-sm'}`}>{formatTime(currentTime)} / {formatTime(duration)}</span>
                   </div>
-                  <div className="flex items-center gap-3 md:gap-5">
+                  <div className="flex items-center gap-2 md:gap-5">
                     <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); handleDownload(); }} title="Download">
-                      <Download className="w-5 h-5 md:w-6 md:h-6" />
+                      <Download className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                     <button 
                       className="text-white hover:text-white/80 transition-colors" 
@@ -2750,7 +2751,7 @@ export function VideoPlayer({
                       }}
                       title="Subtitles / CC"
                     >
-                      <Subtitles className={`w-5 h-5 md:w-6 md:h-6 ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`} />
+                      <Subtitles className={`${isIOS ? 'w-3.5 h-3.5' : 'w-5 h-5 md:w-6 md:h-6'} ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`} />
                     </button>
                     <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
                       <DropdownMenuTrigger asChild>
@@ -2760,7 +2761,7 @@ export function VideoPlayer({
                           title="Settings"
                           style={{ touchAction: 'manipulation' }}
                         >
-                          <Settings className="w-5 h-5 md:w-6 md:h-6" />
+                          <Settings className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent 
@@ -2777,10 +2778,10 @@ export function VideoPlayer({
                       </DropdownMenuContent>
                     </DropdownMenu>
                     <button className="hidden md:block text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); togglePiP(); }} title="Picture-in-Picture">
-                      <PictureInPicture2 className="w-5 h-5 md:w-6 md:h-6" />
+                      <PictureInPicture2 className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                     <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} title="Exit Fullscreen">
-                      <Minimize className="w-5 h-5 md:w-6 md:h-6" />
+                      <Minimize className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                   </div>
                 </>
@@ -2969,44 +2970,44 @@ export function VideoPlayer({
             {activeServer === 'XPLUS' ? (
               /* X-PLUS: Flat minimal controls like a cinema player */
               <>
-                <div className="flex items-center gap-3 md:gap-4">
+                <div className="flex items-center gap-2 md:gap-4">
                   <button 
                     className="text-white hover:text-white/80 transition-colors" 
                     onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                     title={isPlaying ? 'Pause' : 'Play'}
                   >
-                    {isPlaying ? <Pause className="w-5 h-5 md:w-6 md:h-6" /> : <Play className="w-5 h-5 md:w-6 md:h-6 fill-current" />}
+                    {isPlaying ? <Pause className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} /> : <Play className={isIOS ? "w-3.5 h-3.5 fill-current" : "w-5 h-5 md:w-6 md:h-6 fill-current"} />}
                   </button>
                   <button 
                     className="text-white hover:text-white/80 transition-colors" 
                     onClick={(e) => { e.stopPropagation(); skipBackward(); }}
                     title="Skip back 10s"
                   >
-                    <SkipBack className="w-4.5 h-4.5 md:w-5 md:h-5" />
+                    <SkipBack className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
                   </button>
                   <button 
                     className="text-white hover:text-white/80 transition-colors" 
                     onClick={(e) => { e.stopPropagation(); skipForward(); }}
                     title="Skip forward 10s"
                   >
-                    <SkipForward className="w-4.5 h-4.5 md:w-5 md:h-5" />
+                    <SkipForward className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
                   </button>
                   <button 
                     className="text-white hover:text-white/80 transition-colors" 
                     onClick={(e) => { e.stopPropagation(); toggleMute(); }}
                     title={isMuted ? 'Unmute' : 'Mute'}
                   >
-                    {isMuted ? <VolumeX className="w-4.5 h-4.5 md:w-5 md:h-5" /> : <Volume2 className="w-4.5 h-4.5 md:w-5 md:h-5" />}
+                    {isMuted ? <VolumeX className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} /> : <Volume2 className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} />}
                   </button>
-                  <span className="text-white/90 text-xs md:text-sm font-mono">{formatTime(currentTime)} / {formatTime(duration)}</span>
+                  <span className={`text-white/90 font-mono ${isIOS ? 'text-[9px]' : 'text-xs md:text-sm'}`}>{formatTime(currentTime)} / {formatTime(duration)}</span>
                 </div>
-                <div className="flex items-center gap-3 md:gap-4">
+                <div className="flex items-center gap-2 md:gap-4">
                   <button 
                     className="text-white hover:text-white/80 transition-colors" 
                     onClick={(e) => { e.stopPropagation(); handleDownload(); }}
                     title="Download"
                   >
-                    <Download className="w-4.5 h-4.5 md:w-5 md:h-5" />
+                    <Download className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
                   </button>
                   <button 
                     className="text-white hover:text-white/80 transition-colors" 
@@ -3021,7 +3022,7 @@ export function VideoPlayer({
                     }}
                     title="Subtitles / CC"
                   >
-                    <Subtitles className={`w-4.5 h-4.5 md:w-5 md:h-5 ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`} />
+                    <Subtitles className={`${isIOS ? 'w-3 h-3' : 'w-4.5 h-4.5 md:w-5 md:h-5'} ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`} />
                   </button>
                   <DropdownMenu 
                     modal={false} 
@@ -3042,7 +3043,7 @@ export function VideoPlayer({
                         title="Settings"
                         style={{ touchAction: 'manipulation' }}
                       >
-                        <Settings className="w-4.5 h-4.5 md:w-5 md:h-5" />
+                        <Settings className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent 
@@ -3071,7 +3072,7 @@ export function VideoPlayer({
                     onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
                     title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
                   >
-                    {isFullscreen ? <Minimize className="w-4.5 h-4.5 md:w-5 md:h-5" /> : <Maximize className="w-4.5 h-4.5 md:w-5 md:h-5" />}
+                    {isFullscreen ? <Minimize className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} /> : <Maximize className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} />}
                   </button>
                 </div>
               </>
