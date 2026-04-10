@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { ArrowLeft, Save, Film, Volume2 } from 'lucide-react';
+import { ArrowLeft, Save, Film, Volume2, Subtitles } from 'lucide-react';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { IntroOutroEditor } from '@/components/upload/IntroOutroEditor';
 import { VideoFormatConverter } from '@/components/upload/VideoFormatConverter';
@@ -330,6 +330,44 @@ export default function EpisodeEdit() {
             compact={true}
           />
 
+          {/* Uploaded CC Preview & Delete */}
+          {episode?.captions_url && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Subtitles className="h-4 w-4 text-primary" />
+                Current Subtitles (CC)
+              </Label>
+              <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border border-border/50">
+                <a 
+                  href={episode.captions_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary hover:underline truncate flex-1"
+                >
+                  {episode.captions_url.split('/').pop() || 'subtitles.vtt'}
+                </a>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={async () => {
+                    const { error } = await supabase
+                      .from('episodes')
+                      .update({ captions_url: null })
+                      .eq('id', episodeId);
+                    if (error) {
+                      toast.error('Failed to remove subtitles');
+                    } else {
+                      setEpisode(prev => prev ? { ...prev, captions_url: null } : null);
+                      toast.success('Subtitles removed');
+                    }
+                  }}
+                >
+                  Delete CC
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* CC Subtitle Editor */}
           <SubtitleEditor
             compact={true}
@@ -359,6 +397,7 @@ export default function EpisodeEdit() {
               if (error) {
                 toast.error('Failed to save subtitle URL');
               } else {
+                setEpisode(prev => prev ? { ...prev, captions_url: urlData.publicUrl } : null);
                 toast.success('Subtitles saved successfully!');
               }
             }}

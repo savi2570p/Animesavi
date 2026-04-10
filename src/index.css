@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent iOS pull-to-refresh / overscroll reload */
+html, body {
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Glassy iOS-style badges */
 .badge-glass-new {
   background: linear-gradient(135deg, rgba(34, 197, 94, 0.45), rgba(22, 163, 74, 0.35));

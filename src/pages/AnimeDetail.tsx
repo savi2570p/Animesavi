@@ -442,7 +442,7 @@ export default function AnimeDetail() {
   return (
     <div className="min-h-screen">
       {/* Hero Banner */}
-      <div className="relative h-[70vh] md:h-[80vh] overflow-hidden">
+      <div className="relative h-[45vh] md:h-[80vh] overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center scale-105 animate-[float_20s_ease-in-out_infinite]"
           style={{
@@ -463,7 +463,7 @@ export default function AnimeDetail() {
       </div>
 
       {/* Content */}
-      <div className="container relative -mt-[45vh] md:-mt-[50vh] z-10 pb-12">
+      <div className="container relative -mt-[30vh] md:-mt-[50vh] z-10 pb-8 md:pb-12">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Poster - Right-click to save on PC, long-press on mobile */}
           <div className="flex-shrink-0 animate-fade-in">
@@ -476,7 +476,7 @@ export default function AnimeDetail() {
               <img
                 src={anime.cover_image || '/placeholder.svg'}
                 alt={anime.title}
-                className="w-48 md:w-72 rounded-2xl shadow-2xl border border-border/30 transition-transform duration-500 group-hover:scale-[1.02] cursor-pointer"
+                className="w-32 md:w-72 rounded-2xl shadow-2xl border border-border/30 transition-transform duration-500 group-hover:scale-[1.02] cursor-pointer"
                 onContextMenu={(e) => {
                   // Allow default right-click behavior on desktop for native save
                 }}
@@ -513,7 +513,7 @@ export default function AnimeDetail() {
             </div>
 
             {/* Title */}
-            <h1 className="text-4xl md:text-6xl font-heading font-bold leading-tight text-shadow-lg">
+            <h1 className="text-2xl md:text-6xl font-heading font-bold leading-tight text-shadow-lg">
               {anime.title}
             </h1>
 
@@ -545,33 +545,33 @@ export default function AnimeDetail() {
             </div>
 
             {/* Description */}
-            <p className="text-foreground/80 leading-relaxed text-lg max-w-3xl">
+            <p className="text-foreground/80 leading-relaxed text-sm md:text-lg max-w-3xl">
               {anime.description}
             </p>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap gap-4 pt-4">
+            <div className="flex flex-wrap gap-2 md:gap-4 pt-2 md:pt-4">
               {nextEpisode && (
-                <Button asChild size="lg" className="anime-button h-14 px-8 text-lg">
+                <Button asChild size="sm" className="anime-button h-10 md:h-14 px-4 md:px-8 text-sm md:text-lg">
                   <Link to={`/watch/${nextEpisode.id}`}>
-                    <Play className="h-5 w-5 mr-2 fill-current" />
-                    {watchProgress.size > 0 ? 'Continue Watching' : 'Start Watching'}
+                    <Play className="h-4 w-4 md:h-5 md:w-5 mr-1.5 md:mr-2 fill-current" />
+                    {watchProgress.size > 0 ? 'Continue' : 'Watch'}
                   </Link>
                 </Button>
               )}
               <Button
-                size="lg"
+                size="sm"
                 variant="outline"
                 onClick={toggleFavorite}
                 className={cn(
-                  "h-14 px-6 border-2 transition-all duration-300",
+                  "h-10 md:h-14 px-3 md:px-6 border-2 transition-all duration-300 text-xs md:text-sm",
                   isFavorite 
                     ? 'text-anime-pink border-anime-pink bg-anime-pink/10 hover:bg-anime-pink/20' 
                     : 'hover:border-anime-pink hover:text-anime-pink'
                 )}
               >
-                <Heart className={cn("h-5 w-5 mr-2", isFavorite && 'fill-current')} />
-                {isFavorite ? 'In Favorites' : 'Add to Favorites'}
+                <Heart className={cn("h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2", isFavorite && 'fill-current')} />
+                {isFavorite ? 'Fav' : 'Favorite'}
               </Button>
               <ShareEmbedPopup
                 type="series"
