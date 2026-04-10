@@ -4,7 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -610,24 +611,24 @@ export default function AnimeDetail() {
         {/* Episodes Section */}
         <div className="mt-16">
           <Tabs value={selectedSeason || undefined} onValueChange={setSelectedSeason}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-              <h2 className="text-3xl font-heading font-bold flex items-center gap-3">
-                <span className="w-1.5 h-8 bg-primary rounded-full" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
+              <h2 className="text-xl md:text-3xl font-heading font-bold flex items-center gap-3">
+                <span className="w-1.5 h-6 md:h-8 bg-primary rounded-full" />
                 Episodes
               </h2>
               {seasons.length > 0 && (
-                <TabsList className="bg-secondary/50 p-1.5 rounded-xl">
-                  {seasons.map((season) => (
-                    <TabsTrigger 
-                      key={season.id} 
-                      value={season.id}
-                      className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg px-4 py-2"
-                    >
-                      <span className="hidden md:inline">{season.title || `Season ${season.season_number}`}</span>
-                      <span className="md:hidden">S{season.season_number}</span>
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
+                <Select value={selectedSeason || undefined} onValueChange={setSelectedSeason}>
+                  <SelectTrigger className="w-[180px] bg-secondary/50">
+                    <SelectValue placeholder="Select Season" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {seasons.map((season) => (
+                      <SelectItem key={season.id} value={season.id}>
+                        {season.title || `Season ${season.season_number}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
             </div>
 

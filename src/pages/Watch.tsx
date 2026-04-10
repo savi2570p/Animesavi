@@ -1004,27 +1004,21 @@ export default function Watch() {
             />
           </div>
 
-          {/* Season Switcher */}
+          {/* Season Switcher - Dropdown */}
           {allSeasons.length > 0 && (
             <div className="flex items-center gap-2 md:gap-3 ml-auto min-w-0">
               <span className="text-muted-foreground font-medium text-sm md:text-base shrink-0">Season:</span>
-              <div className="flex gap-1.5 md:gap-2 overflow-x-auto no-scrollbar pb-1">
+              <select
+                value={currentSeason?.id || ''}
+                onChange={(e) => handleSeasonChange(e.target.value)}
+                className="bg-secondary/50 border border-border/50 rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              >
                 {allSeasons.map((season) => (
-                  <Button
-                    key={season.id}
-                    size="sm"
-                    variant={currentSeason?.id === season.id ? 'default' : 'outline'}
-                    onClick={() => handleSeasonChange(season.id)}
-                    className={`shrink-0 min-w-fit px-2.5 md:px-3 text-xs md:text-sm h-7 md:h-8 ${currentSeason?.id === season.id ? 'anime-button' : ''}`}
-                    title={season.title || `Season ${season.season_number}`}
-                  >
-                    S{season.season_number}
-                    {season.episode_count !== undefined && (
-                      <span className="ml-1 text-[10px] md:text-xs opacity-70">({season.episode_count})</span>
-                    )}
-                  </Button>
+                  <option key={season.id} value={season.id}>
+                    Season {season.season_number} {season.episode_count !== undefined ? `(${season.episode_count} eps)` : ''}
+                  </option>
                 ))}
-              </div>
+              </select>
             </div>
           )}
         </div>
