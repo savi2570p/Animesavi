@@ -153,9 +153,9 @@ function ScrollRecoveryInitializer() {
       if (!hasActiveOverlay) {
         document.documentElement.classList.remove('scroll-locked');
         document.body.classList.remove('scroll-locked');
-        document.body.style.overflow = 'auto';
-        document.documentElement.style.overflow = 'auto';
-        document.body.style.position = 'static';
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        document.body.style.position = '';
       }
     });
 

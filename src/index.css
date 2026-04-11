@@ -2,9 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Prevent iOS pull-to-refresh / overscroll reload */
-html, body {
+/* Prevent iOS pull-to-refresh but never block scroll */
+html {
   overscroll-behavior-y: none;
+}
+body {
   -webkit-overflow-scrolling: touch;
 }
 

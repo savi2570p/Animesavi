@@ -135,21 +135,19 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
     if (activePopup) {
       html.classList.add('scroll-locked');
       body.classList.add('scroll-locked');
-      html.style.overflow = 'hidden';
-      body.style.overflow = 'hidden';
     } else {
       html.classList.remove('scroll-locked');
       body.classList.remove('scroll-locked');
-      body.style.overflow = 'auto';
-      html.style.overflow = 'auto';
-      body.style.position = 'static';
+      html.style.overflow = '';
+      body.style.overflow = '';
+      body.style.position = '';
     }
     return () => {
       html.classList.remove('scroll-locked');
       body.classList.remove('scroll-locked');
-      body.style.overflow = 'auto';
-      html.style.overflow = 'auto';
-      body.style.position = 'static';
+      html.style.overflow = '';
+      body.style.overflow = '';
+      body.style.position = '';
     };
   }, [activePopup]);
 
