@@ -17,6 +17,7 @@ import { RecommendedAnime } from '@/components/home/RecommendedAnime';
 import { WatchParty } from '@/components/WatchParty';
 import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton';
 import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
+import { HindiDubCheckPopup, hasHindiDub } from '@/components/video/HindiDubCheckPopup';
 import { ServerStatusIndicator } from '@/components/video/ServerStatusIndicator';
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
 import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hooks/useServerAutoSelect';
