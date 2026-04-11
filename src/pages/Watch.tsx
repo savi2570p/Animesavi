@@ -915,6 +915,15 @@ export default function Watch() {
         </div>
       )}
 
+      {/* Hindi Dub Check Popup */}
+      {!hindiDubDismissed && (
+        <HindiDubCheckPopup
+          audioLanguage={episode.audio_language}
+          episodeId={episode.id}
+          onContinueJapanese={() => setHindiDubDismissed(true)}
+        />
+      )}
+
       {/* Main Watch Area - Video + Episode List */}
       <div className="flex">
         {/* Episode List - Desktop Left Sidebar - Ends at video player border */}
