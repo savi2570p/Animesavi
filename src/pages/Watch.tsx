@@ -261,6 +261,7 @@ export default function Watch() {
         ensureHistoryInFlightRef.current = false;
         setInitialSeekDone(false);
         setSavedPlaybackProgress(0);
+        setHindiDubDismissed(false);
       }
       fetchEpisodeData(isSwitch);
       fetchComments();
