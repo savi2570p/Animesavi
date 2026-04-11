@@ -8,12 +8,12 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { usePopupQueue } from '@/contexts/PopupQueueContext';
+import { UpdatePopup } from '@/components/UpdatePopup';
 
 export function WelcomePopup() {
   const { activePopup, dismissPopup } = usePopupQueue();
 
   const showWelcome = activePopup === 'welcome';
-  const showNotice = activePopup === 'whatsNew';
 
   return (
     <>
@@ -58,39 +58,8 @@ export function WelcomePopup() {
         </DialogContent>
       </Dialog>
 
-      {/* What's New Popup — v16 */}
-      <Dialog open={showNotice} onOpenChange={(open) => { if (!open) dismissPopup(); }}>
-        <DialogContent className="sm:max-w-sm border-primary/20 p-4" style={{ zIndex: 9998 }}>
-          <DialogHeader className="pb-1">
-            <DialogTitle className="text-base font-heading text-center">
-              ✨ What's New — v16
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-1.5 max-h-[50vh] overflow-y-auto pr-1">
-            {[
-              { icon: '🎞️', title: 'X-PLUS Server', desc: 'New flat cinema controls with a cleaner fullscreen player' },
-              { icon: '📝', title: 'CC & E-Sub Fix', desc: 'Uploaded subtitles now toggle properly on X-PLUS, even with multi-audio episodes' },
-              { icon: '🔁', title: 'Server Retry', desc: 'Tap the same server again to reload it without leaving the watch page' },
-              { icon: '📦', title: 'Detailed Progress Popups', desc: 'Pending Upload, Crunchy and MuseIN now explain what is still being prepared' },
-              { icon: '🍎', title: 'Smaller iOS Controls', desc: 'Playback controls are more compact on iPhone and iPad' },
-              { icon: '✨', title: 'No Auto Switching', desc: 'Your selected server stays selected until you change it yourself' },
-            ].map((item) => (
-              <div key={item.title} className="flex items-center gap-2.5 p-2 bg-muted/40 rounded-md">
-                <span className="text-sm shrink-0">{item.icon}</span>
-                <div className="min-w-0">
-                  <h4 className="text-xs font-semibold text-foreground leading-tight">{item.title}</h4>
-                  <p className="text-[10px] text-muted-foreground leading-tight">{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <DialogFooter className="pt-2">
-            <Button variant="default" size="sm" className="anime-button w-full" onClick={dismissPopup}>Got it! 👍</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Update / What's New — Premium OTT style */}
+      <UpdatePopup />
     </>
   );
 }
