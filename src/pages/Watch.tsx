@@ -167,6 +167,7 @@ export default function Watch() {
   const [userProfile, setUserProfile] = useState<{ avatar_url: string | null } | null>(null);
   const [isVideoEncoding, setIsVideoEncoding] = useState(false);
   const ensureHistoryInFlightRef = useRef(false);
+  const [hindiDubDismissed, setHindiDubDismissed] = useState(false);
 
   // Device-optimized video URL for iOS compatibility
   const deviceOptimizedVideo = useDeviceOptimizedVideo(episodeId, episode?.video_url || null);
