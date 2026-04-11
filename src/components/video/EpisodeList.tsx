@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { hasHindiDub } from '@/components/video/HindiDubCheckPopup';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -19,6 +20,7 @@ interface Episode {
   id: string;
   episode_number: number;
   title: string;
+  audio_language?: string | null;
 }
 
 interface EpisodeListProps {
