@@ -145,6 +145,14 @@ export function EpisodeList({ episodes, currentEpisodeId, className, onEpisodeSe
                       <span className="flex-1 truncate">
                         {episode.title}
                       </span>
+                      {/* Hindi availability badge */}
+                      {episode.audio_language && (
+                        hasHindiDub(episode.audio_language) ? (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400 shrink-0" title="Hindi Available">🟢</span>
+                        ) : (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 shrink-0" title="Hindi Not Available">🔴</span>
+                        )
+                      )}
                       {isActive && (
                         <Play className="h-3 w-3 text-primary fill-primary shrink-0" />
                       )}
