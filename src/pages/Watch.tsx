@@ -17,6 +17,7 @@ import { RecommendedAnime } from '@/components/home/RecommendedAnime';
 import { WatchParty } from '@/components/WatchParty';
 import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton';
 import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
+import { HindiDubCheckPopup, hasHindiDub } from '@/components/video/HindiDubCheckPopup';
 import { ServerStatusIndicator } from '@/components/video/ServerStatusIndicator';
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
 import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hooks/useServerAutoSelect';
@@ -166,6 +167,7 @@ export default function Watch() {
   const [userProfile, setUserProfile] = useState<{ avatar_url: string | null } | null>(null);
   const [isVideoEncoding, setIsVideoEncoding] = useState(false);
   const ensureHistoryInFlightRef = useRef(false);
+  const [hindiDubDismissed, setHindiDubDismissed] = useState(false);
 
   // Device-optimized video URL for iOS compatibility
   const deviceOptimizedVideo = useDeviceOptimizedVideo(episodeId, episode?.video_url || null);
@@ -259,6 +261,7 @@ export default function Watch() {
         ensureHistoryInFlightRef.current = false;
         setInitialSeekDone(false);
         setSavedPlaybackProgress(0);
+        setHindiDubDismissed(false);
       }
       fetchEpisodeData(isSwitch);
       fetchComments();
@@ -911,6 +914,15 @@ export default function Watch() {
             </Button>
           </div>
         </div>
+      )}
+
+      {/* Hindi Dub Check Popup */}
+      {!hindiDubDismissed && (
+        <HindiDubCheckPopup
+          audioLanguage={episode.audio_language}
+          episodeId={episode.id}
+          onContinueJapanese={() => setHindiDubDismissed(true)}
+        />
       )}
 
       {/* Main Watch Area - Video + Episode List */}
