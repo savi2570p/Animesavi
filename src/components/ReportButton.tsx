@@ -19,6 +19,9 @@ const REPORT_CATEGORIES = [
   { label: '💡 Feature request', value: 'Feature Request' },
   { label: '🔒 Login / Access issue', value: 'Auth Issue' },
   { label: '📺 Server / Streaming issue', value: 'Server Issue' },
+  { label: '📥 Download issue', value: 'Download Issue' },
+  { label: '🔔 Notification issue', value: 'Notification Issue' },
+  { label: '📝 Wrong info / Metadata', value: 'Wrong Info' },
   { label: '🔄 Other', value: 'Other' },
 ];
 
@@ -45,7 +48,25 @@ export function ReportButton() {
       return;
     }
 
-    const text = `🚨 Report from AnimeSavi\n\n📂 Category: ${category}\n📄 Page: ${window.location.pathname}\n📱 Device: ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}\n\n${message.trim()}`;
+    const browserInfo = (() => {
+      const ua = navigator.userAgent;
+      if (ua.includes('Chrome') && !ua.includes('Edg')) return 'Chrome';
+      if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari';
+      if (ua.includes('Firefox')) return 'Firefox';
+      if (ua.includes('Edg')) return 'Edge';
+      return 'Other';
+    })();
+
+    const osInfo = (() => {
+      const ua = navigator.userAgent;
+      if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
+      if (ua.includes('Android')) return 'Android';
+      if (ua.includes('Windows')) return 'Windows';
+      if (ua.includes('Mac')) return 'macOS';
+      return 'Other';
+    })();
+
+    const text = `🚨 Report from AnimeSavi\n\n📂 Category: ${category}\n📄 Page: ${window.location.pathname}\n📱 Device: ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}\n🖥️ OS: ${osInfo}\n🌐 Browser: ${browserInfo}\n📐 Screen: ${window.innerWidth}x${window.innerHeight}\n🕐 Time: ${new Date().toLocaleString('en-IN')}\n\n💬 Details:\n${message.trim()}`;
     const url = `https://t.me/Lv_Savi?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
 
