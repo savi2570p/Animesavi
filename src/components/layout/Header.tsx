@@ -302,8 +302,19 @@ export function Header() {
                 type="search"
                 placeholder="Search..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => { if (searchQuery.trim().length >= 2) setShowSuggestions(true); }}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 className="w-16 sm:w-20 pl-6 pr-1 h-7 sm:h-8 bg-card border-border focus:w-24 sm:focus:w-28 transition-all duration-200 rounded-lg text-xs"
+              />
+              <SearchSuggestions
+                query={searchQuery}
+                isVisible={showSuggestions}
+                onSelect={() => { setSearchQuery(''); setShowSuggestions(false); }}
+                className="w-[70vw] right-0 left-auto"
               />
             </div>
           </form>
