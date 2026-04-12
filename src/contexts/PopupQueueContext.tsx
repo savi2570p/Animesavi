@@ -11,12 +11,14 @@ interface PopupQueueContextType {
   activePopup: PopupType | null;
   dismissPopup: () => void;
   showWhatsNewManually: () => void;
+  isManualWhatsNew: boolean;
 }
 
 const PopupQueueContext = createContext<PopupQueueContextType>({
   activePopup: null,
   dismissPopup: () => {},
   showWhatsNewManually: () => {},
+  isManualWhatsNew: false,
 });
 
 export const usePopupQueue = () => useContext(PopupQueueContext);
@@ -152,7 +154,7 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
   }, [activePopup]);
 
   return (
-    <PopupQueueContext.Provider value={{ activePopup, dismissPopup, showWhatsNewManually }}>
+    <PopupQueueContext.Provider value={{ activePopup, dismissPopup, showWhatsNewManually, isManualWhatsNew: manualWhatsNew }}>
       {children}
     </PopupQueueContext.Provider>
   );
