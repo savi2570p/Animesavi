@@ -6,8 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { History as HistoryIcon, Play, Clock, Trash2, User } from 'lucide-react';
+import { History as HistoryIcon, Play, Clock, Trash2, User, Check, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -148,6 +154,28 @@ export default function History() {
     }
   };
 
+  const markAsWatched = async (historyId: string, animeTitle: string) => {
+    const { error } = await supabase
+      .from('watch_history')
+      .update({ completed: true, progress: 100 })
+      .eq('id', historyId);
+
+    if (!error) {
+      setHistory(prev => prev.map(item =>
+        item.id === historyId ? { ...item, completed: true, progress: 100 } : item
+      ));
+      toast.success(`Marked "${animeTitle}" as watched`);
+    } else {
+      toast.error('Failed to mark as watched');
+    }
+  };
+
+  const saveOffline = async (item: WatchHistoryItem) => {
+    const episodeUrl = `/watch/${item.episode.id}`;
+    toast.info(`Opening "${item.anime.title}" EP ${item.episode.episode_number} — use the download button in the player to save offline.`);
+    navigate(episodeUrl);
+  };
+
   const clearAllHistory = async () => {
     const { error } = await supabase
       .from('watch_history')
@@ -266,7 +294,9 @@ export default function History() {
           {/* Desktop View */}
           <div className="hidden md:block space-y-4">
             {history.map((item) => (
-              <div key={item.id} className="relative pr-10">
+              <ContextMenu key={item.id}>
+                <ContextMenuTrigger asChild>
+              <div className="relative pr-10">
                 <Link
                   to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
                   className="anime-card flex gap-4 p-4 hover:bg-muted/50 transition-colors group"
@@ -343,13 +373,27 @@ export default function History() {
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
+                </ContextMenuTrigger>
+                <ContextMenuContent className="w-52">
+                  <ContextMenuItem onClick={() => markAsWatched(item.id, item.anime.title)} className="flex items-center gap-2 cursor-pointer">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span>Mark as Watched</span>
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={() => saveOffline(item)} className="flex items-center gap-2 cursor-pointer">
+                    <Download className="h-4 w-4 text-blue-500" />
+                    <span>Save Offline</span>
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
             ))}
           </div>
 
           {/* Mobile View - Compact grid with thumbnail and progress only */}
           <div className="md:hidden grid grid-cols-2 sm:grid-cols-3 gap-3">
             {history.map((item) => (
-              <div key={item.id} className="relative group">
+              <ContextMenu key={item.id}>
+                <ContextMenuTrigger asChild>
+              <div className="relative group">
                 <Link
                   to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
                   className="block"
@@ -398,6 +442,18 @@ export default function History() {
                   </Button>
                 )}
               </div>
+                </ContextMenuTrigger>
+                <ContextMenuContent className="w-52">
+                  <ContextMenuItem onClick={() => markAsWatched(item.id, item.anime.title)} className="flex items-center gap-2 cursor-pointer">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span>Mark as Watched</span>
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={() => saveOffline(item)} className="flex items-center gap-2 cursor-pointer">
+                    <Download className="h-4 w-4 text-blue-500" />
+                    <span>Save Offline</span>
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
             ))}
           </div>
         </>
