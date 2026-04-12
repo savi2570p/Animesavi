@@ -43,12 +43,14 @@ import { AccountSwitcher, rememberAccount } from '@/components/AccountSwitcher';
 import { hasValidTokenAccess } from '@/components/AccessBanner';
 import { VerifyTokenDialog } from '@/components/VerifyTokenDialog';
 import { usePopupQueue } from '@/contexts/PopupQueueContext';
+import { SearchSuggestions } from '@/components/SearchSuggestions';
 
 export function Header() {
   const { user, isUploader, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
   const { showWhatsNewManually } = usePopupQueue();
 
@@ -56,6 +58,8 @@ export function Header() {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/browse?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+      setShowSuggestions(false);
     }
   };
 
@@ -154,9 +158,18 @@ export function Header() {
               type="search"
               placeholder="Search anime..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setIsSearchFocused(false)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => {
+                setIsSearchFocused(true);
+                if (searchQuery.trim().length >= 2) setShowSuggestions(true);
+              }}
+              onBlur={() => {
+                setIsSearchFocused(false);
+                setTimeout(() => setShowSuggestions(false), 200);
+              }}
               className="pl-4 pr-12 bg-card border-border focus:border-primary rounded-lg h-10"
             />
             <Button 
@@ -166,6 +179,14 @@ export function Header() {
             >
               <Search className="h-4 w-4" />
             </Button>
+            <SearchSuggestions
+              query={searchQuery}
+              isVisible={showSuggestions}
+              onSelect={() => {
+                setSearchQuery('');
+                setShowSuggestions(false);
+              }}
+            />
           </div>
         </form>
 
@@ -281,8 +302,19 @@ export function Header() {
                 type="search"
                 placeholder="Search..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => { if (searchQuery.trim().length >= 2) setShowSuggestions(true); }}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 className="w-16 sm:w-20 pl-6 pr-1 h-7 sm:h-8 bg-card border-border focus:w-24 sm:focus:w-28 transition-all duration-200 rounded-lg text-xs"
+              />
+              <SearchSuggestions
+                query={searchQuery}
+                isVisible={showSuggestions}
+                onSelect={() => { setSearchQuery(''); setShowSuggestions(false); }}
+                className="w-[70vw] right-0 left-auto"
               />
             </div>
           </form>
