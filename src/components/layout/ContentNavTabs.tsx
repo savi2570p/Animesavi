@@ -26,9 +26,10 @@ export function ContentNavTabs() {
 
   const isOnCrunchy = location.pathname === '/crunchy';
   const isOnMuseIN = location.pathname === '/musein';
+  const isOnShadowFlix = location.pathname === '/shadowflix';
 
-  // On MuseIN or Crunchy pages, show NO tabs — only back button
-  const hideAllTabs = isOnMuseIN || isOnCrunchy;
+  // On MuseIN, Crunchy, or ShadowFlix pages, show NO tabs — only back button
+  const hideAllTabs = isOnMuseIN || isOnCrunchy || isOnShadowFlix;
 
   const tabs: NavTab[] = hideAllTabs
     ? []
@@ -38,6 +39,7 @@ export function ContentNavTabs() {
         { to: '/latest-episodes', label: 'Latest Episodes', icon: Play },
         { to: '/latest-movies', label: 'Latest Movies', icon: Film },
         { to: '/upcoming', label: 'Upcoming', icon: Cherry },
+        { to: '/shadowflix', label: 'Shadow Flix', customIcon: shadowFlixLogo },
         ...(isRolesLoaded && canAccessPending
           ? [{ to: '/pending-upload', label: 'Pending Upload', icon: Clock, requiresUploader: true }]
           : []),
