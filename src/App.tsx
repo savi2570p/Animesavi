@@ -58,6 +58,7 @@ const EmbedSlugPlayer = lazy(() => import("./pages/EmbedSlugPlayer"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const Downloads = lazy(() => import("./pages/Downloads"));
 const WatchList = lazy(() => import("./pages/WatchList"));
+const ShadowArise = lazy(() => import("./pages/ShadowArise"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -201,6 +202,7 @@ const App = () => (
                   <Route path="/embed/:animeSlug/:seasonSlug/:episodeSlug" element={<EmbedSlugPlayer />} />
                   <Route path="/embed/:animeSlug/:episodeSlug" element={<EmbedSlugPlayer />} />
                   <Route path="/welcome" element={<Welcome />} />
+                  <Route path="/Shadow-Arise" element={<ShadowArise />} />
                   <Route element={<MainLayout />}>
                     <Route path="/" element={<Index />} />
                     <Route path="/browse" element={<Browse />} />
