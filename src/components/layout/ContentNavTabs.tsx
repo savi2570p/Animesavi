@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Tv, Play, Film, Clock, LayoutGrid, Cherry, ArrowLeft } from 'lucide-react';
 import museinLogo from '@/assets/musein-logo.jpg';
 import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
+import shadowFlixLogo from '@/assets/shadowflix-logo.jpg';
 import { Button } from '@/components/ui/button';
 
 interface NavTab {

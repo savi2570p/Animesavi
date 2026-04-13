@@ -228,6 +228,7 @@ const App = () => (
                     <Route path="/stats" element={<UserStats />} />
                     <Route path="/downloads" element={<Downloads />} />
                     <Route path="/watchlist" element={<WatchList />} />
+                    <Route path="/shadowflix" element={<ShadowFlix />} />
                     <Route path="/:animeSlug/:episodeSlug" element={<AnimeSlugRedirect />} />
                     <Route path="/:animeSlug" element={<AnimeSlugRedirect />} />
                   </Route>
