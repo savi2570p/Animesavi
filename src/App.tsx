@@ -59,6 +59,7 @@ const Welcome = lazy(() => import("./pages/Welcome"));
 const Downloads = lazy(() => import("./pages/Downloads"));
 const WatchList = lazy(() => import("./pages/WatchList"));
 const ShadowArise = lazy(() => import("./pages/ShadowArise"));
+const ShadowFlix = lazy(() => import("./pages/ShadowFlix"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
