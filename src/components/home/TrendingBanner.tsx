@@ -174,15 +174,34 @@ export function TrendingBanner() {
             </motion.div>
           </AnimatePresence>
 
-          {/* Slim indicator bars */}
-          <div className="absolute bottom-2.5 right-4 z-20 flex gap-1">
+          {/* Slim progress bar - iOS safe, no dots/circles */}
+          <div className="absolute bottom-2.5 left-4 right-4 z-20 flex gap-1.5"
+            style={{ WebkitAppearance: 'none', appearance: 'none' }}>
             {trending.map((_, i) => (
-              <button
+              <div
                 key={i}
                 onClick={() => setActiveIndex(i)}
-                className={`h-[3px] rounded-full transition-all duration-400 ease-in-out ${
-                  i === activeIndex ? 'bg-primary w-6' : 'bg-white/30 w-3 hover:bg-white/50'
-                }`}
+                role="button"
+                tabIndex={0}
+                style={{
+                  height: '3px',
+                  minHeight: '3px',
+                  maxHeight: '3px',
+                  flex: i === activeIndex ? 2 : 1,
+                  borderRadius: '1px',
+                  background: i === activeIndex ? '#e50914' : 'rgba(255,255,255,0.2)',
+                  cursor: 'pointer',
+                  transition: 'all 0.4s ease-in-out',
+                  WebkitAppearance: 'none',
+                  border: 'none',
+                  outline: 'none',
+                  padding: 0,
+                  margin: 0,
+                  boxShadow: i === activeIndex ? '0 0 6px rgba(229,9,20,0.6)' : 'none',
+                  touchAction: 'manipulation',
+                  fontSize: 0,
+                  lineHeight: 0,
+                }}
               />
             ))}
           </div>
