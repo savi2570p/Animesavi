@@ -462,6 +462,36 @@ export type Database = {
           },
         ]
       }
+      shadow_flix_content: {
+        Row: {
+          created_at: string
+          id: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by: string
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       shorts: {
         Row: {
           created_at: string
