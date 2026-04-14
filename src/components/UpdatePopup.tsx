@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePopupQueue } from '@/contexts/PopupQueueContext';
+import { Loader2 } from 'lucide-react';
 
-type UpdateStep = 'alert' | 'downloading' | 'complete';
+type UpdateStep = 'alert' | 'downloading' | 'installing' | 'complete';
 
 export function UpdatePopup() {
   const { activePopup, dismissPopup, isManualWhatsNew } = usePopupQueue();
@@ -13,7 +14,6 @@ export function UpdatePopup() {
 
   const isActive = activePopup === 'whatsNew';
 
-  // Reset step when popup opens — manual = skip to complete (changelog only)
   useEffect(() => {
     if (isActive) {
       setStep(isManualWhatsNew ? 'complete' : 'alert');
@@ -21,7 +21,7 @@ export function UpdatePopup() {
     }
   }, [isActive, isManualWhatsNew]);
 
-  // Progress bar animation — 10 seconds total
+  // Progress bar animation — 10 seconds
   useEffect(() => {
     if (step !== 'downloading') return;
     setProgress(0);
@@ -36,15 +36,20 @@ export function UpdatePopup() {
         current = 100;
         if (intervalRef.current) clearInterval(intervalRef.current);
         setProgress(100);
-        setTimeout(() => setStep('complete'), 400);
+        setTimeout(() => setStep('installing'), 400);
       } else {
         setProgress(current);
       }
     }, tickMs);
 
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [step]);
+
+  // Installing step — 5 seconds then complete
+  useEffect(() => {
+    if (step !== 'installing') return;
+    const timer = setTimeout(() => setStep('complete'), 5000);
+    return () => clearTimeout(timer);
   }, [step]);
 
   const handleDownload = useCallback(() => setStep('downloading'), []);
@@ -67,7 +72,7 @@ export function UpdatePopup() {
     { icon: '📊', title: 'Enhanced Reports', desc: '9 category chips with automatic device metadata' },
   ];
 
-  /* -------- STEP 1: Update Alert (only for auto/first-time) -------- */
+  /* ── STEP 1: Update Alert ── */
   if (step === 'alert') {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-lg animate-in fade-in duration-300">
@@ -97,26 +102,27 @@ export function UpdatePopup() {
           >
             Download
           </button>
+
+          {/* Download progress appears here after clicking */}
         </div>
       </div>
     );
   }
 
-  /* -------- STEP 2: Downloading -------- */
+  /* ── STEP 2: Downloading (inline under button, NOT fullscreen) ── */
   if (step === 'downloading') {
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-xl">
-        <div className="w-full max-w-md mx-4 text-center space-y-8">
-          <div className="mx-auto w-20 h-20 rounded-full bg-red-600/10 flex items-center justify-center animate-pulse">
-            <span className="text-4xl">⬇️</span>
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-lg">
+        <div className="relative w-full max-w-sm mx-4 rounded-2xl border border-red-600/30 bg-gradient-to-b from-zinc-900/95 to-black/95 shadow-2xl shadow-red-900/20 p-8 text-center space-y-5 animate-in zoom-in-95 duration-300">
+          <div className="mx-auto w-16 h-16 rounded-full bg-red-600/15 flex items-center justify-center animate-pulse">
+            <span className="text-3xl">⬇️</span>
           </div>
 
-          <div>
-            <h2 className="text-xl font-bold text-white mb-1">Downloading Update…</h2>
-            <p className="text-sm text-zinc-500">Please wait, this will only take a moment.</p>
-          </div>
+          <h2 className="text-xl font-bold text-white">Downloading Update…</h2>
+          <p className="text-sm text-zinc-500">Please wait, this will only take a moment.</p>
 
-          <div className="space-y-3">
+          {/* Progress bar under text, not fullscreen */}
+          <div className="space-y-2 pt-2">
             <div className="h-2.5 rounded-full bg-zinc-800 overflow-hidden">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-100 ease-linear shadow-[0_0_12px_rgba(220,38,38,0.5)]"
@@ -130,7 +136,29 @@ export function UpdatePopup() {
     );
   }
 
-  /* -------- STEP 3: Complete / What's New (also used for manual) -------- */
+  /* ── STEP 3: Installing Updates (spinner for 5 sec) ── */
+  if (step === 'installing') {
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-lg">
+        <div className="relative w-full max-w-sm mx-4 rounded-2xl border border-red-600/30 bg-gradient-to-b from-zinc-900/95 to-black/95 shadow-2xl shadow-red-900/20 p-8 text-center space-y-5 animate-in zoom-in-95 duration-300">
+          <div className="mx-auto w-16 h-16 rounded-full bg-red-600/15 flex items-center justify-center">
+            <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+          </div>
+
+          <h2 className="text-xl font-bold text-white">Installing Updates</h2>
+          <p className="text-sm text-zinc-500">Almost done, setting up new features…</p>
+
+          <div className="flex justify-center gap-1.5 pt-2">
+            {[0, 1, 2].map(i => (
+              <div key={i} className="w-2 h-2 rounded-full bg-red-500 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── STEP 4: Complete / What's New ── */
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-lg animate-in fade-in duration-300">
       <div className="relative w-full max-w-sm mx-4 rounded-2xl border border-red-600/30 bg-gradient-to-b from-zinc-900/95 to-black/95 shadow-2xl shadow-red-900/20 p-8 text-center space-y-5 animate-in zoom-in-95 duration-300">
@@ -145,7 +173,6 @@ export function UpdatePopup() {
           {isManualWhatsNew ? 'Here are the latest features and improvements.' : 'Your app is now fully up to date.'}
         </p>
 
-        {/* Show changelog in complete step */}
         <div className="space-y-1.5 text-left max-h-[30vh] overflow-y-auto pr-1">
           {changelogItems.map((item) => (
             <div key={item.title} className="flex items-center gap-2.5 p-2 bg-white/5 rounded-md">
