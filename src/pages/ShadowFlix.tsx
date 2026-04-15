@@ -407,15 +407,27 @@ export default function ShadowFlix() {
           style={{ background: 'rgba(20,10,10,0.9)', backdropFilter: 'blur(24px)', border: '1px solid rgba(220,30,30,0.25)', boxShadow: '0 0 60px rgba(220,30,30,0.08)' }}>
           <img src={shadowFlixLogo} alt="ShadowFlix" className="w-20 h-20 rounded-xl mx-auto shadow-lg" />
           <h1 className="text-2xl font-black tracking-wider text-white">SHADOW<span className="text-red-500">FLIX</span></h1>
-          <p className="text-white/50 text-sm">This section is password protected</p>
+          <p className="text-white/40 text-xs uppercase tracking-widest">Private Streaming Vault</p>
+          <div className="space-y-2 text-left bg-white/5 rounded-lg p-3">
+            <p className="text-white/60 text-xs leading-relaxed">
+              🔒 This is a restricted section exclusively for authorized members. Shadow Flix hosts premium content managed independently from the main library.
+            </p>
+            <p className="text-white/40 text-[10px] leading-relaxed">
+              • Upload & manage your own anime series with seasons & episodes<br/>
+              • Custom Netflix-style player with speed controls<br/>
+              • Content here is private and won't appear in public feeds<br/>
+              • Contact an admin if you don't have the access code
+            </p>
+          </div>
           <div className="flex items-center gap-2">
             <Lock className="w-4 h-4 text-red-500 shrink-0" />
-            <Input type="password" placeholder="Enter password" value={password}
+            <Input type="password" placeholder="Enter access code" value={password}
               onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleUnlock()}
               className="bg-white/5 border-white/10 text-white placeholder:text-white/30" />
           </div>
           {passwordError && <p className="text-red-400 text-xs">{passwordError}</p>}
           <Button onClick={handleUnlock} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold">Unlock Access</Button>
+          <p className="text-white/20 text-[10px]">Secured by Shadow Toons & AnimeSavi</p>
         </div>
       </div>
     );
