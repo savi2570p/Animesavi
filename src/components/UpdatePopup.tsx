@@ -85,6 +85,7 @@ export function UpdatePopup() {
 
           <h2 className="text-xl font-bold text-white">Update Available</h2>
           <p className="text-sm text-zinc-400">New features and improvements are ready to install.</p>
+          <span className="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-red-600/20 text-red-400">{APP_VERSION}</span>
 
           <div className="space-y-1.5 text-left max-h-[30vh] overflow-y-auto pr-1">
             {changelogItems.map((item) => (
