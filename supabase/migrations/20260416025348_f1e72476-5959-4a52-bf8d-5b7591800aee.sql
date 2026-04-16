@@ -1,0 +1,1 @@
+ALTER TABLE public.shadow_flix_content ADD COLUMN description text DEFAULT NULL;
