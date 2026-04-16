@@ -61,15 +61,17 @@ export function UpdatePopup() {
 
   if (!isActive) return null;
 
+  const APP_VERSION = 'v19';
+
   const changelogItems = [
+    { icon: '🎬', title: 'Shadow Flix Upgrade', desc: 'Recently Added banner, description/synopsis, and embed link playback support' },
+    { icon: '📺', title: 'Player + Details', desc: 'Watch Now now shows full anime info, seasons & episodes below the player' },
+    { icon: '📤', title: 'Upload Fix', desc: 'Video file uploads from file manager now work reliably with progress tracking' },
+    { icon: '🔗', title: 'Embed Links', desc: 'Embed/external video URLs now play properly in Shadow Flix player' },
     { icon: '📡', title: 'Smart Casting', desc: 'AirPlay & Chromecast support for seamless TV playback' },
     { icon: '🎞️', title: 'X-PLUS Server', desc: 'Flat cinema controls with a cleaner fullscreen player' },
     { icon: '📝', title: 'CC & E-Sub Fix', desc: 'Uploaded subtitles now toggle properly, even with multi-audio' },
-    { icon: '🔁', title: 'Server Retry', desc: 'Tap the same server again to reload without leaving the page' },
-    { icon: '📦', title: 'Detailed Progress', desc: 'Pending Upload, Crunchy & MuseIN now explain what is being prepared' },
-    { icon: '🍎', title: 'Smaller iOS Controls', desc: 'Playback controls are more compact on iPhone & iPad' },
     { icon: '✨', title: 'No Auto Switching', desc: 'Your selected server stays selected until you change it' },
-    { icon: '📊', title: 'Enhanced Reports', desc: '9 category chips with automatic device metadata' },
   ];
 
   /* ── STEP 1: Update Alert ── */
@@ -83,6 +85,7 @@ export function UpdatePopup() {
 
           <h2 className="text-xl font-bold text-white">Update Available</h2>
           <p className="text-sm text-zinc-400">New features and improvements are ready to install.</p>
+          <span className="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-red-600/20 text-red-400">{APP_VERSION}</span>
 
           <div className="space-y-1.5 text-left max-h-[30vh] overflow-y-auto pr-1">
             {changelogItems.map((item) => (
@@ -169,6 +172,7 @@ export function UpdatePopup() {
         <h2 className="text-xl font-bold text-white">
           {isManualWhatsNew ? "What's New" : 'Updated to latest version'}
         </h2>
+        <span className="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-red-600/20 text-red-400">{APP_VERSION}</span>
         <p className="text-sm text-zinc-400">
           {isManualWhatsNew ? 'Here are the latest features and improvements.' : 'Your app is now fully up to date.'}
         </p>
