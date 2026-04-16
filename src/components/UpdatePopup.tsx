@@ -172,6 +172,7 @@ export function UpdatePopup() {
         <h2 className="text-xl font-bold text-white">
           {isManualWhatsNew ? "What's New" : 'Updated to latest version'}
         </h2>
+        <span className="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-red-600/20 text-red-400">{APP_VERSION}</span>
         <p className="text-sm text-zinc-400">
           {isManualWhatsNew ? 'Here are the latest features and improvements.' : 'Your app is now fully up to date.'}
         </p>
