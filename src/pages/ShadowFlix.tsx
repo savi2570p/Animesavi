@@ -754,7 +754,7 @@ export default function ShadowFlix() {
 
   const filteredGroups = seriesGroups.filter(g => {
     const matchesSearch = !searchQuery || g.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesGenre = selectedGenre === 'all' || g.genre === selectedGenre;
+    const matchesGenre = selectedGenre === 'all' || g.genres.includes(selectedGenre) || g.genre === selectedGenre;
     return matchesSearch && matchesGenre;
   });
 
@@ -766,7 +766,18 @@ export default function ShadowFlix() {
     seriesGroups.slice(0, 3),
   [seriesGroups]);
 
-  const availableGenres = [...new Set(items.map(i => i.genre).filter(Boolean))] as string[];
+  const availableGenres = useMemo(() => {
+    const set = new Set<string>();
+    items.forEach(i => {
+      if (i.genres && i.genres.length) i.genres.forEach(g => set.add(g));
+      else if (i.genre) set.add(i.genre);
+    });
+    return Array.from(set);
+  }, [items]);
+
+  const userOwnSeries = useMemo(() =>
+    seriesGroups.filter(g => g.items.some(i => i.uploaded_by === user?.id)),
+  [seriesGroups, user]);
 
   const activeSeriesGroup = selectedSeries ? seriesGroups.find(g => g.title.toLowerCase() === selectedSeries.toLowerCase()) : null;
 
