@@ -620,11 +620,16 @@ export default function ShadowFlix() {
     setUploadProgress('Preparing...');
     try {
       let finalThumbnail = formThumbnailUrl;
+      let finalBanner = formBannerUrl;
       let finalVideo = formVideoUrl;
 
       if (thumbnailFile) {
         setUploadProgress('Uploading thumbnail...');
         finalThumbnail = await uploadFileToStorage(thumbnailFile, 'anime-thumbnails', 'shadowflix');
+      }
+      if (bannerFile) {
+        setUploadProgress('Uploading banner...');
+        finalBanner = await uploadFileToStorage(bannerFile, 'anime-thumbnails', 'shadowflix-banners');
       }
       if (videoFile) {
         setUploadProgress(`Uploading video (${(videoFile.size / (1024 * 1024)).toFixed(1)} MB)...`);
@@ -635,10 +640,12 @@ export default function ShadowFlix() {
       const payload: any = {
         title: formTitle,
         thumbnail_url: finalThumbnail || null,
+        banner_url: finalBanner || null,
         video_url: finalVideo || null,
         season_number: formSeason ? parseInt(formSeason) : 1,
         episode_number: formEpisode ? parseInt(formEpisode) : null,
-        genre: formGenre || null,
+        genre: formGenres[0] || null,
+        genres: formGenres.length ? formGenres : null,
         description: formDescription || null,
       };
 
