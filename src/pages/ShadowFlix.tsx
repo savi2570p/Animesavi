@@ -5,7 +5,7 @@ import {
   Lock, Upload, Pencil, Trash2, Play, Plus, X, Link, Image, Film,
   LogOut, Search, Pause, Maximize, Minimize, SkipForward, SkipBack,
   Settings, ChevronDown, ChevronLeft, TrendingUp, Eye, Share2, Copy, Check,
-  Palette, Monitor, List, Clock
+  Palette, Monitor, List, Clock, Star, GripVertical, ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
