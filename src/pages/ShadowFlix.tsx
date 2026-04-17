@@ -40,6 +40,8 @@ interface ShadowFlixItem {
   genre: string | null;
   genres?: string[] | null;
   description?: string | null;
+  is_featured?: boolean | null;
+  sort_order?: number | null;
 }
 
 interface SeriesGroup {
@@ -51,6 +53,7 @@ interface SeriesGroup {
   genres: string[];
   totalViews: number;
   description: string | null;
+  isFeatured: boolean;
 }
 
 function getWatchCount(id: string): number {
