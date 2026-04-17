@@ -760,19 +760,24 @@ export default function ShadowFlix() {
         else if (i.genre) allGenres.add(i.genre);
       });
       const bannerItem = groupItems.find(i => i.banner_url);
+      // Sort by sort_order first (custom drag order), then season/episode
+      const sorted = [...groupItems].sort((a, b) => {
+        const sa = a.season_number || 1, sb = b.season_number || 1;
+        if (sa !== sb) return sa - sb;
+        const oa = a.sort_order ?? 0, ob = b.sort_order ?? 0;
+        if (oa !== ob) return oa - ob;
+        return (a.episode_number || 0) - (b.episode_number || 0);
+      });
       return {
         title: groupItems[0].title,
-        items: groupItems.sort((a, b) => {
-          const sa = a.season_number || 1, sb = b.season_number || 1;
-          if (sa !== sb) return sa - sb;
-          return (a.episode_number || 0) - (b.episode_number || 0);
-        }),
+        items: sorted,
         thumbnail: groupItems[0].thumbnail_url,
         banner: bannerItem?.banner_url || null,
         genre: groupItems[0].genre,
         genres: Array.from(allGenres),
         totalViews: groupItems.reduce((sum, i) => sum + getWatchCount(i.id), 0),
         description: groupItems.find(i => (i as any).description)?.description || null,
+        isFeatured: groupItems.some(i => i.is_featured),
       };
     });
   }, [items]);
