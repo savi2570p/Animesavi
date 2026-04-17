@@ -473,6 +473,13 @@ function AnimeDetailView({
               <Button variant="outline" size="sm" onClick={handleCopyShare} className="border-white/10 text-white/70 hover:text-white gap-2">
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}{copied ? 'Copied!' : 'Share'}
               </Button>
+              {userId && group.items.some(i => i.uploaded_by === userId) && (
+                <Button variant="outline" size="sm" onClick={() => onToggleFeatured(group)}
+                  className={`border-white/10 gap-2 ${group.isFeatured ? 'text-yellow-400 border-yellow-400/40 bg-yellow-400/5' : 'text-white/70 hover:text-yellow-300'}`}>
+                  <Star className={`w-3.5 h-3.5 ${group.isFeatured ? 'fill-yellow-400' : ''}`} />
+                  {group.isFeatured ? 'Featured' : 'Mark as Featured'}
+                </Button>
+              )}
             </div>
           </div>
         </div>
