@@ -999,6 +999,67 @@ export default function ShadowFlix() {
           <DialogHeader>
             <DialogTitle className="text-red-500 text-lg">{editingItem ? 'Edit Content' : 'Upload to Shadow Flix'}</DialogTitle>
           </DialogHeader>
+
+          {/* Upload mode tabs - hide when editing */}
+          {!editingItem && (
+            <div className="flex gap-2 border-b border-white/5 pb-3 -mt-2">
+              <button onClick={() => { setUploadMode('new'); setSelectedExistingSeries(null); }}
+                className={`text-xs font-semibold px-4 py-2 rounded-lg transition-colors ${uploadMode === 'new' ? 'bg-red-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>
+                <Plus className="w-3.5 h-3.5 inline mr-1.5" /> New Series
+              </button>
+              <button onClick={() => setUploadMode('existing')}
+                className={`text-xs font-semibold px-4 py-2 rounded-lg transition-colors ${uploadMode === 'existing' ? 'bg-red-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>
+                <Film className="w-3.5 h-3.5 inline mr-1.5" /> Existing Upload
+              </button>
+            </div>
+          )}
+
+          {/* Existing series picker — show series, click to start adding episode */}
+          {!editingItem && uploadMode === 'existing' && !selectedExistingSeries && (
+            <div className="space-y-3">
+              <p className="text-xs text-white/50">Select an existing series to add a new episode:</p>
+              {userOwnSeries.length === 0 ? (
+                <div className="text-center py-10 text-white/30 border border-dashed border-white/10 rounded-xl">
+                  <Film className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-xs">You haven't uploaded any series yet.</p>
+                  <p className="text-[10px] mt-1">Switch to "New Series" tab to start.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[60vh] overflow-y-auto pr-1">
+                  {userOwnSeries.map(g => (
+                    <button key={g.title} onClick={() => startNewEpisodeForExisting(g.title)}
+                      className="group text-left rounded-lg overflow-hidden bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
+                      <div className="aspect-[2/3] relative">
+                        {g.thumbnail ? <img src={g.thumbnail} alt={g.title} className="w-full h-full object-cover" />
+                          : <div className="w-full h-full flex items-center justify-center"><Film className="w-6 h-6 text-white/20" /></div>}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-2">
+                          <p className="text-white text-xs font-bold truncate">{g.title}</p>
+                          <p className="text-white/50 text-[10px]">{g.items.length} ep{g.items.length > 1 ? 's' : ''}</p>
+                        </div>
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                          <div className="px-3 py-1.5 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center gap-1">
+                            <Plus className="w-3 h-3" /> Add Episode
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Show form: when in 'new' mode OR editing OR selected an existing series */}
+          {(editingItem || uploadMode === 'new' || (uploadMode === 'existing' && selectedExistingSeries)) && (
+          <>
+          {selectedExistingSeries && (
+            <div className="flex items-center justify-between p-2 bg-red-600/10 rounded-lg border border-red-600/20 -mb-2">
+              <span className="text-xs text-white/70">Adding episode to: <span className="font-bold text-red-400">{selectedExistingSeries}</span></span>
+              <button onClick={() => { setSelectedExistingSeries(null); resetForm(); setUploadMode('existing'); }}
+                className="text-[10px] text-white/40 hover:text-white">Change</button>
+            </div>
+          )}
           <div className="grid sm:grid-cols-2 gap-6">
             {/* Left Column */}
             <div className="space-y-4">
