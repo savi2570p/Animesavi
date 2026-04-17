@@ -5,7 +5,7 @@ import {
   Lock, Upload, Pencil, Trash2, Play, Plus, X, Link, Image, Film,
   LogOut, Search, Pause, Maximize, Minimize, SkipForward, SkipBack,
   Settings, ChevronDown, ChevronLeft, TrendingUp, Eye, Share2, Copy, Check,
-  Palette, Monitor, List, Clock
+  Palette, Monitor, List, Clock, Star, GripVertical, ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,8 @@ interface ShadowFlixItem {
   genre: string | null;
   genres?: string[] | null;
   description?: string | null;
+  is_featured?: boolean | null;
+  sort_order?: number | null;
 }
 
 interface SeriesGroup {
@@ -51,6 +53,7 @@ interface SeriesGroup {
   genres: string[];
   totalViews: number;
   description: string | null;
+  isFeatured: boolean;
 }
 
 function getWatchCount(id: string): number {
@@ -377,7 +380,7 @@ function ShadowFlixPlayer({
 
 /* ─── Anime Detail View ─── */
 function AnimeDetailView({
-  group, userId, onPlay, onEdit, onDelete, onBack, playerTheme
+  group, userId, onPlay, onEdit, onDelete, onBack, playerTheme, onToggleFeatured, onReorderEpisodes
 }: {
   group: SeriesGroup;
   userId?: string;
@@ -386,14 +389,16 @@ function AnimeDetailView({
   onDelete: (id: string) => void;
   onBack: () => void;
   playerTheme: typeof PLAYER_THEMES[0];
+  onToggleFeatured: (group: SeriesGroup) => void;
+  onReorderEpisodes: (orderedIds: string[]) => void;
 }) {
-  const [selectedSeason, setSelectedSeason] = useState<number>(1);
+  const [selectedSeason, setSelectedSeason] = useState<number>(group.items[0]?.season_number || 1);
   const [copied, setCopied] = useState(false);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
   const seasons = [...new Set(group.items.map(i => i.season_number || 1))].sort((a, b) => a - b);
   const episodes = group.items
-    .filter(i => (i.season_number || 1) === selectedSeason)
-    .sort((a, b) => (a.episode_number || 0) - (b.episode_number || 0));
-  const firstEp = episodes[0];
+    .filter(i => (i.season_number || 1) === selectedSeason);
+  const firstEp = episodes[0] || group.items[0];
 
   const shareText = `🎬 ${group.title}\n📺 ${group.items.length} Episode${group.items.length > 1 ? 's' : ''} • ${seasons.length} Season${seasons.length > 1 ? 's' : ''}\n📦 Codec: H.264 (AVC) | Quality: 720p HD\n📁 ${generateShareFilename(group.title, 1, 1)}\n\n🔗 Powered by AnimeSavi X Shadow-Toons`;
   const handleCopyShare = async () => { await navigator.clipboard.writeText(shareText); setCopied(true); toast.success('Share info copied!'); setTimeout(() => setCopied(false), 2000); };
@@ -468,6 +473,13 @@ function AnimeDetailView({
               <Button variant="outline" size="sm" onClick={handleCopyShare} className="border-white/10 text-white/70 hover:text-white gap-2">
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}{copied ? 'Copied!' : 'Share'}
               </Button>
+              {userId && group.items.some(i => i.uploaded_by === userId) && (
+                <Button variant="outline" size="sm" onClick={() => onToggleFeatured(group)}
+                  className={`border-white/10 gap-2 ${group.isFeatured ? 'text-yellow-400 border-yellow-400/40 bg-yellow-400/5' : 'text-white/70 hover:text-yellow-300'}`}>
+                  <Star className={`w-3.5 h-3.5 ${group.isFeatured ? 'fill-yellow-400' : ''}`} />
+                  {group.isFeatured ? 'Featured' : 'Mark as Featured'}
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -486,37 +498,135 @@ function AnimeDetailView({
       )}
 
       <div>
-        <h3 className="text-white font-bold text-base mb-3">{seasons.length > 1 ? `Season ${selectedSeason} Episodes` : 'Episodes'}</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-white font-bold text-base">{seasons.length > 1 ? `Season ${selectedSeason} Episodes` : 'Episodes'}</h3>
+          {userId && episodes.some(e => e.uploaded_by === userId) && episodes.length > 1 && (
+            <span className="text-[10px] text-white/30 flex items-center gap-1"><GripVertical className="w-3 h-3" /> Drag to reorder</span>
+          )}
+        </div>
         <div className="space-y-2">
-          {episodes.map((ep, idx) => (
-            <div key={ep.id}
-              className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors group"
-              style={{ border: '1px solid rgba(255,255,255,0.05)' }}
-              onClick={() => ep.video_url && onPlay(ep, group.items)}>
-              <span className="text-white/20 text-sm font-bold w-6 text-center shrink-0">{idx + 1}</span>
-              <div className="w-24 sm:w-32 aspect-video rounded-lg overflow-hidden bg-white/5 shrink-0 relative">
-                {ep.thumbnail_url ? <img src={ep.thumbnail_url} alt="" className="w-full h-full object-cover" /> : <Film className="w-6 h-6 text-white/20 absolute inset-0 m-auto" />}
-                {ep.video_url && (
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
-                    <Play className="w-5 h-5 text-white" />
+          {episodes.map((ep, idx) => {
+            const isOwner = userId && userId === ep.uploaded_by;
+            return (
+              <div key={ep.id}
+                draggable={!!isOwner}
+                onDragStart={e => { if (isOwner) { setDraggedId(ep.id); e.dataTransfer.effectAllowed = 'move'; } }}
+                onDragOver={e => { if (isOwner && draggedId && draggedId !== ep.id) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }}
+                onDrop={e => {
+                  if (!isOwner || !draggedId || draggedId === ep.id) return;
+                  e.preventDefault();
+                  const ids = episodes.map(x => x.id);
+                  const fromIdx = ids.indexOf(draggedId);
+                  const toIdx = ids.indexOf(ep.id);
+                  if (fromIdx < 0 || toIdx < 0) return;
+                  const reordered = [...ids];
+                  const [moved] = reordered.splice(fromIdx, 1);
+                  reordered.splice(toIdx, 0, moved);
+                  onReorderEpisodes(reordered);
+                  setDraggedId(null);
+                }}
+                onDragEnd={() => setDraggedId(null)}
+                className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors group ${draggedId === ep.id ? 'opacity-40' : ''}`}
+                style={{ border: '1px solid rgba(255,255,255,0.05)' }}
+                onClick={() => ep.video_url && onPlay(ep, group.items)}>
+                {isOwner && (
+                  <GripVertical className="w-4 h-4 text-white/20 cursor-grab active:cursor-grabbing shrink-0" onClick={e => e.stopPropagation()} />
+                )}
+                <span className="text-white/20 text-sm font-bold w-6 text-center shrink-0">{idx + 1}</span>
+                <div className="w-24 sm:w-32 aspect-video rounded-lg overflow-hidden bg-white/5 shrink-0 relative">
+                  {ep.thumbnail_url ? <img src={ep.thumbnail_url} alt="" className="w-full h-full object-cover" /> : <Film className="w-6 h-6 text-white/20 absolute inset-0 m-auto" />}
+                  {ep.video_url && (
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                      <Play className="w-5 h-5 text-white" />
+                    </div>
+                  )}
+                  {isEmbedUrl(ep.video_url) && (
+                    <div className="absolute top-1 right-1 bg-black/70 text-white/80 text-[8px] font-bold px-1.5 py-0.5 rounded uppercase">Embed</div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-medium truncate">{ep.episode_number ? `Episode ${ep.episode_number}` : ep.title}</p>
+                  <p className="text-white/30 text-xs mt-0.5">{ep.title}</p>
+                  <p className="text-white/20 text-[10px] flex items-center gap-1 mt-1"><Eye className="w-3 h-3" /> {getWatchCount(ep.id)} views</p>
+                </div>
+                {isOwner && (
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={e => { e.stopPropagation(); onEdit(ep); }} className="p-1.5 rounded-full bg-black/50 text-white hover:bg-white/20"><Pencil className="w-3 h-3" /></button>
+                    <button onClick={e => { e.stopPropagation(); onDelete(ep.id); }} className="p-1.5 rounded-full bg-black/50 text-white hover:bg-white/20"><Trash2 className="w-3 h-3" /></button>
                   </div>
                 )}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-white text-sm font-medium truncate">{ep.episode_number ? `Episode ${ep.episode_number}` : ep.title}</p>
-                <p className="text-white/30 text-xs mt-0.5">{ep.title}</p>
-                <p className="text-white/20 text-[10px] flex items-center gap-1 mt-1"><Eye className="w-3 h-3" /> {getWatchCount(ep.id)} views</p>
-              </div>
-              {userId && userId === ep.uploaded_by && (
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={e => { e.stopPropagation(); onEdit(ep); }} className="p-1.5 rounded-full bg-black/50 text-white hover:bg-white/20"><Pencil className="w-3 h-3" /></button>
-                  <button onClick={e => { e.stopPropagation(); onDelete(ep.id); }} className="p-1.5 rounded-full bg-black/50 text-white hover:bg-white/20"><Trash2 className="w-3 h-3" /></button>
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ─── Featured Hero Rotator ─── */
+function FeaturedHeroRotator({
+  groups, onPlay, onOpen
+}: {
+  groups: SeriesGroup[];
+  onPlay: (g: SeriesGroup) => void;
+  onOpen: (g: SeriesGroup) => void;
+}) {
+  const [activeIdx, setActiveIdx] = useState(0);
+  useEffect(() => {
+    if (groups.length <= 1) return;
+    const t = setInterval(() => setActiveIdx(i => (i + 1) % groups.length), 6000);
+    return () => clearInterval(t);
+  }, [groups.length]);
+  if (groups.length === 0) return null;
+  const active = groups[activeIdx];
+  const bg = active.banner || active.thumbnail;
+  return (
+    <div className="relative w-full rounded-2xl overflow-hidden aspect-[21/9] sm:aspect-[21/8] md:aspect-[21/7] mb-2"
+      style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-yellow-400/30">
+        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+        <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-400">Featured</span>
+      </div>
+      {bg ? (
+        <img src={bg} alt={active.title} key={active.title}
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700" />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-red-950 to-black" />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-8 z-10">
+        <div className="max-w-2xl">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-white drop-shadow-2xl leading-tight">{active.title}</h2>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {active.genres.slice(0, 3).map(g => (
+              <span key={g} className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md text-white/80 font-medium">{g}</span>
+            ))}
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md text-white/80 font-medium">{active.items.length} ep{active.items.length > 1 ? 's' : ''}</span>
+          </div>
+          {active.description && (
+            <p className="text-white/70 text-xs sm:text-sm mt-2 line-clamp-2 max-w-xl drop-shadow">{active.description}</p>
+          )}
+          <div className="flex gap-2 mt-3 sm:mt-4">
+            <Button onClick={() => onPlay(active)} size="sm" className="bg-red-600 hover:bg-red-700 text-white gap-2 font-bold">
+              <Play className="w-4 h-4" /> Watch Now
+            </Button>
+            <Button onClick={() => onOpen(active)} size="sm" variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 gap-2 backdrop-blur-md">
+              More Info <ChevronRight className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+      {/* Pagination dots */}
+      {groups.length > 1 && (
+        <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-6 z-20 flex gap-1.5">
+          {groups.map((_, i) => (
+            <button key={i} onClick={() => setActiveIdx(i)}
+              className={`h-1 rounded-full transition-all ${i === activeIdx ? 'w-6 bg-red-500' : 'w-3 bg-white/30 hover:bg-white/50'}`} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -743,6 +853,41 @@ export default function ShadowFlix() {
     setPlayingSeriesGroup(group || null);
   };
 
+  const handleToggleFeatured = async (group: SeriesGroup) => {
+    const newVal = !group.isFeatured;
+    const ids = group.items.map(i => i.id);
+    // Optimistic update
+    setItems(prev => prev.map(i => ids.includes(i.id) ? { ...i, is_featured: newVal } : i));
+    const { error } = await supabase.from('shadow_flix_content').update({ is_featured: newVal }).in('id', ids);
+    if (error) {
+      toast.error('Failed to update featured');
+      fetchItems();
+    } else {
+      toast.success(newVal ? `"${group.title}" marked as Featured ⭐` : `Removed from Featured`);
+    }
+  };
+
+  const handleReorderEpisodes = async (orderedIds: string[]) => {
+    // Assign new sort_order values 0..N-1
+    const updates = orderedIds.map((id, idx) => ({ id, sort_order: idx }));
+    // Optimistic
+    setItems(prev => {
+      const orderMap = new Map(updates.map(u => [u.id, u.sort_order]));
+      return prev.map(i => orderMap.has(i.id) ? { ...i, sort_order: orderMap.get(i.id)! } : i);
+    });
+    // Persist (one update per row)
+    const results = await Promise.all(updates.map(u =>
+      supabase.from('shadow_flix_content').update({ sort_order: u.sort_order }).eq('id', u.id)
+    ));
+    const failed = results.find(r => r.error);
+    if (failed) {
+      toast.error('Failed to save order');
+      fetchItems();
+    } else {
+      toast.success('Episode order updated');
+    }
+  };
+
   const seriesGroups = useMemo<SeriesGroup[]>(() => {
     const map = new Map<string, ShadowFlixItem[]>();
     items.forEach(item => {
@@ -757,19 +902,24 @@ export default function ShadowFlix() {
         else if (i.genre) allGenres.add(i.genre);
       });
       const bannerItem = groupItems.find(i => i.banner_url);
+      // Sort by sort_order first (custom drag order), then season/episode
+      const sorted = [...groupItems].sort((a, b) => {
+        const sa = a.season_number || 1, sb = b.season_number || 1;
+        if (sa !== sb) return sa - sb;
+        const oa = a.sort_order ?? 0, ob = b.sort_order ?? 0;
+        if (oa !== ob) return oa - ob;
+        return (a.episode_number || 0) - (b.episode_number || 0);
+      });
       return {
         title: groupItems[0].title,
-        items: groupItems.sort((a, b) => {
-          const sa = a.season_number || 1, sb = b.season_number || 1;
-          if (sa !== sb) return sa - sb;
-          return (a.episode_number || 0) - (b.episode_number || 0);
-        }),
+        items: sorted,
         thumbnail: groupItems[0].thumbnail_url,
         banner: bannerItem?.banner_url || null,
         genre: groupItems[0].genre,
         genres: Array.from(allGenres),
         totalViews: groupItems.reduce((sum, i) => sum + getWatchCount(i.id), 0),
         description: groupItems.find(i => (i as any).description)?.description || null,
+        isFeatured: groupItems.some(i => i.is_featured),
       };
     });
   }, [items]);
@@ -786,6 +936,10 @@ export default function ShadowFlix() {
 
   const recentlyAdded = useMemo(() =>
     seriesGroups.slice(0, 3),
+  [seriesGroups]);
+
+  const featuredGroups = useMemo(() =>
+    seriesGroups.filter(g => g.isFeatured).slice(0, 6),
   [seriesGroups]);
 
   const availableGenres = useMemo(() => {
@@ -900,9 +1054,20 @@ export default function ShadowFlix() {
             onDelete={handleDelete}
             onBack={() => setSelectedSeries(null)}
             playerTheme={playerTheme}
+            onToggleFeatured={handleToggleFeatured}
+            onReorderEpisodes={handleReorderEpisodes}
           />
         ) : (
           <>
+            {/* Featured Hero Rotator */}
+            {featuredGroups.length > 0 && !searchQuery && selectedGenre === 'all' && (
+              <FeaturedHeroRotator
+                groups={featuredGroups}
+                onPlay={(g) => { const ep = g.items.find(i => i.video_url) || g.items[0]; if (ep) handlePlayWithEpisodes(ep, g.items); }}
+                onOpen={(g) => setSelectedSeries(g.title)}
+              />
+            )}
+
             {/* Recently Added Banner */}
             {recentlyAdded.length > 0 && !searchQuery && selectedGenre === 'all' && (
               <div>
@@ -990,6 +1155,11 @@ export default function ShadowFlix() {
                             <Play className="w-5 h-5 text-white ml-0.5" />
                           </div>
                         </div>
+                        {g.isFeatured && (
+                          <div className="absolute top-1.5 left-1.5 flex items-center gap-1 bg-yellow-500/90 text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg">
+                            <Star className="w-2.5 h-2.5 fill-black" /> FEATURED
+                          </div>
+                        )}
                         {g.items.length > 1 && (
                           <div className="absolute top-1.5 right-1.5 bg-red-600/90 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">{g.items.length} EP</div>
                         )}
