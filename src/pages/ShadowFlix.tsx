@@ -675,9 +675,31 @@ export default function ShadowFlix() {
   const openEdit = (item: ShadowFlixItem) => {
     setEditingItem(item); setFormTitle(item.title); setFormDescription((item as any).description || '');
     setFormThumbnailUrl(item.thumbnail_url || '');
+    setFormBannerUrl((item as any).banner_url || '');
     setFormVideoUrl(item.video_url || ''); setFormSeason(String(item.season_number || 1));
     setFormEpisode(item.episode_number ? String(item.episode_number) : '');
-    setFormGenre(item.genre || ''); setThumbnailMode('url'); setShowUpload(true);
+    const existingGenres = (item.genres && item.genres.length) ? item.genres : (item.genre ? [item.genre] : []);
+    setFormGenres(existingGenres);
+    setThumbnailMode('url'); setBannerMode('url'); setUploadMode('new'); setShowUpload(true);
+  };
+
+  const startNewEpisodeForExisting = (seriesTitle: string) => {
+    const group = seriesGroups.find(g => g.title.toLowerCase() === seriesTitle.toLowerCase());
+    if (!group) return;
+    const lastEp = group.items[group.items.length - 1];
+    setEditingItem(null);
+    setFormTitle(group.title);
+    setFormDescription(group.description || '');
+    setFormThumbnailUrl(group.thumbnail || '');
+    setFormBannerUrl(group.banner || '');
+    setFormGenres(group.genres);
+    setFormSeason(String(lastEp?.season_number || 1));
+    setFormEpisode(String((lastEp?.episode_number || 0) + 1));
+    setFormVideoUrl('');
+    setThumbnailFile(null); setBannerFile(null); setVideoFile(null);
+    setThumbnailMode('url'); setBannerMode('url');
+    setSelectedExistingSeries(seriesTitle);
+    toast.success(`Adding new episode to "${group.title}"`);
   };
 
   const handlePlayWithEpisodes = (item: ShadowFlixItem, eps: ShadowFlixItem[]) => {
