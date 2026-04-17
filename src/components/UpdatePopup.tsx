@@ -64,10 +64,10 @@ export function UpdatePopup() {
   const APP_VERSION = 'v19';
 
   const changelogItems = [
-    { icon: '🎬', title: 'Shadow Flix Upgrade', desc: 'Recently Added banner, description/synopsis, and embed link playback support' },
-    { icon: '📺', title: 'Player + Details', desc: 'Watch Now now shows full anime info, seasons & episodes below the player' },
+    { icon: '🎬', title: 'Shadow Flix Upgrade', desc: 'Cinematic banner hero, multi-genre support, and "Existing Upload" flow to add episodes to your series' },
+    { icon: '🖼️', title: 'Dual Thumbnails', desc: 'Upload both a poster Thumbnail and a wide cinematic Banner for each series' },
+    { icon: '🏷️', title: 'Multi-Genre Tags', desc: 'Pick multiple genres per series — no more single-genre limit' },
     { icon: '📤', title: 'Upload Fix', desc: 'Video file uploads from file manager now work reliably with progress tracking' },
-    { icon: '🔗', title: 'Embed Links', desc: 'Embed/external video URLs now play properly in Shadow Flix player' },
     { icon: '📡', title: 'Smart Casting', desc: 'AirPlay & Chromecast support for seamless TV playback' },
     { icon: '🎞️', title: 'X-PLUS Server', desc: 'Flat cinema controls with a cleaner fullscreen player' },
     { icon: '📝', title: 'CC & E-Sub Fix', desc: 'Uploaded subtitles now toggle properly, even with multi-audio' },

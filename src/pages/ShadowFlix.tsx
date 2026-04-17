@@ -31,12 +31,14 @@ interface ShadowFlixItem {
   id: string;
   title: string;
   thumbnail_url: string | null;
+  banner_url?: string | null;
   video_url: string | null;
   uploaded_by: string;
   created_at: string;
   season_number: number | null;
   episode_number: number | null;
   genre: string | null;
+  genres?: string[] | null;
   description?: string | null;
 }
 
@@ -44,7 +46,9 @@ interface SeriesGroup {
   title: string;
   items: ShadowFlixItem[];
   thumbnail: string | null;
+  banner: string | null;
   genre: string | null;
+  genres: string[];
   totalViews: number;
   description: string | null;
 }
@@ -400,6 +404,24 @@ function AnimeDetailView({
         <ChevronLeft className="w-4 h-4" /> Back to library
       </button>
 
+      {/* Cinematic Banner Hero */}
+      {group.banner && (
+        <div className="relative w-full rounded-2xl overflow-hidden aspect-[21/9] sm:aspect-[21/8]">
+          <img src={group.banner} alt={group.title} className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-8">
+            <h2 className="text-3xl sm:text-5xl font-black text-white drop-shadow-2xl leading-tight">{group.title}</h2>
+            {group.description && <p className="text-white/70 text-sm sm:text-base mt-2 max-w-2xl line-clamp-3">{group.description}</p>}
+            {firstEp?.video_url && (
+              <Button onClick={() => onPlay(firstEp, group.items)} className="gap-2 font-bold text-white mt-4" style={{ background: playerTheme.accent }}>
+                <Play className="w-4 h-4" /> Watch Now
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="relative rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="flex flex-col sm:flex-row gap-0">
           <div className="sm:w-56 shrink-0">
@@ -413,7 +435,11 @@ function AnimeDetailView({
             <div>
               <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight">{group.title}</h2>
               <div className="flex flex-wrap items-center gap-2 mt-3">
-                {group.genre && (
+                {group.genres.length > 0 ? (
+                  group.genres.map(g => (
+                    <span key={g} className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: `${playerTheme.accent}22`, color: playerTheme.accent }}>{g}</span>
+                  ))
+                ) : group.genre && (
                   <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: `${playerTheme.accent}22`, color: playerTheme.accent }}>{group.genre}</span>
                 )}
                 <span className="text-white/40 text-xs">•</span>
@@ -517,18 +543,25 @@ export default function ShadowFlix() {
   const [formTitle, setFormTitle] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formThumbnailUrl, setFormThumbnailUrl] = useState('');
+  const [formBannerUrl, setFormBannerUrl] = useState('');
   const [formVideoUrl, setFormVideoUrl] = useState('');
   const [formSeason, setFormSeason] = useState('1');
   const [formEpisode, setFormEpisode] = useState('');
-  const [formGenre, setFormGenre] = useState('');
+  const [formGenres, setFormGenres] = useState<string[]>([]);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [thumbnailMode, setThumbnailMode] = useState<'file' | 'url'>('file');
+  const [bannerMode, setBannerMode] = useState<'file' | 'url'>('file');
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string>('');
+  const [uploadMode, setUploadMode] = useState<'new' | 'existing'>('new');
+  const [selectedExistingSeries, setSelectedExistingSeries] = useState<string | null>(null);
 
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -544,6 +577,18 @@ export default function ShadowFlix() {
       return () => URL.revokeObjectURL(url);
     } else { setThumbnailPreview(null); }
   }, [thumbnailFile]);
+
+  useEffect(() => {
+    if (bannerFile) {
+      const url = URL.createObjectURL(bannerFile);
+      setBannerPreview(url);
+      return () => URL.revokeObjectURL(url);
+    } else { setBannerPreview(null); }
+  }, [bannerFile]);
+
+  const toggleGenre = (g: string) => {
+    setFormGenres(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g]);
+  };
 
   const handleUnlock = () => {
     if (password.toUpperCase() === SHADOW_FLIX_PASSWORD) {
@@ -570,9 +615,12 @@ export default function ShadowFlix() {
   };
 
   const resetForm = () => {
-    setFormTitle(''); setFormDescription(''); setFormThumbnailUrl(''); setFormVideoUrl(''); setFormSeason('1');
-    setFormEpisode(''); setFormGenre(''); setThumbnailFile(null); setVideoFile(null);
-    setThumbnailMode('file'); setThumbnailPreview(null); setEditingItem(null); setUploadProgress('');
+    setFormTitle(''); setFormDescription(''); setFormThumbnailUrl(''); setFormBannerUrl('');
+    setFormVideoUrl(''); setFormSeason('1');
+    setFormEpisode(''); setFormGenres([]); setThumbnailFile(null); setBannerFile(null); setVideoFile(null);
+    setThumbnailMode('file'); setBannerMode('file'); setThumbnailPreview(null); setBannerPreview(null);
+    setEditingItem(null); setUploadProgress('');
+    setUploadMode('new'); setSelectedExistingSeries(null);
   };
 
   const uploadFileToStorage = async (file: File, bucket: string, folder: string): Promise<string> => {
@@ -606,11 +654,16 @@ export default function ShadowFlix() {
     setUploadProgress('Preparing...');
     try {
       let finalThumbnail = formThumbnailUrl;
+      let finalBanner = formBannerUrl;
       let finalVideo = formVideoUrl;
 
       if (thumbnailFile) {
         setUploadProgress('Uploading thumbnail...');
         finalThumbnail = await uploadFileToStorage(thumbnailFile, 'anime-thumbnails', 'shadowflix');
+      }
+      if (bannerFile) {
+        setUploadProgress('Uploading banner...');
+        finalBanner = await uploadFileToStorage(bannerFile, 'anime-thumbnails', 'shadowflix-banners');
       }
       if (videoFile) {
         setUploadProgress(`Uploading video (${(videoFile.size / (1024 * 1024)).toFixed(1)} MB)...`);
@@ -621,10 +674,12 @@ export default function ShadowFlix() {
       const payload: any = {
         title: formTitle,
         thumbnail_url: finalThumbnail || null,
+        banner_url: finalBanner || null,
         video_url: finalVideo || null,
         season_number: formSeason ? parseInt(formSeason) : 1,
         episode_number: formEpisode ? parseInt(formEpisode) : null,
-        genre: formGenre || null,
+        genre: formGenres[0] || null,
+        genres: formGenres.length ? formGenres : null,
         description: formDescription || null,
       };
 
@@ -654,9 +709,31 @@ export default function ShadowFlix() {
   const openEdit = (item: ShadowFlixItem) => {
     setEditingItem(item); setFormTitle(item.title); setFormDescription((item as any).description || '');
     setFormThumbnailUrl(item.thumbnail_url || '');
+    setFormBannerUrl((item as any).banner_url || '');
     setFormVideoUrl(item.video_url || ''); setFormSeason(String(item.season_number || 1));
     setFormEpisode(item.episode_number ? String(item.episode_number) : '');
-    setFormGenre(item.genre || ''); setThumbnailMode('url'); setShowUpload(true);
+    const existingGenres = (item.genres && item.genres.length) ? item.genres : (item.genre ? [item.genre] : []);
+    setFormGenres(existingGenres);
+    setThumbnailMode('url'); setBannerMode('url'); setUploadMode('new'); setShowUpload(true);
+  };
+
+  const startNewEpisodeForExisting = (seriesTitle: string) => {
+    const group = seriesGroups.find(g => g.title.toLowerCase() === seriesTitle.toLowerCase());
+    if (!group) return;
+    const lastEp = group.items[group.items.length - 1];
+    setEditingItem(null);
+    setFormTitle(group.title);
+    setFormDescription(group.description || '');
+    setFormThumbnailUrl(group.thumbnail || '');
+    setFormBannerUrl(group.banner || '');
+    setFormGenres(group.genres);
+    setFormSeason(String(lastEp?.season_number || 1));
+    setFormEpisode(String((lastEp?.episode_number || 0) + 1));
+    setFormVideoUrl('');
+    setThumbnailFile(null); setBannerFile(null); setVideoFile(null);
+    setThumbnailMode('url'); setBannerMode('url');
+    setSelectedExistingSeries(seriesTitle);
+    toast.success(`Adding new episode to "${group.title}"`);
   };
 
   const handlePlayWithEpisodes = (item: ShadowFlixItem, eps: ShadowFlixItem[]) => {
@@ -673,23 +750,33 @@ export default function ShadowFlix() {
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(item);
     });
-    return Array.from(map.entries()).map(([, groupItems]) => ({
-      title: groupItems[0].title,
-      items: groupItems.sort((a, b) => {
-        const sa = a.season_number || 1, sb = b.season_number || 1;
-        if (sa !== sb) return sa - sb;
-        return (a.episode_number || 0) - (b.episode_number || 0);
-      }),
-      thumbnail: groupItems[0].thumbnail_url,
-      genre: groupItems[0].genre,
-      totalViews: groupItems.reduce((sum, i) => sum + getWatchCount(i.id), 0),
-      description: groupItems.find(i => (i as any).description)?.description || null,
-    }));
+    return Array.from(map.entries()).map(([, groupItems]) => {
+      const allGenres = new Set<string>();
+      groupItems.forEach(i => {
+        if (i.genres && i.genres.length) i.genres.forEach(g => allGenres.add(g));
+        else if (i.genre) allGenres.add(i.genre);
+      });
+      const bannerItem = groupItems.find(i => i.banner_url);
+      return {
+        title: groupItems[0].title,
+        items: groupItems.sort((a, b) => {
+          const sa = a.season_number || 1, sb = b.season_number || 1;
+          if (sa !== sb) return sa - sb;
+          return (a.episode_number || 0) - (b.episode_number || 0);
+        }),
+        thumbnail: groupItems[0].thumbnail_url,
+        banner: bannerItem?.banner_url || null,
+        genre: groupItems[0].genre,
+        genres: Array.from(allGenres),
+        totalViews: groupItems.reduce((sum, i) => sum + getWatchCount(i.id), 0),
+        description: groupItems.find(i => (i as any).description)?.description || null,
+      };
+    });
   }, [items]);
 
   const filteredGroups = seriesGroups.filter(g => {
     const matchesSearch = !searchQuery || g.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesGenre = selectedGenre === 'all' || g.genre === selectedGenre;
+    const matchesGenre = selectedGenre === 'all' || g.genres.includes(selectedGenre) || g.genre === selectedGenre;
     return matchesSearch && matchesGenre;
   });
 
@@ -701,7 +788,18 @@ export default function ShadowFlix() {
     seriesGroups.slice(0, 3),
   [seriesGroups]);
 
-  const availableGenres = [...new Set(items.map(i => i.genre).filter(Boolean))] as string[];
+  const availableGenres = useMemo(() => {
+    const set = new Set<string>();
+    items.forEach(i => {
+      if (i.genres && i.genres.length) i.genres.forEach(g => set.add(g));
+      else if (i.genre) set.add(i.genre);
+    });
+    return Array.from(set);
+  }, [items]);
+
+  const userOwnSeries = useMemo(() =>
+    seriesGroups.filter(g => g.items.some(i => i.uploaded_by === user?.id)),
+  [seriesGroups, user]);
 
   const activeSeriesGroup = selectedSeries ? seriesGroups.find(g => g.title.toLowerCase() === selectedSeries.toLowerCase()) : null;
 
@@ -923,6 +1021,67 @@ export default function ShadowFlix() {
           <DialogHeader>
             <DialogTitle className="text-red-500 text-lg">{editingItem ? 'Edit Content' : 'Upload to Shadow Flix'}</DialogTitle>
           </DialogHeader>
+
+          {/* Upload mode tabs - hide when editing */}
+          {!editingItem && (
+            <div className="flex gap-2 border-b border-white/5 pb-3 -mt-2">
+              <button onClick={() => { setUploadMode('new'); setSelectedExistingSeries(null); }}
+                className={`text-xs font-semibold px-4 py-2 rounded-lg transition-colors ${uploadMode === 'new' ? 'bg-red-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>
+                <Plus className="w-3.5 h-3.5 inline mr-1.5" /> New Series
+              </button>
+              <button onClick={() => setUploadMode('existing')}
+                className={`text-xs font-semibold px-4 py-2 rounded-lg transition-colors ${uploadMode === 'existing' ? 'bg-red-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>
+                <Film className="w-3.5 h-3.5 inline mr-1.5" /> Existing Upload
+              </button>
+            </div>
+          )}
+
+          {/* Existing series picker — show series, click to start adding episode */}
+          {!editingItem && uploadMode === 'existing' && !selectedExistingSeries && (
+            <div className="space-y-3">
+              <p className="text-xs text-white/50">Select an existing series to add a new episode:</p>
+              {userOwnSeries.length === 0 ? (
+                <div className="text-center py-10 text-white/30 border border-dashed border-white/10 rounded-xl">
+                  <Film className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-xs">You haven't uploaded any series yet.</p>
+                  <p className="text-[10px] mt-1">Switch to "New Series" tab to start.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[60vh] overflow-y-auto pr-1">
+                  {userOwnSeries.map(g => (
+                    <button key={g.title} onClick={() => startNewEpisodeForExisting(g.title)}
+                      className="group text-left rounded-lg overflow-hidden bg-white/5 hover:bg-white/10 transition-colors border border-white/5">
+                      <div className="aspect-[2/3] relative">
+                        {g.thumbnail ? <img src={g.thumbnail} alt={g.title} className="w-full h-full object-cover" />
+                          : <div className="w-full h-full flex items-center justify-center"><Film className="w-6 h-6 text-white/20" /></div>}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-2">
+                          <p className="text-white text-xs font-bold truncate">{g.title}</p>
+                          <p className="text-white/50 text-[10px]">{g.items.length} ep{g.items.length > 1 ? 's' : ''}</p>
+                        </div>
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                          <div className="px-3 py-1.5 rounded-full bg-red-600 text-white text-[10px] font-bold flex items-center gap-1">
+                            <Plus className="w-3 h-3" /> Add Episode
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Show form: when in 'new' mode OR editing OR selected an existing series */}
+          {(editingItem || uploadMode === 'new' || (uploadMode === 'existing' && selectedExistingSeries)) && (
+          <>
+          {selectedExistingSeries && (
+            <div className="flex items-center justify-between p-2 bg-red-600/10 rounded-lg border border-red-600/20 -mb-2">
+              <span className="text-xs text-white/70">Adding episode to: <span className="font-bold text-red-400">{selectedExistingSeries}</span></span>
+              <button onClick={() => { setSelectedExistingSeries(null); resetForm(); setUploadMode('existing'); }}
+                className="text-[10px] text-white/40 hover:text-white">Change</button>
+            </div>
+          )}
           <div className="grid sm:grid-cols-2 gap-6">
             {/* Left Column */}
             <div className="space-y-4">
@@ -950,13 +1109,21 @@ export default function ShadowFlix() {
                 </div>
               </div>
               <div>
-                <label className="text-xs text-white/50 mb-1 block">Genre</label>
-                <Select value={formGenre} onValueChange={setFormGenre}>
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white h-11"><SelectValue placeholder="Select genre" /></SelectTrigger>
-                  <SelectContent className="bg-[#1a1a1a] border-white/10">
-                    {GENRES.map(g => <SelectItem key={g} value={g} className="text-white">{g}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <label className="text-xs text-white/50 mb-1 block">Genres (select multiple)</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {GENRES.map(g => {
+                    const active = formGenres.includes(g);
+                    return (
+                      <button key={g} type="button" onClick={() => toggleGenre(g)}
+                        className={`text-xs px-2.5 py-1 rounded-full transition-colors ${active ? 'bg-red-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>
+                        {g}
+                      </button>
+                    );
+                  })}
+                </div>
+                {formGenres.length > 0 && (
+                  <p className="text-[10px] text-white/30 mt-1.5">{formGenres.length} selected</p>
+                )}
               </div>
               {/* Video */}
               <div>
@@ -976,10 +1143,53 @@ export default function ShadowFlix() {
               </div>
             </div>
 
-            {/* Right Column - Thumbnail */}
+            {/* Right Column - Banner + Thumbnail */}
             <div className="space-y-4">
+              {/* Banner */}
               <div>
-                <label className="text-xs text-white/50 mb-1 block">Thumbnail</label>
+                <label className="text-xs text-white/50 mb-1 block flex items-center gap-1.5">
+                  <Monitor className="w-3 h-3" /> Banner / Hero (cinematic, optional)
+                </label>
+                <div className="flex gap-2 mb-2">
+                  <button onClick={() => setBannerMode('file')}
+                    className={`text-xs px-3 py-1.5 rounded-full transition-colors ${bannerMode === 'file' ? 'bg-red-600 text-white' : 'bg-white/10 text-white/50'}`}>
+                    <Image className="w-3 h-3 inline mr-1" /> File
+                  </button>
+                  <button onClick={() => setBannerMode('url')}
+                    className={`text-xs px-3 py-1.5 rounded-full transition-colors ${bannerMode === 'url' ? 'bg-red-600 text-white' : 'bg-white/10 text-white/50'}`}>
+                    <Link className="w-3 h-3 inline mr-1" /> URL
+                  </button>
+                </div>
+                {bannerMode === 'file' ? (
+                  <>
+                    <input ref={bannerInputRef} type="file" accept="image/*" className="hidden"
+                      onChange={e => e.target.files?.[0] && setBannerFile(e.target.files[0])} />
+                    <Button variant="outline" size="sm" onClick={() => bannerInputRef.current?.click()}
+                      className="border-white/10 text-white/70 gap-2 w-full h-11">
+                      <Upload className="w-4 h-4" /> {bannerFile ? bannerFile.name : 'Choose banner image (16:9)'}
+                    </Button>
+                  </>
+                ) : (
+                  <Input value={formBannerUrl} onChange={e => setFormBannerUrl(e.target.value)}
+                    placeholder="https://example.com/banner.jpg" className="bg-white/5 border-white/10 text-white h-11" />
+                )}
+                {/* Banner Preview */}
+                <div className="rounded-xl overflow-hidden border border-white/10 aspect-video bg-white/5 flex items-center justify-center mt-2">
+                  {(bannerPreview || (bannerMode === 'url' && formBannerUrl)) ? (
+                    <img src={bannerPreview || formBannerUrl} alt="Banner Preview"
+                      className="w-full h-full object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
+                  ) : (
+                    <div className="text-center text-white/20">
+                      <Monitor className="w-8 h-8 mx-auto mb-1" />
+                      <p className="text-[10px]">Banner preview (16:9)</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Thumbnail */}
+              <div>
+                <label className="text-xs text-white/50 mb-1 block">Thumbnail (poster)</label>
                 <div className="flex gap-2 mb-2">
                   <button onClick={() => setThumbnailMode('file')}
                     className={`text-xs px-3 py-1.5 rounded-full transition-colors ${thumbnailMode === 'file' ? 'bg-red-600 text-white' : 'bg-white/10 text-white/50'}`}>
@@ -1035,6 +1245,8 @@ export default function ShadowFlix() {
               </span>
             ) : editingItem ? 'Save Changes' : 'Upload'}
           </Button>
+          </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

@@ -464,10 +464,12 @@ export type Database = {
       }
       shadow_flix_content: {
         Row: {
+          banner_url: string | null
           created_at: string
           description: string | null
           episode_number: number | null
           genre: string | null
+          genres: string[] | null
           id: string
           season_number: number | null
           thumbnail_url: string | null
@@ -477,10 +479,12 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          banner_url?: string | null
           created_at?: string
           description?: string | null
           episode_number?: number | null
           genre?: string | null
+          genres?: string[] | null
           id?: string
           season_number?: number | null
           thumbnail_url?: string | null
@@ -490,10 +494,12 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          banner_url?: string | null
           created_at?: string
           description?: string | null
           episode_number?: number | null
           genre?: string | null
+          genres?: string[] | null
           id?: string
           season_number?: number | null
           thumbnail_url?: string | null
