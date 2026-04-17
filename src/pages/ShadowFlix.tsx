@@ -498,35 +498,66 @@ function AnimeDetailView({
       )}
 
       <div>
-        <h3 className="text-white font-bold text-base mb-3">{seasons.length > 1 ? `Season ${selectedSeason} Episodes` : 'Episodes'}</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-white font-bold text-base">{seasons.length > 1 ? `Season ${selectedSeason} Episodes` : 'Episodes'}</h3>
+          {userId && episodes.some(e => e.uploaded_by === userId) && episodes.length > 1 && (
+            <span className="text-[10px] text-white/30 flex items-center gap-1"><GripVertical className="w-3 h-3" /> Drag to reorder</span>
+          )}
+        </div>
         <div className="space-y-2">
-          {episodes.map((ep, idx) => (
-            <div key={ep.id}
-              className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors group"
-              style={{ border: '1px solid rgba(255,255,255,0.05)' }}
-              onClick={() => ep.video_url && onPlay(ep, group.items)}>
-              <span className="text-white/20 text-sm font-bold w-6 text-center shrink-0">{idx + 1}</span>
-              <div className="w-24 sm:w-32 aspect-video rounded-lg overflow-hidden bg-white/5 shrink-0 relative">
-                {ep.thumbnail_url ? <img src={ep.thumbnail_url} alt="" className="w-full h-full object-cover" /> : <Film className="w-6 h-6 text-white/20 absolute inset-0 m-auto" />}
-                {ep.video_url && (
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
-                    <Play className="w-5 h-5 text-white" />
+          {episodes.map((ep, idx) => {
+            const isOwner = userId && userId === ep.uploaded_by;
+            return (
+              <div key={ep.id}
+                draggable={!!isOwner}
+                onDragStart={e => { if (isOwner) { setDraggedId(ep.id); e.dataTransfer.effectAllowed = 'move'; } }}
+                onDragOver={e => { if (isOwner && draggedId && draggedId !== ep.id) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }}
+                onDrop={e => {
+                  if (!isOwner || !draggedId || draggedId === ep.id) return;
+                  e.preventDefault();
+                  const ids = episodes.map(x => x.id);
+                  const fromIdx = ids.indexOf(draggedId);
+                  const toIdx = ids.indexOf(ep.id);
+                  if (fromIdx < 0 || toIdx < 0) return;
+                  const reordered = [...ids];
+                  const [moved] = reordered.splice(fromIdx, 1);
+                  reordered.splice(toIdx, 0, moved);
+                  onReorderEpisodes(reordered);
+                  setDraggedId(null);
+                }}
+                onDragEnd={() => setDraggedId(null)}
+                className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition-colors group ${draggedId === ep.id ? 'opacity-40' : ''}`}
+                style={{ border: '1px solid rgba(255,255,255,0.05)' }}
+                onClick={() => ep.video_url && onPlay(ep, group.items)}>
+                {isOwner && (
+                  <GripVertical className="w-4 h-4 text-white/20 cursor-grab active:cursor-grabbing shrink-0" onClick={e => e.stopPropagation()} />
+                )}
+                <span className="text-white/20 text-sm font-bold w-6 text-center shrink-0">{idx + 1}</span>
+                <div className="w-24 sm:w-32 aspect-video rounded-lg overflow-hidden bg-white/5 shrink-0 relative">
+                  {ep.thumbnail_url ? <img src={ep.thumbnail_url} alt="" className="w-full h-full object-cover" /> : <Film className="w-6 h-6 text-white/20 absolute inset-0 m-auto" />}
+                  {ep.video_url && (
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                      <Play className="w-5 h-5 text-white" />
+                    </div>
+                  )}
+                  {isEmbedUrl(ep.video_url) && (
+                    <div className="absolute top-1 right-1 bg-black/70 text-white/80 text-[8px] font-bold px-1.5 py-0.5 rounded uppercase">Embed</div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-medium truncate">{ep.episode_number ? `Episode ${ep.episode_number}` : ep.title}</p>
+                  <p className="text-white/30 text-xs mt-0.5">{ep.title}</p>
+                  <p className="text-white/20 text-[10px] flex items-center gap-1 mt-1"><Eye className="w-3 h-3" /> {getWatchCount(ep.id)} views</p>
+                </div>
+                {isOwner && (
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={e => { e.stopPropagation(); onEdit(ep); }} className="p-1.5 rounded-full bg-black/50 text-white hover:bg-white/20"><Pencil className="w-3 h-3" /></button>
+                    <button onClick={e => { e.stopPropagation(); onDelete(ep.id); }} className="p-1.5 rounded-full bg-black/50 text-white hover:bg-white/20"><Trash2 className="w-3 h-3" /></button>
                   </div>
                 )}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-white text-sm font-medium truncate">{ep.episode_number ? `Episode ${ep.episode_number}` : ep.title}</p>
-                <p className="text-white/30 text-xs mt-0.5">{ep.title}</p>
-                <p className="text-white/20 text-[10px] flex items-center gap-1 mt-1"><Eye className="w-3 h-3" /> {getWatchCount(ep.id)} views</p>
-              </div>
-              {userId && userId === ep.uploaded_by && (
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={e => { e.stopPropagation(); onEdit(ep); }} className="p-1.5 rounded-full bg-black/50 text-white hover:bg-white/20"><Pencil className="w-3 h-3" /></button>
-                  <button onClick={e => { e.stopPropagation(); onDelete(ep.id); }} className="p-1.5 rounded-full bg-black/50 text-white hover:bg-white/20"><Trash2 className="w-3 h-3" /></button>
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
