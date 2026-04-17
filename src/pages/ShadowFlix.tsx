@@ -404,6 +404,24 @@ function AnimeDetailView({
         <ChevronLeft className="w-4 h-4" /> Back to library
       </button>
 
+      {/* Cinematic Banner Hero */}
+      {group.banner && (
+        <div className="relative w-full rounded-2xl overflow-hidden aspect-[21/9] sm:aspect-[21/8]">
+          <img src={group.banner} alt={group.title} className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-8">
+            <h2 className="text-3xl sm:text-5xl font-black text-white drop-shadow-2xl leading-tight">{group.title}</h2>
+            {group.description && <p className="text-white/70 text-sm sm:text-base mt-2 max-w-2xl line-clamp-3">{group.description}</p>}
+            {firstEp?.video_url && (
+              <Button onClick={() => onPlay(firstEp, group.items)} className="gap-2 font-bold text-white mt-4" style={{ background: playerTheme.accent }}>
+                <Play className="w-4 h-4" /> Watch Now
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="relative rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="flex flex-col sm:flex-row gap-0">
           <div className="sm:w-56 shrink-0">
@@ -417,7 +435,11 @@ function AnimeDetailView({
             <div>
               <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight">{group.title}</h2>
               <div className="flex flex-wrap items-center gap-2 mt-3">
-                {group.genre && (
+                {group.genres.length > 0 ? (
+                  group.genres.map(g => (
+                    <span key={g} className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: `${playerTheme.accent}22`, color: playerTheme.accent }}>{g}</span>
+                  ))
+                ) : group.genre && (
                   <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: `${playerTheme.accent}22`, color: playerTheme.accent }}>{group.genre}</span>
                 )}
                 <span className="text-white/40 text-xs">•</span>
