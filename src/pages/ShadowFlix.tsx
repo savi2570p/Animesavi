@@ -786,6 +786,41 @@ export default function ShadowFlix() {
     setPlayingSeriesGroup(group || null);
   };
 
+  const handleToggleFeatured = async (group: SeriesGroup) => {
+    const newVal = !group.isFeatured;
+    const ids = group.items.map(i => i.id);
+    // Optimistic update
+    setItems(prev => prev.map(i => ids.includes(i.id) ? { ...i, is_featured: newVal } : i));
+    const { error } = await supabase.from('shadow_flix_content').update({ is_featured: newVal }).in('id', ids);
+    if (error) {
+      toast.error('Failed to update featured');
+      fetchItems();
+    } else {
+      toast.success(newVal ? `"${group.title}" marked as Featured ⭐` : `Removed from Featured`);
+    }
+  };
+
+  const handleReorderEpisodes = async (orderedIds: string[]) => {
+    // Assign new sort_order values 0..N-1
+    const updates = orderedIds.map((id, idx) => ({ id, sort_order: idx }));
+    // Optimistic
+    setItems(prev => {
+      const orderMap = new Map(updates.map(u => [u.id, u.sort_order]));
+      return prev.map(i => orderMap.has(i.id) ? { ...i, sort_order: orderMap.get(i.id)! } : i);
+    });
+    // Persist (one update per row)
+    const results = await Promise.all(updates.map(u =>
+      supabase.from('shadow_flix_content').update({ sort_order: u.sort_order }).eq('id', u.id)
+    ));
+    const failed = results.find(r => r.error);
+    if (failed) {
+      toast.error('Failed to save order');
+      fetchItems();
+    } else {
+      toast.success('Episode order updated');
+    }
+  };
+
   const seriesGroups = useMemo<SeriesGroup[]>(() => {
     const map = new Map<string, ShadowFlixItem[]>();
     items.forEach(item => {
