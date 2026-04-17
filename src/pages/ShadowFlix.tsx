@@ -871,6 +871,10 @@ export default function ShadowFlix() {
     seriesGroups.slice(0, 3),
   [seriesGroups]);
 
+  const featuredGroups = useMemo(() =>
+    seriesGroups.filter(g => g.isFeatured).slice(0, 6),
+  [seriesGroups]);
+
   const availableGenres = useMemo(() => {
     const set = new Set<string>();
     items.forEach(i => {
