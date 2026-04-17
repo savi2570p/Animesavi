@@ -521,18 +521,25 @@ export default function ShadowFlix() {
   const [formTitle, setFormTitle] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formThumbnailUrl, setFormThumbnailUrl] = useState('');
+  const [formBannerUrl, setFormBannerUrl] = useState('');
   const [formVideoUrl, setFormVideoUrl] = useState('');
   const [formSeason, setFormSeason] = useState('1');
   const [formEpisode, setFormEpisode] = useState('');
-  const [formGenre, setFormGenre] = useState('');
+  const [formGenres, setFormGenres] = useState<string[]>([]);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [thumbnailMode, setThumbnailMode] = useState<'file' | 'url'>('file');
+  const [bannerMode, setBannerMode] = useState<'file' | 'url'>('file');
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string>('');
+  const [uploadMode, setUploadMode] = useState<'new' | 'existing'>('new');
+  const [selectedExistingSeries, setSelectedExistingSeries] = useState<string | null>(null);
 
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
