@@ -581,9 +581,12 @@ export default function ShadowFlix() {
   };
 
   const resetForm = () => {
-    setFormTitle(''); setFormDescription(''); setFormThumbnailUrl(''); setFormVideoUrl(''); setFormSeason('1');
-    setFormEpisode(''); setFormGenre(''); setThumbnailFile(null); setVideoFile(null);
-    setThumbnailMode('file'); setThumbnailPreview(null); setEditingItem(null); setUploadProgress('');
+    setFormTitle(''); setFormDescription(''); setFormThumbnailUrl(''); setFormBannerUrl('');
+    setFormVideoUrl(''); setFormSeason('1');
+    setFormEpisode(''); setFormGenres([]); setThumbnailFile(null); setBannerFile(null); setVideoFile(null);
+    setThumbnailMode('file'); setBannerMode('file'); setThumbnailPreview(null); setBannerPreview(null);
+    setEditingItem(null); setUploadProgress('');
+    setUploadMode('new'); setSelectedExistingSeries(null);
   };
 
   const uploadFileToStorage = async (file: File, bucket: string, folder: string): Promise<string> => {
