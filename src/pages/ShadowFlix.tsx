@@ -1180,6 +1180,8 @@ export default function ShadowFlix() {
               </span>
             ) : editingItem ? 'Save Changes' : 'Upload'}
           </Button>
+          </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
