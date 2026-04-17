@@ -1121,9 +1121,51 @@ export default function ShadowFlix() {
               </div>
             </div>
 
-            {/* Right Column - Thumbnail */}
+            {/* Right Column - Banner + Thumbnail */}
             <div className="space-y-4">
+              {/* Banner */}
               <div>
+                <label className="text-xs text-white/50 mb-1 block flex items-center gap-1.5">
+                  <Monitor className="w-3 h-3" /> Banner / Hero (cinematic, optional)
+                </label>
+                <div className="flex gap-2 mb-2">
+                  <button onClick={() => setBannerMode('file')}
+                    className={`text-xs px-3 py-1.5 rounded-full transition-colors ${bannerMode === 'file' ? 'bg-red-600 text-white' : 'bg-white/10 text-white/50'}`}>
+                    <Image className="w-3 h-3 inline mr-1" /> File
+                  </button>
+                  <button onClick={() => setBannerMode('url')}
+                    className={`text-xs px-3 py-1.5 rounded-full transition-colors ${bannerMode === 'url' ? 'bg-red-600 text-white' : 'bg-white/10 text-white/50'}`}>
+                    <Link className="w-3 h-3 inline mr-1" /> URL
+                  </button>
+                </div>
+                {bannerMode === 'file' ? (
+                  <>
+                    <input ref={bannerInputRef} type="file" accept="image/*" className="hidden"
+                      onChange={e => e.target.files?.[0] && setBannerFile(e.target.files[0])} />
+                    <Button variant="outline" size="sm" onClick={() => bannerInputRef.current?.click()}
+                      className="border-white/10 text-white/70 gap-2 w-full h-11">
+                      <Upload className="w-4 h-4" /> {bannerFile ? bannerFile.name : 'Choose banner image (16:9)'}
+                    </Button>
+                  </>
+                ) : (
+                  <Input value={formBannerUrl} onChange={e => setFormBannerUrl(e.target.value)}
+                    placeholder="https://example.com/banner.jpg" className="bg-white/5 border-white/10 text-white h-11" />
+                )}
+                {/* Banner Preview */}
+                <div className="rounded-xl overflow-hidden border border-white/10 aspect-video bg-white/5 flex items-center justify-center mt-2">
+                  {(bannerPreview || (bannerMode === 'url' && formBannerUrl)) ? (
+                    <img src={bannerPreview || formBannerUrl} alt="Banner Preview"
+                      className="w-full h-full object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
+                  ) : (
+                    <div className="text-center text-white/20">
+                      <Monitor className="w-8 h-8 mx-auto mb-1" />
+                      <p className="text-[10px]">Banner preview (16:9)</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Thumbnail */}
                 <label className="text-xs text-white/50 mb-1 block">Thumbnail</label>
                 <div className="flex gap-2 mb-2">
                   <button onClick={() => setThumbnailMode('file')}
