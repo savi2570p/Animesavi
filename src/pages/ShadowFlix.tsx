@@ -380,7 +380,7 @@ function ShadowFlixPlayer({
 
 /* ─── Anime Detail View ─── */
 function AnimeDetailView({
-  group, userId, onPlay, onEdit, onDelete, onBack, playerTheme
+  group, userId, onPlay, onEdit, onDelete, onBack, playerTheme, onToggleFeatured, onReorderEpisodes
 }: {
   group: SeriesGroup;
   userId?: string;
@@ -389,6 +389,8 @@ function AnimeDetailView({
   onDelete: (id: string) => void;
   onBack: () => void;
   playerTheme: typeof PLAYER_THEMES[0];
+  onToggleFeatured: (group: SeriesGroup) => void;
+  onReorderEpisodes: (orderedIds: string[]) => void;
 }) {
   const [selectedSeason, setSelectedSeason] = useState<number>(group.items[0]?.season_number || 1);
   const [copied, setCopied] = useState(false);
