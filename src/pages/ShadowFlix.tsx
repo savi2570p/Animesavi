@@ -1155,6 +1155,11 @@ export default function ShadowFlix() {
                             <Play className="w-5 h-5 text-white ml-0.5" />
                           </div>
                         </div>
+                        {g.isFeatured && (
+                          <div className="absolute top-1.5 left-1.5 flex items-center gap-1 bg-yellow-500/90 text-black text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg">
+                            <Star className="w-2.5 h-2.5 fill-black" /> FEATURED
+                          </div>
+                        )}
                         {g.items.length > 1 && (
                           <div className="absolute top-1.5 right-1.5 bg-red-600/90 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">{g.items.length} EP</div>
                         )}
