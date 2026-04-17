@@ -983,9 +983,20 @@ export default function ShadowFlix() {
             onDelete={handleDelete}
             onBack={() => setSelectedSeries(null)}
             playerTheme={playerTheme}
+            onToggleFeatured={handleToggleFeatured}
+            onReorderEpisodes={handleReorderEpisodes}
           />
         ) : (
           <>
+            {/* Featured Hero Rotator */}
+            {featuredGroups.length > 0 && !searchQuery && selectedGenre === 'all' && (
+              <FeaturedHeroRotator
+                groups={featuredGroups}
+                onPlay={(g) => { const ep = g.items.find(i => i.video_url) || g.items[0]; if (ep) handlePlayWithEpisodes(ep, g.items); }}
+                onOpen={(g) => setSelectedSeries(g.title)}
+              />
+            )}
+
             {/* Recently Added Banner */}
             {recentlyAdded.length > 0 && !searchQuery && selectedGenre === 'all' && (
               <div>
