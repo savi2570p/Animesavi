@@ -31,12 +31,14 @@ interface ShadowFlixItem {
   id: string;
   title: string;
   thumbnail_url: string | null;
+  banner_url?: string | null;
   video_url: string | null;
   uploaded_by: string;
   created_at: string;
   season_number: number | null;
   episode_number: number | null;
   genre: string | null;
+  genres?: string[] | null;
   description?: string | null;
 }
 
@@ -44,7 +46,9 @@ interface SeriesGroup {
   title: string;
   items: ShadowFlixItem[];
   thumbnail: string | null;
+  banner: string | null;
   genre: string | null;
+  genres: string[];
   totalViews: number;
   description: string | null;
 }
