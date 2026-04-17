@@ -556,6 +556,18 @@ export default function ShadowFlix() {
     } else { setThumbnailPreview(null); }
   }, [thumbnailFile]);
 
+  useEffect(() => {
+    if (bannerFile) {
+      const url = URL.createObjectURL(bannerFile);
+      setBannerPreview(url);
+      return () => URL.revokeObjectURL(url);
+    } else { setBannerPreview(null); }
+  }, [bannerFile]);
+
+  const toggleGenre = (g: string) => {
+    setFormGenres(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g]);
+  };
+
   const handleUnlock = () => {
     if (password.toUpperCase() === SHADOW_FLIX_PASSWORD) {
       setIsUnlocked(true);
