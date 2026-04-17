@@ -1015,13 +1015,21 @@ export default function ShadowFlix() {
                 </div>
               </div>
               <div>
-                <label className="text-xs text-white/50 mb-1 block">Genre</label>
-                <Select value={formGenre} onValueChange={setFormGenre}>
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white h-11"><SelectValue placeholder="Select genre" /></SelectTrigger>
-                  <SelectContent className="bg-[#1a1a1a] border-white/10">
-                    {GENRES.map(g => <SelectItem key={g} value={g} className="text-white">{g}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <label className="text-xs text-white/50 mb-1 block">Genres (select multiple)</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {GENRES.map(g => {
+                    const active = formGenres.includes(g);
+                    return (
+                      <button key={g} type="button" onClick={() => toggleGenre(g)}
+                        className={`text-xs px-2.5 py-1 rounded-full transition-colors ${active ? 'bg-red-600 text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>
+                        {g}
+                      </button>
+                    );
+                  })}
+                </div>
+                {formGenres.length > 0 && (
+                  <p className="text-[10px] text-white/30 mt-1.5">{formGenres.length} selected</p>
+                )}
               </div>
               {/* Video */}
               <div>
