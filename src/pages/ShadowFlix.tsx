@@ -390,13 +390,13 @@ function AnimeDetailView({
   onBack: () => void;
   playerTheme: typeof PLAYER_THEMES[0];
 }) {
-  const [selectedSeason, setSelectedSeason] = useState<number>(1);
+  const [selectedSeason, setSelectedSeason] = useState<number>(group.items[0]?.season_number || 1);
   const [copied, setCopied] = useState(false);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
   const seasons = [...new Set(group.items.map(i => i.season_number || 1))].sort((a, b) => a - b);
   const episodes = group.items
-    .filter(i => (i.season_number || 1) === selectedSeason)
-    .sort((a, b) => (a.episode_number || 0) - (b.episode_number || 0));
-  const firstEp = episodes[0];
+    .filter(i => (i.season_number || 1) === selectedSeason);
+  const firstEp = episodes[0] || group.items[0];
 
   const shareText = `🎬 ${group.title}\n📺 ${group.items.length} Episode${group.items.length > 1 ? 's' : ''} • ${seasons.length} Season${seasons.length > 1 ? 's' : ''}\n📦 Codec: H.264 (AVC) | Quality: 720p HD\n📁 ${generateShareFilename(group.title, 1, 1)}\n\n🔗 Powered by AnimeSavi X Shadow-Toons`;
   const handleCopyShare = async () => { await navigator.clipboard.writeText(shareText); setCopied(true); toast.success('Share info copied!'); setTimeout(() => setCopied(false), 2000); };
