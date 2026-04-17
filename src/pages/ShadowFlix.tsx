@@ -1166,7 +1166,8 @@ export default function ShadowFlix() {
               </div>
 
               {/* Thumbnail */}
-                <label className="text-xs text-white/50 mb-1 block">Thumbnail</label>
+              <div>
+                <label className="text-xs text-white/50 mb-1 block">Thumbnail (poster)</label>
                 <div className="flex gap-2 mb-2">
                   <button onClick={() => setThumbnailMode('file')}
                     className={`text-xs px-3 py-1.5 rounded-full transition-colors ${thumbnailMode === 'file' ? 'bg-red-600 text-white' : 'bg-white/10 text-white/50'}`}>
