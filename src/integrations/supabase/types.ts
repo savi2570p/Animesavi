@@ -471,7 +471,9 @@ export type Database = {
           genre: string | null
           genres: string[] | null
           id: string
+          is_featured: boolean
           season_number: number | null
+          sort_order: number
           thumbnail_url: string | null
           title: string
           updated_at: string
@@ -486,7 +488,9 @@ export type Database = {
           genre?: string | null
           genres?: string[] | null
           id?: string
+          is_featured?: boolean
           season_number?: number | null
+          sort_order?: number
           thumbnail_url?: string | null
           title: string
           updated_at?: string
@@ -501,7 +505,9 @@ export type Database = {
           genre?: string | null
           genres?: string[] | null
           id?: string
+          is_featured?: boolean
           season_number?: number | null
+          sort_order?: number
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
