@@ -677,18 +677,28 @@ export default function ShadowFlix() {
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(item);
     });
-    return Array.from(map.entries()).map(([, groupItems]) => ({
-      title: groupItems[0].title,
-      items: groupItems.sort((a, b) => {
-        const sa = a.season_number || 1, sb = b.season_number || 1;
-        if (sa !== sb) return sa - sb;
-        return (a.episode_number || 0) - (b.episode_number || 0);
-      }),
-      thumbnail: groupItems[0].thumbnail_url,
-      genre: groupItems[0].genre,
-      totalViews: groupItems.reduce((sum, i) => sum + getWatchCount(i.id), 0),
-      description: groupItems.find(i => (i as any).description)?.description || null,
-    }));
+    return Array.from(map.entries()).map(([, groupItems]) => {
+      const allGenres = new Set<string>();
+      groupItems.forEach(i => {
+        if (i.genres && i.genres.length) i.genres.forEach(g => allGenres.add(g));
+        else if (i.genre) allGenres.add(i.genre);
+      });
+      const bannerItem = groupItems.find(i => i.banner_url);
+      return {
+        title: groupItems[0].title,
+        items: groupItems.sort((a, b) => {
+          const sa = a.season_number || 1, sb = b.season_number || 1;
+          if (sa !== sb) return sa - sb;
+          return (a.episode_number || 0) - (b.episode_number || 0);
+        }),
+        thumbnail: groupItems[0].thumbnail_url,
+        banner: bannerItem?.banner_url || null,
+        genre: groupItems[0].genre,
+        genres: Array.from(allGenres),
+        totalViews: groupItems.reduce((sum, i) => sum + getWatchCount(i.id), 0),
+        description: groupItems.find(i => (i as any).description)?.description || null,
+      };
+    });
   }, [items]);
 
   const filteredGroups = seriesGroups.filter(g => {
