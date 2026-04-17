@@ -564,6 +564,73 @@ function AnimeDetailView({
   );
 }
 
+/* ─── Featured Hero Rotator ─── */
+function FeaturedHeroRotator({
+  groups, onPlay, onOpen
+}: {
+  groups: SeriesGroup[];
+  onPlay: (g: SeriesGroup) => void;
+  onOpen: (g: SeriesGroup) => void;
+}) {
+  const [activeIdx, setActiveIdx] = useState(0);
+  useEffect(() => {
+    if (groups.length <= 1) return;
+    const t = setInterval(() => setActiveIdx(i => (i + 1) % groups.length), 6000);
+    return () => clearInterval(t);
+  }, [groups.length]);
+  if (groups.length === 0) return null;
+  const active = groups[activeIdx];
+  const bg = active.banner || active.thumbnail;
+  return (
+    <div className="relative w-full rounded-2xl overflow-hidden aspect-[21/9] sm:aspect-[21/8] md:aspect-[21/7] mb-2"
+      style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-yellow-400/30">
+        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+        <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-400">Featured</span>
+      </div>
+      {bg ? (
+        <img src={bg} alt={active.title} key={active.title}
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700" />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-red-950 to-black" />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-8 z-10">
+        <div className="max-w-2xl">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-white drop-shadow-2xl leading-tight">{active.title}</h2>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {active.genres.slice(0, 3).map(g => (
+              <span key={g} className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md text-white/80 font-medium">{g}</span>
+            ))}
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md text-white/80 font-medium">{active.items.length} ep{active.items.length > 1 ? 's' : ''}</span>
+          </div>
+          {active.description && (
+            <p className="text-white/70 text-xs sm:text-sm mt-2 line-clamp-2 max-w-xl drop-shadow">{active.description}</p>
+          )}
+          <div className="flex gap-2 mt-3 sm:mt-4">
+            <Button onClick={() => onPlay(active)} size="sm" className="bg-red-600 hover:bg-red-700 text-white gap-2 font-bold">
+              <Play className="w-4 h-4" /> Watch Now
+            </Button>
+            <Button onClick={() => onOpen(active)} size="sm" variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 gap-2 backdrop-blur-md">
+              More Info <ChevronRight className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+      {/* Pagination dots */}
+      {groups.length > 1 && (
+        <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-6 z-20 flex gap-1.5">
+          {groups.map((_, i) => (
+            <button key={i} onClick={() => setActiveIdx(i)}
+              className={`h-1 rounded-full transition-all ${i === activeIdx ? 'w-6 bg-red-500' : 'w-3 bg-white/30 hover:bg-white/50'}`} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Main Component ─── */
 export default function ShadowFlix() {
   const { user } = useAuth();
