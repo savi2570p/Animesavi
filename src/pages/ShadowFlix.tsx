@@ -732,6 +732,8 @@ export default function ShadowFlix() {
   const [uploadProgress, setUploadProgress] = useState<string>('');
   const [uploadMode, setUploadMode] = useState<'new' | 'existing'>('new');
   const [selectedExistingSeries, setSelectedExistingSeries] = useState<string | null>(null);
+  const [showFeaturedManager, setShowFeaturedManager] = useState(false);
+  const [continueWatchingTick, setContinueWatchingTick] = useState(0);
 
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
