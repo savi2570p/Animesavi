@@ -281,12 +281,12 @@ function ShadowFlixPlayer({
             {showShare && (
               <div className="absolute top-12 right-0 w-80 bg-black/95 border-l border-white/10 z-20 p-4 space-y-3" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between">
-                  <p className="text-white font-semibold text-sm">Share Info</p>
+                  <p className="text-white font-semibold text-sm">Shadow Flix Share Link</p>
                   <button onClick={() => setShowShare(false)} className="text-white/40 hover:text-white"><X className="w-4 h-4" /></button>
                 </div>
-                <div className="bg-white/5 rounded-lg p-3 text-xs text-white/70 space-y-1 font-mono whitespace-pre-wrap">{shareText}</div>
+                <div className="bg-white/5 rounded-lg p-3 text-[11px] text-white/70 break-all font-mono">{shareText}</div>
                 <Button onClick={handleCopyShare} size="sm" className="w-full gap-2" style={{ background: theme.accent }}>
-                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}{copied ? 'Copied!' : 'Copy Share Info'}
+                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}{copied ? 'Copied!' : 'Copy Link'}
                 </Button>
               </div>
             )}
