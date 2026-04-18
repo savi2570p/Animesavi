@@ -79,6 +79,50 @@ function generateShareFilename(title: string, season?: number | null, episode?: 
   return `${clean}${sn}${ep}_H264_720p_{AnimeSavi_X_Shadow-Toons}.mp4`;
 }
 
+/* Build the canonical Shadow Flix share URL */
+function buildShadowFlixShareUrl(title: string, season?: number | null, episode?: number | null) {
+  const cleanName = title.replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
+  const sn = season ?? 1;
+  const ep = episode ?? 1;
+  return `https://animesavi/lovable/app/shadowflix/${cleanName}, S${sn}E${ep} {AnimeSavi X Shadow}.mp4`;
+}
+
+/* ─── Continue Watching (localStorage) ─── */
+interface ContinueWatchEntry {
+  episodeId: string;
+  seriesTitle: string;
+  position: number; // seconds
+  duration: number; // seconds
+  updatedAt: number;
+}
+const CW_KEY = 'sf_continue_watching';
+function getContinueWatchingMap(): Record<string, ContinueWatchEntry> {
+  try { return JSON.parse(localStorage.getItem(CW_KEY) || '{}'); } catch { return {}; }
+}
+function saveContinueWatching(seriesTitle: string, episodeId: string, position: number, duration: number) {
+  if (!episodeId || position < 5 || (duration && position / duration > 0.95)) {
+    // remove if near the end
+    if (duration && position / duration > 0.95) {
+      const map = getContinueWatchingMap();
+      delete map[seriesTitle.toLowerCase()];
+      localStorage.setItem(CW_KEY, JSON.stringify(map));
+    }
+    return;
+  }
+  const map = getContinueWatchingMap();
+  map[seriesTitle.toLowerCase()] = { episodeId, seriesTitle, position, duration, updatedAt: Date.now() };
+  localStorage.setItem(CW_KEY, JSON.stringify(map));
+}
+function getContinueWatchingFor(seriesTitle: string): ContinueWatchEntry | null {
+  const map = getContinueWatchingMap();
+  return map[seriesTitle.toLowerCase()] || null;
+}
+function fmtResume(s: number): string {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, '0')}`;
+}
+
 /* ── Helper: detect if URL is an embed/external link ── */
 function isEmbedUrl(url: string | null): boolean {
   if (!url) return false;
