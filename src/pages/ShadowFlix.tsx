@@ -694,6 +694,104 @@ function FeaturedHeroRotator({
   );
 }
 
+/* ─── Featured Series Manager (drag to reorder) ─── */
+function FeaturedManagerDialog({
+  open, onOpenChange, groups, onReorder, onUnfeature
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  groups: SeriesGroup[];
+  onReorder: (orderedTitles: string[]) => void;
+  onUnfeature: (group: SeriesGroup) => void;
+}) {
+  const [localOrder, setLocalOrder] = useState<string[]>([]);
+  const [draggedTitle, setDraggedTitle] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) setLocalOrder(groups.map(g => g.title));
+  }, [open, groups]);
+
+  const orderedGroups = localOrder
+    .map(t => groups.find(g => g.title === t))
+    .filter((g): g is SeriesGroup => !!g);
+
+  const handleDrop = (targetTitle: string) => {
+    if (!draggedTitle || draggedTitle === targetTitle) return;
+    const next = [...localOrder];
+    const fromIdx = next.indexOf(draggedTitle);
+    const toIdx = next.indexOf(targetTitle);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const [moved] = next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, moved);
+    setLocalOrder(next);
+    setDraggedTitle(null);
+  };
+
+  const handleSave = () => {
+    onReorder(localOrder);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-[#141414] border-yellow-400/20 text-white sm:max-w-xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-yellow-400">
+            <Star className="w-5 h-5 fill-yellow-400" /> Manage Featured Series
+          </DialogTitle>
+        </DialogHeader>
+        <p className="text-xs text-white/50">
+          Drag series to reorder how they appear in the Hero rotator. The first series shows first.
+        </p>
+        {orderedGroups.length === 0 ? (
+          <div className="text-center py-8 text-white/30 border border-dashed border-white/10 rounded-xl">
+            <Star className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p className="text-xs">No featured series yet.</p>
+            <p className="text-[10px] mt-1">Open a series and click "Mark as Featured" to add it here.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {orderedGroups.map((g, idx) => (
+              <div key={g.title}
+                draggable
+                onDragStart={e => { setDraggedTitle(g.title); e.dataTransfer.effectAllowed = 'move'; }}
+                onDragOver={e => { if (draggedTitle && draggedTitle !== g.title) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }}
+                onDrop={e => { e.preventDefault(); handleDrop(g.title); }}
+                onDragEnd={() => setDraggedTitle(null)}
+                className={`flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/10 cursor-grab active:cursor-grabbing transition-opacity ${draggedTitle === g.title ? 'opacity-40' : ''}`}>
+                <GripVertical className="w-4 h-4 text-white/30 shrink-0" />
+                <span className="text-yellow-400 font-black text-sm w-5 text-center shrink-0">{idx + 1}</span>
+                <div className="w-12 h-16 rounded overflow-hidden bg-black/40 shrink-0 flex items-center justify-center">
+                  {g.thumbnail ? <img src={g.thumbnail} alt={g.title} className="w-full h-full object-cover" />
+                    : <Film className="w-4 h-4 text-white/20" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-bold truncate">{g.title}</p>
+                  <p className="text-white/40 text-[10px]">{g.items.length} ep{g.items.length > 1 ? 's' : ''} · {g.totalViews} views</p>
+                </div>
+                <button onClick={() => onUnfeature(g)}
+                  className="p-1.5 rounded-full hover:bg-red-500/20 text-white/40 hover:text-red-400 shrink-0"
+                  title="Remove from Featured">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="flex gap-2 pt-2 border-t border-white/5">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 border-white/10 text-white/70">
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={orderedGroups.length === 0}
+            className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold gap-1.5">
+            <Check className="w-4 h-4" /> Save Order
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /* ─── Main Component ─── */
 export default function ShadowFlix() {
   const { user } = useAuth();
