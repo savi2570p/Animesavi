@@ -1255,6 +1255,7 @@ export default function ShadowFlix() {
         allEpisodes={playingEpisodes}
         onChangeEpisode={ep => setPlayingItem(ep)}
         seriesGroup={playingSeriesGroup}
+        userId={user?.id}
       />
     );
   }
@@ -1342,6 +1343,15 @@ export default function ShadowFlix() {
                       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
                       onClick={() => handlePlayWithEpisodes(episode, group.items)}>
                       <div className="aspect-video relative bg-black">
+                        {/* Remove from Continue Watching */}
+                        <button
+                          onClick={(e) => handleRemoveContinueWatching(e, group.title)}
+                          className="absolute top-1.5 right-1.5 z-10 p-1 rounded-full bg-black/70 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Remove from Continue Watching"
+                          aria-label="Remove from Continue Watching"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
                         {(episode.thumbnail_url || group.thumbnail) ? (
                           <img src={episode.thumbnail_url || group.thumbnail || ''} alt={group.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
