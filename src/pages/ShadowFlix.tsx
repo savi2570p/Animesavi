@@ -161,13 +161,14 @@ function isEmbedUrl(url: string | null): boolean {
 
 /* ─── Custom Video Player ─── */
 function ShadowFlixPlayer({
-  item, onClose, allEpisodes, onChangeEpisode, seriesGroup
+  item, onClose, allEpisodes, onChangeEpisode, seriesGroup, userId,
 }: {
   item: ShadowFlixItem;
   onClose: () => void;
   allEpisodes?: ShadowFlixItem[];
   onChangeEpisode?: (ep: ShadowFlixItem) => void;
   seriesGroup?: SeriesGroup | null;
+  userId?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -223,23 +224,28 @@ function ShadowFlixPlayer({
   const handleCopyShare = async () => { await navigator.clipboard.writeText(shareText); setCopied(true); toast.success('Shadow Flix link copied!'); setTimeout(() => setCopied(false), 2000); };
   const fmt = (s: number) => `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
 
-  // Resume from continue-watching, save progress periodically
+  // Resume from continue-watching (DB), save progress periodically
   useEffect(() => {
-    if (isEmbed) return;
+    if (isEmbed || !userId) return;
     const v = videoRef.current;
     if (!v) return;
-    const entry = getContinueWatchingFor(item.title);
-    if (entry && entry.episodeId === item.id && entry.position > 5) {
-      const onLoaded = () => { try { v.currentTime = entry.position; } catch { /* */ } };
-      v.addEventListener('loadedmetadata', onLoaded, { once: true });
-    }
+    let cancelled = false;
+    (async () => {
+      const map = await fetchContinueWatchingForUser(userId);
+      const entry = map[item.title.toLowerCase()];
+      if (cancelled) return;
+      if (entry && entry.episodeId === item.id && entry.position > 5) {
+        const onLoaded = () => { try { v.currentTime = entry.position; } catch { /* */ } };
+        v.addEventListener('loadedmetadata', onLoaded, { once: true });
+      }
+    })();
     const interval = setInterval(() => {
       if (v.duration && !v.paused) {
-        saveContinueWatching(item.title, item.id, v.currentTime, v.duration);
+        persistContinueWatching(userId, item.title, item.id, v.currentTime, v.duration);
       }
     }, 5000);
-    return () => clearInterval(interval);
-  }, [item.id, item.title, isEmbed]);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [item.id, item.title, isEmbed, userId]);
 
   const seasons = allEpisodes ? [...new Set(allEpisodes.map(e => e.season_number || 1))].sort((a, b) => a - b) : [];
   const seasonEpisodes = allEpisodes?.filter(e => (e.season_number || 1) === selectedSeason)
