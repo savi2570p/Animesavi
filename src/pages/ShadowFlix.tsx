@@ -1153,11 +1153,25 @@ export default function ShadowFlix() {
     seriesGroups.filter(g => g.isFeatured).slice(0, 6),
   [seriesGroups]);
 
-  // Continue Watching: build from localStorage map intersected with current series
+  // Continue Watching: fetched per-user from DB, intersected with current series
+  const [cwMap, setCwMap] = useState<Record<string, ContinueWatchEntry>>({});
+
+  const refreshContinueWatching = useCallback(async () => {
+    if (!user?.id) { setCwMap({}); return; }
+    const map = await fetchContinueWatchingForUser(user.id);
+    setCwMap(map);
+  }, [user?.id]);
+
+  useEffect(() => { refreshContinueWatching(); }, [refreshContinueWatching]);
+
+  // Refresh when player closes (so progress shows up)
+  useEffect(() => {
+    if (!playingItem) refreshContinueWatching();
+  }, [playingItem, refreshContinueWatching]);
+
   const continueWatching = useMemo(() => {
     void continueWatchingTick;
-    const map = getContinueWatchingMap();
-    return Object.values(map)
+    return Object.values(cwMap)
       .map(entry => {
         const group = seriesGroups.find(g => g.title.toLowerCase() === entry.seriesTitle.toLowerCase());
         const episode = group?.items.find(i => i.id === entry.episodeId);
@@ -1168,12 +1182,20 @@ export default function ShadowFlix() {
       .filter((x): x is NonNullable<typeof x> => !!x)
       .sort((a, b) => b.entry.updatedAt - a.entry.updatedAt)
       .slice(0, 8);
-  }, [seriesGroups, continueWatchingTick]);
+  }, [seriesGroups, cwMap, continueWatchingTick]);
 
-  // Refresh continue watching when player closes
-  useEffect(() => {
-    if (!playingItem) setContinueWatchingTick(t => t + 1);
-  }, [playingItem]);
+  const handleRemoveContinueWatching = async (e: React.MouseEvent, seriesTitle: string) => {
+    e.stopPropagation();
+    if (!user?.id) return;
+    await removeContinueWatching(user.id, seriesTitle);
+    setCwMap(prev => {
+      const next = { ...prev };
+      delete next[seriesTitle.toLowerCase()];
+      return next;
+    });
+    toast.success('Removed from Continue Watching');
+  };
+
 
   const availableGenres = useMemo(() => {
     const set = new Set<string>();
