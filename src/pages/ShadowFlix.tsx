@@ -79,6 +79,50 @@ function generateShareFilename(title: string, season?: number | null, episode?: 
   return `${clean}${sn}${ep}_H264_720p_{AnimeSavi_X_Shadow-Toons}.mp4`;
 }
 
+/* Build the canonical Shadow Flix share URL */
+function buildShadowFlixShareUrl(title: string, season?: number | null, episode?: number | null) {
+  const cleanName = title.replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
+  const sn = season ?? 1;
+  const ep = episode ?? 1;
+  return `https://animesavi/lovable/app/shadowflix/${cleanName}, S${sn}E${ep} {AnimeSavi X Shadow}.mp4`;
+}
+
+/* ─── Continue Watching (localStorage) ─── */
+interface ContinueWatchEntry {
+  episodeId: string;
+  seriesTitle: string;
+  position: number; // seconds
+  duration: number; // seconds
+  updatedAt: number;
+}
+const CW_KEY = 'sf_continue_watching';
+function getContinueWatchingMap(): Record<string, ContinueWatchEntry> {
+  try { return JSON.parse(localStorage.getItem(CW_KEY) || '{}'); } catch { return {}; }
+}
+function saveContinueWatching(seriesTitle: string, episodeId: string, position: number, duration: number) {
+  if (!episodeId || position < 5 || (duration && position / duration > 0.95)) {
+    // remove if near the end
+    if (duration && position / duration > 0.95) {
+      const map = getContinueWatchingMap();
+      delete map[seriesTitle.toLowerCase()];
+      localStorage.setItem(CW_KEY, JSON.stringify(map));
+    }
+    return;
+  }
+  const map = getContinueWatchingMap();
+  map[seriesTitle.toLowerCase()] = { episodeId, seriesTitle, position, duration, updatedAt: Date.now() };
+  localStorage.setItem(CW_KEY, JSON.stringify(map));
+}
+function getContinueWatchingFor(seriesTitle: string): ContinueWatchEntry | null {
+  const map = getContinueWatchingMap();
+  return map[seriesTitle.toLowerCase()] || null;
+}
+function fmtResume(s: number): string {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, '0')}`;
+}
+
 /* ── Helper: detect if URL is an embed/external link ── */
 function isEmbedUrl(url: string | null): boolean {
   if (!url) return false;
@@ -151,9 +195,28 @@ function ShadowFlixPlayer({
   const setSpeed = (rate: number) => { setPlaybackRate(rate); if (videoRef.current) videoRef.current.playbackRate = rate; setShowSettings(false); };
   const handleThemeChange = (t: typeof PLAYER_THEMES[0]) => { setTheme(t); savePlayerTheme(t); setShowThemePicker(false); };
 
-  const shareText = `🎬 ${item.title}${item.season_number ? ` S${item.season_number}` : ''}${item.episode_number ? ` EP${item.episode_number}` : ''}\n📦 Codec: H.264 (AVC)\n📺 Quality: 720p HD\n📁 ${generateShareFilename(item.title, item.season_number, item.episode_number)}\n\n🔗 Powered by AnimeSavi X Shadow-Toons`;
-  const handleCopyShare = async () => { await navigator.clipboard.writeText(shareText); setCopied(true); toast.success('Share info copied!'); setTimeout(() => setCopied(false), 2000); };
+  const shareUrl = buildShadowFlixShareUrl(item.title, item.season_number, item.episode_number);
+  const shareText = shareUrl;
+  const handleCopyShare = async () => { await navigator.clipboard.writeText(shareText); setCopied(true); toast.success('Shadow Flix link copied!'); setTimeout(() => setCopied(false), 2000); };
   const fmt = (s: number) => `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
+
+  // Resume from continue-watching, save progress periodically
+  useEffect(() => {
+    if (isEmbed) return;
+    const v = videoRef.current;
+    if (!v) return;
+    const entry = getContinueWatchingFor(item.title);
+    if (entry && entry.episodeId === item.id && entry.position > 5) {
+      const onLoaded = () => { try { v.currentTime = entry.position; } catch { /* */ } };
+      v.addEventListener('loadedmetadata', onLoaded, { once: true });
+    }
+    const interval = setInterval(() => {
+      if (v.duration && !v.paused) {
+        saveContinueWatching(item.title, item.id, v.currentTime, v.duration);
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [item.id, item.title, isEmbed]);
 
   const seasons = allEpisodes ? [...new Set(allEpisodes.map(e => e.season_number || 1))].sort((a, b) => a - b) : [];
   const seasonEpisodes = allEpisodes?.filter(e => (e.season_number || 1) === selectedSeason)
@@ -218,12 +281,12 @@ function ShadowFlixPlayer({
             {showShare && (
               <div className="absolute top-12 right-0 w-80 bg-black/95 border-l border-white/10 z-20 p-4 space-y-3" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between">
-                  <p className="text-white font-semibold text-sm">Share Info</p>
+                  <p className="text-white font-semibold text-sm">Shadow Flix Share Link</p>
                   <button onClick={() => setShowShare(false)} className="text-white/40 hover:text-white"><X className="w-4 h-4" /></button>
                 </div>
-                <div className="bg-white/5 rounded-lg p-3 text-xs text-white/70 space-y-1 font-mono whitespace-pre-wrap">{shareText}</div>
+                <div className="bg-white/5 rounded-lg p-3 text-[11px] text-white/70 break-all font-mono">{shareText}</div>
                 <Button onClick={handleCopyShare} size="sm" className="w-full gap-2" style={{ background: theme.accent }}>
-                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}{copied ? 'Copied!' : 'Copy Share Info'}
+                  {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}{copied ? 'Copied!' : 'Copy Link'}
                 </Button>
               </div>
             )}
@@ -400,8 +463,8 @@ function AnimeDetailView({
     .filter(i => (i.season_number || 1) === selectedSeason);
   const firstEp = episodes[0] || group.items[0];
 
-  const shareText = `🎬 ${group.title}\n📺 ${group.items.length} Episode${group.items.length > 1 ? 's' : ''} • ${seasons.length} Season${seasons.length > 1 ? 's' : ''}\n📦 Codec: H.264 (AVC) | Quality: 720p HD\n📁 ${generateShareFilename(group.title, 1, 1)}\n\n🔗 Powered by AnimeSavi X Shadow-Toons`;
-  const handleCopyShare = async () => { await navigator.clipboard.writeText(shareText); setCopied(true); toast.success('Share info copied!'); setTimeout(() => setCopied(false), 2000); };
+  const shareText = buildShadowFlixShareUrl(group.title, firstEp?.season_number || 1, firstEp?.episode_number || 1);
+  const handleCopyShare = async () => { await navigator.clipboard.writeText(shareText); setCopied(true); toast.success('Shadow Flix link copied!'); setTimeout(() => setCopied(false), 2000); };
 
   return (
     <div className="space-y-6">
@@ -631,6 +694,104 @@ function FeaturedHeroRotator({
   );
 }
 
+/* ─── Featured Series Manager (drag to reorder) ─── */
+function FeaturedManagerDialog({
+  open, onOpenChange, groups, onReorder, onUnfeature
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  groups: SeriesGroup[];
+  onReorder: (orderedTitles: string[]) => void;
+  onUnfeature: (group: SeriesGroup) => void;
+}) {
+  const [localOrder, setLocalOrder] = useState<string[]>([]);
+  const [draggedTitle, setDraggedTitle] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) setLocalOrder(groups.map(g => g.title));
+  }, [open, groups]);
+
+  const orderedGroups = localOrder
+    .map(t => groups.find(g => g.title === t))
+    .filter((g): g is SeriesGroup => !!g);
+
+  const handleDrop = (targetTitle: string) => {
+    if (!draggedTitle || draggedTitle === targetTitle) return;
+    const next = [...localOrder];
+    const fromIdx = next.indexOf(draggedTitle);
+    const toIdx = next.indexOf(targetTitle);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const [moved] = next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, moved);
+    setLocalOrder(next);
+    setDraggedTitle(null);
+  };
+
+  const handleSave = () => {
+    onReorder(localOrder);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-[#141414] border-yellow-400/20 text-white sm:max-w-xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-yellow-400">
+            <Star className="w-5 h-5 fill-yellow-400" /> Manage Featured Series
+          </DialogTitle>
+        </DialogHeader>
+        <p className="text-xs text-white/50">
+          Drag series to reorder how they appear in the Hero rotator. The first series shows first.
+        </p>
+        {orderedGroups.length === 0 ? (
+          <div className="text-center py-8 text-white/30 border border-dashed border-white/10 rounded-xl">
+            <Star className="w-8 h-8 mx-auto mb-2 opacity-50" />
+            <p className="text-xs">No featured series yet.</p>
+            <p className="text-[10px] mt-1">Open a series and click "Mark as Featured" to add it here.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {orderedGroups.map((g, idx) => (
+              <div key={g.title}
+                draggable
+                onDragStart={e => { setDraggedTitle(g.title); e.dataTransfer.effectAllowed = 'move'; }}
+                onDragOver={e => { if (draggedTitle && draggedTitle !== g.title) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }}
+                onDrop={e => { e.preventDefault(); handleDrop(g.title); }}
+                onDragEnd={() => setDraggedTitle(null)}
+                className={`flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/10 cursor-grab active:cursor-grabbing transition-opacity ${draggedTitle === g.title ? 'opacity-40' : ''}`}>
+                <GripVertical className="w-4 h-4 text-white/30 shrink-0" />
+                <span className="text-yellow-400 font-black text-sm w-5 text-center shrink-0">{idx + 1}</span>
+                <div className="w-12 h-16 rounded overflow-hidden bg-black/40 shrink-0 flex items-center justify-center">
+                  {g.thumbnail ? <img src={g.thumbnail} alt={g.title} className="w-full h-full object-cover" />
+                    : <Film className="w-4 h-4 text-white/20" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-bold truncate">{g.title}</p>
+                  <p className="text-white/40 text-[10px]">{g.items.length} ep{g.items.length > 1 ? 's' : ''} · {g.totalViews} views</p>
+                </div>
+                <button onClick={() => onUnfeature(g)}
+                  className="p-1.5 rounded-full hover:bg-red-500/20 text-white/40 hover:text-red-400 shrink-0"
+                  title="Remove from Featured">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="flex gap-2 pt-2 border-t border-white/5">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 border-white/10 text-white/70">
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={orderedGroups.length === 0}
+            className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold gap-1.5">
+            <Check className="w-4 h-4" /> Save Order
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /* ─── Main Component ─── */
 export default function ShadowFlix() {
   const { user } = useAuth();
@@ -669,6 +830,8 @@ export default function ShadowFlix() {
   const [uploadProgress, setUploadProgress] = useState<string>('');
   const [uploadMode, setUploadMode] = useState<'new' | 'existing'>('new');
   const [selectedExistingSeries, setSelectedExistingSeries] = useState<string | null>(null);
+  const [showFeaturedManager, setShowFeaturedManager] = useState(false);
+  const [continueWatchingTick, setContinueWatchingTick] = useState(0);
 
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -888,6 +1051,25 @@ export default function ShadowFlix() {
     }
   };
 
+  // Reorder featured series — assigns sort_order to ALL items in each series
+  const handleReorderFeatured = async (orderedTitles: string[]) => {
+    // Build update list: for each series title, find all items, assign series-level sort_order
+    const updates: { id: string; sort_order: number }[] = [];
+    orderedTitles.forEach((title, idx) => {
+      const groupItems = items.filter(i => i.title.trim().toLowerCase() === title.toLowerCase());
+      groupItems.forEach(it => updates.push({ id: it.id, sort_order: idx }));
+    });
+    setItems(prev => {
+      const m = new Map(updates.map(u => [u.id, u.sort_order]));
+      return prev.map(i => m.has(i.id) ? { ...i, sort_order: m.get(i.id)! } : i);
+    });
+    const results = await Promise.all(updates.map(u =>
+      supabase.from('shadow_flix_content').update({ sort_order: u.sort_order }).eq('id', u.id)
+    ));
+    if (results.find(r => r.error)) { toast.error('Failed to save featured order'); fetchItems(); }
+    else toast.success('Featured order updated ⭐');
+  };
+
   const seriesGroups = useMemo<SeriesGroup[]>(() => {
     const map = new Map<string, ShadowFlixItem[]>();
     items.forEach(item => {
@@ -941,6 +1123,28 @@ export default function ShadowFlix() {
   const featuredGroups = useMemo(() =>
     seriesGroups.filter(g => g.isFeatured).slice(0, 6),
   [seriesGroups]);
+
+  // Continue Watching: build from localStorage map intersected with current series
+  const continueWatching = useMemo(() => {
+    void continueWatchingTick;
+    const map = getContinueWatchingMap();
+    return Object.values(map)
+      .map(entry => {
+        const group = seriesGroups.find(g => g.title.toLowerCase() === entry.seriesTitle.toLowerCase());
+        const episode = group?.items.find(i => i.id === entry.episodeId);
+        if (!group || !episode) return null;
+        const pct = entry.duration ? Math.min(100, (entry.position / entry.duration) * 100) : 0;
+        return { entry, group, episode, pct };
+      })
+      .filter((x): x is NonNullable<typeof x> => !!x)
+      .sort((a, b) => b.entry.updatedAt - a.entry.updatedAt)
+      .slice(0, 8);
+  }, [seriesGroups, continueWatchingTick]);
+
+  // Refresh continue watching when player closes
+  useEffect(() => {
+    if (!playingItem) setContinueWatchingTick(t => t + 1);
+  }, [playingItem]);
 
   const availableGenres = useMemo(() => {
     const set = new Set<string>();
@@ -1015,6 +1219,12 @@ export default function ShadowFlix() {
           <h1 className="text-lg font-black text-white tracking-wider hidden sm:block">SHADOW<span className="text-red-500">FLIX</span></h1>
         </div>
         <div className="flex items-center gap-2">
+          {user && featuredGroups.length > 0 && (
+            <Button size="sm" variant="outline" onClick={() => setShowFeaturedManager(true)}
+              className="border-yellow-400/40 text-yellow-400 hover:bg-yellow-400/10 gap-1.5">
+              <Star className="w-4 h-4 fill-yellow-400" /> <span className="hidden sm:inline">Featured</span>
+            </Button>
+          )}
           {user && (
             <Button size="sm" onClick={() => { resetForm(); setShowUpload(true); }} className="bg-red-600 hover:bg-red-700 text-white gap-1.5">
               <Plus className="w-4 h-4" /> Upload
@@ -1066,6 +1276,48 @@ export default function ShadowFlix() {
                 onPlay={(g) => { const ep = g.items.find(i => i.video_url) || g.items[0]; if (ep) handlePlayWithEpisodes(ep, g.items); }}
                 onOpen={(g) => setSelectedSeries(g.title)}
               />
+            )}
+
+            {/* Continue Watching */}
+            {continueWatching.length > 0 && !searchQuery && selectedGenre === 'all' && (
+              <div>
+                <h2 className="text-white font-bold text-lg mb-3 flex items-center gap-2">
+                  <Play className="w-5 h-5 text-red-500" /> Continue Watching
+                </h2>
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+                  {continueWatching.map(({ entry, group, episode, pct }) => (
+                    <div key={entry.episodeId}
+                      className="shrink-0 w-44 sm:w-56 cursor-pointer group rounded-xl overflow-hidden"
+                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                      onClick={() => handlePlayWithEpisodes(episode, group.items)}>
+                      <div className="aspect-video relative bg-black">
+                        {(episode.thumbnail_url || group.thumbnail) ? (
+                          <img src={episode.thumbnail_url || group.thumbnail || ''} alt={group.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        ) : (
+                          <div className="w-full h-full bg-white/5 flex items-center justify-center"><Film className="w-8 h-8 text-white/20" /></div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-10 h-10 rounded-full bg-red-600/90 flex items-center justify-center">
+                            <Play className="w-4 h-4 text-white ml-0.5" />
+                          </div>
+                        </div>
+                        <div className="absolute bottom-1.5 left-2 right-2 text-white">
+                          <p className="text-[11px] font-bold truncate drop-shadow">{group.title}</p>
+                          <p className="text-[9px] text-white/70">
+                            {episode.season_number ? `S${episode.season_number}` : ''}{episode.episode_number ? ` · E${episode.episode_number}` : ''} · Resume {fmtResume(entry.position)}
+                          </p>
+                        </div>
+                        {/* Progress bar */}
+                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/60">
+                          <div className="h-full bg-red-500" style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
 
             {/* Recently Added Banner */}
@@ -1419,6 +1671,15 @@ export default function ShadowFlix() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Featured Series Management Dialog */}
+      <FeaturedManagerDialog
+        open={showFeaturedManager}
+        onOpenChange={setShowFeaturedManager}
+        groups={featuredGroups}
+        onReorder={handleReorderFeatured}
+        onUnfeature={handleToggleFeatured}
+      />
     </div>
   );
 }
