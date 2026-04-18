@@ -971,6 +971,8 @@ export default function ShadowFlix() {
     if (results.find(r => r.error)) { toast.error('Failed to save featured order'); fetchItems(); }
     else toast.success('Featured order updated ⭐');
   };
+
+  const seriesGroups = useMemo<SeriesGroup[]>(() => {
     const map = new Map<string, ShadowFlixItem[]>();
     items.forEach(item => {
       const key = item.title.trim().toLowerCase();
