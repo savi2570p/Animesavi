@@ -38,6 +38,7 @@ interface Season {
   title: string | null;
   anime_id: string;
   release_date: string | null;
+  is_upcoming?: boolean;
 }
 
 interface Episode {
