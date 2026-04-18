@@ -1026,7 +1026,27 @@ export default function ShadowFlix() {
     seriesGroups.filter(g => g.isFeatured).slice(0, 6),
   [seriesGroups]);
 
-  const availableGenres = useMemo(() => {
+  // Continue Watching: build from localStorage map intersected with current series
+  const continueWatching = useMemo(() => {
+    void continueWatchingTick;
+    const map = getContinueWatchingMap();
+    return Object.values(map)
+      .map(entry => {
+        const group = seriesGroups.find(g => g.title.toLowerCase() === entry.seriesTitle.toLowerCase());
+        const episode = group?.items.find(i => i.id === entry.episodeId);
+        if (!group || !episode) return null;
+        const pct = entry.duration ? Math.min(100, (entry.position / entry.duration) * 100) : 0;
+        return { entry, group, episode, pct };
+      })
+      .filter((x): x is NonNullable<typeof x> => !!x)
+      .sort((a, b) => b.entry.updatedAt - a.entry.updatedAt)
+      .slice(0, 8);
+  }, [seriesGroups, continueWatchingTick]);
+
+  // Refresh continue watching when player closes
+  useEffect(() => {
+    if (!playingItem) setContinueWatchingTick(t => t + 1);
+  }, [playingItem]);
     const set = new Set<string>();
     items.forEach(i => {
       if (i.genres && i.genres.length) i.genres.forEach(g => set.add(g));
