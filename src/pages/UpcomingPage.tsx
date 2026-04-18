@@ -147,6 +147,11 @@ export default function UpcomingPage() {
 
                   <h3 className="mt-2 text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
                     {anime.title}
+                    {anime.upcoming_season && (
+                      <span className="ml-1.5 text-xs text-orange-400 font-semibold">
+                        • Season {anime.upcoming_season}
+                      </span>
+                    )}
                   </h3>
                 </div>
               </AnimeCardContextMenu>
