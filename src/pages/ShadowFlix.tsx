@@ -87,7 +87,7 @@ function buildShadowFlixShareUrl(title: string, season?: number | null, episode?
   return `https://animesavi/lovable/app/shadowflix/${cleanName}, S${sn}E${ep} {AnimeSavi X Shadow}.mp4`;
 }
 
-/* ─── Continue Watching (localStorage) ─── */
+/* ─── Continue Watching (Supabase, per-user) ─── */
 interface ContinueWatchEntry {
   episodeId: string;
   seriesTitle: string;
@@ -95,28 +95,51 @@ interface ContinueWatchEntry {
   duration: number; // seconds
   updatedAt: number;
 }
-const CW_KEY = 'sf_continue_watching';
-function getContinueWatchingMap(): Record<string, ContinueWatchEntry> {
-  try { return JSON.parse(localStorage.getItem(CW_KEY) || '{}'); } catch { return {}; }
+
+async function fetchContinueWatchingForUser(userId: string): Promise<Record<string, ContinueWatchEntry>> {
+  const { data, error } = await supabase
+    .from('shadow_flix_continue_watching' as any)
+    .select('series_title, episode_id, position, duration, updated_at')
+    .eq('user_id', userId);
+  if (error || !data) return {};
+  const map: Record<string, ContinueWatchEntry> = {};
+  (data as any[]).forEach((r) => {
+    map[r.series_title.toLowerCase()] = {
+      episodeId: r.episode_id,
+      seriesTitle: r.series_title,
+      position: Number(r.position) || 0,
+      duration: Number(r.duration) || 0,
+      updatedAt: new Date(r.updated_at).getTime(),
+    };
+  });
+  return map;
 }
-function saveContinueWatching(seriesTitle: string, episodeId: string, position: number, duration: number) {
-  if (!episodeId || position < 5 || (duration && position / duration > 0.95)) {
-    // remove if near the end
-    if (duration && position / duration > 0.95) {
-      const map = getContinueWatchingMap();
-      delete map[seriesTitle.toLowerCase()];
-      localStorage.setItem(CW_KEY, JSON.stringify(map));
-    }
+
+async function persistContinueWatching(userId: string, seriesTitle: string, episodeId: string, position: number, duration: number) {
+  if (!userId || !episodeId) return;
+  // Near the end → remove
+  if (duration && position / duration > 0.95) {
+    await supabase.from('shadow_flix_continue_watching' as any)
+      .delete().eq('user_id', userId).eq('series_title', seriesTitle);
     return;
   }
-  const map = getContinueWatchingMap();
-  map[seriesTitle.toLowerCase()] = { episodeId, seriesTitle, position, duration, updatedAt: Date.now() };
-  localStorage.setItem(CW_KEY, JSON.stringify(map));
+  if (position < 5) return;
+  await supabase.from('shadow_flix_continue_watching' as any).upsert({
+    user_id: userId,
+    series_title: seriesTitle,
+    episode_id: episodeId,
+    position,
+    duration,
+    updated_at: new Date().toISOString(),
+  } as any, { onConflict: 'user_id,series_title' });
 }
-function getContinueWatchingFor(seriesTitle: string): ContinueWatchEntry | null {
-  const map = getContinueWatchingMap();
-  return map[seriesTitle.toLowerCase()] || null;
+
+async function removeContinueWatching(userId: string, seriesTitle: string) {
+  if (!userId) return;
+  await supabase.from('shadow_flix_continue_watching' as any)
+    .delete().eq('user_id', userId).eq('series_title', seriesTitle);
 }
+
 function fmtResume(s: number): string {
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
