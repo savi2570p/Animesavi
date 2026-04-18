@@ -463,8 +463,8 @@ function AnimeDetailView({
     .filter(i => (i.season_number || 1) === selectedSeason);
   const firstEp = episodes[0] || group.items[0];
 
-  const shareText = `🎬 ${group.title}\n📺 ${group.items.length} Episode${group.items.length > 1 ? 's' : ''} • ${seasons.length} Season${seasons.length > 1 ? 's' : ''}\n📦 Codec: H.264 (AVC) | Quality: 720p HD\n📁 ${generateShareFilename(group.title, 1, 1)}\n\n🔗 Powered by AnimeSavi X Shadow-Toons`;
-  const handleCopyShare = async () => { await navigator.clipboard.writeText(shareText); setCopied(true); toast.success('Share info copied!'); setTimeout(() => setCopied(false), 2000); };
+  const shareText = buildShadowFlixShareUrl(group.title, firstEp?.season_number || 1, firstEp?.episode_number || 1);
+  const handleCopyShare = async () => { await navigator.clipboard.writeText(shareText); setCopied(true); toast.success('Shadow Flix link copied!'); setTimeout(() => setCopied(false), 2000); };
 
   return (
     <div className="space-y-6">
