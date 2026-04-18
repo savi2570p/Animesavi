@@ -1573,6 +1573,15 @@ export default function ShadowFlix() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Featured Series Management Dialog */}
+      <FeaturedManagerDialog
+        open={showFeaturedManager}
+        onOpenChange={setShowFeaturedManager}
+        groups={featuredGroups}
+        onReorder={handleReorderFeatured}
+        onUnfeature={handleToggleFeatured}
+      />
     </div>
   );
 }
