@@ -1047,6 +1047,8 @@ export default function ShadowFlix() {
   useEffect(() => {
     if (!playingItem) setContinueWatchingTick(t => t + 1);
   }, [playingItem]);
+
+  const availableGenres = useMemo(() => {
     const set = new Set<string>();
     items.forEach(i => {
       if (i.genres && i.genres.length) i.genres.forEach(g => set.add(g));
