@@ -1121,6 +1121,12 @@ export default function ShadowFlix() {
           <h1 className="text-lg font-black text-white tracking-wider hidden sm:block">SHADOW<span className="text-red-500">FLIX</span></h1>
         </div>
         <div className="flex items-center gap-2">
+          {user && featuredGroups.length > 0 && (
+            <Button size="sm" variant="outline" onClick={() => setShowFeaturedManager(true)}
+              className="border-yellow-400/40 text-yellow-400 hover:bg-yellow-400/10 gap-1.5">
+              <Star className="w-4 h-4 fill-yellow-400" /> <span className="hidden sm:inline">Featured</span>
+            </Button>
+          )}
           {user && (
             <Button size="sm" onClick={() => { resetForm(); setShowUpload(true); }} className="bg-red-600 hover:bg-red-700 text-white gap-1.5">
               <Plus className="w-4 h-4" /> Upload
