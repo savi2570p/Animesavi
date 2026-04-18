@@ -677,6 +677,17 @@ export default function UploadAnimeEdit() {
                             </PopoverContent>
                           </Popover>
                         </div>
+                        <div className="flex items-center justify-between gap-2 px-1 py-1.5 rounded-md bg-orange-500/5 border border-orange-500/20">
+                          <Label htmlFor={`upcoming-${season.id}`} className="flex items-center gap-1.5 text-xs cursor-pointer">
+                            <CalendarClock className="h-3.5 w-3.5 text-orange-500" />
+                            Add to Upcoming
+                          </Label>
+                          <Switch
+                            id={`upcoming-${season.id}`}
+                            checked={!!season.is_upcoming}
+                            onCheckedChange={(checked) => handleToggleSeasonUpcoming(season.id, checked)}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
