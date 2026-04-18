@@ -953,7 +953,24 @@ export default function ShadowFlix() {
     }
   };
 
-  const seriesGroups = useMemo<SeriesGroup[]>(() => {
+  // Reorder featured series — assigns sort_order to ALL items in each series
+  const handleReorderFeatured = async (orderedTitles: string[]) => {
+    // Build update list: for each series title, find all items, assign series-level sort_order
+    const updates: { id: string; sort_order: number }[] = [];
+    orderedTitles.forEach((title, idx) => {
+      const groupItems = items.filter(i => i.title.trim().toLowerCase() === title.toLowerCase());
+      groupItems.forEach(it => updates.push({ id: it.id, sort_order: idx }));
+    });
+    setItems(prev => {
+      const m = new Map(updates.map(u => [u.id, u.sort_order]));
+      return prev.map(i => m.has(i.id) ? { ...i, sort_order: m.get(i.id)! } : i);
+    });
+    const results = await Promise.all(updates.map(u =>
+      supabase.from('shadow_flix_content').update({ sort_order: u.sort_order }).eq('id', u.id)
+    ));
+    if (results.find(r => r.error)) { toast.error('Failed to save featured order'); fetchItems(); }
+    else toast.success('Featured order updated ⭐');
+  };
     const map = new Map<string, ShadowFlixItem[]>();
     items.forEach(item => {
       const key = item.title.trim().toLowerCase();
