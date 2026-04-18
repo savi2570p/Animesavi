@@ -87,7 +87,7 @@ function buildShadowFlixShareUrl(title: string, season?: number | null, episode?
   return `https://animesavi/lovable/app/shadowflix/${cleanName}, S${sn}E${ep} {AnimeSavi X Shadow}.mp4`;
 }
 
-/* ─── Continue Watching (localStorage) ─── */
+/* ─── Continue Watching (Supabase, per-user) ─── */
 interface ContinueWatchEntry {
   episodeId: string;
   seriesTitle: string;
@@ -95,28 +95,51 @@ interface ContinueWatchEntry {
   duration: number; // seconds
   updatedAt: number;
 }
-const CW_KEY = 'sf_continue_watching';
-function getContinueWatchingMap(): Record<string, ContinueWatchEntry> {
-  try { return JSON.parse(localStorage.getItem(CW_KEY) || '{}'); } catch { return {}; }
+
+async function fetchContinueWatchingForUser(userId: string): Promise<Record<string, ContinueWatchEntry>> {
+  const { data, error } = await supabase
+    .from('shadow_flix_continue_watching' as any)
+    .select('series_title, episode_id, position, duration, updated_at')
+    .eq('user_id', userId);
+  if (error || !data) return {};
+  const map: Record<string, ContinueWatchEntry> = {};
+  (data as any[]).forEach((r) => {
+    map[r.series_title.toLowerCase()] = {
+      episodeId: r.episode_id,
+      seriesTitle: r.series_title,
+      position: Number(r.position) || 0,
+      duration: Number(r.duration) || 0,
+      updatedAt: new Date(r.updated_at).getTime(),
+    };
+  });
+  return map;
 }
-function saveContinueWatching(seriesTitle: string, episodeId: string, position: number, duration: number) {
-  if (!episodeId || position < 5 || (duration && position / duration > 0.95)) {
-    // remove if near the end
-    if (duration && position / duration > 0.95) {
-      const map = getContinueWatchingMap();
-      delete map[seriesTitle.toLowerCase()];
-      localStorage.setItem(CW_KEY, JSON.stringify(map));
-    }
+
+async function persistContinueWatching(userId: string, seriesTitle: string, episodeId: string, position: number, duration: number) {
+  if (!userId || !episodeId) return;
+  // Near the end → remove
+  if (duration && position / duration > 0.95) {
+    await supabase.from('shadow_flix_continue_watching' as any)
+      .delete().eq('user_id', userId).eq('series_title', seriesTitle);
     return;
   }
-  const map = getContinueWatchingMap();
-  map[seriesTitle.toLowerCase()] = { episodeId, seriesTitle, position, duration, updatedAt: Date.now() };
-  localStorage.setItem(CW_KEY, JSON.stringify(map));
+  if (position < 5) return;
+  await supabase.from('shadow_flix_continue_watching' as any).upsert({
+    user_id: userId,
+    series_title: seriesTitle,
+    episode_id: episodeId,
+    position,
+    duration,
+    updated_at: new Date().toISOString(),
+  } as any, { onConflict: 'user_id,series_title' });
 }
-function getContinueWatchingFor(seriesTitle: string): ContinueWatchEntry | null {
-  const map = getContinueWatchingMap();
-  return map[seriesTitle.toLowerCase()] || null;
+
+async function removeContinueWatching(userId: string, seriesTitle: string) {
+  if (!userId) return;
+  await supabase.from('shadow_flix_continue_watching' as any)
+    .delete().eq('user_id', userId).eq('series_title', seriesTitle);
 }
+
 function fmtResume(s: number): string {
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
@@ -138,13 +161,14 @@ function isEmbedUrl(url: string | null): boolean {
 
 /* ─── Custom Video Player ─── */
 function ShadowFlixPlayer({
-  item, onClose, allEpisodes, onChangeEpisode, seriesGroup
+  item, onClose, allEpisodes, onChangeEpisode, seriesGroup, userId,
 }: {
   item: ShadowFlixItem;
   onClose: () => void;
   allEpisodes?: ShadowFlixItem[];
   onChangeEpisode?: (ep: ShadowFlixItem) => void;
   seriesGroup?: SeriesGroup | null;
+  userId?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -200,23 +224,28 @@ function ShadowFlixPlayer({
   const handleCopyShare = async () => { await navigator.clipboard.writeText(shareText); setCopied(true); toast.success('Shadow Flix link copied!'); setTimeout(() => setCopied(false), 2000); };
   const fmt = (s: number) => `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
 
-  // Resume from continue-watching, save progress periodically
+  // Resume from continue-watching (DB), save progress periodically
   useEffect(() => {
-    if (isEmbed) return;
+    if (isEmbed || !userId) return;
     const v = videoRef.current;
     if (!v) return;
-    const entry = getContinueWatchingFor(item.title);
-    if (entry && entry.episodeId === item.id && entry.position > 5) {
-      const onLoaded = () => { try { v.currentTime = entry.position; } catch { /* */ } };
-      v.addEventListener('loadedmetadata', onLoaded, { once: true });
-    }
+    let cancelled = false;
+    (async () => {
+      const map = await fetchContinueWatchingForUser(userId);
+      const entry = map[item.title.toLowerCase()];
+      if (cancelled) return;
+      if (entry && entry.episodeId === item.id && entry.position > 5) {
+        const onLoaded = () => { try { v.currentTime = entry.position; } catch { /* */ } };
+        v.addEventListener('loadedmetadata', onLoaded, { once: true });
+      }
+    })();
     const interval = setInterval(() => {
       if (v.duration && !v.paused) {
-        saveContinueWatching(item.title, item.id, v.currentTime, v.duration);
+        persistContinueWatching(userId, item.title, item.id, v.currentTime, v.duration);
       }
     }, 5000);
-    return () => clearInterval(interval);
-  }, [item.id, item.title, isEmbed]);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [item.id, item.title, isEmbed, userId]);
 
   const seasons = allEpisodes ? [...new Set(allEpisodes.map(e => e.season_number || 1))].sort((a, b) => a - b) : [];
   const seasonEpisodes = allEpisodes?.filter(e => (e.season_number || 1) === selectedSeason)
@@ -1124,11 +1153,25 @@ export default function ShadowFlix() {
     seriesGroups.filter(g => g.isFeatured).slice(0, 6),
   [seriesGroups]);
 
-  // Continue Watching: build from localStorage map intersected with current series
+  // Continue Watching: fetched per-user from DB, intersected with current series
+  const [cwMap, setCwMap] = useState<Record<string, ContinueWatchEntry>>({});
+
+  const refreshContinueWatching = useCallback(async () => {
+    if (!user?.id) { setCwMap({}); return; }
+    const map = await fetchContinueWatchingForUser(user.id);
+    setCwMap(map);
+  }, [user?.id]);
+
+  useEffect(() => { refreshContinueWatching(); }, [refreshContinueWatching]);
+
+  // Refresh when player closes (so progress shows up)
+  useEffect(() => {
+    if (!playingItem) refreshContinueWatching();
+  }, [playingItem, refreshContinueWatching]);
+
   const continueWatching = useMemo(() => {
     void continueWatchingTick;
-    const map = getContinueWatchingMap();
-    return Object.values(map)
+    return Object.values(cwMap)
       .map(entry => {
         const group = seriesGroups.find(g => g.title.toLowerCase() === entry.seriesTitle.toLowerCase());
         const episode = group?.items.find(i => i.id === entry.episodeId);
@@ -1139,12 +1182,20 @@ export default function ShadowFlix() {
       .filter((x): x is NonNullable<typeof x> => !!x)
       .sort((a, b) => b.entry.updatedAt - a.entry.updatedAt)
       .slice(0, 8);
-  }, [seriesGroups, continueWatchingTick]);
+  }, [seriesGroups, cwMap, continueWatchingTick]);
 
-  // Refresh continue watching when player closes
-  useEffect(() => {
-    if (!playingItem) setContinueWatchingTick(t => t + 1);
-  }, [playingItem]);
+  const handleRemoveContinueWatching = async (e: React.MouseEvent, seriesTitle: string) => {
+    e.stopPropagation();
+    if (!user?.id) return;
+    await removeContinueWatching(user.id, seriesTitle);
+    setCwMap(prev => {
+      const next = { ...prev };
+      delete next[seriesTitle.toLowerCase()];
+      return next;
+    });
+    toast.success('Removed from Continue Watching');
+  };
+
 
   const availableGenres = useMemo(() => {
     const set = new Set<string>();
@@ -1204,6 +1255,7 @@ export default function ShadowFlix() {
         allEpisodes={playingEpisodes}
         onChangeEpisode={ep => setPlayingItem(ep)}
         seriesGroup={playingSeriesGroup}
+        userId={user?.id}
       />
     );
   }
@@ -1291,6 +1343,15 @@ export default function ShadowFlix() {
                       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
                       onClick={() => handlePlayWithEpisodes(episode, group.items)}>
                       <div className="aspect-video relative bg-black">
+                        {/* Remove from Continue Watching */}
+                        <button
+                          onClick={(e) => handleRemoveContinueWatching(e, group.title)}
+                          className="absolute top-1.5 right-1.5 z-10 p-1 rounded-full bg-black/70 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Remove from Continue Watching"
+                          aria-label="Remove from Continue Watching"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
                         {(episode.thumbnail_url || group.thumbnail) ? (
                           <img src={episode.thumbnail_url || group.thumbnail || ''} alt={group.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />

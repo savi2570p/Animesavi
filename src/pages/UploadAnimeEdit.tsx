@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { toast } from 'sonner';
-import { Plus, Trash2, Film, Tv, ArrowLeft, Save, CalendarIcon, Edit, Subtitles } from 'lucide-react';
+import { Plus, Trash2, Film, Tv, ArrowLeft, Save, CalendarIcon, Edit, Subtitles, CalendarClock } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { BatchEpisodeUpload } from '@/components/upload/BatchEpisodeUpload';
 import { format } from 'date-fns';
@@ -38,6 +39,7 @@ interface Season {
   title: string | null;
   anime_id: string;
   release_date: string | null;
+  is_upcoming?: boolean;
 }
 
 interface Episode {
@@ -243,6 +245,21 @@ export default function UploadAnimeEdit() {
     }
   };
 
+  const handleToggleSeasonUpcoming = async (seasonId: string, isUpcoming: boolean) => {
+    const { error } = await supabase
+      .from('seasons')
+      .update({ is_upcoming: isUpcoming } as any)
+      .eq('id', seasonId);
+
+    if (error) {
+      toast.error('Failed to update upcoming status');
+    } else {
+      toast.success(isUpcoming ? 'Added to Upcoming' : 'Removed from Upcoming');
+      setSeasons(seasons.map(s => 
+        s.id === seasonId ? { ...s, is_upcoming: isUpcoming } : s
+      ));
+    }
+  };
   const handleDeleteSeason = async (seasonId: string) => {
     if (!confirm('Delete this season and all its episodes?')) return;
 
@@ -659,6 +676,17 @@ export default function UploadAnimeEdit() {
                               />
                             </PopoverContent>
                           </Popover>
+                        </div>
+                        <div className="flex items-center justify-between gap-2 px-1 py-1.5 rounded-md bg-orange-500/5 border border-orange-500/20">
+                          <Label htmlFor={`upcoming-${season.id}`} className="flex items-center gap-1.5 text-xs cursor-pointer">
+                            <CalendarClock className="h-3.5 w-3.5 text-orange-500" />
+                            Add to Upcoming
+                          </Label>
+                          <Switch
+                            id={`upcoming-${season.id}`}
+                            checked={!!season.is_upcoming}
+                            onCheckedChange={(checked) => handleToggleSeasonUpcoming(season.id, checked)}
+                          />
                         </div>
                       </div>
                     ))}
