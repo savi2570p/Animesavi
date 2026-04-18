@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { toast } from 'sonner';
-import { Plus, Trash2, Film, Tv, ArrowLeft, Save, CalendarIcon, Edit, Subtitles } from 'lucide-react';
+import { Plus, Trash2, Film, Tv, ArrowLeft, Save, CalendarIcon, Edit, Subtitles, CalendarClock } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { BatchEpisodeUpload } from '@/components/upload/BatchEpisodeUpload';
 import { format } from 'date-fns';
@@ -244,6 +245,21 @@ export default function UploadAnimeEdit() {
     }
   };
 
+  const handleToggleSeasonUpcoming = async (seasonId: string, isUpcoming: boolean) => {
+    const { error } = await supabase
+      .from('seasons')
+      .update({ is_upcoming: isUpcoming } as any)
+      .eq('id', seasonId);
+
+    if (error) {
+      toast.error('Failed to update upcoming status');
+    } else {
+      toast.success(isUpcoming ? 'Added to Upcoming' : 'Removed from Upcoming');
+      setSeasons(seasons.map(s => 
+        s.id === seasonId ? { ...s, is_upcoming: isUpcoming } : s
+      ));
+    }
+  };
   const handleDeleteSeason = async (seasonId: string) => {
     if (!confirm('Delete this season and all its episodes?')) return;
 
