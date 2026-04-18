@@ -425,6 +425,7 @@ export type Database = {
           anime_id: string
           created_at: string
           id: string
+          is_upcoming: boolean
           release_date: string | null
           season_number: number
           title: string | null
@@ -433,6 +434,7 @@ export type Database = {
           anime_id: string
           created_at?: string
           id?: string
+          is_upcoming?: boolean
           release_date?: string | null
           season_number: number
           title?: string | null
@@ -441,6 +443,7 @@ export type Database = {
           anime_id?: string
           created_at?: string
           id?: string
+          is_upcoming?: boolean
           release_date?: string | null
           season_number?: number
           title?: string | null
@@ -513,6 +516,39 @@ export type Database = {
           updated_at?: string
           uploaded_by?: string
           video_url?: string | null
+        }
+        Relationships: []
+      }
+      shadow_flix_continue_watching: {
+        Row: {
+          created_at: string
+          duration: number
+          episode_id: string
+          id: string
+          position: number
+          series_title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration?: number
+          episode_id: string
+          id?: string
+          position?: number
+          series_title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration?: number
+          episode_id?: string
+          id?: string
+          position?: number
+          series_title?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
