@@ -16,6 +16,7 @@ interface UpcomingAnime {
   release_year: number | null;
   created_at: string;
   type: string | null;
+  upcoming_season?: number | null;
 }
 
 export default function UpcomingPage() {
@@ -29,19 +30,37 @@ export default function UpcomingPage() {
 
   const fetchUpcoming = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch anime explicitly marked as upcoming
+      const { data: upcomingAnime } = await supabase
         .from('anime')
         .select('id, title, cover_image, release_year, created_at, type')
         .eq('status', 'upcoming')
         .order('release_year', { ascending: true })
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching upcoming anime:', error);
-        setIsLoading(false);
-        return;
-      }
-      setAnimeList(data || []);
+      // Fetch seasons marked as upcoming, with parent anime info
+      const { data: upcomingSeasons } = await supabase
+        .from('seasons')
+        .select('id, season_number, anime_id, created_at, anime:anime_id(id, title, cover_image, release_year, type)')
+        .eq('is_upcoming', true as any)
+        .order('created_at', { ascending: false });
+
+      const merged: UpcomingAnime[] = [...(upcomingAnime || [])];
+
+      (upcomingSeasons || []).forEach((s: any) => {
+        if (!s.anime) return;
+        merged.push({
+          id: `${s.anime.id}-s${s.season_number}`,
+          title: s.anime.title,
+          cover_image: s.anime.cover_image,
+          release_year: s.anime.release_year,
+          created_at: s.created_at,
+          type: s.anime.type,
+          upcoming_season: s.season_number,
+        });
+      });
+
+      setAnimeList(merged);
     } catch (error) {
       console.error('Error:', error);
     } finally {
