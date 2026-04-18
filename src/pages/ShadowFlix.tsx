@@ -1180,6 +1180,48 @@ export default function ShadowFlix() {
               />
             )}
 
+            {/* Continue Watching */}
+            {continueWatching.length > 0 && !searchQuery && selectedGenre === 'all' && (
+              <div>
+                <h2 className="text-white font-bold text-lg mb-3 flex items-center gap-2">
+                  <Play className="w-5 h-5 text-red-500" /> Continue Watching
+                </h2>
+                <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+                  {continueWatching.map(({ entry, group, episode, pct }) => (
+                    <div key={entry.episodeId}
+                      className="shrink-0 w-44 sm:w-56 cursor-pointer group rounded-xl overflow-hidden"
+                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                      onClick={() => handlePlayWithEpisodes(episode, group.items)}>
+                      <div className="aspect-video relative bg-black">
+                        {(episode.thumbnail_url || group.thumbnail) ? (
+                          <img src={episode.thumbnail_url || group.thumbnail || ''} alt={group.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        ) : (
+                          <div className="w-full h-full bg-white/5 flex items-center justify-center"><Film className="w-8 h-8 text-white/20" /></div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-10 h-10 rounded-full bg-red-600/90 flex items-center justify-center">
+                            <Play className="w-4 h-4 text-white ml-0.5" />
+                          </div>
+                        </div>
+                        <div className="absolute bottom-1.5 left-2 right-2 text-white">
+                          <p className="text-[11px] font-bold truncate drop-shadow">{group.title}</p>
+                          <p className="text-[9px] text-white/70">
+                            {episode.season_number ? `S${episode.season_number}` : ''}{episode.episode_number ? ` · E${episode.episode_number}` : ''} · Resume {fmtResume(entry.position)}
+                          </p>
+                        </div>
+                        {/* Progress bar */}
+                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/60">
+                          <div className="h-full bg-red-500" style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Recently Added Banner */}
             {recentlyAdded.length > 0 && !searchQuery && selectedGenre === 'all' && (
               <div>
