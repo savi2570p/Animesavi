@@ -195,9 +195,28 @@ function ShadowFlixPlayer({
   const setSpeed = (rate: number) => { setPlaybackRate(rate); if (videoRef.current) videoRef.current.playbackRate = rate; setShowSettings(false); };
   const handleThemeChange = (t: typeof PLAYER_THEMES[0]) => { setTheme(t); savePlayerTheme(t); setShowThemePicker(false); };
 
-  const shareText = `🎬 ${item.title}${item.season_number ? ` S${item.season_number}` : ''}${item.episode_number ? ` EP${item.episode_number}` : ''}\n📦 Codec: H.264 (AVC)\n📺 Quality: 720p HD\n📁 ${generateShareFilename(item.title, item.season_number, item.episode_number)}\n\n🔗 Powered by AnimeSavi X Shadow-Toons`;
-  const handleCopyShare = async () => { await navigator.clipboard.writeText(shareText); setCopied(true); toast.success('Share info copied!'); setTimeout(() => setCopied(false), 2000); };
+  const shareUrl = buildShadowFlixShareUrl(item.title, item.season_number, item.episode_number);
+  const shareText = shareUrl;
+  const handleCopyShare = async () => { await navigator.clipboard.writeText(shareText); setCopied(true); toast.success('Shadow Flix link copied!'); setTimeout(() => setCopied(false), 2000); };
   const fmt = (s: number) => `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
+
+  // Resume from continue-watching, save progress periodically
+  useEffect(() => {
+    if (isEmbed) return;
+    const v = videoRef.current;
+    if (!v) return;
+    const entry = getContinueWatchingFor(item.title);
+    if (entry && entry.episodeId === item.id && entry.position > 5) {
+      const onLoaded = () => { try { v.currentTime = entry.position; } catch { /* */ } };
+      v.addEventListener('loadedmetadata', onLoaded, { once: true });
+    }
+    const interval = setInterval(() => {
+      if (v.duration && !v.paused) {
+        saveContinueWatching(item.title, item.id, v.currentTime, v.duration);
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [item.id, item.title, isEmbed]);
 
   const seasons = allEpisodes ? [...new Set(allEpisodes.map(e => e.season_number || 1))].sort((a, b) => a - b) : [];
   const seasonEpisodes = allEpisodes?.filter(e => (e.season_number || 1) === selectedSeason)
