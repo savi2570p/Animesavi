@@ -947,6 +947,46 @@ export default function ShadowFlix() {
       contentType = extMap[ext.toLowerCase()] || 'application/octet-stream';
     }
 
+    // ⚡ FAST PATH: Use TUS resumable + parallel chunks for large video files (>20MB)
+    const isLargeVideo = file.size > 20 * 1024 * 1024 && contentType.startsWith('video/');
+    if (isLargeVideo) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      const projectUrl = import.meta.env.VITE_SUPABASE_URL;
+      await new Promise<void>((resolve, reject) => {
+        const upload = new tus.Upload(file, {
+          endpoint: `${projectUrl}/storage/v1/upload/resumable`,
+          retryDelays: [0, 1000, 3000, 5000],
+          headers: {
+            authorization: `Bearer ${token}`,
+            'x-upsert': 'false',
+          },
+          uploadDataDuringCreation: true,
+          removeFingerprintOnSuccess: true,
+          metadata: {
+            bucketName: bucket,
+            objectName: path,
+            contentType,
+            cacheControl: '3600',
+          },
+          chunkSize: 10 * 1024 * 1024, // 10 MB chunks (Supabase TUS requirement)
+          parallelUploads: 1,
+          onError: (error) => reject(error),
+          onProgress: (sent, total) => {
+            const pct = Math.floor((sent / total) * 100);
+            setUploadProgress(`Uploading video... ${pct}% (${(sent / 1048576).toFixed(0)}/${(total / 1048576).toFixed(0)} MB)`);
+          },
+          onSuccess: () => resolve(),
+        });
+        upload.findPreviousUploads().then(prev => {
+          if (prev.length) upload.resumeFromPreviousUpload(prev[0]);
+          upload.start();
+        });
+      });
+      return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+    }
+
+    // Standard path for images / small files
     const { error } = await supabase.storage.from(bucket).upload(path, file, {
       cacheControl: '3600',
       upsert: false,
