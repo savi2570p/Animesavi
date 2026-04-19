@@ -9,6 +9,12 @@ import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
 import { AnimatedPage } from '@/components/layout/AnimatedPage';
 import { UpcomingCountdownDialog } from '@/components/home/UpcomingCountdownDialog';
 
+interface UpcomingSeasonInfo {
+  season_number: number;
+  release_date: string | null;
+  title?: string | null;
+}
+
 interface UpcomingAnime {
   id: string;
   title: string;
@@ -19,6 +25,7 @@ interface UpcomingAnime {
   description?: string | null;
   genres?: string[] | null;
   upcoming_seasons?: number[];
+  season_details?: UpcomingSeasonInfo[];
 }
 
 export default function UpcomingPage() {
@@ -40,25 +47,27 @@ export default function UpcomingPage() {
         .order('release_year', { ascending: true })
         .order('created_at', { ascending: false });
 
-      // Fetch seasons marked as upcoming, with parent anime info
+      // Fetch seasons marked as upcoming, with parent anime info + release_date
       const { data: upcomingSeasons } = await supabase
         .from('seasons')
-        .select('id, season_number, anime_id, created_at, anime:anime_id(id, title, cover_image, release_year, type, description, genres)')
+        .select('id, season_number, release_date, title, anime_id, created_at, anime:anime_id(id, title, cover_image, release_year, type, description, genres)')
         .eq('is_upcoming', true as any)
-        .order('created_at', { ascending: false });
+        .order('release_date', { ascending: true, nullsFirst: false });
 
       // Group by anime id so multiple upcoming seasons of same anime become one card
       const byAnimeId = new Map<string, UpcomingAnime>();
 
       (upcomingAnime || []).forEach((a: any) => {
-        byAnimeId.set(a.id, { ...a, upcoming_seasons: [] });
+        byAnimeId.set(a.id, { ...a, upcoming_seasons: [], season_details: [] });
       });
 
       (upcomingSeasons || []).forEach((s: any) => {
         if (!s.anime) return;
+        const detail: UpcomingSeasonInfo = { season_number: s.season_number, release_date: s.release_date || null, title: s.title };
         const existing = byAnimeId.get(s.anime.id);
         if (existing) {
           existing.upcoming_seasons = [...(existing.upcoming_seasons || []), s.season_number];
+          existing.season_details = [...(existing.season_details || []), detail];
         } else {
           byAnimeId.set(s.anime.id, {
             id: s.anime.id,
@@ -70,6 +79,7 @@ export default function UpcomingPage() {
             description: s.anime.description,
             genres: s.anime.genres,
             upcoming_seasons: [s.season_number],
+            season_details: [detail],
           });
         }
       });
