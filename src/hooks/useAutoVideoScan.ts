@@ -62,45 +62,60 @@ export function useAutoVideoScan() {
       setIsScanning(true);
       try {
         console.log('[AutoVideoScan] Starting background scan for unconverted videos...');
-        
+
         const { data: { session } } = await supabase.auth.getSession();
         const token = session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-        let response: Response;
-        try {
-          response = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/video-conversion?action=scan-existing`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-              },
-              body: JSON.stringify({}),
-            }
-          );
-        } catch {
-          // Network error (offline, CORS, etc.) — silently skip
-          console.log('[AutoVideoScan] Network unavailable, skipping scan');
-          return;
+
+        let offset = 0;
+        let totalCreated = 0;
+        let totalSkipped = 0;
+        let totalProcessed = 0;
+        const batchSize = 500;
+        const maxBatches = 20; // safety cap
+
+        for (let i = 0; i < maxBatches; i++) {
+          let response: Response;
+          try {
+            response = await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/video-conversion?action=scan-existing`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ offset, batchSize }),
+              }
+            );
+          } catch {
+            console.log('[AutoVideoScan] Network unavailable, skipping scan');
+            return;
+          }
+
+          const result = await response.json();
+          if (result.error) {
+            console.error('[AutoVideoScan] Scan error:', result.error);
+            return;
+          }
+
+          totalCreated += result.created || 0;
+          totalSkipped += result.skipped || 0;
+          totalProcessed += result.processed || 0;
+
+          if (!result.hasMore || result.nextOffset == null) break;
+          offset = result.nextOffset;
         }
 
-        const result = await response.json();
+        console.log(`[AutoVideoScan] Scan complete: ${totalCreated} new records created, ${totalSkipped} already existed`);
 
-        if (result.error) {
-          console.error('[AutoVideoScan] Scan error:', result.error);
-          return;
-        }
-
-        console.log(`[AutoVideoScan] Scan complete: ${result.created} new records created, ${result.skipped} already existed`);
-        
         setScanResult({
-          created: result.created || 0,
-          skipped: result.skipped || 0,
-          total: result.total || 0,
+          created: totalCreated,
+          skipped: totalSkipped,
+          total: totalProcessed,
         });
-        
+
         setHasScanned(true);
-        
+
         // Auto-start any pending conversions immediately
         await autoStartPending();
         
