@@ -7,6 +7,12 @@ import { CalendarClock, ChevronRight } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { UpcomingCountdownDialog } from '@/components/home/UpcomingCountdownDialog';
 
+interface UpcomingSeasonInfo {
+  season_number: number;
+  release_date: string | null;
+  title?: string | null;
+}
+
 interface UpcomingAnime {
   id: string;
   title: string;
@@ -14,6 +20,8 @@ interface UpcomingAnime {
   release_year: number | null;
   created_at: string;
   type: string | null;
+  upcoming_seasons?: number[];
+  season_details?: UpcomingSeasonInfo[];
 }
 
 export function ComingSoon() {
@@ -39,30 +47,39 @@ export function ComingSoon() {
         console.error('Error fetching upcoming anime:', error);
       }
 
-      // 2) Seasons explicitly marked as upcoming → show parent anime as upcoming
+      // 2) Seasons explicitly marked as upcoming → show parent anime as upcoming with season details
       const { data: upcomingSeasons } = await supabase
         .from('seasons')
-        .select('season_number, created_at, anime:anime_id(id, title, cover_image, release_year, type)')
+        .select('season_number, release_date, title, created_at, anime:anime_id(id, title, cover_image, release_year, type)')
         .eq('is_upcoming', true as any)
-        .order('created_at', { ascending: false })
-        .limit(8);
+        .order('release_date', { ascending: true, nullsFirst: false })
+        .limit(16);
 
-      const merged: UpcomingAnime[] = [...((animeData as any[]) || [])];
-      const seenIds = new Set(merged.map(a => a.id));
+      const merged: UpcomingAnime[] = ((animeData as any[]) || []).map(a => ({ ...a, season_details: [] }));
+      const byAnimeId = new Map<string, UpcomingAnime>();
+      merged.forEach(a => byAnimeId.set(a.id, a));
 
       ((upcomingSeasons as any[]) || []).forEach((s) => {
         if (!s.anime) return;
-        const compositeId = `${s.anime.id}-s${s.season_number}`;
-        if (seenIds.has(compositeId)) return;
-        seenIds.add(compositeId);
-        merged.push({
-          id: compositeId,
-          title: s.anime.title,
-          cover_image: s.anime.cover_image,
-          release_year: s.anime.release_year,
-          created_at: s.created_at,
-          type: s.anime.type,
-        });
+        const detail: UpcomingSeasonInfo = { season_number: s.season_number, release_date: s.release_date || null, title: s.title };
+        const existing = byAnimeId.get(s.anime.id);
+        if (existing) {
+          existing.upcoming_seasons = [...(existing.upcoming_seasons || []), s.season_number];
+          existing.season_details = [...(existing.season_details || []), detail];
+        } else {
+          const entry: UpcomingAnime = {
+            id: s.anime.id,
+            title: s.anime.title,
+            cover_image: s.anime.cover_image,
+            release_year: s.anime.release_year,
+            created_at: s.created_at,
+            type: s.anime.type,
+            upcoming_seasons: [s.season_number],
+            season_details: [detail],
+          };
+          byAnimeId.set(s.anime.id, entry);
+          merged.push(entry);
+        }
       });
 
       setAnimeList(merged.slice(0, 8));

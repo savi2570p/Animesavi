@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import * as tus from 'tus-js-client';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Lock, Upload, Pencil, Trash2, Play, Plus, X, Link, Image, Film,
   LogOut, Search, Pause, Maximize, Minimize, SkipForward, SkipBack,
   Settings, ChevronDown, ChevronLeft, TrendingUp, Eye, Share2, Copy, Check,
-  Palette, Monitor, List, Clock, Star, GripVertical, ChevronRight
+  Palette, Monitor, List, Clock, Star, GripVertical, ChevronRight, Radio
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -946,6 +947,46 @@ export default function ShadowFlix() {
       contentType = extMap[ext.toLowerCase()] || 'application/octet-stream';
     }
 
+    // ⚡ FAST PATH: Use TUS resumable + parallel chunks for large video files (>20MB)
+    const isLargeVideo = file.size > 20 * 1024 * 1024 && contentType.startsWith('video/');
+    if (isLargeVideo) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      const projectUrl = import.meta.env.VITE_SUPABASE_URL;
+      await new Promise<void>((resolve, reject) => {
+        const upload = new tus.Upload(file, {
+          endpoint: `${projectUrl}/storage/v1/upload/resumable`,
+          retryDelays: [0, 1000, 3000, 5000],
+          headers: {
+            authorization: `Bearer ${token}`,
+            'x-upsert': 'false',
+          },
+          uploadDataDuringCreation: true,
+          removeFingerprintOnSuccess: true,
+          metadata: {
+            bucketName: bucket,
+            objectName: path,
+            contentType,
+            cacheControl: '3600',
+          },
+          chunkSize: 10 * 1024 * 1024, // 10 MB chunks (Supabase TUS requirement)
+          parallelUploads: 1,
+          onError: (error) => reject(error),
+          onProgress: (sent, total) => {
+            const pct = Math.floor((sent / total) * 100);
+            setUploadProgress(`Uploading video... ${pct}% (${(sent / 1048576).toFixed(0)}/${(total / 1048576).toFixed(0)} MB)`);
+          },
+          onSuccess: () => resolve(),
+        });
+        upload.findPreviousUploads().then(prev => {
+          if (prev.length) upload.resumeFromPreviousUpload(prev[0]);
+          upload.start();
+        });
+      });
+      return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+    }
+
+    // Standard path for images / small files
     const { error } = await supabase.storage.from(bucket).upload(path, file, {
       cacheControl: '3600',
       upsert: false,
@@ -1161,6 +1202,7 @@ export default function ShadowFlix() {
 
   // Continue Watching: fetched per-user from DB, intersected with current series
   const [cwMap, setCwMap] = useState<Record<string, ContinueWatchEntry>>({});
+  const [cwLive, setCwLive] = useState(false);
 
   const refreshContinueWatching = useCallback(async () => {
     if (!user?.id) { setCwMap({}); return; }
@@ -1177,7 +1219,7 @@ export default function ShadowFlix() {
 
   // Realtime: live-sync Continue Watching across devices
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) { setCwLive(false); return; }
     const channel = supabase
       .channel(`sf_cw_${user.id}`)
       .on(
@@ -1185,8 +1227,10 @@ export default function ShadowFlix() {
         { event: '*', schema: 'public', table: 'shadow_flix_continue_watching', filter: `user_id=eq.${user.id}` },
         () => { refreshContinueWatching(); }
       )
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+      .subscribe((status) => {
+        setCwLive(status === 'SUBSCRIBED');
+      });
+    return () => { setCwLive(false); supabase.removeChannel(channel); };
   }, [user?.id, refreshContinueWatching]);
 
   const handleClearAllContinueWatching = async () => {
@@ -1364,6 +1408,15 @@ export default function ShadowFlix() {
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-white font-bold text-lg flex items-center gap-2">
                     <Play className="w-5 h-5 text-red-500" /> Continue Watching
+                    {cwLive && (
+                      <span
+                        title="Live cross-device sync active"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                      >
+                        <Radio className="w-2.5 h-2.5 animate-pulse" />
+                        Live
+                      </span>
+                    )}
                   </h2>
                   <Button
                     size="sm"
