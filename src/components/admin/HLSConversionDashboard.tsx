@@ -166,25 +166,37 @@ export function HLSConversionDashboard() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/video-conversion?action=scan-existing`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({}),
-        }
-      );
 
-      const result = await response.json();
+      let offset = 0;
+      let totalCreated = 0;
+      let totalSkipped = 0;
+      let totalRequeued = 0;
+      const batchSize = 500;
 
-      if (result.error) {
-        throw new Error(result.error);
+      while (true) {
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/video-conversion?action=scan-existing`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ offset, batchSize }),
+          }
+        );
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+
+        totalCreated += result.created || 0;
+        totalSkipped += result.skipped || 0;
+        totalRequeued += result.requeued || 0;
+
+        if (!result.hasMore || result.nextOffset == null) break;
+        offset = result.nextOffset;
       }
 
-      toast.success(`Scan complete: ${result.created} new records created, ${result.skipped} already existed`);
+      toast.success(`Scan complete: ${totalCreated} new, ${totalRequeued} requeued, ${totalSkipped} skipped`);
       fetchData();
     } catch (error) {
       console.error('Error scanning videos:', error);

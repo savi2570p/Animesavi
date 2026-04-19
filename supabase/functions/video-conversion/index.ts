@@ -261,54 +261,99 @@ Deno.serve(async (req) => {
       const body = await req.json();
 
       if (action === 'scan-existing') {
-        console.log('Starting smart scan of existing episodes...');
+        console.log('Starting smart scan of existing episodes (batched)...');
+        const batchSize = Math.max(1, Math.min(2000, Number(body?.batchSize) || 500));
+        const offset = Math.max(0, Number(body?.offset) || 0);
+
+        // Fetch a single page of episodes
         const { data: episodes, error: fetchError } = await supabaseClient
-          .from('episodes').select('id, video_url').not('video_url', 'is', null);
+          .from('episodes')
+          .select('id, video_url')
+          .not('video_url', 'is', null)
+          .order('created_at', { ascending: false })
+          .range(offset, offset + batchSize - 1);
         if (fetchError) throw fetchError;
 
+        const epList = episodes || [];
         let created = 0, skipped = 0, requeued = 0;
-        for (const episode of episodes || []) {
-          if (!episode.video_url) continue;
-          const pattern = checkUrlPatternCompatibility(episode.video_url);
-          const requiresConversion = preliminaryNeedsConversion(episode.video_url);
 
-          const { data: existing } = await supabaseClient
-            .from('video_conversions').select('id, status, ios_compatible').eq('episode_id', episode.id).single();
+        if (epList.length > 0) {
+          // Bulk-fetch existing conversions for these episodes (1 query)
+          const ids = epList.map((e) => e.id);
+          const { data: existingRows } = await supabaseClient
+            .from('video_conversions')
+            .select('id, episode_id, status')
+            .in('episode_id', ids);
+          const existingMap = new Map<string, { id: string; status: string }>();
+          for (const row of existingRows || []) {
+            existingMap.set(row.episode_id, { id: row.id, status: row.status });
+          }
 
-          if (!existing) {
-            const status = requiresConversion ? 'pending' : 'pending';
-            const { error: insertError } = await supabaseClient
-              .from('video_conversions')
-              .insert({
+          const toInsert: any[] = [];
+          const toRequeue: string[] = [];
+          let requeueReason = '';
+
+          for (const episode of epList) {
+            if (!episode.video_url) continue;
+            const pattern = checkUrlPatternCompatibility(episode.video_url);
+            const requiresConversion = preliminaryNeedsConversion(episode.video_url);
+            const existing = existingMap.get(episode.id);
+
+            if (!existing) {
+              toInsert.push({
                 episode_id: episode.id,
                 original_url: episode.video_url,
                 original_path: episode.video_url,
                 needs_conversion: requiresConversion,
-                status,
+                status: 'pending',
                 conversion_stage: 'queued',
               });
-            if (!insertError) created++;
-          } else if (pattern.isMalformed && existing.status !== 'completed') {
-            const { error: updateError } = await supabaseClient
+            } else if (pattern.isMalformed && existing.status !== 'completed') {
+              toRequeue.push(existing.id);
+              requeueReason = `Malformed container: ${pattern.detectedContainer}`;
+            } else {
+              skipped++;
+            }
+          }
+
+          // Bulk insert new records
+          if (toInsert.length > 0) {
+            const { error: insertError, count } = await supabaseClient
+              .from('video_conversions')
+              .insert(toInsert, { count: 'exact' });
+            if (!insertError) created = count ?? toInsert.length;
+            else console.error('Bulk insert error:', insertError);
+          }
+
+          // Bulk requeue
+          if (toRequeue.length > 0) {
+            const { error: updateError, count } = await supabaseClient
               .from('video_conversions')
               .update({
                 status: 'pending',
                 needs_conversion: true,
-                error_message: `Malformed container: ${pattern.detectedContainer}`,
+                error_message: requeueReason,
                 conversion_started_at: null,
                 conversion_completed_at: null,
                 conversion_stage: 'queued',
-              })
-              .eq('id', existing.id);
-            if (!updateError) requeued++;
-          } else {
-            skipped++;
+              }, { count: 'exact' })
+              .in('id', toRequeue);
+            if (!updateError) requeued = count ?? toRequeue.length;
+            else console.error('Bulk requeue error:', updateError);
           }
         }
 
-        console.log(`Smart scan complete: created=${created}, requeued=${requeued}, skipped=${skipped}`);
+        const hasMore = epList.length === batchSize;
+        console.log(`Smart scan batch done: offset=${offset} size=${epList.length} created=${created} requeued=${requeued} skipped=${skipped} hasMore=${hasMore}`);
         return new Response(
-          JSON.stringify({ message: 'Smart scan completed', created, requeued, skipped, total: episodes?.length || 0 }),
+          JSON.stringify({
+            message: 'Smart scan batch completed',
+            created, requeued, skipped,
+            processed: epList.length,
+            offset,
+            nextOffset: hasMore ? offset + batchSize : null,
+            hasMore,
+          }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
