@@ -1202,6 +1202,7 @@ export default function ShadowFlix() {
 
   // Continue Watching: fetched per-user from DB, intersected with current series
   const [cwMap, setCwMap] = useState<Record<string, ContinueWatchEntry>>({});
+  const [cwLive, setCwLive] = useState(false);
 
   const refreshContinueWatching = useCallback(async () => {
     if (!user?.id) { setCwMap({}); return; }
@@ -1218,7 +1219,7 @@ export default function ShadowFlix() {
 
   // Realtime: live-sync Continue Watching across devices
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) { setCwLive(false); return; }
     const channel = supabase
       .channel(`sf_cw_${user.id}`)
       .on(
@@ -1226,8 +1227,10 @@ export default function ShadowFlix() {
         { event: '*', schema: 'public', table: 'shadow_flix_continue_watching', filter: `user_id=eq.${user.id}` },
         () => { refreshContinueWatching(); }
       )
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+      .subscribe((status) => {
+        setCwLive(status === 'SUBSCRIBED');
+      });
+    return () => { setCwLive(false); supabase.removeChannel(channel); };
   }, [user?.id, refreshContinueWatching]);
 
   const handleClearAllContinueWatching = async () => {
@@ -1405,6 +1408,15 @@ export default function ShadowFlix() {
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-white font-bold text-lg flex items-center gap-2">
                     <Play className="w-5 h-5 text-red-500" /> Continue Watching
+                    {cwLive && (
+                      <span
+                        title="Live cross-device sync active"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                      >
+                        <Radio className="w-2.5 h-2.5 animate-pulse" />
+                        Live
+                      </span>
+                    )}
                   </h2>
                   <Button
                     size="sm"
