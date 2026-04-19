@@ -262,10 +262,55 @@ function ShadowFlixPlayer({
   const seasonEpisodes = allEpisodes?.filter(e => (e.season_number || 1) === selectedSeason)
     .sort((a, b) => (a.episode_number || 0) - (b.episode_number || 0)) || [];
 
+  // ⌨️ Keyboard shortcuts (works for both direct + embed modes)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const v = videoRef.current;
+      switch (e.key.toLowerCase()) {
+        case ' ': case 'k':
+          if (!isEmbed && v) { e.preventDefault(); togglePlay(); }
+          break;
+        case 'arrowright': case 'l':
+          if (!isEmbed && v) { e.preventDefault(); skip(10); resetHideTimer(); }
+          break;
+        case 'arrowleft': case 'j':
+          if (!isEmbed && v) { e.preventDefault(); skip(-10); resetHideTimer(); }
+          break;
+        case 'f':
+          e.preventDefault(); toggleFullscreen();
+          break;
+        case 'm':
+          if (!isEmbed && v) { e.preventDefault(); v.muted = !v.muted; }
+          break;
+        case 'arrowup':
+          if (!isEmbed && v) { e.preventDefault(); v.volume = Math.min(1, v.volume + 0.1); }
+          break;
+        case 'arrowdown':
+          if (!isEmbed && v) { e.preventDefault(); v.volume = Math.max(0, v.volume - 0.1); }
+          break;
+        case 'escape':
+          if (document.fullscreenElement) { document.exitFullscreen?.(); setIsFullscreen(false); }
+          break;
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEmbed]);
+
+  // Sync fullscreen state on browser-driven exit (Esc)
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+
   return (
-    <div ref={containerRef} className="min-h-screen flex flex-col" style={{ background: '#0a0a0a' }}>
-      {/* Player Section */}
-      <div className="relative w-full bg-black" style={{ aspectRatio: isFullscreen ? undefined : '16/9', height: isFullscreen ? '100vh' : undefined }}
+    <div className="min-h-screen flex flex-col" style={{ background: '#0a0a0a' }}>
+      {/* Player Section — fullscreen target is THIS wrapper only, not the whole page */}
+      <div ref={containerRef} className="relative w-full bg-black" style={{ aspectRatio: isFullscreen ? undefined : '16/9', height: isFullscreen ? '100vh' : undefined }}
         onMouseMove={resetHideTimer} onClick={resetHideTimer}>
         {isEmbed ? (
           <iframe src={item.video_url || ''} className="w-full h-full" allowFullScreen
@@ -348,7 +393,7 @@ function ShadowFlixPlayer({
                 </div>
                 <div className="flex items-center gap-2 relative">
                   <div className="relative">
-                    <button onClick={() => { setShowThemePicker(!showThemePicker); setShowSettings(false); }} className="text-white hover:opacity-80 p-1"><Palette className="w-5 h-5" /></button>
+                    <button onClick={() => { setShowThemePicker(!showThemePicker); setShowSettings(false); }} className="text-white hover:opacity-80 p-1" title="Customize player color"><Palette className="w-5 h-5" /></button>
                     {showThemePicker && (
                       <div className="absolute bottom-full right-0 mb-2 bg-[#1a1a1a] border border-white/10 rounded-lg p-2 min-w-[160px] shadow-xl" onClick={e => e.stopPropagation()}>
                         <p className="text-white/50 text-[10px] uppercase tracking-wider mb-1 px-2">Player Color</p>
@@ -373,6 +418,14 @@ function ShadowFlixPlayer({
                             {r === 1 ? 'Normal' : `${r}x`}
                           </button>
                         ))}
+                        <div className="border-t border-white/10 mt-2 pt-2 px-2">
+                          <p className="text-white/40 text-[9px] leading-relaxed">
+                            <span className="text-white/60 font-semibold">Shortcuts:</span><br />
+                            Space/K · Play/Pause<br />
+                            ←/→ · Skip 10s · F · Fullscreen<br />
+                            M · Mute · ↑/↓ · Volume
+                          </p>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -385,7 +438,7 @@ function ShadowFlixPlayer({
           </div>
         )}
 
-        {/* For embed: just a close and title bar */}
+        {/* For embed: title bar + Customize (color) + Fullscreen */}
         {isEmbed && (
           <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black/80 to-transparent flex items-center justify-between z-10">
             <div className="flex items-center gap-3">
@@ -393,6 +446,27 @@ function ShadowFlixPlayer({
               <h3 className="text-white font-bold text-sm">{item.title}
                 {item.season_number ? ` S${item.season_number}` : ''}{item.episode_number ? ` EP${item.episode_number}` : ''}
               </h3>
+            </div>
+            <div className="flex items-center gap-2 relative">
+              <div className="relative">
+                <button onClick={() => setShowThemePicker(!showThemePicker)} className="p-2 rounded-full hover:bg-white/10" title="Customize player color">
+                  <Palette className="w-4 h-4 text-white" />
+                </button>
+                {showThemePicker && (
+                  <div className="absolute top-full right-0 mt-2 bg-[#1a1a1a] border border-white/10 rounded-lg p-2 min-w-[160px] shadow-xl z-30" onClick={e => e.stopPropagation()}>
+                    <p className="text-white/50 text-[10px] uppercase tracking-wider mb-1 px-2">Player Color</p>
+                    {PLAYER_THEMES.map(t => (
+                      <button key={t.name} onClick={() => handleThemeChange(t)}
+                        className={`flex items-center gap-2 w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${theme.name === t.name ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
+                        <div className="w-3 h-3 rounded-full shrink-0" style={{ background: t.accent }} />{t.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button onClick={toggleFullscreen} className="p-2 rounded-full hover:bg-white/10" title="Fullscreen (F)">
+                {isFullscreen ? <Minimize className="w-4 h-4 text-white" /> : <Maximize className="w-4 h-4 text-white" />}
+              </button>
             </div>
           </div>
         )}
