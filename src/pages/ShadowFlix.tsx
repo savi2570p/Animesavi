@@ -418,7 +418,7 @@ function ShadowFlixPlayer({
             </div>
             <div className="mt-2 grid grid-cols-2 gap-1 text-xs text-white/40">
               <div><span className="text-white/20">Codec:</span> H.264</div>
-              <div><span className="text-white/20">Quality:</span> 720p HD</div>
+              <div><span className="text-white/20">Quality:</span> 1080p FHD</div>
               <div><span className="text-white/20">Format:</span> MP4</div>
               <div><span className="text-white/20">Source:</span> AnimeSavi X Shadow-Toons</div>
             </div>
