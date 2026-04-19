@@ -80,12 +80,16 @@ function generateShareFilename(title: string, season?: number | null, episode?: 
   return `${clean}${sn}${ep}_H264_720p_{AnimeSavi_X_Shadow-Toons}.mp4`;
 }
 
-/* Build the canonical Shadow Flix share URL */
+/* Build the canonical Shadow Flix share URL.
+   - Series link (no season/episode): https://animesavi.lovable.app/shadowflix/{Anime_Name}
+   - Episode link: https://animesavi.lovable.app/shadowflix/{Anime_Name}, S{n}E{n} */
 function buildShadowFlixShareUrl(title: string, season?: number | null, episode?: number | null) {
   const cleanName = title.replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '_');
+  const base = `https://animesavi.lovable.app/shadowflix/${cleanName}`;
+  if (season == null && episode == null) return base;
   const sn = season ?? 1;
   const ep = episode ?? 1;
-  return `https://animesavi/lovable/app/shadowflix/${cleanName}, S${sn}E${ep} {AnimeSavi X Shadow}.mp4`;
+  return `${base}, S${sn}E${ep}`;
 }
 
 /* ─── Continue Watching (Supabase, per-user) ─── */
