@@ -27,7 +27,8 @@ export function ComingSoon() {
 
   const fetchUpcomingAnime = async () => {
     try {
-      const { data, error } = await supabase
+      // 1) Anime explicitly marked as upcoming
+      const { data: animeData, error } = await supabase
         .from('anime')
         .select('id, title, cover_image, release_year, created_at, type')
         .eq('status', 'upcoming')
@@ -36,11 +37,35 @@ export function ComingSoon() {
 
       if (error) {
         console.error('Error fetching upcoming anime:', error);
-        setIsLoading(false);
-        return;
       }
 
-      setAnimeList(data || []);
+      // 2) Seasons explicitly marked as upcoming → show parent anime as upcoming
+      const { data: upcomingSeasons } = await supabase
+        .from('seasons')
+        .select('season_number, created_at, anime:anime_id(id, title, cover_image, release_year, type)')
+        .eq('is_upcoming', true as any)
+        .order('created_at', { ascending: false })
+        .limit(8);
+
+      const merged: UpcomingAnime[] = [...((animeData as any[]) || [])];
+      const seenIds = new Set(merged.map(a => a.id));
+
+      ((upcomingSeasons as any[]) || []).forEach((s) => {
+        if (!s.anime) return;
+        const compositeId = `${s.anime.id}-s${s.season_number}`;
+        if (seenIds.has(compositeId)) return;
+        seenIds.add(compositeId);
+        merged.push({
+          id: compositeId,
+          title: s.anime.title,
+          cover_image: s.anime.cover_image,
+          release_year: s.anime.release_year,
+          created_at: s.created_at,
+          type: s.anime.type,
+        });
+      });
+
+      setAnimeList(merged.slice(0, 8));
     } catch (error) {
       console.error('Error:', error);
     } finally {
