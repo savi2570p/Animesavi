@@ -973,8 +973,8 @@ export default function ShadowFlix() {
             contentType,
             cacheControl: '3600',
           },
-          chunkSize: 10 * 1024 * 1024, // 10 MB chunks (Supabase TUS requirement)
-          parallelUploads: 1,
+          chunkSize: 6 * 1024 * 1024, // 6 MB chunks (sweet spot for Supabase TUS throughput)
+          parallelUploads: 4, // ⚡ 4× parallel chunk uploads for faster speed
           onError: (error) => reject(error),
           onProgress: (sent, total) => {
             const pct = Math.floor((sent / total) * 100);
