@@ -129,6 +129,7 @@ export default function EmbedPlayer() {
   const gapSize = deviceInfo.isMobile ? 'gap-[6px]' : 'gap-2';
 
   // Fetch episode data (only if domain allowed)
+  const [resolvedAnimeId, setResolvedAnimeId] = useState<string | null>(null);
   useEffect(() => {
     if (domainAllowed !== true) return;
     const fetchEpisode = async () => {
@@ -146,6 +147,7 @@ export default function EmbedPlayer() {
         if (data.season_id) {
           const { data: season } = await supabase.from('seasons').select('id, season_number, anime_id').eq('id', data.season_id).single();
           if (season) {
+            setResolvedAnimeId(season.anime_id);
             const { data: allSeasons } = await supabase.from('seasons').select('id, season_number').eq('anime_id', season.anime_id).order('season_number');
             if (allSeasons) {
               const allEps: typeof allEpisodes = [];
@@ -165,6 +167,41 @@ export default function EmbedPlayer() {
     };
     fetchEpisode();
   }, [episodeId, domainAllowed]);
+
+  // 📝 Save watch history from embed player → shows up in main "/" Continue Watching
+  useEffect(() => {
+    if (!episodeId || !resolvedAnimeId) return;
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+      // Initial upsert (one row per user+anime)
+      await supabase.from('watch_history').upsert({
+        user_id: user.id,
+        anime_id: resolvedAnimeId,
+        episode_id: episodeId,
+        progress: 0,
+        completed: false,
+        watched_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,anime_id', ignoreDuplicates: false });
+      // Periodic progress sync (every 10s)
+      intervalId = setInterval(async () => {
+        const v = videoRef.current;
+        if (!v || !v.duration) return;
+        const pct = (v.currentTime / v.duration) * 100;
+        await supabase.from('watch_history').upsert({
+          user_id: user.id,
+          anime_id: resolvedAnimeId,
+          episode_id: episodeId,
+          progress: Math.floor(pct),
+          completed: pct >= 90,
+          watched_at: new Date().toISOString(),
+        }, { onConflict: 'user_id,anime_id', ignoreDuplicates: false });
+      }, 10000);
+    })();
+    return () => { cancelled = true; if (intervalId) clearInterval(intervalId); };
+  }, [episodeId, resolvedAnimeId]);
 
   // Video playback setup
   useEffect(() => {

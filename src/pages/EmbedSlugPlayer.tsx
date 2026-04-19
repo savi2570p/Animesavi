@@ -219,6 +219,40 @@ export default function EmbedSlugPlayer() {
     if (idx >= 0) setCurrentEpisodeIndex(idx);
   }, [allEpisodes]);
 
+  // 📝 Save watch history from slug embed player → main "/" Continue Watching
+  const currentEpisodeId = allEpisodes[currentEpisodeIndex]?.id;
+  useEffect(() => {
+    if (!currentEpisodeId || !resolvedAnimeId) return;
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+      await supabase.from('watch_history').upsert({
+        user_id: user.id,
+        anime_id: resolvedAnimeId,
+        episode_id: currentEpisodeId,
+        progress: 0,
+        completed: false,
+        watched_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,anime_id', ignoreDuplicates: false });
+      intervalId = setInterval(async () => {
+        const v = videoRef.current;
+        if (!v || !v.duration) return;
+        const pct = (v.currentTime / v.duration) * 100;
+        await supabase.from('watch_history').upsert({
+          user_id: user.id,
+          anime_id: resolvedAnimeId,
+          episode_id: currentEpisodeId,
+          progress: Math.floor(pct),
+          completed: pct >= 90,
+          watched_at: new Date().toISOString(),
+        }, { onConflict: 'user_id,anime_id', ignoreDuplicates: false });
+      }, 10000);
+    })();
+    return () => { cancelled = true; if (intervalId) clearInterval(intervalId); };
+  }, [currentEpisodeId, resolvedAnimeId]);
+
   // Keyboard shortcuts (Space, F, M)
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
