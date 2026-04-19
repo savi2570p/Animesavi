@@ -562,7 +562,7 @@ function AnimeDetailView({
               )}
               <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-white/40">
                 <div><span className="text-white/20">Codec:</span> H.264 (AVC)</div>
-                <div><span className="text-white/20">Quality:</span> 720p HD</div>
+                <div><span className="text-white/20">Quality:</span> 1080p FHD</div>
                 <div><span className="text-white/20">Format:</span> MP4</div>
                 <div><span className="text-white/20">Source:</span> AnimeSavi X Shadow-Toons</div>
               </div>
