@@ -1,6 +1,13 @@
-import { useState, useEffect } from 'react';
-import { CalendarClock, X, Tag, Film, Sparkles } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { CalendarClock, X, Tag, Film, Sparkles, Bell, BellRing } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+
+interface UpcomingSeasonInfo {
+  season_number: number;
+  release_date: string | null; // ISO date 'YYYY-MM-DD'
+  title?: string | null;
+}
 
 interface UpcomingAnime {
   id: string;
@@ -12,6 +19,8 @@ interface UpcomingAnime {
   description?: string | null;
   genres?: string[] | null;
   upcoming_seasons?: number[];
+  // Optional richer per-season info (preferred when present)
+  season_details?: UpcomingSeasonInfo[];
 }
 
 interface UpcomingCountdownDialogProps {
@@ -19,9 +28,15 @@ interface UpcomingCountdownDialogProps {
   onClose: () => void;
 }
 
-function getTargetDate(releaseYear: number | null): Date {
-  const year = releaseYear || new Date().getFullYear() + 1;
-  return new Date(year, 0, 1, 0, 0, 0);
+/** Pick the soonest release date from per-season info, else fall back to Jan 1 of release_year. */
+function getTargetDate(anime: UpcomingAnime): { date: Date; source: 'season' | 'year'; season?: UpcomingSeasonInfo } {
+  const withDate = (anime.season_details || []).filter(s => s.release_date);
+  if (withDate.length) {
+    const sorted = [...withDate].sort((a, b) => new Date(a.release_date!).getTime() - new Date(b.release_date!).getTime());
+    return { date: new Date(`${sorted[0].release_date}T00:00:00`), source: 'season', season: sorted[0] };
+  }
+  const year = anime.release_year || new Date().getFullYear() + 1;
+  return { date: new Date(year, 0, 1, 0, 0, 0), source: 'year' };
 }
 
 function getTimeRemaining(targetDate: Date) {
@@ -29,48 +44,86 @@ function getTimeRemaining(targetDate: Date) {
   const diff = targetDate.getTime() - now.getTime();
 
   if (diff <= 0) {
-    return { years: 0, months: 0, days: 0, hours: 0, minutes: 0, seconds: 0, expired: true };
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, expired: true };
   }
 
   const totalSeconds = Math.floor(diff / 1000);
-  const totalMinutes = Math.floor(totalSeconds / 60);
-  const totalHours = Math.floor(totalMinutes / 60);
-  const totalDays = Math.floor(totalHours / 24);
-
-  const years = Math.floor(totalDays / 365);
-  const remainingDaysAfterYears = totalDays % 365;
-  const months = Math.floor(remainingDaysAfterYears / 30);
-  const days = remainingDaysAfterYears % 30;
-  const hours = totalHours % 24;
-  const minutes = totalMinutes % 60;
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
 
-  return { years, months, days, hours, minutes, seconds, expired: false };
+  return { days, hours, minutes, seconds, expired: false };
+}
+
+const NOTIFY_KEY = 'upcoming_notify_subs';
+function getNotifySubs(): Record<string, number> {
+  try { return JSON.parse(localStorage.getItem(NOTIFY_KEY) || '{}'); } catch { return {}; }
+}
+function setNotifySubs(subs: Record<string, number>) {
+  localStorage.setItem(NOTIFY_KEY, JSON.stringify(subs));
 }
 
 export function UpcomingCountdownDialog({ anime, onClose }: UpcomingCountdownDialogProps) {
-  const [timeRemaining, setTimeRemaining] = useState(getTimeRemaining(new Date()));
+  const target = useMemo(() => (anime ? getTargetDate(anime) : null), [anime]);
+  const [timeRemaining, setTimeRemaining] = useState(() =>
+    target ? getTimeRemaining(target.date) : { days: 0, hours: 0, minutes: 0, seconds: 0, expired: false }
+  );
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
   useEffect(() => {
     if (!anime) return;
-
-    const targetDate = getTargetDate(anime.release_year);
-    setTimeRemaining(getTimeRemaining(targetDate));
-
-    const interval = setInterval(() => {
-      setTimeRemaining(getTimeRemaining(targetDate));
-    }, 1000);
-
-    return () => clearInterval(interval);
+    const subs = getNotifySubs();
+    setIsSubscribed(!!subs[anime.id]);
   }, [anime]);
 
-  if (!anime) return null;
+  useEffect(() => {
+    if (!target) return;
+    setTimeRemaining(getTimeRemaining(target.date));
+    const interval = setInterval(() => {
+      setTimeRemaining(getTimeRemaining(target.date));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [target]);
+
+  if (!anime || !target) return null;
 
   const t = timeRemaining;
   const seasons = anime.upcoming_seasons && anime.upcoming_seasons.length > 0
     ? anime.upcoming_seasons
     : null;
   const seasonChip = seasons ? seasons.map(n => `S${n}`).join(' · ') : null;
+
+  const releaseDateLabel = target.source === 'season'
+    ? target.date.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    : `Sometime in ${anime.release_year || target.date.getFullYear()}`;
+
+  const headlineSeason = target.source === 'season' && target.season ? target.season.season_number : (seasons?.[0] ?? null);
+
+  const handleNotify = async () => {
+    if (!('Notification' in window)) {
+      toast.error('Notifications not supported on this device');
+      return;
+    }
+    let perm = Notification.permission;
+    if (perm === 'default') perm = await Notification.requestPermission();
+    if (perm !== 'granted') {
+      toast.error('Enable notifications in browser settings to subscribe');
+      return;
+    }
+    const subs = getNotifySubs();
+    if (subs[anime.id]) {
+      delete subs[anime.id];
+      setNotifySubs(subs);
+      setIsSubscribed(false);
+      toast.success('Notification reminder removed');
+    } else {
+      subs[anime.id] = target.date.getTime();
+      setNotifySubs(subs);
+      setIsSubscribed(true);
+      toast.success(`We'll notify you when "${anime.title}" releases!`);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 overflow-y-auto">
@@ -111,6 +164,20 @@ export function UpcomingCountdownDialog({ anime, onClose }: UpcomingCountdownDia
             <h3 className="text-xl font-bold text-foreground leading-tight">{anime.title}</h3>
           </div>
 
+          {/* Headline: which season + when */}
+          <div className="mb-3 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+            <p className="text-orange-400 text-sm font-bold leading-tight">
+              {headlineSeason ? `Season ${headlineSeason} releasing` : 'Releasing'}
+              {target.source === 'season' ? ' on' : ''}
+            </p>
+            <p className="text-foreground text-base font-bold mt-0.5">{releaseDateLabel}</p>
+            {seasons && seasons.length > 1 && (
+              <p className="text-muted-foreground text-xs mt-1">
+                Multiple new seasons confirmed: {seasonChip}
+              </p>
+            )}
+          </div>
+
           {/* Quick meta row */}
           <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">
             {anime.release_year && (
@@ -143,46 +210,59 @@ export function UpcomingCountdownDialog({ anime, onClose }: UpcomingCountdownDia
               {anime.description}
             </p>
           ) : (
-            <p className="text-muted-foreground text-sm mb-4">
-              {seasons
-                ? `New ${seasons.length > 1 ? 'seasons' : 'season'} coming${anime.release_year ? ` in ${anime.release_year}` : ' soon'}.`
-                : `Anime episodes coming${anime.release_year ? ` from ${anime.release_year}` : ' soon'}.`}
+            <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
+              {headlineSeason
+                ? `Get ready — Season ${headlineSeason} of ${anime.title} is on the way${target.source === 'season' ? ` and lands on ${releaseDateLabel}` : ''}. Add it to your watchlist so you don't miss the premiere drop.`
+                : `${anime.title} is officially confirmed${target.source === 'season' ? ` for ${releaseDateLabel}` : ` for ${anime.release_year || 'a future date'}`}. Stay tuned for trailers, episode counts and the official streaming announcement.`}
             </p>
           )}
 
-          {/* Countdown */}
+          {/* Countdown DD:HH:MM:SS */}
           {t.expired ? (
             <div className="text-center py-3 mb-4 bg-primary/10 rounded-lg">
-              <p className="text-primary font-bold">Release period has started!</p>
-              <p className="text-muted-foreground text-xs mt-1">Episodes will be available soon.</p>
+              <p className="text-primary font-bold">It's release day! 🎉</p>
+              <p className="text-muted-foreground text-xs mt-1">Episodes should be available very soon.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-6 gap-1.5 mb-4">
-              {[
-                { label: 'YR', value: t.years },
-                { label: 'MO', value: t.months },
-                { label: 'DD', value: t.days },
-                { label: 'HH', value: t.hours },
-                { label: 'MM', value: t.minutes },
-                { label: 'SS', value: t.seconds },
-              ].map((item) => (
-                <div key={item.label} className="text-center">
-                  <div className="bg-muted rounded-lg py-2 px-1">
-                    <span className="text-lg font-mono font-bold text-foreground">
-                      {String(item.value).padStart(2, '0')}
+            <div className="mb-4">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2 text-center">
+                Live countdown
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { label: 'Days', value: t.days },
+                  { label: 'Hours', value: t.hours },
+                  { label: 'Minutes', value: t.minutes },
+                  { label: 'Seconds', value: t.seconds },
+                ].map((item) => (
+                  <div key={item.label} className="text-center">
+                    <div className="bg-muted rounded-lg py-3 px-1">
+                      <span className="text-2xl font-mono font-bold text-foreground tabular-nums">
+                        {String(item.value).padStart(2, '0')}
+                      </span>
+                    </div>
+                    <span className="text-[9px] text-muted-foreground font-medium mt-1 block uppercase tracking-wider">
+                      {item.label}
                     </span>
                   </div>
-                  <span className="text-[9px] text-muted-foreground font-medium mt-1 block uppercase tracking-wider">
-                    {item.label}
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
 
-          <Button onClick={onClose} className="w-full">
-            Got it
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleNotify}
+              variant={isSubscribed ? 'default' : 'outline'}
+              className="flex-1 gap-2"
+            >
+              {isSubscribed ? <BellRing className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+              {isSubscribed ? 'Notifying' : 'Notify me'}
+            </Button>
+            <Button onClick={onClose} variant="secondary" className="flex-1">
+              Got it
+            </Button>
+          </div>
         </div>
       </div>
     </div>
