@@ -503,7 +503,7 @@ function AnimeDetailView({
     .filter(i => (i.season_number || 1) === selectedSeason);
   const firstEp = episodes[0] || group.items[0];
 
-  const shareText = buildShadowFlixShareUrl(group.title, firstEp?.season_number || 1, firstEp?.episode_number || 1);
+  const shareText = buildShadowFlixShareUrl(group.title); // Series-level: no season/episode
   const handleCopyShare = async () => { await navigator.clipboard.writeText(shareText); setCopied(true); toast.success('Shadow Flix link copied!'); setTimeout(() => setCopied(false), 2000); };
 
   return (
