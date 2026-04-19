@@ -140,6 +140,12 @@ async function removeContinueWatching(userId: string, seriesTitle: string) {
     .delete().eq('user_id', userId).eq('series_title', seriesTitle);
 }
 
+async function clearAllContinueWatching(userId: string) {
+  if (!userId) return;
+  await supabase.from('shadow_flix_continue_watching' as any)
+    .delete().eq('user_id', userId);
+}
+
 function fmtResume(s: number): string {
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
@@ -1169,6 +1175,28 @@ export default function ShadowFlix() {
     if (!playingItem) refreshContinueWatching();
   }, [playingItem, refreshContinueWatching]);
 
+  // Realtime: live-sync Continue Watching across devices
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`sf_cw_${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'shadow_flix_continue_watching', filter: `user_id=eq.${user.id}` },
+        () => { refreshContinueWatching(); }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id, refreshContinueWatching]);
+
+  const handleClearAllContinueWatching = async () => {
+    if (!user?.id) return;
+    if (!window.confirm('Clear ALL Continue Watching entries? This cannot be undone.')) return;
+    await clearAllContinueWatching(user.id);
+    setCwMap({});
+    toast.success('Cleared all Continue Watching');
+  };
+
   const continueWatching = useMemo(() => {
     void continueWatchingTick;
     return Object.values(cwMap)
@@ -1333,9 +1361,19 @@ export default function ShadowFlix() {
             {/* Continue Watching */}
             {continueWatching.length > 0 && !searchQuery && selectedGenre === 'all' && (
               <div>
-                <h2 className="text-white font-bold text-lg mb-3 flex items-center gap-2">
-                  <Play className="w-5 h-5 text-red-500" /> Continue Watching
-                </h2>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-white font-bold text-lg flex items-center gap-2">
+                    <Play className="w-5 h-5 text-red-500" /> Continue Watching
+                  </h2>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleClearAllContinueWatching}
+                    className="text-white/50 hover:text-red-400 hover:bg-white/5 gap-1.5 h-8"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Clear all
+                  </Button>
+                </div>
                 <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
                   {continueWatching.map(({ entry, group, episode, pct }) => (
                     <div key={entry.episodeId}
