@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import * as tus from 'tus-js-client';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Lock, Upload, Pencil, Trash2, Play, Plus, X, Link, Image, Film,
   LogOut, Search, Pause, Maximize, Minimize, SkipForward, SkipBack,
   Settings, ChevronDown, ChevronLeft, TrendingUp, Eye, Share2, Copy, Check,
-  Palette, Monitor, List, Clock, Star, GripVertical, ChevronRight
+  Palette, Monitor, List, Clock, Star, GripVertical, ChevronRight, Radio
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
