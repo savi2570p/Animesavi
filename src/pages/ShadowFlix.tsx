@@ -80,7 +80,7 @@ function savePlayerTheme(theme: typeof PLAYER_THEMES[0]) {
 }
 
 async function fetchPlayerThemePreference(userId: string) {
-  const { data, error } = await supabase
+  const { data, error }: { data: { theme_key?: string | null } | null; error: any } = await supabase
     .from('shadow_flix_player_preferences' as any)
     .select('theme_key')
     .eq('user_id', userId)
@@ -225,6 +225,23 @@ function ShadowFlixPlayer({
 
   const isEmbed = isEmbedUrl(item.video_url);
 
+  useEffect(() => {
+    let cancelled = false;
+    if (!userId) return;
+
+    (async () => {
+      const preferredTheme = await fetchPlayerThemePreference(userId);
+      if (preferredTheme && !cancelled) {
+        setTheme(preferredTheme);
+        savePlayerTheme(preferredTheme);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
   useEffect(() => { incrementWatchCount(item.id); }, [item.id]);
 
   const resetHideTimer = useCallback(() => {
@@ -253,7 +270,14 @@ function ShadowFlixPlayer({
     if (videoRef.current) videoRef.current.currentTime = pct * duration;
   };
   const setSpeed = (rate: number) => { setPlaybackRate(rate); if (videoRef.current) videoRef.current.playbackRate = rate; setShowSettings(false); };
-  const handleThemeChange = (t: typeof PLAYER_THEMES[0]) => { setTheme(t); savePlayerTheme(t); setShowThemePicker(false); };
+  const handleThemeChange = async (t: typeof PLAYER_THEMES[0]) => {
+    setTheme(t);
+    savePlayerTheme(t);
+    if (userId) {
+      await persistPlayerThemePreference(userId, t);
+    }
+    setShowThemePicker(false);
+  };
 
   const shareUrl = buildShadowFlixShareUrl(item.title, item.season_number, item.episode_number);
   const shareText = shareUrl;
