@@ -13,7 +13,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Users, KeyRound, Search, Eye, EyeOff } from 'lucide-react';
+import { Users, KeyRound, Search, Eye, EyeOff, Crown } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface UserProfile {
   id: string;
