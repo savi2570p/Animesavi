@@ -232,6 +232,10 @@ export default function Upload() {
         uploader_id: user.id,
         is_crunchyroll: isCrunchyroll,
         is_muse: isMuse,
+        studio: studio.trim() || null,
+        total_episodes: totalEpisodes ? parseInt(totalEpisodes) : null,
+        source_material: sourceMaterial || null,
+        content_rating: contentRating || null,
       } as any)
       .select()
       .single();
