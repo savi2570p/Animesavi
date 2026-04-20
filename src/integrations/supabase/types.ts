@@ -552,6 +552,38 @@ export type Database = {
         }
         Relationships: []
       }
+      shadow_flix_player_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          theme_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          theme_key?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          theme_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shadow_flix_player_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shorts: {
         Row: {
           created_at: string
