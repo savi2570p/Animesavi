@@ -664,6 +664,66 @@ export default function Upload() {
                   </div>
                 </div>
 
+                {/* Richer metadata for hero detail panel */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="studio">Studio</Label>
+                    <Input
+                      id="studio"
+                      placeholder="e.g. MAPPA, Ufotable"
+                      value={studio}
+                      onChange={(e) => setStudio(e.target.value)}
+                      className="bg-muted/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="totalEpisodes">Total Episodes</Label>
+                    <Input
+                      id="totalEpisodes"
+                      type="number"
+                      placeholder="e.g. 12"
+                      value={totalEpisodes}
+                      onChange={(e) => setTotalEpisodes(e.target.value)}
+                      min="1"
+                      className="bg-muted/50"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label>Source Material</Label>
+                    <Select value={sourceMaterial} onValueChange={setSourceMaterial}>
+                      <SelectTrigger className="bg-muted/50">
+                        <SelectValue placeholder="Select source" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Manga">Manga</SelectItem>
+                        <SelectItem value="Light Novel">Light Novel</SelectItem>
+                        <SelectItem value="Web Novel">Web Novel</SelectItem>
+                        <SelectItem value="Manhwa">Manhwa</SelectItem>
+                        <SelectItem value="Original">Original</SelectItem>
+                        <SelectItem value="Game">Game</SelectItem>
+                        <SelectItem value="Visual Novel">Visual Novel</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Content Rating</Label>
+                    <Select value={contentRating} onValueChange={setContentRating}>
+                      <SelectTrigger className="bg-muted/50">
+                        <SelectValue placeholder="Select rating" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="G">G - All Ages</SelectItem>
+                        <SelectItem value="PG">PG - Children</SelectItem>
+                        <SelectItem value="PG-13">PG-13 - Teens</SelectItem>
+                        <SelectItem value="R">R - 17+</SelectItem>
+                        <SelectItem value="R+">R+ - Mild Nudity</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <Label>Genres</Label>
                   <div className="flex flex-wrap gap-2">
