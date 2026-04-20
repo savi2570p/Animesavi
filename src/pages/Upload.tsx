@@ -73,6 +73,10 @@ export default function Upload() {
   const [status, setStatus] = useState('ongoing');
   const [isCrunchyroll, setIsCrunchyroll] = useState(false);
   const [isMuse, setIsMuse] = useState(false);
+  const [studio, setStudio] = useState('');
+  const [totalEpisodes, setTotalEpisodes] = useState('');
+  const [sourceMaterial, setSourceMaterial] = useState('');
+  const [contentRating, setContentRating] = useState('');
 
   // Existing upload state
   const [selectedAnimeId, setSelectedAnimeId] = useState<string>('');
