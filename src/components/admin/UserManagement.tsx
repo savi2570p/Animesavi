@@ -24,6 +24,7 @@ interface UserProfile {
 }
 
 export function UserManagement() {
+  const { user: adminUser } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,6 +34,33 @@ export function UserManagement() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChanging, setIsChanging] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [grantingId, setGrantingId] = useState<string | null>(null);
+
+  const handleGrantTrial = async (target: UserProfile, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!adminUser) return;
+    setGrantingId(target.id);
+    try {
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { error } = await supabase
+        .from('admin_token_grants' as any)
+        .insert({
+          user_id: target.id,
+          granted_by: adminUser.id,
+          duration_hours: 720,
+          expires_at: expiresAt,
+        });
+      if (error) {
+        toast.error('Failed to grant trial', { description: error.message });
+      } else {
+        toast.success(`Token activated`, {
+          description: `${target.username || 'User'} now has 30-day free access. They'll see the welcome popup on next visit.`,
+        });
+      }
+    } finally {
+      setGrantingId(null);
+    }
+  };
 
   useEffect(() => {
     fetchUsers();
