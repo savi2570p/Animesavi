@@ -973,7 +973,7 @@ export default function ShadowFlix() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState<string>('all');
   const [selectedSeries, setSelectedSeries] = useState<string | null>(null);
-  const [playerTheme] = useState(getPlayerTheme);
+  const [playerTheme, setPlayerTheme] = useState(getPlayerTheme);
 
   // Form state
   const [formTitle, setFormTitle] = useState('');
@@ -997,16 +997,54 @@ export default function ShadowFlix() {
   const [selectedExistingSeries, setSelectedExistingSeries] = useState<string | null>(null);
   const [showFeaturedManager, setShowFeaturedManager] = useState(false);
   const [continueWatchingTick, setContinueWatchingTick] = useState(0);
+  const activeTusUploadRef = useRef<tus.Upload | null>(null);
+  const uploadCancelledRef = useRef(false);
+  const uploadStartedAtRef = useRef<number>(0);
 
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+
+  const cancelActiveUpload = useCallback(async () => {
+    uploadCancelledRef.current = true;
+    if (activeTusUploadRef.current) {
+      try {
+        await activeTusUploadRef.current.abort(true);
+      } catch {
+        /* noop */
+      }
+      activeTusUploadRef.current = null;
+    }
+    setUploading(false);
+    setUploadProgress('');
+  }, []);
 
   useEffect(() => {
     if (sessionStorage.getItem('shadowflix_unlocked') === 'true') setIsUnlocked(true);
   }, []);
 
   useEffect(() => { if (isUnlocked) fetchItems(); }, [isUnlocked]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!user?.id) return;
+    (async () => {
+      const preferredTheme = await fetchPlayerThemePreference(user.id);
+      if (preferredTheme && !cancelled) {
+        setPlayerTheme(preferredTheme);
+        savePlayerTheme(preferredTheme);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    return () => {
+      void cancelActiveUpload();
+    };
+  }, [cancelActiveUpload]);
 
   useEffect(() => {
     if (thumbnailFile) {
@@ -1053,6 +1091,7 @@ export default function ShadowFlix() {
   };
 
   const resetForm = () => {
+    void cancelActiveUpload();
     setFormTitle(''); setFormDescription(''); setFormThumbnailUrl(''); setFormBannerUrl('');
     setFormVideoUrl(''); setFormSeason('1');
     setFormEpisode(''); setFormGenres([]); setThumbnailFile(null); setBannerFile(null); setVideoFile(null);
@@ -1082,6 +1121,8 @@ export default function ShadowFlix() {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       const projectUrl = import.meta.env.VITE_SUPABASE_URL;
+      uploadCancelledRef.current = false;
+      uploadStartedAtRef.current = Date.now();
       await new Promise<void>((resolve, reject) => {
         const upload = new tus.Upload(file, {
           endpoint: `${projectUrl}/storage/v1/upload/resumable`,
@@ -1101,16 +1142,24 @@ export default function ShadowFlix() {
           chunkSize: 6 * 1024 * 1024, // 6 MB chunks (sweet spot for Supabase TUS throughput)
           parallelUploads: 4, // ⚡ 4× parallel chunk uploads for faster speed
           onError: (error) => reject(error),
+          onShouldRetry: () => !uploadCancelledRef.current,
           onProgress: (sent, total) => {
             const pct = Math.floor((sent / total) * 100);
-            setUploadProgress(`Uploading video... ${pct}% (${(sent / 1048576).toFixed(0)}/${(total / 1048576).toFixed(0)} MB)`);
+            const elapsedSeconds = Math.max((Date.now() - uploadStartedAtRef.current) / 1000, 1);
+            const speedMbps = (sent / 1048576) / elapsedSeconds;
+            const remainingMb = Math.max(total - sent, 0) / 1048576;
+            const etaSeconds = speedMbps > 0 ? Math.ceil(remainingMb / speedMbps) : 0;
+            const etaMinutes = Math.floor(etaSeconds / 60);
+            const etaRemainder = etaSeconds % 60;
+            setUploadProgress(`Uploading video... ${pct}% · ${speedMbps.toFixed(2)} MB/s · ETA ${etaMinutes}:${String(etaRemainder).padStart(2, '0')} (${(sent / 1048576).toFixed(0)}/${(total / 1048576).toFixed(0)} MB)`);
           },
-          onSuccess: () => resolve(),
+          onSuccess: () => {
+            activeTusUploadRef.current = null;
+            resolve();
+          },
         });
-        upload.findPreviousUploads().then(prev => {
-          if (prev.length) upload.resumeFromPreviousUpload(prev[0]);
-          upload.start();
-        });
+        activeTusUploadRef.current = upload;
+        upload.start();
       });
       return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
     }
