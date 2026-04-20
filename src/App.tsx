@@ -19,6 +19,7 @@ import { useBackgroundSync } from "@/hooks/useBackgroundSync";
 import { useAutoVideoScan } from "@/hooks/useAutoVideoScan";
 import { AccessBanner, fetchTokenAccessFromDB } from "@/components/AccessBanner";
 import { TokenExpiredGlobalPopup } from "@/components/TokenExpiredGlobalPopup";
+import { AdminTrialPopup } from "@/components/AdminTrialPopup";
 import { ReportButton } from "@/components/ReportButton";
 import { BanGuard } from "@/components/BanGuard";
 
