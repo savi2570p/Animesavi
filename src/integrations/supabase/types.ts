@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_token_grants: {
+        Row: {
+          acknowledged: boolean
+          created_at: string
+          duration_hours: number
+          expires_at: string
+          granted_at: string
+          granted_by: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged?: boolean
+          created_at?: string
+          duration_hours?: number
+          expires_at?: string
+          granted_at?: string
+          granted_by: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          acknowledged?: boolean
+          created_at?: string
+          duration_hours?: number
+          expires_at?: string
+          granted_at?: string
+          granted_by?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       allowed_short_uploaders: {
         Row: {
           created_at: string
@@ -53,6 +86,7 @@ export type Database = {
       anime: {
         Row: {
           banner_image: string | null
+          content_rating: string | null
           cover_image: string | null
           created_at: string
           description: string | null
@@ -64,8 +98,11 @@ export type Database = {
           like_count: number | null
           release_year: number | null
           schedule_day: number | null
+          source_material: string | null
           status: string | null
+          studio: string | null
           title: string
+          total_episodes: number | null
           trailer_url: string | null
           type: string | null
           updated_at: string
@@ -74,6 +111,7 @@ export type Database = {
         }
         Insert: {
           banner_image?: string | null
+          content_rating?: string | null
           cover_image?: string | null
           created_at?: string
           description?: string | null
@@ -85,8 +123,11 @@ export type Database = {
           like_count?: number | null
           release_year?: number | null
           schedule_day?: number | null
+          source_material?: string | null
           status?: string | null
+          studio?: string | null
           title: string
+          total_episodes?: number | null
           trailer_url?: string | null
           type?: string | null
           updated_at?: string
@@ -95,6 +136,7 @@ export type Database = {
         }
         Update: {
           banner_image?: string | null
+          content_rating?: string | null
           cover_image?: string | null
           created_at?: string
           description?: string | null
@@ -106,8 +148,11 @@ export type Database = {
           like_count?: number | null
           release_year?: number | null
           schedule_day?: number | null
+          source_material?: string | null
           status?: string | null
+          studio?: string | null
           title?: string
+          total_episodes?: number | null
           trailer_url?: string | null
           type?: string | null
           updated_at?: string

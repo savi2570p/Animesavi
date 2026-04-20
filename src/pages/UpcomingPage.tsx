@@ -19,11 +19,17 @@ interface UpcomingAnime {
   id: string;
   title: string;
   cover_image: string | null;
+  banner_image?: string | null;
   release_year: number | null;
   created_at: string;
   type: string | null;
+  status?: string | null;
   description?: string | null;
   genres?: string[] | null;
+  studio?: string | null;
+  total_episodes?: number | null;
+  source_material?: string | null;
+  content_rating?: string | null;
   upcoming_seasons?: number[];
   season_details?: UpcomingSeasonInfo[];
 }
@@ -42,7 +48,7 @@ export default function UpcomingPage() {
       // Fetch anime explicitly marked as upcoming
       const { data: upcomingAnime } = await supabase
         .from('anime')
-        .select('id, title, cover_image, release_year, created_at, type, description, genres')
+        .select('id, title, cover_image, banner_image, release_year, created_at, type, status, description, genres, studio, total_episodes, source_material, content_rating')
         .eq('status', 'upcoming')
         .order('release_year', { ascending: true })
         .order('created_at', { ascending: false });
@@ -50,7 +56,7 @@ export default function UpcomingPage() {
       // Fetch seasons marked as upcoming, with parent anime info + release_date
       const { data: upcomingSeasons } = await supabase
         .from('seasons')
-        .select('id, season_number, release_date, title, anime_id, created_at, anime:anime_id(id, title, cover_image, release_year, type, description, genres)')
+        .select('id, season_number, release_date, title, anime_id, created_at, anime:anime_id(id, title, cover_image, banner_image, release_year, type, status, description, genres, studio, total_episodes, source_material, content_rating)')
         .eq('is_upcoming', true as any)
         .order('release_date', { ascending: true, nullsFirst: false });
 
@@ -73,11 +79,17 @@ export default function UpcomingPage() {
             id: s.anime.id,
             title: s.anime.title,
             cover_image: s.anime.cover_image,
+            banner_image: s.anime.banner_image,
             release_year: s.anime.release_year,
             created_at: s.created_at,
             type: s.anime.type,
+            status: s.anime.status,
             description: s.anime.description,
             genres: s.anime.genres,
+            studio: s.anime.studio,
+            total_episodes: s.anime.total_episodes,
+            source_material: s.anime.source_material,
+            content_rating: s.anime.content_rating,
             upcoming_seasons: [s.season_number],
             season_details: [detail],
           });

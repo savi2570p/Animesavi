@@ -1729,7 +1729,18 @@ export default function ShadowFlix() {
                     <div key={g.title}
                       className="group relative rounded-xl overflow-hidden cursor-pointer transition-transform hover:scale-[1.03]"
                       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-                      onClick={() => setSelectedSeries(g.title)}>
+                      onClick={() => setSelectedSeries(g.title)}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        const firstEp = g.items[0];
+                        const embedUrl = firstEp
+                          ? `${window.location.origin}/embed/${firstEp.id}`
+                          : buildShadowFlixShareUrl(g.title);
+                        navigator.clipboard.writeText(embedUrl).then(() => {
+                          toast.success('Embed link copied', { description: embedUrl });
+                        }).catch(() => toast.error('Failed to copy'));
+                      }}
+                      title="Right-click to copy embed link">
                       <div className="aspect-[2/3] relative">
                         {g.thumbnail ? <img src={g.thumbnail} alt={g.title} className="w-full h-full object-cover" />
                           : <div className="w-full h-full flex items-center justify-center bg-white/5"><Film className="w-8 h-8 text-white/20" /></div>}
