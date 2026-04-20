@@ -28,6 +28,12 @@ const PLAYER_THEMES = [
   { name: 'Hot Pink', accent: '#ec4899', bg: 'rgba(236,72,153,0.1)' },
 ];
 
+const PLAYER_THEME_MAP = new Map(PLAYER_THEMES.map((theme) => [theme.name, theme]));
+
+function getThemeByKey(themeKey?: string | null) {
+  return PLAYER_THEME_MAP.get(themeKey || '') || PLAYER_THEMES[0];
+}
+
 interface ShadowFlixItem {
   id: string;
   title: string;
@@ -71,6 +77,25 @@ function getPlayerTheme(): typeof PLAYER_THEMES[0] {
 }
 function savePlayerTheme(theme: typeof PLAYER_THEMES[0]) {
   localStorage.setItem('sf_player_theme', JSON.stringify(theme));
+}
+
+async function fetchPlayerThemePreference(userId: string) {
+  const { data, error } = await supabase
+    .from('shadow_flix_player_preferences' as any)
+    .select('theme_key')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error || !data?.theme_key) return null;
+  return getThemeByKey(data.theme_key);
+}
+
+async function persistPlayerThemePreference(userId: string, theme: typeof PLAYER_THEMES[0]) {
+  if (!userId) return;
+  await supabase.from('shadow_flix_player_preferences' as any).upsert({
+    user_id: userId,
+    theme_key: theme.name,
+  } as any, { onConflict: 'user_id' });
 }
 
 function generateShareFilename(title: string, season?: number | null, episode?: number | null) {
