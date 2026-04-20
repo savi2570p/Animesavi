@@ -19,11 +19,17 @@ interface UpcomingAnime {
   id: string;
   title: string;
   cover_image: string | null;
+  banner_image?: string | null;
   release_year: number | null;
   created_at: string;
   type: string | null;
+  status?: string | null;
   description?: string | null;
   genres?: string[] | null;
+  studio?: string | null;
+  total_episodes?: number | null;
+  source_material?: string | null;
+  content_rating?: string | null;
   upcoming_seasons?: number[];
   season_details?: UpcomingSeasonInfo[];
 }
