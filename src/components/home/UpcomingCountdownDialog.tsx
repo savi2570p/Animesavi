@@ -28,15 +28,14 @@ interface UpcomingCountdownDialogProps {
   onClose: () => void;
 }
 
-/** Pick the soonest release date from per-season info, else fall back to Jan 1 of release_year. */
-function getTargetDate(anime: UpcomingAnime): { date: Date; source: 'season' | 'year'; season?: UpcomingSeasonInfo } {
+/** Pick the soonest explicit release date, otherwise keep it as unknown. */
+function getTargetDate(anime: UpcomingAnime): { date: Date | null; source: 'season' | 'unknown'; season?: UpcomingSeasonInfo } {
   const withDate = (anime.season_details || []).filter(s => s.release_date);
   if (withDate.length) {
     const sorted = [...withDate].sort((a, b) => new Date(a.release_date!).getTime() - new Date(b.release_date!).getTime());
     return { date: new Date(`${sorted[0].release_date}T00:00:00`), source: 'season', season: sorted[0] };
   }
-  const year = anime.release_year || new Date().getFullYear() + 1;
-  return { date: new Date(year, 0, 1, 0, 0, 0), source: 'year' };
+  return { date: null, source: 'unknown' };
 }
 
 function getTimeRemaining(targetDate: Date) {
@@ -79,9 +78,13 @@ export function UpcomingCountdownDialog({ anime, onClose }: UpcomingCountdownDia
 
   useEffect(() => {
     if (!target) return;
+    if (!target.date) {
+      setTimeRemaining({ days: 0, hours: 0, minutes: 0, seconds: 0, expired: false });
+      return;
+    }
     setTimeRemaining(getTimeRemaining(target.date));
     const interval = setInterval(() => {
-      setTimeRemaining(getTimeRemaining(target.date));
+      if (target.date) setTimeRemaining(getTimeRemaining(target.date));
     }, 1000);
     return () => clearInterval(interval);
   }, [target]);
@@ -96,7 +99,7 @@ export function UpcomingCountdownDialog({ anime, onClose }: UpcomingCountdownDia
 
   const releaseDateLabel = target.source === 'season'
     ? target.date.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-    : `Sometime in ${anime.release_year || target.date.getFullYear()}`;
+    : 'Release date announce soon';
 
   const headlineSeason = target.source === 'season' && target.season ? target.season.season_number : (seasons?.[0] ?? null);
 
@@ -118,7 +121,7 @@ export function UpcomingCountdownDialog({ anime, onClose }: UpcomingCountdownDia
       setIsSubscribed(false);
       toast.success('Notification reminder removed');
     } else {
-      subs[anime.id] = target.date.getTime();
+      subs[anime.id] = target.date ? target.date.getTime() : Date.now();
       setNotifySubs(subs);
       setIsSubscribed(true);
       toast.success(`We'll notify you when "${anime.title}" releases!`);
@@ -218,12 +221,12 @@ export function UpcomingCountdownDialog({ anime, onClose }: UpcomingCountdownDia
           )}
 
           {/* Countdown DD:HH:MM:SS */}
-          {t.expired ? (
+          {target.date && t.expired ? (
             <div className="text-center py-3 mb-4 bg-primary/10 rounded-lg">
               <p className="text-primary font-bold">It's release day! 🎉</p>
               <p className="text-muted-foreground text-xs mt-1">Episodes should be available very soon.</p>
             </div>
-          ) : (
+          ) : target.date ? (
             <div className="mb-4">
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2 text-center">
                 Live countdown
@@ -247,6 +250,11 @@ export function UpcomingCountdownDialog({ anime, onClose }: UpcomingCountdownDia
                   </div>
                 ))}
               </div>
+            </div>
+          ) : (
+            <div className="text-center py-3 mb-4 bg-muted rounded-lg">
+              <p className="text-foreground font-semibold">Release date announce soon</p>
+              <p className="text-muted-foreground text-xs mt-1">We will show the live countdown as soon as an exact date is added.</p>
             </div>
           )}
 

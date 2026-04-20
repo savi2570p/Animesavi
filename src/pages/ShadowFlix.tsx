@@ -28,6 +28,12 @@ const PLAYER_THEMES = [
   { name: 'Hot Pink', accent: '#ec4899', bg: 'rgba(236,72,153,0.1)' },
 ];
 
+const PLAYER_THEME_MAP = new Map(PLAYER_THEMES.map((theme) => [theme.name, theme]));
+
+function getThemeByKey(themeKey?: string | null) {
+  return PLAYER_THEME_MAP.get(themeKey || '') || PLAYER_THEMES[0];
+}
+
 interface ShadowFlixItem {
   id: string;
   title: string;
@@ -71,6 +77,25 @@ function getPlayerTheme(): typeof PLAYER_THEMES[0] {
 }
 function savePlayerTheme(theme: typeof PLAYER_THEMES[0]) {
   localStorage.setItem('sf_player_theme', JSON.stringify(theme));
+}
+
+async function fetchPlayerThemePreference(userId: string) {
+  const { data, error }: { data: { theme_key?: string | null } | null; error: any } = await supabase
+    .from('shadow_flix_player_preferences' as any)
+    .select('theme_key')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error || !data?.theme_key) return null;
+  return getThemeByKey(data.theme_key);
+}
+
+async function persistPlayerThemePreference(userId: string, theme: typeof PLAYER_THEMES[0]) {
+  if (!userId) return;
+  await supabase.from('shadow_flix_player_preferences' as any).upsert({
+    user_id: userId,
+    theme_key: theme.name,
+  } as any, { onConflict: 'user_id' });
 }
 
 function generateShareFilename(title: string, season?: number | null, episode?: number | null) {
@@ -172,7 +197,7 @@ function isEmbedUrl(url: string | null): boolean {
 
 /* ─── Custom Video Player ─── */
 function ShadowFlixPlayer({
-  item, onClose, allEpisodes, onChangeEpisode, seriesGroup, userId,
+  item, onClose, allEpisodes, onChangeEpisode, seriesGroup, userId, onThemeChange,
 }: {
   item: ShadowFlixItem;
   onClose: () => void;
@@ -180,6 +205,7 @@ function ShadowFlixPlayer({
   onChangeEpisode?: (ep: ShadowFlixItem) => void;
   seriesGroup?: SeriesGroup | null;
   userId?: string;
+  onThemeChange?: (theme: typeof PLAYER_THEMES[0]) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -199,6 +225,23 @@ function ShadowFlixPlayer({
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const isEmbed = isEmbedUrl(item.video_url);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!userId) return;
+
+    (async () => {
+      const preferredTheme = await fetchPlayerThemePreference(userId);
+      if (preferredTheme && !cancelled) {
+        setTheme(preferredTheme);
+        savePlayerTheme(preferredTheme);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   useEffect(() => { incrementWatchCount(item.id); }, [item.id]);
 
@@ -228,7 +271,15 @@ function ShadowFlixPlayer({
     if (videoRef.current) videoRef.current.currentTime = pct * duration;
   };
   const setSpeed = (rate: number) => { setPlaybackRate(rate); if (videoRef.current) videoRef.current.playbackRate = rate; setShowSettings(false); };
-  const handleThemeChange = (t: typeof PLAYER_THEMES[0]) => { setTheme(t); savePlayerTheme(t); setShowThemePicker(false); };
+  const handleThemeChange = async (t: typeof PLAYER_THEMES[0]) => {
+    setTheme(t);
+    savePlayerTheme(t);
+    if (userId) {
+      await persistPlayerThemePreference(userId, t);
+    }
+    onThemeChange?.(t);
+    setShowThemePicker(false);
+  };
 
   const shareUrl = buildShadowFlixShareUrl(item.title, item.season_number, item.episode_number);
   const shareText = shareUrl;
@@ -922,7 +973,7 @@ export default function ShadowFlix() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState<string>('all');
   const [selectedSeries, setSelectedSeries] = useState<string | null>(null);
-  const [playerTheme] = useState(getPlayerTheme);
+  const [playerTheme, setPlayerTheme] = useState(getPlayerTheme);
 
   // Form state
   const [formTitle, setFormTitle] = useState('');
@@ -946,16 +997,54 @@ export default function ShadowFlix() {
   const [selectedExistingSeries, setSelectedExistingSeries] = useState<string | null>(null);
   const [showFeaturedManager, setShowFeaturedManager] = useState(false);
   const [continueWatchingTick, setContinueWatchingTick] = useState(0);
+  const activeTusUploadRef = useRef<tus.Upload | null>(null);
+  const uploadCancelledRef = useRef(false);
+  const uploadStartedAtRef = useRef<number>(0);
 
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+
+  const cancelActiveUpload = useCallback(async () => {
+    uploadCancelledRef.current = true;
+    if (activeTusUploadRef.current) {
+      try {
+        await activeTusUploadRef.current.abort(true);
+      } catch {
+        /* noop */
+      }
+      activeTusUploadRef.current = null;
+    }
+    setUploading(false);
+    setUploadProgress('');
+  }, []);
 
   useEffect(() => {
     if (sessionStorage.getItem('shadowflix_unlocked') === 'true') setIsUnlocked(true);
   }, []);
 
   useEffect(() => { if (isUnlocked) fetchItems(); }, [isUnlocked]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!user?.id) return;
+    (async () => {
+      const preferredTheme = await fetchPlayerThemePreference(user.id);
+      if (preferredTheme && !cancelled) {
+        setPlayerTheme(preferredTheme);
+        savePlayerTheme(preferredTheme);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    return () => {
+      void cancelActiveUpload();
+    };
+  }, [cancelActiveUpload]);
 
   useEffect(() => {
     if (thumbnailFile) {
@@ -1002,6 +1091,7 @@ export default function ShadowFlix() {
   };
 
   const resetForm = () => {
+    void cancelActiveUpload();
     setFormTitle(''); setFormDescription(''); setFormThumbnailUrl(''); setFormBannerUrl('');
     setFormVideoUrl(''); setFormSeason('1');
     setFormEpisode(''); setFormGenres([]); setThumbnailFile(null); setBannerFile(null); setVideoFile(null);
@@ -1031,6 +1121,8 @@ export default function ShadowFlix() {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       const projectUrl = import.meta.env.VITE_SUPABASE_URL;
+      uploadCancelledRef.current = false;
+      uploadStartedAtRef.current = Date.now();
       await new Promise<void>((resolve, reject) => {
         const upload = new tus.Upload(file, {
           endpoint: `${projectUrl}/storage/v1/upload/resumable`,
@@ -1050,16 +1142,24 @@ export default function ShadowFlix() {
           chunkSize: 6 * 1024 * 1024, // 6 MB chunks (sweet spot for Supabase TUS throughput)
           parallelUploads: 4, // ⚡ 4× parallel chunk uploads for faster speed
           onError: (error) => reject(error),
+          onShouldRetry: () => !uploadCancelledRef.current,
           onProgress: (sent, total) => {
             const pct = Math.floor((sent / total) * 100);
-            setUploadProgress(`Uploading video... ${pct}% (${(sent / 1048576).toFixed(0)}/${(total / 1048576).toFixed(0)} MB)`);
+            const elapsedSeconds = Math.max((Date.now() - uploadStartedAtRef.current) / 1000, 1);
+            const speedMbps = (sent / 1048576) / elapsedSeconds;
+            const remainingMb = Math.max(total - sent, 0) / 1048576;
+            const etaSeconds = speedMbps > 0 ? Math.ceil(remainingMb / speedMbps) : 0;
+            const etaMinutes = Math.floor(etaSeconds / 60);
+            const etaRemainder = etaSeconds % 60;
+            setUploadProgress(`Uploading video... ${pct}% · ${speedMbps.toFixed(2)} MB/s · ETA ${etaMinutes}:${String(etaRemainder).padStart(2, '0')} (${(sent / 1048576).toFixed(0)}/${(total / 1048576).toFixed(0)} MB)`);
           },
-          onSuccess: () => resolve(),
+          onSuccess: () => {
+            activeTusUploadRef.current = null;
+            resolve();
+          },
         });
-        upload.findPreviousUploads().then(prev => {
-          if (prev.length) upload.resumeFromPreviousUpload(prev[0]);
-          upload.start();
-        });
+        activeTusUploadRef.current = upload;
+        upload.start();
       });
       return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
     }
@@ -1406,6 +1506,7 @@ export default function ShadowFlix() {
         onChangeEpisode={ep => setPlayingItem(ep)}
         seriesGroup={playingSeriesGroup}
         userId={user?.id}
+        onThemeChange={setPlayerTheme}
       />
     );
   }
@@ -1668,7 +1769,7 @@ export default function ShadowFlix() {
       </div>
 
       {/* Upload/Edit Dialog */}
-      <Dialog open={showUpload} onOpenChange={o => { if (!o) { setShowUpload(false); resetForm(); } }}>
+      <Dialog open={showUpload} onOpenChange={o => { if (!o) { void cancelActiveUpload(); setShowUpload(false); resetForm(); } }}>
         <DialogContent className="bg-[#141414] border-red-500/20 text-white sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-red-500 text-lg">{editingItem ? 'Edit Content' : 'Upload to Shadow Flix'}</DialogTitle>

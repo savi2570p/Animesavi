@@ -15,7 +15,7 @@ export const SERVER_CONFIGS: Record<ServerType, ServerConfig> = {
   PLAY: {
     id: 'PLAY',
     name: 'H.Savi',
-    description: 'Recommended for iOS',
+    description: 'Fast ⚡',
     features: ['HLS streaming', 'iOS optimized'],
     supportedPlatforms: ['ios', 'android', 'desktop'],
   },
@@ -29,20 +29,21 @@ export const SERVER_CONFIGS: Record<ServerType, ServerConfig> = {
   Zex: {
     id: 'Zex',
     name: 'Multi.Savi',
-    description: 'Backup',
+    description: 'Backup 🔁',
     features: ['Fallback server', 'Download support'],
     supportedPlatforms: ['ios', 'android', 'desktop'],
   },
   XPLUS: {
     id: 'XPLUS',
     name: 'X-PLUS',
-    description: 'Cinematic player',
+    description: 'Best Quality 🔥 (Recommended)',
     features: ['Flat controls', 'Download support', 'CC support'],
     supportedPlatforms: ['ios', 'android', 'desktop'],
   },
 };
 
 const SERVER_PREF_KEY = 'preferred_video_server';
+const AUTO_SERVER_CHAIN: ServerType[] = ['PLAY', 'Zex', 'XPLUS'];
 
 /**
  * Returns the list of servers available for the current device.
@@ -65,13 +66,13 @@ export function getDefaultServer(): ServerType {
 
   const saved = localStorage.getItem(SERVER_PREF_KEY) as ServerType | null;
   if (saved) {
-    if (isIOS && saved === 'SHORT') return 'PLAY';
+    if (isIOS && saved === 'SHORT') return 'XPLUS';
     if (['PLAY', 'SHORT', 'Zex', 'XPLUS'].includes(saved)) return saved;
   }
 
-  if (isIOS) return 'PLAY';
-  if (isMobile) return 'SHORT';
-  return 'SHORT';
+  if (isIOS) return 'XPLUS';
+  if (isMobile) return 'PLAY';
+  return 'PLAY';
 }
 
 interface UseServerAutoSelectOptions {
@@ -82,15 +83,16 @@ interface UseServerAutoSelectOptions {
  * Hook that manages server selection. All timeouts and auto-fallback are disabled.
  * Users can freely switch between any available server.
  */
-export function useServerAutoSelect(_options?: UseServerAutoSelectOptions) {
+export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
   const [activeServer, setActiveServer] = useState<ServerType>(() => getDefaultServer());
   const [isServerLoading, setIsServerLoading] = useState(false);
   const [failedServers, setFailedServers] = useState<Set<ServerType>>(new Set());
-  const [fallbackOccurred] = useState(false);
-  const [fallbackFrom] = useState<ServerType | null>(null);
+  const [fallbackOccurred, setFallbackOccurred] = useState(false);
+  const [fallbackFrom, setFallbackFrom] = useState<ServerType | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
   const videoLoadedRef = useRef(false);
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const availableServers = getAvailableServers();
 
@@ -98,6 +100,10 @@ export function useServerAutoSelect(_options?: UseServerAutoSelectOptions) {
     if (loadingTimeoutRef.current) {
       clearTimeout(loadingTimeoutRef.current);
       loadingTimeoutRef.current = null;
+    }
+    if (fallbackTimeoutRef.current) {
+      clearTimeout(fallbackTimeoutRef.current);
+      fallbackTimeoutRef.current = null;
     }
     setIsServerLoading(false);
   }, []);
@@ -107,8 +113,35 @@ export function useServerAutoSelect(_options?: UseServerAutoSelectOptions) {
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
+      if (fallbackTimeoutRef.current) {
+        clearTimeout(fallbackTimeoutRef.current);
+      }
     };
   }, []);
+
+  const getNextAutoServer = useCallback((server: ServerType) => {
+    const servers = getAvailableServers();
+    const chain = AUTO_SERVER_CHAIN.filter((candidate) => servers.includes(candidate));
+    const currentIndex = chain.indexOf(server);
+    return currentIndex >= 0 ? chain[currentIndex + 1] ?? null : chain[0] ?? null;
+  }, []);
+
+  const triggerAutoSwitch = useCallback((reason: string) => {
+    const nextServer = getNextAutoServer(activeServer);
+    if (!nextServer) return;
+
+    setFallbackOccurred(true);
+    setFallbackFrom(activeServer);
+    videoLoadedRef.current = false;
+    setFailedServers((prev) => new Set(prev).add(activeServer));
+    setIsServerLoading(true);
+    localStorage.setItem(SERVER_PREF_KEY, nextServer);
+    setActiveServer(nextServer);
+    options?.onServerSwitch?.(activeServer, nextServer, reason);
+
+    if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+    loadingTimeoutRef.current = setTimeout(() => setIsServerLoading(false), 1200);
+  }, [activeServer, getNextAutoServer, options]);
 
   const switchServer = useCallback((server: ServerType) => {
     const servers = getAvailableServers();
@@ -147,6 +180,8 @@ export function useServerAutoSelect(_options?: UseServerAutoSelectOptions) {
   const onVideoLoadSuccess = useCallback(() => {
     videoLoadedRef.current = true;
     clearLoadingState();
+    setFallbackOccurred(false);
+    setFallbackFrom(null);
     setFailedServers((prev) => {
       if (!prev.has(activeServer)) return prev;
       const next = new Set(prev);
@@ -157,17 +192,17 @@ export function useServerAutoSelect(_options?: UseServerAutoSelectOptions) {
 
   const onVideoLoadError = useCallback(() => {
     clearLoadingState();
-    setFailedServers((prev) => {
-      const next = new Set(prev);
-      next.add(activeServer);
-      return next;
-    });
     console.log(`Server ${activeServer} encountered an error`);
-  }, [activeServer, clearLoadingState]);
+    triggerAutoSwitch('error');
+  }, [activeServer, clearLoadingState, triggerAutoSwitch]);
 
   const startFallbackTimer = useCallback(() => {
     videoLoadedRef.current = false;
-  }, []);
+    if (fallbackTimeoutRef.current) clearTimeout(fallbackTimeoutRef.current);
+    fallbackTimeoutRef.current = setTimeout(() => {
+      if (!videoLoadedRef.current) triggerAutoSwitch('timeout');
+    }, 3000);
+  }, [triggerAutoSwitch]);
 
   return {
     activeServer,
