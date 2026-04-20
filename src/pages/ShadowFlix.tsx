@@ -197,7 +197,7 @@ function isEmbedUrl(url: string | null): boolean {
 
 /* ─── Custom Video Player ─── */
 function ShadowFlixPlayer({
-  item, onClose, allEpisodes, onChangeEpisode, seriesGroup, userId,
+  item, onClose, allEpisodes, onChangeEpisode, seriesGroup, userId, onThemeChange,
 }: {
   item: ShadowFlixItem;
   onClose: () => void;
@@ -205,6 +205,7 @@ function ShadowFlixPlayer({
   onChangeEpisode?: (ep: ShadowFlixItem) => void;
   seriesGroup?: SeriesGroup | null;
   userId?: string;
+  onThemeChange?: (theme: typeof PLAYER_THEMES[0]) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -276,6 +277,7 @@ function ShadowFlixPlayer({
     if (userId) {
       await persistPlayerThemePreference(userId, t);
     }
+    onThemeChange?.(t);
     setShowThemePicker(false);
   };
 
