@@ -143,23 +143,46 @@ export function UpcomingCountdownDialog({ anime, onClose }: UpcomingCountdownDia
           <X className="h-4 w-4 text-white" />
         </button>
 
-        {/* Cinematic cover */}
-        {anime.cover_image && (
-          <div className="relative w-full h-48 overflow-hidden">
+        {/* Cinematic hero — banner preferred, fallback to cover */}
+        {(anime.banner_image || anime.cover_image) && (
+          <div className="relative w-full h-56 overflow-hidden">
             <img
-              src={anime.cover_image}
+              src={anime.banner_image || anime.cover_image!}
               alt={anime.title}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
-            {seasonChip && (
-              <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-orange-500/95 text-white text-xs font-bold shadow-lg flex items-center gap-1">
-                <Sparkles className="h-3 w-3" />
-                {seasonChip}
+            <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-card/80 via-transparent to-transparent" />
+
+            {/* Floating cover thumbnail */}
+            {anime.banner_image && anime.cover_image && (
+              <img
+                src={anime.cover_image}
+                alt=""
+                className="absolute bottom-3 left-3 w-16 h-24 rounded-md object-cover shadow-2xl border-2 border-card"
+              />
+            )}
+
+            <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+              {seasonChip && (
+                <div className="px-2.5 py-1 rounded-full bg-orange-500/95 text-white text-xs font-bold shadow-lg flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" />
+                  {seasonChip}
+                </div>
+              )}
+              <div className="px-2.5 py-1 rounded-full bg-card/80 backdrop-blur text-foreground text-[10px] font-bold uppercase tracking-wider">
+                Upcoming
+              </div>
+            </div>
+
+            {anime.content_rating && (
+              <div className="absolute top-3 right-12 px-2 py-0.5 rounded bg-red-600/90 text-white text-[10px] font-black tracking-wider">
+                {anime.content_rating}
               </div>
             )}
+
             {anime.type && (
-              <div className="absolute bottom-3 left-3 px-2 py-0.5 rounded bg-black/60 backdrop-blur text-white text-[10px] font-bold uppercase tracking-wider">
+              <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded bg-black/70 backdrop-blur text-white text-[10px] font-bold uppercase tracking-wider">
                 {anime.type}
               </div>
             )}
@@ -186,11 +209,53 @@ export function UpcomingCountdownDialog({ anime, onClose }: UpcomingCountdownDia
             )}
           </div>
 
+          {/* Rich metadata grid */}
+          {(anime.studio || anime.total_episodes || anime.source_material || anime.content_rating) && (
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              {anime.studio && (
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+                  <Building2 className="h-4 w-4 text-primary shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Studio</p>
+                    <p className="text-xs font-bold text-foreground truncate">{anime.studio}</p>
+                  </div>
+                </div>
+              )}
+              {anime.total_episodes && (
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+                  <Hash className="h-4 w-4 text-primary shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Episodes</p>
+                    <p className="text-xs font-bold text-foreground truncate">{anime.total_episodes}</p>
+                  </div>
+                </div>
+              )}
+              {anime.source_material && (
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+                  <BookOpen className="h-4 w-4 text-primary shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Source</p>
+                    <p className="text-xs font-bold text-foreground truncate">{anime.source_material}</p>
+                  </div>
+                </div>
+              )}
+              {anime.content_rating && (
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+                  <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Rating</p>
+                    <p className="text-xs font-bold text-foreground truncate">{anime.content_rating}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Quick meta row */}
           <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">
             {anime.release_year && (
-              <span className="px-2 py-0.5 rounded bg-orange-500/15 text-orange-400 font-semibold">
-                {anime.release_year}
+              <span className="px-2 py-0.5 rounded bg-orange-500/15 text-orange-400 font-semibold flex items-center gap-1">
+                <Clapperboard className="h-3 w-3" /> {anime.release_year}
               </span>
             )}
             {seasons && seasons.map((n) => (
