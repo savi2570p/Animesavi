@@ -195,6 +195,16 @@ export function UserManagement() {
                       Joined {new Date(u.created_at).toLocaleDateString()}
                     </p>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs gap-1 border-amber-500/40 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400"
+                    disabled={grantingId === u.id}
+                    onClick={(e) => handleGrantTrial(u, e)}
+                  >
+                    <Crown className="h-3 w-3" />
+                    {grantingId === u.id ? '...' : '1M Token'}
+                  </Button>
                   <Button variant="outline" size="sm" className="text-xs">
                     <KeyRound className="h-3 w-3 mr-1" />
                     Change Pass
