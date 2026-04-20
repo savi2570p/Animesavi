@@ -1506,6 +1506,7 @@ export default function ShadowFlix() {
         onChangeEpisode={ep => setPlayingItem(ep)}
         seriesGroup={playingSeriesGroup}
         userId={user?.id}
+        onThemeChange={setPlayerTheme}
       />
     );
   }
@@ -1768,7 +1769,7 @@ export default function ShadowFlix() {
       </div>
 
       {/* Upload/Edit Dialog */}
-      <Dialog open={showUpload} onOpenChange={o => { if (!o) { setShowUpload(false); resetForm(); } }}>
+      <Dialog open={showUpload} onOpenChange={o => { if (!o) { void cancelActiveUpload(); setShowUpload(false); resetForm(); } }}>
         <DialogContent className="bg-[#141414] border-red-500/20 text-white sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-red-500 text-lg">{editingItem ? 'Edit Content' : 'Upload to Shadow Flix'}</DialogTitle>
