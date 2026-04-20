@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { CalendarClock, X, Tag, Film, Sparkles, Bell, BellRing } from 'lucide-react';
+import { CalendarClock, X, Tag, Film, Sparkles, Bell, BellRing, Building2, Hash, BookOpen, ShieldCheck, Clapperboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -13,13 +13,18 @@ interface UpcomingAnime {
   id: string;
   title: string;
   cover_image: string | null;
+  banner_image?: string | null;
   release_year: number | null;
   created_at: string;
   type: string | null;
+  status?: string | null;
   description?: string | null;
   genres?: string[] | null;
+  studio?: string | null;
+  total_episodes?: number | null;
+  source_material?: string | null;
+  content_rating?: string | null;
   upcoming_seasons?: number[];
-  // Optional richer per-season info (preferred when present)
   season_details?: UpcomingSeasonInfo[];
 }
 
