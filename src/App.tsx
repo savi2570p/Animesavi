@@ -182,6 +182,7 @@ const App = () => (
               <ScrollToTop />
               <AccessBanner />
               <TokenExpiredGlobalPopup />
+              <AdminTrialPopup />
               <OfflineIndicator />
               <WelcomePopup />
               <FloatingTelegramButton />
