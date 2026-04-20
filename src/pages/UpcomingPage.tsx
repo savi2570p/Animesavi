@@ -48,7 +48,7 @@ export default function UpcomingPage() {
       // Fetch anime explicitly marked as upcoming
       const { data: upcomingAnime } = await supabase
         .from('anime')
-        .select('id, title, cover_image, release_year, created_at, type, description, genres')
+        .select('id, title, cover_image, banner_image, release_year, created_at, type, status, description, genres, studio, total_episodes, source_material, content_rating')
         .eq('status', 'upcoming')
         .order('release_year', { ascending: true })
         .order('created_at', { ascending: false });
@@ -56,7 +56,7 @@ export default function UpcomingPage() {
       // Fetch seasons marked as upcoming, with parent anime info + release_date
       const { data: upcomingSeasons } = await supabase
         .from('seasons')
-        .select('id, season_number, release_date, title, anime_id, created_at, anime:anime_id(id, title, cover_image, release_year, type, description, genres)')
+        .select('id, season_number, release_date, title, anime_id, created_at, anime:anime_id(id, title, cover_image, banner_image, release_year, type, status, description, genres, studio, total_episodes, source_material, content_rating)')
         .eq('is_upcoming', true as any)
         .order('release_date', { ascending: true, nullsFirst: false });
 
