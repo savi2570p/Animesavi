@@ -256,6 +256,10 @@ export default function Upload() {
       setReleaseDate(undefined);
       setType('series');
       setStatus('ongoing');
+      setStudio('');
+      setTotalEpisodes('');
+      setSourceMaterial('');
+      setContentRating('');
       // Refresh list
       fetchAnimeData();
       // Navigate to add episodes
