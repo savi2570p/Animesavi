@@ -1725,22 +1725,23 @@ export default function ShadowFlix() {
               <div>
                 <h2 className="text-white font-bold text-lg mb-3">Library</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {filteredGroups.map(g => (
-                    <div key={g.title}
+                  {filteredGroups.map(g => {
+                    const firstEp = g.items[0];
+                    const embedUrl = firstEp ? `${window.location.origin}/embed/${firstEp.id}` : '';
+                    const seriesUrl = buildShadowFlixShareUrl(g.title);
+                    const iframeCode = `<iframe src="${embedUrl}" width="100%" height="500" frameborder="0" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+                    const copyTo = (text: string, label: string) => {
+                      navigator.clipboard.writeText(text)
+                        .then(() => toast.success(`${label} copied`, { description: text.length > 80 ? text.slice(0, 80) + '…' : text }))
+                        .catch(() => toast.error('Failed to copy'));
+                    };
+                    return (
+                    <ContextMenu key={g.title}>
+                      <ContextMenuTrigger asChild>
+                    <div
                       className="group relative rounded-xl overflow-hidden cursor-pointer transition-transform hover:scale-[1.03]"
                       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-                      onClick={() => setSelectedSeries(g.title)}
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        const firstEp = g.items[0];
-                        const embedUrl = firstEp
-                          ? `${window.location.origin}/embed/${firstEp.id}`
-                          : buildShadowFlixShareUrl(g.title);
-                        navigator.clipboard.writeText(embedUrl).then(() => {
-                          toast.success('Embed link copied', { description: embedUrl });
-                        }).catch(() => toast.error('Failed to copy'));
-                      }}
-                      title="Right-click to copy embed link">
+                      onClick={() => setSelectedSeries(g.title)}>
                       <div className="aspect-[2/3] relative">
                         {g.thumbnail ? <img src={g.thumbnail} alt={g.title} className="w-full h-full object-cover" />
                           : <div className="w-full h-full flex items-center justify-center bg-white/5"><Film className="w-8 h-8 text-white/20" /></div>}
