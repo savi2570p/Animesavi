@@ -702,6 +702,18 @@ export default function Upload() {
                   </div>
                 </div>
 
+                {/* Auto-fill from MyAnimeList (Jikan) */}
+                <div className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium text-amber-500">Auto-fill from MyAnimeList</p>
+                    <p className="text-xs text-muted-foreground">Fetches studio, episodes, source & rating using the title above.</p>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={handleFetchMetadata} disabled={isFetchingMeta} className="border-amber-500/40 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400 gap-1.5">
+                    <Wrench className="h-3.5 w-3.5" />
+                    {isFetchingMeta ? 'Fetching…' : 'Fetch metadata'}
+                  </Button>
+                </div>
+
                 {/* Richer metadata for hero detail panel */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
