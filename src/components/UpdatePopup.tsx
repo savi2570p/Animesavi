@@ -64,14 +64,12 @@ export function UpdatePopup() {
   const APP_VERSION = 'v19';
 
   const changelogItems = [
-    { icon: '🎬', title: 'Shadow Flix Upgrade', desc: 'Cinematic banner hero, multi-genre support, and "Existing Upload" flow to add episodes to your series' },
-    { icon: '🖼️', title: 'Dual Thumbnails', desc: 'Upload both a poster Thumbnail and a wide cinematic Banner for each series' },
-    { icon: '🏷️', title: 'Multi-Genre Tags', desc: 'Pick multiple genres per series — no more single-genre limit' },
-    { icon: '📤', title: 'Upload Fix', desc: 'Video file uploads from file manager now work reliably with progress tracking' },
-    { icon: '📡', title: 'Smart Casting', desc: 'AirPlay & Chromecast support for seamless TV playback' },
-    { icon: '🎞️', title: 'X-PLUS Server', desc: 'Flat cinema controls with a cleaner fullscreen player' },
-    { icon: '📝', title: 'CC & E-Sub Fix', desc: 'Uploaded subtitles now toggle properly, even with multi-audio' },
-    { icon: '✨', title: 'No Auto Switching', desc: 'Your selected server stays selected until you change it' },
+    { icon: '🎬', title: 'Shadow Flix Library Preview', desc: 'Right-click cards now open faster actions, preview details, and smarter share tools.' },
+    { icon: '📤', title: 'Upload Monitor', desc: 'Large uploads now show live MB/s and ETA with a steadier resumable flow.' },
+    { icon: '📅', title: 'Upcoming Refresh', desc: 'Coming Soon panels now surface richer anime details and improved mobile presentation.' },
+    { icon: '📱', title: 'Mobile Popup Fix', desc: 'Opening What\'s New from the hamburger now closes the menu first so the popup is fully visible.' },
+    { icon: '🎞️', title: 'Player Polish', desc: 'Shadow Flix keeps its smoother fullscreen shortcuts, color customization, and premium controls.' },
+    { icon: '📝', title: 'Meta & Share Upgrades', desc: 'Series previews, embed links, and detail panels are cleaner and easier to access.' },
   ];
 
   /* ── STEP 1: Update Alert ── */
@@ -163,38 +161,43 @@ export function UpdatePopup() {
 
   /* ── STEP 4: Complete / What's New ── */
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-lg animate-in fade-in duration-300">
-      <div className="relative w-full max-w-sm mx-4 rounded-2xl border border-red-600/30 bg-gradient-to-b from-zinc-900/95 to-black/95 shadow-2xl shadow-red-900/20 p-8 text-center space-y-5 animate-in zoom-in-95 duration-300">
-        <div className="mx-auto w-16 h-16 rounded-full bg-red-600/15 flex items-center justify-center">
+    <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/90 p-3 backdrop-blur-lg animate-in fade-in duration-300 sm:items-center sm:p-4">
+      <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-red-600/30 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/95 shadow-2xl shadow-red-900/20 animate-in zoom-in-95 duration-300">
+        <div className="border-b border-white/5 px-5 py-4 sm:px-8 sm:py-6">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-600/15">
           <span className="text-3xl">✅</span>
+          </div>
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-white sm:text-2xl">
+              {isManualWhatsNew ? "What's New" : 'Updated to latest version'}
+            </h2>
+            <p className="mt-2 text-sm text-zinc-400">
+              {isManualWhatsNew ? 'Fresh improvements across Shadow Flix, uploads, and mobile popups.' : 'Your app is now fully up to date.'}
+            </p>
+            <span className="mt-3 inline-block rounded bg-red-600/20 px-2 py-0.5 text-[10px] font-mono text-red-400">{APP_VERSION}</span>
+          </div>
         </div>
 
-        <h2 className="text-xl font-bold text-white">
-          {isManualWhatsNew ? "What's New" : 'Updated to latest version'}
-        </h2>
-        <span className="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-red-600/20 text-red-400">{APP_VERSION}</span>
-        <p className="text-sm text-zinc-400">
-          {isManualWhatsNew ? 'Here are the latest features and improvements.' : 'Your app is now fully up to date.'}
-        </p>
-
-        <div className="space-y-1.5 text-left max-h-[30vh] overflow-y-auto pr-1">
+        <div className="space-y-2 px-5 py-4 text-left sm:max-h-[44vh] sm:px-8 sm:py-6 overflow-y-auto">
           {changelogItems.map((item) => (
-            <div key={item.title} className="flex items-center gap-2.5 p-2 bg-white/5 rounded-md">
-              <span className="text-sm shrink-0">{item.icon}</span>
+            <div key={item.title} className="flex items-start gap-3 rounded-xl border border-white/5 bg-white/5 p-3">
+              <span className="shrink-0 text-base">{item.icon}</span>
               <div className="min-w-0">
-                <h4 className="text-xs font-semibold text-white leading-tight">{item.title}</h4>
-                <p className="text-[10px] text-zinc-500 leading-tight">{item.desc}</p>
+                <h4 className="text-sm font-semibold leading-tight text-white">{item.title}</h4>
+                <p className="mt-1 text-xs leading-relaxed text-zinc-500">{item.desc}</p>
               </div>
             </div>
           ))}
         </div>
 
-        <button
-          onClick={handleGo}
-          className="w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-red-700 to-red-500 hover:from-red-600 hover:to-red-400 transition-all shadow-lg shadow-red-900/30"
-        >
-          GO
-        </button>
+        <div className="px-5 pb-5 sm:px-8 sm:pb-8">
+          <button
+            onClick={handleGo}
+            className="w-full rounded-xl bg-gradient-to-r from-red-700 to-red-500 py-3 font-semibold text-white shadow-lg shadow-red-900/30 transition-all hover:from-red-600 hover:to-red-400"
+          >
+            Got it
+          </button>
+        </div>
       </div>
     </div>
   );
