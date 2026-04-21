@@ -999,6 +999,7 @@ export default function ShadowFlix() {
   const [selectedExistingSeries, setSelectedExistingSeries] = useState<string | null>(null);
   const [showFeaturedManager, setShowFeaturedManager] = useState(false);
   const [continueWatchingTick, setContinueWatchingTick] = useState(0);
+  const [previewGroup, setPreviewGroup] = useState<SeriesGroup | null>(null);
   const activeTusUploadRef = useRef<tus.Upload | null>(null);
   const uploadCancelledRef = useRef(false);
   const uploadStartedAtRef = useRef<number>(0);
@@ -1128,7 +1129,7 @@ export default function ShadowFlix() {
       await new Promise<void>((resolve, reject) => {
         const upload = new tus.Upload(file, {
           endpoint: `${projectUrl}/storage/v1/upload/resumable`,
-          retryDelays: [0, 1000, 3000, 5000],
+          retryDelays: [0, 1500, 4000, 8000, 12000],
           headers: {
             authorization: `Bearer ${token}`,
             'x-upsert': 'false',
@@ -1141,11 +1142,18 @@ export default function ShadowFlix() {
             contentType,
             cacheControl: '3600',
           },
-          chunkSize: 6 * 1024 * 1024, // 6 MB chunks (sweet spot for Supabase TUS throughput)
-          parallelUploads: 4, // ⚡ 4× parallel chunk uploads for faster speed
-          onError: (error) => reject(error),
+          chunkSize: 6 * 1024 * 1024,
+          parallelUploads: 3,
+          onError: (error) => {
+            if (uploadCancelledRef.current) {
+              reject(new Error('Upload cancelled'));
+              return;
+            }
+            reject(error);
+          },
           onShouldRetry: () => !uploadCancelledRef.current,
           onProgress: (sent, total) => {
+            if (uploadCancelledRef.current) return;
             const pct = Math.floor((sent / total) * 100);
             const elapsedSeconds = Math.max((Date.now() - uploadStartedAtRef.current) / 1000, 1);
             const speedMbps = (sent / 1048576) / elapsedSeconds;
@@ -1161,8 +1169,18 @@ export default function ShadowFlix() {
           },
         });
         activeTusUploadRef.current = upload;
-        upload.start();
+        upload.findPreviousUploads().then((previousUploads) => {
+          if (uploadCancelledRef.current) {
+            reject(new Error('Upload cancelled'));
+            return;
+          }
+          if (previousUploads.length > 0) {
+            upload.resumeFromPreviousUpload(previousUploads[0]);
+          }
+          upload.start();
+        }).catch(reject);
       });
+      if (uploadCancelledRef.current) throw new Error('Upload cancelled');
       return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
     }
 
@@ -1189,17 +1207,21 @@ export default function ShadowFlix() {
       if (thumbnailFile) {
         setUploadProgress('Uploading thumbnail...');
         finalThumbnail = await uploadFileToStorage(thumbnailFile, 'anime-thumbnails', 'shadowflix');
+        if (uploadCancelledRef.current) throw new Error('Upload cancelled');
       }
       if (bannerFile) {
         setUploadProgress('Uploading banner...');
         finalBanner = await uploadFileToStorage(bannerFile, 'anime-thumbnails', 'shadowflix-banners');
+        if (uploadCancelledRef.current) throw new Error('Upload cancelled');
       }
       if (videoFile) {
         setUploadProgress(`Uploading video (${(videoFile.size / (1024 * 1024)).toFixed(1)} MB)...`);
         finalVideo = await uploadFileToStorage(videoFile, 'anime-videos', 'shadowflix');
+        if (uploadCancelledRef.current) throw new Error('Upload cancelled');
       }
 
       setUploadProgress('Saving to database...');
+      if (uploadCancelledRef.current) throw new Error('Upload cancelled');
       const payload: any = {
         title: formTitle,
         thumbnail_url: finalThumbnail || null,
@@ -1224,7 +1246,9 @@ export default function ShadowFlix() {
       setShowUpload(false); resetForm(); fetchItems();
     } catch (err: any) {
       console.error('[ShadowFlix] Upload error:', err);
-      toast.error(err.message || 'Upload failed');
+      if (err?.message !== 'Upload cancelled') {
+        toast.error(err.message || 'Upload failed');
+      }
     } finally { setUploading(false); setUploadProgress(''); }
   };
 
