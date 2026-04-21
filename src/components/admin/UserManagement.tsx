@@ -15,6 +15,7 @@ import {
 import { toast } from 'sonner';
 import { Users, KeyRound, Search, Eye, EyeOff, Crown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { ActiveTokenGrants } from './ActiveTokenGrants';
 
 interface UserProfile {
   id: string;
@@ -146,6 +147,7 @@ export function UserManagement() {
 
   return (
     <div className="space-y-4">
+      <ActiveTokenGrants />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

@@ -3,11 +3,13 @@ import * as tus from 'tus-js-client';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  Lock, Upload, Pencil, Trash2, Play, Plus, X, Link, Image, Film,
+  Lock, Upload, Pencil, Trash2, Play, Plus, X, Link as LinkIcon, Image, Film,
   LogOut, Search, Pause, Maximize, Minimize, SkipForward, SkipBack,
   Settings, ChevronDown, ChevronLeft, TrendingUp, Eye, Share2, Copy, Check,
-  Palette, Monitor, List, Clock, Star, GripVertical, ChevronRight, Radio
+  Palette, Monitor, List, Clock, Star, GripVertical, ChevronRight, Radio,
+  Code, Code2, ExternalLink
 } from 'lucide-react';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -1725,22 +1727,23 @@ export default function ShadowFlix() {
               <div>
                 <h2 className="text-white font-bold text-lg mb-3">Library</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {filteredGroups.map(g => (
-                    <div key={g.title}
+                  {filteredGroups.map(g => {
+                    const firstEp = g.items[0];
+                    const embedUrl = firstEp ? `${window.location.origin}/embed/${firstEp.id}` : '';
+                    const seriesUrl = buildShadowFlixShareUrl(g.title);
+                    const iframeCode = `<iframe src="${embedUrl}" width="100%" height="500" frameborder="0" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+                    const copyTo = (text: string, label: string) => {
+                      navigator.clipboard.writeText(text)
+                        .then(() => toast.success(`${label} copied`, { description: text.length > 80 ? text.slice(0, 80) + '…' : text }))
+                        .catch(() => toast.error('Failed to copy'));
+                    };
+                    return (
+                    <ContextMenu key={g.title}>
+                      <ContextMenuTrigger asChild>
+                    <div
                       className="group relative rounded-xl overflow-hidden cursor-pointer transition-transform hover:scale-[1.03]"
                       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-                      onClick={() => setSelectedSeries(g.title)}
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        const firstEp = g.items[0];
-                        const embedUrl = firstEp
-                          ? `${window.location.origin}/embed/${firstEp.id}`
-                          : buildShadowFlixShareUrl(g.title);
-                        navigator.clipboard.writeText(embedUrl).then(() => {
-                          toast.success('Embed link copied', { description: embedUrl });
-                        }).catch(() => toast.error('Failed to copy'));
-                      }}
-                      title="Right-click to copy embed link">
+                      onClick={() => setSelectedSeries(g.title)}>
                       <div className="aspect-[2/3] relative">
                         {g.thumbnail ? <img src={g.thumbnail} alt={g.title} className="w-full h-full object-cover" />
                           : <div className="w-full h-full flex items-center justify-center bg-white/5"><Film className="w-8 h-8 text-white/20" /></div>}
@@ -1771,7 +1774,24 @@ export default function ShadowFlix() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                      </ContextMenuTrigger>
+                      <ContextMenuContent className="w-56 bg-[#141414] border-white/10 text-white">
+                        <ContextMenuItem onClick={() => copyTo(embedUrl, 'Embed link')} disabled={!firstEp} className="gap-2 cursor-pointer focus:bg-red-600/20 focus:text-white">
+                          <Code className="h-4 w-4" /> Copy Embed Link
+                        </ContextMenuItem>
+                        <ContextMenuItem onClick={() => copyTo(seriesUrl, 'Series link')} className="gap-2 cursor-pointer focus:bg-red-600/20 focus:text-white">
+                          <LinkIcon className="h-4 w-4" /> Copy Series Link
+                        </ContextMenuItem>
+                        <ContextMenuItem onClick={() => copyTo(iframeCode, 'Iframe code')} disabled={!firstEp} className="gap-2 cursor-pointer focus:bg-red-600/20 focus:text-white">
+                          <Code2 className="h-4 w-4" /> Copy Iframe Code
+                        </ContextMenuItem>
+                        <ContextMenuItem onClick={() => firstEp && window.open(embedUrl, '_blank')} disabled={!firstEp} className="gap-2 cursor-pointer focus:bg-red-600/20 focus:text-white">
+                          <ExternalLink className="h-4 w-4" /> Open in New Tab
+                        </ContextMenuItem>
+                      </ContextMenuContent>
+                    </ContextMenu>
+                  );
+                  })}
                 </div>
               </div>
             )}
@@ -1921,7 +1941,7 @@ export default function ShadowFlix() {
                   </button>
                   <button onClick={() => setBannerMode('url')}
                     className={`text-xs px-3 py-1.5 rounded-full transition-colors ${bannerMode === 'url' ? 'bg-red-600 text-white' : 'bg-white/10 text-white/50'}`}>
-                    <Link className="w-3 h-3 inline mr-1" /> URL
+                    <LinkIcon className="w-3 h-3 inline mr-1" /> URL
                   </button>
                 </div>
                 {bannerMode === 'file' ? (
@@ -1961,7 +1981,7 @@ export default function ShadowFlix() {
                   </button>
                   <button onClick={() => setThumbnailMode('url')}
                     className={`text-xs px-3 py-1.5 rounded-full transition-colors ${thumbnailMode === 'url' ? 'bg-red-600 text-white' : 'bg-white/10 text-white/50'}`}>
-                    <Link className="w-3 h-3 inline mr-1" /> URL
+                    <LinkIcon className="w-3 h-3 inline mr-1" /> URL
                   </button>
                 </div>
                 {thumbnailMode === 'file' ? (

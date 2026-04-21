@@ -77,6 +77,44 @@ export default function Upload() {
   const [totalEpisodes, setTotalEpisodes] = useState('');
   const [sourceMaterial, setSourceMaterial] = useState('');
   const [contentRating, setContentRating] = useState('');
+  const [isFetchingMeta, setIsFetchingMeta] = useState(false);
+
+  const handleFetchMetadata = async () => {
+    if (!title.trim()) {
+      toast.error('Enter the anime title first');
+      return;
+    }
+    setIsFetchingMeta(true);
+    try {
+      const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(title.trim())}&limit=1&sfw=false`);
+      const json = await res.json();
+      const a = json?.data?.[0];
+      if (!a) {
+        toast.error('No match found on MyAnimeList');
+        return;
+      }
+      const studioName = a.studios?.[0]?.name || '';
+      const sourceMap: Record<string, string> = {
+        Manga: 'Manga', 'Light novel': 'Light Novel', 'Web novel': 'Web Novel',
+        Manhwa: 'Manhwa', Original: 'Original', Game: 'Game', 'Visual novel': 'Visual Novel',
+      };
+      const ratingMap: Record<string, string> = {
+        'G - All Ages': 'G', 'PG - Children': 'PG', 'PG-13 - Teens 13 or older': 'PG-13',
+        'R - 17+ (violence & profanity)': 'R', 'R+ - Mild Nudity': 'R+', 'Rx - Hentai': 'R+',
+      };
+      if (studioName) setStudio(studioName);
+      if (a.episodes) setTotalEpisodes(String(a.episodes));
+      if (a.source && sourceMap[a.source]) setSourceMaterial(sourceMap[a.source]);
+      if (a.rating && ratingMap[a.rating]) setContentRating(ratingMap[a.rating]);
+      if (a.year && !releaseYear) setReleaseYear(String(a.year));
+      if (a.synopsis && !description) setDescription(a.synopsis);
+      toast.success('Metadata fetched', { description: `Matched: ${a.title}` });
+    } catch (err: any) {
+      toast.error('Failed to fetch metadata', { description: err.message });
+    } finally {
+      setIsFetchingMeta(false);
+    }
+  };
 
   // Existing upload state
   const [selectedAnimeId, setSelectedAnimeId] = useState<string>('');
@@ -662,6 +700,18 @@ export default function Upload() {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                {/* Auto-fill from MyAnimeList (Jikan) */}
+                <div className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium text-amber-500">Auto-fill from MyAnimeList</p>
+                    <p className="text-xs text-muted-foreground">Fetches studio, episodes, source & rating using the title above.</p>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={handleFetchMetadata} disabled={isFetchingMeta} className="border-amber-500/40 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400 gap-1.5">
+                    <Wrench className="h-3.5 w-3.5" />
+                    {isFetchingMeta ? 'Fetching…' : 'Fetch metadata'}
+                  </Button>
                 </div>
 
                 {/* Richer metadata for hero detail panel */}
