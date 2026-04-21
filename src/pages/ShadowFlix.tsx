@@ -3,11 +3,13 @@ import * as tus from 'tus-js-client';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  Lock, Upload, Pencil, Trash2, Play, Plus, X, Link, Image, Film,
+  Lock, Upload, Pencil, Trash2, Play, Plus, X, Link as LinkIcon, Image, Film,
   LogOut, Search, Pause, Maximize, Minimize, SkipForward, SkipBack,
   Settings, ChevronDown, ChevronLeft, TrendingUp, Eye, Share2, Copy, Check,
-  Palette, Monitor, List, Clock, Star, GripVertical, ChevronRight, Radio
+  Palette, Monitor, List, Clock, Star, GripVertical, ChevronRight, Radio,
+  Code, Code2, ExternalLink
 } from 'lucide-react';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
