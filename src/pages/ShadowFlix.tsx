@@ -1941,7 +1941,7 @@ export default function ShadowFlix() {
                   </button>
                   <button onClick={() => setBannerMode('url')}
                     className={`text-xs px-3 py-1.5 rounded-full transition-colors ${bannerMode === 'url' ? 'bg-red-600 text-white' : 'bg-white/10 text-white/50'}`}>
-                    <Link className="w-3 h-3 inline mr-1" /> URL
+                    <LinkIcon className="w-3 h-3 inline mr-1" /> URL
                   </button>
                 </div>
                 {bannerMode === 'file' ? (
@@ -1981,7 +1981,7 @@ export default function ShadowFlix() {
                   </button>
                   <button onClick={() => setThumbnailMode('url')}
                     className={`text-xs px-3 py-1.5 rounded-full transition-colors ${thumbnailMode === 'url' ? 'bg-red-600 text-white' : 'bg-white/10 text-white/50'}`}>
-                    <Link className="w-3 h-3 inline mr-1" /> URL
+                    <LinkIcon className="w-3 h-3 inline mr-1" /> URL
                   </button>
                 </div>
                 {thumbnailMode === 'file' ? (
