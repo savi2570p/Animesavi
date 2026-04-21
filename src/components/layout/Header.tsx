@@ -52,7 +52,13 @@ export function Header() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { showWhatsNewManually } = usePopupQueue();
+
+  const closeMenuThen = (callback: () => void) => {
+    setMobileMenuOpen(false);
+    window.setTimeout(callback, 120);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -320,7 +326,7 @@ export function Header() {
           </form>
 
           {/* Hamburger Menu - All Screens */}
-          <Sheet>
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild className="flex-shrink-0">
               <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8">
                 <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -418,14 +424,14 @@ export function Header() {
                     </>
                   )}
                   <button
-                    onClick={() => setVerifyOpen(true)}
+                    onClick={() => closeMenuThen(() => setVerifyOpen(true))}
                     className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors w-full text-left"
                   >
                      <BadgeCheck className="h-3.5 w-3.5 text-muted-foreground" />
                      Verify
                   </button>
                   <button
-                    onClick={() => showWhatsNewManually()}
+                    onClick={() => closeMenuThen(showWhatsNewManually)}
                     className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors w-full text-left"
                   >
                     <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />

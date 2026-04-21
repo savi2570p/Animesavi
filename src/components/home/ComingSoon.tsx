@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { CalendarClock, ChevronRight } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { UpcomingCountdownDialog } from '@/components/home/UpcomingCountdownDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface UpcomingSeasonInfo {
   season_number: number;
@@ -28,6 +29,7 @@ export function ComingSoon() {
   const [animeList, setAnimeList] = useState<UpcomingAnime[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedAnime, setSelectedAnime] = useState<UpcomingAnime | null>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchUpcomingAnime();
@@ -124,13 +126,8 @@ export function ComingSoon() {
               </div>
             ))
           ) : (
-            animeList.map((anime) => (
-              <AnimeCardContextMenu 
-                key={anime.id} 
-                animeTitle={anime.title}
-                animeUrl={`/anime/${anime.id}`}
-                coverImage={anime.cover_image}
-              >
+            animeList.map((anime) => {
+              const card = (
                 <div
                   onClick={() => setSelectedAnime(anime)}
                   className="group relative w-[140px] md:w-[160px] lg:w-[180px] shrink-0 cursor-pointer"
@@ -178,8 +175,23 @@ export function ComingSoon() {
                     {anime.title}
                   </h3>
                 </div>
-              </AnimeCardContextMenu>
-            ))
+              );
+
+              if (isMobile) {
+                return <div key={anime.id}>{card}</div>;
+              }
+
+              return (
+                <AnimeCardContextMenu 
+                  key={anime.id} 
+                  animeTitle={anime.title}
+                  animeUrl={`/anime/${anime.id}`}
+                  coverImage={anime.cover_image}
+                >
+                  {card}
+                </AnimeCardContextMenu>
+              );
+            })
           )}
         </div>
       </div>

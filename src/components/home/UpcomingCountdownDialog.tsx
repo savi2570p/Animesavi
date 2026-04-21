@@ -134,8 +134,8 @@ export function UpcomingCountdownDialog({ anime, onClose }: UpcomingCountdownDia
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 overflow-y-auto">
-      <div className="bg-card border border-border rounded-2xl max-w-lg w-full shadow-2xl animate-scale-in relative my-auto overflow-hidden">
+    <div className="fixed inset-0 z-[9999] flex items-end justify-center overflow-y-auto bg-black/80 p-3 sm:items-center sm:p-4">
+      <div className="relative my-auto w-full max-w-3xl overflow-hidden rounded-2xl border border-border bg-card shadow-2xl animate-scale-in max-h-[90vh]">
         <button
           onClick={onClose}
           className="absolute top-3 right-3 p-1.5 rounded-full bg-black/40 hover:bg-black/60 transition-colors z-10"
@@ -196,7 +196,7 @@ export function UpcomingCountdownDialog({ anime, onClose }: UpcomingCountdownDia
           </div>
 
           {/* Headline: which season + when */}
-          <div className="mb-3 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+          <div className="mb-3 rounded-lg border border-orange-500/20 bg-orange-500/10 p-3">
             <p className="text-orange-400 text-sm font-bold leading-tight">
               {headlineSeason ? `Season ${headlineSeason} releasing` : 'Releasing'}
               {target.source === 'season' ? ' on' : ''}
@@ -207,6 +207,25 @@ export function UpcomingCountdownDialog({ anime, onClose }: UpcomingCountdownDia
                 Multiple new seasons confirmed: {seasonChip}
               </p>
             )}
+          </div>
+
+          <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="rounded-lg border border-border/60 bg-muted/40 p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Status</p>
+              <p className="mt-1 text-sm font-bold text-foreground">{anime.status || 'Upcoming'}</p>
+            </div>
+            <div className="rounded-lg border border-border/60 bg-muted/40 p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Episodes</p>
+              <p className="mt-1 text-sm font-bold text-foreground">{anime.total_episodes || 'TBA'}</p>
+            </div>
+            <div className="rounded-lg border border-border/60 bg-muted/40 p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Studio</p>
+              <p className="mt-1 text-sm font-bold text-foreground truncate">{anime.studio || 'TBA'}</p>
+            </div>
+            <div className="rounded-lg border border-border/60 bg-muted/40 p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Source</p>
+              <p className="mt-1 text-sm font-bold text-foreground truncate">{anime.source_material || 'Original / TBA'}</p>
+            </div>
           </div>
 
           {/* Rich metadata grid */}
@@ -337,7 +356,7 @@ export function UpcomingCountdownDialog({ anime, onClose }: UpcomingCountdownDia
               {isSubscribed ? <BellRing className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
               {isSubscribed ? 'Notifying' : 'Notify me'}
             </Button>
-            <Button onClick={onClose} variant="secondary" className="flex-1">
+            <Button onClick={onClose} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
               Got it
             </Button>
           </div>
