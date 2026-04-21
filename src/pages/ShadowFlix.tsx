@@ -1772,7 +1772,24 @@ export default function ShadowFlix() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                      </ContextMenuTrigger>
+                      <ContextMenuContent className="w-56 bg-[#141414] border-white/10 text-white">
+                        <ContextMenuItem onClick={() => copyTo(embedUrl, 'Embed link')} disabled={!firstEp} className="gap-2 cursor-pointer focus:bg-red-600/20 focus:text-white">
+                          <Code className="h-4 w-4" /> Copy Embed Link
+                        </ContextMenuItem>
+                        <ContextMenuItem onClick={() => copyTo(seriesUrl, 'Series link')} className="gap-2 cursor-pointer focus:bg-red-600/20 focus:text-white">
+                          <LinkIcon className="h-4 w-4" /> Copy Series Link
+                        </ContextMenuItem>
+                        <ContextMenuItem onClick={() => copyTo(iframeCode, 'Iframe code')} disabled={!firstEp} className="gap-2 cursor-pointer focus:bg-red-600/20 focus:text-white">
+                          <Code2 className="h-4 w-4" /> Copy Iframe Code
+                        </ContextMenuItem>
+                        <ContextMenuItem onClick={() => firstEp && window.open(embedUrl, '_blank')} disabled={!firstEp} className="gap-2 cursor-pointer focus:bg-red-600/20 focus:text-white">
+                          <ExternalLink className="h-4 w-4" /> Open in New Tab
+                        </ContextMenuItem>
+                      </ContextMenuContent>
+                    </ContextMenu>
+                  );
+                  })}
                 </div>
               </div>
             )}
