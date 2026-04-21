@@ -1800,6 +1800,9 @@ export default function ShadowFlix() {
                     </div>
                       </ContextMenuTrigger>
                       <ContextMenuContent className="w-56 bg-[#141414] border-white/10 text-white">
+                        <ContextMenuItem onClick={() => setPreviewGroup(g)} className="gap-2 cursor-pointer focus:bg-red-600/20 focus:text-white">
+                          <Eye className="h-4 w-4" /> Preview
+                        </ContextMenuItem>
                         <ContextMenuItem onClick={() => copyTo(embedUrl, 'Embed link')} disabled={!firstEp} className="gap-2 cursor-pointer focus:bg-red-600/20 focus:text-white">
                           <Code className="h-4 w-4" /> Copy Embed Link
                         </ContextMenuItem>
@@ -2054,6 +2057,86 @@ export default function ShadowFlix() {
             ) : editingItem ? 'Save Changes' : 'Upload'}
           </Button>
           </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!previewGroup} onOpenChange={(open) => { if (!open) setPreviewGroup(null); }}>
+        <DialogContent className="overflow-hidden border-red-500/20 bg-[#141414] p-0 text-white sm:max-w-2xl">
+          {previewGroup && (
+            <div>
+              <div className="relative aspect-[16/7] overflow-hidden bg-black">
+                {previewGroup.banner || previewGroup.thumbnail ? (
+                  <img
+                    src={previewGroup.banner || previewGroup.thumbnail || ''}
+                    alt={previewGroup.title}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-white/5">
+                    <Film className="h-10 w-10 text-white/20" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-5">
+                  <div className="mb-2 flex flex-wrap gap-2">
+                    <span className="rounded-full bg-red-600/90 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-white">Preview</span>
+                    <span className="rounded-full bg-black/60 px-2 py-1 text-[10px] font-semibold text-white/80">{previewGroup.items.length} episode{previewGroup.items.length > 1 ? 's' : ''}</span>
+                    {previewGroup.genre && <span className="rounded-full bg-black/60 px-2 py-1 text-[10px] font-semibold text-white/80">{previewGroup.genre}</span>}
+                  </div>
+                  <h3 className="text-2xl font-black text-white sm:text-3xl">{previewGroup.title}</h3>
+                </div>
+              </div>
+
+              <div className="space-y-4 p-5">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-white/40">Episodes</p>
+                    <p className="mt-1 text-sm font-bold text-white">{previewGroup.items.length}</p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-white/40">Views</p>
+                    <p className="mt-1 text-sm font-bold text-white">{previewGroup.totalViews || 0}</p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-white/40">Genres</p>
+                    <p className="mt-1 text-sm font-bold text-white">{previewGroup.genres.length || 1}</p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-white/40">First Episode</p>
+                    <p className="mt-1 text-sm font-bold text-white">E{previewGroup.items[0]?.episode_number || 1}</p>
+                  </div>
+                </div>
+
+                <p className="text-sm leading-relaxed text-white/70">
+                  {previewGroup.description || `${previewGroup.title} is available inside Shadow Flix with ${previewGroup.items.length} episode${previewGroup.items.length > 1 ? 's' : ''} ready to watch.`}
+                </p>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => {
+                      setSelectedSeries(previewGroup.title);
+                      setPreviewGroup(null);
+                    }}
+                    className="bg-red-600 text-white hover:bg-red-700"
+                  >
+                    Open Series
+                  </Button>
+                  {previewGroup.items[0] && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        handlePlayWithEpisodes(previewGroup.items[0], previewGroup.items);
+                        setPreviewGroup(null);
+                      }}
+                      className="border-white/10 text-white/80 hover:bg-white/10 hover:text-white"
+                    >
+                      Watch Now
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>
