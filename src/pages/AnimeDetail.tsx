@@ -164,11 +164,12 @@ export default function AnimeDetail() {
   const fetchAnimeDetails = async () => {
     setIsLoading(true);
     
-    const { data: animeData, error: animeError } = await supabase
-      .from('anime_public')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const [animeRes, extrasRes] = await Promise.all([
+      supabase.from('anime_public').select('*').eq('id', id).single(),
+      supabase.from('anime').select('studio, total_episodes').eq('id', id).maybeSingle(),
+    ]);
+    const animeData = animeRes.data;
+    const animeError = animeRes.error;
 
     if (animeError || !animeData) {
       toast.error('Failed to load anime details');
@@ -176,7 +177,12 @@ export default function AnimeDetail() {
       return;
     }
 
-    setAnime(animeData);
+    const merged: Anime = {
+      ...(animeData as any),
+      studio: extrasRes.data?.studio ?? null,
+      total_episodes: extrasRes.data?.total_episodes ?? null,
+    };
+    setAnime(merged);
     // Preload cover and banner for instant display
     preloadImages([animeData.cover_image, animeData.banner_image]);
 
