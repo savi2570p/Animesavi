@@ -2062,82 +2062,143 @@ export default function ShadowFlix() {
       </Dialog>
 
       <Dialog open={!!previewGroup} onOpenChange={(open) => { if (!open) setPreviewGroup(null); }}>
-        <DialogContent className="overflow-hidden border-red-500/20 bg-[#141414] p-0 text-white sm:max-w-2xl">
-          {previewGroup && (
-            <div>
-              <div className="relative aspect-[16/7] overflow-hidden bg-black">
-                {previewGroup.banner || previewGroup.thumbnail ? (
-                  <img
-                    src={previewGroup.banner || previewGroup.thumbnail || ''}
-                    alt={previewGroup.title}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-white/5">
-                    <Film className="h-10 w-10 text-white/20" />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <div className="mb-2 flex flex-wrap gap-2">
-                    <span className="rounded-full bg-red-600/90 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-white">Preview</span>
-                    <span className="rounded-full bg-black/60 px-2 py-1 text-[10px] font-semibold text-white/80">{previewGroup.items.length} episode{previewGroup.items.length > 1 ? 's' : ''}</span>
-                    {previewGroup.genre && <span className="rounded-full bg-black/60 px-2 py-1 text-[10px] font-semibold text-white/80">{previewGroup.genre}</span>}
-                  </div>
-                  <h3 className="text-2xl font-black text-white sm:text-3xl">{previewGroup.title}</h3>
-                </div>
-              </div>
-
-              <div className="space-y-4 p-5">
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                    <p className="text-[10px] uppercase tracking-wider text-white/40">Episodes</p>
-                    <p className="mt-1 text-sm font-bold text-white">{previewGroup.items.length}</p>
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                    <p className="text-[10px] uppercase tracking-wider text-white/40">Views</p>
-                    <p className="mt-1 text-sm font-bold text-white">{previewGroup.totalViews || 0}</p>
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                    <p className="text-[10px] uppercase tracking-wider text-white/40">Genres</p>
-                    <p className="mt-1 text-sm font-bold text-white">{previewGroup.genres.length || 1}</p>
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                    <p className="text-[10px] uppercase tracking-wider text-white/40">First Episode</p>
-                    <p className="mt-1 text-sm font-bold text-white">E{previewGroup.items[0]?.episode_number || 1}</p>
+        <DialogContent className="overflow-hidden border-red-500/20 bg-[#141414] p-0 text-white sm:max-w-3xl max-h-[92vh] overflow-y-auto">
+          {previewGroup && (() => {
+            const seriesUrl = buildShadowFlixShareUrl(previewGroup.title);
+            const firstEp = previewGroup.items[0];
+            const embedUrl = firstEp ? `${window.location.origin}/embed/${firstEp.id}` : seriesUrl;
+            const sortedEpisodes = [...previewGroup.items].sort((a, b) => (a.episode_number || 0) - (b.episode_number || 0));
+            const recentEpisodes = sortedEpisodes.slice(-5).reverse();
+            const allGenres = previewGroup.genres?.length ? previewGroup.genres : (previewGroup.genre ? [previewGroup.genre] : []);
+            const quickShare = async (label: string, url: string) => {
+              try { await navigator.clipboard.writeText(url); toast.success(`${label} copied!`); } catch { toast.error('Copy failed'); }
+            };
+            return (
+              <div>
+                <div className="relative aspect-[16/7] overflow-hidden bg-black">
+                  {previewGroup.banner || previewGroup.thumbnail ? (
+                    <img src={previewGroup.banner || previewGroup.thumbnail || ''} alt={previewGroup.title} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-white/5"><Film className="h-10 w-10 text-white/20" /></div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    <div className="mb-2 flex flex-wrap gap-2">
+                      <span className="rounded-full bg-red-600/90 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-white">Preview</span>
+                      <span className="rounded-full bg-black/60 px-2 py-1 text-[10px] font-semibold text-white/80">{previewGroup.items.length} episode{previewGroup.items.length > 1 ? 's' : ''}</span>
+                      {previewGroup.isFeatured && <span className="rounded-full bg-amber-500/90 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-black">Featured</span>}
+                    </div>
+                    <h3 className="text-2xl font-black text-white sm:text-3xl">{previewGroup.title}</h3>
                   </div>
                 </div>
 
-                <p className="text-sm leading-relaxed text-white/70">
-                  {previewGroup.description || `${previewGroup.title} is available inside Shadow Flix with ${previewGroup.items.length} episode${previewGroup.items.length > 1 ? 's' : ''} ready to watch.`}
-                </p>
-
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    onClick={() => {
-                      setSelectedSeries(previewGroup.title);
-                      setPreviewGroup(null);
-                    }}
-                    className="bg-red-600 text-white hover:bg-red-700"
-                  >
-                    Open Series
-                  </Button>
-                  {previewGroup.items[0] && (
+                <div className="space-y-4 p-5">
+                  {/* Primary actions: Watch + Open */}
+                  <div className="flex flex-wrap gap-2">
+                    {firstEp && (
+                      <Button
+                        onClick={() => { handlePlayWithEpisodes(firstEp, previewGroup.items); setPreviewGroup(null); }}
+                        className="bg-red-600 text-white hover:bg-red-700 gap-2"
+                      >
+                        <Play className="h-4 w-4 fill-current" /> Watch Now
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
-                      onClick={() => {
-                        handlePlayWithEpisodes(previewGroup.items[0], previewGroup.items);
-                        setPreviewGroup(null);
-                      }}
+                      onClick={() => { setSelectedSeries(previewGroup.title); setPreviewGroup(null); }}
                       className="border-white/10 text-white/80 hover:bg-white/10 hover:text-white"
                     >
-                      Watch Now
+                      Open Series
                     </Button>
+                  </div>
+
+                  {/* Genres */}
+                  {allGenres.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {allGenres.map((g) => (
+                        <span key={g} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-white/80">{g}</span>
+                      ))}
+                    </div>
                   )}
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <p className="text-[10px] uppercase tracking-wider text-white/40">Episodes</p>
+                      <p className="mt-1 text-sm font-bold text-white">{previewGroup.items.length}</p>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <p className="text-[10px] uppercase tracking-wider text-white/40">Views</p>
+                      <p className="mt-1 text-sm font-bold text-white">{previewGroup.totalViews || 0}</p>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <p className="text-[10px] uppercase tracking-wider text-white/40">Genres</p>
+                      <p className="mt-1 text-sm font-bold text-white">{allGenres.length || 1}</p>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <p className="text-[10px] uppercase tracking-wider text-white/40">Latest</p>
+                      <p className="mt-1 text-sm font-bold text-white">E{sortedEpisodes[sortedEpisodes.length - 1]?.episode_number || 1}</p>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-sm leading-relaxed text-white/70">
+                    {previewGroup.description || `${previewGroup.title} is available inside Shadow Flix with ${previewGroup.items.length} episode${previewGroup.items.length > 1 ? 's' : ''} ready to watch.`}
+                  </p>
+
+                  {/* Recent episodes */}
+                  {recentEpisodes.length > 0 && (
+                    <div>
+                      <h4 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-white/50">Recent Episodes</h4>
+                      <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                        {recentEpisodes.map((ep) => (
+                          <button
+                            key={ep.id}
+                            onClick={() => { handlePlayWithEpisodes(ep, previewGroup.items); setPreviewGroup(null); }}
+                            className="group flex w-full items-center gap-3 rounded-lg border border-white/5 bg-white/5 p-2 text-left transition hover:border-red-500/40 hover:bg-red-600/10"
+                          >
+                            <div className="relative h-12 w-20 shrink-0 overflow-hidden rounded bg-black">
+                              {ep.thumbnail_url ? (
+                                <img src={ep.thumbnail_url} alt={ep.title} className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center"><Film className="h-4 w-4 text-white/30" /></div>
+                              )}
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover:opacity-100">
+                                <Play className="h-4 w-4 fill-white text-white" />
+                              </div>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-white">E{ep.episode_number ?? '?'} · {ep.title}</p>
+                              <p className="truncate text-[11px] text-white/50">S{ep.season_number ?? 1}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Quick share */}
+                  <div>
+                    <h4 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-white/50">Quick Share</h4>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline" onClick={() => quickShare('Series link', seriesUrl)} className="border-white/10 bg-white/5 text-white/80 hover:bg-white/10 gap-1.5">
+                        <LinkIcon className="h-3.5 w-3.5" /> Series
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => quickShare('Embed link', embedUrl)} className="border-white/10 bg-white/5 text-white/80 hover:bg-white/10 gap-1.5">
+                        <Code className="h-3.5 w-3.5" /> Embed
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => quickShare('Iframe code', `<iframe src="${embedUrl}" width="100%" height="500" frameborder="0" allowfullscreen></iframe>`)} className="border-white/10 bg-white/5 text-white/80 hover:bg-white/10 gap-1.5">
+                        <Code2 className="h-3.5 w-3.5" /> Iframe
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => window.open(seriesUrl, '_blank')} className="border-white/10 bg-white/5 text-white/80 hover:bg-white/10 gap-1.5">
+                        <ExternalLink className="h-3.5 w-3.5" /> Open
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
