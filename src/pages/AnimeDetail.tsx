@@ -46,8 +46,8 @@ interface Anime {
   type: string | null;
   view_count: number | null;
   like_count: number | null;
-  studio: string | null;
-  total_episodes: number | null;
+  studio?: string | null;
+  total_episodes?: number | null;
 }
 
 interface Season {
