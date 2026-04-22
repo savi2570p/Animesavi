@@ -46,6 +46,8 @@ interface Anime {
   type: string | null;
   view_count: number | null;
   like_count: number | null;
+  studio: string | null;
+  total_episodes: number | null;
 }
 
 interface Season {
@@ -519,7 +521,7 @@ export default function AnimeDetail() {
             </h1>
 
             {/* Meta info */}
-            <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-2 md:gap-3 text-muted-foreground">
               {anime.release_year && (
                 <span className="flex items-center gap-1.5 bg-secondary/50 px-3 py-1.5 rounded-lg">
                   <Calendar className="h-4 w-4" />
@@ -538,6 +540,16 @@ export default function AnimeDetail() {
                   'bg-primary text-primary-foreground px-3 py-1.5'
                 )}>
                   {anime.status === 'ongoing' ? 'OG' : anime.status === 'completed' ? 'COM' : anime.status}
+                </span>
+              )}
+              {anime.total_episodes != null && (
+                <span className="flex items-center gap-1.5 bg-primary/10 text-primary border border-primary/20 px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold">
+                  📺 {anime.total_episodes} EP{anime.total_episodes === 1 ? '' : 's'}
+                </span>
+              )}
+              {anime.studio && (
+                <span className="flex items-center gap-1.5 bg-accent/10 text-accent-foreground border border-accent/20 px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold max-w-[200px] truncate">
+                  🎬 {anime.studio}
                 </span>
               )}
               <span className="badge-glass-hdub">
