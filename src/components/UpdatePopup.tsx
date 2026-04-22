@@ -26,23 +26,11 @@ const VERSION_GROUPS: VersionGroup[] = [
   {
     version: 'v20',
     date: 'Latest',
-    highlight: 'Shadow Flix gets richer previews and admin upload controls.',
+    highlight: 'Smoother uploads, richer metadata, and a polished player experience.',
     items: [
-      { icon: '🎬', badge: 'NEW', title: 'Shadow Flix Rich Preview', desc: 'Right-click any series for genres, recent episodes, watch button, and quick share actions.' },
-      { icon: '📤', badge: 'IMPROVED', title: 'Upload Monitor v2', desc: 'Resumable TUS uploads with cleaner cancellation — no more accidental restarts.' },
-      { icon: '🔔', badge: 'NEW', title: "What's New v20", desc: 'Swipeable version history with badges so you can see what changed at a glance.' },
-      { icon: '🎟️', badge: 'NEW', title: '1-Month Admin Trials', desc: 'Admins can grant 30-day trial access from the Users panel and revoke any time.' },
-    ],
-  },
-  {
-    version: 'v19',
-    date: 'Previous',
-    highlight: 'Library polish and mobile popup fixes.',
-    items: [
-      { icon: '🎬', badge: 'NEW', title: 'Shadow Flix Library Preview', desc: 'Faster right-click actions, preview details, and smarter share tools.' },
       { icon: '📅', badge: 'IMPROVED', title: 'Upcoming Refresh', desc: 'Coming Soon panels surface richer anime details with improved mobile presentation.' },
-      { icon: '📱', badge: 'FIX', title: 'Mobile Popup Fix', desc: "Opening What's New from the hamburger now closes the menu first so the popup is fully visible." },
       { icon: '🎞️', badge: 'IMPROVED', title: 'Player Polish', desc: 'Smoother fullscreen shortcuts, color customization, and premium controls.' },
+      { icon: '📱', badge: 'FIX', title: 'Mobile Popup Fix', desc: "Opening What's New from the hamburger now closes the menu first so the popup is fully visible." },
     ],
   },
 ];

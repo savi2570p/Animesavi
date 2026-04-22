@@ -41,6 +41,8 @@ interface Anime {
   type: string | null;
   created_at: string;
   release_year: number | null;
+  studio: string | null;
+  total_episodes: number | null;
 }
 
 interface Season {
@@ -452,10 +454,20 @@ export default function Upload() {
                     />
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-lg">{anime.title}</h3>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
                         <Badge variant="outline" className="capitalize">
                           {anime.status}
                         </Badge>
+                        {anime.total_episodes != null && (
+                          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                            {anime.total_episodes} EP
+                          </Badge>
+                        )}
+                        {anime.studio && (
+                          <Badge variant="secondary" className="bg-accent/10 text-accent-foreground border-accent/20 truncate max-w-[180px]">
+                            🎬 {anime.studio}
+                          </Badge>
+                        )}
                         <span className="text-sm text-muted-foreground">
                           {new Date(anime.created_at).toLocaleDateString()}
                         </span>
@@ -517,13 +529,23 @@ export default function Upload() {
                     />
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-lg">{anime.title}</h3>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
                         <Badge className="bg-accent text-accent-foreground">
                           Movie
                         </Badge>
                         <Badge variant="outline" className="capitalize">
                           {anime.status}
                         </Badge>
+                        {anime.total_episodes != null && (
+                          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                            {anime.total_episodes} EP
+                          </Badge>
+                        )}
+                        {anime.studio && (
+                          <Badge variant="secondary" className="bg-accent/10 text-accent-foreground border-accent/20 truncate max-w-[180px]">
+                            🎬 {anime.studio}
+                          </Badge>
+                        )}
                         <span className="text-sm text-muted-foreground">
                           {new Date(anime.created_at).toLocaleDateString()}
                         </span>
