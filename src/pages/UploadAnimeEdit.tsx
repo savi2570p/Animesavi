@@ -31,6 +31,8 @@ interface Anime {
   status: string | null;
   genres: string[] | null;
   release_year: number | null;
+  studio: string | null;
+  total_episodes: number | null;
 }
 
 interface Season {
@@ -89,6 +91,8 @@ export default function UploadAnimeEdit() {
   const [editGenres, setEditGenres] = useState<string[]>([]);
   const [editReleaseYear, setEditReleaseYear] = useState('');
   const [editReleaseDate, setEditReleaseDate] = useState<Date | undefined>(undefined);
+  const [editStudio, setEditStudio] = useState('');
+  const [editTotalEpisodes, setEditTotalEpisodes] = useState('');
   const [isSavingInfo, setIsSavingInfo] = useState(false);
 
   // New episode form
@@ -157,6 +161,8 @@ export default function UploadAnimeEdit() {
     setEditBannerImage(animeData.banner_image || '');
     setEditGenres(animeData.genres || []);
     setEditReleaseYear(animeData.release_year ? String(animeData.release_year) : '');
+    setEditStudio((animeData as any).studio || '');
+    setEditTotalEpisodes((animeData as any).total_episodes != null ? String((animeData as any).total_episodes) : '');
 
     // Fetch seasons
     const { data: seasonsData } = await supabase
@@ -569,6 +575,28 @@ export default function UploadAnimeEdit() {
               ))}
             </div>
           </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Studio</Label>
+              <Input
+                value={editStudio}
+                onChange={(e) => setEditStudio(e.target.value)}
+                placeholder="e.g. MAPPA, Bones, Ufotable"
+                className="bg-muted/50"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Total Episodes</Label>
+              <Input
+                type="number"
+                min={0}
+                value={editTotalEpisodes}
+                onChange={(e) => setEditTotalEpisodes(e.target.value)}
+                placeholder="e.g. 24"
+                className="bg-muted/50"
+              />
+            </div>
+          </div>
           <Button
             className="anime-button"
             disabled={isSavingInfo}
@@ -581,6 +609,8 @@ export default function UploadAnimeEdit() {
               const yearToStore = animeStatus === 'upcoming' && editReleaseDate
                 ? editReleaseDate.getFullYear()
                 : (editReleaseYear ? parseInt(editReleaseYear) : null);
+              const totalEpisodesToStore = editTotalEpisodes.trim() ? parseInt(editTotalEpisodes) : null;
+              const studioToStore = editStudio.trim() || null;
               const { error } = await supabase
                 .from('anime')
                 .update({
@@ -589,13 +619,15 @@ export default function UploadAnimeEdit() {
                   banner_image: editBannerImage.trim() || null,
                   genres: editGenres.length > 0 ? editGenres : null,
                   release_year: yearToStore,
+                  studio: studioToStore,
+                  total_episodes: totalEpisodesToStore,
                 })
                 .eq('id', animeId);
               if (error) {
                 toast.error('Failed to update');
               } else {
                 toast.success('Series info updated!');
-                setAnime(prev => prev ? { ...prev, title: editTitle.trim(), cover_image: editCoverImage.trim() || null, banner_image: editBannerImage.trim() || null, genres: editGenres, release_year: yearToStore } : null);
+                setAnime(prev => prev ? { ...prev, title: editTitle.trim(), cover_image: editCoverImage.trim() || null, banner_image: editBannerImage.trim() || null, genres: editGenres, release_year: yearToStore, studio: studioToStore, total_episodes: totalEpisodesToStore } : null);
               }
               setIsSavingInfo(false);
             }}
