@@ -636,13 +636,35 @@ export default function AnimeDetail() {
               </h2>
               {seasons.length > 0 && (
                 <Select value={selectedSeason || undefined} onValueChange={setSelectedSeason}>
-                  <SelectTrigger className="w-[180px] bg-secondary/50">
-                    <SelectValue placeholder="Select Season" />
+                  <SelectTrigger className="w-[240px] bg-secondary/50">
+                    <SelectValue placeholder="Select Season">
+                      {(() => {
+                        const s = seasons.find((x) => x.id === selectedSeason);
+                        if (!s) return null;
+                        const label = s.title || `Season ${s.season_number}`;
+                        const count = s.id === selectedSeason ? episodes.length : null;
+                        return (
+                          <span className="flex items-center gap-2">
+                            <span className="truncate">{label}</span>
+                            {count != null && (
+                              <span className="text-[10px] font-semibold text-primary bg-primary/10 border border-primary/20 rounded px-1.5 py-0.5">
+                                {count} EP
+                              </span>
+                            )}
+                          </span>
+                        );
+                      })()}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {seasons.map((season) => (
                       <SelectItem key={season.id} value={season.id}>
-                        {season.title || `Season ${season.season_number}`}
+                        <span className="flex items-center gap-2">
+                          <span>{season.title || `Season ${season.season_number}`}</span>
+                          {anime.total_episodes != null && season.id === seasons[0]?.id && seasons.length === 1 && (
+                            <span className="text-[10px] font-semibold text-primary">· {anime.total_episodes} EP</span>
+                          )}
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
