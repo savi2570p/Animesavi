@@ -5,8 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, ChevronLeft, ChevronRight, Heart, Sparkles } from 'lucide-react';
-import { format, startOfWeek, addDays, isSameDay, parseISO, getDay } from 'date-fns';
+import { CalendarDays, ChevronLeft, ChevronRight, Heart, Sparkles, Flame, Tv } from 'lucide-react';
+import { format, startOfWeek, addDays, isSameDay, parseISO, getDay, isBefore, startOfDay } from 'date-fns';
 
 interface ScheduleAnime {
   id: string;
@@ -18,10 +18,10 @@ interface ScheduleAnime {
   is_favorite: boolean;
   latest_episode_date: string | null;
   has_recent_upload: boolean;
+  total_episodes: number | null;
 }
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const FULL_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export function AnimeCalendar() {
   const { user } = useAuth();
@@ -29,6 +29,7 @@ export function AnimeCalendar() {
   const [isLoading, setIsLoading] = useState(true);
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [activeFilter, setActiveFilter] = useState<'all' | 'favorites' | 'new'>('all');
 
   useEffect(() => {
     fetchScheduleData();
@@ -39,7 +40,7 @@ export function AnimeCalendar() {
     try {
       const { data: animeData, error: animeError } = await supabase
         .from('anime')
-        .select('id, title, cover_image, status, genres, updated_at, schedule_day')
+        .select('id, title, cover_image, status, genres, updated_at, schedule_day, total_episodes')
         .eq('status', 'ongoing');
 
       if (animeError) throw animeError;
@@ -109,7 +110,8 @@ export function AnimeCalendar() {
             release_day: releaseDay,
             is_favorite: userFavorites.has(anime.id),
             latest_episode_date: latestEpisodeDate,
-            has_recent_upload: hasRecentUpload
+            has_recent_upload: hasRecentUpload,
+            total_episodes: (anime as any).total_episodes ?? null,
           };
         })
       );
@@ -124,7 +126,12 @@ export function AnimeCalendar() {
 
   const getAnimeForDay = (dayIndex: number) => {
     return animeList
-      .filter(anime => anime.release_day === dayIndex || anime.release_day === 7)
+      .filter(anime => {
+        if (anime.release_day !== dayIndex && anime.release_day !== 7) return false;
+        if (activeFilter === 'favorites' && !anime.is_favorite) return false;
+        if (activeFilter === 'new' && !anime.has_recent_upload) return false;
+        return true;
+      })
       .sort((a, b) => {
         if (a.is_favorite && !b.is_favorite) return -1;
         if (!a.is_favorite && b.is_favorite) return 1;
@@ -142,7 +149,10 @@ export function AnimeCalendar() {
   };
 
   const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const today = new Date();
+  const today = startOfDay(new Date());
+  const totalThisWeek = weekDates.reduce((sum, _, i) => sum + getAnimeForDay(i).length, 0);
+  const favCount = animeList.filter(a => a.is_favorite).length;
+  const newCount = animeList.filter(a => a.has_recent_upload).length;
 
   if (isLoading) {
     return (
@@ -150,7 +160,7 @@ export function AnimeCalendar() {
         <div className="container">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 rounded-lg bg-primary/10">
-              <Calendar className="h-5 w-5 text-primary" />
+              <CalendarDays className="h-5 w-5 text-primary" />
             </div>
             <h2 className="text-2xl font-heading font-bold">Release Calendar</h2>
           </div>
@@ -174,71 +184,119 @@ export function AnimeCalendar() {
   return (
     <section className="py-8">
       <div className="container">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Calendar className="h-5 w-5 text-primary" />
+        {/* Cinematic header */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-card/40 to-transparent border border-primary/20 p-4 md:p-6 mb-5">
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-primary/15 border border-primary/30 shadow-lg shadow-primary/10">
+                <CalendarDays className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-xl md:text-2xl font-heading font-bold flex items-center gap-2">
+                  Release Calendar
+                  <Badge variant="outline" className="text-[10px] border-primary/40 text-primary uppercase tracking-wider hidden sm:inline-flex">Live</Badge>
+                </h2>
+                <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                  {format(weekStart, 'MMM d')} – {format(addDays(weekStart, 6), 'MMM d, yyyy')} · <span className="text-primary font-semibold">{totalThisWeek}</span> releases this week
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-2xl font-heading font-bold">Release Calendar</h2>
-              <p className="text-sm text-muted-foreground">
-                {format(weekStart, 'MMM d')} - {format(addDays(weekStart, 6), 'MMM d, yyyy')}
-              </p>
+
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={goToToday} className="h-8">
+                Today
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => navigateWeek('prev')} className="h-8 w-8">
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => navigateWeek('next')} className="h-8 w-8">
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={goToToday}>
-              Today
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => navigateWeek('prev')}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => navigateWeek('next')}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+
+          {/* Filter chips */}
+          <div className="relative flex items-center gap-2 mt-4 overflow-x-auto scrollbar-thin">
+            <button
+              onClick={() => setActiveFilter('all')}
+              className={`shrink-0 text-[11px] md:text-xs font-medium px-3 py-1.5 rounded-full border transition-all ${
+                activeFilter === 'all'
+                  ? 'bg-primary text-primary-foreground border-primary shadow shadow-primary/30'
+                  : 'bg-card/40 text-muted-foreground border-border/40 hover:border-primary/40'
+              }`}
+            >
+              All · {animeList.length}
+            </button>
+            <button
+              onClick={() => setActiveFilter('favorites')}
+              className={`shrink-0 text-[11px] md:text-xs font-medium px-3 py-1.5 rounded-full border transition-all flex items-center gap-1 ${
+                activeFilter === 'favorites'
+                  ? 'bg-primary text-primary-foreground border-primary shadow shadow-primary/30'
+                  : 'bg-card/40 text-muted-foreground border-border/40 hover:border-primary/40'
+              }`}
+            >
+              <Heart className="h-3 w-3" /> Favorites · {favCount}
+            </button>
+            <button
+              onClick={() => setActiveFilter('new')}
+              className={`shrink-0 text-[11px] md:text-xs font-medium px-3 py-1.5 rounded-full border transition-all flex items-center gap-1 ${
+                activeFilter === 'new'
+                  ? 'bg-primary text-primary-foreground border-primary shadow shadow-primary/30'
+                  : 'bg-card/40 text-muted-foreground border-border/40 hover:border-primary/40'
+              }`}
+            >
+              <Flame className="h-3 w-3" /> New this week · {newCount}
+            </button>
           </div>
         </div>
 
-        {/* Row-based layout: Date on left, anime scrolling horizontally */}
-        <div className="space-y-1">
+        {/* Row-based layout */}
+        <div className="space-y-1.5">
           {weekDates.map((date, dayIndex) => {
             const isToday = isSameDay(date, today);
+            const isPast = isBefore(date, today) && !isToday;
             const dayAnime = getAnimeForDay(dayIndex);
 
             return (
               <div
                 key={dayIndex}
-                className={`flex items-stretch rounded-lg overflow-hidden transition-colors ${
-                  isToday ? 'bg-primary/5 ring-1 ring-primary/30' : 'bg-card/30 hover:bg-card/50'
+                className={`flex items-stretch rounded-xl overflow-hidden transition-all duration-200 ${
+                  isToday
+                    ? 'bg-gradient-to-r from-primary/10 via-primary/5 to-transparent ring-1 ring-primary/40 shadow-lg shadow-primary/10'
+                    : isPast
+                      ? 'bg-card/20 opacity-60 hover:opacity-90'
+                      : 'bg-card/30 hover:bg-card/50'
                 }`}
               >
-                {/* Left: Date column */}
+                {/* Date column */}
                 <div
-                  className={`shrink-0 w-12 md:w-20 flex flex-col items-center justify-center py-1.5 md:py-2 border-r ${
+                  className={`shrink-0 w-14 md:w-24 flex flex-col items-center justify-center py-2 md:py-3 border-r relative ${
                     isToday
                       ? 'bg-primary text-primary-foreground border-primary'
                       : 'bg-muted/30 border-border/30'
                   }`}
                 >
-                  <span className="text-[8px] md:text-[10px] font-medium uppercase tracking-wider opacity-80">
+                  <span className="text-[9px] md:text-[11px] font-semibold uppercase tracking-wider opacity-90">
                     {DAYS_OF_WEEK[dayIndex]}
                   </span>
-                  <span className="text-base md:text-xl font-bold leading-none mt-0.5">
+                  <span className="text-lg md:text-2xl font-bold leading-none mt-0.5">
                     {format(date, 'd')}
                   </span>
+                  <span className={`text-[8px] md:text-[10px] mt-0.5 ${isToday ? 'opacity-90' : 'opacity-60'}`}>
+                    {format(date, 'MMM')}
+                  </span>
                   {isToday && (
-                    <Badge variant="default" className="text-[7px] px-1 py-0 mt-0.5 h-3">
+                    <Badge variant="secondary" className="text-[7px] px-1 py-0 mt-1 h-3.5 bg-primary-foreground/20 text-primary-foreground border-0">
                       TODAY
                     </Badge>
                   )}
                 </div>
 
-                <div className="flex-1 min-w-0 py-1 px-1.5 md:px-2">
+                <div className="flex-1 min-w-0 py-1.5 px-2 md:px-3">
                   {dayAnime.length === 0 ? (
-                    <div className="flex items-center h-full text-muted-foreground text-[10px] px-2">
-                      —
+                    <div className="flex items-center h-full text-muted-foreground text-[10px] md:text-xs italic px-2">
+                      No releases scheduled
                     </div>
                   ) : (
                     <div className="flex gap-2 md:gap-3 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
@@ -248,31 +306,40 @@ export function AnimeCalendar() {
                           to={`/anime/${anime.id}`}
                           className="shrink-0 group"
                         >
-                          <div className="relative w-[55px] md:w-[70px]">
+                          <div className="relative w-[60px] md:w-[78px]">
                             <div className="relative">
                               <img
                                 src={anime.cover_image || '/placeholder.svg'}
                                 alt={anime.title}
-                                className={`w-[55px] h-[75px] md:w-[70px] md:h-[95px] object-cover rounded transition-transform duration-200 group-hover:scale-105 ${
-                                  anime.is_favorite ? 'ring-2 ring-primary' : ''
+                                className={`w-[60px] h-[82px] md:w-[78px] md:h-[108px] object-cover rounded-md transition-all duration-200 group-hover:scale-105 group-hover:shadow-lg group-hover:shadow-primary/30 ${
+                                  anime.is_favorite ? 'ring-2 ring-primary' : 'ring-1 ring-border/30'
                                 }`}
                                 loading="lazy"
                               />
+                              {/* Episode count corner badge */}
+                              {anime.total_episodes != null && (
+                                <div className="absolute bottom-0.5 left-0.5 flex items-center gap-0.5 bg-black/70 backdrop-blur-sm text-white text-[8px] md:text-[9px] font-bold px-1 py-0.5 rounded">
+                                  <Tv className="h-2 w-2" />
+                                  {anime.total_episodes}
+                                </div>
+                              )}
                               {isToday && (
                                 <div className="absolute -bottom-1 -right-1">
                                   <Sparkles className="h-3 w-3 text-yellow-400 animate-pulse drop-shadow-[0_0_4px_rgba(250,204,21,0.7)]" />
                                 </div>
                               )}
                               {anime.is_favorite && (
-                                <div className="absolute top-1 left-1 p-0.5 bg-primary rounded-full">
+                                <div className="absolute top-1 left-1 p-0.5 bg-primary rounded-full shadow">
                                   <Heart className="h-2 w-2 text-primary-foreground fill-current" />
                                 </div>
                               )}
                               {anime.has_recent_upload && (
-                                <div className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                                <div className="absolute top-1 right-1 flex items-center gap-0.5 px-1 py-0.5 bg-emerald-500 rounded text-[7px] font-bold text-white shadow shadow-emerald-500/50">
+                                  NEW
+                                </div>
                               )}
                             </div>
-                            <p className="text-[8px] md:text-[9px] font-medium line-clamp-1 mt-0.5 leading-tight text-center group-hover:text-primary transition-colors">
+                            <p className="text-[8px] md:text-[10px] font-medium line-clamp-2 mt-1 leading-tight text-center group-hover:text-primary transition-colors">
                               {anime.title}
                             </p>
                           </div>
@@ -285,7 +352,7 @@ export function AnimeCalendar() {
                 {/* Count badge */}
                 {dayAnime.length > 0 && (
                   <div className="shrink-0 flex items-center pr-2 md:pr-3">
-                    <Badge variant="outline" className="text-[10px] h-5">
+                    <Badge variant="outline" className={`text-[10px] h-5 ${isToday ? 'border-primary/50 text-primary' : ''}`}>
                       {dayAnime.length}
                     </Badge>
                   </div>
