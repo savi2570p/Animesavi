@@ -567,11 +567,11 @@ export default function Welcome() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             {[
-              { icon: Crown, title: 'Personal Watchrooms', desc: 'Persistent rooms with friends — pick up sessions days later.', tag: 'In Progress' },
-              { icon: Flame, title: 'Smarter Recommendations', desc: 'Genre-aware suggestions tuned by your real watch history.', tag: 'Beta' },
-              { icon: Calendar, title: 'Seasonal Tracker', desc: 'One dashboard to follow every airing show this season.', tag: 'Soon' },
-              { icon: Palette, title: 'Custom Player Themes', desc: 'Pick accent colors and player skins to match your vibe.', tag: 'Soon' },
-              { icon: BarChart3, title: 'Watch Stats', desc: 'See total hours watched, top genres, longest streaks.', tag: 'Planned' },
+              { icon: Crown, title: 'Persistent Watch Rooms', desc: 'Resume group sessions days later — chat history, queue and playback position all saved.', tag: 'In Progress' },
+              { icon: Flame, title: 'Smart Recommendations 2.0', desc: 'Genre + mood-aware suggestions tuned by your real watch history and ratings.', tag: 'Beta' },
+              { icon: Calendar, title: 'Seasonal Anime Tracker', desc: 'A single dashboard for every airing show this season with episode countdowns.', tag: 'Soon' },
+              { icon: Palette, title: 'Custom Player Skins', desc: 'Pick accent colors, control layouts and skip-intro behavior to match your vibe.', tag: 'Soon' },
+              { icon: BarChart3, title: 'Personal Watch Stats', desc: 'Total hours watched, top genres, longest streaks and a year-in-review wrap.', tag: 'Planned' },
               { icon: MapPin, title: 'AI Episode Recaps', desc: 'Auto-generated 30-second recaps so you never lose track of long-running shows.', tag: 'Planned' },
             ].map((r, i) => (
               <div key={i} className="relative p-5 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/30 transition-all duration-300">
