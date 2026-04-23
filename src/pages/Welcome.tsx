@@ -680,6 +680,75 @@ export default function Welcome() {
         </div>
       </div>
 
+      {/* Realistic launch loading overlay — shown when user clicks "Start Watching" */}
+      {isLaunching && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-background/95 backdrop-blur-xl animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Loading AnimeSavi"
+        >
+          {/* Ambient glow */}
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
+            style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.18) 0%, transparent 60%)' }}
+          />
+          <div className="relative w-full max-w-md mx-auto px-6 flex flex-col items-center gap-7 text-center">
+            {/* Logo with pulse rings */}
+            <div className="relative w-24 h-24 flex items-center justify-center">
+              <span className="absolute inset-0 rounded-3xl border-2 border-primary/40 animate-ping" />
+              <span className="absolute inset-2 rounded-3xl border border-primary/30 animate-pulse" />
+              <div
+                className="relative w-20 h-20 rounded-3xl flex items-center justify-center overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, hsl(var(--primary) / 0.25), hsl(var(--accent)))',
+                  boxShadow: '0 0 60px hsl(var(--primary) / 0.5)',
+                }}
+              >
+                <img src={logo} alt="AnimeSavi" className="w-12 h-12 object-contain" />
+              </div>
+            </div>
+
+            {/* Title */}
+            <div className="space-y-1.5">
+              <h2 className="text-2xl font-extrabold tracking-tight">
+                <span className="text-primary">Anime</span>
+                <span className="text-foreground">Savi</span>
+              </h2>
+              <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase">
+                {launchStage}
+              </p>
+            </div>
+
+            {/* Progress bar */}
+            <div className="w-full space-y-2">
+              <div className="h-1.5 w-full rounded-full bg-card/80 overflow-hidden border border-border/30">
+                <div
+                  className="h-full rounded-full transition-[width] duration-150 ease-out"
+                  style={{
+                    width: `${launchProgress}%`,
+                    background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))',
+                    boxShadow: '0 0 12px hsl(var(--primary) / 0.6)',
+                  }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground font-medium tabular-nums">
+                <span>{Math.floor(launchProgress)}%</span>
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  H.Savi · 4K Ready
+                </span>
+              </div>
+            </div>
+
+            {/* Tip */}
+            <p className="text-[11px] text-muted-foreground/70 max-w-xs leading-relaxed">
+              Tip: Pin AnimeSavi to your home screen for an instant native-app experience.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Bottom branding */}
       <div className="relative z-10 pb-8 pt-12 text-center">
         <div className="flex items-center justify-center gap-2 mb-2">
