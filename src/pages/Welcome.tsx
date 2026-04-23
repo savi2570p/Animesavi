@@ -645,7 +645,7 @@ export default function Welcome() {
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">Ready to Watch?</h2>
             <p className="text-muted-foreground text-sm sm:text-base mb-6 max-w-md mx-auto">Join thousands of anime fans streaming their favorites on AnimeSavi — completely free and ad-free.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button onClick={() => navigate('/')} className="flex items-center gap-2 px-8 py-3.5 rounded-2xl text-base font-bold transition-all duration-200 hover:scale-105 bg-primary text-primary-foreground" style={{ boxShadow: '0 4px 24px hsl(var(--primary) / 0.4)' }}>
+              <button onClick={() => startWatching('/')} className="flex items-center gap-2 px-8 py-3.5 rounded-2xl text-base font-bold transition-all duration-200 hover:scale-105 bg-primary text-primary-foreground" style={{ boxShadow: '0 4px 24px hsl(var(--primary) / 0.4)' }}>
                 <Play className="w-5 h-5 fill-current" />
                 Start Watching Now
               </button>
