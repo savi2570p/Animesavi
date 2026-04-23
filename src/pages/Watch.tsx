@@ -401,30 +401,68 @@ export default function Watch() {
   const updateWatchProgress = useCallback(async (currentTime: number, duration: number) => {
     if (!user || !episodeId || !anime) return;
 
-    // Handle initial seek from resume progress - "Remember Playback Position" feature
-    if (!initialSeekDone && resumeProgress && duration > 0) {
-      const progressPercent = parseInt(resumeProgress, 10);
-      if (!isNaN(progressPercent) && progressPercent > 0 && progressPercent < 95) {
-        const seekTime = (progressPercent / 100) * duration;
-        // Find video element and seek
+    // Handle initial seek from resume progress - "Remember Playback Position"
+    // Priority: ?ts=1&t=<seconds>  >  localStorage exact seconds  >  ?t=<percent>
+    if (!initialSeekDone && duration > 0) {
+      const tsMode = searchParams.get('ts') === '1';
+      const stored = (() => {
+        try {
+          const raw = localStorage.getItem(`resume:${episodeId}`);
+          const n = raw ? parseFloat(raw) : NaN;
+          return Number.isFinite(n) && n > 5 ? n : null;
+        } catch { return null; }
+      })();
+
+      let seekTime: number | null = null;
+      let label = '';
+      if (resumeProgress && tsMode) {
+        const sec = parseFloat(resumeProgress);
+        if (Number.isFinite(sec) && sec > 5 && sec < duration - 10) {
+          seekTime = sec;
+          label = `Resuming from ${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
+        }
+      }
+      if (seekTime === null && stored !== null && stored < duration - 10) {
+        seekTime = stored;
+        label = `Resuming from ${Math.floor(stored / 60)}:${String(Math.floor(stored % 60)).padStart(2, '0')}`;
+      }
+      if (seekTime === null && resumeProgress && !tsMode) {
+        const pct = parseInt(resumeProgress, 10);
+        if (!isNaN(pct) && pct > 0 && pct < 95) {
+          seekTime = (pct / 100) * duration;
+          label = `Resuming from ${Math.round(pct)}%`;
+        }
+      }
+
+      if (seekTime !== null) {
         const videoElement = document.querySelector('video');
-        if (videoElement && Math.abs(videoElement.currentTime - seekTime) > 5) {
+        if (videoElement && Math.abs(videoElement.currentTime - seekTime) > 3) {
           videoElement.currentTime = seekTime;
-          // Show resume notification
           setShowResumeNotification(true);
-          toast.success(`Resuming from ${Math.round(progressPercent)}%`, {
-            description: 'Your playback position was remembered',
+          toast.success(label, {
+            description: 'Your exact position was remembered',
             duration: 3000,
           });
-          // Hide notification after 3 seconds
           setTimeout(() => setShowResumeNotification(false), 3000);
         }
       }
       setInitialSeekDone(true);
     }
 
+    // Persist exact seconds locally for instant resume next time
+    try {
+      if (currentTime > 5) {
+        localStorage.setItem(`resume:${episodeId}`, String(Math.floor(currentTime)));
+      }
+    } catch {}
+
     const progressPercent = Math.floor((currentTime / duration) * 100);
     const completed = progressPercent >= 90;
+
+    // Clear checkpoint when finished so we don't resume completed episodes
+    if (completed) {
+      try { localStorage.removeItem(`resume:${episodeId}`); } catch {}
+    }
 
     try {
       if (watchHistoryId) {
@@ -440,7 +478,7 @@ export default function Watch() {
     } catch (error) {
       console.error('Error updating watch progress:', error);
     }
-  }, [user, episodeId, anime, watchHistoryId, resumeProgress, initialSeekDone]);
+  }, [user, episodeId, anime, watchHistoryId, resumeProgress, initialSeekDone, searchParams]);
 
   const fetchEpisodeData = async (isEpisodeSwitch = false) => {
     if (!isEpisodeSwitch) setIsLoading(true);
