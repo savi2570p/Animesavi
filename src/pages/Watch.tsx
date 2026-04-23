@@ -871,10 +871,6 @@ export default function Watch() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Telegram Mini Toast — non-blocking, sits at bottom corner so it never covers the player */}
-      {showTelegramPopup && (
-        <div
-          className="fixed z-[60] left-1/2 -translate-x-1/2 bottom-4 sm:left-auto sm:right-4 sm:translate-x-0 sm:bottom-4 w-[calc(100%-2rem)] max-w-xs animate-slide-in-right pointer-events-auto"
       {/* Telegram Mini Toast — non-blocking, sits at bottom corner so it never covers the player.
           Outer wrapper is pointer-events-none so it never blocks scroll/clicks on the page;
           the inner card opts back into pointer-events-auto. */}
