@@ -275,6 +275,17 @@ export function EmbedIframePlayer({
         if (current === 'ready') return current;
 
         if (iframeLoadedRef.current) {
+          if (!isTrustedBridge) {
+            // Third-party providers (UPNShare, Filemoon, Streamtape, etc.) don't
+            // implement our handshake. As long as the iframe loaded, treat it as
+            // a working embed instead of surfacing a fake failure to the user.
+            pushDebugEvent('system', 'third-party-embed', {
+              note: 'Third-party embed loaded successfully without our trusted control bridge.',
+            });
+            onReady?.();
+            return 'limited';
+          }
+
           pushDebugEvent('system', 'handshake-unavailable', {
             note: 'Iframe loaded, but the embedded player does not expose the trusted control bridge.',
           });
@@ -295,7 +306,7 @@ export function EmbedIframePlayer({
         handshakeTimerRef.current = null;
       }
     };
-  }, [iframeMeta.href, pushDebugEvent, reportError]);
+  }, [iframeMeta.href, isTrustedBridge, onReady, pushDebugEvent, reportError]);
 
   useEffect(() => {
     remoteStateRef.current = remoteState;
