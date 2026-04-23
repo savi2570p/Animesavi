@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Home, Play, Star, TrendingUp, Sparkles, Shield, Zap, Download, Smartphone, Globe, Users, Swords, Heart, Wand2, Ghost, Laugh, Brain, ChevronRight, Clock, Monitor, Headphones, Subtitles, Film, Tv, MessageSquare, Quote, Trophy, BookOpen, Bell, Wifi, Share2, ThumbsUp, MessageCircle, Crown, Flame, Send, ExternalLink, Eye, Lock, HardDrive, Layers, Palette, RefreshCw, Settings, Volume2, FileText, Award, Radio, Gamepad2, Compass, MapPin, Calendar, BarChart3 } from 'lucide-react';
+import { Search, Home, Play, Star, TrendingUp, Sparkles, Shield, Zap, Download, Smartphone, Globe, Users, Swords, Heart, Wand2, Ghost, Laugh, Brain, ChevronRight, Clock, Monitor, Headphones, Subtitles, Film, Tv, MessageSquare, Quote, Trophy, BookOpen, Bell, Wifi, Share2, ThumbsUp, MessageCircle, Crown, Flame, Send, ExternalLink, Eye, Lock, HardDrive, Layers, Palette, RefreshCw, Settings, Volume2, FileText, Award, Radio, Gamepad2, Compass, MapPin, Calendar, BarChart3, Keyboard, Cast } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import logo from '@/assets/logo.png';
 import { supabase } from '@/integrations/supabase/client';
@@ -479,6 +479,131 @@ export default function Welcome() {
               </AccordionItem>
             ))}
           </Accordion>
+        </div>
+
+        {/* Platform Highlights — at-a-glance numbers */}
+        <div className="w-full max-w-5xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '955ms' }}>
+          <div className="text-center mb-10">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">By the Numbers</span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Platform Highlights</h2>
+            <p className="text-muted-foreground text-sm mt-2">A quick look at what AnimeSavi delivers every day</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            {[
+              { icon: Award, label: 'Avg. Start Time', value: '< 1.2s', color: 'text-emerald-400' },
+              { icon: Layers, label: 'Quality Tiers', value: '144p–4K', color: 'text-primary' },
+              { icon: HardDrive, label: 'Storage Used', value: '12 TB+', color: 'text-blue-400' },
+              { icon: Radio, label: 'CDN Servers', value: '4 Active', color: 'text-pink-400' },
+              { icon: Eye, label: 'Episodes Watched', value: '2.4M+', color: 'text-yellow-400' },
+              { icon: Lock, label: 'DRM-Free', value: '100%', color: 'text-emerald-400' },
+              { icon: RefreshCw, label: 'Auto Updates', value: 'Daily', color: 'text-cyan-400' },
+              { icon: Compass, label: 'Genres', value: '30+', color: 'text-purple-400' },
+            ].map((s, i) => (
+              <div key={i} className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/20 transition-all duration-300">
+                <s.icon className={`w-6 h-6 ${s.color}`} />
+                <span className="text-xl sm:text-2xl font-extrabold text-foreground">{s.value}</span>
+                <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">{s.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Supported Devices */}
+        <div className="w-full max-w-5xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '960ms' }}>
+          <div className="text-center mb-10">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Watch Anywhere</span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Works on Every Device</h2>
+            <p className="text-muted-foreground text-sm mt-2 max-w-lg mx-auto">One account, every screen. AnimeSavi adapts to whatever you're watching on.</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            {[
+              { icon: Smartphone, title: 'Mobile', desc: 'iOS & Android with PWA install support' },
+              { icon: Monitor, title: 'Desktop', desc: 'Chrome, Safari, Firefox & Edge' },
+              { icon: Tv, title: 'Smart TV', desc: 'Cast via Chromecast or open in TV browser' },
+              { icon: Gamepad2, title: 'Console', desc: 'PS5 / Xbox built-in browsers supported' },
+            ].map((d, i) => (
+              <div key={i} className="flex flex-col items-center text-center gap-3 p-5 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/30 hover:bg-card/60 transition-all duration-300">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center"><d.icon className="w-6 h-6 text-primary" /></div>
+                <h3 className="text-sm font-bold text-foreground">{d.title}</h3>
+                <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{d.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Pro Tips */}
+        <div className="w-full max-w-4xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '965ms' }}>
+          <div className="text-center mb-10">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Pro Tips</span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Get the Most Out of AnimeSavi</h2>
+            <p className="text-muted-foreground text-sm mt-2">Hidden features power-users love</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            {[
+              { icon: Keyboard, title: 'Keyboard Shortcuts', desc: 'Space = play/pause, F = fullscreen, M = mute, ← → seek 10s, ↑ ↓ volume.' },
+              { icon: Volume2, title: 'Switch Audio Live', desc: 'Tap the headphone icon mid-episode to swap Hindi / English / Japanese without reloading.' },
+              { icon: FileText, title: 'Custom Subtitles', desc: 'Drop in your own VTT/SRT file from the CC editor for any episode.' },
+              { icon: Cast, title: 'Cast to TV', desc: 'Hit the cast icon in the player to mirror to Chromecast, AirPlay, or Smart TV.' },
+              { icon: Bell, title: 'Release Reminders', desc: 'Tap the bell on any ongoing series to get pinged the moment a new episode drops.' },
+              { icon: Wifi, title: 'Offline Mode', desc: 'Downloaded episodes keep working even without internet — perfect for flights & commutes.' },
+            ].map((tip, i) => (
+              <div key={i} className="flex gap-3 p-4 sm:p-5 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/20 transition-all duration-300">
+                <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center"><tip.icon className="w-5 h-5 text-primary" /></div>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground mb-1">{tip.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{tip.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* What's Coming Next — roadmap */}
+        <div className="w-full max-w-4xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '970ms' }}>
+          <div className="text-center mb-10">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Roadmap</span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">What's Coming Next</h2>
+            <p className="text-muted-foreground text-sm mt-2">A peek at features we're building right now</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            {[
+              { icon: Crown, title: 'Personal Watchrooms', desc: 'Persistent rooms with friends — pick up sessions days later.', tag: 'In Progress' },
+              { icon: Flame, title: 'Smarter Recommendations', desc: 'Genre-aware suggestions tuned by your real watch history.', tag: 'Beta' },
+              { icon: Calendar, title: 'Seasonal Tracker', desc: 'One dashboard to follow every airing show this season.', tag: 'Soon' },
+              { icon: Palette, title: 'Custom Player Themes', desc: 'Pick accent colors and player skins to match your vibe.', tag: 'Soon' },
+              { icon: BarChart3, title: 'Watch Stats', desc: 'See total hours watched, top genres, longest streaks.', tag: 'Planned' },
+              { icon: MapPin, title: 'Regional Subtitles', desc: 'Tamil, Telugu, Marathi, Bengali subtitle tracks.', tag: 'Planned' },
+            ].map((r, i) => (
+              <div key={i} className="relative p-5 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/30 transition-all duration-300">
+                <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-primary/15 text-primary">{r.tag}</span>
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3"><r.icon className="w-5 h-5 text-primary" /></div>
+                <h3 className="text-sm font-bold text-foreground mb-1">{r.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{r.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Trust & Privacy */}
+        <div className="w-full max-w-3xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '975ms' }}>
+          <div className="text-center mb-8">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Trust & Privacy</span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Your Privacy, Respected</h2>
+            <p className="text-muted-foreground text-sm mt-2">No trackers, no third-party ads, no data sales — ever.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            {[
+              { icon: Shield, title: 'No Tracking', desc: 'We don\'t use Google Analytics, Facebook Pixel, or third-party trackers.' },
+              { icon: Lock, title: 'Encrypted Sessions', desc: 'All traffic is HTTPS. Auth uses industry-standard JWT with rotation.' },
+              { icon: Settings, title: 'You Own Your Data', desc: 'Delete your account anytime — every record is wiped within 24 hours.' },
+            ].map((t, i) => (
+              <div key={i} className="flex flex-col items-center text-center gap-3 p-5 rounded-2xl bg-card/40 border border-border/30">
+                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center"><t.icon className="w-5 h-5 text-primary" /></div>
+                <h3 className="text-sm font-bold text-foreground">{t.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{t.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Final CTA */}
