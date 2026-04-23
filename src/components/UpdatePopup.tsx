@@ -58,6 +58,8 @@ const BADGE_STYLES: Record<BadgeKind, string> = {
   FIX: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
 };
 
+const DOWNLOAD_COMPLETED_KEY = `update_downloaded_${APP_VERSION}`;
+
 export function UpdatePopup() {
   const { activePopup, dismissPopup, isManualWhatsNew } = usePopupQueue();
   const navigate = useNavigate();
@@ -71,9 +73,10 @@ export function UpdatePopup() {
 
   useEffect(() => {
     if (isActive) {
-      // Always start at the 'alert' step so the Download button is shown,
-      // whether the popup is auto-triggered or opened manually from the menu.
-      setStep('alert');
+      // If the user already completed the download for this version,
+      // skip straight to the "What's New / GO" complete view.
+      const alreadyDownloaded = localStorage.getItem(DOWNLOAD_COMPLETED_KEY) === 'true';
+      setStep(alreadyDownloaded ? 'complete' : 'alert');
       setProgress(0);
       setVersionIndex(0);
     }
@@ -104,7 +107,11 @@ export function UpdatePopup() {
 
   useEffect(() => {
     if (step !== 'installing') return;
-    const timer = setTimeout(() => setStep('complete'), 5000);
+    const timer = setTimeout(() => {
+      // Mark this version as downloaded so future manual opens skip the flow.
+      try { localStorage.setItem(DOWNLOAD_COMPLETED_KEY, 'true'); } catch { /* ignore */ }
+      setStep('complete');
+    }, 5000);
     return () => clearTimeout(timer);
   }, [step]);
 
@@ -135,8 +142,15 @@ export function UpdatePopup() {
           <div className="mx-auto w-16 h-16 rounded-full bg-red-600/15 flex items-center justify-center">
             <span className="text-3xl">🔥</span>
           </div>
-          <h2 className="text-xl font-bold text-white">Update Available</h2>
-          <p className="text-sm text-zinc-400">New features and improvements are ready to install.</p>
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            </span>
+            Update Available • Download Ready
+          </div>
+          <h2 className="text-xl font-bold text-white">New Version Ready to Install</h2>
+          <p className="text-sm text-zinc-400">Tap Download to install the latest features and improvements.</p>
           <span className="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-red-600/20 text-red-400">{APP_VERSION}</span>
 
           <div className="space-y-1.5 text-left max-h-[30vh] overflow-y-auto pr-1">
