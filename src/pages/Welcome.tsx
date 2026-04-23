@@ -541,6 +541,28 @@ export default function Welcome() {
           </div>
         </div>
 
+        {/* Watch Instantly — how fast streaming works */}
+        <div className="w-full max-w-4xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '958ms' }}>
+          <div className="text-center mb-10">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Watch Instantly</span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Press Play. Skip the Wait.</h2>
+            <p className="text-muted-foreground text-sm mt-2 max-w-lg mx-auto">Our streaming stack is tuned so the first frame appears in under a second on most networks.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            {[
+              { icon: Zap, title: 'Sub-second start', desc: 'Tiny initial buffer + first-fragment prefetch deliver an instant first frame, then the buffer grows in the background.' },
+              { icon: Layers, title: 'Adaptive 144p → 4K', desc: 'HLS dynamically picks the best quality your connection can sustain — upgrades to 4K within seconds when bandwidth allows.' },
+              { icon: Wifi, title: 'Network-aware', desc: 'Detects 2G / 3G / cellular vs Wi-Fi and tunes buffer size, retries and start level so playback never stalls.' },
+            ].map((b, i) => (
+              <div key={i} className="flex flex-col items-center text-center gap-3 p-5 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/30 transition-all duration-300">
+                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center"><b.icon className="w-5 h-5 text-primary" /></div>
+                <h3 className="text-sm font-bold text-foreground">{b.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{b.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Supported Devices */}
         <div className="w-full max-w-5xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '960ms' }}>
           <div className="text-center mb-10">
