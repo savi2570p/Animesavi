@@ -915,40 +915,48 @@ export default function Watch() {
   return (
     <div className="min-h-screen bg-background">
       {/* Telegram Mini Toast — non-blocking, sits at bottom corner so it never covers the player.
-          Outer wrapper is pointer-events-none so it never blocks scroll/clicks on the page;
-          the inner card opts back into pointer-events-auto. */}
-      {showTelegramPopup && (
-        <div
-          className="fixed z-[60] left-1/2 -translate-x-1/2 bottom-[max(1rem,env(safe-area-inset-bottom))] sm:left-auto sm:right-4 sm:translate-x-0 w-[min(calc(100vw-1.5rem),22rem)] animate-slide-in-right pointer-events-none"
-          role="status"
-          aria-live="polite"
-          aria-label="Join Telegram"
-        >
-          <div className="pointer-events-auto relative flex items-center gap-2.5 rounded-2xl border border-[#0088cc]/30 bg-card/95 backdrop-blur-xl shadow-2xl pl-3 pr-2 py-2.5">
-            <button
-              onClick={handleTelegramDismiss}
-              className="absolute -top-2 -right-2 h-6 w-6 rounded-full flex items-center justify-center bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-md"
-              aria-label="Dismiss"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-            <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-gradient-to-br from-[#0088cc] to-[#0077b5] flex items-center justify-center shadow-md">
-              <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 text-white" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+          SAFEGUARDS:
+          - pointer-events-none on outer wrapper -> never blocks scroll/clicks/video playback.
+          - No onClick on backdrop, no event listeners attached to player; show/dismiss never
+            calls play()/pause() on the <video> element.
+          - bottom offset uses max(controls-clearance, env(safe-area-inset-bottom)) so it
+            clears iOS home-indicator and Android nav bar AND stays above player controls. */}
+      {showTelegramPopup && (() => {
+        const tgCopy = resolveTelegramCopy(episode?.audio_language);
+        return (
+          <div
+            className="fixed z-[60] left-1/2 -translate-x-1/2 bottom-[max(5.5rem,calc(env(safe-area-inset-bottom)+1rem))] sm:left-auto sm:right-4 sm:translate-x-0 sm:bottom-[max(1.25rem,env(safe-area-inset-bottom))] w-[min(calc(100vw-1.5rem),22rem)] animate-slide-in-right pointer-events-none"
+            role="status"
+            aria-live="polite"
+            aria-label={tgCopy.aria}
+            dir={resolveTelegramCopy(episode?.audio_language) === TELEGRAM_COPY.ar ? 'rtl' : 'ltr'}
+          >
+            <div className="pointer-events-auto relative flex items-center gap-2.5 rounded-2xl border border-[#0088cc]/30 bg-card/95 backdrop-blur-xl shadow-2xl pl-3 pr-2 py-2.5">
+              <button
+                onClick={handleTelegramDismiss}
+                className="absolute -top-2 -right-2 h-6 w-6 rounded-full flex items-center justify-center bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-md"
+                aria-label="Dismiss"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+              <div className="flex-shrink-0 h-9 w-9 rounded-full bg-[#0088cc] flex items-center justify-center shadow-md">
+                <Send className="h-4 w-4 text-white" />
+              </div>
+              <div className="flex-1 min-w-0 pr-1">
+                <p className="text-[13px] font-semibold text-foreground leading-tight truncate">{tgCopy.title}</p>
+                <p className="text-[11px] text-muted-foreground leading-tight mt-0.5 truncate">{tgCopy.subtitle}</p>
+              </div>
+              <Button
+                onClick={handleTelegramJoin}
+                size="sm"
+                className="flex-shrink-0 h-8 px-3 text-xs font-semibold bg-[#0088cc] hover:bg-[#0077b5] text-white rounded-lg min-w-[3.5rem]"
+              >
+                {tgCopy.cta}
+              </Button>
             </div>
-            <div className="flex-1 min-w-0 pr-1">
-              <p className="text-[13px] font-semibold text-foreground leading-tight truncate">Join our Telegram</p>
-              <p className="text-[11px] text-muted-foreground leading-tight mt-0.5 truncate">New episodes & updates</p>
-            </div>
-            <Button
-              onClick={handleTelegramJoin}
-              size="sm"
-              className="flex-shrink-0 h-8 px-3 text-xs font-semibold bg-[#0088cc] hover:bg-[#0077b5] text-white rounded-lg min-w-[3.5rem]"
-            >
-              Join
-            </Button>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
 
       {/* Free Access Popup — shown when token system is disabled */}
