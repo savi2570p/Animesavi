@@ -8,6 +8,7 @@ import {
   List, ChevronRight, X
 } from 'lucide-react';
 import Hls from 'hls.js';
+import { useEmbedPlayerBridge } from '@/hooks/useEmbedPlayerBridge';
 
 const ALLOWED_DOMAINS = [
   'shadow-arise.lovable.app',
@@ -406,6 +407,35 @@ export default function EmbedSlugPlayer() {
       }
     } catch {}
   };
+
+  const play = useCallback(() => {
+    void videoRef.current?.play();
+  }, []);
+  const pause = useCallback(() => videoRef.current?.pause(), []);
+  const seek = useCallback((time: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = Math.max(0, Math.min(time, duration));
+    }
+  }, [duration]);
+  const getPlaybackState = useCallback(() => ({
+    currentTime,
+    duration,
+    isPlaying,
+    isMuted,
+    isFullscreen,
+    readyState: videoRef.current?.readyState ?? 0,
+  }), [currentTime, duration, isFullscreen, isMuted, isPlaying]);
+
+  useEmbedPlayerBridge({
+    videoRef,
+    getPlaybackState,
+    play,
+    pause,
+    togglePlay,
+    seek,
+    toggleFullscreen,
+    errorReason: error,
+  });
 
   useEffect(() => {
     const h = () => setIsFullscreen(!!(document.fullscreenElement || (document as any).webkitFullscreenElement));

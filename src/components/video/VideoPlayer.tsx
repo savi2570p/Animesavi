@@ -56,6 +56,7 @@ import { EncodingOverlay } from './EncodingOverlay';
 import { useVideoGestures } from '@/hooks/useVideoGestures';
 import { ScreenMirroringDialog } from './ScreenMirroringDialog';
 import { YouTubeEmbed, isYouTubeUrl } from './YouTubeEmbed';
+import { EmbedIframePlayer } from './EmbedIframePlayer';
 
 interface AudioTrackInfo {
   id: number;
@@ -1923,13 +1924,28 @@ export function VideoPlayer({
           height: isFullscreen ? '100vh' : undefined,
         }}
       >
-        <iframe
-          src={`${anyVideoUrl}${anyVideoUrl.includes('?') ? '&' : '?'}autoplay=1`}
-          className="w-full h-full"
-          allowFullScreen
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+        <EmbedIframePlayer
+          url={anyVideoUrl}
           title={`${animeTitle} - Episode ${episodeNumber}`}
-          style={{ border: 'none' }}
+          className="w-full h-full"
+          containerClassName="absolute inset-0"
+          onTimeUpdate={onTimeUpdate}
+          onReady={() => {
+            onVideoLoadSuccess?.();
+          }}
+          onPlaybackStateChange={(state) => {
+            if (typeof state.isPlaying === 'boolean') setIsPlaying(state.isPlaying);
+            if (typeof state.currentTime === 'number') setCurrentTime(state.currentTime);
+            if (typeof state.duration === 'number') setDuration(state.duration);
+          }}
+          onError={({ url, reason, browserReason }) => {
+            console.error('[VideoPlayer] Embed playback failed', { url, reason, browserReason, activeServer });
+            toast.error('Embed player failed to load. You can retry or open it directly.', { duration: 6000 });
+            onVideoLoadError?.();
+          }}
+          onRequestNativeFullscreen={() => {
+            void toggleFullscreen();
+          }}
         />
       </div>
     );
