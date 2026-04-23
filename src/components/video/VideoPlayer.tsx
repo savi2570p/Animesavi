@@ -1930,7 +1930,6 @@ export function VideoPlayer({
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
           title={`${animeTitle} - Episode ${episodeNumber}`}
           style={{ border: 'none' }}
-          sandbox="allow-scripts allow-same-origin allow-presentation allow-fullscreen"
         />
       </div>
     );
