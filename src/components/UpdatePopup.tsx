@@ -142,8 +142,15 @@ export function UpdatePopup() {
           <div className="mx-auto w-16 h-16 rounded-full bg-red-600/15 flex items-center justify-center">
             <span className="text-3xl">🔥</span>
           </div>
-          <h2 className="text-xl font-bold text-white">Update Available</h2>
-          <p className="text-sm text-zinc-400">New features and improvements are ready to install.</p>
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            </span>
+            Update Available • Download Ready
+          </div>
+          <h2 className="text-xl font-bold text-white">New Version Ready to Install</h2>
+          <p className="text-sm text-zinc-400">Tap Download to install the latest features and improvements.</p>
           <span className="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-red-600/20 text-red-400">{APP_VERSION}</span>
 
           <div className="space-y-1.5 text-left max-h-[30vh] overflow-y-auto pr-1">
