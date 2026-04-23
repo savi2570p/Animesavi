@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Play, ChevronRight, CalendarClock, Wand2, Flame } from 'lucide-react';
+import { Sparkles, Play, ChevronRight, CalendarClock, Heart, Flame } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 
@@ -115,8 +115,8 @@ export function RecommendedAnime() {
         <div className="flex items-end justify-between mb-7 gap-4">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-primary via-primary/80 to-purple-500 shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.7)]">
-                <Wand2 className="h-5 w-5 text-white" />
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-rose-500 via-primary to-pink-500 shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.7)]">
+                <Heart className="h-5 w-5 text-white fill-white" />
               </div>
               <Sparkles className="absolute -top-1 -right-1 h-3.5 w-3.5 text-primary animate-pulse" />
             </div>
