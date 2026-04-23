@@ -92,6 +92,39 @@ export default function Welcome() {
   const [totalAnime, setTotalAnime] = useState(0);
   const [totalEpisodes, setTotalEpisodes] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isLaunching, setIsLaunching] = useState(false);
+  const [launchProgress, setLaunchProgress] = useState(0);
+  const [launchStage, setLaunchStage] = useState('Warming up servers');
+
+  const startWatching = (target: string = '/') => {
+    if (isLaunching) return;
+    setIsLaunching(true);
+    setLaunchProgress(0);
+    setLaunchStage('Warming up servers');
+    const stages: Array<{ at: number; label: string }> = [
+      { at: 18, label: 'Connecting to H.Savi CDN' },
+      { at: 38, label: 'Loading your library' },
+      { at: 58, label: 'Preparing 4K stream' },
+      { at: 78, label: 'Syncing watch history' },
+      { at: 92, label: 'Almost there' },
+    ];
+    const start = performance.now();
+    const duration = 1800; // ms — fast but feels real
+    const tick = () => {
+      const elapsed = performance.now() - start;
+      const pct = Math.min(100, (elapsed / duration) * 100);
+      setLaunchProgress(pct);
+      const stage = [...stages].reverse().find(s => pct >= s.at);
+      if (stage) setLaunchStage(stage.label);
+      if (pct < 100) {
+        requestAnimationFrame(tick);
+      } else {
+        setLaunchStage('Ready');
+        setTimeout(() => navigate(target), 220);
+      }
+    };
+    requestAnimationFrame(tick);
+  };
 
   useEffect(() => {
     const fetchFeatured = async () => {
