@@ -41,6 +41,22 @@ const TEST_TIMEOUT_MS = 3000;
 const RECENT_EVENTS_LIMIT = 14;
 const IFRAME_ALLOW = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
 
+// Origins for embeds that we control and that speak our postMessage protocol.
+// Anything else is treated as a third-party embed where we don't require a handshake.
+const TRUSTED_BRIDGE_HOSTS = [
+  'animesavi.lovable.app',
+  'crunchysavi.lovable.app',
+  'shadow-arise.lovable.app',
+  'id-preview--33d3090e-95de-4730-92ea-a67c07f853e0.lovable.app',
+  '33d3090e-95de-4730-92ea-a67c07f853e0.lovableproject.com',
+];
+
+function isTrustedBridgeOrigin(origin: string, hostname: string) {
+  if (!origin || origin === '*') return false;
+  if (origin === window.location.origin) return true;
+  return TRUSTED_BRIDGE_HOSTS.some((host) => hostname === host || hostname.endsWith('.' + host));
+}
+
 type HandshakeState = 'loading' | 'ready' | 'limited' | 'failed';
 type EmbedEventDirection = 'incoming' | 'outgoing' | 'system';
 
@@ -112,6 +128,10 @@ export function EmbedIframePlayer({
     [instanceId, reloadToken, url],
   );
   const iframeMeta = useMemo(() => getEmbedUrlMeta(iframeUrl), [iframeUrl]);
+  const isTrustedBridge = useMemo(
+    () => isTrustedBridgeOrigin(iframeMeta.origin, iframeMeta.host),
+    [iframeMeta.host, iframeMeta.origin],
+  );
   const deviceLabel = useMemo(() => {
     if (typeof window === 'undefined') return 'Unknown';
     const ua = navigator.userAgent;
@@ -255,6 +275,17 @@ export function EmbedIframePlayer({
         if (current === 'ready') return current;
 
         if (iframeLoadedRef.current) {
+          if (!isTrustedBridge) {
+            // Third-party providers (UPNShare, Filemoon, Streamtape, etc.) don't
+            // implement our handshake. As long as the iframe loaded, treat it as
+            // a working embed instead of surfacing a fake failure to the user.
+            pushDebugEvent('system', 'third-party-embed', {
+              note: 'Third-party embed loaded successfully without our trusted control bridge.',
+            });
+            onReady?.();
+            return 'limited';
+          }
+
           pushDebugEvent('system', 'handshake-unavailable', {
             note: 'Iframe loaded, but the embedded player does not expose the trusted control bridge.',
           });
@@ -275,7 +306,7 @@ export function EmbedIframePlayer({
         handshakeTimerRef.current = null;
       }
     };
-  }, [iframeMeta.href, pushDebugEvent, reportError]);
+  }, [iframeMeta.href, isTrustedBridge, onReady, pushDebugEvent, reportError]);
 
   useEffect(() => {
     remoteStateRef.current = remoteState;
@@ -361,8 +392,22 @@ export function EmbedIframePlayer({
     pushDebugEvent('system', 'iframe-load', {
       note: 'Iframe load event fired successfully.',
     });
-    sendCommand('handshake-request', { title }, 'Starting trusted postMessage handshake.');
-    sendCommand('ping', { title }, 'Checking whether the embed responds to control probes.');
+
+    if (isTrustedBridge) {
+      sendCommand('handshake-request', { title }, 'Starting trusted postMessage handshake.');
+      sendCommand('ping', { title }, 'Checking whether the embed responds to control probes.');
+      return;
+    }
+
+    // Third-party embed (UPNShare, Filemoon, etc.) — they handle their own
+    // playback, so we just mark the source as working and clear the spinner.
+    if (handshakeTimerRef.current) {
+      window.clearTimeout(handshakeTimerRef.current);
+      handshakeTimerRef.current = null;
+    }
+    setHandshakeState('limited');
+    setFriendlyError(null);
+    onReady?.();
   };
 
   const handleIframeError = () => {
@@ -489,7 +534,7 @@ export function EmbedIframePlayer({
             ) : handshakeState === 'limited' ? (
               <>
                 <span className="h-2 w-2 rounded-full bg-accent" />
-                Player loaded • limited remote controls
+                {isTrustedBridge ? 'Player loaded • limited remote controls' : 'Third-party player loaded'}
               </>
             ) : handshakeState === 'failed' ? (
               <>
