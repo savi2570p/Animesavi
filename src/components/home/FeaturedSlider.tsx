@@ -87,10 +87,10 @@ export function FeaturedSlider() {
     fetchFeaturedAnime();
   }, []);
 
-  // Auto-slide every 5 seconds
+  // Auto-slide every 7 seconds — gives Ken Burns time to breathe
   useEffect(() => {
     if (featuredAnime.length === 0) return;
-    const interval = setInterval(() => handleNext(), 5000);
+    const interval = setInterval(() => handleNext(), 7000);
     return () => clearInterval(interval);
   }, [currentIndex, featuredAnime.length]);
 
@@ -139,7 +139,7 @@ export function FeaturedSlider() {
               <img
                 src={anime.banner || anime.thumbnail || '/placeholder.svg'}
                 alt={anime.title}
-                className="w-full h-full object-cover"
+                className={`w-full h-full object-cover ${idx === currentIndex ? 'nf-ken-burns' : ''}`}
               />
             </div>
           ))}
@@ -261,7 +261,7 @@ export function FeaturedSlider() {
             <img
               src={anime.banner || anime.thumbnail || '/placeholder.svg'}
               alt={anime.title}
-              className="w-full h-full object-cover"
+              className={`w-full h-full object-cover ${idx === currentIndex ? 'nf-ken-burns' : ''}`}
             />
           </div>
         ))}
