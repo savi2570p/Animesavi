@@ -340,7 +340,6 @@ export function VideoPlayer({
   // Mobile mute indicator state (shows when video is muted due to autoplay policy)
   const [showMobileUnmute, setShowMobileUnmute] = useState(false);
   const [wasMutedForAutoplay, setWasMutedForAutoplay] = useState(false);
-  const [embedErrorMessage, setEmbedErrorMessage] = useState<string | null>(null);
   
   // Timeline hover time preview
   const [hoverTime, setHoverTime] = useState<number | null>(null);
@@ -396,7 +395,6 @@ export function VideoPlayer({
   // Reset state when video URL or server changes
   useEffect(() => {
     setVideoError(false);
-    setEmbedErrorMessage(null);
     setUseIframeFallback(!videoUrl && !!externalUrl);
     setAudioTracks([]);
     setCurrentAudioTrack(0);
@@ -1933,7 +1931,6 @@ export function VideoPlayer({
           containerClassName="absolute inset-0"
           onTimeUpdate={onTimeUpdate}
           onReady={() => {
-            setEmbedErrorMessage(null);
             onVideoLoadSuccess?.();
           }}
           onPlaybackStateChange={(state) => {
@@ -1942,8 +1939,6 @@ export function VideoPlayer({
             if (typeof state.duration === 'number') setDuration(state.duration);
           }}
           onError={({ url, reason, browserReason }) => {
-            const detail = browserReason ? `${reason} ${browserReason}` : reason;
-            setEmbedErrorMessage(detail);
             console.error('[VideoPlayer] Embed playback failed', { url, reason, browserReason, activeServer });
             toast.error('Embed player failed to load. You can retry or open it directly.', { duration: 6000 });
             onVideoLoadError?.();
