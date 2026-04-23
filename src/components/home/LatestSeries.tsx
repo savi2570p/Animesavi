@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Tv, ChevronRight, Play, CalendarClock } from 'lucide-react';
+import { Tv, ChevronRight, Play, CalendarClock, Sparkles } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 
@@ -28,33 +28,21 @@ export function LatestSeries() {
 
   const fetchLatestSeries = async () => {
     try {
-      // Fetch ALL anime series with larger limit to ensure we get all with episodes
       const { data: animeData, error: animeError } = await supabase
         .from('anime')
-        .select(`
-          id,
-          title,
-          cover_image,
-          created_at,
-          updated_at,
-          type,
-          status
-        `)
+        .select(`id, title, cover_image, created_at, updated_at, type, status`)
         .eq('type', 'series')
         .order('updated_at', { ascending: false })
         .limit(500);
 
       if (animeError) throw animeError;
 
-      // Batch fetch all seasons for all anime at once for better performance
       const animeIds = (animeData || []).map(a => a.id);
-      
       const { data: allSeasons } = await supabase
         .from('seasons')
         .select('id, anime_id')
         .in('anime_id', animeIds);
 
-      // Group seasons by anime_id
       const seasonsByAnime = new Map<string, string[]>();
       (allSeasons || []).forEach(season => {
         const existing = seasonsByAnime.get(season.anime_id) || [];
@@ -62,10 +50,7 @@ export function LatestSeries() {
         seasonsByAnime.set(season.anime_id, existing);
       });
 
-      // Get all season IDs for batch episode query
       const allSeasonIds = (allSeasons || []).map(s => s.id);
-
-      // Paginate episodes to avoid 1000-row limit
       const allEpisodes: { id: string; season_id: string; created_at: string }[] = [];
       if (allSeasonIds.length > 0) {
         let offset = 0;
@@ -84,11 +69,8 @@ export function LatestSeries() {
         }
       }
 
-      // Group episodes by season_id and count
       const episodesByAnime = new Map<string, { count: number; latestDate: string | null }>();
-      
       allEpisodes.forEach(episode => {
-        // Find which anime this episode belongs to
         for (const [animeId, seasonIds] of seasonsByAnime.entries()) {
           if (seasonIds.includes(episode.season_id)) {
             const existing = episodesByAnime.get(animeId) || { count: 0, latestDate: null };
@@ -102,26 +84,19 @@ export function LatestSeries() {
         }
       });
 
-      // Build series with data - ONLY include anime with episodes > 0
       const seriesWithData: AnimeSeries[] = (animeData || [])
         .map((anime) => {
           const episodeData = episodesByAnime.get(anime.id) || { count: 0, latestDate: null };
-          return {
-            ...anime,
-            episode_count: episodeData.count,
-            latest_episode_date: episodeData.latestDate
-          };
+          return { ...anime, episode_count: episodeData.count, latest_episode_date: episodeData.latestDate };
         })
-        .filter(anime => anime.episode_count > 0); // Filter out anime with zero episodes
+        .filter(anime => anime.episode_count > 0);
 
-      // Sort by latest episode date (most recently uploaded episodes first)
       seriesWithData.sort((a, b) => {
         const dateA = a.latest_episode_date || a.updated_at || a.created_at;
         const dateB = b.latest_episode_date || b.updated_at || b.created_at;
         return new Date(dateB).getTime() - new Date(dateA).getTime();
       });
 
-      // Take first 12 to show more anime with recent uploads
       setSeries(seriesWithData.slice(0, 12));
     } catch (error) {
       console.error('Error fetching latest series:', error);
@@ -131,37 +106,24 @@ export function LatestSeries() {
   };
 
   const isNew = (anime: AnimeSeries) => {
-    // Check if the latest episode or the anime itself was created/updated within last 24 hours
     const dateToCheck = anime.latest_episode_date || anime.updated_at || anime.created_at;
-    const date = new Date(dateToCheck);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const hours = diff / (1000 * 60 * 60);
+    const hours = (Date.now() - new Date(dateToCheck).getTime()) / (1000 * 60 * 60);
     return hours <= 24;
   };
 
-  const getStatusBadge = (anime: AnimeSeries) => {
+  const statusPill = (anime: AnimeSeries) => {
     if (anime.status === 'upcoming') {
       return (
-        <div className="absolute top-10 left-2 px-2 py-1 text-xs font-bold bg-orange-500 text-white rounded-lg shadow-md animate-pulse flex items-center gap-1">
-          <CalendarClock className="h-3 w-3" />
-          Coming Soon
-        </div>
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded bg-orange-500/90 text-white">
+          <CalendarClock className="h-2.5 w-2.5" /> Soon
+        </span>
       );
     }
     if (anime.status === 'completed') {
-      return (
-        <div className="absolute top-10 left-2 badge-glass-com">
-          COM
-        </div>
-      );
+      return <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded bg-emerald-500/90 text-white">Com</span>;
     }
     if (anime.status === 'ongoing') {
-      return (
-        <div className="absolute top-10 left-2 badge-glass-og">
-          OG
-        </div>
-      );
+      return <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded bg-primary/90 text-primary-foreground">On Air</span>;
     }
     return null;
   };
@@ -170,18 +132,17 @@ export function LatestSeries() {
     return (
       <section className="py-10 md:py-14">
         <div className="container">
-          <div className="flex items-center gap-3 mb-8">
+          <div className="flex items-center gap-3 mb-6">
             <div className="p-2 rounded-lg bg-primary/10">
               <Tv className="h-5 w-5 text-primary" />
             </div>
             <h2 className="text-2xl md:text-3xl font-heading font-bold">Latest Series</h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Array(4).fill(0).map((_, i) => (
-              <div key={i} className="space-y-2">
-                <Skeleton className="aspect-[3/4] rounded-lg" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
+          <div className="flex gap-4 overflow-hidden">
+            {Array(6).fill(0).map((_, i) => (
+              <div key={i} className="w-[160px] md:w-[180px] shrink-0 space-y-2">
+                <Skeleton className="aspect-[2/3] rounded-xl" />
+                <Skeleton className="h-3 w-3/4" />
               </div>
             ))}
           </div>
@@ -193,26 +154,39 @@ export function LatestSeries() {
   if (series.length === 0) return null;
 
   return (
-    <section className="py-10 md:py-14">
-      <div className="container">
-        <div className="flex items-center justify-between mb-8">
+    <section className="py-10 md:py-14 relative">
+      {/* Soft accent backdrop */}
+      <div aria-hidden className="absolute inset-x-0 top-12 h-40 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
+
+      <div className="container relative">
+        {/* Redesigned header */}
+        <div className="flex items-end justify-between mb-6 gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Tv className="h-5 w-5 text-primary" />
+            <div className="relative">
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 shadow-inner">
+                <Tv className="h-5 w-5 text-primary" />
+              </div>
+              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_hsl(var(--primary))]" />
             </div>
-            <h2 className="text-2xl md:text-3xl font-heading font-bold">Latest Series</h2>
-            <span className="px-2 py-1 text-xs font-medium bg-primary/20 text-primary rounded-full">
-              Series
-            </span>
+            <div>
+              <h2 className="text-2xl md:text-3xl font-heading font-bold leading-tight">
+                Latest <span className="anime-gradient-text">Series</span>
+              </h2>
+              <p className="text-xs md:text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                <Sparkles className="h-3 w-3 text-primary" />
+                Fresh drops & ongoing favorites
+              </p>
+            </div>
           </div>
-          <Button asChild variant="ghost" className="group">
+          <Button asChild variant="ghost" size="sm" className="group shrink-0">
             <Link to="/latest-series" className="flex items-center gap-1">
-              See All
+              See all
               <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>
         </div>
 
+        {/* Poster row */}
         <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-row scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
           {series.slice(0, 12).map((anime, index) => (
             <AnimeCardContextMenu
@@ -223,64 +197,65 @@ export function LatestSeries() {
             >
               <Link
                 to={`/anime/${anime.id}`}
-                className={`group relative block stagger-${Math.min(index + 1, 4)} animate-fade-in w-[140px] md:w-[160px] lg:w-[180px] shrink-0`}
+                className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in w-[150px] md:w-[170px] lg:w-[190px] shrink-0`}
               >
-                {/* Cover Image - Smaller */}
-                <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-muted shadow-md group-hover:shadow-xl transition-all duration-500">
+                {/* Poster */}
+                <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl group-hover:-translate-y-1 transition-all duration-500 ring-1 ring-white/5 group-hover:ring-primary/40">
                   <img
                     src={anime.cover_image || '/placeholder.svg'}
                     alt={anime.title}
-                    className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 pointer-events-none"
                     loading="lazy"
                   />
-                  {/* 4K Badge */}
-                  <div className="absolute bottom-1.5 right-1.5 z-10">
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg">4K</span>
-                  </div>
-                  
-                  {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-60 group-hover:opacity-90 transition-all duration-300" />
-                  
-                  {/* Play overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <div className="p-4 rounded-full bg-primary/90 shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300">
-                      <Play className="h-6 w-6 text-primary-foreground fill-current" />
-                    </div>
-                  </div>
 
-                  {/* Episode count badge */}
-                  <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-lg shadow-md">
-                    {anime.episode_count} EP{anime.episode_count !== 1 ? 'S' : ''}
-                  </div>
+                  {/* Bottom legibility gradient (always on) */}
+                  <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none" />
 
-                  {/* NEW + H-DUB badges */}
-                  <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                  {/* Top-right: NEW + 4K stack */}
+                  <div className="absolute top-2 right-2 flex flex-col gap-1 items-end pointer-events-none">
                     {isNew(anime) && (
-                      <div className="badge-glass-new animate-pulse">
-                        NEW
-                      </div>
+                      <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded bg-primary text-primary-foreground shadow-md animate-pulse">
+                        New
+                      </span>
                     )}
-                    <div className="badge-glass-hdub">
-                      H-DUB
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
+                      4K
+                    </span>
+                  </div>
+
+                  {/* Top-left: status */}
+                  <div className="absolute top-2 left-2 pointer-events-none">
+                    {statusPill(anime)}
+                  </div>
+
+                  {/* Crown */}
+                  <div className="pointer-events-none">
+                    <TokenCrownBadge />
+                  </div>
+
+                  {/* Center play on hover */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+                    <div className="p-3 rounded-full bg-primary/95 shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-300">
+                      <Play className="h-5 w-5 text-primary-foreground fill-current" />
                     </div>
                   </div>
 
-                  {/* Status Badge */}
-                  {getStatusBadge(anime)}
-
-                  {/* Token Crown Badge */}
-                  <TokenCrownBadge />
-
-                  {/* Title at bottom */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <h3 className="text-sm md:text-base font-semibold text-white line-clamp-2 drop-shadow-lg">
+                  {/* Title block over poster */}
+                  <div className="absolute bottom-0 left-0 right-0 p-2.5 pointer-events-none">
+                    <h3 className="text-[13px] md:text-sm font-semibold text-white line-clamp-2 leading-tight drop-shadow-lg">
                       {anime.title}
                     </h3>
-                    {anime.episode_count > 0 && (
-                      <p className="text-xs text-white/70 mt-1">
-                        {anime.episode_count} Episode{anime.episode_count !== 1 ? 's' : ''}
-                      </p>
-                    )}
+                    <div className="flex items-center justify-between mt-1.5 gap-2">
+                      <span className="text-[10px] font-medium text-white/80">
+                        {anime.episode_count} EP{anime.episode_count !== 1 ? 's' : ''}
+                      </span>
+                      <span className="h-1 flex-1 rounded-full bg-white/15 overflow-hidden">
+                        <span className="block h-full w-1/3 bg-gradient-to-r from-primary to-primary/60 group-hover:w-full transition-[width] duration-700" />
+                      </span>
+                    </div>
                   </div>
                 </div>
               </Link>

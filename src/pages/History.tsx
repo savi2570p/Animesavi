@@ -190,6 +190,19 @@ export default function History() {
     }
   };
 
+  // Build resume URL preferring exact seconds saved in localStorage,
+  // falling back to percent-based progress for older entries.
+  const buildResumeUrl = (item: WatchHistoryItem) => {
+    try {
+      const raw = localStorage.getItem(`resume:${item.episode.id}`);
+      const sec = raw ? parseFloat(raw) : NaN;
+      if (Number.isFinite(sec) && sec > 5) {
+        return `/watch/${item.episode.id}?ts=1&t=${Math.floor(sec)}`;
+      }
+    } catch {}
+    return `/watch/${item.episode.id}?t=${item.progress || 0}`;
+  };
+
   const formatTimeAgo = (date: string) => {
     const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
     const intervals = [
@@ -298,7 +311,7 @@ export default function History() {
                 <ContextMenuTrigger asChild>
               <div className="relative pr-10">
                 <Link
-                  to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
+                  to={buildResumeUrl(item)}
                   className="anime-card flex gap-4 p-4 hover:bg-muted/50 transition-colors group"
                 >
                   <div className="relative flex-shrink-0 w-32 aspect-video rounded-lg overflow-hidden bg-muted">
@@ -395,7 +408,7 @@ export default function History() {
                 <ContextMenuTrigger asChild>
               <div className="relative group">
                 <Link
-                  to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
+                  to={buildResumeUrl(item)}
                   className="block"
                 >
                   <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">

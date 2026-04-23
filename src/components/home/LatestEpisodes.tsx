@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Play, ChevronRight } from 'lucide-react';
+import { Play, ChevronRight, Zap, Clock } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 
@@ -51,41 +51,29 @@ export function LatestEpisodes() {
 
   const fetchLatestEpisodes = async () => {
     try {
-      // Fetch more episodes to allow for better grouping
       const { data, error } = await supabase
         .from('episodes')
         .select(`
-          id,
-          title,
-          episode_number,
-          thumbnail,
-          created_at,
-          duration,
+          id, title, episode_number, thumbnail, created_at, duration,
           season:season_id (
             season_number,
-            anime:anime_id (
-              id,
-              title,
-              cover_image,
-              type,
-              status,
-              updated_at
-            )
+            anime:anime_id ( id, title, cover_image, type, status, updated_at )
           )
         `)
         .order('created_at', { ascending: false })
         .limit(200);
 
       if (error) throw error;
-      
-      // Filter out episodes from movies - only show series episodes
-      const filteredEpisodes = (data || []).filter((ep: any) => {
-        return ep.season?.anime && ep.season.anime.type !== 'movie';
-      });
-      
+
+      const filteredEpisodes = (data || []).filter((ep: any) =>
+        ep.season?.anime && ep.season.anime.type !== 'movie'
+      );
+
       setEpisodes(filteredEpisodes as unknown as LatestEpisode[]);
-      // Preload first 6 thumbnails for instant grid display
-      preloadFirstN(filteredEpisodes.slice(0, 6).map((ep: any) => ({ thumbnail: ep.thumbnail || ep.season?.anime?.cover_image })), 6);
+      preloadFirstN(
+        filteredEpisodes.slice(0, 6).map((ep: any) => ({ thumbnail: ep.thumbnail || ep.season?.anime?.cover_image })),
+        6
+      );
     } catch (error) {
       console.error('Error fetching latest episodes:', error);
     } finally {
@@ -93,23 +81,16 @@ export function LatestEpisodes() {
     }
   };
 
-  // Group episodes by anime + season and merge into single entries
   const groupedEpisodes = useMemo<GroupedEpisode[]>(() => {
     const groups = new Map<string, GroupedEpisode>();
-    
     for (const ep of episodes) {
       if (!ep.season?.anime) continue;
-      
       const key = `${ep.season.anime.id}-${ep.season.season_number}`;
       const existing = groups.get(key);
-      
       if (existing) {
-        // Update min/max episode numbers
         existing.episodeMin = Math.min(existing.episodeMin, ep.episode_number);
         existing.episodeMax = Math.max(existing.episodeMax, ep.episode_number);
         existing.episodeCount++;
-        
-        // Keep the latest episode's data for the card
         if (new Date(ep.created_at) > new Date(existing.latestCreatedAt)) {
           existing.latestEpisodeId = ep.id;
           existing.latestCreatedAt = ep.created_at;
@@ -131,45 +112,45 @@ export function LatestEpisodes() {
         });
       }
     }
-    
-    // Convert to array and sort by latest created_at
     return Array.from(groups.values())
       .sort((a, b) => new Date(b.latestCreatedAt).getTime() - new Date(a.latestCreatedAt).getTime())
       .slice(0, 8);
   }, [episodes]);
 
   const isNew = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const hours = diff / (1000 * 60 * 60);
+    const hours = (Date.now() - new Date(dateString).getTime()) / (1000 * 60 * 60);
     return hours <= 24;
   };
 
-  // Format episode range string
-  const formatEpisodeRange = (min: number, max: number, count: number) => {
-    if (min === max) {
-      return `Episode ${min}`;
-    }
-    return `Episodes ${min}–${max}`;
+  const timeAgo = (dateString: string) => {
+    const minutes = Math.floor((Date.now() - new Date(dateString).getTime()) / 60000);
+    if (minutes < 60) return `${Math.max(1, minutes)}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    const weeks = Math.floor(days / 7);
+    return `${weeks}w ago`;
   };
+
+  const formatEpisodeRange = (min: number, max: number) =>
+    min === max ? `Episode ${min}` : `Episodes ${min}–${max}`;
 
   if (loading) {
     return (
       <section className="py-10 md:py-14">
         <div className="container">
-          <div className="flex items-center gap-3 mb-8">
+          <div className="flex items-center gap-3 mb-6">
             <div className="p-2 rounded-lg bg-primary/10">
-              <Play className="h-5 w-5 text-primary" />
+              <Zap className="h-5 w-5 text-primary" />
             </div>
             <h2 className="text-2xl md:text-3xl font-heading font-bold">Latest Episodes</h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="flex gap-4 overflow-hidden">
             {Array(4).fill(0).map((_, i) => (
-              <div key={i} className="space-y-2">
-                <Skeleton className="aspect-video rounded-lg" />
+              <div key={i} className="w-[260px] shrink-0 space-y-2">
+                <Skeleton className="aspect-video rounded-xl" />
                 <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
               </div>
             ))}
           </div>
@@ -180,35 +161,59 @@ export function LatestEpisodes() {
 
   if (groupedEpisodes.length === 0) return null;
 
+  const hasFreshDrop = groupedEpisodes.some(g => isNew(g.latestCreatedAt));
+
   return (
-    <section className="py-10 md:py-14">
-      <div className="container">
-        <div className="flex items-center justify-between mb-8">
+    <section className="py-10 md:py-14 relative">
+      {/* Backdrop accent */}
+      <div aria-hidden className="absolute inset-x-0 top-10 h-44 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
+
+      <div className="container relative">
+        {/* Redesigned header */}
+        <div className="flex items-end justify-between mb-6 gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Play className="h-5 w-5 text-primary" />
+            <div className="relative">
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 shadow-inner">
+                <Zap className="h-5 w-5 text-primary" />
+              </div>
+              {hasFreshDrop && (
+                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-primary opacity-75 animate-ping" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
+                </span>
+              )}
             </div>
-            <h2 className="text-2xl md:text-3xl font-heading font-bold">Latest Episodes</h2>
-            {groupedEpisodes.some(g => isNew(g.latestCreatedAt)) && (
-              <span className="px-2 py-1 text-xs font-medium bg-primary/20 text-primary rounded-full">
-                New
-              </span>
-            )}
+            <div>
+              <h2 className="text-2xl md:text-3xl font-heading font-bold leading-tight flex items-center gap-2">
+                Latest <span className="anime-gradient-text">Episodes</span>
+                {hasFreshDrop && (
+                  <span className="hidden sm:inline-flex px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-primary/15 text-primary border border-primary/30">
+                    Fresh
+                  </span>
+                )}
+              </h2>
+              <p className="text-xs md:text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                <Clock className="h-3 w-3" />
+                Just-uploaded episodes from your library
+              </p>
+            </div>
           </div>
-          <Button asChild variant="ghost" className="group">
+          <Button asChild variant="ghost" size="sm" className="group shrink-0">
             <Link to="/latest-episodes" className="flex items-center gap-1">
-              See All
+              See all
               <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>
         </div>
 
+        {/* Episode row */}
         <div className="flex gap-4 md:gap-5 overflow-x-auto pb-4 -mx-4 px-4 snap-row scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
-          {groupedEpisodes.slice(0, 8).map((group, index) => {
+          {groupedEpisodes.map((group, index) => {
             const displayImage = group.thumbnail || group.coverImage || '/placeholder.svg';
-            const episodeRangeText = formatEpisodeRange(group.episodeMin, group.episodeMax, group.episodeCount);
+            const episodeRangeText = formatEpisodeRange(group.episodeMin, group.episodeMax);
             const hasMultipleEpisodes = group.episodeMin !== group.episodeMax;
-            
+            const fresh = isNew(group.latestCreatedAt);
+
             return (
               <AnimeCardContextMenu
                 key={`${group.animeId}-${group.seasonNumber}`}
@@ -218,66 +223,78 @@ export function LatestEpisodes() {
               >
                 <Link
                   to={`/watch/${group.latestEpisodeId}`}
-                  className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in w-[200px] md:w-[260px] lg:w-[300px] shrink-0`}
+                  className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in w-[210px] md:w-[270px] lg:w-[310px] shrink-0`}
                 >
-                  {/* Thumbnail with hover effects */}
-                  <div className="relative aspect-video rounded-xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl transition-all duration-500">
+                  {/* Thumbnail card */}
+                  <div className="relative aspect-video rounded-2xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl group-hover:-translate-y-1 transition-all duration-500 ring-1 ring-white/5 group-hover:ring-primary/40">
                     <img
                       src={displayImage}
                       alt={group.animeTitle}
-                      className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 pointer-events-none"
                       loading="lazy"
                     />
-                    {/* 4K Badge */}
-                    <div className="absolute bottom-8 right-2 z-10">
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg">4K</span>
+
+                    {/* Persistent legibility gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
+
+                    {/* Hover red wash */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-primary/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                    {/* Top-left: Season + count */}
+                    <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 pointer-events-none">
+                      <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-black/70 backdrop-blur-md text-white border border-white/10">
+                        S{group.seasonNumber}
+                      </span>
+                      {hasMultipleEpisodes && (
+                        <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-primary/90 text-primary-foreground shadow">
+                          +{group.episodeCount}
+                        </span>
+                      )}
                     </div>
-                    
-                    {/* Gradient overlay on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                    
-                    {/* Play overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                      <div className="p-4 rounded-full bg-primary/90 shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300">
+
+                    {/* Top-right: NEW + 4K + H-DUB */}
+                    <div className="absolute top-2.5 right-2.5 flex flex-col gap-1 items-end pointer-events-none">
+                      {fresh && (
+                        <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-primary text-primary-foreground shadow-lg animate-pulse">
+                          New
+                        </span>
+                      )}
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
+                        4K
+                      </span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/90 text-black shadow">
+                        H-DUB
+                      </span>
+                    </div>
+
+                    {/* Crown */}
+                    <div className="pointer-events-none">
+                      <TokenCrownBadge />
+                    </div>
+
+                    {/* Center hover play */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+                      <div className="p-4 rounded-full bg-primary/95 shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-300">
                         <Play className="h-6 w-6 text-primary-foreground fill-current" />
                       </div>
                     </div>
 
-                    {/* Season badge */}
-                    <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-lg shadow-md">
-                      S{group.seasonNumber}
-                    </div>
-
-                    {/* Episode count badge for multiple episodes */}
-                    {hasMultipleEpisodes && (
-                      <div className="absolute top-2 left-14 px-2 py-1 text-xs font-bold bg-secondary text-secondary-foreground rounded-lg shadow-md">
-                        +{group.episodeCount} eps
-                      </div>
-                    )}
-
-                    {/* NEW + H-DUB badges */}
-                    <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
-                      {isNew(group.latestCreatedAt) && (
-                        <div className="badge-glass-new animate-pulse">
-                          NEW
-                        </div>
-                      )}
-                      <div className="badge-glass-hdub">
-                        H-DUB
-                      </div>
-                    </div>
-
-                    {/* Token Crown Badge */}
-                    <TokenCrownBadge />
-
-                    {/* Title and episode range overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent">
-                      <h3 className="text-sm font-semibold text-white line-clamp-1 drop-shadow-lg">
+                    {/* Bottom info */}
+                    <div className="absolute bottom-0 left-0 right-0 p-3 pointer-events-none">
+                      <h3 className="text-sm md:text-base font-semibold text-white line-clamp-1 drop-shadow-lg">
                         {group.animeTitle}
                       </h3>
-                      <p className="text-xs text-white/70 mt-0.5">
-                        {episodeRangeText}
-                      </p>
+                      <div className="flex items-center justify-between mt-1 gap-2">
+                        <p className="text-xs text-white/85 font-medium">{episodeRangeText}</p>
+                        <span className="text-[10px] text-white/70 flex items-center gap-1 shrink-0">
+                          <Clock className="h-2.5 w-2.5" />
+                          {timeAgo(group.latestCreatedAt)}
+                        </span>
+                      </div>
+                      {/* Shimmer line */}
+                      <span className="mt-2 block h-[2px] w-full rounded-full bg-white/10 overflow-hidden">
+                        <span className="block h-full w-1/4 bg-gradient-to-r from-primary via-primary/70 to-primary/30 group-hover:w-full transition-[width] duration-700" />
+                      </span>
                     </div>
                   </div>
                 </Link>
