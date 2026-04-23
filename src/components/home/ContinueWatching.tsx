@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Play, ChevronRight, Clock, Sparkles, Check, User } from 'lucide-react';
+import { Play, ChevronRight, Clock, Check, User } from 'lucide-react';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 
 import { toast } from 'sonner';
@@ -180,42 +180,41 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
 
   return (
     <section className="relative overflow-x-hidden overflow-y-visible py-10 md:py-14">
-      {/* Background glow effect */}
+      {/* Ambient background glow */}
       <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none" />
-      
+
       <div className="container relative">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            {/* User Profile Avatar */}
-            <Avatar className="h-10 w-10 md:h-12 md:w-12 border-2 border-primary/30">
+        {/* Header — cleaner two-row layout on mobile */}
+        <div className="flex items-center justify-between mb-6 md:mb-8">
+          <div className="flex items-center gap-3 md:gap-4 min-w-0">
+            <Avatar className="h-10 w-10 md:h-12 md:w-12 border-2 border-primary/40 shadow-lg shadow-primary/10 shrink-0">
               <AvatarImage src={userProfile?.avatar_url || undefined} alt={userProfile?.username || 'User'} />
               <AvatarFallback className="bg-primary/10 text-primary">
                 {userProfile?.username?.charAt(0).toUpperCase() || <User className="h-5 w-5" />}
               </AvatarFallback>
             </Avatar>
-            <div className="relative">
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
-                <Clock className="h-5 w-5 text-primary" />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-primary shrink-0" />
+                <h2 className="text-xl md:text-2xl font-heading font-bold text-foreground truncate">
+                  Continue Watching
+                </h2>
               </div>
-              <div className="absolute -top-1 -right-1">
-                <Sparkles className="h-3 w-3 text-primary animate-pulse" />
-              </div>
-            </div>
-            <div>
-              <h2 className="text-2xl md:text-3xl font-heading font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                Continue Watching
-              </h2>
-              <p className="text-sm text-muted-foreground mt-0.5">Pick up where you left off</p>
+              <p className="text-xs md:text-sm text-muted-foreground mt-0.5 truncate">
+                {userProfile?.username ? `Welcome back, ${userProfile.username}` : 'Pick up where you left off'}
+              </p>
             </div>
           </div>
-          <Button 
-            variant="ghost" 
-            asChild 
-            className="text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-300 group"
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+            className="text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all shrink-0"
           >
             <Link to="/history" className="flex items-center gap-1">
-              View all 
-              <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              <span className="hidden sm:inline">View all</span>
+              <span className="sm:hidden">All</span>
+              <ChevronRight className="h-4 w-4" />
             </Link>
           </Button>
         </div>
@@ -228,102 +227,105 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
           className="w-full"
         >
           <CarouselContent className="-ml-2 md:-ml-4">
-            {history.map((item, index) => (
-              <CarouselItem key={item.id} className="pl-2 md:pl-4 basis-[85%] sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                <Link
-                  to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
-                  className="group relative block"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <div className="anime-card opacity-0 animate-fade-in">
-                    {/* Thumbnail container */}
-                    <div className="relative aspect-video rounded-xl overflow-hidden bg-muted/50 border border-border/50 group-hover:border-primary/50 transition-all duration-500">
+            {history.map((item, index) => {
+              const progressPct = Math.min(Math.max(item.progress || 0, 0), 100);
+              const timeLeft = formatTimeLeft(item.progress, item.episode.duration);
+              return (
+                <CarouselItem key={item.id} className="pl-2 md:pl-4 basis-[80%] sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                  <div className="group relative opacity-0 animate-fade-in" style={{ animationDelay: `${index * 80}ms` }}>
+                    {/* Single-tap link covers the entire card. All decorative overlays use pointer-events-none
+                        so the first tap on mobile navigates immediately (no hover-then-tap double click). */}
+                    <Link
+                      to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
+                      className="relative block aspect-video rounded-2xl overflow-hidden bg-muted/40 border border-border/40 group-hover:border-primary/50 transition-all duration-500 shadow-md hover:shadow-xl hover:shadow-primary/20"
+                      aria-label={`Resume ${item.anime.title} episode ${item.episode.episode_number}`}
+                    >
                       <img
                         src={item.episode.thumbnail || item.anime.cover_image || '/placeholder.svg'}
                         alt={item.anime.title}
-                        className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-110"
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
                         loading="lazy"
+                        draggable={false}
                       />
-                      
-                      {/* Gradient overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
-                      
-                      {/* Play button overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+
+                      {/* Bottom gradient for legibility */}
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+
+                      {/* Top badges row */}
+                      <div className="pointer-events-none absolute top-2 left-2 right-2 flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span className="px-2 py-0.5 rounded-md bg-primary/95 text-[10px] font-bold text-primary-foreground shadow-sm">
+                            S{item.season?.season_number || 1} · E{item.episode.episode_number}
+                          </span>
+                          {item.hasNewEpisode && (
+                            <span className="badge-glass-new animate-pulse shadow-lg shadow-green-500/40">
+                              NEW
+                            </span>
+                          )}
+                        </div>
+                        <span className="px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-semibold text-white tabular-nums">
+                          {Math.round(progressPct)}%
+                        </span>
+                      </div>
+
+                      {/* Center play hint — desktop hover only, never blocks taps */}
+                      <div className="pointer-events-none absolute inset-0 hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <div className="relative">
-                          <div className="absolute inset-0 bg-primary/30 rounded-full blur-xl scale-150 animate-pulse" />
-                          <div className="relative w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/50 transform group-hover:scale-110 transition-transform duration-300">
+                          <div className="absolute inset-0 bg-primary/30 rounded-full blur-xl scale-150" />
+                          <div className="relative w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/50">
                             <Play className="h-5 w-5 text-primary-foreground fill-current ml-0.5" />
                           </div>
                         </div>
                       </div>
 
-                      {/* Season & Episode badge */}
-                      <div className="absolute top-2 left-2 flex items-center gap-1">
-                        <span className="px-2 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
-                          S{item.season?.season_number || 1} E{item.episode.episode_number}
-                        </span>
-                        {item.hasNewEpisode && (
-                          <span className="badge-glass-new animate-pulse shadow-lg shadow-green-500/40">
-                            NEW
-                          </span>
-                        )}
-                        <span className="badge-glass-hdub">
-                          H-DUB
-                        </span>
+                      {/* Token Crown Badge (decorative) */}
+                      <div className="pointer-events-none">
+                        <TokenCrownBadge />
                       </div>
 
-                      {/* Progress percentage badge */}
-                      <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] font-medium text-white/90">
-                        {Math.round(item.progress || 0)}%
+                      {/* Bottom info: title + meta inside the card for a more premium look */}
+                      <div className="pointer-events-none absolute bottom-0 left-0 right-0 p-3 pb-4">
+                        <h3 className="text-sm font-semibold text-white line-clamp-1 drop-shadow-md">
+                          {item.anime.title}
+                        </h3>
+                        <p className="text-[11px] text-white/75 mt-0.5 flex items-center gap-1.5">
+                          <span>EP {item.episode.episode_number}</span>
+                          {timeLeft && (
+                            <>
+                              <span className="opacity-50">·</span>
+                              <span className="text-primary-foreground/90">{timeLeft}</span>
+                            </>
+                          )}
+                        </p>
                       </div>
 
-                      {/* Token Crown Badge */}
-                      <TokenCrownBadge />
-
-                      {/* Mark as Completed button */}
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="absolute bottom-3 right-2 h-5 px-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-primary hover:bg-primary/90 text-primary-foreground text-[9px] font-medium z-10 rounded-sm"
-                        onClick={(e) => handleMarkCompleted(e, item.id, item.anime.title)}
-                      >
-                        <Check className="h-2.5 w-2.5 mr-0.5" />
-                        Done
-                      </Button>
-
-                      {/* Premium progress bar */}
-                      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/50 backdrop-blur-sm">
-                        <div className="relative h-full overflow-hidden">
-                          <div className="absolute inset-0 bg-white/10" />
-                          <div 
-                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-primary to-primary/80 transition-all duration-500 ease-out"
-                            style={{ width: `${Math.min(item.progress || 0, 100)}%` }}
-                          >
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine" />
-                          </div>
+                      {/* Premium progress bar pinned to the very bottom edge */}
+                      <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-1 bg-black/60">
+                        <div
+                          className="relative h-full bg-gradient-to-r from-primary via-primary to-primary/80 transition-[width] duration-500 ease-out"
+                          style={{ width: `${progressPct}%` }}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shine" />
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Title and info below card */}
-                    <div className="mt-2 px-1">
-                      <h3 className="text-sm font-medium text-foreground line-clamp-1 group-hover:text-primary transition-colors">
-                        {item.anime.title}
-                      </h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Episode {item.episode.episode_number}
-                        {formatTimeLeft(item.progress, item.episode.duration) && (
-                          <span className="ml-2 text-primary/80">
-                            • {formatTimeLeft(item.progress, item.episode.duration)}
-                          </span>
-                        )}
-                      </p>
-                    </div>
+                    </Link>
+
+                    {/* "Done" action — sits ABOVE the link, never on the tap path of the thumbnail center.
+                        Tiny pill in the top-right that only appears on hover (desktop) or always on mobile via active state. */}
+                    <button
+                      type="button"
+                      onClick={(e) => handleMarkCompleted(e, item.id, item.anime.title)}
+                      className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 h-6 px-2 rounded-full text-[10px] font-semibold bg-background/80 backdrop-blur-md border border-border/60 text-foreground/80 hover:text-primary hover:border-primary/60 hover:bg-background opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-200 shadow-md"
+                      aria-label={`Mark ${item.anime.title} as completed`}
+                      style={{ marginTop: '1.75rem' }}
+                    >
+                      <Check className="h-3 w-3" />
+                      Done
+                    </button>
                   </div>
-                </Link>
-              </CarouselItem>
-            ))}
+                </CarouselItem>
+              );
+            })}
           </CarouselContent>
           <CarouselPrevious className="hidden md:flex -left-4 bg-background/80 backdrop-blur-sm border-border/50 hover:bg-primary/10 hover:border-primary/50" />
           <CarouselNext className="hidden md:flex -right-4 bg-background/80 backdrop-blur-sm border-border/50 hover:bg-primary/10 hover:border-primary/50" />
