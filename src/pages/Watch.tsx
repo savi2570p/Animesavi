@@ -128,7 +128,10 @@ const TELEGRAM_COPY: Record<string, TelegramCopy> = {
   de: { title: 'Tritt unserem Telegram bei', subtitle: 'Neue Folgen & Updates', cta: 'Beitreten', aria: 'Telegram beitreten' },
   ar: { title: 'انضم إلى تيليجرام', subtitle: 'حلقات جديدة وتحديثات', cta: 'انضم', aria: 'انضم إلى تيليجرام' },
 };
-function resolveTelegramCopy(audioLanguage?: string | null): TelegramCopy {
+function resolveTelegramCopy(_audioLanguage?: string | null): TelegramCopy {
+  // Telegram popup is always shown in English regardless of episode/user language.
+  return TELEGRAM_COPY.en;
+  // eslint-disable-next-line no-unreachable
   const normalize = (raw?: string | null): string | null => {
     if (!raw) return null;
     const s = raw.toLowerCase().trim();
