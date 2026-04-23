@@ -278,6 +278,8 @@ export function EmbedIframePlayer({
   }, [iframeMeta.href, pushDebugEvent, reportError]);
 
   useEffect(() => {
+    remoteStateRef.current = remoteState;
+
     const handleMessage = (event: MessageEvent) => {
       if (!isEmbedMessage(event.data)) return;
       if (instanceId && event.data.instanceId !== instanceId) {
@@ -330,6 +332,7 @@ export function EmbedIframePlayer({
             readyState: Number(event.data.payload?.readyState ?? 0),
           };
 
+          remoteStateRef.current = nextState;
           setRemoteState(nextState);
           onPlaybackStateChange?.(nextState);
           onTimeUpdate?.(nextState.currentTime, nextState.duration);
