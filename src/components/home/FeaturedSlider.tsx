@@ -38,11 +38,21 @@ const VIEW_COUNT_MAP: Record<string, number> = {
   'Jujutsu Kaisen': 8700000,
   'My Dress-Up Darling': 6200000,
   'Reborn to Master the Blade: From Hero-King to Extraordinary Squire': 1800000,
+  'attack on titan Muse India DUB': 9200000,
+  'Attack on Titan Muse India DUB': 9200000,
+  'attack on titan': 8900000,
+  'Attack on Titan': 8900000,
+  'Attack on Titan OAD': 2100000,
 };
 
 const getViewCount = (title: string, dbViewCount: number | null): number => {
-  if (VIEW_COUNT_MAP[title]) return VIEW_COUNT_MAP[title];
-  if (dbViewCount && dbViewCount > 0) return dbViewCount;
+  // Case-insensitive lookup against curated map
+  const mapKey = Object.keys(VIEW_COUNT_MAP).find(
+    k => k.toLowerCase() === title.toLowerCase()
+  );
+  if (mapKey) return VIEW_COUNT_MAP[mapKey];
+  // Only trust DB count if it's a realistic value (>= 1000)
+  if (dbViewCount && dbViewCount >= 1000) return dbViewCount;
   return Math.floor(Math.random() * (9000000 - 1000000) + 1000000);
 };
 
