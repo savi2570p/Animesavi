@@ -238,7 +238,7 @@ export function FeaturedSlider() {
                     ? 'bg-primary w-full'
                     : 'w-0'
                 }`}
-                style={idx === currentIndex ? { animation: 'slider-fill 5s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
+                style={idx === currentIndex ? { animation: 'slider-fill 7s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
               />
             </button>
           ))}
@@ -359,7 +359,7 @@ export function FeaturedSlider() {
                   ? 'bg-primary w-full'
                   : 'w-0'
               }`}
-              style={idx === currentIndex ? { animation: 'slider-fill 5s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
+              style={idx === currentIndex ? { animation: 'slider-fill 7s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
             />
           </button>
         ))}
