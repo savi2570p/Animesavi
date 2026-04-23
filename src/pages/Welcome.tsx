@@ -572,7 +572,7 @@ export default function Welcome() {
               { icon: Calendar, title: 'Seasonal Tracker', desc: 'One dashboard to follow every airing show this season.', tag: 'Soon' },
               { icon: Palette, title: 'Custom Player Themes', desc: 'Pick accent colors and player skins to match your vibe.', tag: 'Soon' },
               { icon: BarChart3, title: 'Watch Stats', desc: 'See total hours watched, top genres, longest streaks.', tag: 'Planned' },
-              { icon: MapPin, title: 'Regional Subtitles', desc: 'Tamil, Telugu, Marathi, Bengali subtitle tracks.', tag: 'Planned' },
+              { icon: MapPin, title: 'AI Episode Recaps', desc: 'Auto-generated 30-second recaps so you never lose track of long-running shows.', tag: 'Planned' },
             ].map((r, i) => (
               <div key={i} className="relative p-5 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/30 transition-all duration-300">
                 <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-primary/15 text-primary">{r.tag}</span>
