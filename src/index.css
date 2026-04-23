@@ -1025,48 +1025,139 @@ img[loading="lazy"] {
 }
 
 /* ===========================================================================
-   Netflix-Style Global Polish Layer (v2)
-   Applied site-wide to existing home sections without rewriting each component.
+   Netflix-Style Global Polish Layer (v3) — site-wide upgrade
+   Applied to all home sections without rewriting components.
    =========================================================================== */
 
+/* ---------- Section rhythm + headings ---------- */
 main section { position: relative; }
-main section h2,
-main section > .container > h2 { letter-spacing: -0.01em; }
 
+/* Red accent bar before every section h2 (skip hero/banners) */
+main section:not(:first-of-type) > .container > h2,
+main section:not(:first-of-type) > .container > div > h2 {
+  position: relative;
+  padding-left: 0.875rem;
+  letter-spacing: -0.015em;
+  background-image: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 70%));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+main section:not(:first-of-type) > .container > h2::before,
+main section:not(:first-of-type) > .container > div > h2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 18%;
+  bottom: 18%;
+  width: 4px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, hsl(0 85% 55%), hsl(0 85% 40%));
+  box-shadow: 0 0 12px hsla(0, 85%, 50%, 0.55);
+}
+
+/* ---------- Card hover (Netflix-style elevation) ---------- */
 @media (hover: hover) and (pointer: fine) {
-  .snap-row > * {
-    transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
-                box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  .snap-row > *,
+  main section [class*="grid"] > a,
+  main section [class*="grid"] > div > a {
+    transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 360ms cubic-bezier(0.22, 1, 0.36, 1),
+                filter 280ms ease;
+    will-change: transform;
   }
   .snap-row > *:hover {
-    transform: translateZ(0) scale(1.045);
-    z-index: 5;
-    box-shadow: 0 18px 40px -12px hsla(0, 85%, 35%, 0.45),
-                0 8px 18px -8px hsla(0, 0%, 0%, 0.6);
+    transform: translateZ(0) scale(1.055);
+    z-index: 10;
+    box-shadow:
+      0 24px 50px -14px hsla(0, 85%, 30%, 0.55),
+      0 10px 24px -10px hsla(0, 0%, 0%, 0.7),
+      0 0 0 1px hsla(0, 85%, 55%, 0.25);
   }
-  .snap-row img, main section img {
-    transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1), filter 320ms ease;
+  .snap-row img,
+  main section img {
+    transition: transform 480ms cubic-bezier(0.22, 1, 0.36, 1),
+                filter 320ms ease;
   }
   .snap-row > *:hover img {
-    transform: scale(1.04);
-    filter: saturate(1.08) contrast(1.04);
+    transform: scale(1.06);
+    filter: saturate(1.12) contrast(1.05) brightness(1.04);
   }
 }
 
+/* ---------- Section entry fade ---------- */
 @keyframes nf-row-in {
-  from { opacity: 0; transform: translateY(14px); }
+  from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
-main section { animation: nf-row-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+main section { animation: nf-row-in 560ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 
-@media (prefers-reduced-motion: reduce) {
-  main section, .snap-row > *, .snap-row img {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
+/* ---------- Edge fade masks on horizontal rows (Netflix gradient) ---------- */
+.snap-row {
+  scroll-snap-stop: always;
+  scroll-behavior: smooth;
+  -webkit-mask-image: linear-gradient(90deg,
+    transparent 0,
+    #000 1.25rem,
+    #000 calc(100% - 1.25rem),
+    transparent 100%);
+  mask-image: linear-gradient(90deg,
+    transparent 0,
+    #000 1.25rem,
+    #000 calc(100% - 1.25rem),
+    transparent 100%);
+}
+@media (max-width: 640px) {
+  .snap-row {
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 }
 
+/* ---------- Hero Ken Burns (slow zoom-pan) ---------- */
+@keyframes nf-ken-burns {
+  0%   { transform: scale(1.06) translate3d(0, 0, 0); }
+  50%  { transform: scale(1.12) translate3d(-1.5%, -1%, 0); }
+  100% { transform: scale(1.06) translate3d(0, 0, 0); }
+}
+.nf-ken-burns,
+section:first-of-type .relative > div > img {
+  animation: nf-ken-burns 22s ease-in-out infinite;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* ---------- Skeleton shimmer (used by ContinueWatching + others) ---------- */
+@keyframes skeleton-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(0 0% 12%) 0%,
+    hsl(0 0% 18%) 50%,
+    hsl(0 0% 12%) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+/* ---------- Progress-bar shine (Continue Watching) ---------- */
+@keyframes nf-shine {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.animate-shine { animation: nf-shine 2.4s ease-in-out infinite; }
+
+/* ---------- Calendar polish ---------- */
+[data-calendar-day] {
+  transition: background 280ms ease, border-color 280ms ease;
+}
+[data-calendar-day]:hover {
+  background: hsla(0, 85%, 50%, 0.06);
+}
+
+/* ---------- Mobile tap feedback (no hover) ---------- */
 @media (hover: none) {
   .snap-row > *:active {
     transform: scale(0.97);
@@ -1074,7 +1165,26 @@ main section { animation: nf-row-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both; }
   }
 }
 
-.snap-row {
-  scroll-snap-stop: always;
-  scroll-behavior: smooth;
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  main section,
+  .snap-row > *,
+  .snap-row img,
+  .nf-ken-burns,
+  section:first-of-type .relative > div > img,
+  .skeleton-shimmer,
+  .animate-shine {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
 }
+
+/* ---------- Smooth font rendering on iOS/Android ---------- */
+@supports (-webkit-touch-callout: none) {
+  body, h1, h2, h3 {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+}
+

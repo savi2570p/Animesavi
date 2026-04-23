@@ -87,10 +87,10 @@ export function FeaturedSlider() {
     fetchFeaturedAnime();
   }, []);
 
-  // Auto-slide every 5 seconds
+  // Auto-slide every 7 seconds — gives Ken Burns time to breathe
   useEffect(() => {
     if (featuredAnime.length === 0) return;
-    const interval = setInterval(() => handleNext(), 5000);
+    const interval = setInterval(() => handleNext(), 7000);
     return () => clearInterval(interval);
   }, [currentIndex, featuredAnime.length]);
 
@@ -139,7 +139,7 @@ export function FeaturedSlider() {
               <img
                 src={anime.banner || anime.thumbnail || '/placeholder.svg'}
                 alt={anime.title}
-                className="w-full h-full object-cover"
+                className={`w-full h-full object-cover ${idx === currentIndex ? 'nf-ken-burns' : ''}`}
               />
             </div>
           ))}
@@ -233,12 +233,12 @@ export function FeaturedSlider() {
               <div
                 className={`absolute inset-y-0 left-0 rounded-full transition-all ${
                   idx === currentIndex
-                    ? 'bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)] animate-[slider-fill_5s_linear]'
+                    ? 'bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)] animate-[slider-fill_7s_linear]'
                     : idx < currentIndex
                     ? 'bg-primary w-full'
                     : 'w-0'
                 }`}
-                style={idx === currentIndex ? { animation: 'slider-fill 5s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
+                style={idx === currentIndex ? { animation: 'slider-fill 7s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
               />
             </button>
           ))}
@@ -261,7 +261,7 @@ export function FeaturedSlider() {
             <img
               src={anime.banner || anime.thumbnail || '/placeholder.svg'}
               alt={anime.title}
-              className="w-full h-full object-cover"
+              className={`w-full h-full object-cover ${idx === currentIndex ? 'nf-ken-burns' : ''}`}
             />
           </div>
         ))}
@@ -359,7 +359,7 @@ export function FeaturedSlider() {
                   ? 'bg-primary w-full'
                   : 'w-0'
               }`}
-              style={idx === currentIndex ? { animation: 'slider-fill 5s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
+              style={idx === currentIndex ? { animation: 'slider-fill 7s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
             />
           </button>
         ))}
