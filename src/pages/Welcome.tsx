@@ -92,6 +92,39 @@ export default function Welcome() {
   const [totalAnime, setTotalAnime] = useState(0);
   const [totalEpisodes, setTotalEpisodes] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isLaunching, setIsLaunching] = useState(false);
+  const [launchProgress, setLaunchProgress] = useState(0);
+  const [launchStage, setLaunchStage] = useState('Warming up servers');
+
+  const startWatching = (target: string = '/') => {
+    if (isLaunching) return;
+    setIsLaunching(true);
+    setLaunchProgress(0);
+    setLaunchStage('Warming up servers');
+    const stages: Array<{ at: number; label: string }> = [
+      { at: 18, label: 'Connecting to H.Savi CDN' },
+      { at: 38, label: 'Loading your library' },
+      { at: 58, label: 'Preparing 4K stream' },
+      { at: 78, label: 'Syncing watch history' },
+      { at: 92, label: 'Almost there' },
+    ];
+    const start = performance.now();
+    const duration = 1800; // ms — fast but feels real
+    const tick = () => {
+      const elapsed = performance.now() - start;
+      const pct = Math.min(100, (elapsed / duration) * 100);
+      setLaunchProgress(pct);
+      const stage = [...stages].reverse().find(s => pct >= s.at);
+      if (stage) setLaunchStage(stage.label);
+      if (pct < 100) {
+        requestAnimationFrame(tick);
+      } else {
+        setLaunchStage('Ready');
+        setTimeout(() => navigate(target), 220);
+      }
+    };
+    requestAnimationFrame(tick);
+  };
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -267,7 +300,7 @@ export default function Welcome() {
 
           {/* CTA Buttons */}
           <div className="flex items-center gap-3 animate-fade-in" style={{ animationDelay: '400ms' }}>
-            <button onClick={() => navigate('/')} className="flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-2xl text-sm sm:text-base font-bold transition-all duration-200 hover:scale-105 bg-primary text-primary-foreground" style={{ boxShadow: '0 4px 24px hsl(var(--primary) / 0.4)' }}>
+            <button onClick={() => startWatching('/')} className="flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-2xl text-sm sm:text-base font-bold transition-all duration-200 hover:scale-105 bg-primary text-primary-foreground" style={{ boxShadow: '0 4px 24px hsl(var(--primary) / 0.4)' }}>
               <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
               Start Watching
             </button>
@@ -508,6 +541,28 @@ export default function Welcome() {
           </div>
         </div>
 
+        {/* Watch Instantly — how fast streaming works */}
+        <div className="w-full max-w-4xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '958ms' }}>
+          <div className="text-center mb-10">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Watch Instantly</span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Press Play. Skip the Wait.</h2>
+            <p className="text-muted-foreground text-sm mt-2 max-w-lg mx-auto">Our streaming stack is tuned so the first frame appears in under a second on most networks.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            {[
+              { icon: Zap, title: 'Sub-second start', desc: 'Tiny initial buffer + first-fragment prefetch deliver an instant first frame, then the buffer grows in the background.' },
+              { icon: Layers, title: 'Adaptive 144p → 4K', desc: 'HLS dynamically picks the best quality your connection can sustain — upgrades to 4K within seconds when bandwidth allows.' },
+              { icon: Wifi, title: 'Network-aware', desc: 'Detects 2G / 3G / cellular vs Wi-Fi and tunes buffer size, retries and start level so playback never stalls.' },
+            ].map((b, i) => (
+              <div key={i} className="flex flex-col items-center text-center gap-3 p-5 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/30 transition-all duration-300">
+                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center"><b.icon className="w-5 h-5 text-primary" /></div>
+                <h3 className="text-sm font-bold text-foreground">{b.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{b.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Supported Devices */}
         <div className="w-full max-w-5xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '960ms' }}>
           <div className="text-center mb-10">
@@ -567,11 +622,11 @@ export default function Welcome() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             {[
-              { icon: Crown, title: 'Personal Watchrooms', desc: 'Persistent rooms with friends — pick up sessions days later.', tag: 'In Progress' },
-              { icon: Flame, title: 'Smarter Recommendations', desc: 'Genre-aware suggestions tuned by your real watch history.', tag: 'Beta' },
-              { icon: Calendar, title: 'Seasonal Tracker', desc: 'One dashboard to follow every airing show this season.', tag: 'Soon' },
-              { icon: Palette, title: 'Custom Player Themes', desc: 'Pick accent colors and player skins to match your vibe.', tag: 'Soon' },
-              { icon: BarChart3, title: 'Watch Stats', desc: 'See total hours watched, top genres, longest streaks.', tag: 'Planned' },
+              { icon: Crown, title: 'Persistent Watch Rooms', desc: 'Resume group sessions days later — chat history, queue and playback position all saved.', tag: 'In Progress' },
+              { icon: Flame, title: 'Smart Recommendations 2.0', desc: 'Genre + mood-aware suggestions tuned by your real watch history and ratings.', tag: 'Beta' },
+              { icon: Calendar, title: 'Seasonal Anime Tracker', desc: 'A single dashboard for every airing show this season with episode countdowns.', tag: 'Soon' },
+              { icon: Palette, title: 'Custom Player Skins', desc: 'Pick accent colors, control layouts and skip-intro behavior to match your vibe.', tag: 'Soon' },
+              { icon: BarChart3, title: 'Personal Watch Stats', desc: 'Total hours watched, top genres, longest streaks and a year-in-review wrap.', tag: 'Planned' },
               { icon: MapPin, title: 'AI Episode Recaps', desc: 'Auto-generated 30-second recaps so you never lose track of long-running shows.', tag: 'Planned' },
             ].map((r, i) => (
               <div key={i} className="relative p-5 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/30 transition-all duration-300">
@@ -612,7 +667,7 @@ export default function Welcome() {
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">Ready to Watch?</h2>
             <p className="text-muted-foreground text-sm sm:text-base mb-6 max-w-md mx-auto">Join thousands of anime fans streaming their favorites on AnimeSavi — completely free and ad-free.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button onClick={() => navigate('/')} className="flex items-center gap-2 px-8 py-3.5 rounded-2xl text-base font-bold transition-all duration-200 hover:scale-105 bg-primary text-primary-foreground" style={{ boxShadow: '0 4px 24px hsl(var(--primary) / 0.4)' }}>
+              <button onClick={() => startWatching('/')} className="flex items-center gap-2 px-8 py-3.5 rounded-2xl text-base font-bold transition-all duration-200 hover:scale-105 bg-primary text-primary-foreground" style={{ boxShadow: '0 4px 24px hsl(var(--primary) / 0.4)' }}>
                 <Play className="w-5 h-5 fill-current" />
                 Start Watching Now
               </button>
@@ -624,6 +679,75 @@ export default function Welcome() {
           </div>
         </div>
       </div>
+
+      {/* Realistic launch loading overlay — shown when user clicks "Start Watching" */}
+      {isLaunching && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-background/95 backdrop-blur-xl animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Loading AnimeSavi"
+        >
+          {/* Ambient glow */}
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
+            style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.18) 0%, transparent 60%)' }}
+          />
+          <div className="relative w-full max-w-md mx-auto px-6 flex flex-col items-center gap-7 text-center">
+            {/* Logo with pulse rings */}
+            <div className="relative w-24 h-24 flex items-center justify-center">
+              <span className="absolute inset-0 rounded-3xl border-2 border-primary/40 animate-ping" />
+              <span className="absolute inset-2 rounded-3xl border border-primary/30 animate-pulse" />
+              <div
+                className="relative w-20 h-20 rounded-3xl flex items-center justify-center overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, hsl(var(--primary) / 0.25), hsl(var(--accent)))',
+                  boxShadow: '0 0 60px hsl(var(--primary) / 0.5)',
+                }}
+              >
+                <img src={logo} alt="AnimeSavi" className="w-12 h-12 object-contain" />
+              </div>
+            </div>
+
+            {/* Title */}
+            <div className="space-y-1.5">
+              <h2 className="text-2xl font-extrabold tracking-tight">
+                <span className="text-primary">Anime</span>
+                <span className="text-foreground">Savi</span>
+              </h2>
+              <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase">
+                {launchStage}
+              </p>
+            </div>
+
+            {/* Progress bar */}
+            <div className="w-full space-y-2">
+              <div className="h-1.5 w-full rounded-full bg-card/80 overflow-hidden border border-border/30">
+                <div
+                  className="h-full rounded-full transition-[width] duration-150 ease-out"
+                  style={{
+                    width: `${launchProgress}%`,
+                    background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))',
+                    boxShadow: '0 0 12px hsl(var(--primary) / 0.6)',
+                  }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground font-medium tabular-nums">
+                <span>{Math.floor(launchProgress)}%</span>
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  H.Savi · 4K Ready
+                </span>
+              </div>
+            </div>
+
+            {/* Tip */}
+            <p className="text-[11px] text-muted-foreground/70 max-w-xs leading-relaxed">
+              Tip: Pin AnimeSavi to your home screen for an instant native-app experience.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Bottom branding */}
       <div className="relative z-10 pb-8 pt-12 text-center">
