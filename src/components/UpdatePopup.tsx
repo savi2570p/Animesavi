@@ -20,12 +20,29 @@ interface VersionGroup {
   items: ChangelogItem[];
 }
 
-const APP_VERSION = 'v20';
+const APP_VERSION = 'v21';
 
 const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'v20',
+    version: 'v21',
     date: 'Latest',
+    highlight: 'Cinematic Netflix-style redesign, smarter Telegram toast, and buttery-smooth playback across every device.',
+    items: [
+      { icon: '🎬', badge: 'NEW', title: 'Cinematic Hero Banner', desc: 'Auto-rotating featured slides with Ken Burns zoom-pan, 7s timing, and slim progress bars.' },
+      { icon: '✨', badge: 'IMPROVED', title: 'Netflix-Style UI Polish', desc: 'Red accent section headers, hover scale with red shadows, and edge-fade row masks site-wide.' },
+      { icon: '🌟', badge: 'NEW', title: 'Featured Anime Refresh', desc: 'Witch Hat Atelier and Grand Blue Dreaming now headline the hero rotation with curated view counts.' },
+      { icon: '📺', badge: 'IMPROVED', title: 'Continue Watching', desc: 'Faster loading, deduplicated entries, and a tighter row layout for quicker resume.' },
+      { icon: '🔥', badge: 'IMPROVED', title: 'Discovery Rows', desc: 'Recommended, Most Popular, Latest Series/Episodes/Movies, Coming Soon, and Recently Completed all refreshed.' },
+      { icon: '📅', badge: 'IMPROVED', title: 'Release Calendar', desc: 'Cleaner row layout with fixed date column for at-a-glance weekly browsing.' },
+      { icon: '💬', badge: 'NEW', title: 'Language-Aware Telegram Toast', desc: 'Toast text now adapts to your subtitle/audio language with browser fallback (8 languages).' },
+      { icon: '📱', badge: 'FIX', title: 'Safe-Area Toast Offsets', desc: 'Telegram toast respects iOS notches and Android nav bars — never overlaps player controls.' },
+      { icon: '🛡️', badge: 'FIX', title: 'Playback Safeguard', desc: 'Telegram toast can no longer pause or block video playback when shown or dismissed.' },
+      { icon: '⚡', badge: 'IMPROVED', title: 'Smoother Everywhere', desc: 'Tuned animations, lazy loading, and scroll performance for desktop, iOS, and Android.' },
+    ],
+  },
+  {
+    version: 'v20',
+    date: 'Previous',
     highlight: 'Smoother uploads, richer metadata, and a polished player experience.',
     items: [
       { icon: '📅', badge: 'IMPROVED', title: 'Upcoming Refresh', desc: 'Coming Soon panels surface richer anime details with improved mobile presentation.' },
