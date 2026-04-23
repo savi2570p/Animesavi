@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Film, Clock, Star, ChevronRight, CalendarClock } from 'lucide-react';
+import { Film, Clapperboard, Play, ChevronRight, CalendarClock, Star } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 
@@ -24,11 +24,7 @@ export function LatestMovies() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [showAll, setShowAll] = useState(false);
-
-  useEffect(() => {
-    fetchLatestMovies();
-  }, []);
+  useEffect(() => { fetchLatestMovies(); }, []);
 
   const fetchLatestMovies = async () => {
     try {
@@ -40,62 +36,29 @@ export function LatestMovies() {
         .limit(8);
 
       if (error) throw error;
-      
-      // Fetch first episode for each movie
+
       const moviesWithEpisodes = await Promise.all(
         (data || []).map(async (movie) => {
-          // Get the first season for this movie
           const { data: seasons } = await supabase
-            .from('seasons')
-            .select('id')
-            .eq('anime_id', movie.id)
-            .order('season_number')
-            .limit(1);
-          
+            .from('seasons').select('id').eq('anime_id', movie.id).order('season_number').limit(1);
           if (seasons && seasons.length > 0) {
-            // Get the first episode from the first season
             const { data: episodes } = await supabase
-              .from('episodes')
-              .select('id')
-              .eq('season_id', seasons[0].id)
-              .order('episode_number')
-              .limit(1);
-            
-            return {
-              ...movie,
-              firstEpisodeId: episodes && episodes.length > 0 ? episodes[0].id : null
-            };
+              .from('episodes').select('id').eq('season_id', seasons[0].id).order('episode_number').limit(1);
+            return { ...movie, firstEpisodeId: episodes?.[0]?.id || null };
           }
-          
           return { ...movie, firstEpisodeId: null };
         })
       );
-      
       setMovies(moviesWithEpisodes);
-    } catch (error) {
-      console.error('Error fetching latest movies:', error);
+    } catch (e) {
+      console.error('Error fetching latest movies:', e);
     } finally {
       setLoading(false);
     }
   };
 
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(hours / 24);
-    
-    if (days > 0) return `${days}d ago`;
-    if (hours > 0) return `${hours}h ago`;
-    return 'Just now';
-  };
-
   const isNew = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const hours = diff / (1000 * 60 * 60);
+    const hours = (Date.now() - new Date(dateString).getTime()) / 3_600_000;
     return hours <= 24;
   };
 
@@ -103,19 +66,10 @@ export function LatestMovies() {
     return (
       <section className="py-10 md:py-14 bg-card/30">
         <div className="container">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 rounded-lg bg-accent/10">
-              <Film className="h-5 w-5 text-accent" />
-            </div>
-            <h2 className="text-2xl md:text-3xl font-heading font-bold">Latest Movies</h2>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-            {Array(4).fill(0).map((_, i) => (
-              <div key={i} className="space-y-3">
-                <Skeleton className="aspect-[2/3] rounded-xl" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-              </div>
+          <div className="h-12 w-72 bg-muted/40 animate-pulse rounded-xl mb-8" />
+          <div className="flex gap-4 overflow-hidden">
+            {Array(5).fill(0).map((_, i) => (
+              <Skeleton key={i} className="aspect-[2/3] w-[160px] md:w-[200px] shrink-0 rounded-2xl" />
             ))}
           </div>
         </div>
@@ -126,21 +80,41 @@ export function LatestMovies() {
   if (movies.length === 0) return null;
 
   return (
-    <section className="py-10 md:py-14 bg-card/30">
-      <div className="container">
-        <div className="flex items-center justify-between mb-8">
+    <section className="py-10 md:py-14 bg-card/30 relative overflow-hidden">
+      {/* Backdrop accents */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-20 right-1/4 w-96 h-96 rounded-full bg-accent/10 blur-3xl" />
+        <div className="absolute bottom-0 left-1/4 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
+      </div>
+
+      <div className="container relative">
+        {/* Header */}
+        <div className="flex items-end justify-between mb-7 gap-4 flex-wrap">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-accent/10">
-              <Film className="h-5 w-5 text-accent" />
+            <div className="relative">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-accent via-accent/80 to-primary shadow-[0_8px_30px_-8px_hsl(var(--accent)/0.7)]">
+                <Clapperboard className="h-5 w-5 text-white" />
+              </div>
+              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-accent animate-pulse ring-2 ring-background" />
             </div>
-            <h2 className="text-2xl md:text-3xl font-heading font-bold">Latest Movies</h2>
-            <span className="px-2 py-1 text-xs font-medium bg-accent/20 text-accent rounded-full">
-              New
-            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-2xl md:text-3xl font-heading font-bold leading-tight">
+                  Latest <span className="anime-gradient-text">Movies</span>
+                </h2>
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-accent/15 text-accent border border-accent/30">
+                  <Film className="h-2.5 w-2.5" />
+                  Cinema
+                </span>
+              </div>
+              <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                Big-screen anime films, ready to stream in 4K
+              </p>
+            </div>
           </div>
-          <Button asChild variant="ghost" className="group">
+          <Button asChild variant="ghost" size="sm" className="group">
             <Link to="/latest-movies" className="flex items-center gap-1">
-              See All
+              See all
               <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>
@@ -156,103 +130,90 @@ export function LatestMovies() {
             >
               <Link
                 to={movie.firstEpisodeId ? `/watch/${movie.firstEpisodeId}` : `/anime/${movie.id}`}
-                className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in gpu-accelerate w-[140px] md:w-[160px] lg:w-[180px] shrink-0`}
+                className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in gpu-accelerate w-[160px] md:w-[200px] lg:w-[220px] shrink-0`}
               >
-                {/* Poster with enhanced hover */}
-                <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted mb-3 shadow-lg transition-all duration-500 group-hover:shadow-2xl group-hover:scale-[1.03] group-hover:-translate-y-2">
+                <div className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl group-hover:-translate-y-1 transition-all duration-500 ring-1 ring-white/5 group-hover:ring-accent/50">
+                  {/* Blurred fill */}
+                  {movie.cover_image && (
+                    <img
+                      src={movie.cover_image}
+                      alt=""
+                      aria-hidden
+                      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                      style={{ filter: 'blur(24px) brightness(0.4)' }}
+                    />
+                  )}
                   <img
                     src={movie.cover_image || '/placeholder.svg'}
                     alt={movie.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="relative z-[2] w-full h-full object-contain transition-transform duration-700 group-hover:scale-105 pointer-events-none"
                     loading="lazy"
                   />
-                  {/* 4K Badge */}
-                  <div className="absolute bottom-1.5 right-1.5 z-10">
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg">4K</span>
-                  </div>
-                  
-                  {/* Enhanced gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
 
-                  {/* Play button with animation */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <div className="p-4 rounded-full bg-primary/90 shadow-lg transform scale-0 group-hover:scale-100 transition-transform duration-300 delay-100">
-                      <Film className="h-6 w-6 text-primary-foreground" />
-                    </div>
-                  </div>
+                  {/* Cinematic letterbox bars on hover */}
+                  <div className="absolute inset-x-0 top-0 h-2 z-[6] bg-black opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                  <div className="absolute inset-x-0 bottom-0 h-2 z-[6] bg-black opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
-                  {/* Movie badge */}
-                  <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-accent text-accent-foreground rounded-md flex items-center gap-1 shadow-md">
-                    <Film className="h-3 w-3" />
+                  {/* Legibility gradient */}
+                  <div className="absolute inset-x-0 bottom-0 h-2/3 z-[3] bg-gradient-to-t from-black via-black/55 to-transparent pointer-events-none" />
+
+                  {/* Hover wash */}
+                  <div className="absolute inset-0 z-[3] bg-gradient-to-tr from-accent/25 via-transparent to-primary/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                  {/* Top-left Movie badge */}
+                  <span className="absolute top-2 left-2 z-[5] inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-accent/95 text-accent-foreground text-[10px] font-bold uppercase tracking-wider shadow-md">
+                    <Film className="h-2.5 w-2.5" />
                     Movie
-                  </div>
+                  </span>
 
-                  {/* Token Crown Badge */}
-                  <TokenCrownBadge />
-
-                  {/* NEW + H-DUB badges */}
-                  <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                  {/* Top-right NEW + 4K stack */}
+                  <div className="absolute top-2 right-2 z-[5] flex flex-col gap-1 items-end">
                     {isNew(movie.created_at) && (
-                      <div className="badge-glass-new animate-pulse">
-                        NEW
-                      </div>
+                      <span className="badge-glass-new animate-pulse">NEW</span>
                     )}
-                    <div className="badge-glass-hdub">
-                      H-DUB
-                    </div>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
+                      4K
+                    </span>
                   </div>
 
-                  {/* Coming Soon badge for upcoming */}
                   {movie.status === 'upcoming' && (
-                    <div className="absolute top-10 left-2 px-2 py-1 text-xs font-bold bg-orange-500 text-white rounded-md animate-pulse shadow-md flex items-center gap-1">
-                      <CalendarClock className="h-3 w-3" />
-                      Coming Soon
+                    <div className="absolute top-10 left-2 z-[5] inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-500/95 text-white text-[10px] font-bold uppercase tracking-wider animate-pulse shadow">
+                      <CalendarClock className="h-2.5 w-2.5" />
+                      Soon
                     </div>
                   )}
 
-                  {/* Detailed info on hover - slides up from bottom */}
-                  <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
-                    {/* Description */}
-                    <p className="text-white/90 text-xs line-clamp-3 mb-2">
-                      {movie.description || 'No description available'}
-                    </p>
-                    
-                    {/* Meta info */}
-                    <div className="flex items-center gap-2 text-white/80 text-xs">
+                  <div className="pointer-events-none">
+                    <TokenCrownBadge />
+                  </div>
+
+                  {/* Center play */}
+                  <div className="absolute inset-0 z-[4] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+                    <div className="p-3 rounded-full bg-accent/95 shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-300">
+                      <Play className="h-5 w-5 text-accent-foreground fill-current" />
+                    </div>
+                  </div>
+
+                  {/* Bottom info */}
+                  <div className="absolute bottom-0 left-0 right-0 z-[5] p-3 pointer-events-none">
+                    <h3 className="text-sm md:text-base font-semibold text-white line-clamp-2 leading-tight drop-shadow-lg">
+                      {movie.title}
+                    </h3>
+                    <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-white/80">
                       {movie.release_year && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
+                        <span className="px-1.5 py-0.5 rounded bg-white/10 backdrop-blur-sm font-semibold">
                           {movie.release_year}
                         </span>
                       )}
-                      {movie.view_count && movie.view_count > 0 && (
-                        <span className="flex items-center gap-1">
-                          <Star className="h-3 w-3" />
-                          {movie.view_count} views
+                      {movie.genres?.[0] && (
+                        <span className="flex items-center gap-1 text-white/75 truncate">
+                          <Star className="h-2.5 w-2.5 text-accent" />
+                          {movie.genres[0]}
                         </span>
                       )}
                     </div>
-
-                    {/* Genres */}
-                    {movie.genres && movie.genres.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {movie.genres.slice(0, 3).map(genre => (
-                          <span 
-                            key={genre}
-                            className="px-2 py-0.5 text-xs bg-white/20 rounded-full text-white/90"
-                          >
-                            {genre}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
-
-                {/* Title only - simplified */}
-                <h3 className="text-sm md:text-base font-semibold line-clamp-2 group-hover:text-primary transition-colors duration-300">
-                  {movie.title}
-                </h3>
               </Link>
             </AnimeCardContextMenu>
           ))}

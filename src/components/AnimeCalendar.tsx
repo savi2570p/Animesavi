@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CalendarDays, ChevronLeft, ChevronRight, Heart, Sparkles, Flame, Tv } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Heart, Sparkles, Flame, Tv, CalendarRange, Radio } from 'lucide-react';
 import { format, startOfWeek, addDays, isSameDay, parseISO, getDay, isBefore, startOfDay } from 'date-fns';
 
 interface ScheduleAnime {
@@ -182,71 +182,91 @@ export function AnimeCalendar() {
   }
 
   return (
-    <section className="py-8">
-      <div className="container">
+    <section className="py-10 md:py-14 relative overflow-hidden">
+      {/* Backdrop accents */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-24 left-1/3 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-cyan-500/5 blur-3xl" />
+      </div>
+
+      <div className="container relative">
         {/* Cinematic header */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-card/40 to-transparent border border-primary/20 p-4 md:p-6 mb-5">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/15 via-card/50 to-cyan-500/5 border border-primary/20 p-5 md:p-7 mb-6 backdrop-blur-sm">
+          <div className="absolute -top-16 -right-10 w-56 h-56 bg-primary/25 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-20 -left-10 w-56 h-56 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
+
           <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-primary/15 border border-primary/30 shadow-lg shadow-primary/10">
-                <CalendarDays className="h-5 w-5 text-primary" />
+              <div className="relative">
+                <div className="p-3 rounded-2xl bg-gradient-to-br from-primary via-primary/80 to-cyan-500 shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.7)]">
+                  <CalendarRange className="h-5 w-5 text-white" />
+                </div>
+                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse ring-2 ring-background" />
               </div>
               <div>
-                <h2 className="text-xl md:text-2xl font-heading font-bold flex items-center gap-2">
-                  Release Calendar
-                  <Badge variant="outline" className="text-[10px] border-primary/40 text-primary uppercase tracking-wider hidden sm:inline-flex">Live</Badge>
-                </h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-2xl md:text-3xl font-heading font-bold leading-tight">
+                    Release <span className="anime-gradient-text">Calendar</span>
+                  </h2>
+                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">
+                    <Radio className="h-2.5 w-2.5" />
+                    Live
+                  </span>
+                </div>
                 <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-                  {format(weekStart, 'MMM d')} – {format(addDays(weekStart, 6), 'MMM d, yyyy')} · <span className="text-primary font-semibold">{totalThisWeek}</span> releases this week
+                  {format(weekStart, 'MMM d')} – {format(addDays(weekStart, 6), 'MMM d, yyyy')}
+                  <span className="mx-1.5 opacity-50">•</span>
+                  <span className="text-primary font-semibold">{totalThisWeek}</span> releases this week
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={goToToday} className="h-8">
-                Today
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => navigateWeek('prev')} className="h-8 w-8">
+            <div className="flex items-center gap-1.5 bg-card/40 backdrop-blur-sm rounded-full border border-border/40 p-1">
+              <Button variant="ghost" size="icon" onClick={() => navigateWeek('prev')} className="h-8 w-8 rounded-full hover:bg-primary/15">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => navigateWeek('next')} className="h-8 w-8">
+              <Button variant="default" size="sm" onClick={goToToday} className="h-7 px-3 rounded-full text-xs font-semibold">
+                Today
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => navigateWeek('next')} className="h-8 w-8 rounded-full hover:bg-primary/15">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
 
           {/* Filter chips */}
-          <div className="relative flex items-center gap-2 mt-4 overflow-x-auto scrollbar-thin">
+          <div className="relative flex items-center gap-2 mt-5 overflow-x-auto scrollbar-thin scrollbar-thumb-primary/20">
             <button
               onClick={() => setActiveFilter('all')}
-              className={`shrink-0 text-[11px] md:text-xs font-medium px-3 py-1.5 rounded-full border transition-all ${
+              className={`shrink-0 text-[11px] md:text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all ${
                 activeFilter === 'all'
-                  ? 'bg-primary text-primary-foreground border-primary shadow shadow-primary/30'
-                  : 'bg-card/40 text-muted-foreground border-border/40 hover:border-primary/40'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/30 scale-105'
+                  : 'bg-card/40 text-muted-foreground border-border/40 hover:border-primary/40 hover:text-foreground'
               }`}
             >
-              All · {animeList.length}
+              All <span className="opacity-70 ml-1">{animeList.length}</span>
             </button>
             <button
               onClick={() => setActiveFilter('favorites')}
-              className={`shrink-0 text-[11px] md:text-xs font-medium px-3 py-1.5 rounded-full border transition-all flex items-center gap-1 ${
+              className={`shrink-0 text-[11px] md:text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all flex items-center gap-1.5 ${
                 activeFilter === 'favorites'
-                  ? 'bg-primary text-primary-foreground border-primary shadow shadow-primary/30'
-                  : 'bg-card/40 text-muted-foreground border-border/40 hover:border-primary/40'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/30 scale-105'
+                  : 'bg-card/40 text-muted-foreground border-border/40 hover:border-primary/40 hover:text-foreground'
               }`}
             >
-              <Heart className="h-3 w-3" /> Favorites · {favCount}
+              <Heart className={`h-3 w-3 ${activeFilter === 'favorites' ? 'fill-current' : ''}`} />
+              Favorites <span className="opacity-70">{favCount}</span>
             </button>
             <button
               onClick={() => setActiveFilter('new')}
-              className={`shrink-0 text-[11px] md:text-xs font-medium px-3 py-1.5 rounded-full border transition-all flex items-center gap-1 ${
+              className={`shrink-0 text-[11px] md:text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all flex items-center gap-1.5 ${
                 activeFilter === 'new'
-                  ? 'bg-primary text-primary-foreground border-primary shadow shadow-primary/30'
-                  : 'bg-card/40 text-muted-foreground border-border/40 hover:border-primary/40'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/30 scale-105'
+                  : 'bg-card/40 text-muted-foreground border-border/40 hover:border-primary/40 hover:text-foreground'
               }`}
             >
-              <Flame className="h-3 w-3" /> New this week · {newCount}
+              <Flame className="h-3 w-3" />
+              New this week <span className="opacity-70">{newCount}</span>
             </button>
           </div>
         </div>
