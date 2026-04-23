@@ -24,12 +24,10 @@ export default function TokenVerify() {
 
   const verifyToken = async (token: string) => {
     try {
-      const { data, error } = await supabase
-        .from('unlock_tokens')
-        .select('*')
-        .eq('token', token)
-        .eq('is_active', true)
-        .maybeSingle();
+      const { data: rows, error } = await supabase
+        .rpc('verify_unlock_token', { _token: token });
+
+      const data = Array.isArray(rows) ? rows[0] : null;
 
       if (error || !data) {
         setStatus('error');
