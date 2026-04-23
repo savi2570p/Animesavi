@@ -114,6 +114,49 @@ type CommentSortOption = 'newest' | 'oldest' | 'most_liked';
 const TELEGRAM_POPUP_KEY = 'telegram_popup_last_shown';
 const TELEGRAM_POPUP_SESSION_KEY = 'telegram_popup_dismissed_session';
 
+// Language-aware Telegram toast copy.
+// Resolution order: episode audio_language -> stored preferred_audio_language -> navigator.language.
+// Falls back to English. Pure function: no side effects, never touches the player.
+type TelegramCopy = { title: string; subtitle: string; cta: string; aria: string };
+const TELEGRAM_COPY: Record<string, TelegramCopy> = {
+  en: { title: 'Join our Telegram', subtitle: 'New episodes & updates', cta: 'Join', aria: 'Join Telegram' },
+  hi: { title: 'हमारा टेलीग्राम जॉइन करें', subtitle: 'नए एपिसोड और अपडेट्स', cta: 'जॉइन', aria: 'टेलीग्राम जॉइन करें' },
+  ja: { title: 'Telegram に参加', subtitle: '新エピソードと更新情報', cta: '参加', aria: 'Telegram に参加' },
+  es: { title: 'Únete a nuestro Telegram', subtitle: 'Nuevos episodios y novedades', cta: 'Unirse', aria: 'Unirse a Telegram' },
+  fr: { title: 'Rejoignez notre Telegram', subtitle: 'Nouveaux épisodes et mises à jour', cta: 'Rejoindre', aria: 'Rejoindre Telegram' },
+  pt: { title: 'Entre no nosso Telegram', subtitle: 'Novos episódios e atualizações', cta: 'Entrar', aria: 'Entrar no Telegram' },
+  de: { title: 'Tritt unserem Telegram bei', subtitle: 'Neue Folgen & Updates', cta: 'Beitreten', aria: 'Telegram beitreten' },
+  ar: { title: 'انضم إلى تيليجرام', subtitle: 'حلقات جديدة وتحديثات', cta: 'انضم', aria: 'انضم إلى تيليجرام' },
+};
+function resolveTelegramCopy(audioLanguage?: string | null): TelegramCopy {
+  const normalize = (raw?: string | null): string | null => {
+    if (!raw) return null;
+    const s = raw.toLowerCase().trim();
+    if (s.startsWith('hi') || s.includes('hindi')) return 'hi';
+    if (s.startsWith('ja') || s.includes('japanese') || s.includes('original')) return 'ja';
+    if (s.startsWith('es') || s.includes('spanish')) return 'es';
+    if (s.startsWith('fr') || s.includes('french')) return 'fr';
+    if (s.startsWith('pt') || s.includes('portuguese')) return 'pt';
+    if (s.startsWith('de') || s.includes('german')) return 'de';
+    if (s.startsWith('ar') || s.includes('arabic')) return 'ar';
+    if (s.startsWith('en') || s.includes('english')) return 'en';
+    return null;
+  };
+  const fromEpisode = normalize(audioLanguage);
+  if (fromEpisode) return TELEGRAM_COPY[fromEpisode];
+  try {
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('preferred_audio_language') : null;
+    const fromStored = normalize(stored);
+    if (fromStored) return TELEGRAM_COPY[fromStored];
+    const navLang = typeof navigator !== 'undefined' ? navigator.language : null;
+    const fromNav = normalize(navLang);
+    if (fromNav) return TELEGRAM_COPY[fromNav];
+  } catch {
+    /* ignore */
+  }
+  return TELEGRAM_COPY.en;
+}
+
 export default function Watch() {
   const { episodeId } = useParams<{ episodeId: string }>();
   const [searchParams] = useSearchParams();
