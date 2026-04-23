@@ -478,7 +478,7 @@ export default function Watch() {
     } catch (error) {
       console.error('Error updating watch progress:', error);
     }
-  }, [user, episodeId, anime, watchHistoryId, resumeProgress, initialSeekDone]);
+  }, [user, episodeId, anime, watchHistoryId, resumeProgress, initialSeekDone, searchParams]);
 
   const fetchEpisodeData = async (isEpisodeSwitch = false) => {
     if (!isEpisodeSwitch) setIsLoading(true);
