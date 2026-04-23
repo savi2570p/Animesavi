@@ -41,6 +41,22 @@ const TEST_TIMEOUT_MS = 3000;
 const RECENT_EVENTS_LIMIT = 14;
 const IFRAME_ALLOW = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
 
+// Origins for embeds that we control and that speak our postMessage protocol.
+// Anything else is treated as a third-party embed where we don't require a handshake.
+const TRUSTED_BRIDGE_HOSTS = [
+  'animesavi.lovable.app',
+  'crunchysavi.lovable.app',
+  'shadow-arise.lovable.app',
+  'id-preview--33d3090e-95de-4730-92ea-a67c07f853e0.lovable.app',
+  '33d3090e-95de-4730-92ea-a67c07f853e0.lovableproject.com',
+];
+
+function isTrustedBridgeOrigin(origin: string, hostname: string) {
+  if (!origin || origin === '*') return false;
+  if (origin === window.location.origin) return true;
+  return TRUSTED_BRIDGE_HOSTS.some((host) => hostname === host || hostname.endsWith('.' + host));
+}
+
 type HandshakeState = 'loading' | 'ready' | 'limited' | 'failed';
 type EmbedEventDirection = 'incoming' | 'outgoing' | 'system';
 
