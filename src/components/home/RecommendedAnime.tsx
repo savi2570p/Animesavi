@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Sparkles, Play, ChevronRight, CalendarClock } from 'lucide-react';
+import { Sparkles, Play, ChevronRight, CalendarClock, Wand2, Flame } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 
@@ -25,11 +24,8 @@ export function RecommendedAnime() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      fetchRecommendations();
-    } else {
-      fetchPopular();
-    }
+    if (user) fetchRecommendations();
+    else fetchPopular();
   }, [user]);
 
   const fetchRecommendations = async () => {
@@ -52,13 +48,12 @@ export function RecommendedAnime() {
 
       const watchedIds = watchedData?.map((w) => w.anime_id) || [];
 
-      // Use anime_public view to avoid exposing uploader_id
       let query = supabase
         .from('anime_public')
         .select('*')
         .overlaps('genres', genres)
         .order('view_count', { ascending: false })
-        .limit(12);
+        .limit(14);
 
       if (watchedIds.length > 0) {
         query = query.not('id', 'in', `(${watchedIds.join(',')})`);
@@ -66,7 +61,6 @@ export function RecommendedAnime() {
 
       const { data } = await query;
       if (data) {
-        // Randomize the results
         const shuffled = [...data].sort(() => Math.random() - 0.5);
         setRecommendations(shuffled);
       }
@@ -78,30 +72,26 @@ export function RecommendedAnime() {
 
   const fetchPopular = async () => {
     setIsLoading(true);
-    // Use anime_public view to avoid exposing uploader_id
     const { data } = await supabase
       .from('anime_public')
       .select('*')
       .order('view_count', { ascending: false })
-      .limit(12);
-
+      .limit(14);
     if (data) {
-      // Randomize the results
       const shuffled = [...data].sort(() => Math.random() - 0.5);
       setRecommendations(shuffled);
     }
     setIsLoading(false);
   };
 
-
   if (isLoading) {
     return (
-      <section className="py-12 bg-card/30">
+      <section className="py-12 relative">
         <div className="container">
-          <div className="h-8 w-64 bg-muted animate-pulse rounded mb-6" />
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="aspect-[3/4] bg-muted animate-pulse rounded-lg" />
+          <div className="h-10 w-64 bg-muted/50 animate-pulse rounded-lg mb-6" />
+          <div className="flex gap-3 overflow-hidden">
+            {[...Array(7)].map((_, i) => (
+              <div key={i} className="w-[150px] md:w-[170px] shrink-0 aspect-[2/3] bg-muted/50 animate-pulse rounded-2xl" />
             ))}
           </div>
         </div>
@@ -112,34 +102,69 @@ export function RecommendedAnime() {
   if (recommendations.length === 0) return null;
 
   return (
-    <section className="py-12 bg-card/30">
-      <div className="container">
-        {/* Section Header */}
-        <div className="flex items-center justify-between mb-6">
+    <section className="py-12 relative overflow-hidden">
+      {/* Layered backdrop accents */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute top-10 right-0 w-80 h-80 rounded-full bg-purple-500/10 blur-3xl" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+      </div>
+
+      <div className="container relative">
+        {/* Redesigned header */}
+        <div className="flex items-end justify-between mb-7 gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-gradient-primary shadow-lg">
-              <Sparkles className="h-5 w-5 text-white" />
+            <div className="relative">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-primary via-primary/80 to-purple-500 shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.7)]">
+                <Wand2 className="h-5 w-5 text-white" />
+              </div>
+              <Sparkles className="absolute -top-1 -right-1 h-3.5 w-3.5 text-primary animate-pulse" />
             </div>
             <div>
-              <h2 className="text-xl md:text-2xl font-heading font-bold">
-                {user ? 'Recommended For You' : 'Popular Anime'}
-              </h2>
-              {topGenres.length > 0 && (
-                <p className="text-sm text-muted-foreground">
-                  Based on your love for {topGenres.join(', ')}
-                </p>
-              )}
+              <div className="flex items-center gap-2">
+                <h2 className="text-2xl md:text-3xl font-heading font-bold leading-tight">
+                  {user ? (
+                    <>Recommended <span className="anime-gradient-text">For You</span></>
+                  ) : (
+                    <>Popular <span className="anime-gradient-text">Right Now</span></>
+                  )}
+                </h2>
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-primary/15 text-primary border border-primary/30">
+                  <Flame className="h-2.5 w-2.5" />
+                  Picks
+                </span>
+              </div>
+              <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                {topGenres.length > 0
+                  ? <>Tailored to your love for <span className="text-primary font-medium">{topGenres.join(' · ')}</span></>
+                  : 'Hand-picked titles trending across the community'}
+              </p>
             </div>
           </div>
-          <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
-            <Link to="/browse" className="flex items-center">
-              View all <ChevronRight className="h-4 w-4 ml-1" />
+          <Button variant="ghost" size="sm" asChild className="group shrink-0">
+            <Link to="/browse" className="flex items-center gap-1">
+              Explore all
+              <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>
         </div>
 
-        {/* Anime Row - Horizontal scroll on all devices */}
-        <div className="flex gap-2.5 overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory scrollbar-none">
+        {/* Genre chips */}
+        {topGenres.length > 0 && (
+          <div className="flex items-center gap-2 mb-5 overflow-x-auto scrollbar-none -mx-4 px-4">
+            {topGenres.map((g) => (
+              <span
+                key={g}
+                className="shrink-0 px-3 py-1 text-[11px] font-medium rounded-full bg-card/60 text-foreground border border-border/60 backdrop-blur-sm"
+              >
+                #{g}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Poster row */}
+        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-row scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
           {recommendations.map((anime, index) => (
             <AnimeCardContextMenu
               key={anime.id}
@@ -147,71 +172,79 @@ export function RecommendedAnime() {
               animeUrl={`/anime/${anime.id}`}
               coverImage={anime.cover_image}
             >
-              <Link 
-                to={`/anime/${anime.id}`} 
-                className={`anime-card group stagger-${Math.min(index + 1, 6)} opacity-0 animate-fade-in shrink-0 snap-start`}
-                style={{ width: 120 }}
+              <Link
+                to={`/anime/${anime.id}`}
+                className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in w-[150px] md:w-[170px] lg:w-[190px] shrink-0`}
               >
-                <div
-                  className="relative overflow-hidden rounded-xl"
-                  style={{ width: 120, height: 180, background: '#0f0f0f' }}
-                >
-                  {/* Blurred background layer */}
+                <div className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl group-hover:-translate-y-1 transition-all duration-500 ring-1 ring-white/5 group-hover:ring-primary/40">
+                  {/* Blurred background fill */}
                   {anime.cover_image && (
                     <img
                       src={anime.cover_image}
                       alt=""
                       aria-hidden="true"
-                      className="absolute inset-0 w-full h-full object-cover"
-                      style={{ filter: 'blur(20px) brightness(0.4)' }}
+                      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                      style={{ filter: 'blur(24px) brightness(0.4)' }}
                     />
                   )}
-                  {/* Foreground image */}
+                  {/* Foreground poster */}
                   <img
                     src={anime.cover_image || '/placeholder.svg'}
                     alt={anime.title || ''}
-                    className="relative z-[2] w-full h-full object-contain"
+                    className="relative z-[2] w-full h-full object-contain transition-transform duration-700 group-hover:scale-105 pointer-events-none"
                     loading="lazy"
                   />
-                  {/* 4K Badge */}
-                  <div className="absolute bottom-1.5 right-1.5 z-10">
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg">4K</span>
-                  </div>
-                  {/* Hover overlay */}
-                  <div className="absolute inset-0 z-[3] bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-0 left-0 right-0 p-2">
-                      <Button size="sm" className="w-full anime-button text-[10px] py-1.5">
-                        <Play className="h-3 w-3 mr-1 fill-current" /> Watch
-                      </Button>
-                    </div>
-                  </div>
-                  {/* Status Badge */}
+
+                  {/* Persistent legibility gradient */}
+                  <div className="absolute inset-x-0 bottom-0 h-2/3 z-[3] bg-gradient-to-t from-black via-black/55 to-transparent pointer-events-none" />
+
+                  {/* Hover red wash */}
+                  <div className="absolute inset-0 z-[3] bg-gradient-to-tr from-primary/35 via-transparent to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                  {/* Top-left status */}
                   {anime.status === 'ongoing' && (
-                    <Badge className="absolute top-2 left-2 z-[4] bg-primary text-primary-foreground text-[9px] font-semibold uppercase tracking-wide">
-                      Ongoing
-                    </Badge>
+                    <span className="absolute top-2 left-2 z-[5] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-primary/90 text-primary-foreground shadow">
+                      On Air
+                    </span>
                   )}
                   {anime.status === 'upcoming' && (
-                    <Badge className="absolute top-2 left-2 z-[4] bg-orange-500 text-white text-[9px] font-semibold uppercase tracking-wide flex items-center gap-1 animate-pulse">
-                      <CalendarClock className="h-3 w-3" />
+                    <span className="absolute top-2 left-2 z-[5] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-orange-500/90 text-white shadow flex items-center gap-1 animate-pulse">
+                      <CalendarClock className="h-2.5 w-2.5" />
                       Soon
-                    </Badge>
+                    </span>
                   )}
-                  <TokenCrownBadge />
-                </div>
-                {/* Info - fixed height */}
-                <div className="pt-1.5 px-0.5" style={{ height: 44 }}>
-                  <h3 className="font-semibold text-xs leading-tight line-clamp-2 group-hover:text-primary transition-colors duration-200">
-                    {anime.title}
-                  </h3>
-                  <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-muted-foreground truncate">
-                    {anime.release_year && <span>{anime.release_year}</span>}
-                    {anime.genres && anime.genres.length > 0 && (
-                      <>
-                        {anime.release_year && <span>•</span>}
-                        <span className="text-primary/80">{anime.genres[0]}</span>
-                      </>
-                    )}
+
+                  {/* Top-right 4K */}
+                  <span className="absolute top-2 right-2 z-[5] text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
+                    4K
+                  </span>
+
+                  {/* Crown */}
+                  <div className="pointer-events-none">
+                    <TokenCrownBadge />
+                  </div>
+
+                  {/* Center play */}
+                  <div className="absolute inset-0 z-[4] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
+                    <div className="p-3 rounded-full bg-primary/95 shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-300">
+                      <Play className="h-5 w-5 text-primary-foreground fill-current" />
+                    </div>
+                  </div>
+
+                  {/* Title overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 z-[5] p-2.5 pointer-events-none">
+                    <h3 className="text-[13px] md:text-sm font-semibold text-white line-clamp-2 leading-tight drop-shadow-lg">
+                      {anime.title}
+                    </h3>
+                    <div className="flex items-center gap-1.5 mt-1 text-[10px] text-white/75">
+                      {anime.release_year && <span>{anime.release_year}</span>}
+                      {anime.release_year && anime.genres?.[0] && <span className="opacity-50">•</span>}
+                      {anime.genres?.[0] && (
+                        <span className="text-primary-foreground/90 font-medium truncate">
+                          {anime.genres[0]}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </Link>
