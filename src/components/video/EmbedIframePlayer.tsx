@@ -128,6 +128,10 @@ export function EmbedIframePlayer({
     [instanceId, reloadToken, url],
   );
   const iframeMeta = useMemo(() => getEmbedUrlMeta(iframeUrl), [iframeUrl]);
+  const isTrustedBridge = useMemo(
+    () => isTrustedBridgeOrigin(iframeMeta.origin, iframeMeta.host),
+    [iframeMeta.host, iframeMeta.origin],
+  );
   const deviceLabel = useMemo(() => {
     if (typeof window === 'undefined') return 'Unknown';
     const ua = navigator.userAgent;
