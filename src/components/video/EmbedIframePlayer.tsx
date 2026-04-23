@@ -312,6 +312,60 @@ export function EmbedIframePlayer({
     remoteStateRef.current = remoteState;
 
     const handleMessage = (event: MessageEvent) => {
+      // Validate origin first for any incoming message (security).
+      const fromExpectedOriginGlobal = iframeMeta.origin === '*' || event.origin === iframeMeta.origin;
+      const fromExpectedSource = !iframeRef.current?.contentWindow || event.source === iframeRef.current.contentWindow;
+
+      // ---- Third-party player API (e.g. UPNShare/RPMShare style) ----
+      // These players send plain objects like:
+      //   { playerStatus: 'Ready' } | { currentTime: 12.3 } | { duration: 600 }
+      // They are NOT wrapped in our namespaced envelope.
+      if (fromExpectedOriginGlobal && fromExpectedSource && event.data && typeof event.data === 'object' && !isEmbedMessage(event.data)) {
+        const data = event.data as Record<string, unknown>;
+        let handledThirdParty = false;
+
+        if (data.playerStatus === 'Ready') {
+          handledThirdParty = true;
+          pushDebugEvent('incoming', 'third-party:Ready', { origin: event.origin });
+          if (handshakeTimerRef.current) {
+            window.clearTimeout(handshakeTimerRef.current);
+            handshakeTimerRef.current = null;
+          }
+          setHandshakeState('ready');
+          setFriendlyError(null);
+          onReady?.();
+          // Ask for time/duration on ready.
+          try {
+            iframeRef.current?.contentWindow?.postMessage({ command: 'getTime' }, iframeMeta.origin);
+            iframeRef.current?.contentWindow?.postMessage({ command: 'getDuration' }, iframeMeta.origin);
+            pushDebugEvent('outgoing', 'third-party:getTime', { origin: iframeMeta.origin });
+          } catch {
+            // ignore
+          }
+        }
+
+        if (typeof data.currentTime === 'number' || typeof data.duration === 'number') {
+          handledThirdParty = true;
+          const nextCurrent = typeof data.currentTime === 'number' ? data.currentTime : remoteStateRef.current.currentTime;
+          const nextDuration = typeof data.duration === 'number' ? data.duration : remoteStateRef.current.duration;
+          const nextState: EmbedRemotePlaybackState = {
+            ...remoteStateRef.current,
+            currentTime: nextCurrent,
+            duration: nextDuration,
+          };
+          remoteStateRef.current = nextState;
+          setRemoteState(nextState);
+          onPlaybackStateChange?.(nextState);
+          onTimeUpdate?.(nextCurrent, nextDuration);
+          pushDebugEvent('incoming', 'third-party:time', {
+            origin: event.origin,
+            note: `t=${nextCurrent.toFixed(2)}s / dur=${nextDuration.toFixed(2)}s`,
+          });
+        }
+
+        if (handledThirdParty) return;
+      }
+
       if (!isEmbedMessage(event.data)) return;
       if (instanceId && event.data.instanceId !== instanceId) {
         pushDebugEvent('system', 'rejected-instance', {
