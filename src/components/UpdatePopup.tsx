@@ -71,7 +71,9 @@ export function UpdatePopup() {
 
   useEffect(() => {
     if (isActive) {
-      setStep(isManualWhatsNew ? 'complete' : 'alert');
+      // Always start at the 'alert' step so the Download button is shown,
+      // whether the popup is auto-triggered or opened manually from the menu.
+      setStep('alert');
       setProgress(0);
       setVersionIndex(0);
     }
