@@ -129,34 +129,8 @@ const TELEGRAM_COPY: Record<string, TelegramCopy> = {
   ar: { title: 'انضم إلى تيليجرام', subtitle: 'حلقات جديدة وتحديثات', cta: 'انضم', aria: 'انضم إلى تيليجرام' },
 };
 function resolveTelegramCopy(_audioLanguage?: string | null): TelegramCopy {
-  // Telegram popup is always shown in English regardless of episode/user language.
-  return TELEGRAM_COPY.en;
-  // eslint-disable-next-line no-unreachable
-  const normalize = (raw?: string | null): string | null => {
-    if (!raw) return null;
-    const s = raw.toLowerCase().trim();
-    if (s.startsWith('hi') || s.includes('hindi')) return 'hi';
-    if (s.startsWith('ja') || s.includes('japanese') || s.includes('original')) return 'ja';
-    if (s.startsWith('es') || s.includes('spanish')) return 'es';
-    if (s.startsWith('fr') || s.includes('french')) return 'fr';
-    if (s.startsWith('pt') || s.includes('portuguese')) return 'pt';
-    if (s.startsWith('de') || s.includes('german')) return 'de';
-    if (s.startsWith('ar') || s.includes('arabic')) return 'ar';
-    if (s.startsWith('en') || s.includes('english')) return 'en';
-    return null;
-  };
-  const fromEpisode = normalize(audioLanguage);
-  if (fromEpisode) return TELEGRAM_COPY[fromEpisode];
-  try {
-    const stored = typeof window !== 'undefined' ? localStorage.getItem('preferred_audio_language') : null;
-    const fromStored = normalize(stored);
-    if (fromStored) return TELEGRAM_COPY[fromStored];
-    const navLang = typeof navigator !== 'undefined' ? navigator.language : null;
-    const fromNav = normalize(navLang);
-    if (fromNav) return TELEGRAM_COPY[fromNav];
-  } catch {
-    /* ignore */
-  }
+  // Telegram popup is intentionally always shown in English so the CTA stays consistent
+  // across all audio languages and locales.
   return TELEGRAM_COPY.en;
 }
 
