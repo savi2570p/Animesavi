@@ -1929,6 +1929,7 @@ export function VideoPlayer({
           title={`${animeTitle} - Episode ${episodeNumber}`}
           className="w-full h-full"
           containerClassName="absolute inset-0"
+          fallbackMessage={`If ${serverConfigs[activeServer].name} still fails, switch to another source from the server picker and try again.`}
           onTimeUpdate={onTimeUpdate}
           onReady={() => {
             onVideoLoadSuccess?.();
@@ -1938,9 +1939,9 @@ export function VideoPlayer({
             if (typeof state.currentTime === 'number') setCurrentTime(state.currentTime);
             if (typeof state.duration === 'number') setDuration(state.duration);
           }}
-          onError={({ url, reason, browserReason }) => {
-            console.error('[VideoPlayer] Embed playback failed', { url, reason, browserReason, activeServer });
-            toast.error('Embed player failed to load. You can retry or open it directly.', { duration: 6000 });
+          onError={({ url, reason, browserReason, debug }) => {
+            console.error('[VideoPlayer] Embed playback failed', { url, reason, browserReason, activeServer, debug });
+            toast.error('This source failed. Retry it, or switch to another source from the server picker.', { duration: 6000 });
             onVideoLoadError?.();
           }}
           onRequestNativeFullscreen={() => {

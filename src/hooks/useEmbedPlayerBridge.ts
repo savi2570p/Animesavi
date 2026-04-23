@@ -41,7 +41,8 @@ export function useEmbedPlayerBridge({
 
     const handleMessage = (event: MessageEvent) => {
       if (!isEmbedMessage(event.data)) return;
-      if (instanceId && event.data.instanceId && event.data.instanceId !== instanceId) return;
+      if (event.source !== window.parent) return;
+      if (instanceId && event.data.instanceId !== instanceId) return;
       if (targetMeta.origin !== '*' && event.origin !== targetMeta.origin) return;
 
       switch (event.data.type) {
