@@ -392,8 +392,22 @@ export function EmbedIframePlayer({
     pushDebugEvent('system', 'iframe-load', {
       note: 'Iframe load event fired successfully.',
     });
-    sendCommand('handshake-request', { title }, 'Starting trusted postMessage handshake.');
-    sendCommand('ping', { title }, 'Checking whether the embed responds to control probes.');
+
+    if (isTrustedBridge) {
+      sendCommand('handshake-request', { title }, 'Starting trusted postMessage handshake.');
+      sendCommand('ping', { title }, 'Checking whether the embed responds to control probes.');
+      return;
+    }
+
+    // Third-party embed (UPNShare, Filemoon, etc.) — they handle their own
+    // playback, so we just mark the source as working and clear the spinner.
+    if (handshakeTimerRef.current) {
+      window.clearTimeout(handshakeTimerRef.current);
+      handshakeTimerRef.current = null;
+    }
+    setHandshakeState('limited');
+    setFriendlyError(null);
+    onReady?.();
   };
 
   const handleIframeError = () => {
