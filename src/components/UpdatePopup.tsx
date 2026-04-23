@@ -58,6 +58,8 @@ const BADGE_STYLES: Record<BadgeKind, string> = {
   FIX: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
 };
 
+const DOWNLOAD_COMPLETED_KEY = `update_downloaded_${APP_VERSION}`;
+
 export function UpdatePopup() {
   const { activePopup, dismissPopup, isManualWhatsNew } = usePopupQueue();
   const navigate = useNavigate();
@@ -71,9 +73,10 @@ export function UpdatePopup() {
 
   useEffect(() => {
     if (isActive) {
-      // Always start at the 'alert' step so the Download button is shown,
-      // whether the popup is auto-triggered or opened manually from the menu.
-      setStep('alert');
+      // If the user already completed the download for this version,
+      // skip straight to the "What's New / GO" complete view.
+      const alreadyDownloaded = localStorage.getItem(DOWNLOAD_COMPLETED_KEY) === 'true';
+      setStep(alreadyDownloaded ? 'complete' : 'alert');
       setProgress(0);
       setVersionIndex(0);
     }
@@ -104,7 +107,11 @@ export function UpdatePopup() {
 
   useEffect(() => {
     if (step !== 'installing') return;
-    const timer = setTimeout(() => setStep('complete'), 5000);
+    const timer = setTimeout(() => {
+      // Mark this version as downloaded so future manual opens skip the flow.
+      try { localStorage.setItem(DOWNLOAD_COMPLETED_KEY, 'true'); } catch { /* ignore */ }
+      setStep('complete');
+    }, 5000);
     return () => clearTimeout(timer);
   }, [step]);
 
