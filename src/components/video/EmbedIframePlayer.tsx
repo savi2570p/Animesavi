@@ -275,7 +275,6 @@ export function EmbedIframePlayer({
         handshakeTimerRef.current = null;
       }
     };
-    };
   }, [iframeMeta.href, pushDebugEvent, reportError]);
 
   useEffect(() => {
