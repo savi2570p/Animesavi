@@ -408,6 +408,9 @@ export default function EmbedSlugPlayer() {
     } catch {}
   };
 
+  const play = useCallback(() => {
+    void videoRef.current?.play();
+  }, []);
   const pause = useCallback(() => videoRef.current?.pause(), []);
   const seek = useCallback((time: number) => {
     if (videoRef.current) {
@@ -426,7 +429,7 @@ export default function EmbedSlugPlayer() {
   useEmbedPlayerBridge({
     videoRef,
     getPlaybackState,
-    play: togglePlay,
+    play,
     pause,
     togglePlay,
     seek,
