@@ -284,17 +284,7 @@ export function LatestEpisodes() {
                       <h3 className="text-sm md:text-base font-semibold text-white line-clamp-1 drop-shadow-lg">
                         {group.animeTitle}
                       </h3>
-                      <div className="flex items-center justify-between mt-1 gap-2">
-                        <p className="text-xs text-white/85 font-medium">{episodeRangeText}</p>
-                        <span className="text-[10px] text-white/70 flex items-center gap-1 shrink-0">
-                          <Clock className="h-2.5 w-2.5" />
-                          {timeAgo(group.latestCreatedAt)}
-                        </span>
-                      </div>
-                      {/* Shimmer line */}
-                      <span className="mt-2 block h-[2px] w-full rounded-full bg-white/10 overflow-hidden">
-                        <span className="block h-full w-1/4 bg-gradient-to-r from-primary via-primary/70 to-primary/30 group-hover:w-full transition-[width] duration-700" />
-                      </span>
+                      <p className="text-xs text-white/85 font-medium mt-1">{episodeRangeText}</p>
                     </div>
                   </div>
                 </Link>
