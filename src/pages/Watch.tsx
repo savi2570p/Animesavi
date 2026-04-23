@@ -108,9 +108,11 @@ interface Comment {
 
 type CommentSortOption = 'newest' | 'oldest' | 'most_liked';
 
-// Telegram popup key for localStorage
-
+// Telegram popup keys
+// - daily key (localStorage): limits how often we re-prompt across days
+// - session key (sessionStorage): once dismissed, don't show again this session
 const TELEGRAM_POPUP_KEY = 'telegram_popup_last_shown';
+const TELEGRAM_POPUP_SESSION_KEY = 'telegram_popup_dismissed_session';
 
 export default function Watch() {
   const { episodeId } = useParams<{ episodeId: string }>();
