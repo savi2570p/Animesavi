@@ -33,7 +33,7 @@ export function useEmbedPlayerBridge({
     if (window.parent === window) return;
 
     const emitState = () => {
-      postEmbedMessage(window.parent, 'state-update', getPlaybackState(), {
+      postEmbedMessage(window.parent, 'state-update', { ...getPlaybackState() }, {
         instanceId,
         targetOrigin: targetMeta.origin,
       });
@@ -46,7 +46,7 @@ export function useEmbedPlayerBridge({
 
       switch (event.data.type) {
         case 'handshake-request':
-          postEmbedMessage(window.parent, 'handshake-ack', getPlaybackState(), {
+          postEmbedMessage(window.parent, 'handshake-ack', { ...getPlaybackState() }, {
             instanceId,
             targetOrigin: targetMeta.origin,
           });
@@ -71,7 +71,7 @@ export function useEmbedPlayerBridge({
           void toggleFullscreen();
           break;
         case 'ping':
-          postEmbedMessage(window.parent, 'pong', getPlaybackState(), {
+          postEmbedMessage(window.parent, 'pong', { ...getPlaybackState() }, {
             instanceId,
             targetOrigin: targetMeta.origin,
           });
