@@ -8,6 +8,7 @@ import {
   List, X
 } from 'lucide-react';
 import Hls from 'hls.js';
+import { useEmbedPlayerBridge } from '@/hooks/useEmbedPlayerBridge';
 
 const ALLOWED_DOMAINS = [
   'shadow-arise.lovable.app',
@@ -366,6 +367,26 @@ export default function EmbedPlayer() {
 
   const skipForward = useCallback(() => seek(currentTime + 10), [currentTime]);
   const skipBackward = useCallback(() => seek(currentTime - 10), [currentTime]);
+
+  const getPlaybackState = useCallback(() => ({
+    currentTime,
+    duration,
+    isPlaying,
+    isMuted,
+    isFullscreen,
+    readyState: videoRef.current?.readyState ?? 0,
+  }), [currentTime, duration, isFullscreen, isMuted, isPlaying]);
+
+  useEmbedPlayerBridge({
+    videoRef,
+    getPlaybackState,
+    play,
+    pause,
+    togglePlay,
+    seek,
+    toggleFullscreen,
+    errorReason: error,
+  });
 
   const handleDoubleTap = (e: React.TouchEvent) => {
     const now = Date.now();
