@@ -233,7 +233,7 @@ export function FeaturedSlider() {
               <div
                 className={`absolute inset-y-0 left-0 rounded-full transition-all ${
                   idx === currentIndex
-                    ? 'bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)] animate-[slider-fill_5s_linear]'
+                    ? 'bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)] animate-[slider-fill_7s_linear]'
                     : idx < currentIndex
                     ? 'bg-primary w-full'
                     : 'w-0'
