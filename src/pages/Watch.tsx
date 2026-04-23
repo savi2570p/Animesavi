@@ -221,13 +221,15 @@ export default function Watch() {
     });
   }, [user?.email]);
 
-  // Check if Telegram popup should be shown (once per day)
+  // Check if Telegram popup should be shown (once per day, and not if dismissed this session)
   useEffect(() => {
+    const dismissedThisSession = sessionStorage.getItem(TELEGRAM_POPUP_SESSION_KEY);
+    if (dismissedThisSession) return;
+
     const lastShown = localStorage.getItem(TELEGRAM_POPUP_KEY);
     const today = new Date().toDateString();
-    
+
     if (lastShown !== today) {
-      // Show popup after a short delay when page loads
       const timer = setTimeout(() => {
         setShowTelegramPopup(true);
       }, 1000);
@@ -238,11 +240,13 @@ export default function Watch() {
   const handleTelegramJoin = () => {
     window.open('https://t.me/AnimeSaviInhindiDUB', '_blank');
     localStorage.setItem(TELEGRAM_POPUP_KEY, new Date().toDateString());
+    sessionStorage.setItem(TELEGRAM_POPUP_SESSION_KEY, '1');
     setShowTelegramPopup(false);
   };
 
   const handleTelegramDismiss = () => {
     localStorage.setItem(TELEGRAM_POPUP_KEY, new Date().toDateString());
+    sessionStorage.setItem(TELEGRAM_POPUP_SESSION_KEY, '1');
     setShowTelegramPopup(false);
   };
 
