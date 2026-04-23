@@ -22,13 +22,10 @@ export default function UnlockAccess() {
 
   const verifyToken = async (slug: string) => {
     try {
-      const { data, error } = await supabase
-        .from('unlock_tokens')
-        .select('*')
-        .eq('token', slug)
-        .eq('is_active', true)
-        .neq('token', '__system_toggle__')
-        .maybeSingle();
+      const { data: rows, error } = await supabase
+        .rpc('verify_unlock_token', { _token: slug });
+
+      const data = Array.isArray(rows) ? rows[0] : null;
 
       if (error || !data) {
         setStatus('error');

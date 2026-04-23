@@ -66,13 +66,10 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
 
           // Fetch token duration
           if (usage.token_id) {
-            const { data: token } = await supabase
-              .from('unlock_tokens')
-              .select('duration_hours')
-              .eq('id', usage.token_id)
-              .single();
-            if (token?.duration_hours) {
-              setDurationHours(token.duration_hours);
+            const { data: hours } = await supabase
+              .rpc('get_token_duration', { _token_id: usage.token_id });
+            if (typeof hours === 'number' && hours > 0) {
+              setDurationHours(hours);
             }
           }
         }
