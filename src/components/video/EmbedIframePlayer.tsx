@@ -534,7 +534,7 @@ export function EmbedIframePlayer({
             ) : handshakeState === 'limited' ? (
               <>
                 <span className="h-2 w-2 rounded-full bg-accent" />
-                Player loaded • limited remote controls
+                {isTrustedBridge ? 'Player loaded • limited remote controls' : 'Third-party player loaded'}
               </>
             ) : handshakeState === 'failed' ? (
               <>
