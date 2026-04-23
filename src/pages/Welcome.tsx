@@ -300,7 +300,7 @@ export default function Welcome() {
 
           {/* CTA Buttons */}
           <div className="flex items-center gap-3 animate-fade-in" style={{ animationDelay: '400ms' }}>
-            <button onClick={() => navigate('/')} className="flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-2xl text-sm sm:text-base font-bold transition-all duration-200 hover:scale-105 bg-primary text-primary-foreground" style={{ boxShadow: '0 4px 24px hsl(var(--primary) / 0.4)' }}>
+            <button onClick={() => startWatching('/')} className="flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-2xl text-sm sm:text-base font-bold transition-all duration-200 hover:scale-105 bg-primary text-primary-foreground" style={{ boxShadow: '0 4px 24px hsl(var(--primary) / 0.4)' }}>
               <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
               Start Watching
             </button>
