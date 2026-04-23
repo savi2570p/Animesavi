@@ -248,14 +248,9 @@ export function LatestSeries() {
                     <h3 className="text-[13px] md:text-sm font-semibold text-white line-clamp-2 leading-tight drop-shadow-lg">
                       {anime.title}
                     </h3>
-                    <div className="flex items-center justify-between mt-1.5 gap-2">
-                      <span className="text-[10px] font-medium text-white/80">
-                        {anime.episode_count} EP{anime.episode_count !== 1 ? 's' : ''}
-                      </span>
-                      <span className="h-1 flex-1 rounded-full bg-white/15 overflow-hidden">
-                        <span className="block h-full w-1/3 bg-gradient-to-r from-primary to-primary/60 group-hover:w-full transition-[width] duration-700" />
-                      </span>
-                    </div>
+                    <p className="text-[10px] font-medium text-white/80 mt-1.5">
+                      {anime.episode_count} EP{anime.episode_count !== 1 ? 's' : ''}
+                    </p>
                   </div>
                 </div>
               </Link>
