@@ -1378,6 +1378,7 @@ export type Database = {
     }
     Functions: {
       end_watch_party: { Args: { party_uuid: string }; Returns: boolean }
+      get_token_duration: { Args: { _token_id: string }; Returns: number }
       get_token_system_status: { Args: never; Returns: boolean }
       has_role: {
         Args: {
@@ -1385,6 +1386,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      verify_unlock_token: {
+        Args: { _token: string }
+        Returns: {
+          duration_hours: number
+          id: string
+          is_active: boolean
+        }[]
       }
     }
     Enums: {
