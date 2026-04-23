@@ -865,37 +865,35 @@ export default function Watch() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Telegram Popup */}
+      {/* Telegram Mini Toast — non-blocking, sits at bottom corner so it never covers the player */}
       {showTelegramPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4 shadow-xl animate-scale-in">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-bold text-foreground">Join the Telegram Channel</h3>
-              <button 
-                onClick={handleTelegramDismiss}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-5 w-5" />
-              </button>
+        <div
+          className="fixed z-[60] left-1/2 -translate-x-1/2 bottom-4 sm:left-auto sm:right-4 sm:translate-x-0 sm:bottom-4 w-[calc(100%-2rem)] max-w-xs animate-slide-in-right pointer-events-auto"
+          role="dialog"
+          aria-label="Join Telegram"
+        >
+          <div className="relative flex items-center gap-3 rounded-2xl border border-[#0088cc]/30 bg-card/95 backdrop-blur-xl shadow-2xl p-3 pr-9">
+            <button
+              onClick={handleTelegramDismiss}
+              className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              aria-label="Dismiss"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-[#0088cc] to-[#0077b5] flex items-center justify-center shadow-md">
+              <svg viewBox="0 0 24 24" className="w-5 h-5 text-white" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
             </div>
-            <p className="text-muted-foreground mb-6">
-              Get more updates, new anime releases, and exclusive content!
-            </p>
-            <div className="flex gap-3">
-              <Button 
-                onClick={handleTelegramJoin}
-                className="flex-1 anime-button"
-              >
-                Join
-              </Button>
-              <Button 
-                onClick={handleTelegramDismiss}
-                variant="outline"
-                className="flex-1"
-              >
-                OK
-              </Button>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-foreground leading-tight">Join our Telegram</p>
+              <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">New episodes & updates</p>
             </div>
+            <Button
+              onClick={handleTelegramJoin}
+              size="sm"
+              className="h-8 px-3 text-xs font-semibold bg-[#0088cc] hover:bg-[#0077b5] text-white rounded-lg"
+            >
+              Join
+            </Button>
           </div>
         </div>
       )}
