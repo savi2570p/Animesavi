@@ -1149,7 +1149,8 @@ export default function Upload() {
           <UpcomingTabContent anime={myAnime} allAnime={allAnime} isAdmin={isAdmin} onDelete={handleDeleteAnime} />
         </TabsContent>
 
-      </Tabs>
+        </Tabs>
+      </div>
     </div>
   );
 }
