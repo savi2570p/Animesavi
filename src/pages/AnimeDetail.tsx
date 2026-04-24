@@ -452,56 +452,57 @@ export default function AnimeDetail() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Banner */}
-      <div className="relative h-[36vh] md:h-[80vh] overflow-hidden">
+      {/* Hero Banner — cinematic backdrop */}
+      <div className="relative h-[42vh] md:h-[85vh] overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center scale-105 animate-[float_20s_ease-in-out_infinite]"
+          className="absolute inset-0 bg-cover bg-center scale-110 animate-[float_24s_ease-in-out_infinite]"
           style={{
             backgroundImage: `url(${anime.banner_image || anime.cover_image || '/placeholder.svg'})`,
+            filter: 'saturate(1.05) contrast(1.05)',
           }}
         />
-        {/* Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/20" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-transparent to-transparent h-32" />
-        
-        {/* Floating particles effect */}
+        {/* Dark vignette + radial accent */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_30%,hsl(var(--primary)/0.18),transparent_60%)]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/55 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-background/80 to-transparent" />
+
+        {/* Floating particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-primary/30 rounded-full animate-float" />
-          <div className="absolute top-1/3 right-1/3 w-3 h-3 bg-primary/20 rounded-full animate-float animation-delay-200" />
+          <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-primary/40 rounded-full animate-float" />
+          <div className="absolute top-1/3 right-1/3 w-3 h-3 bg-primary/25 rounded-full animate-float animation-delay-200" />
           <div className="absolute bottom-1/3 left-1/2 w-2 h-2 bg-accent/30 rounded-full animate-float animation-delay-400" />
         </div>
       </div>
 
       {/* Content */}
-      <div className="container relative -mt-[24vh] md:-mt-[50vh] z-10 pb-8 md:pb-12">
-        <div className="flex flex-col lg:flex-row gap-5 md:gap-8">
-          {/* Poster - Right-click to save on PC, long-press on mobile */}
+      <div className="container relative -mt-[28vh] md:-mt-[55vh] z-10 pb-8 md:pb-12">
+        <div className="flex flex-col lg:flex-row gap-5 md:gap-10">
+          {/* Poster */}
           <div className="flex-shrink-0 animate-fade-in">
-            <div 
+            <div
               className="relative group"
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
               onTouchMove={handleTouchMove}
             >
+              {/* Glow halo behind poster */}
+              <div className="absolute -inset-3 rounded-2xl bg-gradient-to-br from-primary/40 via-primary/10 to-transparent blur-2xl opacity-60 group-hover:opacity-90 transition-opacity duration-500" />
               <img
                 src={anime.cover_image || '/placeholder.svg'}
                 alt={anime.title}
-                className="w-24 md:w-72 rounded-xl md:rounded-2xl shadow-2xl border border-border/30 transition-transform duration-500 group-hover:scale-[1.02] cursor-pointer"
-                onContextMenu={(e) => {
-                  // Allow default right-click behavior on desktop for native save
-                }}
+                className="relative w-28 md:w-72 rounded-xl md:rounded-2xl shadow-[0_25px_60px_-15px_hsl(var(--primary)/0.5),0_15px_40px_-15px_hsl(0_0%_0%/0.7)] border border-border/40 transition-transform duration-500 group-hover:scale-[1.03] cursor-pointer"
               />
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
-              {/* Quick play button on poster */}
+              <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+              {/* Quick play */}
               {nextEpisode && (
-                <Link 
+                <Link
                   to={`/watch/${nextEpisode.id}`}
                   className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
                 >
-                  <div className="w-16 h-16 rounded-full bg-primary/90 flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
-                    <Play className="w-7 h-7 text-white fill-current ml-1" />
+                  <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-2xl shadow-primary/60 hover:scale-110 transition-transform ring-4 ring-primary/30">
+                    <Play className="w-7 h-7 text-primary-foreground fill-current ml-1" />
                   </div>
                 </Link>
               )}
@@ -509,13 +510,34 @@ export default function AnimeDetail() {
           </div>
 
           {/* Info */}
-          <div className="flex-1 space-y-5 animate-fade-in-up">
-            {/* Genres */}
-            <div className="flex flex-wrap gap-2">
+          <div className="flex-1 space-y-4 md:space-y-5 animate-fade-in-up">
+            {/* Status pill row */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 backdrop-blur-md px-2.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-[0.18em] text-primary shadow-lg shadow-primary/10">
+                <Sparkles className="h-3 w-3" />
+                Featured Anime
+              </div>
+              {anime.status === 'ongoing' && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/15 backdrop-blur-md px-2.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider text-emerald-300">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Airing Now
+                </span>
+              )}
+            </div>
+
+            {/* Title — gradient */}
+            <h1 className="text-2xl md:text-6xl font-heading font-extrabold leading-[1.05] tracking-tight">
+              <span className="bg-gradient-to-br from-foreground via-foreground to-foreground/60 bg-clip-text text-transparent drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+                {anime.title}
+              </span>
+            </h1>
+
+            {/* Genres — chips */}
+            <div className="flex flex-wrap gap-1.5">
               {anime.genres?.map((genre, i) => (
-                <Badge 
-                  key={genre} 
-                  className="genre-badge animate-fade-in"
+                <Badge
+                  key={genre}
+                  className="genre-badge animate-fade-in text-[10px] md:text-xs px-2.5 py-1 rounded-full border border-foreground/15 bg-foreground/5 backdrop-blur-md text-foreground/85 hover:border-primary/50 hover:text-primary transition-colors"
                   style={{ animationDelay: `${i * 50}ms` }}
                 >
                   {genre}
@@ -523,60 +545,58 @@ export default function AnimeDetail() {
               ))}
             </div>
 
-            {/* Title */}
-            <h1 className="text-xl md:text-6xl font-heading font-bold leading-tight text-shadow-lg">
-              {anime.title}
-            </h1>
-
-            {/* Meta info */}
-            <div className="flex flex-wrap items-center gap-2 md:gap-3 text-muted-foreground">
+            {/* Meta info — glass chips */}
+            <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
               {anime.release_year && (
-                <span className="flex items-center gap-1.5 bg-secondary/50 px-3 py-1.5 rounded-lg">
-                  <Calendar className="h-4 w-4" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] md:text-sm font-semibold bg-foreground/5 border border-foreground/10 backdrop-blur-md text-foreground/85">
+                  <Calendar className="h-3.5 w-3.5 text-primary" />
                   {anime.release_year}
                 </span>
               )}
               {anime.type && (
-                <Badge variant="outline" className="capitalize px-3 py-1.5">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] md:text-sm font-bold capitalize bg-primary/10 border border-primary/30 text-primary backdrop-blur-md">
                   {anime.type}
-                </Badge>
+                </span>
               )}
               {anime.status && (
                 <span className={cn(
-                  anime.status === 'ongoing' ? 'badge-glass-og' : 
-                  anime.status === 'completed' ? 'badge-glass-com' : 
-                  'bg-primary text-primary-foreground px-3 py-1.5'
+                  anime.status === 'ongoing' ? 'badge-glass-og' :
+                  anime.status === 'completed' ? 'badge-glass-com' :
+                  'bg-primary text-primary-foreground px-2.5 py-1 rounded-lg text-[11px] md:text-sm'
                 )}>
                   {anime.status === 'ongoing' ? 'OG' : anime.status === 'completed' ? 'COM' : anime.status}
                 </span>
               )}
               {anime.total_episodes != null && (
-                <span className="flex items-center gap-1.5 bg-primary/10 text-primary border border-primary/20 px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold">
-                  📺 {anime.total_episodes} EP{anime.total_episodes === 1 ? '' : 's'}
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] md:text-sm font-semibold bg-foreground/5 border border-foreground/10 backdrop-blur-md text-foreground/85">
+                  <ListVideo className="h-3.5 w-3.5 text-primary" />
+                  {anime.total_episodes} EP{anime.total_episodes === 1 ? '' : 's'}
                 </span>
               )}
               {anime.studio && (
-                <span className="flex items-center gap-1.5 bg-accent/10 text-accent-foreground border border-accent/20 px-3 py-1.5 rounded-lg text-xs md:text-sm font-semibold max-w-[200px] truncate">
-                  🎬 {anime.studio}
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] md:text-sm font-semibold bg-foreground/5 border border-foreground/10 backdrop-blur-md text-foreground/85 max-w-[200px] truncate">
+                  <Flame className="h-3.5 w-3.5 text-amber-400" />
+                  {anime.studio}
                 </span>
               )}
-              <span className="badge-glass-hdub">
-                H-DUB
-              </span>
+              <span className="badge-glass-hdub">H-DUB</span>
             </div>
 
-            {/* Description */}
-            <p className="text-foreground/80 leading-relaxed text-sm md:text-lg max-w-3xl">
-              {anime.description}
-            </p>
+            {/* Description — accent border card */}
+            <div className="relative max-w-3xl">
+              <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full bg-gradient-to-b from-primary via-primary/60 to-transparent" />
+              <p className="text-foreground/80 leading-relaxed text-[13px] md:text-base pl-3 md:pl-4">
+                {anime.description}
+              </p>
+            </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap gap-2 md:gap-4 pt-2 md:pt-4">
+            <div className="flex flex-wrap gap-2 md:gap-3 pt-2 md:pt-3">
               {nextEpisode && (
-                <Button asChild size="sm" className="anime-button h-10 md:h-14 px-4 md:px-8 text-sm md:text-lg">
+                <Button asChild size="sm" className="group bg-gradient-to-r from-primary via-primary to-primary/80 text-primary-foreground hover:scale-[1.03] h-11 md:h-14 px-5 md:px-8 text-sm md:text-base rounded-xl shadow-2xl shadow-primary/40 transition-all">
                   <Link to={`/watch/${nextEpisode.id}`}>
-                    <Play className="h-4 w-4 md:h-5 md:w-5 mr-1.5 md:mr-2 fill-current" />
-                    {watchProgress.size > 0 ? 'Continue' : 'Watch'}
+                    <Play className="h-4 w-4 md:h-5 md:w-5 mr-2 fill-current group-hover:translate-x-0.5 transition-transform" />
+                    {watchProgress.size > 0 ? 'Continue' : 'Watch Now'}
                   </Link>
                 </Button>
               )}
@@ -585,23 +605,23 @@ export default function AnimeDetail() {
                 variant="outline"
                 onClick={toggleFavorite}
                 className={cn(
-                  "h-10 md:h-14 px-3 md:px-6 border-2 transition-all duration-300 text-xs md:text-sm",
-                  isFavorite 
-                    ? 'text-anime-pink border-anime-pink bg-anime-pink/10 hover:bg-anime-pink/20' 
-                    : 'hover:border-anime-pink hover:text-anime-pink'
+                  "h-11 md:h-14 px-4 md:px-5 rounded-xl border backdrop-blur-md transition-all duration-300 text-xs md:text-sm",
+                  isFavorite
+                    ? 'text-anime-pink border-anime-pink/60 bg-anime-pink/10 hover:bg-anime-pink/20'
+                    : 'border-foreground/20 bg-foreground/5 hover:border-anime-pink/60 hover:text-anime-pink'
                 )}
               >
-                <Heart className={cn("h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2", isFavorite && 'fill-current')} />
-                {isFavorite ? 'Fav' : 'Favorite'}
+                <Heart className={cn("h-4 w-4 md:h-5 md:w-5 mr-1.5 md:mr-2", isFavorite && 'fill-current')} />
+                {isFavorite ? 'Favorited' : 'Favorite'}
               </Button>
               <ShareEmbedPopup
                 type="series"
                 pageUrl={window.location.pathname}
                 animeTitle={anime.title}
                 size="lg"
-                className="h-14 px-6 border-2"
+                className="h-11 md:h-14 px-4 md:px-5 rounded-xl border border-foreground/20 bg-foreground/5 backdrop-blur-md hover:border-primary/40"
               />
-              
+
               {/* Watch List Button */}
               {nextEpisode && (
                 <Button
@@ -609,18 +629,18 @@ export default function AnimeDetail() {
                   variant="outline"
                   onClick={toggleWatchList}
                   className={cn(
-                    "h-14 px-6 border-2 transition-all duration-300",
+                    "h-11 md:h-14 px-4 md:px-5 rounded-xl border backdrop-blur-md transition-all duration-300 text-xs md:text-sm",
                     isInWatchList
-                      ? 'text-primary border-primary bg-primary/10 hover:bg-primary/20'
-                      : 'hover:border-primary hover:text-primary'
+                      ? 'text-primary border-primary/60 bg-primary/10 hover:bg-primary/20'
+                      : 'border-foreground/20 bg-foreground/5 hover:border-primary/40 hover:text-primary'
                   )}
                 >
-                  <ListVideo className={cn("h-5 w-5 mr-2")} />
-                  {isInWatchList ? 'In Watch List' : 'Add to Watch List'}
+                  <ListVideo className="h-4 w-4 md:h-5 md:w-5 mr-1.5 md:mr-2" />
+                  {isInWatchList ? 'In Watch List' : 'Watch List'}
                 </Button>
               )}
 
-              {/* Batch Download Button */}
+              {/* Batch Download */}
               {episodes.length > 0 && (
                 <BatchDownload episodes={episodes} animeTitle={anime.title} />
               )}
