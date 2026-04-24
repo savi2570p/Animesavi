@@ -82,28 +82,26 @@ export default function LatestMoviesPage() {
     return hours <= 24;
   };
 
+  const newCount = movies.filter(m => isNew(m.created_at)).length;
+  const upcomingCount = movies.filter(m => m.status === 'upcoming').length;
+
   return (
     <div className="min-h-screen">
-      {/* Content Navigation Tabs */}
       <ContentNavTabs />
-      
-      {/* Hero Header */}
-      <div className="relative py-12 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-accent/5 via-transparent to-transparent" />
-        <div className="absolute top-0 left-1/3 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
-        
-        <div className="container relative">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 rounded-xl bg-accent/10">
-              <Film className="h-6 w-6 text-accent" />
-            </div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-heading font-bold">Latest Movies</h1>
-              <p className="text-muted-foreground">Recently added anime movies</p>
-            </div>
-          </div>
-        </div>
-      </div>
+
+      <SeeAllHeader
+        icon={Clapperboard}
+        title="Latest Movies"
+        subtitle="Cinematic anime films — recently added to the AnimeSavi library."
+        eyebrow="Big Screen"
+        iconGradient="from-amber-500 via-orange-500 to-rose-500"
+        glowTone="bg-amber-500/20"
+        stats={[
+          { icon: Film, value: movies.length, label: 'Movies', tone: 'text-amber-400' },
+          { icon: Sparkles, value: newCount, label: 'New 24h', tone: 'text-emerald-400' },
+          { icon: CalendarClock, value: upcomingCount, label: 'Upcoming', tone: 'text-orange-400' },
+        ]}
+      />
 
       <div className="container pb-12">
         {loading ? (
