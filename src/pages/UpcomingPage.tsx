@@ -40,6 +40,19 @@ export default function UpcomingPage() {
 
   useEffect(() => {
     fetchUpcoming();
+
+    // Refetch when tab regains focus / page becomes visible so newly edited
+    // metadata (total episodes, studio, source) appears immediately.
+    const onFocus = () => fetchUpcoming();
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') fetchUpcoming();
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, []);
 
   const fetchUpcoming = async () => {
