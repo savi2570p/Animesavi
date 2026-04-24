@@ -4,9 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Clock, ArrowLeft, AlertCircle, Upload, Lock } from 'lucide-react';
+import { Clock, AlertCircle, Upload, Lock, Hourglass, Activity, FileVideo, ListChecks, Pencil } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
+import { SeeAllHeader } from '@/components/layout/SeeAllHeader';
 
 interface NoEpisodesPopupProps {
   isOpen: boolean;
