@@ -734,110 +734,106 @@ export default function Browse() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
             {animeList.map((anime, index) => (
               <Link 
                 key={anime.id} 
                 to={`/anime/${anime.id}`} 
-                className="browse-card animate-fade-in-up"
-                style={{ animationDelay: `${index * 50}ms` }}
+                className="browse-card group animate-fade-in-up"
+                style={{ animationDelay: `${Math.min(index * 40, 600)}ms` }}
                 onClick={(e) => handleAnimeClick(anime, e)}
               >
-                <div className="aspect-[3/4] relative overflow-hidden rounded-t-xl">
+                {/* Poster */}
+                <div className="aspect-[2/3] relative overflow-hidden rounded-xl">
+                  {/* Skeleton/blur background */}
+                  <div
+                    className="absolute inset-0 bg-cover bg-center scale-110 blur-2xl opacity-40"
+                    style={{ backgroundImage: `url(${anime.cover_image || '/placeholder.svg'})` }}
+                    aria-hidden="true"
+                  />
                   <img
                     src={anime.cover_image || '/placeholder.svg'}
                     alt={anime.title}
-                    className="browse-card-image"
+                    className="browse-card-image relative z-[1]"
                     loading="lazy"
                   />
-                  
-                  {/* Status badge */}
-                  {anime.status === 'ongoing' && (
-                    <div className="browse-card-badge badge-glass-og">
-                      OG
-                    </div>
-                  )}
-                  
-                  {/* Upcoming/Coming Soon badge */}
-                  {anime.status === 'upcoming' && (
-                    <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-orange-500 text-white rounded-md flex items-center gap-1 z-10 animate-pulse">
-                      <CalendarClock className="w-3 h-3" />
-                      Coming Soon
-                    </div>
-                  )}
-                  
-                  {/* Completed badge */}
-                  {anime.status === 'completed' && (
-                    <div className="absolute top-2 left-2 badge-glass-com z-10">
-                      COM
-                    </div>
-                  )}
 
-                  {/* NEW + H-DUB badges */}
-                  <div className="absolute top-2 right-2 flex flex-col gap-1 items-end z-10">
-                    {isNew(anime.created_at) && (
-                      <div className="badge-glass-new animate-pulse">
-                        NEW
+                  {/* Always-on bottom gradient for legibility */}
+                  <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/95 via-black/50 to-transparent z-[2] pointer-events-none" />
+
+                  {/* TOP-LEFT: status badge */}
+                  <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 items-start">
+                    {anime.status === 'ongoing' && (
+                      <div className="badge-glass-og">OG</div>
+                    )}
+                    {anime.status === 'completed' && (
+                      <div className="badge-glass-com">COM</div>
+                    )}
+                    {anime.status === 'upcoming' && (
+                      <div className="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider bg-orange-500/95 text-white rounded-md flex items-center gap-1 backdrop-blur-md shadow-lg shadow-orange-500/30 animate-pulse">
+                        <CalendarClock className="w-2.5 h-2.5" />
+                        Soon
                       </div>
                     )}
-                    <div className="badge-glass-hdub">
-                      H-DUB
-                    </div>
+                    {anime.type === 'movie' && (
+                      <div className="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider bg-accent/95 text-accent-foreground rounded-md flex items-center gap-1 backdrop-blur-md">
+                        <Film className="w-2.5 h-2.5" />
+                        Movie
+                      </div>
+                    )}
                   </div>
 
-                  {/* Episode count badge - Bottom left */}
-                  {anime.episode_count !== undefined && anime.episode_count > 0 && (
-                    <div className="absolute bottom-2 left-2 px-2 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-md flex items-center gap-1 z-10">
-                      <Tv className="h-3 w-3" />
-                      {anime.episode_count} EP{anime.episode_count !== 1 ? 'S' : ''}
+                  {/* TOP-RIGHT: NEW + H-DUB */}
+                  <div className="absolute top-2 right-2 z-10 flex flex-col gap-1 items-end">
+                    {isNew(anime.created_at) && (
+                      <div className="badge-glass-new animate-pulse">NEW</div>
+                    )}
+                    <div className="badge-glass-hdub">H-DUB</div>
+                  </div>
+
+                  {/* BOTTOM-LEFT: episode count chip */}
+                  {anime.episode_count !== undefined && anime.episode_count > 0 && anime.type !== 'movie' && (
+                    <div className="absolute bottom-2 left-2 z-10 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold bg-black/70 text-white rounded-md flex items-center gap-1 backdrop-blur-md ring-1 ring-white/10">
+                      <Tv className="h-2.5 w-2.5 text-primary" />
+                      {anime.episode_count} EP
                     </div>
                   )}
 
-                  {/* Type badge */}
-                  {anime.type === 'movie' && (
-                    <div className="absolute bottom-2 left-2 px-2 py-1 text-xs font-bold bg-accent text-accent-foreground rounded-md flex items-center gap-1 z-10">
-                      <Film className="h-3 w-3" />
-                      Movie
+                  {/* BOTTOM-RIGHT: year */}
+                  {anime.release_year && (
+                    <div className="absolute bottom-2 right-2 z-10 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold bg-black/70 text-white/90 rounded-md backdrop-blur-md ring-1 ring-white/10">
+                      {anime.release_year}
                     </div>
                   )}
 
                   {/* Episodes Under Progress overlay */}
                   {anime.episode_count === 0 && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20">
-                      <div className="bg-orange-500/90 text-white px-3 py-2 rounded-lg text-center">
-                        <AlertCircle className="h-5 w-5 mx-auto mb-1" />
-                        <span className="text-xs font-bold">Episodes Under Progress</span>
+                    <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px] flex items-center justify-center z-20 p-3 text-center">
+                      <div className="bg-orange-500/95 text-white px-2.5 py-2 rounded-lg shadow-xl">
+                        <AlertCircle className="h-4 w-4 mx-auto mb-1" />
+                        <span className="text-[10px] font-bold uppercase tracking-wide">Under Progress</span>
                       </div>
                     </div>
                   )}
 
-                  {/* Hover overlay */}
-                  
-                  {/* Hover content */}
-                  <div className="browse-card-content">
-                    <Button size="sm" className="anime-button w-full">
-                      <Play className="h-4 w-4 mr-2 fill-current" />
-                      Watch Now
-                    </Button>
+                  {/* Hover Play overlay (desktop) */}
+                  <div className="absolute inset-0 z-[3] hidden sm:flex items-center justify-center bg-black/40 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="h-14 w-14 rounded-full bg-primary/95 flex items-center justify-center shadow-2xl shadow-primary/50 ring-4 ring-white/20 scale-75 group-hover:scale-100 transition-transform duration-300">
+                      <Play className="h-6 w-6 text-primary-foreground fill-current ml-0.5" />
+                    </div>
                   </div>
-                </div>
 
-                {/* Card info */}
-                <div className="p-4">
-                  <h3 className="font-bold text-base line-clamp-2 group-hover:text-primary transition-colors mb-2">
-                    {anime.title}
-                  </h3>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    {anime.release_year && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        {anime.release_year}
-                      </span>
-                    )}
+                  {/* Title overlay always visible at bottom */}
+                  <div className="absolute inset-x-0 bottom-0 z-[4] p-2.5 sm:p-3 pt-8">
+                    <h3 className="font-bold text-[12px] sm:text-sm text-white line-clamp-2 leading-tight drop-shadow-md group-hover:text-primary transition-colors">
+                      {anime.title}
+                    </h3>
                     {anime.genres && anime.genres.length > 0 && (
-                      <span className="px-2 py-0.5 bg-secondary/50 rounded text-xs">
-                        {anime.genres[0]}
-                      </span>
+                      <div className="mt-1 flex items-center gap-1 flex-wrap">
+                        <span className="text-[9px] sm:text-[10px] font-medium text-white/70 uppercase tracking-wider truncate">
+                          {anime.genres.slice(0, 2).join(' · ')}
+                        </span>
+                      </div>
                     )}
                   </div>
                 </div>
