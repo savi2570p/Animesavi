@@ -202,6 +202,7 @@ const App = () => (
               <BackgroundSyncInitializer />
               <AutoVideoScanInitializer />
               <TokenAccessSyncInitializer />
+              <RoutePrefetchInitializer />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/auth" element={<Auth />} />
