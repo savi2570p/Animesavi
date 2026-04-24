@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MessageCircle, Heart, Shield, FileText, ExternalLink } from 'lucide-react';
+import { MessageCircle, Heart, Shield, FileText, ExternalLink, Lock, Database, Cookie, UserCheck, Baby, Server, Sparkles, Scale, AlertTriangle, Copyright, MessagesSquare, Ban, RefreshCw, Mail, BookCheck, Globe2 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import {
   Dialog,
@@ -33,6 +33,16 @@ const footerLinks = {
   ],
 };
 
+const privacySections = [
+  { icon: Database, title: 'Information We Collect', tone: 'text-sky-400', body: 'We collect only the minimum information necessary: your email address and username when you create an account. We also store your viewing preferences, watch history, and favorites locally on your device using browser storage. We do not collect IP addresses, device fingerprints, or any form of tracking data beyond what is essential for authentication.' },
+  { icon: UserCheck, title: 'How We Use Your Information', tone: 'text-emerald-400', body: 'Your account information is used solely for authentication and personalization. We do not sell, rent, or share your personal data with any third parties. Your viewing preferences are used to provide recommendations and improve your experience. We do not run third-party analytics or advertising scripts.' },
+  { icon: Server, title: 'Content & Third-Party Services', tone: 'text-violet-400', body: 'All video content is hosted on independent third-party platforms including but not limited to services affiliated with Crunchyroll, Muse India, and Amazon Prime. We act as an indexing service and have no control over third-party data practices, content availability, or server reliability. Each third-party service operates under its own privacy policy.' },
+  { icon: Lock, title: 'Data Security', tone: 'text-amber-400', body: 'Passwords are encrypted using industry-standard hashing algorithms. We never store or have access to plain text passwords. All communication between your browser and our servers is encrypted via HTTPS/TLS. Account sessions are managed securely with automatic expiration.' },
+  { icon: Cookie, title: 'Cookies & Local Storage', tone: 'text-orange-400', body: 'We use browser local storage to save your preferences, watch history, and session tokens. We do not use third-party cookies for advertising or tracking purposes. You may clear this data at any time through your browser settings.' },
+  { icon: Sparkles, title: 'Your Rights', tone: 'text-fuchsia-400', body: 'You may delete your account and all associated data at any time. You can clear your local viewing history and preferences through your browser settings. For data removal requests, contact us via our official Telegram channel: @AnimeSaviInhindiDUB' },
+  { icon: Baby, title: "Children's Privacy", tone: 'text-rose-400', body: 'Our service is not intended for children under 13. We do not knowingly collect personal information from children. If you believe a child has provided us with personal data, please contact us immediately.' },
+];
+
 function PrivacyPolicyButton() {
   const [open, setOpen] = useState(false);
 
@@ -46,77 +56,72 @@ function PrivacyPolicyButton() {
         Privacy Policy
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg bg-card/95 backdrop-blur-xl border-border/50" aria-describedby="privacy-policy-description">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <Shield className="h-5 w-5 text-primary" />
-              Privacy Policy
-            </DialogTitle>
-            <DialogDescription id="privacy-policy-description" className="sr-only">
-              Privacy policy and data handling information for Anime Savi
-            </DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="max-h-[60vh]">
-            <div className="space-y-4 text-sm text-muted-foreground pr-4">
-              <p className="text-foreground font-medium">Last Updated: March 2026</p>
-              
-              <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
-                <p className="text-foreground font-medium text-center">
-                  AnimeSavi does not store any files on its own server. We only index links from the internet which are hosted on third-party services. We index links just like Google.
+        <DialogContent className="max-w-2xl bg-card/95 backdrop-blur-xl border-border/50 p-0 overflow-hidden" aria-describedby="privacy-policy-description">
+          {/* Cinematic Header */}
+          <div className="relative overflow-hidden border-b border-border/40">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-card/50 to-fuchsia-500/15" />
+            <div className="absolute -top-16 -right-12 h-44 w-44 rounded-full bg-primary/30 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-8 h-44 w-44 rounded-full bg-fuchsia-500/20 blur-3xl pointer-events-none" />
+            <DialogHeader className="relative p-6">
+              <div className="flex items-start gap-4">
+                <div className="relative shrink-0">
+                  <div className="absolute inset-0 rounded-2xl bg-primary/40 blur-xl" />
+                  <div className="relative p-3 rounded-2xl bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/30">
+                    <Shield className="h-6 w-6 text-primary-foreground" />
+                  </div>
+                </div>
+                <div className="min-w-0 text-left">
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Updated
+                    </span>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">March 2026</span>
+                  </div>
+                  <DialogTitle className="text-2xl font-heading">
+                    Your <span className="anime-gradient-text">Privacy</span>, Respected
+                  </DialogTitle>
+                  <DialogDescription id="privacy-policy-description" className="mt-1.5 text-sm text-muted-foreground">
+                    No selling. No tracking pixels. Just an indexing service that keeps your data lean.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+          </div>
+
+          <ScrollArea className="max-h-[60vh] px-6 py-5">
+            <div className="space-y-4">
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/10 border border-primary/25">
+                <BookCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <p className="text-sm text-foreground font-medium">
+                  AnimeSavi does not store any files on its own server. We only index links from the internet which are hosted on third-party services — we index links just like Google.
                 </p>
               </div>
-              
-              <div className="space-y-2">
-                <h3 className="text-foreground font-semibold">1. Information We Collect</h3>
-                <p>
-                  We collect only the minimum information necessary: your email address and username when you create an account. We also store your viewing preferences, watch history, and favorites locally on your device using browser storage. We do not collect IP addresses, device fingerprints, or any form of tracking data beyond what is essential for authentication.
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <h3 className="text-foreground font-semibold">2. How We Use Your Information</h3>
-                <p>
-                  Your account information is used solely for authentication and personalization. We do not sell, rent, or share your personal data with any third parties. Your viewing preferences are used to provide recommendations and improve your experience. We do not run third-party analytics or advertising scripts.
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <h3 className="text-foreground font-semibold">3. Content & Third-Party Services</h3>
-                <p>
-                  All video content is hosted on independent third-party platforms including but not limited to services affiliated with Crunchyroll, Muse India, and Amazon Prime. We act as an indexing service and have no control over third-party data practices, content availability, or server reliability. Each third-party service operates under its own privacy policy.
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <h3 className="text-foreground font-semibold">4. Data Security</h3>
-                <p>
-                  Passwords are encrypted using industry-standard hashing algorithms. We never store or have access to plain text passwords. All communication between your browser and our servers is encrypted via HTTPS/TLS. Account sessions are managed securely with automatic expiration.
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <h3 className="text-foreground font-semibold">5. Cookies & Local Storage</h3>
-                <p>
-                  We use browser local storage to save your preferences, watch history, and session tokens. We do not use third-party cookies for advertising or tracking purposes. You may clear this data at any time through your browser settings.
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <h3 className="text-foreground font-semibold">6. Your Rights</h3>
-                <p>
-                  You may delete your account and all associated data at any time. You can clear your local viewing history and preferences through your browser settings. For data removal requests, contact us via our official Telegram channel: @AnimeSaviInhindiDUB
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <h3 className="text-foreground font-semibold">7. Children's Privacy</h3>
-                <p>
-                  Our service is not intended for children under 13. We do not knowingly collect personal information from children. If you believe a child has provided us with personal data, please contact us immediately.
-                </p>
-              </div>
+
+              {privacySections.map((s, i) => (
+                <div key={s.title} className="group relative overflow-hidden rounded-xl bg-card/40 border border-border/40 p-4 hover:border-border/70 transition-all">
+                  <div className="flex items-start gap-3">
+                    <div className={`shrink-0 p-2 rounded-lg bg-card/80 ${s.tone}`}>
+                      <s.icon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-[10px] font-bold tabular-nums ${s.tone}`}>0{i + 1}</span>
+                        <h3 className="text-sm font-semibold text-foreground">{s.title}</h3>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{s.body}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </ScrollArea>
-          <div className="flex justify-end pt-4">
+
+          <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-border/40 bg-card/40">
+            <a href="https://t.me/AnimeSaviInhindiDUB" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5">
+              <MessageCircle className="h-3.5 w-3.5" />
+              @AnimeSaviInhindiDUB
+            </a>
             <Button onClick={() => setOpen(false)} className="anime-button">
               <span>I Understand</span>
             </Button>
@@ -126,6 +131,20 @@ function PrivacyPolicyButton() {
     </>
   );
 }
+
+const termsSections = [
+  { icon: BookCheck, title: 'Acceptance of Terms', tone: 'text-primary', body: 'By accessing and using AnimesaviinHindi ("the Service"), you acknowledge that you have read, understood, and agree to be bound by these Terms. If you do not agree, discontinue use immediately. These Terms constitute a legally binding agreement between you and AnimesaviinHindi.' },
+  { icon: Globe2, title: 'Nature of Service', tone: 'text-sky-400', body: 'AnimesaviinHindi is a content indexing and discovery platform. We aggregate and index publicly available links to anime content hosted on independent third-party servers including platforms affiliated with Crunchyroll, Muse India, Amazon Prime, and others. We do not host, upload, store, or have any control over video files. Our role is functionally equivalent to a search engine.' },
+  { icon: UserCheck, title: 'Eligibility & Accounts', tone: 'text-emerald-400', list: ['You must be at least 13 years old to use this Service', 'You are responsible for all activity under your account', 'Account sharing or transfer is prohibited', 'A maximum of 5 accounts may be created per user', 'We reserve the right to suspend accounts at our sole discretion', 'Providing false information may result in permanent ban'] },
+  { icon: Ban, title: 'Acceptable Use', tone: 'text-rose-400', intro: 'You agree not to:', list: ['Use the Service for any unlawful or unauthorized purpose', 'Attempt to gain unauthorized access to our systems', 'Upload malicious code, spam, or harmful content', 'Harass, abuse, or threaten other users', 'Use automated tools, bots, or scrapers without written permission', 'Circumvent security measures or access restrictions', 'Redistribute or commercially exploit any part of the Service', 'Abuse the token access system or share access tokens'] },
+  { icon: Server, title: 'Third-Party Content', tone: 'text-violet-400', body: 'All video content accessible through AnimesaviinHindi is hosted on independent third-party platforms over which we have no control. Content may originate from services such as Crunchyroll, Muse India, Amazon Prime, and other distributors. We do not verify, endorse, or assume responsibility for third-party content including its accuracy, legality, quality, or availability. Your interaction with third-party content is entirely at your own risk.' },
+  { icon: Copyright, title: 'Intellectual Property', tone: 'text-amber-400', body: 'The AnimesaviinHindi name, logo, design, and original code are our exclusive property. All anime titles, characters, and artwork belong to their respective copyright holders. We make no ownership claim over any indexed content.' },
+  { icon: MessagesSquare, title: 'User Content & Reviews', tone: 'text-fuchsia-400', body: 'By posting comments, reviews, or other content, you grant AnimesaviinHindi a non-exclusive, royalty-free license to display and distribute such content on the platform. All reviews are displayed anonymously to protect user privacy. You retain ownership and are solely responsible for ensuring your content does not violate any laws or third-party rights.' },
+  { icon: AlertTriangle, title: 'Disclaimer & Liability', tone: 'text-orange-400', body: 'THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND. WE ARE NOT LIABLE FOR ANY DAMAGES ARISING FROM YOUR USE OF THE SERVICE, INCLUDING BUT NOT LIMITED TO DIRECT, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES. USE THE SERVICE AT YOUR OWN RISK.' },
+  { icon: Scale, title: 'DMCA & Copyright', tone: 'text-yellow-400', body: 'We respect intellectual property rights. If you believe indexed content infringes your copyright, submit a DMCA notice via our Telegram channel: @AnimeSaviInhindiDUB. We will respond to legitimate claims promptly.' },
+  { icon: RefreshCw, title: 'Changes & Termination', tone: 'text-teal-400', body: 'We may modify these Terms at any time. Continued use after changes constitutes acceptance. We may terminate or restrict access to the Service at any time without prior notice or liability.' },
+  { icon: Mail, title: 'Contact', tone: 'text-blue-400', body: 'For questions, concerns, or DMCA notices, contact us via Telegram: @AnimeSaviInhindiDUB' },
+];
 
 function TermsOfServiceButton() {
   const [open, setOpen] = useState(false);
@@ -140,118 +159,83 @@ function TermsOfServiceButton() {
         Terms of Service
       </button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl bg-card/95 backdrop-blur-xl border-border/50" aria-describedby="terms-of-service-description">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <FileText className="h-5 w-5 text-primary" />
-              Terms of Service
-            </DialogTitle>
-            <DialogDescription id="terms-of-service-description" className="sr-only">
-              Terms of service and usage conditions for Anime Savi
-            </DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="max-h-[70vh]">
-            <div className="space-y-6 text-sm text-muted-foreground pr-4">
-              <p className="text-foreground font-medium">Last Updated: March 2026</p>
-              
-              <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
-                <p className="text-foreground font-medium text-center">
-                  AnimeSavi does not store any files on its own server. We only index links from the internet which are hosted on third-party services. We index links just like Google.
+        <DialogContent className="max-w-3xl bg-card/95 backdrop-blur-xl border-border/50 p-0 overflow-hidden" aria-describedby="terms-of-service-description">
+          {/* Cinematic Header */}
+          <div className="relative overflow-hidden border-b border-border/40">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 via-card/50 to-primary/15" />
+            <div className="absolute -top-16 -right-12 h-44 w-44 rounded-full bg-amber-500/25 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-8 h-44 w-44 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
+            <DialogHeader className="relative p-6">
+              <div className="flex items-start gap-4">
+                <div className="relative shrink-0">
+                  <div className="absolute inset-0 rounded-2xl bg-amber-500/40 blur-xl" />
+                  <div className="relative p-3 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg shadow-amber-500/30">
+                    <Scale className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+                <div className="min-w-0 text-left">
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                      <FileText className="h-2.5 w-2.5" />
+                      Legal
+                    </span>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Updated March 2026</span>
+                  </div>
+                  <DialogTitle className="text-2xl font-heading">
+                    Terms of <span className="anime-gradient-text">Service</span>
+                  </DialogTitle>
+                  <DialogDescription id="terms-of-service-description" className="mt-1.5 text-sm text-muted-foreground">
+                    The ground rules — short, fair, and written so a human can actually read them.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+          </div>
+
+          <ScrollArea className="max-h-[65vh] px-6 py-5">
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/25">
+                <BookCheck className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+                <p className="text-sm text-foreground font-medium">
+                  AnimeSavi does not store any files on its own server. We only index links from the internet which are hosted on third-party services — we index links just like Google.
                 </p>
               </div>
-              
-              <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">1. Acceptance of Terms</h3>
-                <p>
-                  By accessing and using AnimesaviinHindi ("the Service"), you acknowledge that you have read, understood, and agree to be bound by these Terms. If you do not agree, discontinue use immediately. These Terms constitute a legally binding agreement between you and AnimesaviinHindi.
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">2. Nature of Service</h3>
-                <p>
-                  AnimesaviinHindi is a content indexing and discovery platform. We aggregate and index publicly available links to anime content hosted on independent third-party servers including platforms affiliated with Crunchyroll, Muse India, Amazon Prime, and others. We do not host, upload, store, or have any control over video files. Our role is functionally equivalent to a search engine.
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">3. Eligibility & Accounts</h3>
-                <ul className="list-disc list-inside space-y-1 ml-2">
-                  <li>You must be at least 13 years old to use this Service</li>
-                  <li>You are responsible for all activity under your account</li>
-                  <li>Account sharing or transfer is prohibited</li>
-                  <li>A maximum of 5 accounts may be created per user</li>
-                  <li>We reserve the right to suspend accounts at our sole discretion</li>
-                  <li>Providing false information may result in permanent ban</li>
-                </ul>
-              </div>
-              
-              <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">4. Acceptable Use</h3>
-                <p>You agree not to:</p>
-                <ul className="list-disc list-inside space-y-1 ml-2">
-                  <li>Use the Service for any unlawful or unauthorized purpose</li>
-                  <li>Attempt to gain unauthorized access to our systems</li>
-                  <li>Upload malicious code, spam, or harmful content</li>
-                  <li>Harass, abuse, or threaten other users</li>
-                  <li>Use automated tools, bots, or scrapers without written permission</li>
-                  <li>Circumvent security measures or access restrictions</li>
-                  <li>Redistribute or commercially exploit any part of the Service</li>
-                  <li>Abuse the token access system or share access tokens</li>
-                </ul>
-              </div>
-              
-              <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">5. Third-Party Content</h3>
-                <p>
-                  All video content accessible through AnimesaviinHindi is hosted on independent third-party platforms over which we have no control. Content may originate from services such as Crunchyroll, Muse India, Amazon Prime, and other distributors. We do not verify, endorse, or assume responsibility for third-party content including its accuracy, legality, quality, or availability. Your interaction with third-party content is entirely at your own risk.
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">6. Intellectual Property</h3>
-                <p>
-                  The AnimesaviinHindi name, logo, design, and original code are our exclusive property. All anime titles, characters, and artwork belong to their respective copyright holders. We make no ownership claim over any indexed content.
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">7. User Content & Reviews</h3>
-                <p>
-                  By posting comments, reviews, or other content, you grant AnimesaviinHindi a non-exclusive, royalty-free license to display and distribute such content on the platform. All reviews are displayed anonymously to protect user privacy. You retain ownership and are solely responsible for ensuring your content does not violate any laws or third-party rights.
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">8. Disclaimer & Limitation of Liability</h3>
-                <p>
-                  THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND. WE ARE NOT LIABLE FOR ANY DAMAGES ARISING FROM YOUR USE OF THE SERVICE, INCLUDING BUT NOT LIMITED TO DIRECT, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES. USE THE SERVICE AT YOUR OWN RISK.
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">9. DMCA & Copyright</h3>
-                <p>
-                  We respect intellectual property rights. If you believe indexed content infringes your copyright, submit a DMCA notice via our Telegram channel: @AnimeSaviInhindiDUB. We will respond to legitimate claims promptly.
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">10. Changes & Termination</h3>
-                <p>
-                  We may modify these Terms at any time. Continued use after changes constitutes acceptance. We may terminate or restrict access to the Service at any time without prior notice or liability.
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <h3 className="text-foreground font-semibold text-base">11. Contact</h3>
-                <p>
-                  For questions, concerns, or DMCA notices, contact us via Telegram: @AnimeSaviInhindiDUB
-                </p>
-              </div>
+
+              {termsSections.map((s, i) => (
+                <div key={s.title} className="group relative overflow-hidden rounded-xl bg-card/40 border border-border/40 p-4 hover:border-border/70 transition-all">
+                  <div className="flex items-start gap-3">
+                    <div className={`shrink-0 p-2 rounded-lg bg-card/80 ${s.tone}`}>
+                      <s.icon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className={`text-[10px] font-bold tabular-nums ${s.tone}`}>{String(i + 1).padStart(2, '0')}</span>
+                        <h3 className="text-sm font-semibold text-foreground">{s.title}</h3>
+                      </div>
+                      {s.body && <p className="text-xs text-muted-foreground leading-relaxed">{s.body}</p>}
+                      {s.intro && <p className="text-xs text-muted-foreground leading-relaxed mb-2">{s.intro}</p>}
+                      {s.list && (
+                        <ul className="space-y-1.5 mt-1">
+                          {s.list.map((item) => (
+                            <li key={item} className="flex items-start gap-2 text-xs text-muted-foreground">
+                              <span className={`shrink-0 mt-1.5 h-1 w-1 rounded-full ${s.tone.replace('text-', 'bg-')}`} />
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </ScrollArea>
-          <div className="flex justify-end pt-4">
+
+          <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-border/40 bg-card/40 flex-wrap">
+            <a href="https://t.me/AnimeSaviInhindiDUB" target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5">
+              <MessageCircle className="h-3.5 w-3.5" />
+              DMCA · @AnimeSaviInhindiDUB
+            </a>
             <Button onClick={() => setOpen(false)} className="anime-button">
               <span>I Agree</span>
             </Button>
@@ -280,7 +264,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-              Your ultimate destination for streaming the best anime content. Discover, watch, and enjoy thousands of anime series and movies.
+              Where every frame tells a story. Hand-curated anime in crisp 4K, dubbed in your language — built by fans, made for the late-night binge.
             </p>
             <div className="flex items-center gap-2">
               <a
