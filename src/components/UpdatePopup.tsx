@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePopupQueue } from '@/contexts/PopupQueueContext';
-import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, Sparkles, X, ArrowRight } from 'lucide-react';
 
 type UpdateStep = 'alert' | 'downloading' | 'installing' | 'complete';
 type BadgeKind = 'NEW' | 'IMPROVED' | 'FIX';
@@ -53,9 +53,15 @@ const VERSION_GROUPS: VersionGroup[] = [
 ];
 
 const BADGE_STYLES: Record<BadgeKind, string> = {
-  NEW: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-  IMPROVED: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
-  FIX: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+  NEW: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  IMPROVED: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+  FIX: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+};
+
+const BADGE_DOT: Record<BadgeKind, string> = {
+  NEW: 'bg-emerald-400',
+  IMPROVED: 'bg-sky-400',
+  FIX: 'bg-amber-400',
 };
 
 const DOWNLOAD_COMPLETED_KEY = `update_downloaded_${APP_VERSION}`;
@@ -220,84 +226,130 @@ export function UpdatePopup() {
     );
   }
 
-  /* ── STEP 4: Complete / What's New (with version groups + swipe) ── */
+  /* ── STEP 4: Complete / What's New — compact cinematic redesign ── */
   return (
-    <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/90 p-3 backdrop-blur-lg animate-in fade-in duration-300 sm:items-center sm:p-4">
-      <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-red-600/30 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/95 shadow-2xl shadow-red-900/20 animate-in zoom-in-95 duration-300">
-        <div className="border-b border-white/5 px-5 py-4 sm:px-8 sm:py-6">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-600/15">
-            <span className="text-3xl">✅</span>
-          </div>
-          <div className="text-center">
-            <h2 className="text-xl font-bold text-white sm:text-2xl">
-              {isManualWhatsNew ? "What's New" : 'Updated to latest version'}
-            </h2>
-            <p className="mt-2 text-sm text-zinc-400">{currentGroup.highlight}</p>
-            <span className="mt-3 inline-block rounded bg-red-600/20 px-2 py-0.5 text-[10px] font-mono text-red-400">{APP_VERSION}</span>
-          </div>
+    <div
+      className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/85 p-3 backdrop-blur-xl animate-in fade-in duration-300 sm:items-center sm:p-4"
+      onClick={dismissPopup}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-md overflow-hidden rounded-2xl border border-red-600/25 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-red-900/30 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
+      >
+        {/* Decorative glows */}
+        <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-red-600/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-red-500/10 blur-3xl" />
 
-          {/* Version pager */}
-          <div className="mt-4 flex items-center justify-center gap-3">
-            <button
-              onClick={goPrev}
-              disabled={versionIndex === 0}
-              className="rounded-full border border-white/10 bg-white/5 p-1.5 text-white/70 transition hover:bg-white/10 disabled:opacity-30"
-              aria-label="Previous version"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <div className="flex items-center gap-1.5">
-              {VERSION_GROUPS.map((g, i) => (
-                <button
-                  key={g.version}
-                  onClick={() => setVersionIndex(i)}
-                  className={`rounded-full transition-all ${i === versionIndex ? 'h-1.5 w-6 bg-red-500' : 'h-1.5 w-1.5 bg-white/20'}`}
-                  aria-label={`Go to ${g.version}`}
-                />
-              ))}
-            </div>
-            <button
-              onClick={goNext}
-              disabled={versionIndex === VERSION_GROUPS.length - 1}
-              className="rounded-full border border-white/10 bg-white/5 p-1.5 text-white/70 transition hover:bg-white/10 disabled:opacity-30"
-              aria-label="Next version"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
+        {/* Close */}
+        <button
+          onClick={dismissPopup}
+          aria-label="Close"
+          className="absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white/60 backdrop-blur-md transition hover:bg-white/10 hover:text-white"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+
+        {/* Header — compact */}
+        <div className="relative px-5 pt-5 pb-3 text-center">
+          <div className="mx-auto mb-2.5 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-600/30 to-red-500/10 ring-1 ring-red-500/30">
+            <Sparkles className="h-5 w-5 text-red-400" />
+          </div>
+          <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-300">
+            <span className="relative flex h-1 w-1">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-1 w-1 rounded-full bg-emerald-400" />
+            </span>
+            {isManualWhatsNew ? "What's New" : 'You are up to date'}
+          </div>
+          <h2 className="text-base font-bold text-white sm:text-lg">
+            {isManualWhatsNew ? 'Latest Drops & Polish' : 'Updated to latest version'}
+          </h2>
+          <p className="mx-auto mt-1 max-w-xs text-[11px] leading-snug text-zinc-400">
+            {currentGroup.highlight}
+          </p>
+          <span className="mt-2 inline-block rounded-md border border-red-500/30 bg-red-600/15 px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-wider text-red-300">
+            {APP_VERSION}
+          </span>
+        </div>
+
+        {/* Version pager — slim */}
+        <div className="relative flex items-center justify-center gap-2 border-y border-white/5 bg-black/30 px-5 py-2">
+          <button
+            onClick={goPrev}
+            disabled={versionIndex === 0}
+            className="rounded-md border border-white/10 bg-white/5 p-1 text-white/60 transition hover:bg-white/10 hover:text-white disabled:opacity-25"
+            aria-label="Previous version"
+          >
+            <ChevronLeft className="h-3 w-3" />
+          </button>
+          <div className="flex items-center gap-1.5">
+            {VERSION_GROUPS.map((g, i) => (
+              <button
+                key={g.version}
+                onClick={() => setVersionIndex(i)}
+                className={`h-1 rounded-full transition-all ${
+                  i === versionIndex ? 'w-5 bg-red-500' : 'w-1 bg-white/20 hover:bg-white/40'
+                }`}
+                aria-label={`Go to ${g.version}`}
+              />
+            ))}
+          </div>
+          <button
+            onClick={goNext}
+            disabled={versionIndex === VERSION_GROUPS.length - 1}
+            className="rounded-md border border-white/10 bg-white/5 p-1 text-white/60 transition hover:bg-white/10 hover:text-white disabled:opacity-25"
+            aria-label="Next version"
+          >
+            <ChevronRight className="h-3 w-3" />
+          </button>
+          <div className="ml-2 flex items-center gap-1.5">
+            <span className="rounded border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-red-300">
+              {currentGroup.version}
+            </span>
+            <span className="text-[9px] uppercase tracking-wider text-white/40">{currentGroup.date}</span>
           </div>
         </div>
 
-        {/* Swipeable card */}
+        {/* Items — compact rows, scroll-locked height */}
         <div
-          className="space-y-2 px-5 py-4 text-left sm:max-h-[44vh] sm:px-8 sm:py-6 overflow-y-auto"
+          className="relative max-h-[42vh] space-y-1.5 overflow-y-auto px-4 py-3 sm:max-h-[40vh]"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
-          <div className="mb-2 flex items-center justify-between">
-            <span className="rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-1 text-[10px] font-mono font-bold uppercase text-red-300">{currentGroup.version}</span>
-            <span className="text-[10px] uppercase tracking-wider text-white/40">{currentGroup.date}</span>
-          </div>
-          {currentGroup.items.map((item) => (
-            <div key={item.title} className="flex items-start gap-3 rounded-xl border border-white/5 bg-white/5 p-3 animate-in fade-in slide-in-from-right-2 duration-300">
-              <span className="shrink-0 text-base">{item.icon}</span>
+          {currentGroup.items.map((item, idx) => (
+            <div
+              key={item.title}
+              className="group flex items-start gap-2.5 rounded-lg border border-white/5 bg-gradient-to-br from-white/[0.04] to-white/[0.01] p-2.5 transition-all hover:border-red-500/20 hover:from-red-500/5 animate-in fade-in slide-in-from-right-2 duration-300"
+              style={{ animationDelay: `${idx * 30}ms` }}
+            >
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/5 text-sm">
+                {item.icon}
+              </div>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <h4 className="text-sm font-semibold leading-tight text-white">{item.title}</h4>
-                  <span className={`shrink-0 rounded border px-1.5 py-px text-[9px] font-bold uppercase tracking-wider ${BADGE_STYLES[item.badge]}`}>{item.badge}</span>
+                  <h4 className="text-[12px] font-semibold leading-tight text-white">{item.title}</h4>
+                  <span
+                    className={`inline-flex shrink-0 items-center gap-1 rounded border px-1 py-px text-[8px] font-bold uppercase tracking-wider ${BADGE_STYLES[item.badge]}`}
+                  >
+                    <span className={`h-1 w-1 rounded-full ${BADGE_DOT[item.badge]}`} />
+                    {item.badge}
+                  </span>
                 </div>
-                <p className="mt-1 text-xs leading-relaxed text-zinc-500">{item.desc}</p>
+                <p className="mt-0.5 text-[10px] leading-snug text-zinc-500">{item.desc}</p>
               </div>
             </div>
           ))}
-          <p className="pt-2 text-center text-[10px] text-white/30 sm:hidden">← Swipe to browse versions →</p>
+          <p className="pt-1 text-center text-[9px] text-white/25 sm:hidden">← Swipe to browse versions →</p>
         </div>
 
-        <div className="px-5 pb-5 sm:px-8 sm:pb-8">
+        {/* CTA */}
+        <div className="relative border-t border-white/5 bg-black/40 px-4 py-3">
           <button
             onClick={handleGo}
-            className="w-full rounded-xl bg-gradient-to-r from-red-700 to-red-500 py-3 font-semibold text-white shadow-lg shadow-red-900/30 transition-all hover:from-red-600 hover:to-red-400"
+            className="group flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-red-700 via-red-600 to-red-500 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-900/40 transition-all hover:from-red-600 hover:to-red-400 hover:shadow-red-700/50"
           >
-            Got it
+            Explore Now
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </button>
         </div>
       </div>
