@@ -216,74 +216,160 @@ export function Header() {
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-card border-border" align="end">
-                <div className="flex items-center gap-3 p-3 border-b border-border">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={user.user_metadata?.avatar_url} alt="Avatar" />
-                    <AvatarFallback className="bg-primary text-primary-foreground font-medium">
-                      {user.email?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{user.user_metadata?.username || 'User'}</p>
-                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+              <DropdownMenuContent
+                className="w-72 bg-card/95 backdrop-blur-xl border-border/60 p-0 overflow-hidden shadow-2xl"
+                align="end"
+                sideOffset={8}
+              >
+                {/* Cinematic header */}
+                <div className="relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent" />
+                  <div className="absolute -top-10 -right-8 w-32 h-32 bg-primary/30 rounded-full blur-3xl" />
+                  <div className="relative flex items-center gap-3 p-4">
+                    <div className="relative shrink-0">
+                      <div className="absolute inset-0 bg-primary/40 blur-md rounded-full" />
+                      <Avatar className="relative h-12 w-12 ring-2 ring-primary/40">
+                        <AvatarImage src={user.user_metadata?.avatar_url} alt="Avatar" />
+                        <AvatarFallback className="bg-primary text-primary-foreground font-bold">
+                          {user.email?.charAt(0).toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      {(isAdmin || hasValidTokenAccess(user?.email)) && (
+                        <Crown className="absolute -top-1 -right-1 h-3.5 w-3.5 text-yellow-500 drop-shadow animate-crown-shimmer" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold truncate">{user.user_metadata?.username || 'User'}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {isAdmin ? (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-[9px] font-black text-yellow-400 uppercase tracking-wider">
+                            <Crown className="h-2 w-2" /> Admin
+                          </span>
+                        ) : isUploader ? (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-[9px] font-black text-primary uppercase tracking-wider">
+                            <Upload className="h-2 w-2" /> Uploader
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-muted text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                            Viewer
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <DropdownMenuItem asChild>
-                  <Link to="/profile" className="flex items-center gap-2 py-2">
-                    <User className="h-4 w-4" /> Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/favorites" className="flex items-center gap-2 py-2">
-                    <Heart className="h-4 w-4" /> Favorites
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/history" className="flex items-center gap-2 py-2">
-                    <History className="h-4 w-4" /> Watch History
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/downloads" className="flex items-center gap-2 py-2">
-                    <Download className="h-4 w-4" /> Downloads
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/watchlist" className="flex items-center gap-2 py-2">
-                    <ListVideo className="h-4 w-4" /> Watch List
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {canUpload() && (
-                  <DropdownMenuItem asChild>
-                    <Link to="/upload" className="flex items-center gap-2 py-2">
-                      <Upload className="h-4 w-4" /> Upload Anime
+
+                {/* Library section */}
+                <div className="p-2">
+                  <p className="px-2 pt-1 pb-1.5 text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                    Library
+                  </p>
+                  <div className="grid grid-cols-2 gap-1">
+                    <DropdownMenuItem asChild className="rounded-lg p-0">
+                      <Link to="/profile" className="flex flex-col items-center gap-1 py-2.5 hover:bg-primary/10 rounded-lg group">
+                        <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center group-hover:bg-primary/25 transition-colors">
+                          <User className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <span className="text-[10px] font-semibold">Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="rounded-lg p-0">
+                      <Link to="/favorites" className="flex flex-col items-center gap-1 py-2.5 hover:bg-rose-500/10 rounded-lg group">
+                        <div className="w-7 h-7 rounded-lg bg-rose-500/15 flex items-center justify-center group-hover:bg-rose-500/25 transition-colors">
+                          <Heart className="h-3.5 w-3.5 text-rose-500" />
+                        </div>
+                        <span className="text-[10px] font-semibold">Favorites</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="rounded-lg p-0">
+                      <Link to="/downloads" className="flex flex-col items-center gap-1 py-2.5 hover:bg-emerald-500/10 rounded-lg group">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center group-hover:bg-emerald-500/25 transition-colors">
+                          <Download className="h-3.5 w-3.5 text-emerald-500" />
+                        </div>
+                        <span className="text-[10px] font-semibold">Downloads</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="rounded-lg p-0">
+                      <Link to="/watchlist" className="flex flex-col items-center gap-1 py-2.5 hover:bg-sky-500/10 rounded-lg group">
+                        <div className="w-7 h-7 rounded-lg bg-sky-500/15 flex items-center justify-center group-hover:bg-sky-500/25 transition-colors">
+                          <ListVideo className="h-3.5 w-3.5 text-sky-500" />
+                        </div>
+                        <span className="text-[10px] font-semibold">Watch List</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  </div>
+
+                  <DropdownMenuItem asChild className="rounded-lg mt-1">
+                    <Link to="/history" className="flex items-center gap-2.5 py-2 px-2">
+                      <div className="w-7 h-7 rounded-lg bg-violet-500/15 flex items-center justify-center">
+                        <History className="h-3.5 w-3.5 text-violet-500" />
+                      </div>
+                      <span className="text-[12px] font-medium">Watch History</span>
                     </Link>
                   </DropdownMenuItem>
+                </div>
+
+                {(canUpload() || isAdmin) && (
+                  <>
+                    <DropdownMenuSeparator className="my-0" />
+                    <div className="p-2">
+                      <p className="px-2 pt-1 pb-1.5 text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                        Creator Tools
+                      </p>
+                      {canUpload() && (
+                        <DropdownMenuItem asChild className="rounded-lg">
+                          <Link to="/upload" className="flex items-center gap-2.5 py-2 px-2">
+                            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center shadow-md shadow-primary/30">
+                              <Upload className="h-3.5 w-3.5 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <span className="text-[12px] font-semibold block leading-tight">Upload Anime</span>
+                              <span className="text-[9px] text-muted-foreground">Add new episodes</span>
+                            </div>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {isAdmin && (
+                        <DropdownMenuItem asChild className="rounded-lg">
+                          <Link to="/admin" className="flex items-center gap-2.5 py-2 px-2">
+                            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-md shadow-yellow-500/30">
+                              <Shield className="h-3.5 w-3.5 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <span className="text-[12px] font-semibold block leading-tight">Admin Panel</span>
+                              <span className="text-[9px] text-muted-foreground">Manage platform</span>
+                            </div>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                    </div>
+                  </>
                 )}
-                {isAdmin && (
-                  <DropdownMenuItem asChild>
-                    <Link to="/admin" className="flex items-center gap-2 py-2">
-                      <Shield className="h-4 w-4" /> Admin Panel
+
+                <DropdownMenuSeparator className="my-0" />
+                <div className="p-2">
+                  <DropdownMenuItem asChild className="rounded-lg">
+                    <Link to="/settings" className="flex items-center gap-2.5 py-2 px-2">
+                      <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
+                        <Settings className="h-3.5 w-3.5 text-muted-foreground" />
+                      </div>
+                      <span className="text-[12px] font-medium">Settings</span>
                     </Link>
                   </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/settings" className="flex items-center gap-2 py-2">
-                    <Settings className="h-4 w-4" /> Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="p-0">
-                  <AccountSwitcher />
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={handleSignOut} 
-                  className="text-destructive focus:text-destructive"
-                >
-                  <LogOut className="h-4 w-4 mr-2" /> Sign Out
-                </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="p-0 rounded-lg">
+                    <AccountSwitcher />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
+                    className="rounded-lg text-destructive focus:text-destructive focus:bg-destructive/10 mt-1"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-destructive/15 flex items-center justify-center mr-2.5">
+                      <LogOut className="h-3.5 w-3.5" />
+                    </div>
+                    <span className="text-[12px] font-semibold">Sign Out</span>
+                  </DropdownMenuItem>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
@@ -332,123 +418,222 @@ export function Header() {
                 <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-64 sm:w-72 bg-background border-border">
-              <div className="flex flex-col gap-3 mt-6">
+            <SheetContent
+              side="right"
+              className="w-[19rem] sm:w-80 bg-background border-border p-0 overflow-y-auto"
+            >
+              {/* Cinematic header */}
+              <div className="relative overflow-hidden border-b border-border/40">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-primary/5 to-transparent" />
+                <div className="absolute -top-12 -right-10 w-48 h-48 bg-primary/30 rounded-full blur-3xl" />
+                <div className="absolute -bottom-10 left-1/3 w-32 h-32 bg-pink-500/20 rounded-full blur-3xl" />
+                <div className="relative p-5 pt-7">
+                  <div className="flex items-center gap-3">
+                    <div className="relative shrink-0">
+                      <div className="absolute inset-0 bg-primary/40 blur-md rounded-xl" />
+                      <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center shadow-xl">
+                        <img src={logo} alt="Anime Savi" className="w-7 h-7 rounded-md object-contain" />
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-base font-black leading-none">
+                        <span className="text-primary">Anime</span>
+                        <span className="text-foreground"> Savi</span>
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-widest font-bold">
+                        Premium OTT
+                      </p>
+                    </div>
+                  </div>
+
+                  {user ? (
+                    <div className="mt-4 flex items-center gap-2.5 p-2.5 rounded-xl bg-card/60 backdrop-blur-sm border border-border/40">
+                      <Avatar className="h-8 w-8 ring-1 ring-primary/30">
+                        <AvatarImage src={user.user_metadata?.avatar_url} alt="Avatar" />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+                          {user.email?.charAt(0).toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold truncate">
+                          {user.user_metadata?.username || 'User'}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
+                      </div>
+                      {(isAdmin || hasValidTokenAccess(user?.email)) && (
+                        <Crown className="h-3.5 w-3.5 text-yellow-500 shrink-0" />
+                      )}
+                    </div>
+                  ) : (
+                    <Button asChild size="sm" className="mt-4 w-full bg-gradient-to-r from-primary to-pink-500 hover:opacity-90 text-white font-bold shadow-lg shadow-primary/30">
+                      <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                        Sign In to Continue
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-3 space-y-4">
                 {/* Search */}
                 <form onSubmit={handleSearch}>
                   <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                     <Input
                       type="search"
                       placeholder="Search anime..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-3 pr-9 bg-card border-border rounded-lg h-8 text-xs"
+                      className="pl-8 pr-9 bg-card border-border/60 rounded-lg h-9 text-xs"
                       autoFocus={false}
                       tabIndex={-1}
                     />
-                    <Button 
-                      type="submit" 
-                      size="icon" 
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 bg-primary"
+                    <Button
+                      type="submit"
+                      size="icon"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 bg-primary"
                     >
                       <Search className="h-3 w-3" />
                     </Button>
                   </div>
                 </form>
 
-                {/* Nav Links */}
-                <nav className="flex flex-col gap-0.5">
-                  {navLinks.map((link) => (
-                    <Link 
-                      key={link.label}
-                      to={link.to} 
-                      className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors"
+                {/* Discover */}
+                <div>
+                  <p className="px-1 mb-1.5 text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                    Discover
+                  </p>
+                  <nav className="grid grid-cols-2 gap-1.5">
+                    {navLinks.map((link) => (
+                      <Link
+                        key={link.label}
+                        to={link.to}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-2 text-[12px] font-semibold py-2 px-2.5 rounded-lg bg-card/50 hover:bg-card border border-border/40 hover:border-primary/40 transition-all"
+                      >
+                        {link.icon ? (
+                          <link.icon className="h-3.5 w-3.5 text-primary" />
+                        ) : (
+                          <Home className="h-3.5 w-3.5 text-primary" />
+                        )}
+                        <span className="truncate">{link.label}</span>
+                      </Link>
+                    ))}
+                  </nav>
+                </div>
+
+                {/* My Library */}
+                {user && (
+                  <div>
+                    <p className="px-1 mb-1.5 text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                      My Library
+                    </p>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {[
+                        { to: '/favorites', icon: Heart, label: 'Likes', tone: 'text-rose-500 bg-rose-500/10' },
+                        { to: '/history', icon: History, label: 'History', tone: 'text-violet-500 bg-violet-500/10' },
+                        { to: '/downloads', icon: Download, label: 'Saved', tone: 'text-emerald-500 bg-emerald-500/10' },
+                        { to: '/watchlist', icon: ListVideo, label: 'List', tone: 'text-sky-500 bg-sky-500/10' },
+                      ].map((it) => (
+                        <Link
+                          key={it.to}
+                          to={it.to}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex flex-col items-center gap-1 py-2.5 px-1 rounded-lg bg-card/50 border border-border/40 hover:border-primary/40 hover:-translate-y-0.5 transition-all"
+                        >
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${it.tone}`}>
+                            <it.icon className="h-3.5 w-3.5" />
+                          </div>
+                          <span className="text-[10px] font-semibold">{it.label}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Social */}
+                <div>
+                  <p className="px-1 mb-1.5 text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                    Watch Together
+                  </p>
+                  <div className="space-y-1">
+                    <JoinPartyDialog
+                      trigger={
+                        <button className="flex items-center gap-2.5 text-[12px] font-semibold py-2 px-2.5 rounded-lg bg-card/50 hover:bg-card border border-border/40 transition-all w-full text-left">
+                          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-md">
+                            <Users className="h-3.5 w-3.5 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <span className="block leading-tight">Join Party</span>
+                            <span className="text-[9px] text-muted-foreground font-medium">Enter party code</span>
+                          </div>
+                        </button>
+                      }
+                    />
+                    <ViewPartyDialog
+                      trigger={
+                        <button className="flex items-center gap-2.5 text-[12px] font-semibold py-2 px-2.5 rounded-lg bg-card/50 hover:bg-card border border-border/40 transition-all w-full text-left">
+                          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shadow-md">
+                            <Eye className="h-3.5 w-3.5 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <span className="block leading-tight">View Parties</span>
+                            <span className="text-[9px] text-muted-foreground font-medium">Browse live parties</span>
+                          </div>
+                        </button>
+                      }
+                    />
+                  </div>
+                </div>
+
+                {/* Quick actions */}
+                <div>
+                  <p className="px-1 mb-1.5 text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                    Quick Actions
+                  </p>
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => closeMenuThen(() => setVerifyOpen(true))}
+                      className="flex items-center gap-2.5 text-[12px] font-semibold py-2 px-2.5 rounded-lg bg-card/50 hover:bg-card border border-border/40 transition-all w-full text-left"
                     >
-                      {link.icon && <link.icon className="h-3.5 w-3.5 text-muted-foreground" />}
-                      {link.label}
-                    </Link>
-                  ))}
-                  
-                  <div className="py-1.5 px-2.5">
-                    <JoinPartyDialog 
-                      trigger={
-                        <button className="flex items-center gap-2.5 text-[13px] font-medium hover:text-primary transition-colors w-full text-left">
-                          <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                          Join Party
-                        </button>
-                      }
-                    />
+                      <div className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+                        <BadgeCheck className="h-3.5 w-3.5 text-emerald-500" />
+                      </div>
+                      <span>Verify Token</span>
+                    </button>
+                    <button
+                      onClick={() => closeMenuThen(showWhatsNewManually)}
+                      className="flex items-center gap-2.5 text-[12px] font-semibold py-2 px-2.5 rounded-lg bg-card/50 hover:bg-card border border-border/40 transition-all w-full text-left"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center">
+                        <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                      </div>
+                      <span>What's New</span>
+                    </button>
                   </div>
-                  
-                  <div className="py-1.5 px-2.5">
-                    <ViewPartyDialog 
-                      trigger={
-                        <button className="flex items-center gap-2.5 text-[13px] font-medium hover:text-primary transition-colors w-full text-left">
-                          <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-                          View Parties
-                        </button>
-                      }
-                    />
-                  </div>
-                  
-                  {user && (
-                    <>
-                      <Link 
-                        to="/favorites" 
-                        className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors"
-                      >
-                        <Heart className="h-3.5 w-3.5 text-muted-foreground" />
-                        Favorites
-                      </Link>
-                      <Link 
-                        to="/history" 
-                        className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors"
-                      >
-                        <History className="h-3.5 w-3.5 text-muted-foreground" />
-                        Watch History
-                      </Link>
-                      <Link 
-                        to="/downloads" 
-                        className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors"
-                      >
-                        <Download className="h-3.5 w-3.5 text-muted-foreground" />
-                        Downloads
-                      </Link>
-                      <Link 
-                        to="/watchlist" 
-                        className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors"
-                      >
-                        <ListVideo className="h-3.5 w-3.5 text-muted-foreground" />
-                        Watch List
-                      </Link>
-                    </>
-                  )}
-                  <button
-                    onClick={() => closeMenuThen(() => setVerifyOpen(true))}
-                    className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors w-full text-left"
-                  >
-                     <BadgeCheck className="h-3.5 w-3.5 text-muted-foreground" />
-                     Verify
-                  </button>
-                  <button
-                    onClick={() => closeMenuThen(showWhatsNewManually)}
-                    className="flex items-center gap-2.5 text-[13px] font-medium py-1.5 px-2.5 rounded-lg hover:bg-card transition-colors w-full text-left"
-                  >
-                    <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
-                    What's New
-                  </button>
+
                   {canUpload() && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handleUploadClick}
-                      className="flex items-center gap-2 justify-start mt-2 border-primary/30 text-primary text-xs"
+                    <Button
+                      onClick={() => closeMenuThen(handleUploadClick)}
+                      className="w-full mt-2 bg-gradient-to-r from-primary to-pink-500 hover:opacity-90 text-white font-bold shadow-lg shadow-primary/30 h-9"
                     >
-                      <Upload className="h-3.5 w-3.5" />
+                      <Upload className="h-3.5 w-3.5 mr-1.5" />
                       Upload Anime
                     </Button>
                   )}
-                </nav>
+                  {isAdmin && (
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="w-full mt-1.5 border-yellow-500/40 text-yellow-500 hover:bg-yellow-500/10 h-9 font-bold"
+                    >
+                      <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>
+                        <Shield className="h-3.5 w-3.5 mr-1.5" />
+                        Admin Panel
+                      </Link>
+                    </Button>
+                  )}
+                </div>
               </div>
             </SheetContent>
           </Sheet>
