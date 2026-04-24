@@ -8,6 +8,7 @@ import { Plus, Trash2, Upload, Loader2, GripVertical } from 'lucide-react';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { VideoFormatConverter } from '@/components/upload/VideoFormatConverter';
 import { supabase } from '@/integrations/supabase/client';
+import { extractEmbedSrc } from '@/components/video/PureEmbedPlayer';
 
 interface BatchEpisode {
   id: string;
@@ -119,7 +120,7 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
         episode_number: currentEpisodeCount + index + 1,
         title: ep.title.trim(),
         video_url: ep.videoUrl.trim() || null,
-        external_url: ep.externalUrl.trim() || null,
+        external_url: extractEmbedSrc(ep.externalUrl) || null,
         thumbnail: ep.thumbnail.trim() || null,
         duration: ep.duration ? parseInt(ep.duration) : null,
       }));

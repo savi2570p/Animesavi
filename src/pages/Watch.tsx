@@ -21,6 +21,7 @@ import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
 import { ServerStatusIndicator } from '@/components/video/ServerStatusIndicator';
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
 import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hooks/useServerAutoSelect';
+import { isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 import { z } from 'zod';
 import { hasValidTokenAccess, isSuperAdmin, fetchTokenSystemStatus } from '@/components/AccessBanner';
 import { TokenExpiredPopup } from '@/components/TokenExpiredPopup';
@@ -276,6 +277,24 @@ export default function Watch() {
   const handleServerChange = useCallback((server: ServerType) => {
     handleServerSwitch(server);
   }, [handleServerSwitch]);
+
+  // Auto-assign EMBED server when the loaded episode only has an external embed link.
+  // Runs once per episode so the user can still manually switch away afterward.
+  const autoEmbedAppliedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!episode) return;
+    if (autoEmbedAppliedRef.current === episode.id) return;
+
+    const hasDirectVideo = !!episode.video_url;
+    const externalIsEmbed = isEmbedLikeUrl(episode.external_url);
+
+    if (!hasDirectVideo && externalIsEmbed && activeServer !== 'EMBED') {
+      autoEmbedAppliedRef.current = episode.id;
+      handleServerSwitch('EMBED');
+    } else if (hasDirectVideo || !externalIsEmbed) {
+      autoEmbedAppliedRef.current = episode.id;
+    }
+  }, [episode, activeServer, handleServerSwitch]);
 
   const prevEpisodeIdRef = useRef<string | undefined>(undefined);
 
