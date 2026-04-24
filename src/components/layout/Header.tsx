@@ -611,6 +611,18 @@ export function Header() {
                       </div>
                       <span>What's New</span>
                     </button>
+                    <button
+                      onClick={() => closeMenuThen(handleHardRefresh)}
+                      className="flex items-center gap-2.5 text-[12px] font-semibold py-2 px-2.5 rounded-lg bg-card/50 hover:bg-card border border-border/40 transition-all w-full text-left"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-sky-500/15 flex items-center justify-center">
+                        <RefreshCw className="h-3.5 w-3.5 text-sky-500" />
+                      </div>
+                      <div className="flex-1">
+                        <span className="block leading-tight">Refresh App</span>
+                        <span className="text-[9px] text-muted-foreground font-medium">Force latest update</span>
+                      </div>
+                    </button>
                   </div>
 
                   {canUpload() && (
