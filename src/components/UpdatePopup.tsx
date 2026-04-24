@@ -20,12 +20,27 @@ interface VersionGroup {
   items: ChangelogItem[];
 }
 
-const APP_VERSION = 'v22';
+const APP_VERSION = 'v22.1';
 
 const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'v22',
+    version: 'v22.1',
     date: 'Latest',
+    highlight: 'A focused maintenance update — sharper player behavior, smarter server selection, and a polished Report &amp; Telegram experience.',
+    items: [
+      { icon: '🎬', badge: 'FIX', title: 'Embed Server Guardrails', desc: 'Picking "Embed" on a file-uploaded episode (or another server on an embed-only episode) now shows a centered modal instead of collapsing inside the player.' },
+      { icon: '🖥️', badge: 'FIX', title: 'Default Server', desc: 'Desktop and Android now default to X-PLUS for the most reliable, recommended playback out of the box.' },
+      { icon: 'ℹ️', badge: 'FIX', title: 'Episode Entry Notice', desc: 'A one-time message on every episode entry warns that the [Embed] server is under development — use other servers.' },
+      { icon: '🚩', badge: 'FIX', title: 'Report Dialog', desc: 'Cinematic redesign with icon-tagged categories, character counter, and an optional screenshot upload (paste, replace, or remove).' },
+      { icon: '📎', badge: 'FIX', title: 'Screenshot Auto-Save', desc: 'Attached screenshots are saved to your device on send, so you can drop them into Telegram in one tap.' },
+      { icon: '✈️', badge: 'FIX', title: 'Telegram FAB', desc: 'Tapping the Telegram button now opens a polished menu with two clear options: Join Channel and Personal Message (@Lv_Savi).' },
+      { icon: '🛡️', badge: 'FIX', title: 'Iframe Sandbox Removal', desc: 'Global guard ensures no iframe ever carries a sandbox attribute, fixing "sandbox not allowed" errors on external embed hosts.' },
+      { icon: '🎞️', badge: 'FIX', title: 'Direct Embed Rendering', desc: 'Embed server now renders the iframe directly without any custom player wrapper, overlays, or restrictions.' },
+    ],
+  },
+  {
+    version: 'v22',
+    date: 'Previous',
     highlight: 'Cinematic detail pages, smoother season switching, and a 3-second auto-loop hero with direction-aware transitions.',
     items: [
       { icon: '🎬', badge: 'IMPROVED', title: 'Hero Banner Auto-Loop', desc: 'New 3-second loop with cinematic blur, scale, and direction-aware slide animations on every change.' },
@@ -40,7 +55,7 @@ const VERSION_GROUPS: VersionGroup[] = [
   },
   {
     version: 'v21',
-    date: 'Previous',
+    date: 'Older',
     highlight: 'Cinematic Netflix-style redesign, smarter Telegram toast, and buttery-smooth playback across every device.',
     items: [
       { icon: '🎬', badge: 'NEW', title: 'Cinematic Hero Banner', desc: 'Auto-rotating featured slides with Ken Burns zoom-pan, 7s timing, and slim progress bars.' },
@@ -49,16 +64,6 @@ const VERSION_GROUPS: VersionGroup[] = [
       { icon: '📺', badge: 'IMPROVED', title: 'Continue Watching', desc: 'Faster loading, deduplicated entries, and a tighter row layout for quicker resume.' },
       { icon: '🔥', badge: 'IMPROVED', title: 'Discovery Rows', desc: 'Recommended, Most Popular, Latest Series/Episodes/Movies, Coming Soon, and Recently Completed all refreshed.' },
       { icon: '💬', badge: 'NEW', title: 'Language-Aware Telegram Toast', desc: 'Toast text now adapts to your subtitle/audio language with browser fallback (8 languages).' },
-    ],
-  },
-  {
-    version: 'v20',
-    date: 'Older',
-    highlight: 'Smoother uploads, richer metadata, and a polished player experience.',
-    items: [
-      { icon: '📅', badge: 'IMPROVED', title: 'Upcoming Refresh', desc: 'Coming Soon panels surface richer anime details with improved mobile presentation.' },
-      { icon: '🎞️', badge: 'IMPROVED', title: 'Player Polish', desc: 'Smoother fullscreen shortcuts, color customization, and premium controls.' },
-      { icon: '📱', badge: 'FIX', title: 'Mobile Popup Fix', desc: "Opening What's New from the hamburger now closes the menu first so the popup is fully visible." },
     ],
   },
 ];
@@ -90,7 +95,7 @@ export function UpdatePopup() {
   const rafRef = useRef<number | null>(null);
   const touchStartX = useRef<number | null>(null);
 
-  const TOTAL_MB = 42;
+  const TOTAL_MB = 2.31;
 
   const isActive = activePopup === 'whatsNew';
 
@@ -344,8 +349,8 @@ export function UpdatePopup() {
             <div className="rounded-lg border border-white/5 bg-white/[0.03] px-2.5 py-2">
               <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Size</div>
               <div className="text-[13px] font-bold font-mono text-white tabular-nums leading-tight">
-                {downloadedMb.toFixed(1)}
-                <span className="text-[9px] text-zinc-500 ml-0.5">/{TOTAL_MB}MB</span>
+                {downloadedMb.toFixed(2)}
+                <span className="text-[9px] text-zinc-500 ml-0.5">/{TOTAL_MB.toFixed(2)}MB</span>
               </div>
             </div>
             <div className="rounded-lg border border-white/5 bg-white/[0.03] px-2.5 py-2">
