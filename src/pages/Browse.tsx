@@ -410,83 +410,69 @@ export default function Browse() {
         onClose={() => setNoEpisodesPopup({ isOpen: false, animeTitle: '' })}
         animeTitle={noEpisodesPopup.animeTitle}
       />
-      {/* Hero header */}
-      <div className="relative py-16 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
-        
-        <div className="container relative">
-          {/* Mode indicator */}
-          <div className="flex items-center gap-3 mb-4">
+
+      {/* Compact cinematic hero */}
+      <div className="relative overflow-hidden border-b border-border/40">
+        {/* Ambient gradient backdrop */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background" />
+        <div className="absolute -top-24 left-1/3 w-[420px] h-[420px] bg-primary/15 rounded-full blur-3xl opacity-60" />
+        <div className="absolute -bottom-24 right-1/4 w-72 h-72 bg-accent/10 rounded-full blur-3xl opacity-50" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--primary)/0.08),transparent_60%)]" />
+
+        <div className="container relative px-4 py-8 sm:py-12">
+          {/* Mode pill + clear */}
+          <div className="flex items-center gap-2 mb-3 sm:mb-4">
             <div className={cn(
-              "inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all",
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-semibold uppercase tracking-wider transition-all",
               isSearchMode 
-                ? "bg-primary/20 text-primary border border-primary/30" 
-                : "bg-muted text-muted-foreground"
+                ? "bg-primary/20 text-primary border border-primary/40 shadow-sm shadow-primary/20" 
+                : "bg-muted/60 text-muted-foreground border border-border/50"
             )}>
-              {isSearchMode ? (
-                <>
-                  <Search className="h-4 w-4" />
-                  Search Mode
-                </>
-              ) : (
-                <>
-                  <Filter className="h-4 w-4" />
-                  Browse Mode
-                </>
-              )}
+              {isSearchMode ? <Search className="h-3 w-3" /> : <Filter className="h-3 w-3" />}
+              {isSearchMode ? 'Searching' : 'Browse'}
             </div>
             {isSearchMode && (
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearSearch}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Exit Search
-                </Button>
-                <span className="text-xs text-muted-foreground hidden sm:inline">
-                  Press <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Esc</kbd> to exit
-                </span>
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearSearch}
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5 mr-1" />
+                Exit
+              </Button>
             )}
           </div>
-          
-          <h1 className="text-5xl md:text-6xl font-heading font-bold mb-4 animate-fade-in">
+
+          {/* Title */}
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-heading font-bold leading-tight animate-fade-in">
             {isSearchMode ? (
-              <>Search Results for "<span className="anime-gradient-text">{searchParams.get('q')}</span>"</>
+              <>Results for <span className="anime-gradient-text">"{searchParams.get('q')}"</span></>
             ) : (
-              <>Browse <span className="anime-gradient-text">Anime</span></>
+              <>Discover <span className="anime-gradient-text">Anime</span></>
             )}
           </h1>
-          <p className="text-muted-foreground text-lg max-w-xl animate-fade-in animation-delay-100">
+          <p className="text-muted-foreground text-sm sm:text-base mt-2 max-w-xl animate-fade-in animation-delay-100">
             {isSearchMode 
-              ? `Showing results matching your search`
-              : 'Discover your next favorite series from our extensive collection'
+              ? 'Refine with the filters below or pick a result.'
+              : 'Browse our entire catalog — filter by type, genre, status, and more.'
             }
           </p>
-        </div>
-      </div>
 
-      <div className="container pb-12">
-        {/* Search Bar - Always visible */}
-        <div className="mb-8">
-          <form onSubmit={handleSearch} className="flex gap-3 max-w-2xl animate-fade-in-up stagger-1">
+          {/* Hero search bar */}
+          <form onSubmit={handleSearch} className="mt-5 sm:mt-7 flex gap-2 max-w-2xl animate-fade-in-up">
             <div className="relative flex-1" ref={searchContainerRef}>
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground z-10 pointer-events-none" />
               <Input
                 ref={searchInputRef}
                 type="search"
-                placeholder={isSearchMode ? "Modify your search..." : "Search for anime..."}
+                placeholder={isSearchMode ? "Modify your search…" : "Search anime by title…"}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setShowSearchDropdown(true)}
                 className={cn(
-                  "pl-12 pr-10 h-14 bg-card/50 border-border/50 rounded-xl text-base focus:border-primary/50 focus:bg-card transition-all",
-                  isSearchMode && "border-primary/30 bg-primary/5"
+                  "pl-10 sm:pl-11 pr-10 h-11 sm:h-12 bg-card/70 backdrop-blur-md border-border/60 rounded-xl text-sm sm:text-base focus:border-primary/60 focus:bg-card focus-visible:ring-2 focus-visible:ring-primary/30 transition-all shadow-sm",
+                  isSearchMode && "border-primary/40 bg-primary/5"
                 )}
               />
               
@@ -498,36 +484,35 @@ export default function Browse() {
                     setSearchQuery('');
                     if (isSearchMode) clearSearch();
                   }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground z-10"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/70 z-10"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               )}
               
-              {/* Search Dropdown - Only in Browse Mode */}
+              {/* Search Dropdown */}
               {!isSearchMode && showSearchDropdown && showDropdownContent && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-xl overflow-hidden" style={{ zIndex: 99999, position: 'relative' }}>
-                  {/* Search Suggestions with Thumbnails */}
+                <div className="absolute top-full left-0 right-0 mt-2 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl overflow-hidden" style={{ zIndex: 99999 }}>
                   {showSuggestions && (
                     <div className="max-h-80 overflow-y-auto">
                       <div className="px-4 py-2 border-b border-border/50">
-                        <span className="text-xs font-medium text-muted-foreground">Suggestions</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Suggestions</span>
                       </div>
                       {searchSuggestions.map((suggestion) => (
                         <button
                           key={suggestion.id}
                           type="button"
                           onClick={() => handleSuggestionClick(suggestion)}
-                          className="flex items-center gap-3 w-full px-4 py-3 hover:bg-muted/50 transition-colors"
+                          className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-muted/60 transition-colors text-left"
                         >
-                          <div className="w-12 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                          <div className="w-10 h-14 rounded-md overflow-hidden bg-muted flex-shrink-0">
                             <img 
                               src={suggestion.cover_image || '/placeholder.svg'} 
                               alt={suggestion.title}
                               className="w-full h-full object-cover"
                             />
                           </div>
-                          <div className="flex-1 text-left">
+                          <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium line-clamp-1">{suggestion.title}</p>
                             <p className="text-xs text-muted-foreground capitalize">{suggestion.type || 'Anime'}</p>
                           </div>
@@ -536,32 +521,31 @@ export default function Browse() {
                     </div>
                   )}
                   
-                  {/* Search History - Only when input is empty */}
                   {showHistory && (
                     <>
                       <div className="flex items-center justify-between px-4 py-2 border-b border-border/50">
-                        <span className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                           <History className="h-3 w-3" />
-                          Recent Searches
+                          Recent
                         </span>
                         <button
                           type="button"
                           onClick={(e) => { e.preventDefault(); clearHistory(); }}
-                          className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                          className="text-[10px] font-medium text-muted-foreground hover:text-destructive transition-colors uppercase tracking-wider"
                         >
-                          Clear All
+                          Clear
                         </button>
                       </div>
                       <div className="max-h-48 overflow-y-auto">
                         {searchHistory.map((item, index) => (
                           <div
                             key={index}
-                            className="flex items-center justify-between px-4 py-2 hover:bg-muted/50 cursor-pointer group"
+                            className="flex items-center justify-between px-3 py-2 hover:bg-muted/60 cursor-pointer group"
                           >
                             <button
                               type="button"
                               onClick={() => handleHistoryItemClick(item.query)}
-                              className="flex items-center gap-3 flex-1 text-left"
+                              className="flex items-center gap-2.5 flex-1 text-left"
                             >
                               <Search className="h-3.5 w-3.5 text-muted-foreground" />
                               <span className="text-sm">{item.query}</span>
@@ -581,126 +565,139 @@ export default function Browse() {
                 </div>
               )}
             </div>
-            <Button type="submit" className="anime-button h-14 px-8 rounded-xl">
-              <Search className="h-5 w-5 mr-2" />
-              Search
+            <Button type="submit" className="anime-button h-11 sm:h-12 px-4 sm:px-7 rounded-xl shadow-md shadow-primary/20">
+              <Search className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
+              <span className="hidden sm:inline">Search</span>
             </Button>
           </form>
         </div>
+      </div>
 
-        {/* Browse Filters - Available in both modes for optional refinement */}
+      <div className="container px-4 pt-5 sm:pt-7 pb-12">
+        {/* Filters — chip rows in card */}
         <div className={cn(
-          "mb-10 space-y-6 transition-all",
-          isSearchMode && "opacity-70"
+          "rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm p-3 sm:p-5 mb-6 sm:mb-8 space-y-3 sm:space-y-4 transition-all",
+          isSearchMode && "opacity-95"
         )}>
-          {/* Section label for Search Mode */}
           {isSearchMode && (
-            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border/50">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Optional filters to refine search results</span>
+            <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+              <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Refine your results</span>
             </div>
           )}
 
-          {/* Type filter */}
-          <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-2">
-            <span className="text-sm text-muted-foreground font-medium">Type:</span>
-            {typeOptions.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => handleTypeFilter(option.value)}
-                className={cn("filter-btn flex items-center gap-2", typeFilter === option.value && "active")}
-              >
-                {option.value === 'movie' && <Film className="h-4 w-4" />}
-                {option.value === 'series' && <Tv className="h-4 w-4" />}
-                {option.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Sort options - Hide in Search Mode as search is keyword-based */}
-          {!isSearchMode && (
-            <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-3">
-              <span className="text-sm text-muted-foreground font-medium">Sort by:</span>
-              {sortOptions.map((option) => (
+          {/* Type */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold w-16 shrink-0">Type</span>
+            <div className="flex flex-wrap gap-1.5">
+              {typeOptions.map((option) => (
                 <button
                   key={option.value}
-                  onClick={() => setSortBy(option.value)}
-                  className={cn("filter-btn flex items-center gap-2", sortBy === option.value && "active")}
+                  onClick={() => handleTypeFilter(option.value)}
+                  className={cn("filter-btn flex items-center gap-1.5 text-xs", typeFilter === option.value && "active")}
                 >
-                  <option.icon className="h-4 w-4" />
+                  {option.value === 'movie' && <Film className="h-3.5 w-3.5" />}
+                  {option.value === 'series' && <Tv className="h-3.5 w-3.5" />}
                   {option.label}
                 </button>
               ))}
             </div>
-          )}
-
-          {/* Status filter */}
-          <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-4">
-            <span className="text-sm text-muted-foreground font-medium">Status:</span>
-            {statusOptions.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => handleStatusFilter(option.value)}
-                className={cn("filter-btn flex items-center gap-2", statusFilter === option.value && "active")}
-              >
-                <option.icon className="h-4 w-4" />
-                {option.label}
-              </button>
-            ))}
           </div>
 
-          {/* Episode filter - Only in Browse Mode */}
+          {/* Sort */}
           {!isSearchMode && (
-            <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-5">
-              <span className="text-sm text-muted-foreground font-medium">Episodes:</span>
-              {episodeOptions.map((option) => (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold w-16 shrink-0">Sort</span>
+              <div className="flex flex-wrap gap-1.5">
+                {sortOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setSortBy(option.value)}
+                    className={cn("filter-btn flex items-center gap-1.5 text-xs", sortBy === option.value && "active")}
+                  >
+                    <option.icon className="h-3.5 w-3.5" />
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Status */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold w-16 shrink-0">Status</span>
+            <div className="flex flex-wrap gap-1.5">
+              {statusOptions.map((option) => (
                 <button
                   key={option.value}
-                  onClick={() => handleEpisodeFilter(option.value)}
-                  className={cn("filter-btn flex items-center gap-2", episodeFilter === option.value && "active")}
+                  onClick={() => handleStatusFilter(option.value)}
+                  className={cn("filter-btn flex items-center gap-1.5 text-xs", statusFilter === option.value && "active")}
                 >
+                  <option.icon className="h-3.5 w-3.5" />
                   {option.label}
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Episodes */}
+          {!isSearchMode && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold w-16 shrink-0">Episodes</span>
+              <div className="flex flex-wrap gap-1.5">
+                {episodeOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => handleEpisodeFilter(option.value)}
+                    className={cn("filter-btn text-xs", episodeFilter === option.value && "active")}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
 
-          {/* Genre filters */}
-          <div className="flex flex-wrap items-center gap-3 animate-fade-in-up stagger-5">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
-              <Sparkles className="h-4 w-4" />
-              Genres:
+          {/* Genres */}
+          <div className="flex flex-wrap items-start gap-2 pt-3 border-t border-border/40">
+            <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold w-16 shrink-0 flex items-center gap-1 pt-1.5">
+              <Sparkles className="h-3 w-3" />
+              Genres
+            </span>
+            <div className="flex flex-wrap gap-1.5 flex-1">
+              {ALLOWED_GENRES.map((genre) => (
+                <button
+                  key={genre}
+                  onClick={() => handleGenreFilter(genre)}
+                  className={cn("filter-btn text-xs", selectedGenre === genre.toLowerCase() && "active")}
+                >
+                  {genre}
+                </button>
+              ))}
             </div>
-            {ALLOWED_GENRES.map((genre) => (
-              <button
-                key={genre}
-                onClick={() => handleGenreFilter(genre)}
-                className={cn("filter-btn", selectedGenre === genre.toLowerCase() && "active")}
-              >
-                {genre}
-              </button>
-            ))}
           </div>
         </div>
 
-        {/* Top 10 Most Popular Section - Only in Browse Mode, hidden when searching */}
+        {/* Top 10 Most Popular — Browse Mode only */}
         {!isSearchMode && !searchParams.get('genre') && sortBy === 'newest' && (
           <MostPopularSection />
         )}
 
-        {/* Results count */}
+        {/* Results header */}
         {!isLoading && (
-          <div className="mb-6 text-muted-foreground animate-fade-in">
-            {isSearchMode ? (
-              <>
-                Found <span className="text-foreground font-semibold">{animeList.length}</span> result{animeList.length !== 1 ? 's' : ''} for "<span className="text-primary font-medium">{searchParams.get('q')}</span>"
-              </>
-            ) : (
-              <>
-                Found <span className="text-foreground font-semibold">{animeList.length}</span> anime
-                {selectedGenre && <span> in <span className="text-primary font-medium capitalize">{selectedGenre}</span></span>}
-              </>
-            )}
+          <div className="flex items-center justify-between mb-4 sm:mb-6 animate-fade-in">
+            <div className="text-sm sm:text-base text-muted-foreground">
+              {isSearchMode ? (
+                <>
+                  <span className="text-foreground font-bold">{animeList.length}</span> result{animeList.length !== 1 ? 's' : ''} for <span className="text-primary font-semibold">"{searchParams.get('q')}"</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-foreground font-bold">{animeList.length}</span> anime
+                  {selectedGenre && <span> · <span className="text-primary font-semibold capitalize">{selectedGenre}</span></span>}
+                </>
+              )}
+            </div>
           </div>
         )}
 
