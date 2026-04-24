@@ -980,15 +980,25 @@ export default function Upload() {
         </TabsContent>
 
         {/* Add New Movie Tab - Only Movie, Thumbnail, Banner, Description */}
-        <TabsContent value="new-movie">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Film className="h-5 w-5" />
-                Add New Movie
+        <TabsContent value="new-movie" className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="h-7 w-1 rounded-full bg-gradient-to-b from-rose-400 to-pink-500" />
+            <div>
+              <h2 className="text-lg md:text-xl font-heading font-black">Add New Movie</h2>
+              <p className="text-[11px] text-muted-foreground">Single feature film — no seasons or episodes required</p>
+            </div>
+          </div>
+          <Card className="bg-card/60 backdrop-blur-sm border-border/40 rounded-2xl overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-rose-500 via-pink-500 to-violet-500" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center shadow-md">
+                  <Film className="h-4 w-4 text-white" />
+                </div>
+                Movie Details
               </CardTitle>
-              <CardDescription>
-                Upload a movie with cover image, banner and description (no episodes needed)
+              <CardDescription className="text-xs">
+                Cover, banner, video file and metadata for the standalone release.
               </CardDescription>
             </CardHeader>
             <CardContent>
