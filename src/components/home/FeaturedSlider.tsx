@@ -149,7 +149,7 @@ export function FeaturedSlider() {
           {featuredAnime.map((anime, idx) => (
             <div
               key={anime.id}
-              className={`absolute inset-0 transition-opacity duration-500 ease-out ${
+              className={`absolute inset-0 transition-opacity duration-1000 ease-out ${
                 idx === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
               }`}
             >
@@ -279,7 +279,7 @@ export function FeaturedSlider() {
         {featuredAnime.map((anime, idx) => (
           <div
             key={anime.id}
-            className={`absolute inset-0 transition-opacity duration-500 ease-out ${
+            className={`absolute inset-0 transition-opacity duration-1000 ease-out ${
               idx === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
             }`}
           >
