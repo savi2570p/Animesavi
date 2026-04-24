@@ -716,7 +716,10 @@ export function Header() {
           <VerifyTokenDialog open={verifyOpen} onOpenChange={setVerifyOpen} />
           
         </div>
+        </div>
       </div>
+      {/* Accent gradient underline */}
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
     </header>
   );
 }
