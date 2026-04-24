@@ -285,17 +285,26 @@ export default function Watch() {
     const isFileOnlyEpisode = hasDirectVideo;
 
     if (server === 'EMBED' && isFileOnlyEpisode) {
-      toast.error('Embed link is not available. Please use other servers.');
+      setServerBlockMessage('Embed link is not available. Please use other servers.');
       return;
     }
 
     if (server !== 'EMBED' && isEmbedOnlyEpisode) {
-      toast.error('The video file is not available. Please use "Embed" player for this episode.');
+      setServerBlockMessage('The video file is not available. Please use "Embed" player for this episode.');
       return;
     }
 
     handleServerSwitch(server);
   }, [handleServerSwitch, episode]);
+
+  // Show a one-time info message when entering an episode about Embed server status.
+  const entryMessageShownRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!episode) return;
+    if (entryMessageShownRef.current === episode.id) return;
+    entryMessageShownRef.current = episode.id;
+    toast.info('The [Embed] server is not working. It\u2019s under development. Please use other servers.');
+  }, [episode]);
 
   // Auto-assign EMBED server when the loaded episode only has an external embed link.
   // Runs once per episode so the user can still manually switch away afterward.
