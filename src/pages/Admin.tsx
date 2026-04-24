@@ -434,6 +434,10 @@ export default function Admin() {
           <TokenManager />
         </TabsContent>
 
+        <TabsContent value="embed">
+          <EmbedAllowlistManager />
+        </TabsContent>
+
         <TabsContent value="users">
           <UserManagement />
         </TabsContent>
