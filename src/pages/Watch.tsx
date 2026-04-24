@@ -273,10 +273,28 @@ export default function Watch() {
     setShowTelegramPopup(false);
   };
 
-  // Handle server change - delegates to useServerAutoSelect
+  // Handle server change - delegates to useServerAutoSelect.
+  // Enforce source-type compatibility:
+  //  - File-uploaded videos (video_url present) → only PLAY / SHORT / Zex / XPLUS allowed.
+  //  - Embed-link episodes (no video_url, external_url is embed) → only EMBED allowed.
   const handleServerChange = useCallback((server: ServerType) => {
+    const hasDirectVideo = !!episode?.video_url;
+    const externalIsEmbed = isEmbedLikeUrl(episode?.external_url);
+    const isEmbedOnlyEpisode = !hasDirectVideo && externalIsEmbed;
+    const isFileOnlyEpisode = hasDirectVideo;
+
+    if (server === 'EMBED' && isFileOnlyEpisode) {
+      toast.error('Embed link is not available. Please use other servers.');
+      return;
+    }
+
+    if (server !== 'EMBED' && isEmbedOnlyEpisode) {
+      toast.error('The video file is not available. Please use "Embed" player for this episode.');
+      return;
+    }
+
     handleServerSwitch(server);
-  }, [handleServerSwitch]);
+  }, [handleServerSwitch, episode]);
 
   // Auto-assign EMBED server when the loaded episode only has an external embed link.
   // Runs once per episode so the user can still manually switch away afterward.
