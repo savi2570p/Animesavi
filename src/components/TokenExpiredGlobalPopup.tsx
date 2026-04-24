@@ -1,9 +1,13 @@
 import { Crown, Sparkles, ExternalLink, X, Tv, Ban, Globe, Download, Zap, Lock } from 'lucide-react';
 import { usePopupQueue } from '@/contexts/PopupQueueContext';
+import { useCastDetection } from '@/hooks/useCastDetection';
 
 export function TokenExpiredGlobalPopup() {
   const { activePopup, dismissPopup } = usePopupQueue();
+  const isCasting = useCastDetection();
 
+  // Bypass popup entirely while casting / mirroring to a TV
+  if (isCasting) return null;
   if (activePopup !== 'expired') return null;
 
   const perks = [
