@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { preloadImages } from '@/lib/imageOptimization';
 import { BatchDownload } from '@/components/download/BatchDownload';
 import { AnimeReviews } from '@/components/anime/AnimeReviews';
+import { AnimeDetailLoader } from '@/components/anime/AnimeDetailLoader';
 import { ShareEmbedPopup } from '@/components/ShareEmbedPopup';
 import {
   Play,
