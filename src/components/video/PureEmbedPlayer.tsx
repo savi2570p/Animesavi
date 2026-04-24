@@ -67,6 +67,9 @@ export function PureEmbedPlayer({ url, title, onSwitchServer }: PureEmbedPlayerP
   const [reloadKey, setReloadKey] = useState(0);
   const [hasError, setHasError] = useState(false);
 
+  const allowed = useMemo(() => (cleanUrl ? isEmbedUrlAllowed(cleanUrl) : true), [cleanUrl]);
+  const blockedHost = useMemo(() => (cleanUrl ? getHostname(cleanUrl) : null), [cleanUrl]);
+
   if (!cleanUrl) {
     return (
       <div
@@ -76,6 +79,29 @@ export function PureEmbedPlayer({ url, title, onSwitchServer }: PureEmbedPlayerP
         <div className="text-center text-white/80 px-6">
           <AlertCircle className="h-8 w-8 mx-auto mb-3 text-amber-400" />
           <p className="text-sm font-semibold">No embed URL provided.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!allowed) {
+    return (
+      <div
+        className="relative w-full bg-black flex items-center justify-center"
+        style={{ aspectRatio: '16 / 9' }}
+      >
+        <div className="text-center text-white/80 px-6 max-w-md">
+          <ShieldAlert className="h-10 w-10 mx-auto mb-3 text-amber-400" />
+          <p className="text-white font-semibold mb-1">Embed host not on allowlist</p>
+          <p className="text-white/60 text-sm mb-4">
+            {blockedHost ? <><span className="font-mono">{blockedHost}</span> is not in the </> : 'This source is not in the '}
+            approved embed domains list. Ask an admin to add it, or switch to another server.
+          </p>
+          {onSwitchServer && (
+            <Button size="sm" onClick={onSwitchServer}>
+              Try Another Server
+            </Button>
+          )}
         </div>
       </div>
     );
