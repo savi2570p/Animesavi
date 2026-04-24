@@ -4,10 +4,95 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Clock, AlertCircle, Upload, Lock, Hourglass, Activity, FileVideo, ListChecks, Pencil } from 'lucide-react';
+import { Clock, AlertCircle, Upload, Lock, Hourglass, Activity, FileVideo, ListChecks, Pencil, CheckCircle2, Loader2, Timer } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
 import { SeeAllHeader } from '@/components/layout/SeeAllHeader';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
+/**
+ * Compute the upload status and an estimated time remaining for a pending anime
+ * based on how long ago it was added to the database.
+ *
+ * Heuristic timeline (rolling team SLA):
+ *  - 0–24h  → "Queued"      (target: episodes within 48h)
+ *  - 1–3d   → "Processing"  (encoding + multi-audio sync)
+ *  - 3–7d   → "Encoding"    (still in pipeline, longer titles)
+ *  - 7d+    → "Overdue"     (needs manual attention)
+ */
+type PendingStatus = {
+  key: 'queued' | 'processing' | 'encoding' | 'overdue';
+  label: string;
+  description: string;
+  remaining: string;
+  badgeClass: string;
+  ringClass: string;
+  textClass: string;
+  Icon: typeof Clock;
+};
+
+function formatRemaining(hours: number): string {
+  if (hours <= 0) return 'Any moment now';
+  if (hours < 1) return `${Math.max(1, Math.round(hours * 60))}m left`;
+  if (hours < 24) return `~${Math.round(hours)}h left`;
+  const days = Math.floor(hours / 24);
+  const rem = Math.round(hours % 24);
+  return rem > 0 ? `~${days}d ${rem}h left` : `~${days}d left`;
+}
+
+function getPendingStatus(createdAt: string): PendingStatus {
+  const ageHours = (Date.now() - new Date(createdAt).getTime()) / 3_600_000;
+  // Target SLA: 72h to first episode pack
+  const targetHours = 72;
+  const remainingHours = targetHours - ageHours;
+
+  if (ageHours < 24) {
+    return {
+      key: 'queued',
+      label: 'Queued',
+      description: 'In the upload queue. Team will pick this up within the next encoding window.',
+      remaining: formatRemaining(remainingHours),
+      badgeClass: 'bg-sky-500/90 text-white',
+      ringClass: 'ring-sky-500/30 group-hover:ring-sky-500/60 group-hover:shadow-sky-500/20',
+      textClass: 'group-hover:text-sky-400',
+      Icon: Clock,
+    };
+  }
+  if (ageHours < 72) {
+    return {
+      key: 'processing',
+      label: 'Processing',
+      description: 'Episodes are being prepared — multi-audio sync and subtitle timing in progress.',
+      remaining: formatRemaining(remainingHours),
+      badgeClass: 'bg-amber-500/90 text-white',
+      ringClass: 'ring-amber-500/30 group-hover:ring-amber-500/60 group-hover:shadow-amber-500/20',
+      textClass: 'group-hover:text-amber-400',
+      Icon: Loader2,
+    };
+  }
+  if (ageHours < 168) {
+    return {
+      key: 'encoding',
+      label: 'Encoding',
+      description: 'Adaptive HLS conversion (480p → 4K) underway. Larger seasons take longer.',
+      remaining: formatRemaining(168 - ageHours),
+      badgeClass: 'bg-violet-500/90 text-white',
+      ringClass: 'ring-violet-500/30 group-hover:ring-violet-500/60 group-hover:shadow-violet-500/20',
+      textClass: 'group-hover:text-violet-400',
+      Icon: FileVideo,
+    };
+  }
+  return {
+    key: 'overdue',
+    label: 'Overdue',
+    description: 'Past expected delivery window. Flagged for the team to review and prioritise.',
+    remaining: 'Needs review',
+    badgeClass: 'bg-red-500/95 text-white',
+    ringClass: 'ring-red-500/40 group-hover:ring-red-500/70 group-hover:shadow-red-500/25',
+    textClass: 'group-hover:text-red-400',
+    Icon: AlertCircle,
+  };
+}
 
 interface NoEpisodesPopupProps {
   isOpen: boolean;
