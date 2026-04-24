@@ -1,5 +1,9 @@
-import { useState } from 'react';
-import { Flag, Send, X, Sparkles, Bug, PlayCircle, Volume2, Palette, Zap, Lightbulb, Lock, Server, Download, Bell, FileWarning, MoreHorizontal } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Flag, Send, X, Sparkles, Bug, PlayCircle, Volume2, Palette, Zap, Lightbulb,
+  Lock, Server, Download, Bell, FileWarning, MoreHorizontal,
+  ImagePlus, Trash2, Paperclip,
+} from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -31,6 +35,9 @@ export function ReportButton() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [category, setCategory] = useState('');
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Hide on embed routes
   const isEmbed = typeof window !== 'undefined' && (
@@ -38,9 +45,58 @@ export function ReportButton() {
     new URLSearchParams(window.location.search).get('embed') === 'true'
   );
 
+  // Generate / cleanup preview URL
+  useEffect(() => {
+    if (!screenshot) {
+      setScreenshotPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(screenshot);
+    setScreenshotPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [screenshot]);
+
+  // Allow pasting an image directly into the dialog
+  useEffect(() => {
+    if (!open) return;
+    const onPaste = (e: ClipboardEvent) => {
+      const item = Array.from(e.clipboardData?.items ?? []).find((i) => i.type.startsWith('image/'));
+      if (!item) return;
+      const file = item.getAsFile();
+      if (file) {
+        handlePickFile(file);
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  }, [open]);
+
   if (isEmbed) return null;
 
-  const handleSend = () => {
+  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+  const handlePickFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please choose an image file');
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      toast.error('Image is too large. Max 5MB.');
+      return;
+    }
+    setScreenshot(file);
+  };
+
+  const onFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handlePickFile(file);
+    e.target.value = '';
+  };
+
+  const removeScreenshot = () => setScreenshot(null);
+
+  const handleSend = async () => {
     if (!category) {
       toast.error('Please select a category');
       return;
@@ -68,13 +124,36 @@ export function ReportButton() {
       return 'Other';
     })();
 
-    const text = `🚨 Report from AnimeSavi\n\n📂 Category: ${category}\n📄 Page: ${window.location.pathname}\n📱 Device: ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}\n🖥️ OS: ${osInfo}\n🌐 Browser: ${browserInfo}\n📐 Screen: ${window.innerWidth}x${window.innerHeight}\n🕐 Time: ${new Date().toLocaleString('en-IN')}\n\n💬 Details:\n${message.trim()}`;
-    const url = `https://t.me/Lv_Savi?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    const screenshotLine = screenshot
+      ? `\n📎 Screenshot: attached (${(screenshot.size / 1024).toFixed(0)} KB)`
+      : '';
 
-    toast.success('Opening Telegram to send your report');
+    const text = `🚨 Report from AnimeSavi\n\n📂 Category: ${category}\n📄 Page: ${window.location.pathname}\n📱 Device: ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}\n🖥️ OS: ${osInfo}\n🌐 Browser: ${browserInfo}\n📐 Screen: ${window.innerWidth}x${window.innerHeight}\n🕐 Time: ${new Date().toLocaleString('en-IN')}${screenshotLine}\n\n💬 Details:\n${message.trim()}`;
+
+    // Auto-download the screenshot so the user can attach it in Telegram in one tap.
+    if (screenshot) {
+      const ext = screenshot.name.split('.').pop()?.toLowerCase() || 'png';
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `animesavi-report-${stamp}.${ext}`;
+      const url = URL.createObjectURL(screenshot);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      toast.success('Screenshot saved — attach it in Telegram');
+    } else {
+      toast.success('Opening Telegram to send your report');
+    }
+
+    const tgUrl = `https://t.me/Lv_Savi?text=${encodeURIComponent(text)}`;
+    window.open(tgUrl, '_blank', 'noopener,noreferrer');
+
     setMessage('');
     setCategory('');
+    setScreenshot(null);
     setOpen(false);
   };
 
@@ -199,12 +278,73 @@ export function ReportButton() {
               </div>
             </div>
 
+            {/* Optional screenshot */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Screenshot <span className="text-muted-foreground/60 normal-case font-normal">(optional)</span>
+                </label>
+                {screenshot && (
+                  <span className="text-[10px] font-medium text-primary truncate max-w-[55%]">
+                    {(screenshot.size / 1024).toFixed(0)} KB
+                  </span>
+                )}
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={onFileInputChange}
+                className="hidden"
+              />
+
+              {!screenshotPreview ? (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-3 rounded-lg border border-dashed border-border/60 bg-muted/30 hover:bg-muted/60 hover:border-destructive/50 text-muted-foreground hover:text-foreground transition-all"
+                >
+                  <ImagePlus className="h-4 w-4" />
+                  <span className="text-[11.5px] font-medium">
+                    Click to upload <span className="text-muted-foreground/70">or paste an image</span>
+                  </span>
+                </button>
+              ) : (
+                <div className="relative group/img rounded-lg overflow-hidden border border-border/60 bg-black/40">
+                  <img
+                    src={screenshotPreview}
+                    alt="Report screenshot preview"
+                    className="w-full max-h-48 object-contain"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 px-2.5 py-1.5 bg-gradient-to-t from-black/80 to-transparent">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-[10.5px] font-medium text-white/90 hover:text-white inline-flex items-center gap-1"
+                    >
+                      <ImagePlus className="h-3 w-3" />
+                      Replace
+                    </button>
+                    <button
+                      type="button"
+                      onClick={removeScreenshot}
+                      className="text-[10.5px] font-medium text-destructive-foreground bg-destructive/80 hover:bg-destructive px-2 py-0.5 rounded-md inline-flex items-center gap-1"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Info chip */}
             <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-muted/40 border border-border/40">
-              <Send className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
+              <Paperclip className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
               <p className="text-[10.5px] leading-relaxed text-muted-foreground">
-                Your report will open in <span className="font-semibold text-foreground">Telegram</span>{' '}
-                pre-filled with the current page, device, OS &amp; browser info.
+                Your report opens in <span className="font-semibold text-foreground">Telegram</span> with page, device, OS &amp; browser info.
+                {' '}If you attach a screenshot, we'll save it to your device so you can drop it into Telegram in one tap.
               </p>
             </div>
           </div>
