@@ -7,7 +7,7 @@ import {
   LogOut, Search, Pause, Maximize, Minimize, SkipForward, SkipBack,
   Settings, ChevronDown, ChevronLeft, TrendingUp, Eye, Share2, Copy, Check,
   Palette, Monitor, List, Clock, Star, GripVertical, ChevronRight, Radio,
-  Code, Code2, ExternalLink
+  Code, Code2, ExternalLink, ShieldCheck, Eye as EyeIcon, EyeOff, KeyRound, Sparkles, AlertTriangle, Send
 } from 'lucide-react';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import { Button } from '@/components/ui/button';
