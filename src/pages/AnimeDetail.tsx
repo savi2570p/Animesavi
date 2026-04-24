@@ -584,7 +584,7 @@ export default function AnimeDetail() {
           </div>
 
           {/* Info */}
-          <div className="flex-1 space-y-4 md:space-y-5 animate-fade-in-up">
+          <div className="flex-1 space-y-4 md:space-y-5 detail-stagger">
             {/* Status pill row */}
             <div className="flex items-center gap-2 flex-wrap">
               <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 backdrop-blur-md px-2.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-[0.18em] text-primary shadow-lg shadow-primary/10">
