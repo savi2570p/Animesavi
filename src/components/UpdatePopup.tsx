@@ -20,12 +20,27 @@ interface VersionGroup {
   items: ChangelogItem[];
 }
 
-const APP_VERSION = 'v21';
+const APP_VERSION = 'v22';
 
 const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'v21',
+    version: 'v22',
     date: 'Latest',
+    highlight: 'Cinematic detail pages, smoother season switching, and a 3-second auto-loop hero with direction-aware transitions.',
+    items: [
+      { icon: '🎬', badge: 'IMPROVED', title: 'Hero Banner Auto-Loop', desc: 'New 3-second loop with cinematic blur, scale, and direction-aware slide animations on every change.' },
+      { icon: '✨', badge: 'NEW', title: 'Redesigned More Info Page', desc: 'Glow-haloed poster, gradient title, glassy meta chips, and a refined CTA row with primary glow shadow.' },
+      { icon: '💀', badge: 'NEW', title: 'Realistic Skeleton Loaders', desc: 'Detail page skeletons now mirror the actual layout — hero, poster, chips, description, buttons, and episode grid.' },
+      { icon: '🌊', badge: 'IMPROVED', title: 'Smooth Section Stagger', desc: 'Each "More Info" section fades and slides in sequentially for a buttery, premium feel.' },
+      { icon: '📺', badge: 'NEW', title: 'Season Switch Skeletons', desc: 'Switching seasons now shows a staggered episode skeleton grid before fading in the new episodes.' },
+      { icon: '🎯', badge: 'IMPROVED', title: 'Crossfade Transitions', desc: 'Skeleton-to-content swap uses a 500ms crossfade so the page never flashes empty.' },
+      { icon: '⏯️', badge: 'FIX', title: 'Player Pause Cleanup', desc: 'Pausing no longer shows a redundant center play icon. Finished episodes now show a "Rewatch" control.' },
+      { icon: '📰', badge: 'IMPROVED', title: 'What\'s New Popup', desc: 'Tighter glass card with pulsing live indicator, dot-based version pager, and color-coded change tags.' },
+    ],
+  },
+  {
+    version: 'v21',
+    date: 'Previous',
     highlight: 'Cinematic Netflix-style redesign, smarter Telegram toast, and buttery-smooth playback across every device.',
     items: [
       { icon: '🎬', badge: 'NEW', title: 'Cinematic Hero Banner', desc: 'Auto-rotating featured slides with Ken Burns zoom-pan, 7s timing, and slim progress bars.' },
@@ -33,16 +48,12 @@ const VERSION_GROUPS: VersionGroup[] = [
       { icon: '🌟', badge: 'NEW', title: 'Featured Anime Refresh', desc: 'Witch Hat Atelier and Grand Blue Dreaming now headline the hero rotation with curated view counts.' },
       { icon: '📺', badge: 'IMPROVED', title: 'Continue Watching', desc: 'Faster loading, deduplicated entries, and a tighter row layout for quicker resume.' },
       { icon: '🔥', badge: 'IMPROVED', title: 'Discovery Rows', desc: 'Recommended, Most Popular, Latest Series/Episodes/Movies, Coming Soon, and Recently Completed all refreshed.' },
-      { icon: '📅', badge: 'IMPROVED', title: 'Release Calendar', desc: 'Cleaner row layout with fixed date column for at-a-glance weekly browsing.' },
       { icon: '💬', badge: 'NEW', title: 'Language-Aware Telegram Toast', desc: 'Toast text now adapts to your subtitle/audio language with browser fallback (8 languages).' },
-      { icon: '📱', badge: 'FIX', title: 'Safe-Area Toast Offsets', desc: 'Telegram toast respects iOS notches and Android nav bars — never overlaps player controls.' },
-      { icon: '🛡️', badge: 'FIX', title: 'Playback Safeguard', desc: 'Telegram toast can no longer pause or block video playback when shown or dismissed.' },
-      { icon: '⚡', badge: 'IMPROVED', title: 'Smoother Everywhere', desc: 'Tuned animations, lazy loading, and scroll performance for desktop, iOS, and Android.' },
     ],
   },
   {
     version: 'v20',
-    date: 'Previous',
+    date: 'Older',
     highlight: 'Smoother uploads, richer metadata, and a polished player experience.',
     items: [
       { icon: '📅', badge: 'IMPROVED', title: 'Upcoming Refresh', desc: 'Coming Soon panels surface richer anime details with improved mobile presentation.' },
