@@ -1263,9 +1263,11 @@ export default function Watch() {
               );
             })()}
           </div>
+            </div>
+          </div>
 
           {/* Comments */}
-          <div className="space-y-6">
+          <div className="space-y-6 mt-6 md:mt-8">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-4">
                 <h2 className="text-xl font-heading font-bold flex items-center gap-2">
