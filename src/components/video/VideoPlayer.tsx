@@ -293,6 +293,8 @@ export function VideoPlayer({
   // Settings menu state
   const [settingsMenu, setSettingsMenu] = useState<SettingsMenu>('main');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Player theme — session only (no persistence)
+  const [playerTheme, setPlayerTheme] = useState<PlayerThemeKey>('classic');
   
   // Keyboard shortcuts info state
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
