@@ -203,135 +203,293 @@ export default function Welcome() {
 
   return (
     <div className="relative min-h-screen overflow-x-hidden overflow-y-visible bg-background">
-      {/* Hero background */}
-      <div className="absolute inset-0 overflow-hidden">
-        {heroAnime?.cover_image && (
-          <div className="absolute inset-0 transition-opacity duration-1000">
-            <img src={heroAnime.cover_image} alt="" className="w-full h-[70vh] object-cover object-top" loading="eager" />
-            <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
-            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
+      {/* Cinematic Hero Background — full bleed with parallax-like layering */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {heroAnime?.cover_image ? (
+          <div className="absolute inset-0 transition-opacity duration-[1200ms]">
+            <img
+              src={heroAnime.cover_image}
+              alt=""
+              className="w-full h-[85vh] object-cover object-top scale-110 transition-transform duration-[8000ms] ease-out"
+              loading="eager"
+            />
+            {/* Triple-layer cinematic gradient */}
+            <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/75 to-background" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/50 to-background/20" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,hsl(var(--background)/0.85)_85%)]" />
+            {/* Film grain overlay */}
+            <div
+              className="absolute inset-0 opacity-[0.04] mix-blend-overlay"
+              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")' }}
+            />
           </div>
-        )}
-        {!heroAnime?.cover_image && (
+        ) : (
           <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full" style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.08) 0%, transparent 70%)' }} />
         )}
+        {/* Decorative floating glow blobs */}
+        <div className="absolute top-1/3 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl animate-pulse" style={{ animationDuration: '6s' }} />
+        <div className="absolute top-1/4 -right-32 w-[28rem] h-[28rem] rounded-full bg-fuchsia-500/8 blur-3xl animate-pulse" style={{ animationDuration: '8s', animationDelay: '1s' }} />
       </div>
 
-      {/* Top bar */}
-      <div className="relative z-10 flex items-center justify-between px-4 sm:px-8 py-4">
-        <div className="flex items-center gap-2">
-          <img src={logo} alt="AnimeSavi" className="h-9 w-9 rounded-lg object-contain" />
-          <span className="text-lg font-bold">
-            <span className="text-primary">Anime</span>
-            <span className="text-foreground">Savi</span>
-          </span>
+      {/* Top bar — glass nav strip */}
+      <div className="relative z-10 flex items-center justify-between px-4 sm:px-8 py-4 backdrop-blur-md bg-background/30 border-b border-border/20">
+        <div className="flex items-center gap-2.5">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-xl bg-primary/40 blur-lg" />
+            <img src={logo} alt="AnimeSavi" className="relative h-9 w-9 rounded-xl object-contain" />
+          </div>
+          <div className="flex flex-col leading-none">
+            <span className="text-base sm:text-lg font-bold">
+              <span className="text-primary">Anime</span>
+              <span className="text-foreground">Savi</span>
+            </span>
+            <span className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70 font-semibold mt-0.5">Hindi · Free · 4K</span>
+          </div>
         </div>
-        <button onClick={() => navigate('/')} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-foreground/80 hover:text-foreground transition-all duration-200 hover:scale-105 bg-accent border border-border">
-          <Home className="w-4 h-4" />
+        <button onClick={() => navigate('/')} className="group flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-foreground/80 hover:text-foreground transition-all duration-200 hover:scale-105 bg-card/60 backdrop-blur-sm border border-border/40 hover:border-primary/40">
+          <Home className="w-4 h-4 transition-transform group-hover:-rotate-12" />
           <span className="hidden sm:inline">Home</span>
         </button>
       </div>
 
       {/* Main content */}
       <div className="relative z-10 flex flex-col items-center px-4 sm:px-8 pb-16">
-        {/* Hero section */}
-        <div className="w-full max-w-3xl mx-auto flex flex-col items-center gap-6 mt-6 sm:mt-12">
-          <div className="flex flex-col items-center gap-3 animate-fade-in">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden flex items-center justify-center" style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.2), hsl(var(--accent)))', boxShadow: '0 0 40px hsl(var(--primary) / 0.2)' }}>
-              <img src={logo} alt="AnimeSavi" className="w-10 h-10 sm:w-14 sm:h-14 object-contain" />
+        {/* HERO SECTION — Cinematic identity */}
+        <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-7 mt-8 sm:mt-16">
+          {/* Live Status Pill */}
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/50 backdrop-blur-md border border-emerald-500/30 animate-fade-in">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-75" />
+              <span className="relative rounded-full h-2 w-2 bg-emerald-400" />
+            </span>
+            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-emerald-300">Streaming Live · 4 Servers Active</span>
+          </div>
+
+          {/* Logo + Title block */}
+          <div className="flex flex-col items-center gap-4 animate-fade-in" style={{ animationDelay: '50ms' }}>
+            <div className="relative">
+              {/* Animated pulse rings */}
+              <span className="absolute inset-0 rounded-3xl border-2 border-primary/30 animate-ping" style={{ animationDuration: '3s' }} />
+              <span className="absolute inset-1 rounded-2xl border border-primary/20 animate-pulse" />
+              <div
+                className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl overflow-hidden flex items-center justify-center"
+                style={{
+                  background: 'linear-gradient(135deg, hsl(var(--primary) / 0.3), hsl(var(--accent)))',
+                  boxShadow: '0 0 60px hsl(var(--primary) / 0.35), inset 0 1px 0 hsl(0 0% 100% / 0.1)',
+                }}
+              >
+                <img src={logo} alt="AnimeSavi" className="w-12 h-12 sm:w-14 sm:h-14 object-contain drop-shadow-2xl" />
+              </div>
             </div>
-            <div className="text-center">
-              <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight">
-                <span className="text-primary">Anime</span>
+
+            <div className="text-center space-y-3">
+              <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight leading-[0.95]">
+                <span className="bg-gradient-to-r from-primary via-rose-400 to-primary bg-clip-text text-transparent" style={{ filter: 'drop-shadow(0 4px 20px hsl(var(--primary) / 0.3))' }}>Anime</span>
                 <span className="text-foreground">Savi</span>
               </h1>
-              <p className="mt-3 text-muted-foreground text-sm sm:text-lg max-w-lg mx-auto leading-relaxed">
-                India's #1 ad-free anime streaming platform. Watch Hindi dubbed anime for free — anytime, anywhere.
+              <p className="text-base sm:text-xl text-foreground/80 max-w-xl mx-auto leading-relaxed font-medium">
+                Where every frame tells a story.
+                <span className="block text-sm sm:text-base text-muted-foreground mt-1.5 font-normal">
+                  Hand-curated anime in crisp 4K, dubbed in your language — built by fans, made for the late-night binge.
+                </span>
               </p>
+            </div>
+
+            {/* Trust badges row */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
+              {[
+                { icon: Shield, label: 'Zero Ads' },
+                { icon: Globe, label: 'Hindi Dub' },
+                { icon: Zap, label: '< 1.2s Start' },
+                { icon: Lock, label: 'Private' },
+              ].map((b) => (
+                <span key={b.label} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-card/40 backdrop-blur-sm border border-border/30 text-[10px] sm:text-xs font-semibold text-foreground/70">
+                  <b.icon className="w-3 h-3 text-primary" />
+                  {b.label}
+                </span>
+              ))}
             </div>
           </div>
 
-          {/* Search bar */}
-          <form onSubmit={handleSearch} className="w-full max-w-xl animate-fade-in" style={{ animationDelay: '100ms' }}>
-            <div className="relative group transition-all duration-300" style={{ boxShadow: isFocused ? '0 8px 40px hsl(var(--primary) / 0.25), 0 0 0 2px hsl(var(--primary) / 0.4)' : '0 4px 30px hsl(0 0% 0% / 0.4)', borderRadius: '1rem' }}>
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors duration-200" style={{ color: isFocused ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
-              <input ref={inputRef} type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)} placeholder="Search anime, movies, series..." className="w-full pl-12 pr-4 py-4 sm:py-5 rounded-2xl text-base sm:text-lg bg-card/90 backdrop-blur-sm text-foreground placeholder:text-muted-foreground border border-border/50 focus:outline-none transition-all duration-200" />
-              {searchQuery && (
-                <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 px-4 py-2 rounded-xl text-sm font-semibold text-primary-foreground bg-primary transition-all duration-200 hover:scale-105">Search</button>
-              )}
+          {/* Premium Search bar */}
+          <form onSubmit={handleSearch} className="w-full max-w-2xl animate-fade-in" style={{ animationDelay: '150ms' }}>
+            <div
+              className="relative group transition-all duration-300"
+              style={{
+                boxShadow: isFocused
+                  ? '0 12px 50px hsl(var(--primary) / 0.3), 0 0 0 2px hsl(var(--primary) / 0.5)'
+                  : '0 8px 40px hsl(0 0% 0% / 0.4)',
+                borderRadius: '1.25rem',
+              }}
+            >
+              {/* Animated gradient ring on focus */}
+              <div
+                className="absolute -inset-px rounded-[1.25rem] opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"
+                style={{
+                  background: 'linear-gradient(120deg, hsl(var(--primary) / 0.6), transparent, hsl(var(--primary) / 0.6))',
+                  padding: '1px',
+                }}
+              />
+              <div className="relative flex items-center bg-card/95 backdrop-blur-xl rounded-[1.2rem] border border-border/40">
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors duration-200" style={{ color: isFocused ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  placeholder="Search anime, movies, characters…"
+                  className="w-full pl-14 pr-4 py-4 sm:py-5 rounded-[1.2rem] text-base sm:text-lg bg-transparent text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+                />
+                {searchQuery ? (
+                  <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 sm:py-2.5 rounded-xl text-sm font-semibold text-primary-foreground bg-primary transition-all duration-200 hover:scale-105 shadow-lg shadow-primary/30">
+                    Search
+                  </button>
+                ) : (
+                  <kbd className="absolute right-4 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold text-muted-foreground bg-card border border-border/50">
+                    <span>⌘</span>K
+                  </kbd>
+                )}
+              </div>
+            </div>
+
+            {/* Trending search hints */}
+            <div className="flex flex-wrap items-center justify-center gap-1.5 mt-3">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold mr-1">Trending:</span>
+              {['Solo Leveling', 'Demon Slayer', 'Jujutsu Kaisen', 'One Piece'].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => navigate(`/browse?q=${encodeURIComponent(t)}`)}
+                  className="text-[10px] sm:text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-2 py-0.5 rounded-md hover:bg-card/50"
+                >
+                  {t}
+                </button>
+              ))}
             </div>
           </form>
 
-          {/* Quick links */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 animate-fade-in" style={{ animationDelay: '200ms' }}>
+          {/* Quick links — pill-style nav */}
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 animate-fade-in" style={{ animationDelay: '250ms' }}>
             {quickLinks.map((link) => (
-              <button key={link.label} onClick={() => navigate(link.path)} className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 hover:scale-105 bg-card/60 backdrop-blur-sm text-foreground/80 border border-border/40 hover:border-primary/40 hover:bg-card">
-                <link.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+              <button
+                key={link.label}
+                onClick={() => navigate(link.path)}
+                className="group flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 hover:scale-105 bg-card/60 backdrop-blur-md text-foreground/80 border border-border/40 hover:border-primary/50 hover:bg-card hover:text-foreground"
+              >
+                <link.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary transition-transform group-hover:scale-110" />
                 {link.label}
               </button>
             ))}
           </div>
 
-          {/* Featured anime carousel */}
+          {/* Featured anime carousel — refined cinematic shelf */}
           {featuredAnime.length > 0 && (
-            <div className="w-full max-w-2xl mt-4 animate-fade-in" style={{ animationDelay: '300ms' }}>
+            <div className="w-full max-w-3xl mt-4 animate-fade-in" style={{ animationDelay: '350ms' }}>
+              <div className="flex items-center justify-between mb-3 px-1">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-1 rounded-full bg-primary" />
+                  <span className="text-[10px] sm:text-xs uppercase tracking-widest font-bold text-foreground">Featured Right Now</span>
+                </div>
+                <button onClick={() => navigate('/browse?sort=popular')} className="text-[10px] sm:text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                  View all <ChevronRight className="w-3 h-3" />
+                </button>
+              </div>
               <div className="flex items-end justify-center gap-2 sm:gap-3">
                 {featuredAnime.slice(0, 7).map((anime, i) => {
                   const isActive = i === activeIndex;
                   return (
-                    <button key={anime.id} onClick={() => navigate(`/anime/${anime.id}`)} className="relative flex-shrink-0 rounded-xl overflow-hidden transition-all duration-500 cursor-pointer" style={{ width: isActive ? '120px' : '55px', height: isActive ? '170px' : '80px', opacity: isActive ? 1 : 0.4, transform: isActive ? 'scale(1)' : 'scale(0.95)', border: isActive ? '2px solid hsl(var(--primary) / 0.7)' : '1px solid hsl(var(--border) / 0.2)' }}>
-                      {anime.cover_image ? <img src={anime.cover_image} alt={anime.title} className="w-full h-full object-cover" loading="lazy" /> : <div className="w-full h-full bg-accent" />}
+                    <button
+                      key={anime.id}
+                      onClick={() => navigate(`/anime/${anime.id}`)}
+                      className="relative flex-shrink-0 rounded-xl overflow-hidden transition-all duration-500 cursor-pointer group/card"
+                      style={{
+                        width: isActive ? '130px' : '60px',
+                        height: isActive ? '185px' : '88px',
+                        opacity: isActive ? 1 : 0.45,
+                        transform: isActive ? 'scale(1) translateY(-4px)' : 'scale(0.95)',
+                        boxShadow: isActive ? '0 12px 40px hsl(var(--primary) / 0.35), 0 0 0 2px hsl(var(--primary) / 0.6)' : '0 2px 10px hsl(0 0% 0% / 0.3)',
+                      }}
+                    >
+                      {anime.cover_image ? (
+                        <img src={anime.cover_image} alt={anime.title} className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110" loading="lazy" />
+                      ) : (
+                        <div className="w-full h-full bg-accent" />
+                      )}
                       {isActive && (
-                        <div className="absolute inset-x-0 bottom-0 p-2" style={{ background: 'linear-gradient(to top, hsl(0 0% 0% / 0.9), transparent)' }}>
-                          <p className="text-[10px] sm:text-xs text-foreground font-semibold truncate text-center">{anime.title}</p>
-                        </div>
+                        <>
+                          <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-primary/90 backdrop-blur-sm">
+                            <span className="text-[8px] font-bold uppercase tracking-wider text-primary-foreground">#{i + 1}</span>
+                          </div>
+                          <div className="absolute inset-x-0 bottom-0 p-2" style={{ background: 'linear-gradient(to top, hsl(0 0% 0% / 0.95), transparent)' }}>
+                            <p className="text-[10px] sm:text-xs text-foreground font-bold truncate text-center">{anime.title}</p>
+                          </div>
+                        </>
                       )}
                     </button>
                   );
                 })}
               </div>
-              <div className="flex items-center justify-center gap-1.5 mt-3">
+              {/* Slim progress-bar style pagination */}
+              <div className="flex items-center justify-center gap-1 mt-4">
                 {featuredAnime.slice(0, 7).map((_, i) => (
-                  <button key={i} onClick={() => setActiveIndex(i)} className="transition-all duration-300 rounded-full" style={{ width: i === activeIndex ? '20px' : '6px', height: '6px', background: i === activeIndex ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground) / 0.3)' }} />
+                  <button
+                    key={i}
+                    onClick={() => setActiveIndex(i)}
+                    className="transition-all duration-500 rounded-full overflow-hidden"
+                    style={{
+                      width: i === activeIndex ? '28px' : '8px',
+                      height: '3px',
+                      background: i === activeIndex ? 'transparent' : 'hsl(var(--muted-foreground) / 0.25)',
+                    }}
+                  >
+                    {i === activeIndex && (
+                      <div className="h-full w-full bg-primary" style={{ animation: 'shrink 4s linear' }} />
+                    )}
+                  </button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* CTA Buttons */}
-          <div className="flex items-center gap-3 animate-fade-in" style={{ animationDelay: '400ms' }}>
-            <button onClick={() => startWatching('/')} className="flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-2xl text-sm sm:text-base font-bold transition-all duration-200 hover:scale-105 bg-primary text-primary-foreground" style={{ boxShadow: '0 4px 24px hsl(var(--primary) / 0.4)' }}>
-              <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
-              Start Watching
+          {/* CTA Buttons — premium */}
+          <div className="flex items-center gap-3 animate-fade-in mt-2" style={{ animationDelay: '450ms' }}>
+            <button
+              onClick={() => startWatching('/')}
+              className="group relative flex items-center gap-2.5 px-7 sm:px-9 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-bold transition-all duration-300 hover:scale-105 bg-primary text-primary-foreground overflow-hidden"
+              style={{ boxShadow: '0 8px 32px hsl(var(--primary) / 0.45), inset 0 1px 0 hsl(0 0% 100% / 0.2)' }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+              <Play className="relative w-4 h-4 sm:w-5 sm:h-5 fill-current" />
+              <span className="relative">Start Watching</span>
             </button>
-            <button onClick={() => navigate('/browse')} className="flex items-center gap-2 px-5 sm:px-6 py-3 sm:py-3.5 rounded-2xl text-sm sm:text-base font-semibold transition-all duration-200 hover:scale-105 bg-card/60 backdrop-blur-sm text-foreground border border-border/50 hover:border-primary/40">
+            <button onClick={() => navigate('/browse')} className="group flex items-center gap-2 px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-semibold transition-all duration-200 hover:scale-105 bg-card/60 backdrop-blur-md text-foreground border border-border/40 hover:border-primary/40">
               Browse All
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </button>
           </div>
         </div>
 
-        {/* Live Stats Bar */}
-        <div className="w-full max-w-3xl mx-auto mt-16 animate-fade-in" style={{ animationDelay: '500ms' }}>
-          <div className="flex items-center justify-around py-5 px-4 rounded-2xl bg-card/40 backdrop-blur-sm border border-border/30">
-            <div className="text-center">
-              <p className="text-2xl sm:text-4xl font-extrabold text-primary">{totalAnime || '100'}+</p>
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 font-medium">Anime Titles</p>
-            </div>
-            <div className="w-px h-10 bg-border/30" />
-            <div className="text-center">
-              <p className="text-2xl sm:text-4xl font-extrabold text-primary">{totalEpisodes || '500'}+</p>
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 font-medium">Episodes</p>
-            </div>
-            <div className="w-px h-10 bg-border/30" />
-            <div className="text-center">
-              <p className="text-2xl sm:text-4xl font-extrabold text-primary">24/7</p>
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 font-medium">Free Streaming</p>
-            </div>
-            <div className="w-px h-10 bg-border/30 hidden sm:block" />
-            <div className="text-center hidden sm:block">
-              <p className="text-2xl sm:text-4xl font-extrabold text-primary">0</p>
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 font-medium">Ads Ever</p>
+        {/* Live Stats Bar — cinematic upgrade */}
+        <div className="w-full max-w-4xl mx-auto mt-16 animate-fade-in" style={{ animationDelay: '550ms' }}>
+          <div className="relative overflow-hidden rounded-2xl bg-card/50 backdrop-blur-xl border border-border/40">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-fuchsia-500/5 pointer-events-none" />
+            <div className="relative grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/20">
+              {[
+                { value: totalAnime || 100, suffix: '+', label: 'Anime Titles', icon: Film, accent: 'text-primary' },
+                { value: totalEpisodes || 500, suffix: '+', label: 'Episodes', icon: Play, accent: 'text-sky-400' },
+                { value: '24/7', suffix: '', label: 'Free Streaming', icon: Zap, accent: 'text-emerald-400' },
+                { value: '0', suffix: '', label: 'Ads. Ever.', icon: Shield, accent: 'text-rose-400' },
+              ].map((stat) => (
+                <div key={stat.label} className="group flex flex-col items-center justify-center text-center py-5 px-3 transition-all hover:bg-card/40">
+                  <stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.accent} mb-2 transition-transform group-hover:scale-110`} />
+                  <p className={`text-2xl sm:text-4xl font-extrabold ${stat.accent} tabular-nums leading-none`}>
+                    {stat.value}{stat.suffix}
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5 font-semibold uppercase tracking-wider">{stat.label}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
