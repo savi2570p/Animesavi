@@ -108,25 +108,62 @@ export function UpdatePopup() {
   useEffect(() => {
     if (step !== 'downloading') return;
     setProgress(0);
-    const duration = 10000;
-    const tickMs = 80;
-    const increment = 100 / (duration / tickMs);
-    let current = 0;
+    setDisplayProgress(0);
+    setSpeedMbps(0);
+    setSpeedHistory([]);
 
+    const tickMs = 200;
+    let current = 0;
+    // Variable-speed simulation: 3 phases (ramp-up, steady, slow-finish)
     intervalRef.current = setInterval(() => {
-      current += increment + Math.random() * 0.3;
+      // Phase-based speed (Mbps): start slow, peak in middle, slow at end
+      let baseSpeed: number;
+      if (current < 15) baseSpeed = 2 + current * 0.4;            // ramp up 2 → 8
+      else if (current < 75) baseSpeed = 8 + Math.sin(current / 10) * 2.5; // steady 5.5 – 10.5
+      else baseSpeed = Math.max(1.2, 9 - (current - 75) * 0.25);   // wind-down
+
+      // Network jitter
+      const jitter = (Math.random() - 0.5) * 1.8;
+      const liveSpeed = Math.max(0.4, baseSpeed + jitter);
+
+      // % progress per tick: speed (MB/s) * dt / total
+      const mbThisTick = (liveSpeed / 8) * (tickMs / 1000); // Mbps→MB/s ÷8
+      const pctThisTick = (mbThisTick / TOTAL_MB) * 100;
+      current = Math.min(100, current + pctThisTick);
+
+      setSpeedMbps(liveSpeed);
+      setSpeedHistory((prev) => {
+        const next = [...prev, liveSpeed];
+        return next.length > 24 ? next.slice(-24) : next;
+      });
+      setProgress(current);
+
       if (current >= 100) {
-        current = 100;
         if (intervalRef.current) clearInterval(intervalRef.current);
-        setProgress(100);
-        setTimeout(() => setStep('installing'), 400);
-      } else {
-        setProgress(current);
+        setTimeout(() => setStep('installing'), 600);
       }
     }, tickMs);
 
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [step]);
+
+  // Smooth eased counter — interpolates displayProgress toward progress every frame
+  useEffect(() => {
+    if (step !== 'downloading') {
+      setDisplayProgress(progress);
+      return;
+    }
+    const animate = () => {
+      setDisplayProgress((prev) => {
+        const diff = progress - prev;
+        if (Math.abs(diff) < 0.05) return progress;
+        return prev + diff * 0.18; // easing factor
+      });
+      rafRef.current = requestAnimationFrame(animate);
+    };
+    rafRef.current = requestAnimationFrame(animate);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [progress, step]);
 
   useEffect(() => {
     if (step !== 'installing') return;
