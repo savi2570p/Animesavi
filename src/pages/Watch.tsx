@@ -24,6 +24,7 @@ import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hook
 import { z } from 'zod';
 import { hasValidTokenAccess, isSuperAdmin, fetchTokenSystemStatus } from '@/components/AccessBanner';
 import { TokenExpiredPopup } from '@/components/TokenExpiredPopup';
+import { useCastDetection } from '@/hooks/useCastDetection';
 import {
   ChevronLeft,
   ChevronRight,
