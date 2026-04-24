@@ -27,6 +27,8 @@ import {
   EyeOff,
   Download,
   ListVideo,
+  Flame,
+  CalendarClock,
 } from 'lucide-react';
 
 // Helper to create slug from title
