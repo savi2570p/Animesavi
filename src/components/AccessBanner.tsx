@@ -134,6 +134,7 @@ export function wasAccessSyncedFromCloud(): boolean {
 
 export function AccessBanner() {
   const { user } = useAuth();
+  const isCasting = useCastDetection();
   const [tokenEnabled, setTokenEnabled] = useState(true);
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [time, setTime] = useState<ReturnType<typeof getTimeRemaining>>(null);
@@ -164,9 +165,10 @@ export function AccessBanner() {
     checkAccessFromDB();
   }, [checkAccessFromDB, user?.id]);
 
-  // Countdown timer — uses DB-sourced expiresAt
+  // Countdown timer — uses DB-sourced expiresAt. Pause while casting/mirroring.
   useEffect(() => {
     if (!dbChecked) return;
+    if (isCasting) return; // freeze countdown UI while casting
     const interval = setInterval(() => {
       const t = getTimeRemaining(tokenEnabled, expiresAt);
       setTime(t);
@@ -179,9 +181,9 @@ export function AccessBanner() {
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [tokenEnabled, expiresAt, dbChecked]);
+  }, [tokenEnabled, expiresAt, dbChecked, isCasting]);
 
-  if (isEmbedRoute || superAdmin || !time) return null;
+  if (isEmbedRoute || superAdmin || !time || isCasting) return null;
 
   return (
     <div
