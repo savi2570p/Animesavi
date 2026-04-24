@@ -1024,6 +1024,35 @@ img[loading="lazy"] {
   to { width: 100%; }
 }
 
+/* Hero slide enter animations — direction aware, cinematic */
+@keyframes hero-slide-in-right {
+  0%   { opacity: 0; transform: scale(1.08) translate3d(4%, 0, 0); filter: blur(8px) brightness(0.7); }
+  60%  { opacity: 1; filter: blur(0) brightness(1); }
+  100% { opacity: 1; transform: scale(1.06) translate3d(0, 0, 0); filter: blur(0) brightness(1); }
+}
+@keyframes hero-slide-in-left {
+  0%   { opacity: 0; transform: scale(1.08) translate3d(-4%, 0, 0); filter: blur(8px) brightness(0.7); }
+  60%  { opacity: 1; filter: blur(0) brightness(1); }
+  100% { opacity: 1; transform: scale(1.06) translate3d(0, 0, 0); filter: blur(0) brightness(1); }
+}
+.hero-slide-in-right { animation: hero-slide-in-right 900ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.hero-slide-in-left  { animation: hero-slide-in-left  900ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Hero content (title/desc/buttons) staggered entry */
+@keyframes hero-content-up {
+  0%   { opacity: 0; transform: translateY(24px); filter: blur(6px); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.hero-content-in > * {
+  animation: hero-content-up 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.hero-content-in > *:nth-child(1) { animation-delay: 80ms; }
+.hero-content-in > *:nth-child(2) { animation-delay: 180ms; }
+.hero-content-in > *:nth-child(3) { animation-delay: 260ms; }
+.hero-content-in > *:nth-child(4) { animation-delay: 340ms; }
+.hero-content-in > *:nth-child(5) { animation-delay: 420ms; }
+.hero-content-in > *:nth-child(6) { animation-delay: 500ms; }
+
 /* ===========================================================================
    Netflix-Style Global Polish Layer (v3) — site-wide upgrade
    Applied to all home sections without rewriting components.
