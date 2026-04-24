@@ -2840,6 +2840,12 @@ export function VideoPlayer({
                     >
                       <Subtitles className={`${isIOS ? 'w-3.5 h-3.5' : 'w-5 h-5 md:w-6 md:h-6'} ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`} />
                     </button>
+                    <ThemePickerButton
+                      value={playerTheme}
+                      onChange={setPlayerTheme}
+                      iconClassName={isIOS ? 'w-3.5 h-3.5' : 'w-5 h-5 md:w-6 md:h-6'}
+                      containerEl={containerRef.current}
+                    />
                     <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
                       <DropdownMenuTrigger asChild>
                         <button 
