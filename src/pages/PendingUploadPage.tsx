@@ -349,8 +349,9 @@ export default function PendingUploadPage() {
         glowTone="bg-amber-500/20"
         stats={[
           { icon: ListChecks, value: animeList.length, label: 'Pending', tone: 'text-amber-400' },
-          { icon: Activity, value: recentCount, label: 'Just Added', tone: 'text-emerald-400' },
-          { icon: AlertCircle, value: overdueCount, label: '7+ Days', tone: 'text-red-400' },
+          { icon: Clock, value: statusCounts.queued, label: 'Queued', tone: 'text-sky-400' },
+          { icon: Loader2, value: statusCounts.processing + statusCounts.encoding, label: 'Processing', tone: 'text-violet-400' },
+          { icon: AlertCircle, value: statusCounts.overdue, label: 'Overdue', tone: 'text-red-400' },
         ]}
       />
 
