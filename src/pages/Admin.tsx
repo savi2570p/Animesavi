@@ -200,110 +200,99 @@ export default function Admin() {
     );
   }
 
+  const tabConfig = [
+    { value: 'applications', icon: FileText, label: 'Applications', tone: 'from-amber-500/20 to-orange-500/10', accent: 'text-amber-400', count: applications.length },
+    { value: 'encoding', icon: FileVideo, label: 'Encoding', tone: 'from-violet-500/20 to-fuchsia-500/10', accent: 'text-violet-400' },
+    { value: 'ios-conversion', icon: Smartphone, label: 'iOS Convert', tone: 'from-sky-500/20 to-cyan-500/10', accent: 'text-sky-400' },
+    { value: 'hls-system', icon: Zap, label: 'HLS System', tone: 'from-yellow-500/20 to-amber-500/10', accent: 'text-yellow-400' },
+    { value: 'health', icon: Activity, label: 'Health', tone: 'from-emerald-500/20 to-green-500/10', accent: 'text-emerald-400' },
+    { value: 'notifications', icon: Bell, label: 'Alerts', tone: 'from-rose-500/20 to-pink-500/10', accent: 'text-rose-400' },
+    { value: 'cdn', icon: Globe, label: 'CDN', tone: 'from-blue-500/20 to-indigo-500/10', accent: 'text-blue-400' },
+    { value: 'tokens', icon: Key, label: 'Tokens', tone: 'from-fuchsia-500/20 to-purple-500/10', accent: 'text-fuchsia-400' },
+    { value: 'users', icon: Users, label: 'Users', tone: 'from-teal-500/20 to-emerald-500/10', accent: 'text-teal-400' },
+  ];
+
   return (
-    <div className="container py-8">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 rounded-lg bg-gradient-primary">
-          <Shield className="h-6 w-6 text-white" />
+    <div className="container py-6 md:py-8">
+      {/* Cinematic Hero */}
+      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/15 via-card/60 to-card/30 backdrop-blur-xl mb-6">
+        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -left-16 h-72 w-72 rounded-full bg-fuchsia-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,hsl(var(--primary)/0.12),transparent_60%)] pointer-events-none" />
+        <div className="relative p-5 md:p-7">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-2xl bg-primary/40 blur-xl" />
+                <div className="relative p-3 rounded-2xl bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/30">
+                  <Shield className="h-7 w-7 text-primary-foreground" />
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Live Control
+                  </span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Admin Console</span>
+                </div>
+                <h1 className="text-2xl md:text-4xl font-heading font-bold leading-tight">
+                  Command <span className="anime-gradient-text">Center</span>
+                </h1>
+                <p className="text-xs md:text-sm text-muted-foreground mt-1">Pulse-check the platform, approve creators, ship features.</p>
+              </div>
+            </div>
+            <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-card/60 border border-border/40 backdrop-blur-sm">
+              <Activity className="h-4 w-4 text-emerald-400" />
+              <span className="text-xs font-semibold tabular-nums">All systems nominal</span>
+            </div>
+          </div>
+
+          {/* Stats Row */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+            {[
+              { icon: Film, value: stats.totalAnime, label: 'Total Anime', tone: 'from-primary/20 to-primary/5', accent: 'text-primary', ring: 'ring-primary/30' },
+              { icon: Users, value: stats.totalUsers, label: 'Total Users', tone: 'from-sky-500/20 to-sky-500/5', accent: 'text-sky-400', ring: 'ring-sky-500/30' },
+              { icon: FileText, value: stats.pendingApplications, label: 'Pending Apps', tone: 'from-amber-500/20 to-amber-500/5', accent: 'text-amber-400', ring: 'ring-amber-500/30' },
+              { icon: TrendingUp, value: stats.uploaders, label: 'Uploaders', tone: 'from-emerald-500/20 to-emerald-500/5', accent: 'text-emerald-400', ring: 'ring-emerald-500/30' },
+            ].map((s) => (
+              <div key={s.label} className={`group relative overflow-hidden rounded-xl bg-gradient-to-br ${s.tone} border border-border/40 p-4 ring-1 ${s.ring} transition-all hover:scale-[1.02]`}>
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg bg-card/70 ${s.accent}`}>
+                    <s.icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className={`text-2xl font-bold tabular-nums ${s.accent}`}>{s.value}</p>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold truncate">{s.label}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div>
-          <h1 className="text-3xl font-heading font-bold">
-            Admin <span className="anime-gradient-text">Dashboard</span>
-          </h1>
-          <p className="text-muted-foreground">Manage platform content and users</p>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="p-3 rounded-lg bg-primary/10">
-              <Film className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{stats.totalAnime}</p>
-              <p className="text-sm text-muted-foreground">Total Anime</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="p-3 rounded-lg bg-anime-blue/10">
-              <Users className="h-6 w-6 text-anime-blue" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{stats.totalUsers}</p>
-              <p className="text-sm text-muted-foreground">Total Users</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="p-3 rounded-lg bg-anime-orange/10">
-              <FileText className="h-6 w-6 text-anime-orange" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{stats.pendingApplications}</p>
-              <p className="text-sm text-muted-foreground">Pending Apps</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="p-3 rounded-lg bg-green-500/10">
-              <TrendingUp className="h-6 w-6 text-green-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{stats.uploaders}</p>
-              <p className="text-sm text-muted-foreground">Uploaders</p>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Main Tabs */}
       <Tabs defaultValue="applications">
-        <TabsList className="mb-6 flex-wrap">
-          <TabsTrigger value="applications">
-            Applications ({applications.length})
-          </TabsTrigger>
-          <TabsTrigger value="encoding" className="flex items-center gap-2">
-            <FileVideo className="h-4 w-4" />
-            Encoding
-          </TabsTrigger>
-          <TabsTrigger value="ios-conversion" className="flex items-center gap-2">
-            <Smartphone className="h-4 w-4" />
-            iOS Conversion
-          </TabsTrigger>
-          <TabsTrigger value="hls-system" className="flex items-center gap-2">
-            <Zap className="h-4 w-4" />
-            HLS System
-          </TabsTrigger>
-           <TabsTrigger value="health" className="flex items-center gap-2">
-             <Activity className="h-4 w-4" />
-             Health
-           </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            Notifications
-          </TabsTrigger>
-          <TabsTrigger value="cdn" className="flex items-center gap-2">
-            <Globe className="h-4 w-4" />
-            CDN Health
-          </TabsTrigger>
-          <TabsTrigger value="tokens" className="flex items-center gap-2">
-            <Key className="h-4 w-4" />
-            Token Manager
-          </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Users
-          </TabsTrigger>
-        </TabsList>
+        <div className="relative -mx-2 px-2 mb-6">
+          <TabsList className="w-full h-auto p-1.5 bg-card/40 border border-border/40 backdrop-blur-md rounded-2xl flex flex-wrap gap-1.5 justify-start">
+            {tabConfig.map((t) => (
+              <TabsTrigger
+                key={t.value}
+                value={t.value}
+                className={`group relative flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all data-[state=active]:bg-gradient-to-br data-[state=active]:${t.tone} data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40`}
+              >
+                <t.icon className={`h-3.5 w-3.5 ${t.accent}`} />
+                <span>{t.label}</span>
+                {t.count !== undefined && (
+                  <span className={`ml-0.5 px-1.5 py-0.5 rounded-full bg-card/80 text-[10px] tabular-nums ${t.accent}`}>
+                    {t.count}
+                  </span>
+                )}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
         <TabsContent value="applications">
           {/* Applications Sub-Tabs */}

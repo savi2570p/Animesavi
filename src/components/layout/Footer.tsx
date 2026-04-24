@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MessageCircle, Heart, Shield, FileText, ExternalLink } from 'lucide-react';
+import { MessageCircle, Heart, Shield, FileText, ExternalLink, Lock, Database, Cookie, UserCheck, Baby, Server, Sparkles, Scale, AlertTriangle, Copyright, MessagesSquare, Ban, RefreshCw, Mail, BookCheck, Globe2 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import {
   Dialog,
@@ -280,7 +280,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-              Your ultimate destination for streaming the best anime content. Discover, watch, and enjoy thousands of anime series and movies.
+              Where every frame tells a story. Hand-curated anime in crisp 4K, dubbed in your language — built by fans, made for the late-night binge.
             </p>
             <div className="flex items-center gap-2">
               <a
