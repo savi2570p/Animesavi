@@ -140,28 +140,28 @@ export default function LatestSeriesPage() {
     return null;
   };
 
+  const newCount = series.filter(a => isNew(a)).length;
+  const ongoingCount = series.filter(a => a.status === 'ongoing' || (!a.status && a.episode_count > 0)).length;
+  const totalEps = series.reduce((sum, a) => sum + a.episode_count, 0);
+
   return (
     <div className="min-h-screen">
-      {/* Content Navigation Tabs */}
       <ContentNavTabs />
-      
-      {/* Hero Header */}
-      <div className="relative overflow-x-hidden overflow-y-visible px-4 py-12">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        
-        <div className="container relative">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 rounded-xl bg-primary/10">
-              <Tv className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-heading font-bold">Latest Series</h1>
-              <p className="text-muted-foreground">Recently updated anime series with new episodes</p>
-            </div>
-          </div>
-        </div>
-      </div>
+
+      <SeeAllHeader
+        icon={Tv}
+        title="Latest Series"
+        subtitle="Recently updated anime series with new episodes — sorted by latest activity."
+        eyebrow="Trending Series"
+        iconGradient="from-primary via-primary to-rose-500"
+        glowTone="bg-primary/20"
+        stats={[
+          { icon: Film, value: series.length, label: 'Series', tone: 'text-primary' },
+          { icon: Play, value: totalEps, label: 'Episodes', tone: 'text-blue-400' },
+          { icon: Flame, value: ongoingCount, label: 'Ongoing', tone: 'text-orange-400' },
+          { icon: Sparkles, value: newCount, label: 'New 24h', tone: 'text-emerald-400' },
+        ]}
+      />
 
       <div className="container pb-12">
         {loading ? (
