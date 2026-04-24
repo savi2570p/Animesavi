@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Flag } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -80,10 +81,15 @@ export function ReportButton() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 md:bottom-6 md:right-20 z-50 w-9 h-9 md:w-10 md:h-10 rounded-full bg-destructive/80 hover:bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg transition-all duration-200 text-sm md:text-base"
         aria-label="Report an issue"
+        className="group fixed bottom-[8.25rem] right-3 md:bottom-6 md:right-[5.25rem] z-50 w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center shadow-lg shadow-destructive/40 transition-all duration-300 hover:scale-110 active:scale-95"
+        style={{
+          background: 'linear-gradient(135deg, hsl(var(--destructive) / 0.95) 0%, hsl(var(--destructive)) 60%, hsl(var(--destructive) / 0.85) 100%)',
+        }}
       >
-        ⚠️
+        <span className="absolute inset-0 rounded-full ring-1 ring-white/20" />
+        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-400 ring-2 ring-background animate-pulse" />
+        <Flag className="relative h-4 w-4 md:h-[18px] md:w-[18px] text-destructive-foreground drop-shadow" />
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>

@@ -1040,6 +1040,39 @@ export default function Watch() {
             onVideoLoadSuccess={onVideoLoadSuccess}
             onVideoLoadError={onVideoLoadError}
           />
+
+          {/* Player Strip — anime thumbnail + name (non-fullscreen) */}
+          {anime && (
+            <Link
+              to={`/anime/${anime.id}`}
+              className="group mt-2 md:mt-3 flex items-center gap-2.5 md:gap-3 px-2 md:px-3 py-1.5 md:py-2 rounded-lg border border-border/40 bg-gradient-to-r from-card/70 via-card/40 to-transparent backdrop-blur-md hover:border-primary/40 hover:bg-card/80 transition-all"
+            >
+              <div className="relative w-9 h-12 md:w-11 md:h-14 rounded-md overflow-hidden shrink-0 ring-1 ring-border/60 group-hover:ring-primary/50 transition-all">
+                {anime.cover_image ? (
+                  <img
+                    src={anime.cover_image}
+                    alt={anime.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-muted" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-primary/80 leading-none mb-1">
+                  Now Watching
+                </p>
+                <p className="text-sm md:text-base font-semibold text-foreground truncate group-hover:text-primary transition-colors leading-tight">
+                  {anime.title}
+                </p>
+                <p className="text-[10px] md:text-xs text-muted-foreground truncate mt-0.5">
+                  S{currentSeason?.season_number || 1} · E{episode.episode_number} — {episode.title}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+            </Link>
+          )}
         </div>
       </div>
 
@@ -1135,21 +1168,21 @@ export default function Watch() {
       </div>
 
       {/* Episode Info & Navigation */}
-      <div className="container py-5 md:py-8">
-        <div className="relative rounded-xl md:rounded-3xl border border-border/40 bg-gradient-to-br from-card/70 via-background/40 to-card/50 backdrop-blur-xl p-4 md:p-7 shadow-xl shadow-black/20 overflow-hidden">
-          {/* Decorative glows */}
-          <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="container py-3 md:py-8">
+        <div className="relative rounded-lg md:rounded-3xl border border-border/40 bg-gradient-to-br from-card/70 via-background/40 to-card/50 backdrop-blur-xl p-3 md:p-7 shadow-md md:shadow-xl shadow-black/20 overflow-hidden">
+          {/* Decorative glows — desktop only */}
+          <div className="hidden md:block absolute -top-20 -right-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="hidden md:block absolute -bottom-20 -left-20 w-64 h-64 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative flex flex-col gap-4 md:gap-6">
+          <div className="relative flex flex-col gap-2.5 md:gap-6">
             {/* Breadcrumb with Format Indicator */}
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-1.5 text-xs md:text-sm">
-                <Link to={`/anime/${anime?.id}`} className="text-muted-foreground hover:text-primary transition-colors font-medium">
+            <div className="flex items-center justify-between flex-wrap gap-1.5">
+              <div className="flex items-center gap-1 md:gap-1.5 text-[11px] md:text-sm min-w-0">
+                <Link to={`/anime/${anime?.id}`} className="text-muted-foreground hover:text-primary transition-colors font-medium truncate max-w-[140px] md:max-w-none">
                   {anime?.title}
                 </Link>
-                <ChevronRight className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground/60" />
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/30 text-primary font-bold text-[11px] md:text-xs">
+                <ChevronRight className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground/60 shrink-0" />
+                <span className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 rounded-md bg-primary/10 border border-primary/30 text-primary font-bold text-[10px] md:text-xs shrink-0">
                   S{currentSeason?.season_number || 1} · E{episode.episode_number}
                 </span>
               </div>
@@ -1164,19 +1197,19 @@ export default function Watch() {
             </div>
 
             {/* Episode Title */}
-            <div className="space-y-2">
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-accent/15 border border-accent/30 text-[10px] md:text-xs font-bold uppercase tracking-wider text-accent-foreground">
+            <div className="space-y-1.5 md:space-y-2">
+              <span className="inline-flex items-center gap-1 md:gap-1.5 px-1.5 md:px-2 py-0.5 rounded-full bg-accent/15 border border-accent/30 text-[9px] md:text-xs font-bold uppercase tracking-wider text-accent-foreground">
                 <span className="w-1 h-1 rounded-full bg-accent animate-pulse" />
                 Now Playing
               </span>
-              <h1 className="text-lg md:text-3xl font-heading font-bold leading-tight text-foreground">
+              <h1 className="text-base md:text-3xl font-heading font-bold leading-snug md:leading-tight text-foreground">
                 {episode.title}
               </h1>
             </div>
 
             {/* Description */}
             {episode.description && (
-              <p className="text-xs md:text-sm leading-relaxed text-muted-foreground border-l-2 border-primary/40 pl-3 md:pl-4 py-1">
+              <p className="text-[11px] md:text-sm leading-relaxed text-muted-foreground border-l-2 border-primary/40 pl-2.5 md:pl-4 py-0.5 md:py-1">
                 {episode.description}
               </p>
             )}
