@@ -191,6 +191,7 @@ export default function Watch() {
   const [savedPlaybackProgress, setSavedPlaybackProgress] = useState(0);
   const [userProfile, setUserProfile] = useState<{ avatar_url: string | null } | null>(null);
   const [isVideoEncoding, setIsVideoEncoding] = useState(false);
+  const [serverBlockMessage, setServerBlockMessage] = useState<string | null>(null);
   const ensureHistoryInFlightRef = useRef(false);
   
 
@@ -284,17 +285,26 @@ export default function Watch() {
     const isFileOnlyEpisode = hasDirectVideo;
 
     if (server === 'EMBED' && isFileOnlyEpisode) {
-      toast.error('Embed link is not available. Please use other servers.');
+      setServerBlockMessage('Embed link is not available. Please use other servers.');
       return;
     }
 
     if (server !== 'EMBED' && isEmbedOnlyEpisode) {
-      toast.error('The video file is not available. Please use "Embed" player for this episode.');
+      setServerBlockMessage('The video file is not available. Please use "Embed" player for this episode.');
       return;
     }
 
     handleServerSwitch(server);
   }, [handleServerSwitch, episode]);
+
+  // Show a one-time info message when entering an episode about Embed server status.
+  const entryMessageShownRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!episode) return;
+    if (entryMessageShownRef.current === episode.id) return;
+    entryMessageShownRef.current = episode.id;
+    toast.info('The [Embed] server is not working. It\u2019s under development. Please use other servers.');
+  }, [episode]);
 
   // Auto-assign EMBED server when the loaded episode only has an external embed link.
   // Runs once per episode so the user can still manually switch away afterward.
@@ -1047,39 +1057,66 @@ export default function Watch() {
 
         {/* Video Player */}
         <div className="flex-1">
-          <VideoPlayer
-            key={`${episodeId}-${activeServer}-${reloadToken}`}
-            videoUrl={deviceOptimizedVideo.videoUrl || episode.video_url}
-            externalUrl={episode.external_url}
-            title={episode.title}
-            animeTitle={anime?.title || ''}
-            episodeNumber={episode.episode_number}
-            seasonNumber={currentSeason?.season_number || 1}
-            episodeId={episode.id}
-            poster={anime?.cover_image || undefined}
-            isMovie={isMovie}
-            activeServer={activeServer}
-            isLoading={serverLoading}
-            audioLanguage={episode.audio_language || undefined}
-            captionsUrl={episode.captions_url}
-            isEncoding={isVideoEncoding}
-            onTimeUpdate={updateWatchProgress}
-            hasNextEpisode={!!nextEpisode}
-            lockedQuality={2160}
-            onNextEpisode={nextEpisode ? () => navigate(`/watch/${nextEpisode.id}`, { replace: true }) : undefined}
-            introStartTime={episode.intro_start_time}
-            introEndTime={episode.intro_end_time}
-            outroStartTime={episode.outro_start_time}
-            outroEndTime={episode.outro_end_time}
-            savedPlaybackProgress={savedPlaybackProgress}
-            onResumeChoice={(resume) => {
-              if (!resume) {
-                setSavedPlaybackProgress(0);
-              }
-            }}
-            onVideoLoadSuccess={onVideoLoadSuccess}
-            onVideoLoadError={onVideoLoadError}
-          />
+          <div className="relative">
+            <VideoPlayer
+              key={`${episodeId}-${activeServer}-${reloadToken}`}
+              videoUrl={deviceOptimizedVideo.videoUrl || episode.video_url}
+              externalUrl={episode.external_url}
+              title={episode.title}
+              animeTitle={anime?.title || ''}
+              episodeNumber={episode.episode_number}
+              seasonNumber={currentSeason?.season_number || 1}
+              episodeId={episode.id}
+              poster={anime?.cover_image || undefined}
+              isMovie={isMovie}
+              activeServer={activeServer}
+              isLoading={serverLoading}
+              audioLanguage={episode.audio_language || undefined}
+              captionsUrl={episode.captions_url}
+              isEncoding={isVideoEncoding}
+              onTimeUpdate={updateWatchProgress}
+              hasNextEpisode={!!nextEpisode}
+              lockedQuality={2160}
+              onNextEpisode={nextEpisode ? () => navigate(`/watch/${nextEpisode.id}`, { replace: true }) : undefined}
+              introStartTime={episode.intro_start_time}
+              introEndTime={episode.intro_end_time}
+              outroStartTime={episode.outro_start_time}
+              outroEndTime={episode.outro_end_time}
+              savedPlaybackProgress={savedPlaybackProgress}
+              onResumeChoice={(resume) => {
+                if (!resume) {
+                  setSavedPlaybackProgress(0);
+                }
+              }}
+              onVideoLoadSuccess={onVideoLoadSuccess}
+              onVideoLoadError={onVideoLoadError}
+            />
+
+            {/* Server-mismatch modal — centered inside the player area, never collapsed */}
+            {serverBlockMessage && (
+              <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm rounded-md">
+                <div
+                  role="alertdialog"
+                  aria-modal="true"
+                  className="mx-4 w-full max-w-sm rounded-xl border border-border/60 bg-card shadow-2xl p-5 text-center"
+                >
+                  <h3 className="text-base md:text-lg font-semibold text-foreground mb-2">
+                    Server unavailable
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-5">
+                    {serverBlockMessage}
+                  </p>
+                  <Button
+                    size="sm"
+                    className="min-w-[96px]"
+                    onClick={() => setServerBlockMessage(null)}
+                  >
+                    OK
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Player Strip — anime thumbnail + name (non-fullscreen) */}
           {anime && (
