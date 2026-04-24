@@ -169,7 +169,7 @@ export default function EpisodeEdit() {
         title: title.trim(),
         description: description.trim() || null,
         video_url: videoUrl.trim() || null,
-        external_url: externalUrl.trim() || null,
+        external_url: (await import('@/components/video/PureEmbedPlayer')).extractEmbedSrc(externalUrl) || null,
         thumbnail: thumbnail.trim() || null,
         duration: duration ? parseInt(duration) : null,
         episode_number: parseInt(episodeNumber),

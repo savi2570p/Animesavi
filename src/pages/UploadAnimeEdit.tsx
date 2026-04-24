@@ -296,7 +296,7 @@ export default function UploadAnimeEdit() {
         title: newEpisodeTitle.trim(),
         description: newEpisodeDescription.trim() || null,
         video_url: newEpisodeVideoUrl.trim() || null,
-        external_url: newEpisodeExternalUrl.trim() || null,
+        external_url: (await import('@/components/video/PureEmbedPlayer')).extractEmbedSrc(newEpisodeExternalUrl) || null,
         thumbnail: newEpisodeThumbnail.trim() || null,
         duration: newEpisodeDuration ? parseInt(newEpisodeDuration) : null,
       })
