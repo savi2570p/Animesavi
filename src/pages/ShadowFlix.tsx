@@ -7,7 +7,7 @@ import {
   LogOut, Search, Pause, Maximize, Minimize, SkipForward, SkipBack,
   Settings, ChevronDown, ChevronLeft, TrendingUp, Eye, Share2, Copy, Check,
   Palette, Monitor, List, Clock, Star, GripVertical, ChevronRight, Radio,
-  Code, Code2, ExternalLink
+  Code, Code2, ExternalLink, ShieldCheck, Eye as EyeIcon, EyeOff, KeyRound, Sparkles, AlertTriangle, Send
 } from 'lucide-react';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import { Button } from '@/components/ui/button';
@@ -965,6 +965,9 @@ export default function ShadowFlix() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [unlockAttempts, setUnlockAttempts] = useState(0);
+  const [unlocking, setUnlocking] = useState(false);
   const [items, setItems] = useState<ShadowFlixItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
@@ -1070,13 +1073,25 @@ export default function ShadowFlix() {
   };
 
   const handleUnlock = () => {
-    if (password.toUpperCase() === SHADOW_FLIX_PASSWORD) {
-      setIsUnlocked(true);
-      sessionStorage.setItem('shadowflix_unlocked', 'true');
-      setPasswordError('');
-    } else {
-      setPasswordError('Incorrect password. Try again.');
+    if (!password.trim()) {
+      setPasswordError('Please enter the access code.');
+      return;
     }
+    setUnlocking(true);
+    setTimeout(() => {
+      if (password.trim().toUpperCase() === SHADOW_FLIX_PASSWORD) {
+        setIsUnlocked(true);
+        sessionStorage.setItem('shadowflix_unlocked', 'true');
+        setPasswordError('');
+        setUnlockAttempts(0);
+        toast.success('Access granted — welcome to Shadow Flix');
+      } else {
+        const next = unlockAttempts + 1;
+        setUnlockAttempts(next);
+        setPasswordError(next >= 3 ? `Incorrect code. ${next} failed attempts — contact an admin if you've lost your code.` : 'Incorrect access code. Try again.');
+      }
+      setUnlocking(false);
+    }, 350);
   };
 
   const handleLogout = () => {
@@ -1491,33 +1506,224 @@ export default function ShadowFlix() {
   // ─── PASSWORD GATE ───
   if (!isUnlocked) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4"
-        style={{ background: 'radial-gradient(ellipse at 30% 70%, rgba(180,0,0,0.12) 0%, transparent 50%), radial-gradient(ellipse at 70% 30%, rgba(180,0,0,0.08) 0%, transparent 50%), #0a0a0a' }}>
-        <div className="w-full max-w-sm rounded-2xl p-8 text-center space-y-6"
-          style={{ background: 'rgba(20,10,10,0.9)', backdropFilter: 'blur(24px)', border: '1px solid rgba(220,30,30,0.25)', boxShadow: '0 0 60px rgba(220,30,30,0.08)' }}>
-          <img src={shadowFlixLogo} alt="ShadowFlix" className="w-20 h-20 rounded-xl mx-auto shadow-lg" />
-          <h1 className="text-2xl font-black tracking-wider text-white">SHADOW<span className="text-red-500">FLIX</span></h1>
-          <p className="text-white/40 text-xs uppercase tracking-widest">Private Streaming Vault</p>
-          <div className="space-y-2 text-left bg-white/5 rounded-lg p-3">
-            <p className="text-white/60 text-xs leading-relaxed">
-              🔒 This is a restricted section exclusively for authorized members. Shadow Flix hosts premium content managed independently from the main library.
-            </p>
-            <p className="text-white/40 text-[10px] leading-relaxed">
-              • Upload & manage your own anime series with seasons & episodes<br/>
-              • Custom Netflix-style player with speed controls<br/>
-              • Content here is private and won't appear in public feeds<br/>
-              • Contact an admin if you don't have the access code
-            </p>
+      <div
+        className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden"
+        style={{ background: '#070707' }}
+      >
+        {/* Cinematic background layers */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-40 -left-40 w-[40rem] h-[40rem] rounded-full bg-red-600/20 blur-[140px]" />
+          <div className="absolute -bottom-40 -right-40 w-[36rem] h-[36rem] rounded-full bg-red-900/30 blur-[140px]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,#000,transparent_70%)]" />
+          <div
+            className="absolute inset-0 opacity-[0.04]"
+            style={{
+              backgroundImage:
+                'repeating-linear-gradient(0deg, rgba(255,255,255,0.5) 0 1px, transparent 1px 4px)',
+            }}
+          />
+        </div>
+
+        <div className="relative w-full max-w-md">
+          {/* Top brand strip */}
+          <div className="flex items-center justify-center gap-2 mb-5">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-red-500/50" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/30">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
+              </span>
+              <span className="text-[9px] font-black text-red-300 uppercase tracking-[0.2em]">
+                Restricted Vault
+              </span>
+            </div>
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-red-500/50" />
           </div>
-          <div className="flex items-center gap-2">
-            <Lock className="w-4 h-4 text-red-500 shrink-0" />
-            <Input type="password" placeholder="Enter access code" value={password}
-              onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleUnlock()}
-              className="bg-white/5 border-white/10 text-white placeholder:text-white/30" />
+
+          <div
+            className="rounded-3xl p-7 md:p-8 text-center space-y-6"
+            style={{
+              background:
+                'linear-gradient(180deg, rgba(28,12,12,0.95), rgba(12,8,8,0.95))',
+              backdropFilter: 'blur(28px)',
+              border: '1px solid rgba(220,30,30,0.28)',
+              boxShadow:
+                '0 30px 80px -20px rgba(220,30,30,0.25), inset 0 1px 0 rgba(255,255,255,0.04)',
+            }}
+          >
+            {/* Logo */}
+            <div className="relative mx-auto w-fit">
+              <div className="absolute inset-0 bg-red-600/40 blur-2xl rounded-full" />
+              <div className="relative w-20 h-20 rounded-2xl p-0.5 bg-gradient-to-br from-red-500 via-red-600 to-red-900 mx-auto shadow-2xl">
+                <img
+                  src={shadowFlixLogo}
+                  alt="ShadowFlix"
+                  className="w-full h-full rounded-2xl object-cover"
+                />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-red-600 border-4 border-[#0c0808] flex items-center justify-center shadow-lg">
+                <Lock className="h-3 w-3 text-white" />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <h1 className="text-3xl font-black tracking-wider text-white">
+                SHADOW<span className="text-red-500">FLIX</span>
+              </h1>
+              <p className="text-white/40 text-[10px] uppercase tracking-[0.3em]">
+                Private Streaming Vault
+              </p>
+            </div>
+
+            {/* Detail panels */}
+            <div className="space-y-2.5 text-left">
+              {/* Notice */}
+              <div className="flex items-start gap-2.5 rounded-xl p-3 bg-red-500/[0.06] border border-red-500/20">
+                <ShieldCheck className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                <p className="text-white/70 text-[11px] leading-relaxed">
+                  This is a <span className="text-white font-semibold">restricted area</span> for
+                  authorized members only. All content is hosted independently and is{' '}
+                  <span className="text-white font-semibold">not visible</span> in the public
+                  AnimeSavi library.
+                </p>
+              </div>
+
+              {/* Feature list */}
+              <div className="rounded-xl p-3 bg-white/[0.03] border border-white/10">
+                <p className="text-[10px] uppercase tracking-wider text-white/40 mb-2 font-bold">
+                  What's inside
+                </p>
+                <ul className="space-y-1.5">
+                  {[
+                    { icon: Film, text: 'Premium uploads with seasons & episodes' },
+                    { icon: Sparkles, text: 'Custom Netflix-style player with themes' },
+                    { icon: EyeIcon, text: 'Private — content stays out of public feeds' },
+                    { icon: KeyRound, text: 'Per-device session unlock (auto-locks on logout)' },
+                  ].map((item) => (
+                    <li
+                      key={item.text}
+                      className="flex items-start gap-2 text-white/65 text-[11px] leading-relaxed"
+                    >
+                      <item.icon className="w-3 h-3 text-red-400 shrink-0 mt-0.5" />
+                      <span>{item.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Hint */}
+              <div className="flex items-start gap-2.5 rounded-xl p-3 bg-amber-500/[0.06] border border-amber-500/20">
+                <KeyRound className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div className="text-[11px] leading-relaxed">
+                  <p className="text-white/80">
+                    <span className="font-bold text-amber-300">Hint:</span> the access code is the
+                    Shadow Toons × AnimeSavi codename — uppercase, 3 words, separated by{' '}
+                    <span className="font-mono text-amber-300">×</span> .
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Password input */}
+            <div className="space-y-2 text-left">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-white/50 flex items-center gap-1.5">
+                <Lock className="w-3 h-3" /> Access Code
+              </label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your secret code"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError) setPasswordError('');
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
+                  autoFocus
+                  className="bg-black/40 border-white/10 text-white placeholder:text-white/25 pr-11 h-11 font-mono tracking-wider focus-visible:ring-red-500/40 focus-visible:border-red-500/50"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+                  aria-label={showPassword ? 'Hide code' : 'Show code'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                </button>
+              </div>
+
+              {/* Status row */}
+              <div className="flex items-center justify-between text-[10px] pt-0.5">
+                <span className={`flex items-center gap-1 ${unlockAttempts > 0 ? 'text-red-400' : 'text-white/40'}`}>
+                  {unlockAttempts > 0 ? (
+                    <>
+                      <AlertTriangle className="w-3 h-3" />
+                      {unlockAttempts} failed attempt{unlockAttempts > 1 ? 's' : ''}
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-3 h-3" />
+                      Encrypted session
+                    </>
+                  )}
+                </span>
+                <span className="text-white/30 font-mono">
+                  {password.length}/24
+                </span>
+              </div>
+
+              {passwordError && (
+                <div className="flex items-start gap-1.5 rounded-md p-2 bg-red-500/10 border border-red-500/30 text-red-300 text-[11px] animate-fade-in">
+                  <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5" />
+                  <span>{passwordError}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Unlock button */}
+            <Button
+              onClick={handleUnlock}
+              disabled={unlocking}
+              className="w-full h-11 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-black tracking-wider shadow-lg shadow-red-600/30 transition-all"
+            >
+              {unlocking ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Verifying…
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <KeyRound className="w-4 h-4" />
+                  Unlock Vault
+                </span>
+              )}
+            </Button>
+
+            {/* Help row */}
+            <div className="flex items-center justify-between gap-2 pt-1">
+              <a
+                href="https://t.me/Lv_Savi"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-[11px] font-semibold transition-colors"
+              >
+                <Send className="w-3 h-3" />
+                Request Access
+              </a>
+              <a
+                href="/"
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white text-[11px] font-semibold transition-colors"
+              >
+                <ChevronLeft className="w-3 h-3" />
+                Back Home
+              </a>
+            </div>
+
+            <div className="flex items-center justify-center gap-1.5 text-[9px] uppercase tracking-[0.2em] text-white/25">
+              <ShieldCheck className="w-3 h-3" />
+              Secured by Shadow Toons × AnimeSavi
+            </div>
           </div>
-          {passwordError && <p className="text-red-400 text-xs">{passwordError}</p>}
-          <Button onClick={handleUnlock} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold">Unlock Access</Button>
-          <p className="text-white/20 text-[10px]">Secured by Shadow Toons & AnimeSavi</p>
         </div>
       </div>
     );
