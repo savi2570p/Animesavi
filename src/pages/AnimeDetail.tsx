@@ -87,6 +87,7 @@ export default function AnimeDetail() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isInWatchList, setIsInWatchList] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [seasonLoading, setSeasonLoading] = useState(false);
   const [recommendations, setRecommendations] = useState<Anime[]>([]);
   const [watchProgress, setWatchProgress] = useState<Map<string, WatchProgress>>(new Map());
   
@@ -230,16 +231,22 @@ export default function AnimeDetail() {
   };
 
   const fetchEpisodes = async (seasonId: string) => {
-    const { data } = await supabase
-      .from('episodes')
-      .select('*')
-      .eq('season_id', seasonId)
-      .order('episode_number');
+    setSeasonLoading(true);
+    setEpisodes([]);
+    try {
+      const { data } = await supabase
+        .from('episodes')
+        .select('*')
+        .eq('season_id', seasonId)
+        .order('episode_number');
 
-    if (data) {
-      setEpisodes(data);
-      // Preload first 8 episode thumbnails
-      preloadImages(data.slice(0, 8).map(ep => ep.thumbnail));
+      if (data) {
+        setEpisodes(data);
+        preloadImages(data.slice(0, 8).map(ep => ep.thumbnail));
+      }
+    } finally {
+      // Small min-delay so the skeleton is perceptible even on fast networks
+      setTimeout(() => setSeasonLoading(false), 250);
     }
   };
 
@@ -770,8 +777,25 @@ export default function AnimeDetail() {
 
             {seasons.map((season) => (
               <TabsContent key={season.id} value={season.id} className="mt-0">
-                {episodes.length === 0 ? (
-                  <div className="text-center py-16 bg-card/50 rounded-2xl border border-border/30">
+                {seasonLoading ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 animate-fade-in">
+                    {Array.from({ length: 10 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="rounded-xl overflow-hidden border border-border/30 bg-card/40 detail-fade-swap"
+                        style={{ animationDelay: `${i * 40}ms` }}
+                      >
+                        <Skeleton className="aspect-video w-full rounded-none" />
+                        <div className="p-2.5 space-y-1.5">
+                          <Skeleton className="h-3 w-12" />
+                          <Skeleton className="h-3.5 w-full" />
+                          <Skeleton className="h-3 w-2/3" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : episodes.length === 0 ? (
+                  <div className="text-center py-16 bg-card/50 rounded-2xl border border-border/30 animate-fade-in">
                     <Clock className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
                     <p className="text-muted-foreground text-lg">No episodes available yet.</p>
                     <p className="text-muted-foreground/70 text-sm mt-2">Check back soon for new episodes!</p>
