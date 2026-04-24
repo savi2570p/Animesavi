@@ -82,9 +82,15 @@ export function UpdatePopup() {
   const navigate = useNavigate();
   const [step, setStep] = useState<UpdateStep>('alert');
   const [progress, setProgress] = useState(0);
+  const [displayProgress, setDisplayProgress] = useState(0);
+  const [speedMbps, setSpeedMbps] = useState(0);
+  const [speedHistory, setSpeedHistory] = useState<number[]>([]);
   const [versionIndex, setVersionIndex] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const rafRef = useRef<number | null>(null);
   const touchStartX = useRef<number | null>(null);
+
+  const TOTAL_MB = 42;
 
   const isActive = activePopup === 'whatsNew';
 
