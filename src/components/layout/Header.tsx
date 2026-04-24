@@ -216,74 +216,160 @@ export function Header() {
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-card border-border" align="end">
-                <div className="flex items-center gap-3 p-3 border-b border-border">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={user.user_metadata?.avatar_url} alt="Avatar" />
-                    <AvatarFallback className="bg-primary text-primary-foreground font-medium">
-                      {user.email?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{user.user_metadata?.username || 'User'}</p>
-                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+              <DropdownMenuContent
+                className="w-72 bg-card/95 backdrop-blur-xl border-border/60 p-0 overflow-hidden shadow-2xl"
+                align="end"
+                sideOffset={8}
+              >
+                {/* Cinematic header */}
+                <div className="relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent" />
+                  <div className="absolute -top-10 -right-8 w-32 h-32 bg-primary/30 rounded-full blur-3xl" />
+                  <div className="relative flex items-center gap-3 p-4">
+                    <div className="relative shrink-0">
+                      <div className="absolute inset-0 bg-primary/40 blur-md rounded-full" />
+                      <Avatar className="relative h-12 w-12 ring-2 ring-primary/40">
+                        <AvatarImage src={user.user_metadata?.avatar_url} alt="Avatar" />
+                        <AvatarFallback className="bg-primary text-primary-foreground font-bold">
+                          {user.email?.charAt(0).toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      {(isAdmin || hasValidTokenAccess(user?.email)) && (
+                        <Crown className="absolute -top-1 -right-1 h-3.5 w-3.5 text-yellow-500 drop-shadow animate-crown-shimmer" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold truncate">{user.user_metadata?.username || 'User'}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {isAdmin ? (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-[9px] font-black text-yellow-400 uppercase tracking-wider">
+                            <Crown className="h-2 w-2" /> Admin
+                          </span>
+                        ) : isUploader ? (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-[9px] font-black text-primary uppercase tracking-wider">
+                            <Upload className="h-2 w-2" /> Uploader
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-muted text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                            Viewer
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <DropdownMenuItem asChild>
-                  <Link to="/profile" className="flex items-center gap-2 py-2">
-                    <User className="h-4 w-4" /> Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/favorites" className="flex items-center gap-2 py-2">
-                    <Heart className="h-4 w-4" /> Favorites
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/history" className="flex items-center gap-2 py-2">
-                    <History className="h-4 w-4" /> Watch History
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/downloads" className="flex items-center gap-2 py-2">
-                    <Download className="h-4 w-4" /> Downloads
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/watchlist" className="flex items-center gap-2 py-2">
-                    <ListVideo className="h-4 w-4" /> Watch List
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {canUpload() && (
-                  <DropdownMenuItem asChild>
-                    <Link to="/upload" className="flex items-center gap-2 py-2">
-                      <Upload className="h-4 w-4" /> Upload Anime
+
+                {/* Library section */}
+                <div className="p-2">
+                  <p className="px-2 pt-1 pb-1.5 text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                    Library
+                  </p>
+                  <div className="grid grid-cols-2 gap-1">
+                    <DropdownMenuItem asChild className="rounded-lg p-0">
+                      <Link to="/profile" className="flex flex-col items-center gap-1 py-2.5 hover:bg-primary/10 rounded-lg group">
+                        <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center group-hover:bg-primary/25 transition-colors">
+                          <User className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <span className="text-[10px] font-semibold">Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="rounded-lg p-0">
+                      <Link to="/favorites" className="flex flex-col items-center gap-1 py-2.5 hover:bg-rose-500/10 rounded-lg group">
+                        <div className="w-7 h-7 rounded-lg bg-rose-500/15 flex items-center justify-center group-hover:bg-rose-500/25 transition-colors">
+                          <Heart className="h-3.5 w-3.5 text-rose-500" />
+                        </div>
+                        <span className="text-[10px] font-semibold">Favorites</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="rounded-lg p-0">
+                      <Link to="/downloads" className="flex flex-col items-center gap-1 py-2.5 hover:bg-emerald-500/10 rounded-lg group">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center group-hover:bg-emerald-500/25 transition-colors">
+                          <Download className="h-3.5 w-3.5 text-emerald-500" />
+                        </div>
+                        <span className="text-[10px] font-semibold">Downloads</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="rounded-lg p-0">
+                      <Link to="/watchlist" className="flex flex-col items-center gap-1 py-2.5 hover:bg-sky-500/10 rounded-lg group">
+                        <div className="w-7 h-7 rounded-lg bg-sky-500/15 flex items-center justify-center group-hover:bg-sky-500/25 transition-colors">
+                          <ListVideo className="h-3.5 w-3.5 text-sky-500" />
+                        </div>
+                        <span className="text-[10px] font-semibold">Watch List</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  </div>
+
+                  <DropdownMenuItem asChild className="rounded-lg mt-1">
+                    <Link to="/history" className="flex items-center gap-2.5 py-2 px-2">
+                      <div className="w-7 h-7 rounded-lg bg-violet-500/15 flex items-center justify-center">
+                        <History className="h-3.5 w-3.5 text-violet-500" />
+                      </div>
+                      <span className="text-[12px] font-medium">Watch History</span>
                     </Link>
                   </DropdownMenuItem>
+                </div>
+
+                {(canUpload() || isAdmin) && (
+                  <>
+                    <DropdownMenuSeparator className="my-0" />
+                    <div className="p-2">
+                      <p className="px-2 pt-1 pb-1.5 text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                        Creator Tools
+                      </p>
+                      {canUpload() && (
+                        <DropdownMenuItem asChild className="rounded-lg">
+                          <Link to="/upload" className="flex items-center gap-2.5 py-2 px-2">
+                            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center shadow-md shadow-primary/30">
+                              <Upload className="h-3.5 w-3.5 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <span className="text-[12px] font-semibold block leading-tight">Upload Anime</span>
+                              <span className="text-[9px] text-muted-foreground">Add new episodes</span>
+                            </div>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {isAdmin && (
+                        <DropdownMenuItem asChild className="rounded-lg">
+                          <Link to="/admin" className="flex items-center gap-2.5 py-2 px-2">
+                            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-md shadow-yellow-500/30">
+                              <Shield className="h-3.5 w-3.5 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <span className="text-[12px] font-semibold block leading-tight">Admin Panel</span>
+                              <span className="text-[9px] text-muted-foreground">Manage platform</span>
+                            </div>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                    </div>
+                  </>
                 )}
-                {isAdmin && (
-                  <DropdownMenuItem asChild>
-                    <Link to="/admin" className="flex items-center gap-2 py-2">
-                      <Shield className="h-4 w-4" /> Admin Panel
+
+                <DropdownMenuSeparator className="my-0" />
+                <div className="p-2">
+                  <DropdownMenuItem asChild className="rounded-lg">
+                    <Link to="/settings" className="flex items-center gap-2.5 py-2 px-2">
+                      <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
+                        <Settings className="h-3.5 w-3.5 text-muted-foreground" />
+                      </div>
+                      <span className="text-[12px] font-medium">Settings</span>
                     </Link>
                   </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/settings" className="flex items-center gap-2 py-2">
-                    <Settings className="h-4 w-4" /> Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="p-0">
-                  <AccountSwitcher />
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={handleSignOut} 
-                  className="text-destructive focus:text-destructive"
-                >
-                  <LogOut className="h-4 w-4 mr-2" /> Sign Out
-                </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="p-0 rounded-lg">
+                    <AccountSwitcher />
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
+                    className="rounded-lg text-destructive focus:text-destructive focus:bg-destructive/10 mt-1"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-destructive/15 flex items-center justify-center mr-2.5">
+                      <LogOut className="h-3.5 w-3.5" />
+                    </div>
+                    <span className="text-[12px] font-semibold">Sign Out</span>
+                  </DropdownMenuItem>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
