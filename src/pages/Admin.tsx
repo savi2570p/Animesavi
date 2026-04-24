@@ -33,6 +33,7 @@ import { ConversionNotifications } from '@/components/admin/ConversionNotificati
 import { ConversionHealthDashboard } from '@/components/admin/ConversionHealthDashboard';
 import { TokenManager } from '@/components/admin/TokenManager';
 import { UserManagement } from '@/components/admin/UserManagement';
+import { EmbedAllowlistManager } from '@/components/admin/EmbedAllowlistManager';
 
 interface Application {
   id: string;
