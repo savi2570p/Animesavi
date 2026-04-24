@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { TrendingUp, Play, Eye } from 'lucide-react';
+import { TrendingUp, Play, Eye, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface TrendingAnime {
