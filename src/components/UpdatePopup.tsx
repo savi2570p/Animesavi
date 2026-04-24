@@ -226,19 +226,6 @@ export function UpdatePopup() {
     );
   }
 
-  /* ── STEP 4: Complete / What's New (with version groups + swipe) ── */
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/90 p-3 backdrop-blur-lg animate-in fade-in duration-300 sm:items-center sm:p-4">
-      <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-red-600/30 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/95 shadow-2xl shadow-red-900/20 animate-in zoom-in-95 duration-300">
-        <div className="border-b border-white/5 px-5 py-4 sm:px-8 sm:py-6">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-600/15">
-            <span className="text-3xl">✅</span>
-          </div>
-          <div className="text-center">
-            <h2 className="text-xl font-bold text-white sm:text-2xl">
-              {isManualWhatsNew ? "What's New" : 'Updated to latest version'}
-            </h2>
-            <p className="mt-2 text-sm text-zinc-400">{currentGroup.highlight}</p>
   /* ── STEP 4: Complete / What's New — compact cinematic redesign ── */
   return (
     <div
