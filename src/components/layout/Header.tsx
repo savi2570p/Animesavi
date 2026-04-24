@@ -30,7 +30,8 @@ import {
   Sparkles,
   Home,
   Download,
-  ListVideo
+  ListVideo,
+  RefreshCw
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
