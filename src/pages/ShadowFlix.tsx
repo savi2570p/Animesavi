@@ -1073,13 +1073,25 @@ export default function ShadowFlix() {
   };
 
   const handleUnlock = () => {
-    if (password.toUpperCase() === SHADOW_FLIX_PASSWORD) {
-      setIsUnlocked(true);
-      sessionStorage.setItem('shadowflix_unlocked', 'true');
-      setPasswordError('');
-    } else {
-      setPasswordError('Incorrect password. Try again.');
+    if (!password.trim()) {
+      setPasswordError('Please enter the access code.');
+      return;
     }
+    setUnlocking(true);
+    setTimeout(() => {
+      if (password.trim().toUpperCase() === SHADOW_FLIX_PASSWORD) {
+        setIsUnlocked(true);
+        sessionStorage.setItem('shadowflix_unlocked', 'true');
+        setPasswordError('');
+        setUnlockAttempts(0);
+        toast.success('Access granted — welcome to Shadow Flix');
+      } else {
+        const next = unlockAttempts + 1;
+        setUnlockAttempts(next);
+        setPasswordError(next >= 3 ? `Incorrect code. ${next} failed attempts — contact an admin if you've lost your code.` : 'Incorrect access code. Try again.');
+      }
+      setUnlocking(false);
+    }, 350);
   };
 
   const handleLogout = () => {
