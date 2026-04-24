@@ -320,8 +320,15 @@ export default function PendingUploadPage() {
     return Math.max(0, Math.floor(ms / (1000 * 60 * 60 * 24)));
   };
 
-  const overdueCount = animeList.filter(a => daysSince(a.created_at) >= 7).length;
-  const recentCount = animeList.filter(a => daysSince(a.created_at) < 2).length;
+  // Bucket counts derived from new status logic
+  const statusCounts = animeList.reduce(
+    (acc, a) => {
+      const s = getPendingStatus(a.created_at).key;
+      acc[s] = (acc[s] || 0) + 1;
+      return acc;
+    },
+    { queued: 0, processing: 0, encoding: 0, overdue: 0 } as Record<PendingStatus['key'], number>
+  );
 
   return (
     <div className="min-h-screen">
