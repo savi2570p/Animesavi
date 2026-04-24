@@ -1210,15 +1210,45 @@ export default function Upload() {
 
 
         {/* Tools Tab */}
-        <TabsContent value="tools">
-          <div className="space-y-6">
-            <ConversionHealthDashboard />
+        <TabsContent value="tools" className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="h-7 w-1 rounded-full bg-gradient-to-b from-emerald-400 to-teal-500" />
+            <div>
+              <h2 className="text-lg md:text-xl font-heading font-black flex items-center gap-2">
+                Tools
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">Live</span>
+              </h2>
+              <p className="text-[11px] text-muted-foreground">Encoding pipeline status, conversion health & maintenance utilities</p>
+            </div>
           </div>
+          <Card className="bg-card/60 backdrop-blur-sm border-border/40 rounded-2xl overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500" />
+            <CardContent className="p-4 md:p-6 space-y-6">
+              <ConversionHealthDashboard />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Token.Savi Tab */}
-        <TabsContent value="token-savi">
-          <TokenSaviDashboard />
+        <TabsContent value="token-savi" className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="h-7 w-1 rounded-full bg-gradient-to-b from-yellow-400 to-orange-500" />
+            <div>
+              <h2 className="text-lg md:text-xl font-heading font-black flex items-center gap-2">
+                Token.Savi
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 uppercase tracking-wider inline-flex items-center gap-0.5">
+                  <Key className="h-2.5 w-2.5" /> Access
+                </span>
+              </h2>
+              <p className="text-[11px] text-muted-foreground">Generate, manage and revoke unlock tokens for premium access</p>
+            </div>
+          </div>
+          <Card className="bg-card/60 backdrop-blur-sm border-border/40 rounded-2xl overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-yellow-500 via-orange-500 to-amber-500" />
+            <CardContent className="p-4 md:p-6">
+              <TokenSaviDashboard />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Upcoming Tab */}
