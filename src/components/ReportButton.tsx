@@ -1,30 +1,31 @@
 import { useState } from 'react';
-import { Flag } from 'lucide-react';
+import { Flag, Send, X, Sparkles, Bug, PlayCircle, Volume2, Palette, Zap, Lightbulb, Lock, Server, Download, Bell, FileWarning, MoreHorizontal } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 
 const REPORT_CATEGORIES = [
-  { label: '🐛 Bug / Glitch', value: 'Bug' },
-  { label: '▶️ Video not playing', value: 'Video Issue' },
-  { label: '🔇 Audio / Subtitle issue', value: 'Audio/Sub Issue' },
-  { label: '📱 UI / Design issue', value: 'UI Issue' },
-  { label: '⚡ Slow / Laggy', value: 'Performance' },
-  { label: '💡 Feature request', value: 'Feature Request' },
-  { label: '🔒 Login / Access issue', value: 'Auth Issue' },
-  { label: '📺 Server / Streaming issue', value: 'Server Issue' },
-  { label: '📥 Download issue', value: 'Download Issue' },
-  { label: '🔔 Notification issue', value: 'Notification Issue' },
-  { label: '📝 Wrong info / Metadata', value: 'Wrong Info' },
-  { label: '🔄 Other', value: 'Other' },
-];
+  { label: 'Bug / Glitch', value: 'Bug', icon: Bug },
+  { label: 'Video not playing', value: 'Video Issue', icon: PlayCircle },
+  { label: 'Audio / Subtitle', value: 'Audio/Sub Issue', icon: Volume2 },
+  { label: 'UI / Design', value: 'UI Issue', icon: Palette },
+  { label: 'Slow / Laggy', value: 'Performance', icon: Zap },
+  { label: 'Feature request', value: 'Feature Request', icon: Lightbulb },
+  { label: 'Login / Access', value: 'Auth Issue', icon: Lock },
+  { label: 'Server / Stream', value: 'Server Issue', icon: Server },
+  { label: 'Download issue', value: 'Download Issue', icon: Download },
+  { label: 'Notification', value: 'Notification Issue', icon: Bell },
+  { label: 'Wrong info', value: 'Wrong Info', icon: FileWarning },
+  { label: 'Other', value: 'Other', icon: MoreHorizontal },
+] as const;
+
+const MAX_LENGTH = 500;
 
 export function ReportButton() {
   const [open, setOpen] = useState(false);
@@ -77,6 +78,9 @@ export function ReportButton() {
     setOpen(false);
   };
 
+  const remaining = MAX_LENGTH - message.length;
+  const canSend = !!category && message.trim().length > 0;
+
   return (
     <>
       <button
@@ -93,50 +97,140 @@ export function ReportButton() {
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-sm border-destructive/20">
-          <DialogHeader>
-            <DialogTitle className="text-base flex items-center gap-2">
-              ⚠️ Report an Issue
-            </DialogTitle>
-          </DialogHeader>
+        <DialogContent
+          className="sm:max-w-md p-0 gap-0 overflow-hidden border-border/50 bg-card/95 backdrop-blur-xl"
+        >
+          {/* Cinematic header with destructive gradient */}
+          <div
+            className="relative px-5 pt-5 pb-4 border-b border-border/40"
+            style={{
+              background:
+                'linear-gradient(135deg, hsl(var(--destructive) / 0.18) 0%, hsl(var(--destructive) / 0.04) 50%, transparent 100%)',
+            }}
+          >
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -top-12 -right-10 w-40 h-40 rounded-full opacity-30 blur-3xl"
+              style={{ background: 'hsl(var(--destructive))' }}
+            />
 
-          {/* Category selector */}
-          <div className="flex flex-wrap gap-1.5">
-            {REPORT_CATEGORIES.map((cat) => (
-              <button
-                key={cat.value}
-                onClick={() => setCategory(cat.value)}
-                className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border ${
-                  category === cat.value
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-muted/50 text-muted-foreground border-border/50 hover:bg-muted'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+            <DialogHeader className="space-y-1 text-left">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className="flex h-9 w-9 items-center justify-center rounded-xl ring-1 ring-destructive/30 shadow-lg shadow-destructive/20"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, hsl(var(--destructive) / 0.95), hsl(var(--destructive) / 0.7))',
+                  }}
+                >
+                  <Flag className="h-4 w-4 text-destructive-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <DialogTitle className="text-base font-semibold leading-tight text-foreground">
+                    Report an Issue
+                  </DialogTitle>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                    <Sparkles className="h-2.5 w-2.5" />
+                    Helps us improve AnimeSavi for everyone
+                  </p>
+                </div>
+              </div>
+            </DialogHeader>
           </div>
 
-          <Textarea
-            placeholder="Describe the problem you're facing..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="min-h-[100px] resize-none"
-            maxLength={500}
-          />
+          {/* Body */}
+          <div className="px-5 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
+            {/* Category grid */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Category
+                </label>
+                {category && (
+                  <span className="text-[10px] font-medium text-primary">Selected</span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                {REPORT_CATEGORIES.map((cat) => {
+                  const Icon = cat.icon;
+                  const active = category === cat.value;
+                  return (
+                    <button
+                      key={cat.value}
+                      onClick={() => setCategory(cat.value)}
+                      className={`group/cat relative flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-[11px] font-medium transition-all border text-left ${
+                        active
+                          ? 'bg-destructive/10 text-foreground border-destructive/60 shadow-sm shadow-destructive/20'
+                          : 'bg-muted/40 text-muted-foreground border-border/40 hover:bg-muted hover:text-foreground hover:border-border'
+                      }`}
+                    >
+                      <Icon
+                        className={`h-3.5 w-3.5 shrink-0 transition-colors ${
+                          active ? 'text-destructive' : 'text-muted-foreground group-hover/cat:text-foreground'
+                        }`}
+                      />
+                      <span className="truncate">{cat.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-          <p className="text-[10px] text-muted-foreground">
-            Your report will be sent via Telegram with page & device info attached.
-          </p>
+            {/* Description */}
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Describe the issue
+              </label>
+              <div className="relative">
+                <Textarea
+                  placeholder="What happened? Steps to reproduce, expected vs actual…"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value.slice(0, MAX_LENGTH))}
+                  className="min-h-[110px] resize-none bg-muted/30 border-border/50 focus-visible:border-destructive/60 focus-visible:ring-destructive/20"
+                  maxLength={MAX_LENGTH}
+                />
+                <span
+                  className={`pointer-events-none absolute bottom-2 right-2.5 text-[10px] font-mono ${
+                    remaining < 50 ? 'text-destructive' : 'text-muted-foreground/70'
+                  }`}
+                >
+                  {remaining}
+                </span>
+              </div>
+            </div>
 
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
+            {/* Info chip */}
+            <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-muted/40 border border-border/40">
+              <Send className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
+              <p className="text-[10.5px] leading-relaxed text-muted-foreground">
+                Your report will open in <span className="font-semibold text-foreground">Telegram</span>{' '}
+                pre-filled with the current page, device, OS &amp; browser info.
+              </p>
+            </div>
+          </div>
+
+          {/* Sticky footer */}
+          <div className="px-5 py-3 border-t border-border/40 bg-background/40 backdrop-blur flex items-center justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setOpen(false)}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5 mr-1" />
               Cancel
             </Button>
-            <Button size="sm" variant="destructive" onClick={handleSend}>
-              Send via Telegram
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleSend}
+              disabled={!canSend}
+              className="min-w-[140px] shadow-md shadow-destructive/25"
+            >
+              <Send className="h-3.5 w-3.5 mr-1.5" />
+              Send Report
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </>
