@@ -12,7 +12,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Eye } from 'lucide-react';
+import { TrendingUp, Eye, Flame, Sparkles, Play, Star, Crown } from 'lucide-react';
 import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
@@ -32,6 +32,7 @@ export default function CrunchyPage() {
   const [animeList, setAnimeList] = useState<CrunchyAnime[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [underProgressAnime, setUnderProgressAnime] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'all' | 'new' | 'trending'>('all');
 
   const formatViewCount = (count: number) => {
     if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
@@ -47,7 +48,6 @@ export default function CrunchyPage() {
         .eq('is_crunchyroll', true as any)
         .order('title');
 
-      // Curated view count map (same as MostPopular)
       const viewCountMap: Record<string, number> = {
         'Your Name': 9500000,
         'Your lie in April': 3400000,
@@ -61,7 +61,6 @@ export default function CrunchyPage() {
         'My Dress-Up Darling': 6200000,
         'Reborn to Master the Blade: From Hero-King to Extraordinary Squire': 1800000,
       };
-
 
       if (!error && data) {
         const enriched = await Promise.all(
@@ -126,55 +125,161 @@ export default function CrunchyPage() {
     }
   };
 
-  // Get trending/popular anime (sorted by view_count)
   const trendingAnime = [...animeList]
     .filter(a => (a.episode_count || 0) > 0)
     .sort((a, b) => (b.view_count || 0) - (a.view_count || 0))
-    .slice(0, 6);
+    .slice(0, 8);
+
+  const isNew = (date: string | null | undefined) => {
+    if (!date) return false;
+    return Date.now() - new Date(date).getTime() < 7 * 24 * 60 * 60 * 1000;
+  };
+
+  const filteredList = animeList.filter((a) => {
+    if (filter === 'new') return isNew(a.latest_episode_at);
+    if (filter === 'trending') return (a.view_count || 0) > 2000000;
+    return true;
+  });
+
+  const totalEpisodes = animeList.reduce((sum, a) => sum + (a.episode_count || 0), 0);
+  const readyCount = animeList.filter(a => (a.episode_count || 0) > 0).length;
 
   return (
     <div className="min-h-screen">
       <ContentNavTabs />
 
-      {/* Header */}
-      <div className="relative overflow-x-hidden overflow-y-visible px-4 py-12">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-        <div className="absolute top-0 right-1/3 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="container relative">
-          <div className="flex items-center gap-4 mb-4">
-            <img src={crunchyrollLogo} alt="Crunchy" className="h-10 md:h-12 w-auto object-contain" />
-            <div>
-              <h1 className="text-3xl md:text-4xl font-heading font-bold">Crunchy</h1>
-              <p className="text-muted-foreground">Curated anime collection</p>
+      {/* Cinematic Header */}
+      <div className="relative overflow-hidden">
+        {/* Background gradient layers */}
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-amber-500/10 to-transparent" />
+        <div className="absolute -top-20 right-1/4 w-[28rem] h-[28rem] bg-orange-500/20 rounded-full blur-[120px]" />
+        <div className="absolute -top-10 left-1/3 w-[20rem] h-[20rem] bg-amber-400/15 rounded-full blur-[100px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--background)),transparent_70%)]" />
+
+        <div className="container relative px-4 py-10 md:py-14">
+          <div className="flex flex-col md:flex-row md:items-end gap-6 md:gap-8">
+            {/* Logo block */}
+            <div className="relative shrink-0">
+              <div className="absolute inset-0 bg-orange-500/30 blur-2xl rounded-full" />
+              <div className="relative flex items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-orange-500/20 to-amber-500/10 border border-orange-500/30 backdrop-blur-sm">
+                <img src={crunchyrollLogo} alt="Crunchy" className="h-12 md:h-14 w-auto object-contain" />
+              </div>
             </div>
+
+            {/* Title block */}
+            <div className="flex-1 min-w-0">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/15 border border-orange-500/30 mb-3">
+                <Sparkles className="h-3 w-3 text-orange-400" />
+                <span className="text-[10px] font-bold text-orange-300 uppercase tracking-wider">Curated Collection</span>
+              </div>
+              <h1 className="text-4xl md:text-6xl font-heading font-black tracking-tight leading-none">
+                Crunchy
+                <span className="text-orange-400">.</span>
+              </h1>
+              <p className="text-muted-foreground mt-2 max-w-xl text-sm md:text-base">
+                A hand-picked library of premium licensed anime — streamed in stunning quality with H-DUB support.
+              </p>
+
+              {/* Stats row */}
+              <div className="flex flex-wrap gap-2 mt-4">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card/60 border border-border/40 backdrop-blur-sm">
+                  <Play className="h-3.5 w-3.5 text-orange-400" />
+                  <span className="text-xs font-semibold">{readyCount} Series</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card/60 border border-border/40 backdrop-blur-sm">
+                  <Star className="h-3.5 w-3.5 text-amber-400" />
+                  <span className="text-xs font-semibold">{totalEpisodes} Episodes</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card/60 border border-border/40 backdrop-blur-sm">
+                  <Crown className="h-3.5 w-3.5 text-yellow-400" />
+                  <span className="text-xs font-semibold">Premium 4K</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Filter chips */}
+          <div className="flex items-center gap-2 mt-8 overflow-x-auto scrollbar-none -mx-4 px-4">
+            {([
+              { key: 'all', label: 'All Titles', icon: null },
+              { key: 'trending', label: 'Trending', icon: Flame },
+              { key: 'new', label: 'New This Week', icon: Sparkles },
+            ] as const).map((f) => {
+              const Icon = f.icon;
+              const active = filter === f.key;
+              return (
+                <button
+                  key={f.key}
+                  onClick={() => setFilter(f.key)}
+                  className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+                    active
+                      ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30 scale-[1.02]'
+                      : 'bg-card/60 text-muted-foreground border border-border/40 hover:bg-card hover:text-foreground'
+                  }`}
+                >
+                  {Icon && <Icon className="h-3.5 w-3.5" />}
+                  {f.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      <div className="container pb-12">
-        {/* Trending / Most Popular Section */}
-        {!isLoading && trendingAnime.length > 0 && (
-          <div className="mb-10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <TrendingUp className="h-5 w-5 text-primary" />
+      <div className="container px-4 pb-12">
+        {/* Trending Spotlight */}
+        {!isLoading && trendingAnime.length > 0 && filter === 'all' && (
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-orange-500/40 blur-md rounded-lg" />
+                  <div className="relative p-2 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500">
+                    <Flame className="h-5 w-5 text-white" />
+                  </div>
+                </div>
+                <div>
+                  <h2 className="text-xl md:text-2xl font-heading font-black">Trending Now</h2>
+                  <p className="text-[11px] text-muted-foreground">Most watched on Crunchy this week</p>
+                </div>
               </div>
-              <h2 className="text-xl md:text-2xl font-heading font-bold">Trending in Crunchy</h2>
+              <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/10 border border-orange-500/20">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-orange-500" />
+                </span>
+                <span className="text-[10px] font-bold text-orange-300 uppercase tracking-wider">Live</span>
+              </div>
             </div>
+
             <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-none">
-              {trendingAnime.map((anime) => (
+              {trendingAnime.map((anime, idx) => (
                 <Link
                   key={anime.id}
                   to={`/anime/${anime.id}`}
                   onClick={(e) => handleAnimeClick(e, anime)}
-                  className="group relative shrink-0 w-[140px] md:w-[160px]"
+                  className="group relative shrink-0 w-[150px] md:w-[170px]"
                 >
-                  <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+                  <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted ring-1 ring-border/30 group-hover:ring-orange-500/50 transition-all duration-300">
+                    {/* Rank number */}
+                    <div className="absolute -left-1 top-2 z-20">
+                      <div
+                        className="text-5xl md:text-6xl font-heading font-black leading-none"
+                        style={{
+                          WebkitTextStroke: '2px rgba(251, 146, 60, 0.9)',
+                          color: 'transparent',
+                          textShadow: '0 4px 20px rgba(251, 146, 60, 0.3)',
+                        }}
+                      >
+                        {idx + 1}
+                      </div>
+                    </div>
+
                     {anime.cover_image ? (
                       <img
                         src={anime.cover_image}
                         alt={anime.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         loading="lazy"
                       />
                     ) : (
@@ -182,22 +287,33 @@ export default function CrunchyPage() {
                         <span className="text-muted-foreground">No Image</span>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                    <div className="absolute bottom-2 left-2 right-2">
-                      <div className="flex items-center gap-1 text-[10px] text-white/80">
-                        <Eye className="h-3 w-3" />
-                        {formatViewCount(anime.view_count || 0)} views
+
+                    {/* Letterbox bars on hover */}
+                    <div className="absolute inset-x-0 top-0 h-3 bg-black translate-y-[-100%] group-hover:translate-y-0 transition-transform duration-300" />
+                    <div className="absolute inset-x-0 bottom-0 h-3 bg-black translate-y-[100%] group-hover:translate-y-0 transition-transform duration-300" />
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+
+                    {/* Play overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="w-12 h-12 rounded-full bg-orange-500/95 flex items-center justify-center shadow-2xl shadow-orange-500/50 scale-90 group-hover:scale-100 transition-transform">
+                        <Play className="h-5 w-5 text-white fill-white ml-0.5" />
                       </div>
                     </div>
-                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
-                      🔥 Trending
+
+                    <div className="absolute bottom-2 left-2 right-2">
+                      <div className="flex items-center gap-1 text-[10px] text-white/90 font-medium">
+                        <Eye className="h-3 w-3" />
+                        {formatViewCount(anime.view_count || 0)}
+                      </div>
                     </div>
+
                     <TokenCrownBadge />
-                    <div className="absolute top-2 right-2 px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-lg shadow-md">
+                    <div className="absolute top-2 right-2 px-2 py-0.5 text-[9px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-md shadow-md uppercase tracking-wider">
                       H-DUB
                     </div>
                   </div>
-                  <h3 className="mt-2 text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                  <h3 className="mt-2.5 text-sm font-semibold line-clamp-2 group-hover:text-orange-400 transition-colors">
                     {anime.title}
                   </h3>
                 </Link>
@@ -207,37 +323,45 @@ export default function CrunchyPage() {
         )}
 
         {/* All Crunchy Anime */}
+        <div className="flex items-center gap-3 mb-5">
+          <div className="h-6 w-1 rounded-full bg-gradient-to-b from-orange-400 to-amber-500" />
+          <h2 className="text-lg md:text-xl font-heading font-black">
+            {filter === 'all' ? 'Full Library' : filter === 'new' ? 'Fresh Releases' : 'Most Watched'}
+          </h2>
+          <span className="text-xs text-muted-foreground">({filteredList.length})</span>
+        </div>
+
         {isLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="space-y-2">
-                <Skeleton className="aspect-[2/3] rounded-lg" />
+                <Skeleton className="aspect-[2/3] rounded-xl" />
                 <Skeleton className="h-4 w-3/4" />
               </div>
             ))}
           </div>
-        ) : animeList.length === 0 ? (
-          <div className="text-center py-16">
+        ) : filteredList.length === 0 ? (
+          <div className="text-center py-16 rounded-2xl border border-dashed border-border/50 bg-card/30">
             <img src={crunchyrollLogo} alt="Crunchy" className="h-16 w-auto mx-auto mb-4 opacity-50" />
-            <h3 className="text-xl font-semibold mb-2">No Crunchy Anime Yet</h3>
-            <p className="text-muted-foreground">Check back soon for curated content.</p>
+            <h3 className="text-xl font-semibold mb-2">Nothing here yet</h3>
+            <p className="text-muted-foreground text-sm">Try switching the filter or check back soon.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {animeList.map((anime, index) => (
+            {filteredList.map((anime, index) => (
               <Link
                 key={anime.id}
                 to={`/anime/${anime.id}`}
                 onClick={(e) => handleAnimeClick(e, anime)}
                 className="group relative animate-fade-in"
-                style={{ animationDelay: `${index * 50}ms` }}
+                style={{ animationDelay: `${Math.min(index * 30, 600)}ms` }}
               >
-                <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+                <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted ring-1 ring-border/30 group-hover:ring-orange-500/50 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-orange-500/20">
                   {anime.cover_image ? (
                     <img
                       src={anime.cover_image}
                       alt={anime.title}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       loading="lazy"
                     />
                   ) : (
@@ -245,32 +369,61 @@ export default function CrunchyPage() {
                       <span className="text-muted-foreground">No Image</span>
                     </div>
                   )}
-                  {/* Under Progress overlay on thumbnail */}
+
+                  {/* Under Progress overlay */}
                   {anime.episode_count === 0 && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                      <span className="text-white text-xs font-bold bg-primary/80 px-3 py-1.5 rounded-full">Under Progress</span>
+                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center">
+                      <span className="text-white text-[10px] font-black bg-orange-500/90 px-3 py-1.5 rounded-full uppercase tracking-wider shadow-lg">
+                        Under Progress
+                      </span>
                     </div>
                   )}
-                  {anime.type && (
-                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-muted/90 text-[10px] font-bold uppercase">
+
+                  {/* NEW badge */}
+                  {isNew(anime.latest_episode_at) && (
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-gradient-to-r from-orange-500 to-amber-500 text-[9px] font-black text-white uppercase tracking-wider shadow-md">
+                      New
+                    </div>
+                  )}
+
+                  {/* Type badge */}
+                  {anime.type && !isNew(anime.latest_episode_at) && (
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[9px] font-bold text-white uppercase tracking-wider border border-white/10">
                       {anime.type}
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                  {/* View count */}
-                  <div className="absolute bottom-2 left-2 right-2">
-                    <div className="flex items-center gap-1 text-[10px] text-white/80">
-                      <Eye className="h-3 w-3" />
-                      {formatViewCount(anime.view_count || 0)} views
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent" />
+
+                  {/* Play overlay on hover */}
+                  {(anime.episode_count || 0) > 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="w-11 h-11 rounded-full bg-orange-500/95 flex items-center justify-center shadow-2xl shadow-orange-500/50 scale-90 group-hover:scale-100 transition-transform">
+                        <Play className="h-4 w-4 text-white fill-white ml-0.5" />
+                      </div>
                     </div>
+                  )}
+
+                  {/* Bottom info */}
+                  <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-[10px] text-white/90 font-medium">
+                      <Eye className="h-3 w-3" />
+                      {formatViewCount(anime.view_count || 0)}
+                    </div>
+                    {(anime.episode_count || 0) > 0 && (
+                      <span className="text-[9px] font-bold text-white/80 px-1.5 py-0.5 rounded bg-black/40 backdrop-blur-sm">
+                        {anime.episode_count} EP
+                      </span>
+                    )}
                   </div>
+
                   <TokenCrownBadge />
-                  <div className="absolute top-2 right-2 px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-lg shadow-md">
+                  <div className="absolute top-2 right-2 px-2 py-0.5 text-[9px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-md shadow-md uppercase tracking-wider">
                     H-DUB
                   </div>
                 </div>
-                <div className="mt-2">
-                  <h3 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                <div className="mt-2.5">
+                  <h3 className="text-sm font-semibold line-clamp-2 group-hover:text-orange-400 transition-colors">
                     {anime.title}
                   </h3>
                 </div>
