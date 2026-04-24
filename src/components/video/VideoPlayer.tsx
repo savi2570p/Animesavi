@@ -26,6 +26,7 @@ import {
   Info,
   Keyboard,
   Cast,
+  RotateCcw,
 } from 'lucide-react';
 import { 
   getAudioTrackLabel, 
@@ -245,6 +246,7 @@ export function VideoPlayer({
   const hlsRef = useRef<Hls | null>(null);
   
   const [isPlaying, setIsPlaying] = useState(false);
+  const [hasEnded, setHasEnded] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1);
   const [brightness, setBrightness] = useState(1);
@@ -2425,6 +2427,7 @@ export function VideoPlayer({
         onTimeUpdate={handleTimeUpdate}
         onPlay={() => {
           setIsPlaying(true);
+          setHasEnded(false);
           setHasUserInteracted(true);
           // Hide premium loader on play
           setShowPremiumLoader(false);
@@ -2436,6 +2439,10 @@ export function VideoPlayer({
           }
         }}
         onPause={() => setIsPlaying(false)}
+        onEnded={() => {
+          setIsPlaying(false);
+          setHasEnded(true);
+        }}
         onLoadedMetadata={() => {
           if (videoRef.current) {
             setDuration(videoRef.current.duration);
