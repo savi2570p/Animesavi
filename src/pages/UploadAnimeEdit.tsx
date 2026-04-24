@@ -18,6 +18,7 @@ import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { BatchEpisodeUpload } from '@/components/upload/BatchEpisodeUpload';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { extractEmbedSrc } from '@/components/video/PureEmbedPlayer';
 
 const ALL_GENRES = ['Action', 'Adventure', 'Animation', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Mysterious', 'Anime', 'Anime Series', 'Hindi', 'English', 'Tamil', 'Telugu', 'Japanese', 'Crunchyroll', 'Muse India', 'Amazon Prime'];
 
@@ -296,7 +297,7 @@ export default function UploadAnimeEdit() {
         title: newEpisodeTitle.trim(),
         description: newEpisodeDescription.trim() || null,
         video_url: newEpisodeVideoUrl.trim() || null,
-        external_url: (await import('@/components/video/PureEmbedPlayer')).extractEmbedSrc(newEpisodeExternalUrl) || null,
+        external_url: extractEmbedSrc(newEpisodeExternalUrl) || null,
         thumbnail: newEpisodeThumbnail.trim() || null,
         duration: newEpisodeDuration ? parseInt(newEpisodeDuration) : null,
       })

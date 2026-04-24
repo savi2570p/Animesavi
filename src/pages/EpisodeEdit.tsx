@@ -14,6 +14,7 @@ import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { IntroOutroEditor } from '@/components/upload/IntroOutroEditor';
 import { VideoFormatConverter } from '@/components/upload/VideoFormatConverter';
 import { SubtitleEditor } from '@/components/upload/SubtitleEditor';
+import { extractEmbedSrc } from '@/components/video/PureEmbedPlayer';
 
 const AUDIO_LANGUAGES = [
   { value: 'original', label: 'Original (Japanese)' },
@@ -169,7 +170,7 @@ export default function EpisodeEdit() {
         title: title.trim(),
         description: description.trim() || null,
         video_url: videoUrl.trim() || null,
-        external_url: (await import('@/components/video/PureEmbedPlayer')).extractEmbedSrc(externalUrl) || null,
+        external_url: extractEmbedSrc(externalUrl) || null,
         thumbnail: thumbnail.trim() || null,
         duration: duration ? parseInt(duration) : null,
         episode_number: parseInt(episodeNumber),
