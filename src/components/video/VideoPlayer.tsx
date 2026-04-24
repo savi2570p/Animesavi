@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { DownloadVerificationDialog } from './DownloadVerificationDialog';
+import { ThemePickerButton, buildThemeStyle, type PlayerThemeKey } from './PlayerThemePicker';
 import { QualityOverlay } from './QualityOverlay';
 import { BufferingIndicator } from './BufferingIndicator';
 import { VolumeSlider } from './VolumeSlider';
