@@ -275,18 +275,19 @@ export function FeaturedSlider() {
   // ─── MOBILE: Taller cinematic slider ───
   return (
     <section className="relative w-full overflow-x-hidden overflow-y-visible">
-      <div className="relative w-full aspect-[16/9]">
+      <div className="relative w-full aspect-[16/9] overflow-hidden">
         {featuredAnime.map((anime, idx) => (
           <div
             key={anime.id}
-            className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+            className={`absolute inset-0 transition-opacity duration-500 ease-out ${
               idx === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
             }`}
           >
             <img
+              key={idx === currentIndex ? `mimg-${animKey}` : `mimg-${idx}`}
               src={anime.banner || anime.thumbnail || '/placeholder.svg'}
               alt={anime.title}
-              className={`w-full h-full object-cover ${idx === currentIndex ? 'nf-ken-burns' : ''}`}
+              className={`w-full h-full object-cover ${idx === currentIndex ? (direction === 'next' ? 'hero-slide-in-right' : 'hero-slide-in-left') : ''}`}
             />
           </div>
         ))}
@@ -297,7 +298,7 @@ export function FeaturedSlider() {
 
         {/* Content overlay — mobile */}
         <div className="absolute inset-0 z-30 flex items-end pb-12 px-3">
-          <div className="w-full space-y-2 max-w-full overflow-hidden">
+          <div key={`mcontent-${animKey}`} className="hero-content-in w-full space-y-2 max-w-full overflow-hidden">
             {/* Featured pill + views */}
             <div className="flex items-center gap-1.5 flex-wrap">
               <div className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/15 backdrop-blur-md px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-primary">
