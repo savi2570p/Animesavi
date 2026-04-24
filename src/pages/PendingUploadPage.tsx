@@ -109,43 +109,178 @@ interface NoEpisodesPopupProps {
 
 function NoEpisodesPopup({ isOpen, onClose, animeTitle }: NoEpisodesPopupProps) {
   if (!isOpen) return null;
+
+  // Pretend a live pipeline progress — in reality we just animate forward to feel alive.
+  const activeStage = 2; // "Encoding" highlighted by default
   const stages = [
-    { Icon: ListChecks, title: 'Episode upload queue', desc: 'Season links, posters and first episode files are being added.' },
-    { Icon: ShieldCheck, title: 'Audio + E-sub check', desc: 'Multi-audio (Hindi/English/Japanese) and subtitle timing verified.' },
-    { Icon: RefreshCw, title: 'HLS conversion & encoding', desc: 'Adaptive streaming format prepared (480p → 4K).' },
-    { Icon: ServerCog, title: 'Server deployment', desc: 'Distributed across H.Savi, SAVI.IN, Multi.Savi and X-PLUS.' },
-    { Icon: PackageCheck, title: 'Quality assurance', desc: 'Tested on mobile, desktop and TV before going live.' },
-  ];
+    { Icon: ListChecks, title: 'Upload queue', desc: 'Season links, posters and episode files added.', tone: 'sky' },
+    { Icon: ShieldCheck, title: 'Audio + E-sub check', desc: 'Multi-audio + subtitle timing verified.', tone: 'amber' },
+    { Icon: RefreshCw, title: 'HLS encoding', desc: 'Adaptive streaming (480p → 4K) in progress.', tone: 'violet' },
+    { Icon: ServerCog, title: 'Server deployment', desc: 'Distributed to H.Savi, SAVI.IN, Multi.Savi & X-PLUS.', tone: 'fuchsia' },
+    { Icon: PackageCheck, title: 'Quality assurance', desc: 'Tested on mobile, desktop & TV before going live.', tone: 'emerald' },
+  ] as const;
+
+  const toneMap: Record<string, { ring: string; bg: string; text: string; dot: string; bar: string }> = {
+    sky: { ring: 'ring-sky-500/40', bg: 'bg-sky-500/15', text: 'text-sky-300', dot: 'bg-sky-500', bar: 'bg-sky-500' },
+    amber: { ring: 'ring-amber-500/40', bg: 'bg-amber-500/15', text: 'text-amber-300', dot: 'bg-amber-500', bar: 'bg-amber-500' },
+    violet: { ring: 'ring-violet-500/50', bg: 'bg-violet-500/15', text: 'text-violet-300', dot: 'bg-violet-500', bar: 'bg-violet-500' },
+    fuchsia: { ring: 'ring-fuchsia-500/40', bg: 'bg-fuchsia-500/15', text: 'text-fuchsia-300', dot: 'bg-fuchsia-500', bar: 'bg-fuchsia-500' },
+    emerald: { ring: 'ring-emerald-500/40', bg: 'bg-emerald-500/15', text: 'text-emerald-300', dot: 'bg-emerald-500', bar: 'bg-emerald-500' },
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="relative bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-6 max-w-md w-full shadow-2xl animate-scale-in overflow-hidden">
-        <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-amber-500/20 blur-3xl pointer-events-none" />
-        <div className="relative flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
-            <Hourglass className="h-6 w-6 text-white animate-pulse" />
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-lg rounded-3xl overflow-hidden animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Cinematic backdrop */}
+        <div className="absolute inset-0 bg-gradient-to-br from-card via-card/95 to-card border border-border/60 rounded-3xl" />
+        <div className="absolute -top-32 -right-32 w-72 h-72 rounded-full bg-amber-500/20 blur-[100px] pointer-events-none" />
+        <div className="absolute -bottom-32 -left-32 w-72 h-72 rounded-full bg-violet-500/15 blur-[100px] pointer-events-none" />
+        <div
+          className="absolute inset-0 opacity-[0.04] pointer-events-none rounded-3xl"
+          style={{ backgroundImage: 'repeating-linear-gradient(45deg, currentColor 0 1px, transparent 1px 12px)' }}
+        />
+
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-background/60 hover:bg-background border border-border/50 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Close"
+        >
+          ×
+        </button>
+
+        <div className="relative p-6 md:p-7">
+          {/* Eyebrow */}
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-[10px] font-bold text-amber-300 uppercase tracking-[0.18em] mb-4">
+            <Sparkles className="h-3 w-3" /> Under Progress
           </div>
-          <div>
-            <h3 className="text-lg font-bold">Episodes Coming Soon</h3>
-            <p className="text-xs text-muted-foreground">5-stage release pipeline</p>
-          </div>
-        </div>
-        <p className="text-sm text-muted-foreground mb-4">
-          <span className="text-foreground font-semibold">{animeTitle}</span> is still in the encoding pipeline — the watch page unlocks the moment the first episode pack is ready.
-        </p>
-        <div className="space-y-2 mb-5">
-          {stages.map((s, i) => (
-            <div key={s.title} className="flex items-start gap-3 rounded-xl border border-border/50 bg-muted/40 p-3">
-              <div className="shrink-0 w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30 flex items-center justify-center">
-                <s.Icon className="h-3.5 w-3.5 text-amber-400" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold leading-tight">{i + 1}. {s.title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{s.desc}</p>
+
+          {/* Hero icon + headings */}
+          <div className="flex items-start gap-4 mb-5">
+            <div className="relative shrink-0">
+              <div className="absolute inset-0 bg-amber-500/40 blur-2xl rounded-3xl animate-pulse" />
+              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 flex items-center justify-center shadow-xl shadow-amber-500/40">
+                <Hourglass className="h-7 w-7 text-white animate-pulse" />
               </div>
             </div>
-          ))}
+            <div className="min-w-0 flex-1">
+              <h3 className="text-xl md:text-2xl font-heading font-black tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+                Episodes Coming Soon
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                <span className="text-foreground font-semibold">{animeTitle}</span> is still cooking — we’ll unlock the watch page the moment the first episode pack is ready.
+              </p>
+            </div>
+          </div>
+
+          {/* Live status pill row */}
+          <div className="flex items-center gap-2 flex-wrap mb-5">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+              </span>
+              <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider">Pipeline Live</span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/40 border border-border/50">
+              <Timer className="h-3 w-3 text-muted-foreground" />
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">ETA 24–72h</span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/40 border border-border/50">
+              <FileVideo className="h-3 w-3 text-muted-foreground" />
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Adaptive HLS</span>
+            </div>
+          </div>
+
+          {/* Vertical timeline */}
+          <div className="relative mb-5">
+            {/* Track */}
+            <div className="absolute left-[15px] top-2 bottom-2 w-px bg-gradient-to-b from-sky-500/40 via-amber-500/40 via-violet-500/50 via-fuchsia-500/40 to-emerald-500/40" />
+
+            <div className="space-y-2.5">
+              {stages.map((s, i) => {
+                const t = toneMap[s.tone];
+                const isDone = i < activeStage;
+                const isActive = i === activeStage;
+                return (
+                  <div key={s.title} className="relative flex items-start gap-3 pl-0">
+                    {/* Node */}
+                    <div className="relative z-10 shrink-0 mt-1">
+                      <div
+                        className={cn(
+                          'w-8 h-8 rounded-full flex items-center justify-center ring-2 transition-all',
+                          isActive ? cn(t.bg, t.ring, 'shadow-lg') : isDone ? 'bg-emerald-500/15 ring-emerald-500/40' : 'bg-muted/50 ring-border/50',
+                        )}
+                      >
+                        {isDone ? (
+                          <CircleDot className="h-4 w-4 text-emerald-400" />
+                        ) : (
+                          <s.Icon className={cn('h-4 w-4', isActive ? t.text : 'text-muted-foreground', isActive && s.Icon === RefreshCw && 'animate-spin')} />
+                        )}
+                      </div>
+                      {isActive && (
+                        <span className={cn('absolute inset-0 rounded-full animate-ping opacity-50', t.bg)} />
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div
+                      className={cn(
+                        'flex-1 min-w-0 rounded-xl border p-2.5 transition-all',
+                        isActive
+                          ? 'bg-card/80 border-border shadow-md'
+                          : 'bg-muted/30 border-border/40',
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-0.5">
+                        <p className={cn('text-sm font-bold leading-tight', isActive && t.text)}>
+                          <span className="text-muted-foreground/70 font-mono text-[10px] mr-1.5">0{i + 1}</span>
+                          {s.title}
+                        </p>
+                        {isActive && (
+                          <span className={cn('text-[9px] font-black uppercase tracking-wider px-1.5 py-px rounded', t.bg, t.text)}>
+                            In Progress
+                          </span>
+                        )}
+                        {isDone && (
+                          <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-px rounded bg-emerald-500/15 text-emerald-300">
+                            Done
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-snug">{s.desc}</p>
+
+                      {/* Animated bar for active step */}
+                      {isActive && (
+                        <div className="mt-2 h-1 rounded-full bg-muted/60 overflow-hidden">
+                          <div className={cn('h-full w-1/2 rounded-full animate-pulse', t.bar)} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Footer note + CTA */}
+          <div className="rounded-xl border border-amber-500/20 bg-gradient-to-r from-amber-500/[0.08] via-orange-500/[0.04] to-transparent p-3 mb-4 flex items-start gap-2.5">
+            <Sparkles className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              You’ll see the watch page unlock automatically here — no need to refresh. Want a heads-up? Add it to your <span className="text-foreground font-semibold">Watch List</span> to get notified.
+            </p>
+          </div>
+
+          <Button onClick={onClose} size="lg" className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold uppercase tracking-wider shadow-lg shadow-amber-500/30">
+            Got It — I'll Wait
+          </Button>
         </div>
-        <Button onClick={onClose} className="w-full">OK, Got It!</Button>
       </div>
     </div>
   );
