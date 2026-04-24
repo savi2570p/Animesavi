@@ -11,7 +11,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Eye, Sparkles, Clock, Film, Globe } from 'lucide-react';
+import { TrendingUp, Eye, Sparkles, Clock, Film, Globe, Play, Flame, Star, Languages } from 'lucide-react';
 import museinLogo from '@/assets/musein-logo.jpg';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
