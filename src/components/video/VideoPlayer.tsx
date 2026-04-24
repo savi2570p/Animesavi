@@ -3146,6 +3146,12 @@ export function VideoPlayer({
                   >
                     <Subtitles className={`${isIOS ? 'w-3 h-3' : 'w-4.5 h-4.5 md:w-5 md:h-5'} ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`} />
                   </button>
+                  <ThemePickerButton
+                    value={playerTheme}
+                    onChange={setPlayerTheme}
+                    iconClassName={isIOS ? 'w-3 h-3' : 'w-4.5 h-4.5 md:w-5 md:h-5'}
+                    containerEl={containerRef.current}
+                  />
                   <DropdownMenu 
                     modal={false} 
                     open={settingsOpen}
