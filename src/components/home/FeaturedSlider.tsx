@@ -58,7 +58,8 @@ const getViewCount = (title: string, dbViewCount: number | null): number => {
 
 export function FeaturedSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [direction, setDirection] = useState<'next' | 'prev'>('next');
+  const [animKey, setAnimKey] = useState(0);
   const [featuredAnime, setFeaturedAnime] = useState<FeaturedAnimeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
@@ -86,7 +87,6 @@ export function FeaturedSlider() {
             status: anime.status,
           }));
           setFeaturedAnime(items);
-          // Preload first 3 banner/cover images for instant slider
           preloadImages(items.slice(0, 3).map(a => a.banner || a.thumbnail));
         }
       } catch (error) {
@@ -98,26 +98,32 @@ export function FeaturedSlider() {
     fetchFeaturedAnime();
   }, []);
 
-  // Auto-slide every 7 seconds — gives Ken Burns time to breathe
-  useEffect(() => {
-    if (featuredAnime.length === 0) return;
-    const interval = setInterval(() => handleNext(), 7000);
-    return () => clearInterval(interval);
-  }, [currentIndex, featuredAnime.length]);
+  const goTo = useCallback((nextIdx: number, dir: 'next' | 'prev') => {
+    setDirection(dir);
+    setCurrentIndex(nextIdx);
+    setAnimKey(k => k + 1);
+  }, []);
 
   const handleNext = useCallback(() => {
-    if (isAnimating || featuredAnime.length === 0) return;
-    setIsAnimating(true);
-    setCurrentIndex(prev => (prev + 1) % featuredAnime.length);
-    setTimeout(() => setIsAnimating(false), 600);
-  }, [isAnimating, featuredAnime.length]);
+    if (featuredAnime.length === 0) return;
+    goTo((currentIndex + 1) % featuredAnime.length, 'next');
+  }, [currentIndex, featuredAnime.length, goTo]);
 
   const handlePrev = useCallback(() => {
-    if (isAnimating || featuredAnime.length === 0) return;
-    setIsAnimating(true);
-    setCurrentIndex(prev => (prev - 1 + featuredAnime.length) % featuredAnime.length);
-    setTimeout(() => setIsAnimating(false), 600);
-  }, [isAnimating, featuredAnime.length]);
+    if (featuredAnime.length === 0) return;
+    goTo((currentIndex - 1 + featuredAnime.length) % featuredAnime.length, 'prev');
+  }, [currentIndex, featuredAnime.length, goTo]);
+
+  // Auto-loop every 3 seconds — restarts on manual change
+  useEffect(() => {
+    if (featuredAnime.length === 0) return;
+    const interval = setInterval(() => {
+      setDirection('next');
+      setCurrentIndex(prev => (prev + 1) % featuredAnime.length);
+      setAnimKey(k => k + 1);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [currentIndex, featuredAnime.length]);
 
   if (loading) {
     return (
