@@ -58,7 +58,8 @@ const getViewCount = (title: string, dbViewCount: number | null): number => {
 
 export function FeaturedSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [direction, setDirection] = useState<'next' | 'prev'>('next');
+  const [animKey, setAnimKey] = useState(0);
   const [featuredAnime, setFeaturedAnime] = useState<FeaturedAnimeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
@@ -86,7 +87,6 @@ export function FeaturedSlider() {
             status: anime.status,
           }));
           setFeaturedAnime(items);
-          // Preload first 3 banner/cover images for instant slider
           preloadImages(items.slice(0, 3).map(a => a.banner || a.thumbnail));
         }
       } catch (error) {
@@ -98,26 +98,32 @@ export function FeaturedSlider() {
     fetchFeaturedAnime();
   }, []);
 
-  // Auto-slide every 7 seconds — gives Ken Burns time to breathe
-  useEffect(() => {
-    if (featuredAnime.length === 0) return;
-    const interval = setInterval(() => handleNext(), 7000);
-    return () => clearInterval(interval);
-  }, [currentIndex, featuredAnime.length]);
+  const goTo = useCallback((nextIdx: number, dir: 'next' | 'prev') => {
+    setDirection(dir);
+    setCurrentIndex(nextIdx);
+    setAnimKey(k => k + 1);
+  }, []);
 
   const handleNext = useCallback(() => {
-    if (isAnimating || featuredAnime.length === 0) return;
-    setIsAnimating(true);
-    setCurrentIndex(prev => (prev + 1) % featuredAnime.length);
-    setTimeout(() => setIsAnimating(false), 600);
-  }, [isAnimating, featuredAnime.length]);
+    if (featuredAnime.length === 0) return;
+    goTo((currentIndex + 1) % featuredAnime.length, 'next');
+  }, [currentIndex, featuredAnime.length, goTo]);
 
   const handlePrev = useCallback(() => {
-    if (isAnimating || featuredAnime.length === 0) return;
-    setIsAnimating(true);
-    setCurrentIndex(prev => (prev - 1 + featuredAnime.length) % featuredAnime.length);
-    setTimeout(() => setIsAnimating(false), 600);
-  }, [isAnimating, featuredAnime.length]);
+    if (featuredAnime.length === 0) return;
+    goTo((currentIndex - 1 + featuredAnime.length) % featuredAnime.length, 'prev');
+  }, [currentIndex, featuredAnime.length, goTo]);
+
+  // Auto-loop every 3 seconds — restarts on manual change
+  useEffect(() => {
+    if (featuredAnime.length === 0) return;
+    const interval = setInterval(() => {
+      setDirection('next');
+      setCurrentIndex(prev => (prev + 1) % featuredAnime.length);
+      setAnimKey(k => k + 1);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [currentIndex, featuredAnime.length]);
 
   if (loading) {
     return (
@@ -139,18 +145,19 @@ export function FeaturedSlider() {
     return (
       <section className="relative w-full overflow-x-hidden overflow-y-visible">
         {/* Background hero image */}
-        <div className="relative w-full aspect-[16/9]">
+        <div className="relative w-full aspect-[16/9] overflow-hidden">
           {featuredAnime.map((anime, idx) => (
             <div
               key={anime.id}
-              className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+              className={`absolute inset-0 transition-opacity duration-500 ease-out ${
                 idx === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
               }`}
             >
               <img
+                key={idx === currentIndex ? `img-${animKey}` : `img-${idx}`}
                 src={anime.banner || anime.thumbnail || '/placeholder.svg'}
                 alt={anime.title}
-                className={`w-full h-full object-cover ${idx === currentIndex ? 'nf-ken-burns' : ''}`}
+                className={`w-full h-full object-cover ${idx === currentIndex ? (direction === 'next' ? 'hero-slide-in-right' : 'hero-slide-in-left') : ''}`}
               />
             </div>
           ))}
@@ -162,7 +169,7 @@ export function FeaturedSlider() {
           {/* Content overlay */}
           <div className="absolute inset-0 z-30 flex items-center">
             <div className="container">
-              <div className="max-w-2xl space-y-5">
+              <div key={`content-${animKey}`} className="hero-content-in max-w-2xl space-y-5">
                 {/* Featured pill + slide counter */}
                 <div className="flex items-center gap-3">
                   <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-primary shadow-lg shadow-primary/10">
@@ -243,19 +250,20 @@ export function FeaturedSlider() {
           {featuredAnime.map((_, idx) => (
             <button
               key={idx}
-              onClick={() => { setCurrentIndex(idx); }}
-              className="flex-1 h-[3px] rounded-full bg-foreground/20 overflow-hidden relative"
+              onClick={() => goTo(idx, idx > currentIndex ? 'next' : 'prev')}
+              className={`h-[3px] rounded-full bg-foreground/20 overflow-hidden relative transition-all duration-500 ${idx === currentIndex ? 'flex-[2]' : 'flex-1'}`}
               aria-label={`Go to slide ${idx + 1}`}
             >
               <div
-                className={`absolute inset-y-0 left-0 rounded-full transition-all ${
+                key={idx === currentIndex ? `bar-${animKey}` : `bar-${idx}`}
+                className={`absolute inset-y-0 left-0 rounded-full ${
                   idx === currentIndex
-                    ? 'bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)] animate-[slider-fill_7s_linear]'
+                    ? 'bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)]'
                     : idx < currentIndex
                     ? 'bg-primary w-full'
                     : 'w-0'
                 }`}
-                style={idx === currentIndex ? { animation: 'slider-fill 7s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
+                style={idx === currentIndex ? { animation: 'slider-fill 3s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
               />
             </button>
           ))}
@@ -267,18 +275,19 @@ export function FeaturedSlider() {
   // ─── MOBILE: Taller cinematic slider ───
   return (
     <section className="relative w-full overflow-x-hidden overflow-y-visible">
-      <div className="relative w-full aspect-[16/9]">
+      <div className="relative w-full aspect-[16/9] overflow-hidden">
         {featuredAnime.map((anime, idx) => (
           <div
             key={anime.id}
-            className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+            className={`absolute inset-0 transition-opacity duration-500 ease-out ${
               idx === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
             }`}
           >
             <img
+              key={idx === currentIndex ? `mimg-${animKey}` : `mimg-${idx}`}
               src={anime.banner || anime.thumbnail || '/placeholder.svg'}
               alt={anime.title}
-              className={`w-full h-full object-cover ${idx === currentIndex ? 'nf-ken-burns' : ''}`}
+              className={`w-full h-full object-cover ${idx === currentIndex ? (direction === 'next' ? 'hero-slide-in-right' : 'hero-slide-in-left') : ''}`}
             />
           </div>
         ))}
@@ -289,7 +298,7 @@ export function FeaturedSlider() {
 
         {/* Content overlay — mobile */}
         <div className="absolute inset-0 z-30 flex items-end pb-12 px-3">
-          <div className="w-full space-y-2 max-w-full overflow-hidden">
+          <div key={`mcontent-${animKey}`} className="hero-content-in w-full space-y-2 max-w-full overflow-hidden">
             {/* Featured pill + views */}
             <div className="flex items-center gap-1.5 flex-wrap">
               <div className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/15 backdrop-blur-md px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-primary">
@@ -367,12 +376,13 @@ export function FeaturedSlider() {
         {featuredAnime.map((_, idx) => (
           <button
             key={idx}
-            onClick={() => { setCurrentIndex(idx); }}
-            className="flex-1 h-[2px] rounded-[1px] bg-foreground/20 overflow-hidden relative"
+            onClick={() => goTo(idx, idx > currentIndex ? 'next' : 'prev')}
+            className={`h-[2px] rounded-[1px] bg-foreground/20 overflow-hidden relative transition-all duration-500 ${idx === currentIndex ? 'flex-[2]' : 'flex-1'}`}
             style={{ WebkitAppearance: 'none', minHeight: '2px', maxHeight: '2px' }}
             aria-label={`Go to slide ${idx + 1}`}
           >
             <div
+              key={idx === currentIndex ? `mbar-${animKey}` : `mbar-${idx}`}
               className={`absolute inset-y-0 left-0 rounded-[1px] ${
                 idx === currentIndex
                   ? 'bg-primary shadow-[0_0_6px_hsl(var(--primary)/0.5)]'
@@ -380,7 +390,7 @@ export function FeaturedSlider() {
                   ? 'bg-primary w-full'
                   : 'w-0'
               }`}
-              style={idx === currentIndex ? { animation: 'slider-fill 7s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
+              style={idx === currentIndex ? { animation: 'slider-fill 3s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
             />
           </button>
         ))}
