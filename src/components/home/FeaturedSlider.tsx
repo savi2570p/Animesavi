@@ -250,19 +250,20 @@ export function FeaturedSlider() {
           {featuredAnime.map((_, idx) => (
             <button
               key={idx}
-              onClick={() => { setCurrentIndex(idx); }}
-              className="flex-1 h-[3px] rounded-full bg-foreground/20 overflow-hidden relative"
+              onClick={() => goTo(idx, idx > currentIndex ? 'next' : 'prev')}
+              className={`h-[3px] rounded-full bg-foreground/20 overflow-hidden relative transition-all duration-500 ${idx === currentIndex ? 'flex-[2]' : 'flex-1'}`}
               aria-label={`Go to slide ${idx + 1}`}
             >
               <div
-                className={`absolute inset-y-0 left-0 rounded-full transition-all ${
+                key={idx === currentIndex ? `bar-${animKey}` : `bar-${idx}`}
+                className={`absolute inset-y-0 left-0 rounded-full ${
                   idx === currentIndex
-                    ? 'bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)] animate-[slider-fill_7s_linear]'
+                    ? 'bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)]'
                     : idx < currentIndex
                     ? 'bg-primary w-full'
                     : 'w-0'
                 }`}
-                style={idx === currentIndex ? { animation: 'slider-fill 7s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
+                style={idx === currentIndex ? { animation: 'slider-fill 3s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
               />
             </button>
           ))}
