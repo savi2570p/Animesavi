@@ -58,6 +58,7 @@ import { useVideoGestures } from '@/hooks/useVideoGestures';
 import { ScreenMirroringDialog } from './ScreenMirroringDialog';
 import { YouTubeEmbed, isYouTubeUrl } from './YouTubeEmbed';
 import { EmbedIframePlayer } from './EmbedIframePlayer';
+import { PureEmbedPlayer } from './PureEmbedPlayer';
 
 interface AudioTrackInfo {
   id: number;
@@ -134,6 +135,11 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
     name: 'X-PLUS',
     features: ['watch', 'quality', 'download', 'cc'],
     playerStyle: 'xplus'
+  },
+  EMBED: {
+    name: 'Embed',
+    features: ['iframe'],
+    playerStyle: 'embed'
   },
 };
 
