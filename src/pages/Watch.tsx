@@ -24,6 +24,7 @@ import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hook
 import { z } from 'zod';
 import { hasValidTokenAccess, isSuperAdmin, fetchTokenSystemStatus } from '@/components/AccessBanner';
 import { TokenExpiredPopup } from '@/components/TokenExpiredPopup';
+import { useCastDetection } from '@/hooks/useCastDetection';
 import {
   ChevronLeft,
   ChevronRight,
@@ -139,6 +140,7 @@ export default function Watch() {
   const [searchParams] = useSearchParams();
   const { user, isAdmin, isUploader } = useAuth();
   const navigate = useNavigate();
+  const isCastingScreen = useCastDetection();
   const resumeProgress = searchParams.get('t');
 
   const [episode, setEpisode] = useState<Episode | null>(null);
@@ -923,7 +925,8 @@ export default function Watch() {
 
   const accessValid = hasValidTokenAccess(user?.email);
 
-  if (tokenSystemActive && !accessValid) {
+  // Bypass token gate when casting / mirroring to a TV — playback must continue
+  if (tokenSystemActive && !accessValid && !isCastingScreen) {
     return <TokenExpiredPopup />;
   }
 
