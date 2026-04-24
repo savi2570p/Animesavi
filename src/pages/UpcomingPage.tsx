@@ -109,19 +109,26 @@ export default function UpcomingPage() {
     }
   };
 
+  const withDate = animeList.filter(a => a.season_details?.some(s => s.release_date)).length;
+  const newSeasons = animeList.reduce((sum, a) => sum + (a.upcoming_seasons?.length || 0), 0);
+
   return (
     <AnimatedPage>
       <ContentNavTabs />
-      <div className="container py-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 rounded-lg bg-orange-500/10">
-            <CalendarClock className="h-6 w-6 text-orange-500" />
-          </div>
-          <h1 className="text-2xl md:text-3xl font-heading font-bold">Upcoming Anime</h1>
-          <span className="px-2 py-1 text-xs font-medium bg-orange-500/20 text-orange-500 rounded-full">
-            {animeList.length} titles
-          </span>
-        </div>
+      <SeeAllHeader
+        icon={Rocket}
+        title="Upcoming Anime"
+        subtitle="Future releases and new seasons of your favorite anime — tap any title for a live countdown."
+        eyebrow="Coming Soon"
+        iconGradient="from-orange-500 via-amber-500 to-yellow-500"
+        glowTone="bg-orange-500/20"
+        stats={[
+          { icon: Layers, value: animeList.length, label: 'Titles', tone: 'text-orange-400' },
+          { icon: CalendarClock, value: newSeasons, label: 'Seasons', tone: 'text-amber-400' },
+          { icon: Clock, value: withDate, label: 'Dated', tone: 'text-emerald-400' },
+        ]}
+      />
+      <div className="container px-4 pb-12">
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {isLoading ? (
