@@ -3266,6 +3266,12 @@ export function VideoPlayer({
                 </button>
               )}
               {/* Settings Menu */}
+              <ThemePickerButton
+                value={playerTheme}
+                onChange={setPlayerTheme}
+                iconClassName="w-3 h-3 md:w-[18px] md:h-[18px]"
+                containerEl={containerRef.current}
+              />
               <DropdownMenu 
                 modal={false} 
                 open={settingsOpen}
