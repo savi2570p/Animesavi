@@ -376,12 +376,13 @@ export function FeaturedSlider() {
         {featuredAnime.map((_, idx) => (
           <button
             key={idx}
-            onClick={() => { setCurrentIndex(idx); }}
-            className="flex-1 h-[2px] rounded-[1px] bg-foreground/20 overflow-hidden relative"
+            onClick={() => goTo(idx, idx > currentIndex ? 'next' : 'prev')}
+            className={`h-[2px] rounded-[1px] bg-foreground/20 overflow-hidden relative transition-all duration-500 ${idx === currentIndex ? 'flex-[2]' : 'flex-1'}`}
             style={{ WebkitAppearance: 'none', minHeight: '2px', maxHeight: '2px' }}
             aria-label={`Go to slide ${idx + 1}`}
           >
             <div
+              key={idx === currentIndex ? `mbar-${animKey}` : `mbar-${idx}`}
               className={`absolute inset-y-0 left-0 rounded-[1px] ${
                 idx === currentIndex
                   ? 'bg-primary shadow-[0_0_6px_hsl(var(--primary)/0.5)]'
@@ -389,7 +390,7 @@ export function FeaturedSlider() {
                   ? 'bg-primary w-full'
                   : 'w-0'
               }`}
-              style={idx === currentIndex ? { animation: 'slider-fill 7s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
+              style={idx === currentIndex ? { animation: 'slider-fill 3s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
             />
           </button>
         ))}
