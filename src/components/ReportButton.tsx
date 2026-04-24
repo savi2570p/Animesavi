@@ -96,7 +96,7 @@ export function ReportButton() {
 
   const removeScreenshot = () => setScreenshot(null);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!category) {
       toast.error('Please select a category');
       return;
@@ -124,13 +124,36 @@ export function ReportButton() {
       return 'Other';
     })();
 
-    const text = `🚨 Report from AnimeSavi\n\n📂 Category: ${category}\n📄 Page: ${window.location.pathname}\n📱 Device: ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}\n🖥️ OS: ${osInfo}\n🌐 Browser: ${browserInfo}\n📐 Screen: ${window.innerWidth}x${window.innerHeight}\n🕐 Time: ${new Date().toLocaleString('en-IN')}\n\n💬 Details:\n${message.trim()}`;
-    const url = `https://t.me/Lv_Savi?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    const screenshotLine = screenshot
+      ? `\n📎 Screenshot: attached (${(screenshot.size / 1024).toFixed(0)} KB)`
+      : '';
 
-    toast.success('Opening Telegram to send your report');
+    const text = `🚨 Report from AnimeSavi\n\n📂 Category: ${category}\n📄 Page: ${window.location.pathname}\n📱 Device: ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}\n🖥️ OS: ${osInfo}\n🌐 Browser: ${browserInfo}\n📐 Screen: ${window.innerWidth}x${window.innerHeight}\n🕐 Time: ${new Date().toLocaleString('en-IN')}${screenshotLine}\n\n💬 Details:\n${message.trim()}`;
+
+    // Auto-download the screenshot so the user can attach it in Telegram in one tap.
+    if (screenshot) {
+      const ext = screenshot.name.split('.').pop()?.toLowerCase() || 'png';
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `animesavi-report-${stamp}.${ext}`;
+      const url = URL.createObjectURL(screenshot);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      toast.success('Screenshot saved — attach it in Telegram');
+    } else {
+      toast.success('Opening Telegram to send your report');
+    }
+
+    const tgUrl = `https://t.me/Lv_Savi?text=${encodeURIComponent(text)}`;
+    window.open(tgUrl, '_blank', 'noopener,noreferrer');
+
     setMessage('');
     setCategory('');
+    setScreenshot(null);
     setOpen(false);
   };
 
