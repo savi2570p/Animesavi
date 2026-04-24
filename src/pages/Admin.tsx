@@ -209,6 +209,7 @@ export default function Admin() {
     { value: 'notifications', icon: Bell, label: 'Alerts', tone: 'from-rose-500/20 to-pink-500/10', accent: 'text-rose-400' },
     { value: 'cdn', icon: Globe, label: 'CDN', tone: 'from-blue-500/20 to-indigo-500/10', accent: 'text-blue-400' },
     { value: 'tokens', icon: Key, label: 'Tokens', tone: 'from-fuchsia-500/20 to-purple-500/10', accent: 'text-fuchsia-400' },
+    { value: 'embed', icon: Globe, label: 'Embed', tone: 'from-cyan-500/20 to-sky-500/10', accent: 'text-cyan-400' },
     { value: 'users', icon: Users, label: 'Users', tone: 'from-teal-500/20 to-emerald-500/10', accent: 'text-teal-400' },
   ];
 
