@@ -525,7 +525,7 @@ export default function AnimeDetail() {
   const nextEpisode = getFirstUnwatchedEpisode();
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen animate-fade-in">
       {/* Hero Banner — cinematic backdrop */}
       <div className="relative h-[42vh] md:h-[85vh] overflow-hidden">
         <div
