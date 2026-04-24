@@ -1301,30 +1301,50 @@ function UpcomingTabContent({ anime, allAnime, isAdmin, onDelete }: { anime: Ani
 
   return (
     <>
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 rounded-lg bg-orange-500/10">
-          <CalendarClock className="h-5 w-5 text-orange-500" />
+      <div className="flex items-center gap-3 mb-5">
+        <div className="h-7 w-1 rounded-full bg-gradient-to-b from-orange-400 to-amber-500" />
+        <div className="flex-1">
+          <h2 className="text-lg md:text-xl font-heading font-black flex items-center gap-2">
+            Upcoming Releases
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-400 border border-orange-500/30 uppercase tracking-wider">
+              {upcomingList.length} titles
+            </span>
+          </h2>
+          <p className="text-[11px] text-muted-foreground">Live countdowns to upcoming premiere dates</p>
         </div>
-        <h2 className="text-xl font-heading font-bold">Upcoming Anime</h2>
-        <Badge variant="outline" className="text-orange-500 border-orange-500/30">
-          {upcomingList.length} titles
-        </Badge>
       </div>
 
       {upcomingList.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <CalendarClock className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No upcoming anime</h3>
-            <p className="text-muted-foreground">Anime marked as "Upcoming" will appear here</p>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-dashed border-border/50 bg-card/30 py-14 text-center">
+          <div className="relative w-fit mx-auto mb-3">
+            <div className="absolute inset-0 bg-orange-500/30 blur-2xl rounded-full" />
+            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-2xl">
+              <CalendarClock className="h-6 w-6 text-white" />
+            </div>
+          </div>
+          <h3 className="text-lg font-bold mb-1">No upcoming anime</h3>
+          <p className="text-muted-foreground text-sm">Anime marked as "Upcoming" will appear here</p>
+        </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {upcomingList.map((a) => (
-            <Card key={a.id}>
-              <CardContent className="flex items-center gap-4 p-4">
-                <div className="relative w-16 h-20 rounded overflow-hidden bg-muted shrink-0">
+            <div
+              key={a.id}
+              className="group relative overflow-hidden rounded-2xl border border-border/40 bg-card/60 backdrop-blur-sm hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-300"
+            >
+              {a.cover_image && (
+                <div
+                  className="absolute inset-0 opacity-15 group-hover:opacity-25 transition-opacity"
+                  style={{
+                    backgroundImage: `url(${a.cover_image})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    filter: 'blur(20px)',
+                  }}
+                />
+              )}
+              <div className="relative flex gap-3 p-3">
+                <div className="relative w-16 h-22 shrink-0 rounded-lg overflow-hidden ring-1 ring-orange-500/30 group-hover:ring-orange-500/60 transition-all">
                   {a.cover_image ? (
                     <img src={a.cover_image} alt={a.title} className="w-full h-full object-cover" loading="lazy" />
                   ) : (
@@ -1332,48 +1352,55 @@ function UpcomingTabContent({ anime, allAnime, isAdmin, onDelete }: { anime: Ani
                       <Film className="h-6 w-6 text-muted-foreground" />
                     </div>
                   )}
+                  <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-gradient-to-r from-orange-500 to-amber-500 text-[8px] font-black uppercase text-white shadow-md">
+                    Soon
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate">{a.title}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="outline" className="text-orange-500 border-orange-500/30 text-xs">
-                      Upcoming
-                    </Badge>
+                <div className="flex-1 min-w-0 flex flex-col">
+                  <h3 className="font-bold text-sm truncate group-hover:text-orange-400 transition-colors">{a.title}</h3>
+                  <div className="flex items-center gap-1.5 mt-1">
                     {a.release_year && (
-                      <span className="text-xs text-muted-foreground">{a.release_year}</span>
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-muted text-muted-foreground border border-border/50">
+                        {a.release_year}
+                      </span>
                     )}
-                    <span className="text-orange-400 text-xs font-mono font-bold">
+                  </div>
+                  {/* Live countdown */}
+                  <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gradient-to-r from-orange-500/15 to-amber-500/15 border border-orange-500/30 w-fit">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-orange-500" />
+                    </span>
+                    <span className="text-orange-300 text-[10px] font-mono font-black tracking-wide">
                       {countdowns[a.id] || '...'}
                     </span>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-orange-500 border-orange-500/30 hover:bg-orange-500/10"
-                    onClick={() => setSelectedAnime(a)}
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    Countdown
-                  </Button>
-                  <Link to={`/upload/anime/${a.id}`}>
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
+                  <div className="flex items-center gap-1 mt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-[10px] flex-1 px-2 border-orange-500/40 text-orange-400 hover:bg-orange-500/10"
+                      onClick={() => setSelectedAnime(a)}
+                    >
+                      <Eye className="h-3 w-3 mr-0.5" /> Countdown
                     </Button>
-                  </Link>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => onDelete(a.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                    <Link to={`/upload/anime/${a.id}`} className="flex-1">
+                      <Button variant="outline" size="sm" className="h-7 text-[10px] w-full px-2">
+                        <Edit className="h-3 w-3 mr-0.5" /> Edit
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+                      onClick={() => onDelete(a.id)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       )}
