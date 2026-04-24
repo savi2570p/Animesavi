@@ -131,101 +131,137 @@ export function Header() {
     { to: '/browse?sort=popular', label: 'Most Popular', icon: TrendingUp },
   ];
 
+  const isActivePath = (to: string) => {
+    const [path, query] = to.split('?');
+    if (path !== window.location.pathname) return false;
+    if (!query) return window.location.search === '' || path === '/';
+    return window.location.search.includes(query);
+  };
+
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-b border-border/50 safe-area-top">
-      <div className="container flex h-12 sm:h-14 items-center justify-between gap-1.5 sm:gap-4">
-        {/* Logo + Home Button (mobile) */}
-        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-          <Link to="/welcome" className="flex-shrink-0">
-            <img 
-              src={logo} 
-              alt="Anime Savi" 
-              className="h-6 w-6 sm:h-8 sm:w-8 rounded-lg object-contain hover:scale-110 transition-transform duration-200" 
-            />
-          </Link>
-          {/* Mobile Home Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            asChild
-            className="lg:hidden h-7 w-7 sm:h-8 sm:w-8"
-          >
-            <Link to="/">
-              <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
-            </Link>
-          </Button>
-          <Link to="/" className="hidden sm:inline-block text-lg font-bold hover:opacity-80 transition-opacity">
-            <span className="text-primary">Anime</span>
-            <span className="text-foreground ml-1">Savi</span>
-          </Link>
+    <header className="sticky top-0 z-50 w-full safe-area-top">
+      {/* Layered glass surface */}
+      <div className="relative bg-background/70 backdrop-blur-xl supports-[backdrop-filter]:bg-background/55 border-b border-border/40">
+        {/* Ambient gradient wash */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-24 left-1/4 w-[28rem] h-40 bg-primary/10 blur-3xl rounded-full" />
+          <div className="absolute -top-20 right-10 w-72 h-32 bg-pink-500/10 blur-3xl rounded-full" />
         </div>
 
-        {/* Navigation - Desktop */}
-        <nav className="hidden lg:flex items-center gap-1">
-          {navLinks.map((link) => (
-            <Link 
-              key={link.label}
-              to={link.to} 
-              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
-            >
-              {link.label}
+        <div className="container relative flex h-12 sm:h-14 items-center justify-between gap-1.5 sm:gap-4">
+          {/* Logo lockup */}
+          <div className="flex items-center gap-1 sm:gap-2.5 flex-shrink-0">
+            <Link to="/welcome" className="group relative flex-shrink-0" aria-label="Welcome">
+              <span className="absolute inset-0 rounded-lg bg-primary/30 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <img
+                src={logo}
+                alt="Anime Savi"
+                className="relative h-6 w-6 sm:h-8 sm:w-8 rounded-lg object-contain ring-1 ring-border/50 group-hover:ring-primary/50 group-hover:scale-110 transition-all duration-200"
+              />
             </Link>
-          ))}
-          
-          {canUpload() && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleUploadClick}
-              className="text-primary hover:text-primary hover:bg-primary/10 ml-2"
+            {/* Mobile Home Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="lg:hidden h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-primary/10"
             >
-              <Upload className="h-4 w-4 mr-1" />
-              Upload
+              <Link to="/" aria-label="Home">
+                <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+              </Link>
             </Button>
-          )}
-        </nav>
-
-        {/* Search - HiAnime Style */}
-        <form onSubmit={handleSearch} className="flex-1 max-w-md hidden md:flex">
-          <div className={`relative w-full transition-all duration-200 ${isSearchFocused ? 'scale-[1.02]' : ''}`}>
-            <Input
-              type="search"
-              placeholder="Search anime..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setShowSuggestions(true);
-              }}
-              onFocus={() => {
-                setIsSearchFocused(true);
-                if (searchQuery.trim().length >= 2) setShowSuggestions(true);
-              }}
-              onBlur={() => {
-                setIsSearchFocused(false);
-                setTimeout(() => setShowSuggestions(false), 200);
-              }}
-              className="pl-4 pr-12 bg-card border-border focus:border-primary rounded-lg h-10"
-            />
-            <Button 
-              type="submit" 
-              size="icon" 
-              className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 bg-primary hover:bg-primary/90 rounded-md"
-            >
-              <Search className="h-4 w-4" />
-            </Button>
-            <SearchSuggestions
-              query={searchQuery}
-              isVisible={showSuggestions}
-              onSelect={() => {
-                setSearchQuery('');
-                setShowSuggestions(false);
-              }}
-            />
+            <Link to="/" className="hidden sm:flex items-baseline gap-1 leading-none hover:opacity-90 transition-opacity">
+              <span className="text-lg font-black tracking-tight bg-gradient-to-br from-primary via-primary to-pink-500 bg-clip-text text-transparent">
+                Anime
+              </span>
+              <span className="text-lg font-black tracking-tight text-foreground">Savi</span>
+              <span className="hidden xl:inline-block ml-1.5 px-1.5 py-0.5 rounded-md bg-primary/15 border border-primary/25 text-[8px] font-black uppercase tracking-[0.2em] text-primary">
+                4K
+              </span>
+            </Link>
           </div>
-        </form>
 
-        {/* User Menu */}
-        <div className="flex items-center gap-1 sm:gap-2">
+          {/* Navigation - Desktop pill bar */}
+          <nav className="hidden lg:flex items-center gap-0.5 p-1 rounded-full bg-card/40 border border-border/40 backdrop-blur-md">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              const active = isActivePath(link.to);
+              return (
+                <Link
+                  key={link.label}
+                  to={link.to}
+                  className={`relative inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-semibold transition-all duration-200 ${
+                    active
+                      ? 'text-primary-foreground bg-gradient-to-br from-primary to-pink-500 shadow-md shadow-primary/30'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
+                  }`}
+                >
+                  {Icon && <Icon className="h-3.5 w-3.5" />}
+                  <span>{link.label}</span>
+                </Link>
+              );
+            })}
+
+            {canUpload() && (
+              <button
+                onClick={handleUploadClick}
+                className="ml-1 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-bold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30 transition-all"
+              >
+                <Upload className="h-3.5 w-3.5" />
+                Upload
+              </button>
+            )}
+          </nav>
+
+          {/* Search - premium pill */}
+          <form onSubmit={handleSearch} className="flex-1 max-w-md hidden md:flex">
+            <div className={`relative w-full transition-all duration-200 ${isSearchFocused ? 'scale-[1.015]' : ''}`}>
+              {/* Glow on focus */}
+              <div className={`pointer-events-none absolute -inset-px rounded-full bg-gradient-to-r from-primary/40 via-pink-500/30 to-primary/40 opacity-0 blur-md transition-opacity duration-300 ${isSearchFocused ? 'opacity-100' : ''}`} />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none z-10" />
+              <Input
+                type="search"
+                placeholder="Search anime, movies, episodes…"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => {
+                  setIsSearchFocused(true);
+                  if (searchQuery.trim().length >= 2) setShowSuggestions(true);
+                }}
+                onBlur={() => {
+                  setIsSearchFocused(false);
+                  setTimeout(() => setShowSuggestions(false), 200);
+                }}
+                className="relative pl-10 pr-24 bg-card/60 border-border/50 focus:border-primary/60 rounded-full h-9 text-[13px] placeholder:text-muted-foreground/70"
+              />
+              <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                <kbd className="hidden lg:inline-flex items-center px-1.5 h-5 rounded-md bg-muted/60 border border-border/40 text-[9px] font-bold text-muted-foreground tracking-wider">
+                  ⌘ K
+                </kbd>
+                <Button
+                  type="submit"
+                  size="icon"
+                  className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-pink-500 hover:opacity-90 shadow-md shadow-primary/30"
+                >
+                  <Search className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <SearchSuggestions
+                query={searchQuery}
+                isVisible={showSuggestions}
+                onSelect={() => {
+                  setSearchQuery('');
+                  setShowSuggestions(false);
+                }}
+              />
+            </div>
+          </form>
+
+          {/* User Menu */}
+          <div className="flex items-center gap-1 sm:gap-1.5">
           {user && <div className="[&_button]:h-7 [&_button]:w-7 sm:[&_button]:h-9 sm:[&_button]:w-9 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4"><WatchLaterButton /></div>}
           {user && <div className="[&_button]:h-7 [&_button]:w-7 sm:[&_button]:h-9 sm:[&_button]:w-9 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4"><NotificationBell /></div>}
           
@@ -680,7 +716,10 @@ export function Header() {
           <VerifyTokenDialog open={verifyOpen} onOpenChange={setVerifyOpen} />
           
         </div>
+        </div>
       </div>
+      {/* Accent gradient underline */}
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
     </header>
   );
 }
