@@ -2255,6 +2255,7 @@ export function VideoPlayer({
         paddingBottom: isFullscreen ? 'env(safe-area-inset-bottom)' : undefined,
         paddingLeft: isFullscreen ? 'env(safe-area-inset-left)' : undefined,
         paddingRight: isFullscreen ? 'env(safe-area-inset-right)' : undefined,
+        ...buildThemeStyle(playerTheme),
       }}
       onClick={handleVideoAreaClick}
       onMouseMove={handleMouseMove}
