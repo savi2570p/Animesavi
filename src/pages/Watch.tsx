@@ -1569,7 +1569,6 @@ export default function Watch() {
           <div className="mt-8">
             <RecommendedAnime />
           </div>
-        </div>
       </div>
     </div>
   );
