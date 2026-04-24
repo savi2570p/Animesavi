@@ -35,6 +35,9 @@ export function ReportButton() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [category, setCategory] = useState('');
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Hide on embed routes
   const isEmbed = typeof window !== 'undefined' && (
@@ -42,7 +45,56 @@ export function ReportButton() {
     new URLSearchParams(window.location.search).get('embed') === 'true'
   );
 
+  // Generate / cleanup preview URL
+  useEffect(() => {
+    if (!screenshot) {
+      setScreenshotPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(screenshot);
+    setScreenshotPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [screenshot]);
+
+  // Allow pasting an image directly into the dialog
+  useEffect(() => {
+    if (!open) return;
+    const onPaste = (e: ClipboardEvent) => {
+      const item = Array.from(e.clipboardData?.items ?? []).find((i) => i.type.startsWith('image/'));
+      if (!item) return;
+      const file = item.getAsFile();
+      if (file) {
+        handlePickFile(file);
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  }, [open]);
+
   if (isEmbed) return null;
+
+  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+  const handlePickFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please choose an image file');
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      toast.error('Image is too large. Max 5MB.');
+      return;
+    }
+    setScreenshot(file);
+  };
+
+  const onFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handlePickFile(file);
+    e.target.value = '';
+  };
+
+  const removeScreenshot = () => setScreenshot(null);
 
   const handleSend = () => {
     if (!category) {
