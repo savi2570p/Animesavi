@@ -1867,24 +1867,15 @@ export function VideoPlayer({
     );
   }
 
-  // EMBED server: pure iframe playback for any external embed link.
-  // Skips all custom-player logic, sandbox, overlays and direct-file detection.
+  // EMBED server: render the iframe DIRECTLY — no player wrapper, no overlays,
+  // no fullscreen container, no controls. PureEmbedPlayer already provides its
+  // own 16:9 container and handles fullscreen via the iframe's allow="fullscreen".
   if (activeServer === 'EMBED' && anyVideoUrl) {
     return (
-      <div
-        ref={containerRef}
-        className={`relative bg-black w-full ${isFullscreen ? 'fixed inset-0 z-[9999]' : ''}`}
-        style={{
-          aspectRatio: isFullscreen ? undefined : '16/9',
-          maxHeight: isFullscreen ? '100vh' : '70vh',
-          height: isFullscreen ? '100vh' : undefined,
-        }}
-      >
-        <PureEmbedPlayer
-          url={anyVideoUrl}
-          title={`${animeTitle} - Episode ${episodeNumber}`}
-        />
-      </div>
+      <PureEmbedPlayer
+        url={anyVideoUrl}
+        title={`${animeTitle} - Episode ${episodeNumber}`}
+      />
     );
   }
 
