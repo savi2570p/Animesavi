@@ -1,5 +1,9 @@
-import { useState } from 'react';
-import { Flag, Send, X, Sparkles, Bug, PlayCircle, Volume2, Palette, Zap, Lightbulb, Lock, Server, Download, Bell, FileWarning, MoreHorizontal } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Flag, Send, X, Sparkles, Bug, PlayCircle, Volume2, Palette, Zap, Lightbulb,
+  Lock, Server, Download, Bell, FileWarning, MoreHorizontal,
+  ImagePlus, Trash2, Paperclip,
+} from 'lucide-react';
 import {
   Dialog,
   DialogContent,
