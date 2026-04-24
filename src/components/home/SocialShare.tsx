@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Share2, Copy, Check, Send, Twitter, Facebook, Instagram, Camera, Sparkles, Heart } from 'lucide-react';
+import { Share2, Copy, Check, Send, Twitter, Facebook, Instagram, Camera, Sparkles, Heart, MessageSquareText, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -7,9 +7,38 @@ interface SocialShareProps {
   className?: string;
 }
 
+const MESSAGE_TEMPLATES = [
+  {
+    id: 'casual',
+    label: '😎 Casual',
+    text: "Hey! I've been watching anime on AnimeSavi — free HD streaming, no ads, even 4K. You should check it out 👇",
+  },
+  {
+    id: 'hype',
+    label: '🔥 Hype',
+    text: "🔥 Found the cleanest anime site ever — AnimeSavi. Free 4K, Hindi dubs, watch parties, the works. Drop everything and try it:",
+  },
+  {
+    id: 'short',
+    label: '⚡ Short',
+    text: 'Free HD anime, zero ads. AnimeSavi 👉',
+  },
+  {
+    id: 'invite',
+    label: '💌 Invite',
+    text: "I'm watching anime on AnimeSavi and want you to join me. We can do watch parties together! Sign up here:",
+  },
+];
+
 export function SocialShare({ className = '' }: SocialShareProps) {
   const [copied, setCopied] = useState(false);
+  const [msgCopied, setMsgCopied] = useState(false);
+  const [templateId, setTemplateId] = useState(MESSAGE_TEMPLATES[0].id);
+  const [showTemplates, setShowTemplates] = useState(false);
+
   const websiteUrl = 'https://animesavi.lovable.app';
+  const template = MESSAGE_TEMPLATES.find(t => t.id === templateId) || MESSAGE_TEMPLATES[0];
+  const fullMessage = `${template.text} ${websiteUrl}`;
 
   const handleCopyLink = async () => {
     try {
@@ -22,25 +51,47 @@ export function SocialShare({ className = '' }: SocialShareProps) {
     }
   };
 
+  const handleCopyMessage = async () => {
+    try {
+      await navigator.clipboard.writeText(fullMessage);
+      setMsgCopied(true);
+      toast.success('Message + link copied — paste anywhere!');
+      setTimeout(() => setMsgCopied(false), 2200);
+    } catch {
+      toast.error('Failed to copy message');
+    }
+  };
+
+  const handleShareOption = async (url: string, name: string) => {
+    // Copy the templated message first so the user can paste it
+    try {
+      await navigator.clipboard.writeText(fullMessage);
+      toast.success(`Message copied — paste it on ${name}!`, { duration: 2500 });
+    } catch {
+      // ignore clipboard failure, still open share dialog
+    }
+    window.open(url, '_blank');
+  };
+
   const shareOptions = [
     {
       name: 'Telegram',
       icon: Send,
-      url: `https://t.me/share/url?url=${encodeURIComponent(websiteUrl)}&text=${encodeURIComponent('Check out Anime Savi - Free HD Anime Streaming!')}`,
+      url: `https://t.me/share/url?url=${encodeURIComponent(websiteUrl)}&text=${encodeURIComponent(template.text)}`,
       gradient: 'from-sky-400 to-blue-500',
       ring: 'hover:ring-sky-400/50',
     },
     {
       name: 'X / Twitter',
       icon: Twitter,
-      url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(websiteUrl)}&text=${encodeURIComponent('Check out Anime Savi - Free HD Anime Streaming!')}`,
+      url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(websiteUrl)}&text=${encodeURIComponent(template.text)}`,
       gradient: 'from-zinc-700 to-black',
       ring: 'hover:ring-foreground/50',
     },
     {
       name: 'Facebook',
       icon: Facebook,
-      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(websiteUrl)}`,
+      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(websiteUrl)}&quote=${encodeURIComponent(template.text)}`,
       gradient: 'from-blue-500 to-blue-700',
       ring: 'hover:ring-blue-500/50',
     },
@@ -88,43 +139,85 @@ export function SocialShare({ className = '' }: SocialShareProps) {
               </span>
             </div>
             <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-              Help others discover free HD anime
+              Pick a vibe, copy & share in one tap
             </p>
           </div>
         </div>
 
-        {/* Copy link */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleCopyLink}
-          className="w-full justify-between gap-2 h-11 mb-4 rounded-xl bg-background/50 hover:bg-primary/10 hover:border-primary/40 transition-all group"
-        >
-          <span className="flex items-center gap-2 text-xs md:text-sm font-mono text-muted-foreground truncate">
-            <span className="opacity-60">🔗</span>
-            animesavi.lovable.app
-          </span>
-          <span className="flex items-center gap-1.5 text-xs font-semibold shrink-0">
-            {copied ? (
-              <>
-                <Check className="h-4 w-4 text-emerald-500" />
-                <span className="text-emerald-500">Copied</span>
-              </>
-            ) : (
-              <>
-                <Copy className="h-4 w-4 group-hover:text-primary transition-colors" />
-                Copy
-              </>
-            )}
-          </span>
-        </Button>
+        {/* Template picker */}
+        <div className="mb-3">
+          <button
+            onClick={() => setShowTemplates(s => !s)}
+            className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-background/40 border border-border/50 hover:border-primary/40 transition-colors text-left"
+          >
+            <span className="flex items-center gap-2 min-w-0">
+              <MessageSquareText className="h-4 w-4 text-primary shrink-0" />
+              <span className="text-xs md:text-sm font-semibold truncate">
+                {template.label}
+              </span>
+              <span className="text-[10px] md:text-xs text-muted-foreground truncate hidden sm:inline">
+                — {template.text.slice(0, 38)}…
+              </span>
+            </span>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${showTemplates ? 'rotate-180' : ''}`} />
+          </button>
 
-        {/* Share grid */}
+          {showTemplates && (
+            <div className="mt-2 grid grid-cols-2 gap-2 animate-fade-in">
+              {MESSAGE_TEMPLATES.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => { setTemplateId(t.id); setShowTemplates(false); }}
+                  className={`text-left px-3 py-2 rounded-xl border transition-all text-[11px] md:text-xs ${
+                    t.id === templateId
+                      ? 'bg-primary/15 border-primary/50 text-foreground shadow shadow-primary/10'
+                      : 'bg-card/40 border-border/40 hover:border-primary/30 text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <div className="font-bold mb-0.5">{t.label}</div>
+                  <div className="line-clamp-2 opacity-80">{t.text}</div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Message preview */}
+        <div className="mb-3 p-3 rounded-xl bg-background/40 border border-dashed border-border/60 text-[11px] md:text-xs text-foreground/85 leading-relaxed">
+          <span className="block">{template.text}</span>
+          <span className="block mt-1 font-mono text-primary truncate">{websiteUrl}</span>
+        </div>
+
+        {/* Action row: Copy message (primary) + Copy link */}
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          <Button
+            size="sm"
+            onClick={handleCopyMessage}
+            className="h-11 rounded-xl gap-2 bg-gradient-to-r from-primary to-rose-500 hover:opacity-95 text-primary-foreground font-semibold shadow-md shadow-primary/30"
+          >
+            {msgCopied ? <Check className="h-4 w-4" /> : <MessageSquareText className="h-4 w-4" />}
+            {msgCopied ? 'Copied!' : 'Copy message'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopyLink}
+            className="h-11 rounded-xl gap-2 bg-background/50 hover:bg-primary/10 hover:border-primary/40"
+          >
+            {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+            {copied ? 'Link copied' : 'Copy link only'}
+          </Button>
+        </div>
+
+        {/* Share grid — taps copy template + open dialog */}
+        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold mb-2">
+          Tap to copy & share
+        </p>
         <div className="grid grid-cols-5 gap-2 md:gap-3">
           {shareOptions.map((option) => (
             <button
               key={option.name}
-              onClick={() => window.open(option.url, '_blank')}
+              onClick={() => handleShareOption(option.url, option.name)}
               aria-label={`Share on ${option.name}`}
               className={`group relative flex flex-col items-center gap-1.5 p-2.5 rounded-2xl bg-card/40 border border-border/40 backdrop-blur-sm transition-all hover:-translate-y-1 hover:shadow-lg ring-1 ring-transparent ${option.ring}`}
             >
