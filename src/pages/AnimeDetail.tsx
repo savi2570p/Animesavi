@@ -451,7 +451,7 @@ export default function AnimeDetail() {
   return (
     <div className="min-h-screen">
       {/* Hero Banner */}
-      <div className="relative h-[45vh] md:h-[80vh] overflow-hidden">
+      <div className="relative h-[36vh] md:h-[80vh] overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center scale-105 animate-[float_20s_ease-in-out_infinite]"
           style={{
@@ -472,8 +472,8 @@ export default function AnimeDetail() {
       </div>
 
       {/* Content */}
-      <div className="container relative -mt-[30vh] md:-mt-[50vh] z-10 pb-8 md:pb-12">
-        <div className="flex flex-col lg:flex-row gap-8">
+      <div className="container relative -mt-[24vh] md:-mt-[50vh] z-10 pb-8 md:pb-12">
+        <div className="flex flex-col lg:flex-row gap-5 md:gap-8">
           {/* Poster - Right-click to save on PC, long-press on mobile */}
           <div className="flex-shrink-0 animate-fade-in">
             <div 
@@ -485,7 +485,7 @@ export default function AnimeDetail() {
               <img
                 src={anime.cover_image || '/placeholder.svg'}
                 alt={anime.title}
-                className="w-32 md:w-72 rounded-2xl shadow-2xl border border-border/30 transition-transform duration-500 group-hover:scale-[1.02] cursor-pointer"
+                className="w-24 md:w-72 rounded-xl md:rounded-2xl shadow-2xl border border-border/30 transition-transform duration-500 group-hover:scale-[1.02] cursor-pointer"
                 onContextMenu={(e) => {
                   // Allow default right-click behavior on desktop for native save
                 }}
@@ -522,7 +522,7 @@ export default function AnimeDetail() {
             </div>
 
             {/* Title */}
-            <h1 className="text-2xl md:text-6xl font-heading font-bold leading-tight text-shadow-lg">
+            <h1 className="text-xl md:text-6xl font-heading font-bold leading-tight text-shadow-lg">
               {anime.title}
             </h1>
 
