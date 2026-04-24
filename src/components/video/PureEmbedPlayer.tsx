@@ -30,6 +30,33 @@ export function extractEmbedSrc(raw: string): string {
 }
 
 /**
+ * Heuristic: is this URL an external embed link (vs. a direct file/storage URL)?
+ * Used to auto-assign the EMBED server when an episode only has an external_url.
+ */
+export function isEmbedLikeUrl(raw: string | null | undefined): boolean {
+  if (!raw) return false;
+  const url = extractEmbedSrc(raw);
+  if (!url) return false;
+
+  // Pasted iframe markup is always an embed.
+  if (/<iframe[\s>]/i.test(raw)) return true;
+
+  // Direct video files / HLS / storage URLs are NOT embeds.
+  if (/\.(mp4|mkv|webm|avi|m3u8|m4v|mov)(\?.*)?$/i.test(url)) return false;
+  if (/supabase.*storage|blob\.core\.windows|s3\.amazonaws|cloudfront\.net|r2\.cloudflarestorage|storage\.googleapis/i.test(url)) return false;
+
+  // YouTube has its own dedicated embed handler in VideoPlayer.
+  if (/(?:youtube\.com|youtu\.be)/i.test(url)) return false;
+
+  // Common embed indicators: /embed/, /e/, /play/, ?v=, known hosts.
+  if (/\/(embed|e|play|stream|iframe)\//i.test(url)) return true;
+  if (/(upnshare|rpmshare|doodstream|dood\.|streamtape|filemoon|vidplay|streamwish|mixdrop|vidcloud|vidsrc|2embed|streamhg|streamlare|voe\.sx|hydrax)/i.test(url)) return true;
+
+  // Fallback: any non-direct http(s) URL is treated as a possible embed.
+  return /^https?:\/\//i.test(url);
+}
+
+/**
  * Pure iframe embed player — no custom controls, no postMessage handshake,
  * no sandbox. Used by the "Embed" server for external hosts (UPNShare,
  * RPMShare, Doodstream, Streamtape, etc.).
