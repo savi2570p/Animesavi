@@ -965,6 +965,9 @@ export default function ShadowFlix() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [unlockAttempts, setUnlockAttempts] = useState(0);
+  const [unlocking, setUnlocking] = useState(false);
   const [items, setItems] = useState<ShadowFlixItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
