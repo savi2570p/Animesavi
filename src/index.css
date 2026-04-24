@@ -1045,6 +1045,27 @@ img[loading="lazy"] {
   animation: hero-content-up 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* ---------- Detail page section stagger (More Info) ---------- */
+@keyframes detail-section-in {
+  0%   { opacity: 0; transform: translateY(16px); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.detail-stagger > * {
+  animation: detail-section-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.detail-stagger > *:nth-child(1) { animation-delay: 60ms; }
+.detail-stagger > *:nth-child(2) { animation-delay: 140ms; }
+.detail-stagger > *:nth-child(3) { animation-delay: 220ms; }
+.detail-stagger > *:nth-child(4) { animation-delay: 300ms; }
+.detail-stagger > *:nth-child(5) { animation-delay: 380ms; }
+.detail-stagger > *:nth-child(6) { animation-delay: 460ms; }
+.detail-stagger > *:nth-child(7) { animation-delay: 540ms; }
+
+/* Smooth crossfade between skeleton and real content */
+.detail-fade-swap {
+  animation: detail-section-in 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* ===========================================================================
    Netflix-Style Global Polish Layer (v3) — site-wide upgrade
    Applied to all home sections without rewriting components.
