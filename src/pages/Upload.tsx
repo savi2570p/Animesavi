@@ -388,10 +388,6 @@ export default function Upload() {
     );
   }
 
-  return (
-    <div className="container py-10">
-      <div className="flex items-center justify-between mb-10">
-        <div>
   // Quick metrics
   const seriesCount = myAnime.filter(a => a.type !== 'movie' && a.status !== 'upcoming').length;
   const moviesCount = myAnime.filter(a => a.type === 'movie' && a.status !== 'upcoming').length;
