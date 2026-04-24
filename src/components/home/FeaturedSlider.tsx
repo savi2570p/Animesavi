@@ -145,18 +145,19 @@ export function FeaturedSlider() {
     return (
       <section className="relative w-full overflow-x-hidden overflow-y-visible">
         {/* Background hero image */}
-        <div className="relative w-full aspect-[16/9]">
+        <div className="relative w-full aspect-[16/9] overflow-hidden">
           {featuredAnime.map((anime, idx) => (
             <div
               key={anime.id}
-              className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+              className={`absolute inset-0 transition-opacity duration-500 ease-out ${
                 idx === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
               }`}
             >
               <img
+                key={idx === currentIndex ? `img-${animKey}` : `img-${idx}`}
                 src={anime.banner || anime.thumbnail || '/placeholder.svg'}
                 alt={anime.title}
-                className={`w-full h-full object-cover ${idx === currentIndex ? 'nf-ken-burns' : ''}`}
+                className={`w-full h-full object-cover ${idx === currentIndex ? (direction === 'next' ? 'hero-slide-in-right' : 'hero-slide-in-left') : ''}`}
               />
             </div>
           ))}
@@ -168,7 +169,7 @@ export function FeaturedSlider() {
           {/* Content overlay */}
           <div className="absolute inset-0 z-30 flex items-center">
             <div className="container">
-              <div className="max-w-2xl space-y-5">
+              <div key={`content-${animKey}`} className="hero-content-in max-w-2xl space-y-5">
                 {/* Featured pill + slide counter */}
                 <div className="flex items-center gap-3">
                   <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-primary shadow-lg shadow-primary/10">
