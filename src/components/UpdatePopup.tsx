@@ -196,40 +196,138 @@ export function UpdatePopup() {
     );
   }
 
-  /* ── STEP 2: Downloading ── */
+  /* ── STEP 2: Downloading — cinematic progress ── */
   if (step === 'downloading') {
+    const radius = 56;
+    const circumference = 2 * Math.PI * radius;
+    const dashOffset = circumference - (progress / 100) * circumference;
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-lg">
-        <div className="relative w-full max-w-sm mx-4 rounded-2xl border border-red-600/30 bg-gradient-to-b from-zinc-900/95 to-black/95 shadow-2xl shadow-red-900/20 p-8 text-center space-y-5 animate-in zoom-in-95 duration-300">
-          <div className="mx-auto w-16 h-16 rounded-full bg-red-600/15 flex items-center justify-center animate-pulse">
-            <span className="text-3xl">⬇️</span>
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-300">
+        <div className="relative w-full max-w-sm mx-4 overflow-hidden rounded-2xl border border-red-600/30 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-red-900/40 p-8 text-center space-y-6 animate-in zoom-in-95 duration-300">
+          {/* Decorative glows */}
+          <div className="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full bg-red-600/20 blur-3xl animate-pulse" />
+          <div className="pointer-events-none absolute -bottom-24 -left-20 h-52 w-52 rounded-full bg-red-500/15 blur-3xl" />
+
+          {/* Header pill */}
+          <div className="relative inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-red-300">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-400" />
+            </span>
+            Downloading {APP_VERSION}
           </div>
-          <h2 className="text-xl font-bold text-white">Downloading Update…</h2>
-          <p className="text-sm text-zinc-500">Please wait, this will only take a moment.</p>
-          <div className="space-y-2 pt-2">
-            <div className="h-2.5 rounded-full bg-zinc-800 overflow-hidden">
-              <div className="h-full rounded-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-100 ease-linear shadow-[0_0_12px_rgba(220,38,38,0.5)]" style={{ width: `${progress}%` }} />
+
+          {/* Circular progress */}
+          <div className="relative mx-auto h-36 w-36">
+            <svg className="h-full w-full -rotate-90" viewBox="0 0 128 128">
+              <circle cx="64" cy="64" r={radius} stroke="rgba(255,255,255,0.08)" strokeWidth="6" fill="none" />
+              <circle
+                cx="64" cy="64" r={radius}
+                stroke="url(#dlGrad)"
+                strokeWidth="6"
+                strokeLinecap="round"
+                fill="none"
+                strokeDasharray={circumference}
+                strokeDashoffset={dashOffset}
+                style={{ transition: 'stroke-dashoffset 100ms linear', filter: 'drop-shadow(0 0 8px rgba(220,38,38,0.6))' }}
+              />
+              <defs>
+                <linearGradient id="dlGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#ef4444" />
+                  <stop offset="100%" stopColor="#f97316" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-3xl font-bold font-mono bg-gradient-to-br from-white to-red-300 bg-clip-text text-transparent tabular-nums">
+                {Math.round(progress)}<span className="text-lg text-red-400">%</span>
+              </span>
+              <span className="text-[10px] uppercase tracking-wider text-zinc-500 mt-0.5">{progress < 100 ? 'Fetching' : 'Verifying'}</span>
             </div>
-            <span className="text-lg font-mono font-bold text-red-400">{Math.round(progress)}%</span>
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-lg font-bold text-white">Downloading Update</h2>
+            <p className="text-xs text-zinc-500">Securing the latest features and improvements…</p>
+          </div>
+
+          {/* Linear progress bar with shine */}
+          <div className="relative h-1.5 rounded-full bg-zinc-800/80 overflow-hidden">
+            <div
+              className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-red-600 via-red-500 to-orange-400 shadow-[0_0_12px_rgba(220,38,38,0.6)] transition-all duration-100 ease-linear"
+              style={{ width: `${progress}%` }}
+            />
+            <div
+              className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine"
+              style={{ left: `${Math.max(0, progress - 33)}%` }}
+            />
+          </div>
+
+          {/* Stats row */}
+          <div className="flex items-center justify-between text-[10px] text-zinc-500 font-mono">
+            <span className="uppercase tracking-wider">{(progress * 0.42).toFixed(1)} MB / 42 MB</span>
+            <span className="uppercase tracking-wider text-red-400/80">{Math.max(1, Math.round((100 - progress) / 10))}s left</span>
           </div>
         </div>
       </div>
     );
   }
 
-  /* ── STEP 3: Installing ── */
+  /* ── STEP 3: Installing — multi-stage cinematic ── */
   if (step === 'installing') {
+    const stages = [
+      { icon: '🔓', label: 'Unpacking files' },
+      { icon: '⚙️', label: 'Configuring system' },
+      { icon: '✨', label: 'Optimizing assets' },
+      { icon: '🚀', label: 'Finalizing install' },
+    ];
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-lg">
-        <div className="relative w-full max-w-sm mx-4 rounded-2xl border border-red-600/30 bg-gradient-to-b from-zinc-900/95 to-black/95 shadow-2xl shadow-red-900/20 p-8 text-center space-y-5 animate-in zoom-in-95 duration-300">
-          <div className="mx-auto w-16 h-16 rounded-full bg-red-600/15 flex items-center justify-center">
-            <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-300">
+        <div className="relative w-full max-w-sm mx-4 overflow-hidden rounded-2xl border border-red-600/30 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-red-900/40 p-8 text-center space-y-6 animate-in zoom-in-95 duration-300">
+          {/* Decorative glows */}
+          <div className="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full bg-red-600/20 blur-3xl animate-pulse" />
+          <div className="pointer-events-none absolute -bottom-24 -left-20 h-52 w-52 rounded-full bg-red-500/15 blur-3xl" />
+
+          {/* Header pill */}
+          <div className="relative inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">
+            <Loader2 className="h-2.5 w-2.5 animate-spin" />
+            Installing {APP_VERSION}
           </div>
-          <h2 className="text-xl font-bold text-white">Installing Updates</h2>
-          <p className="text-sm text-zinc-500">Almost done, setting up new features…</p>
-          <div className="flex justify-center gap-1.5 pt-2">
+
+          {/* Animated install icon */}
+          <div className="relative mx-auto h-24 w-24">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-red-500/30 to-orange-500/20 blur-xl animate-pulse" />
+            <div className="absolute inset-2 rounded-full border-2 border-red-500/40 border-t-red-500 animate-spin" style={{ animationDuration: '1.4s' }} />
+            <div className="absolute inset-5 rounded-full border-2 border-amber-500/30 border-b-amber-400 animate-spin" style={{ animationDuration: '1.8s', animationDirection: 'reverse' }} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-3xl">⚙️</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-lg font-bold text-white">Installing Updates</h2>
+            <p className="text-xs text-zinc-500">Setting up new features and polishing the experience…</p>
+          </div>
+
+          {/* Stage list — staggered */}
+          <div className="space-y-1.5 text-left">
+            {stages.map((stage, i) => (
+              <div
+                key={stage.label}
+                className="flex items-center gap-2.5 rounded-lg border border-white/5 bg-white/[0.03] px-3 py-2 animate-in fade-in slide-in-from-bottom-2"
+                style={{ animationDelay: `${i * 350}ms`, animationDuration: '500ms', animationFillMode: 'both' }}
+              >
+                <span className="text-base shrink-0">{stage.icon}</span>
+                <span className="flex-1 text-[11px] font-semibold text-white/90">{stage.label}</span>
+                <Loader2 className="h-3 w-3 text-red-400 animate-spin shrink-0" />
+              </div>
+            ))}
+          </div>
+
+          {/* Bouncing dots */}
+          <div className="flex justify-center gap-1.5 pt-1">
             {[0, 1, 2].map(i => (
-              <div key={i} className="w-2 h-2 rounded-full bg-red-500 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+              <div key={i} className="w-1.5 h-1.5 rounded-full bg-red-500 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
             ))}
           </div>
         </div>
