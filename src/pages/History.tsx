@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,7 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { History as HistoryIcon, Play, Clock, Trash2, User, Check, Download } from 'lucide-react';
+import {
+  History as HistoryIcon,
+  Play,
+  Clock,
+  Trash2,
+  User,
+  Check,
+  Download,
+  Film,
+  Tv,
+  Sparkles,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import {
   ContextMenu,
@@ -60,7 +71,6 @@ export default function History() {
       navigate('/auth');
       return;
     }
-
     fetchHistory();
     fetchUserProfile();
   }, [user]);
@@ -79,14 +89,7 @@ export default function History() {
     try {
       const { data, error } = await supabase
         .from('watch_history')
-        .select(`
-          id,
-          watched_at,
-          progress,
-          completed,
-          anime_id,
-          episode_id
-        `)
+        .select(`id, watched_at, progress, completed, anime_id, episode_id`)
         .eq('user_id', user!.id)
         .order('watched_at', { ascending: false });
 
@@ -97,25 +100,30 @@ export default function History() {
       }
 
       if (data && data.length > 0) {
-        // Fetch anime data separately
-        const animeIds = [...new Set(data.map(h => h.anime_id))];
-        const episodeIds = [...new Set(data.map(h => h.episode_id))];
+        const animeIds = [...new Set(data.map((h) => h.anime_id))];
+        const episodeIds = [...new Set(data.map((h) => h.episode_id))];
 
         const [animeResponse, episodeResponse] = await Promise.all([
           supabase.from('anime').select('id, title, cover_image').in('id', animeIds),
-          supabase.from('episodes').select('id, title, episode_number, duration').in('id', episodeIds)
+          supabase.from('episodes').select('id, title, episode_number, duration').in('id', episodeIds),
         ]);
 
-        const animeMap = new Map(animeResponse.data?.map(a => [a.id, a]) || []);
-        const episodeMap = new Map(episodeResponse.data?.map(e => [e.id, e]) || []);
+        const animeMap = new Map(animeResponse.data?.map((a) => [a.id, a]) || []);
+        const episodeMap = new Map(episodeResponse.data?.map((e) => [e.id, e]) || []);
 
-        const historyWithDetails = data.map(h => ({
+        const historyWithDetails = data.map((h) => ({
           id: h.id,
           watched_at: h.watched_at,
           progress: h.progress,
           completed: h.completed,
           anime: animeMap.get(h.anime_id) || { id: h.anime_id, title: 'Unknown', cover_image: null },
-          episode: episodeMap.get(h.episode_id) || { id: h.episode_id, title: 'Unknown', episode_number: 0, duration: null }
+          episode:
+            episodeMap.get(h.episode_id) || {
+              id: h.episode_id,
+              title: 'Unknown',
+              episode_number: 0,
+              duration: null,
+            },
         }));
 
         setHistory(historyWithDetails as WatchHistoryItem[]);
@@ -127,25 +135,17 @@ export default function History() {
   };
 
   const deleteHistoryItem = async (historyId: string, e: React.MouseEvent | React.TouchEvent) => {
-    // Critical: Stop event propagation to prevent card navigation
     e.preventDefault();
     e.stopPropagation();
-    
-    // For touch events on mobile, we need extra protection
     if ('nativeEvent' in e && e.nativeEvent) {
       e.nativeEvent.stopImmediatePropagation();
     }
-
     try {
-      const { error } = await supabase
-        .from('watch_history')
-        .delete()
-        .eq('id', historyId);
-
+      const { error } = await supabase.from('watch_history').delete().eq('id', historyId);
       if (error) {
         toast.error('Failed to delete history item');
       } else {
-        setHistory(prev => prev.filter((item) => item.id !== historyId));
+        setHistory((prev) => prev.filter((item) => item.id !== historyId));
         toast.success('Removed from history');
       }
     } catch (err) {
@@ -161,9 +161,11 @@ export default function History() {
       .eq('id', historyId);
 
     if (!error) {
-      setHistory(prev => prev.map(item =>
-        item.id === historyId ? { ...item, completed: true, progress: 100 } : item
-      ));
+      setHistory((prev) =>
+        prev.map((item) =>
+          item.id === historyId ? { ...item, completed: true, progress: 100 } : item,
+        ),
+      );
       toast.success(`Marked "${animeTitle}" as watched`);
     } else {
       toast.error('Failed to mark as watched');
@@ -172,16 +174,14 @@ export default function History() {
 
   const saveOffline = async (item: WatchHistoryItem) => {
     const episodeUrl = `/watch/${item.episode.id}`;
-    toast.info(`Opening "${item.anime.title}" EP ${item.episode.episode_number} — use the download button in the player to save offline.`);
+    toast.info(
+      `Opening "${item.anime.title}" EP ${item.episode.episode_number} — use the download button in the player to save offline.`,
+    );
     navigate(episodeUrl);
   };
 
   const clearAllHistory = async () => {
-    const { error } = await supabase
-      .from('watch_history')
-      .delete()
-      .eq('user_id', user!.id);
-
+    const { error } = await supabase.from('watch_history').delete().eq('user_id', user!.id);
     if (error) {
       toast.error('Failed to clear history');
     } else {
@@ -190,8 +190,6 @@ export default function History() {
     }
   };
 
-  // Build resume URL preferring exact seconds saved in localStorage,
-  // falling back to percent-based progress for older entries.
   const buildResumeUrl = (item: WatchHistoryItem) => {
     try {
       const raw = localStorage.getItem(`resume:${item.episode.id}`);
@@ -212,12 +210,9 @@ export default function History() {
       { label: 'hour', seconds: 3600 },
       { label: 'minute', seconds: 60 },
     ];
-
     for (const interval of intervals) {
       const count = Math.floor(seconds / interval.seconds);
-      if (count > 0) {
-        return `${count} ${interval.label}${count !== 1 ? 's' : ''} ago`;
-      }
+      if (count > 0) return `${count} ${interval.label}${count !== 1 ? 's' : ''} ago`;
     }
     return 'Just now';
   };
@@ -228,17 +223,33 @@ export default function History() {
     const minutes = Math.floor(watchedSeconds / 60);
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
-    
-    if (hours > 0) {
-      return `${hours}h ${remainingMinutes}m watched`;
-    }
+    if (hours > 0) return `${hours}h ${remainingMinutes}m watched`;
     return `${minutes}m watched`;
   };
+
+  // Stats
+  const stats = useMemo(() => {
+    const totalEpisodes = history.length;
+    const completed = history.filter((h) => h.completed).length;
+    const inProgress = totalEpisodes - completed;
+    const uniqueAnime = new Set(history.map((h) => h.anime.id)).size;
+    const totalMinutes = history.reduce((acc, h) => {
+      if (!h.progress || !h.episode.duration) return acc;
+      return acc + (h.progress / 100) * (h.episode.duration / 60);
+    }, 0);
+    return {
+      totalEpisodes,
+      completed,
+      inProgress,
+      uniqueAnime,
+      totalHours: Math.floor(totalMinutes / 60),
+    };
+  }, [history]);
 
   if (isLoading) {
     return (
       <div className="container py-8">
-        <h1 className="text-3xl font-heading font-bold mb-8">Watch History</h1>
+        <Skeleton className="h-48 w-full rounded-2xl mb-8" />
         <div className="space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-24 w-full rounded-xl" />
@@ -249,228 +260,328 @@ export default function History() {
   }
 
   return (
-    <div className="container py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          {/* User Profile Avatar */}
-          <Avatar className="h-10 w-10 border-2 border-primary/30">
-            <AvatarImage src={userProfile?.avatar_url || undefined} alt={userProfile?.username || 'User'} />
-            <AvatarFallback className="bg-primary/10 text-primary">
-              {userProfile?.username?.charAt(0).toUpperCase() || <User className="h-5 w-5" />}
-            </AvatarFallback>
-          </Avatar>
-          <HistoryIcon className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-heading font-bold">
-            Watch <span className="anime-gradient-text">History</span>
-          </h1>
-        </div>
+    <div className="min-h-screen">
+      {/* Cinematic hero */}
+      <div className="relative h-[240px] md:h-[300px] overflow-hidden border-b border-border/40">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-rose-500/10" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(var(--primary)/0.3),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,hsl(0_85%_50%/0.18),transparent_60%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/40 to-background" />
 
-        {history.length > 0 && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" className="text-destructive hover:text-destructive">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Clear All
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Clear Watch History?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete all your watch history and remove all your progress data.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={clearAllHistory} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                  Clear All
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
-      </div>
-
-      {history.length === 0 ? (
-        <div className="text-center py-20">
-          <HistoryIcon className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">No watch history</h2>
-          <p className="text-muted-foreground mb-6">
-            Start watching anime to track your progress
-          </p>
-          <Button asChild className="anime-button">
-            <Link to="/browse">Browse Anime</Link>
-          </Button>
-        </div>
-      ) : (
-        <>
-          {/* Desktop View */}
-          <div className="hidden md:block space-y-4">
-            {history.map((item) => (
-              <ContextMenu key={item.id}>
-                <ContextMenuTrigger asChild>
-              <div className="relative pr-10">
-                <Link
-                  to={buildResumeUrl(item)}
-                  className="anime-card flex gap-4 p-4 hover:bg-muted/50 transition-colors group"
-                >
-                  <div className="relative flex-shrink-0 w-32 aspect-video rounded-lg overflow-hidden bg-muted">
-                    <img
-                      src={item.anime.cover_image || '/placeholder.svg'}
-                      alt={item.anime.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Play className="h-8 w-8 text-white fill-current" />
-                    </div>
-                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
-                      EP {item.episode.episode_number}
-                    </div>
-                    {item.completed && (
-                      <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-green-500/90 text-[10px] font-bold text-white">
-                        COMPLETE
-                      </div>
-                    )}
-                    {item.progress !== null && item.progress > 0 && (
-                      <div className="absolute bottom-0 left-0 right-0">
-                        <Progress value={item.progress} className="h-1 rounded-none" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold group-hover:text-primary transition-colors">
-                      {item.anime.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Episode {item.episode.episode_number}: {item.episode.title}
-                    </p>
-                    <div className="flex items-center flex-wrap gap-4 mt-2">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {formatTimeAgo(item.watched_at)}
-                      </div>
-                      {item.progress !== null && item.progress > 0 && (
-                        <span className="text-sm text-muted-foreground">
-                          {item.completed ? 'Completed' : `${item.progress}% watched`}
-                        </span>
-                      )}
-                      {formatWatchedTime(item.progress, item.episode.duration) && (
-                        <span className="text-sm text-primary font-medium">
-                          {formatWatchedTime(item.progress, item.episode.duration)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <Button size="sm" variant="outline" className="self-center" asChild>
-                      <span>
-                        <Play className="h-4 w-4 mr-1 fill-current" />
-                        Continue
-                      </span>
-                    </Button>
-                  </div>
-                </Link>
-                {/* Delete button positioned outside the card */}
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="absolute -right-1 top-1/2 -translate-y-1/2 z-20 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    deleteHistoryItem(item.id, e);
-                  }}
-                  type="button"
-                  title="Remove from history"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+        <div className="relative container h-full flex flex-col justify-end pb-6 md:pb-8">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary to-rose-500 blur-xl opacity-60" />
+                <Avatar className="relative h-16 w-16 md:h-20 md:w-20 rounded-2xl border-2 border-primary/40 shadow-2xl">
+                  <AvatarImage
+                    src={userProfile?.avatar_url || undefined}
+                    alt={userProfile?.username || 'User'}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="rounded-2xl bg-gradient-to-br from-primary to-rose-500 text-white text-xl font-bold">
+                    {userProfile?.username?.charAt(0).toUpperCase() || <User className="h-7 w-7" />}
+                  </AvatarFallback>
+                </Avatar>
               </div>
-                </ContextMenuTrigger>
-                <ContextMenuContent className="w-52">
-                  <ContextMenuItem onClick={() => markAsWatched(item.id, item.anime.title)} className="flex items-center gap-2 cursor-pointer">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>Mark as Watched</span>
-                  </ContextMenuItem>
-                  <ContextMenuItem onClick={() => saveOffline(item)} className="flex items-center gap-2 cursor-pointer">
-                    <Download className="h-4 w-4 text-blue-500" />
-                    <span>Save Offline</span>
-                  </ContextMenuItem>
-                </ContextMenuContent>
-              </ContextMenu>
-            ))}
-          </div>
-
-          {/* Mobile View - Compact grid with thumbnail and progress only */}
-          <div className="md:hidden grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {history.map((item) => (
-              <ContextMenu key={item.id}>
-                <ContextMenuTrigger asChild>
-              <div className="relative group">
-                <Link
-                  to={buildResumeUrl(item)}
-                  className="block"
-                >
-                  <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
-                    <img
-                      src={item.anime.cover_image || '/placeholder.svg'}
-                      alt={item.anime.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-active:opacity-100 transition-opacity">
-                      <Play className="h-8 w-8 text-white fill-current" />
-                    </div>
-                    <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-primary/90 text-[10px] font-bold text-primary-foreground">
-                      EP {item.episode.episode_number}
-                    </div>
-                    {item.completed && (
-                      <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded bg-green-500/90 text-[8px] font-bold text-white">
-                        COMPLETE
-                      </div>
-                    )}
-                    {item.progress !== null && item.progress > 0 && !item.completed && (
-                      <div className="absolute bottom-0 left-0 right-0">
-                        <Progress value={item.progress} className="h-1.5 rounded-none" />
-                      </div>
-                    )}
-                  </div>
-                  <p className="mt-1.5 text-xs font-medium line-clamp-2 leading-tight">
-                    {item.anime.title}
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1 flex items-center gap-2">
+                  <HistoryIcon className="h-3 w-3" />
+                  Your Journey
+                </p>
+                <h1 className="text-3xl md:text-5xl font-heading font-bold tracking-tight">
+                  Watch <span className="anime-gradient-text">History</span>
+                </h1>
+                {userProfile?.username && (
+                  <p className="text-sm md:text-base text-muted-foreground mt-1">
+                    Welcome back, <span className="text-foreground font-medium">{userProfile.username}</span>
                   </p>
-                </Link>
-                {/* Delete button outside the Link */}
-                {!item.completed && (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="absolute top-1 right-1 h-6 w-6 text-white/80 hover:text-destructive bg-black/40 hover:bg-black/60 z-20"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      deleteHistoryItem(item.id, e);
-                    }}
-                    type="button"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
                 )}
               </div>
-                </ContextMenuTrigger>
-                <ContextMenuContent className="w-52">
-                  <ContextMenuItem onClick={() => markAsWatched(item.id, item.anime.title)} className="flex items-center gap-2 cursor-pointer">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>Mark as Watched</span>
-                  </ContextMenuItem>
-                  <ContextMenuItem onClick={() => saveOffline(item)} className="flex items-center gap-2 cursor-pointer">
-                    <Download className="h-4 w-4 text-blue-500" />
-                    <span>Save Offline</span>
-                  </ContextMenuItem>
-                </ContextMenuContent>
-              </ContextMenu>
-            ))}
+            </div>
+
+            {history.length > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive backdrop-blur-md bg-card/40"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Clear All
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Clear Watch History?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete all your watch
+                      history and remove all your progress data.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={clearAllHistory}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Clear All
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
-        </>
-      )}
+        </div>
+      </div>
+
+      <div className="container py-6 md:py-8">
+        {history.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="relative inline-flex mb-6">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-rose-500 blur-2xl opacity-40" />
+              <div className="relative h-20 w-20 rounded-full bg-gradient-to-br from-primary/20 to-rose-500/10 border border-primary/30 flex items-center justify-center">
+                <HistoryIcon className="h-10 w-10 text-primary" />
+              </div>
+            </div>
+            <h2 className="text-2xl font-heading font-bold mb-2">No watch history yet</h2>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Start watching anime to track your progress and pick up right where you left off.
+            </p>
+            <Button asChild className="bg-gradient-to-r from-primary to-rose-500 hover:opacity-90 text-white">
+              <Link to="/browse">
+                <Play className="h-4 w-4 mr-2 fill-current" />
+                Browse Anime
+              </Link>
+            </Button>
+          </div>
+        ) : (
+          <>
+            {/* Stats grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+              {[
+                { icon: Film, label: 'Episodes', value: stats.totalEpisodes },
+                { icon: Tv, label: 'Anime', value: stats.uniqueAnime },
+                { icon: Check, label: 'Completed', value: stats.completed },
+                { icon: Clock, label: 'Hours Watched', value: stats.totalHours },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="group relative overflow-hidden rounded-xl border border-border/50 bg-card/40 backdrop-blur-md p-4 hover:border-primary/40 transition-all"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <stat.icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        {stat.label}
+                      </p>
+                      <p className="text-xl font-bold tabular-nums">{stat.value}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <h2 className="text-sm uppercase tracking-[0.2em] text-muted-foreground font-semibold">
+                Recent Activity
+              </h2>
+              <div className="flex-1 h-px bg-gradient-to-r from-border via-border/40 to-transparent" />
+            </div>
+
+            {/* Desktop list */}
+            <div className="hidden md:block space-y-3">
+              {history.map((item) => (
+                <ContextMenu key={item.id}>
+                  <ContextMenuTrigger asChild>
+                    <div className="relative group">
+                      <Link
+                        to={buildResumeUrl(item)}
+                        className="relative flex gap-4 p-3 rounded-xl border border-border/50 bg-card/40 backdrop-blur-sm hover:border-primary/40 hover:bg-card/70 transition-all overflow-hidden"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                        <div className="relative flex-shrink-0 w-36 aspect-video rounded-lg overflow-hidden bg-muted ring-1 ring-border/40">
+                          <img
+                            src={item.anime.cover_image || '/placeholder.svg'}
+                            alt={item.anime.title}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="h-12 w-12 rounded-full bg-primary/90 flex items-center justify-center shadow-lg">
+                              <Play className="h-5 w-5 text-white fill-current ml-0.5" />
+                            </div>
+                          </div>
+                          <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-primary/90 backdrop-blur-sm text-[10px] font-bold text-primary-foreground">
+                            EP {item.episode.episode_number}
+                          </div>
+                          {item.completed && (
+                            <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-emerald-500/90 backdrop-blur-sm text-[10px] font-bold text-white flex items-center gap-1">
+                              <Check className="h-2.5 w-2.5" />
+                              DONE
+                            </div>
+                          )}
+                          {item.progress !== null && item.progress > 0 && (
+                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/40">
+                              <div
+                                className="h-full bg-gradient-to-r from-primary to-rose-500"
+                                style={{ width: `${item.progress}%` }}
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="relative flex-1 min-w-0 flex flex-col justify-center">
+                          <h3 className="font-semibold text-base group-hover:text-primary transition-colors line-clamp-1">
+                            {item.anime.title}
+                          </h3>
+                          <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5">
+                            EP {item.episode.episode_number} · {item.episode.title}
+                          </p>
+                          <div className="flex items-center flex-wrap gap-3 mt-2 text-xs">
+                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              {formatTimeAgo(item.watched_at)}
+                            </span>
+                            {item.progress !== null && item.progress > 0 && (
+                              <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary font-medium">
+                                {item.completed ? 'Completed' : `${item.progress}% watched`}
+                              </span>
+                            )}
+                            {formatWatchedTime(item.progress, item.episode.duration) && (
+                              <span className="text-muted-foreground">
+                                {formatWatchedTime(item.progress, item.episode.duration)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="relative flex items-center gap-2 pr-2">
+                          <Button
+                            size="sm"
+                            className="bg-gradient-to-r from-primary to-rose-500 hover:opacity-90 text-white shadow-lg"
+                            asChild
+                          >
+                            <span>
+                              <Play className="h-3.5 w-3.5 mr-1 fill-current" />
+                              Resume
+                            </span>
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            onClick={(e) => deleteHistoryItem(item.id, e)}
+                            type="button"
+                            title="Remove"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </Link>
+                    </div>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent className="w-52">
+                    <ContextMenuItem
+                      onClick={() => markAsWatched(item.id, item.anime.title)}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Check className="h-4 w-4 text-emerald-500" />
+                      <span>Mark as Watched</span>
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                      onClick={() => saveOffline(item)}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Download className="h-4 w-4 text-blue-500" />
+                      <span>Save Offline</span>
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
+              ))}
+            </div>
+
+            {/* Mobile grid */}
+            <div className="md:hidden grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {history.map((item) => (
+                <ContextMenu key={item.id}>
+                  <ContextMenuTrigger asChild>
+                    <div className="relative group">
+                      <Link to={buildResumeUrl(item)} className="block">
+                        <div className="relative aspect-video rounded-xl overflow-hidden bg-muted ring-1 ring-border/40">
+                          <img
+                            src={item.anime.cover_image || '/placeholder.svg'}
+                            alt={item.anime.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-active:opacity-100 transition-opacity">
+                            <Play className="h-8 w-8 text-white fill-current" />
+                          </div>
+                          <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-primary/90 backdrop-blur-sm text-[9px] font-bold text-primary-foreground">
+                            EP {item.episode.episode_number}
+                          </div>
+                          {item.completed && (
+                            <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-emerald-500/90 text-[8px] font-bold text-white">
+                              ✓
+                            </div>
+                          )}
+                          {item.progress !== null && item.progress > 0 && !item.completed && (
+                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/40">
+                              <div
+                                className="h-full bg-gradient-to-r from-primary to-rose-500"
+                                style={{ width: `${item.progress}%` }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <p className="mt-1.5 text-xs font-medium line-clamp-2 leading-tight">
+                          {item.anime.title}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          {formatTimeAgo(item.watched_at)}
+                        </p>
+                      </Link>
+                      {!item.completed && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="absolute top-1 right-1 h-6 w-6 text-white/90 hover:text-destructive bg-black/50 hover:bg-black/70 backdrop-blur-sm z-20"
+                          onClick={(e) => deleteHistoryItem(item.id, e)}
+                          type="button"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent className="w-52">
+                    <ContextMenuItem
+                      onClick={() => markAsWatched(item.id, item.anime.title)}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Check className="h-4 w-4 text-emerald-500" />
+                      <span>Mark as Watched</span>
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                      onClick={() => saveOffline(item)}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Download className="h-4 w-4 text-blue-500" />
+                      <span>Save Offline</span>
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

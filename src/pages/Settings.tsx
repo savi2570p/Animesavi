@@ -9,15 +9,26 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { ReleaseReminderSettings } from '@/components/ReleaseReminderSettings';
-import { Settings as SettingsIcon, Moon, Globe, Keyboard, Shield, KeyRound, Eye, EyeOff } from 'lucide-react';
+import {
+  Settings as SettingsIcon,
+  Moon,
+  Globe,
+  Keyboard,
+  Shield,
+  KeyRound,
+  Eye,
+  EyeOff,
+  Sparkles,
+  User as UserIcon,
+  Bell,
+  Lock,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Settings() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [autoplay, setAutoplay] = useState(true);
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Change password state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -27,45 +38,12 @@ export default function Settings() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
-  // Load saved theme on mount
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | 'system' | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-      applyTheme(savedTheme);
-    }
-  }, []);
-
   // Redirect to auth if not logged in
   useEffect(() => {
     if (!user) {
       navigate('/auth');
     }
   }, [user, navigate]);
-
-  const applyTheme = (newTheme: 'light' | 'dark' | 'system') => {
-    const root = document.documentElement;
-    root.classList.add('theme-transitioning');
-    if (newTheme === 'system') {
-      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      root.classList.toggle('dark', systemPrefersDark);
-    } else {
-      root.classList.toggle('dark', newTheme === 'dark');
-    }
-    setTimeout(() => {
-      root.classList.remove('theme-transitioning');
-    }, 500);
-  };
-
-  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
-    if (isTransitioning) return;
-    setIsTransitioning(true);
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    applyTheme(newTheme);
-    toast.success(`Theme changed to ${newTheme}`);
-    setTimeout(() => setIsTransitioning(false), 500);
-  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +59,6 @@ export default function Settings() {
 
     setIsChangingPassword(true);
     try {
-      // Verify current password first
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: user?.email || '',
         password: currentPassword,
@@ -93,7 +70,6 @@ export default function Settings() {
         return;
       }
 
-      // Update password
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword,
       });
@@ -115,213 +91,279 @@ export default function Settings() {
 
   if (!user) return null;
 
+  const shortcuts = [
+    { label: 'Play / Pause', key: 'Space' },
+    { label: 'Fullscreen', key: 'F' },
+    { label: 'Mute / Unmute', key: 'M' },
+    { label: 'PiP Mode', key: 'P' },
+    { label: 'Skip Forward', key: '→' },
+    { label: 'Skip Backward', key: '←' },
+  ];
+
   return (
-    <div className="container py-12 max-w-2xl">
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 rounded-lg bg-gradient-primary">
-            <SettingsIcon className="h-6 w-6 text-white" />
+    <div className="min-h-screen">
+      {/* Cinematic hero */}
+      <div className="relative h-[220px] md:h-[280px] overflow-hidden border-b border-border/40">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-rose-500/10" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.25),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,hsl(0_85%_50%/0.15),transparent_60%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background" />
+
+        <div className="relative container h-full flex items-end pb-8">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary to-rose-500 blur-xl opacity-60" />
+              <div className="relative h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-gradient-to-br from-primary to-rose-500 flex items-center justify-center shadow-2xl">
+                <SettingsIcon className="h-8 w-8 md:h-10 md:w-10 text-white" />
+              </div>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1">Preferences</p>
+              <h1 className="text-3xl md:text-5xl font-heading font-bold tracking-tight">
+                Settings
+              </h1>
+              <p className="text-sm md:text-base text-muted-foreground mt-1">
+                Personalize your experience
+              </p>
+            </div>
           </div>
-          <h1 className="text-3xl font-heading font-bold">Settings</h1>
         </div>
-        <p className="text-muted-foreground">Manage your app preferences</p>
       </div>
 
-      <div className="space-y-6">
-        {/* Theme - Locked to Dark */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Moon className="h-5 w-5" />
-              Appearance
-            </CardTitle>
-            <CardDescription>
-              Theme is locked to dark mode for the best viewing experience
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg border border-primary/20">
-              <Moon className="h-5 w-5 text-primary" />
-              <span className="font-medium">Dark Mode</span>
-              <span className="text-xs text-muted-foreground ml-auto">Always On</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Push Notification Settings */}
-        <NotificationSettings />
-
-        {/* Release Reminder Settings */}
-        <ReleaseReminderSettings />
-
-        {/* Playback Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Globe className="h-5 w-5" />
-              Playback
-            </CardTitle>
-            <CardDescription>
-              Video playback preferences
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="autoplay">Autoplay Next Episode</Label>
-                <p className="text-sm text-muted-foreground">
-                  Automatically play the next episode when current one ends
-                </p>
-              </div>
-              <Switch
-                id="autoplay"
-                checked={autoplay}
-                onCheckedChange={setAutoplay}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Change Password */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <KeyRound className="h-5 w-5" />
-              Change Password
-            </CardTitle>
-            <CardDescription>
-              Update your account password. If you forgot your password, contact an admin to reset it for you.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleChangePassword} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="current-password">Current Password</Label>
-                <div className="relative">
-                  <Input
-                    id="current-password"
-                    type={showCurrentPassword ? 'text' : 'password'}
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="bg-muted/50 pr-10"
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
-                <div className="relative">
-                  <Input
-                    id="new-password"
-                    type={showNewPassword ? 'text' : 'password'}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="bg-muted/50 pr-10"
-                    autoComplete="new-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm New Password</Label>
-                <Input
-                  id="confirm-password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="bg-muted/50"
-                  autoComplete="new-password"
-                />
-              </div>
-              <Button
-                type="submit"
-                disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}
-                className="w-full"
-              >
-                {isChangingPassword ? 'Changing Password...' : 'Change Password'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Keyboard Shortcuts */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Keyboard className="h-5 w-5" />
-              Keyboard Shortcuts
-            </CardTitle>
-            <CardDescription>
-              Quick controls for the video player
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
-                <span className="text-muted-foreground">Play/Pause</span>
-                <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">Space</kbd>
-              </div>
-              <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
-                <span className="text-muted-foreground">Fullscreen</span>
-                <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">F</kbd>
-              </div>
-              <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
-                <span className="text-muted-foreground">Mute/Unmute</span>
-                <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">M</kbd>
-              </div>
-              <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
-                <span className="text-muted-foreground">PiP Mode</span>
-                <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">P</kbd>
-              </div>
-              <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
-                <span className="text-muted-foreground">Skip Forward</span>
-                <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">→</kbd>
-              </div>
-              <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
-                <span className="text-muted-foreground">Skip Backward</span>
-                <kbd className="px-2 py-1 bg-background rounded text-xs font-mono">←</kbd>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Privacy & Security */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Privacy & Security
-            </CardTitle>
-            <CardDescription>
-              Manage your privacy settings
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button 
-              variant="outline" 
-              className="w-full justify-start"
-              onClick={() => navigate('/profile')}
+      <div className="container py-8 md:py-10 max-w-4xl">
+        {/* Quick stats / chips */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          {[
+            { icon: Moon, label: 'Theme', value: 'Dark' },
+            { icon: Bell, label: 'Alerts', value: 'On' },
+            { icon: Globe, label: 'Autoplay', value: autoplay ? 'On' : 'Off' },
+            { icon: Lock, label: 'Account', value: 'Secure' },
+          ].map((chip) => (
+            <div
+              key={chip.label}
+              className="group relative overflow-hidden rounded-xl border border-border/50 bg-card/40 backdrop-blur-md p-3 hover:border-primary/40 transition-all"
             >
-              Manage Profile Settings
-            </Button>
-          </CardContent>
-        </Card>
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <chip.icon className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground truncate">
+                    {chip.label}
+                  </p>
+                  <p className="text-sm font-semibold truncate">{chip.value}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="space-y-5">
+          {/* Appearance */}
+          <Card className="relative overflow-hidden border-border/50 bg-card/60 backdrop-blur-sm">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Moon className="h-4 w-4 text-primary" />
+                </div>
+                Appearance
+              </CardTitle>
+              <CardDescription>
+                Locked to dark mode for cinematic viewing
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-primary/10 to-rose-500/5 border border-primary/20">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <span className="font-medium text-sm">Dark Mode</span>
+                <span className="ml-auto text-xs text-muted-foreground uppercase tracking-wider">
+                  Always On
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notifications */}
+          <NotificationSettings />
+
+          {/* Release reminders */}
+          <ReleaseReminderSettings />
+
+          {/* Playback */}
+          <Card className="relative overflow-hidden border-border/50 bg-card/60 backdrop-blur-sm">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Globe className="h-4 w-4 text-primary" />
+                </div>
+                Playback
+              </CardTitle>
+              <CardDescription>Video player preferences</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/40">
+                <div className="space-y-0.5">
+                  <Label htmlFor="autoplay" className="text-sm font-medium">
+                    Autoplay Next Episode
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Auto-advance when an episode ends
+                  </p>
+                </div>
+                <Switch id="autoplay" checked={autoplay} onCheckedChange={setAutoplay} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Change Password */}
+          <Card className="relative overflow-hidden border-border/50 bg-card/60 backdrop-blur-sm">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <KeyRound className="h-4 w-4 text-primary" />
+                </div>
+                Change Password
+              </CardTitle>
+              <CardDescription>
+                Update your password. Forgot it? Contact an admin.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleChangePassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="current-password" className="text-xs uppercase tracking-wider text-muted-foreground">
+                    Current Password
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="current-password"
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="bg-muted/40 border-border/50 pr-10 h-11"
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password" className="text-xs uppercase tracking-wider text-muted-foreground">
+                      New Password
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="new-password"
+                        type={showNewPassword ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="bg-muted/40 border-border/50 pr-10 h-11"
+                        autoComplete="new-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password" className="text-xs uppercase tracking-wider text-muted-foreground">
+                      Confirm New
+                    </Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="bg-muted/40 border-border/50 h-11"
+                      autoComplete="new-password"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={
+                    isChangingPassword || !currentPassword || !newPassword || !confirmPassword
+                  }
+                  className="w-full h-11 bg-gradient-to-r from-primary to-rose-500 hover:opacity-90 text-white font-semibold"
+                >
+                  {isChangingPassword ? 'Changing Password...' : 'Update Password'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Keyboard Shortcuts */}
+          <Card className="relative overflow-hidden border-border/50 bg-card/60 backdrop-blur-sm">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Keyboard className="h-4 w-4 text-primary" />
+                </div>
+                Keyboard Shortcuts
+              </CardTitle>
+              <CardDescription>Quick controls for the video player</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-2.5">
+                {shortcuts.map((s) => (
+                  <div
+                    key={s.label}
+                    className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 border border-border/40 hover:border-primary/30 transition-colors"
+                  >
+                    <span className="text-xs md:text-sm text-muted-foreground">{s.label}</span>
+                    <kbd className="px-2 py-1 bg-background/80 border border-border rounded-md text-[10px] md:text-xs font-mono font-semibold shadow-sm">
+                      {s.key}
+                    </kbd>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Privacy & Security */}
+          <Card className="relative overflow-hidden border-border/50 bg-card/60 backdrop-blur-sm">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Shield className="h-4 w-4 text-primary" />
+                </div>
+                Privacy & Security
+              </CardTitle>
+              <CardDescription>Manage your account & profile</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant="outline"
+                className="w-full justify-start h-11 border-border/50 hover:border-primary/40 hover:bg-primary/5"
+                onClick={() => navigate('/profile')}
+              >
+                <UserIcon className="h-4 w-4 mr-2" />
+                Manage Profile Settings
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
