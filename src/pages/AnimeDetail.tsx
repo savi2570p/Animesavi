@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { preloadImages } from '@/lib/imageOptimization';
 import { BatchDownload } from '@/components/download/BatchDownload';
 import { AnimeReviews } from '@/components/anime/AnimeReviews';
+import { AnimeDetailLoader } from '@/components/anime/AnimeDetailLoader';
 import { ShareEmbedPopup } from '@/components/ShareEmbedPopup';
 import {
   Play,
@@ -424,94 +425,7 @@ export default function AnimeDetail() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen animate-fade-in">
-        {/* Hero backdrop skeleton */}
-        <div className="relative h-[42vh] md:h-[85vh] overflow-hidden">
-          <div className="absolute inset-0 skeleton-shimmer" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_30%,hsl(var(--primary)/0.15),transparent_60%)]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/10" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/55 to-transparent" />
-          <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-background/80 to-transparent" />
-        </div>
-
-        {/* Content skeleton mirrors real layout */}
-        <div className="container relative -mt-[28vh] md:-mt-[55vh] z-10 pb-8 md:pb-12">
-          <div className="flex flex-col lg:flex-row gap-5 md:gap-10">
-            {/* Poster skeleton */}
-            <div className="flex-shrink-0">
-              <div className="relative">
-                <div className="absolute -inset-3 rounded-2xl bg-primary/10 blur-2xl" />
-                <Skeleton className="relative w-28 md:w-72 h-40 md:h-[26rem] rounded-xl md:rounded-2xl border border-border/40" />
-              </div>
-            </div>
-
-            {/* Info skeleton */}
-            <div className="flex-1 space-y-4 md:space-y-5">
-              {/* Status pills */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <Skeleton className="h-6 w-32 rounded-full" />
-                <Skeleton className="h-6 w-24 rounded-full" />
-              </div>
-              {/* Title */}
-              <div className="space-y-2">
-                <Skeleton className="h-8 md:h-14 w-3/4" />
-                <Skeleton className="h-8 md:h-14 w-1/2 md:hidden" />
-              </div>
-              {/* Genre chips */}
-              <div className="flex flex-wrap gap-1.5">
-                {[60, 80, 70, 90, 65].map((w, i) => (
-                  <Skeleton key={i} className="h-6 rounded-full" style={{ width: `${w}px` }} />
-                ))}
-              </div>
-              {/* Meta chips */}
-              <div className="flex flex-wrap gap-1.5 md:gap-2">
-                {[70, 60, 50, 90, 110].map((w, i) => (
-                  <Skeleton key={i} className="h-7 rounded-lg" style={{ width: `${w}px` }} />
-                ))}
-              </div>
-              {/* Description lines */}
-              <div className="space-y-2 max-w-3xl pl-3 md:pl-4 border-l-[3px] border-primary/20 rounded-l">
-                <Skeleton className="h-3.5 w-full" />
-                <Skeleton className="h-3.5 w-[95%]" />
-                <Skeleton className="h-3.5 w-[88%]" />
-                <Skeleton className="h-3.5 w-2/3" />
-              </div>
-              {/* Action buttons */}
-              <div className="flex flex-wrap gap-2 md:gap-3 pt-2 md:pt-3">
-                <Skeleton className="h-11 md:h-14 w-32 md:w-44 rounded-xl" />
-                <Skeleton className="h-11 md:h-14 w-24 md:w-32 rounded-xl" />
-                <Skeleton className="h-11 md:h-14 w-24 md:w-32 rounded-xl" />
-                <Skeleton className="h-11 md:h-14 w-32 md:w-40 rounded-xl" />
-              </div>
-            </div>
-          </div>
-
-          {/* Episodes section skeleton */}
-          <div className="mt-12 md:mt-16">
-            <div className="flex items-center justify-between mb-6 md:mb-8">
-              <div className="flex items-center gap-3">
-                <div className="w-1.5 h-6 md:h-8 bg-primary/30 rounded-full" />
-                <Skeleton className="h-7 md:h-9 w-32 md:w-44" />
-              </div>
-              <Skeleton className="h-10 w-[200px] md:w-[240px] rounded-md" />
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="rounded-xl overflow-hidden border border-border/30 bg-card/40">
-                  <Skeleton className="aspect-video w-full rounded-none" />
-                  <div className="p-2.5 space-y-1.5">
-                    <Skeleton className="h-3 w-12" />
-                    <Skeleton className="h-3.5 w-full" />
-                    <Skeleton className="h-3 w-2/3" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <AnimeDetailLoader isReady={false} title="Loading anime details" />;
   }
 
   if (!anime) {
