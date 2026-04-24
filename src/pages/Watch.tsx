@@ -1044,61 +1044,81 @@ export default function Watch() {
       </div>
 
       {/* Below Player - Server Selection & Season Switcher */}
-      <div className="container py-4 border-b border-border/30">
-        <div className="flex flex-wrap items-center gap-4">
-          {/* Server Selection */}
-          <div className="flex items-center gap-3">
-            <Server className="h-5 w-5 text-muted-foreground" />
-            <span className="text-muted-foreground font-medium">Server:</span>
-            <div className="flex gap-2 flex-wrap">
-              {availableServers.map((server) => {
-                const config = SERVER_CONFIGS[server];
-                const isFailed = failedServers.has(server);
-                return (
-                  <Button
-                    key={server}
-                    size="sm"
-                    variant={activeServer === server ? 'default' : 'outline'}
-                    onClick={() => handleServerChange(server)}
-                    disabled={serverLoading}
-                    className={`${activeServer === server ? 'anime-button' : ''} ${isFailed ? 'opacity-60 line-through' : ''}`}
-                    title={config.description}
-                  >
-                    {config.name}
-                    {activeServer === server && (
-                      <span className="ml-1.5 text-[10px] opacity-75">●</span>
-                    )}
-                  </Button>
-                );
-              })}
-            </div>
-            {/* Live server status indicator */}
-            <ServerStatusIndicator
-              activeServer={activeServer}
-              failedServers={failedServers}
-              isServerLoading={serverLoading}
-              fallbackOccurred={fallbackOccurred}
-              fallbackFrom={fallbackFrom}
-            />
-          </div>
+      <div className="container py-3 md:py-4 border-b border-border/30">
+        <div className="relative rounded-xl md:rounded-2xl border border-border/40 bg-gradient-to-br from-card/80 via-card/40 to-card/60 backdrop-blur-xl p-3 md:p-4 shadow-lg shadow-black/20 overflow-hidden">
+          {/* Glow accent */}
+          <div className="absolute -top-12 -right-12 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Season Switcher - Dropdown */}
-          {allSeasons.length > 0 && (
-            <div className="flex items-center gap-2 md:gap-3 ml-auto min-w-0">
-              <span className="text-muted-foreground font-medium text-sm md:text-base shrink-0">Season:</span>
-              <select
-                value={currentSeason?.id || ''}
-                onChange={(e) => handleSeasonChange(e.target.value)}
-                className="bg-secondary/50 border border-border/50 rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              >
-                {allSeasons.map((season) => (
-                  <option key={season.id} value={season.id}>
-                    Season {season.season_number} {season.episode_count !== undefined ? `(${season.episode_count} eps)` : ''}
-                  </option>
-                ))}
-              </select>
+          <div className="relative flex flex-col md:flex-row md:items-center gap-3 md:gap-5">
+            {/* Server Selection */}
+            <div className="flex flex-col gap-2 flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-md bg-primary/15 border border-primary/30">
+                  <Server className="h-3 w-3 md:h-3.5 md:w-3.5 text-primary" />
+                </div>
+                <span className="text-[11px] md:text-xs font-bold uppercase tracking-wider text-foreground/80">Streaming Server</span>
+                <ServerStatusIndicator
+                  activeServer={activeServer}
+                  failedServers={failedServers}
+                  isServerLoading={serverLoading}
+                  fallbackOccurred={fallbackOccurred}
+                  fallbackFrom={fallbackFrom}
+                />
+              </div>
+              <div className="flex gap-1.5 md:gap-2 flex-wrap">
+                {availableServers.map((server) => {
+                  const config = SERVER_CONFIGS[server];
+                  const isFailed = failedServers.has(server);
+                  const isActive = activeServer === server;
+                  return (
+                    <button
+                      key={server}
+                      onClick={() => handleServerChange(server)}
+                      disabled={serverLoading}
+                      title={config.description}
+                      className={`group relative px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg border text-[11px] md:text-xs font-semibold transition-all duration-300 ${
+                        isActive
+                          ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-primary shadow-lg shadow-primary/30 scale-[1.02]'
+                          : 'bg-background/40 text-foreground/80 border-border/50 hover:border-primary/50 hover:bg-primary/5 hover:text-foreground'
+                      } ${isFailed ? 'opacity-50 line-through' : ''} ${serverLoading ? 'cursor-wait' : ''}`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        {isActive && (
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-foreground opacity-75" />
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary-foreground" />
+                          </span>
+                        )}
+                        {config.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          )}
+
+            {/* Season Switcher */}
+            {allSeasons.length > 0 && (
+              <div className="flex items-center gap-2 md:gap-3 md:border-l md:border-border/40 md:pl-5 min-w-0 md:ml-auto">
+                <span className="text-[11px] md:text-xs font-bold uppercase tracking-wider text-foreground/80 shrink-0">Season</span>
+                <div className="relative flex-1 md:flex-initial">
+                  <select
+                    value={currentSeason?.id || ''}
+                    onChange={(e) => handleSeasonChange(e.target.value)}
+                    className="w-full appearance-none bg-background/60 border border-border/50 rounded-lg pl-3 pr-9 py-1.5 md:py-2 text-xs md:text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 hover:border-primary/40 transition-colors cursor-pointer"
+                  >
+                    {allSeasons.map((season) => (
+                      <option key={season.id} value={season.id}>
+                        Season {season.season_number} {season.episode_count !== undefined ? `· ${season.episode_count} eps` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronRight className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 rotate-90 text-muted-foreground pointer-events-none" />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1115,89 +1135,116 @@ export default function Watch() {
       </div>
 
       {/* Episode Info & Navigation */}
-      <div className="container py-6">
-        <div className="flex flex-col gap-8">
-          {/* Breadcrumb with Format Indicator */}
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Link to={`/anime/${anime?.id}`} className="hover:text-primary">
-                {anime?.title}
-              </Link>
-              <ChevronRight className="h-4 w-4" />
-              <span>Episode {episode.episode_number}</span>
+      <div className="container py-5 md:py-8">
+        <div className="relative rounded-xl md:rounded-3xl border border-border/40 bg-gradient-to-br from-card/70 via-background/40 to-card/50 backdrop-blur-xl p-4 md:p-7 shadow-xl shadow-black/20 overflow-hidden">
+          {/* Decorative glows */}
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative flex flex-col gap-4 md:gap-6">
+            {/* Breadcrumb with Format Indicator */}
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-1.5 text-xs md:text-sm">
+                <Link to={`/anime/${anime?.id}`} className="text-muted-foreground hover:text-primary transition-colors font-medium">
+                  {anime?.title}
+                </Link>
+                <ChevronRight className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground/60" />
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/30 text-primary font-bold text-[11px] md:text-xs">
+                  S{currentSeason?.season_number || 1} · E{episode.episode_number}
+                </span>
+              </div>
+              {(isAdmin || isUploader) && (
+                <VideoFormatIndicator
+                  servedFormat={deviceOptimizedVideo.servedFormat}
+                  device={deviceOptimizedVideo.device}
+                  conversionStatus={deviceOptimizedVideo.conversionStatus}
+                  isHLS={deviceOptimizedVideo.videoUrl?.includes('.m3u8') || false}
+                />
+              )}
             </div>
-            
-            {/* Video Format Indicator - Only visible to admin/uploader */}
-            {(isAdmin || isUploader) && (
-              <VideoFormatIndicator
-                servedFormat={deviceOptimizedVideo.servedFormat}
-                device={deviceOptimizedVideo.device}
-                conversionStatus={deviceOptimizedVideo.conversionStatus}
-                isHLS={deviceOptimizedVideo.videoUrl?.includes('.m3u8') || false}
-              />
-            )}
-          </div>
 
-          {/* Anime Title */}
-          <h1 className="text-2xl md:text-3xl font-heading font-bold">
-            {episode.title}
-          </h1>
+            {/* Episode Title */}
+            <div className="space-y-2">
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-accent/15 border border-accent/30 text-[10px] md:text-xs font-bold uppercase tracking-wider text-accent-foreground">
+                <span className="w-1 h-1 rounded-full bg-accent animate-pulse" />
+                Now Playing
+              </span>
+              <h1 className="text-lg md:text-3xl font-heading font-bold leading-tight text-foreground">
+                {episode.title}
+              </h1>
+            </div>
 
-          {/* Edit Episode and Watch Party */}
-          <div className="flex items-center gap-4">
-            {(isAdmin || isUploader) && anime && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate(`/upload/anime/${anime.id}/episode/${episode.id}/edit`)}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Episode
-              </Button>
+            {/* Description */}
+            {episode.description && (
+              <p className="text-xs md:text-sm leading-relaxed text-muted-foreground border-l-2 border-primary/40 pl-3 md:pl-4 py-1">
+                {episode.description}
+              </p>
             )}
-            
-            {/* Watch Party Button */}
-            {anime && (
-              <WatchParty
+
+            {/* Quick actions row: Edit + Watch Party */}
+            {((isAdmin || isUploader) || anime) && (
+              <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+                {(isAdmin || isUploader) && anime && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/upload/anime/${anime.id}/episode/${episode.id}/edit`)}
+                    className="h-8 md:h-9 text-xs"
+                  >
+                    <Edit className="h-3.5 w-3.5 mr-1.5" />
+                    Edit
+                  </Button>
+                )}
+                {anime && (
+                  <WatchParty
+                    episodeId={episode.id}
+                    videoRef={{ current: document.querySelector('video') } as React.RefObject<HTMLVideoElement>}
+                    animeTitle={anime.title || ''}
+                    episodeNumber={episode.episode_number}
+                    seasonNumber={currentSeason?.season_number || 1}
+                    animeId={anime.id}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+
+            {/* Episode Navigation */}
+            <div className="flex flex-wrap items-center gap-2 md:gap-3">
+              {prevEpisode && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/watch/${prevEpisode.id}`, { replace: true })}
+                  className="h-9 md:h-10 text-xs md:text-sm border-border/60 hover:border-primary/60 hover:bg-primary/5"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5" />
+                  Previous
+                </Button>
+              )}
+              {nextEpisode && (
+                <Button
+                  size="sm"
+                  className="anime-button h-9 md:h-10 text-xs md:text-sm shadow-lg shadow-primary/20"
+                  onClick={() => navigate(`/watch/${nextEpisode.id}`, { replace: true })}
+                >
+                  Next Episode
+                  <ChevronRight className="h-3.5 w-3.5 md:h-4 md:w-4 ml-1.5" />
+                </Button>
+              )}
+
+              {/* Offline Download Button */}
+              <OfflineDownloadButton
+                videoUrl={episode.video_url}
+                iosVideoUrl={deviceOptimizedVideo.device === 'iOS' ? deviceOptimizedVideo.videoUrl : null}
                 episodeId={episode.id}
-                videoRef={{ current: document.querySelector('video') } as React.RefObject<HTMLVideoElement>}
-                animeTitle={anime.title || ''}
-                episodeNumber={episode.episode_number}
-                seasonNumber={currentSeason?.season_number || 1}
-                animeId={anime.id}
+                episodeTitle={episode.title}
+                animeTitle={anime?.title || 'Unknown'}
+                thumbnail={episode.thumbnail}
+                isIOSDevice={deviceOptimizedVideo.device === 'iOS'}
               />
-            )}
-          </div>
-
-          {episode.description && (
-            <p className="text-muted-foreground">{episode.description}</p>
-          )}
-
-          {/* Episode Navigation */}
-          <div className="flex flex-wrap items-center gap-4">
-            {prevEpisode && (
-              <Button variant="outline" onClick={() => navigate(`/watch/${prevEpisode.id}`, { replace: true })}>
-                <ChevronLeft className="h-4 w-4 mr-2" />
-                Previous Episode
-              </Button>
-            )}
-            {nextEpisode && (
-              <Button className="anime-button" onClick={() => navigate(`/watch/${nextEpisode.id}`, { replace: true })}>
-                Next Episode
-                <ChevronRight className="h-4 w-4 ml-2" />
-              </Button>
-            )}
-            
-            {/* Offline Download Button */}
-            <OfflineDownloadButton
-              videoUrl={episode.video_url}
-              iosVideoUrl={deviceOptimizedVideo.device === 'iOS' ? deviceOptimizedVideo.videoUrl : null}
-              episodeId={episode.id}
-              episodeTitle={episode.title}
-              animeTitle={anime?.title || 'Unknown'}
-              thumbnail={episode.thumbnail}
-              isIOSDevice={deviceOptimizedVideo.device === 'iOS'}
-            />
             
             {(() => {
               const animeSlug = anime?.title
@@ -1216,9 +1263,11 @@ export default function Watch() {
               );
             })()}
           </div>
+            </div>
+          </div>
 
           {/* Comments */}
-          <div className="space-y-6">
+          <div className="space-y-6 mt-6 md:mt-8">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-4">
                 <h2 className="text-xl font-heading font-bold flex items-center gap-2">
@@ -1520,7 +1569,6 @@ export default function Watch() {
           <div className="mt-8">
             <RecommendedAnime />
           </div>
-        </div>
       </div>
     </div>
   );
