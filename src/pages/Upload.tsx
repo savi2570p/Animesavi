@@ -392,52 +392,114 @@ export default function Upload() {
     <div className="container py-10">
       <div className="flex items-center justify-between mb-10">
         <div>
-          <h1 className="text-3xl md:text-4xl font-heading font-bold mb-2">
-            <span className="anime-gradient-text">Upload</span> Dashboard
-          </h1>
-          <p className="text-muted-foreground">Manage and upload your anime content</p>
+  // Quick metrics
+  const seriesCount = myAnime.filter(a => a.type !== 'movie' && a.status !== 'upcoming').length;
+  const moviesCount = myAnime.filter(a => a.type === 'movie' && a.status !== 'upcoming').length;
+  const upcomingCount = (isAdmin ? allAnime : myAnime).filter(a => a.status === 'upcoming').length;
+  const ongoingCount = myAnime.filter(a => a.status === 'ongoing').length;
+
+  return (
+    <div className="min-h-screen">
+      {/* Cinematic dashboard hero */}
+      <div className="relative overflow-hidden border-b border-border/40">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-purple-500/5 to-transparent" />
+        <div className="absolute -top-24 right-1/4 w-[28rem] h-[28rem] bg-primary/20 rounded-full blur-[120px]" />
+        <div className="absolute -top-12 left-1/3 w-[20rem] h-[20rem] bg-pink-500/15 rounded-full blur-[100px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--background)),transparent_70%)]" />
+
+        <div className="container relative px-4 pt-8 pb-10">
+          <div className="flex flex-col md:flex-row md:items-end gap-5 md:gap-7">
+            <div className="relative shrink-0">
+              <div className="absolute inset-0 bg-primary/30 blur-2xl rounded-full" />
+              <div className="relative flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-primary via-pink-500 to-purple-500 shadow-2xl">
+                <UploadIcon className="h-7 w-7 md:h-9 md:w-9 text-white" />
+              </div>
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 mb-3">
+                <Sparkles className="h-3 w-3 text-primary" />
+                <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Creator Studio</span>
+              </div>
+              <h1 className="text-3xl md:text-5xl font-heading font-black tracking-tight leading-none">
+                <span className="anime-gradient-text">Upload</span> Dashboard
+              </h1>
+              <p className="text-muted-foreground mt-2 max-w-2xl text-sm md:text-base">
+                Manage your library, publish new titles, and monitor encoding pipelines from one place.
+              </p>
+
+              {/* Stat chips */}
+              <div className="flex flex-wrap gap-2 mt-4">
+                {[
+                  { icon: Tv, value: seriesCount, label: 'Series', tone: 'text-sky-400' },
+                  { icon: Film, value: moviesCount, label: 'Movies', tone: 'text-violet-400' },
+                  { icon: Activity, value: ongoingCount, label: 'Ongoing', tone: 'text-emerald-400' },
+                  { icon: CalendarClock, value: upcomingCount, label: 'Upcoming', tone: 'text-orange-400' },
+                ].map((s) => (
+                  <div key={s.label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card/60 border border-border/40 backdrop-blur-sm">
+                    <s.icon className={`h-3.5 w-3.5 ${s.tone}`} />
+                    <span className="text-xs font-semibold tabular-nums">{s.value}</span>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{s.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-        <TabsList className="bg-secondary/50 p-1 rounded-xl flex-wrap">
-          <TabsTrigger value="my-anime" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
-            My Anime Series
-          </TabsTrigger>
-          <TabsTrigger value="my-movies" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
-            My Movies
-          </TabsTrigger>
-          <TabsTrigger value="new" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
-            Add New Series
-          </TabsTrigger>
-          <TabsTrigger value="new-movie" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
-            <Film className="h-4 w-4 mr-2" />
-            Add New Movie
-          </TabsTrigger>
-          <TabsTrigger value="tools" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
-            <Wrench className="h-4 w-4 mr-2" />
-            Tools
-          </TabsTrigger>
-          <TabsTrigger value="token-savi" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
-            <Key className="h-4 w-4 mr-2" />
-            Token.Savi
-          </TabsTrigger>
-          <TabsTrigger value="upcoming" className="rounded-lg data-[state=active]:bg-orange-500 data-[state=active]:text-white">
-            <CalendarClock className="h-4 w-4 mr-2" />
-            Upcoming
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="my-anime">
-          {/* Search bar */}
-          <div className="mb-4">
-            <Input
-              placeholder="Search anime series..."
-              value={animeSearchQuery}
-              onChange={(e) => setAnimeSearchQuery(e.target.value)}
-              className="max-w-md"
-            />
+      <div className="container px-4 py-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          {/* Cinematic tab strip */}
+          <div className="overflow-x-auto -mx-4 px-4 pb-1">
+            <TabsList className="bg-card/60 backdrop-blur-sm border border-border/40 p-1 rounded-2xl flex flex-nowrap gap-1 w-fit">
+              <TabsTrigger value="my-anime" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-sky-500 data-[state=active]:to-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
+                <Tv className="h-3.5 w-3.5" /> My Series
+              </TabsTrigger>
+              <TabsTrigger value="my-movies" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
+                <Film className="h-3.5 w-3.5" /> My Movies
+              </TabsTrigger>
+              <TabsTrigger value="new" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
+                <Plus className="h-3.5 w-3.5" /> Add Series
+              </TabsTrigger>
+              <TabsTrigger value="new-movie" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-rose-500 data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
+                <Film className="h-3.5 w-3.5" /> Add Movie
+              </TabsTrigger>
+              <TabsTrigger value="tools" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
+                <Wrench className="h-3.5 w-3.5" /> Tools
+              </TabsTrigger>
+              <TabsTrigger value="token-savi" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
+                <Key className="h-3.5 w-3.5" /> Token.Savi
+              </TabsTrigger>
+              <TabsTrigger value="upcoming" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-amber-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
+                <CalendarClock className="h-3.5 w-3.5" /> Upcoming
+              </TabsTrigger>
+            </TabsList>
           </div>
+
+          <TabsContent value="my-anime" className="space-y-4">
+            {/* Section header + search */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="h-7 w-1 rounded-full bg-gradient-to-b from-sky-400 to-blue-500" />
+                <div>
+                  <h2 className="text-lg md:text-xl font-heading font-black flex items-center gap-2">
+                    My Anime Series
+                    <span className="text-xs font-bold text-muted-foreground">({seriesCount})</span>
+                  </h2>
+                  <p className="text-[11px] text-muted-foreground">Manage uploaded series, episodes & metadata</p>
+                </div>
+              </div>
+              <div className="relative w-full sm:max-w-xs">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Search series..."
+                  value={animeSearchQuery}
+                  onChange={(e) => setAnimeSearchQuery(e.target.value)}
+                  className="pl-9 h-9 bg-card/60 border-border/40 rounded-xl"
+                />
+              </div>
+            </div>
           {(() => {
             const filteredAnime = myAnime.filter(a => a.type !== 'movie' && a.status !== 'upcoming' && a.title.toLowerCase().includes(animeSearchQuery.toLowerCase()));
             return filteredAnime.length === 0 ? (
