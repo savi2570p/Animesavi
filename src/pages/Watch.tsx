@@ -1057,39 +1057,66 @@ export default function Watch() {
 
         {/* Video Player */}
         <div className="flex-1">
-          <VideoPlayer
-            key={`${episodeId}-${activeServer}-${reloadToken}`}
-            videoUrl={deviceOptimizedVideo.videoUrl || episode.video_url}
-            externalUrl={episode.external_url}
-            title={episode.title}
-            animeTitle={anime?.title || ''}
-            episodeNumber={episode.episode_number}
-            seasonNumber={currentSeason?.season_number || 1}
-            episodeId={episode.id}
-            poster={anime?.cover_image || undefined}
-            isMovie={isMovie}
-            activeServer={activeServer}
-            isLoading={serverLoading}
-            audioLanguage={episode.audio_language || undefined}
-            captionsUrl={episode.captions_url}
-            isEncoding={isVideoEncoding}
-            onTimeUpdate={updateWatchProgress}
-            hasNextEpisode={!!nextEpisode}
-            lockedQuality={2160}
-            onNextEpisode={nextEpisode ? () => navigate(`/watch/${nextEpisode.id}`, { replace: true }) : undefined}
-            introStartTime={episode.intro_start_time}
-            introEndTime={episode.intro_end_time}
-            outroStartTime={episode.outro_start_time}
-            outroEndTime={episode.outro_end_time}
-            savedPlaybackProgress={savedPlaybackProgress}
-            onResumeChoice={(resume) => {
-              if (!resume) {
-                setSavedPlaybackProgress(0);
-              }
-            }}
-            onVideoLoadSuccess={onVideoLoadSuccess}
-            onVideoLoadError={onVideoLoadError}
-          />
+          <div className="relative">
+            <VideoPlayer
+              key={`${episodeId}-${activeServer}-${reloadToken}`}
+              videoUrl={deviceOptimizedVideo.videoUrl || episode.video_url}
+              externalUrl={episode.external_url}
+              title={episode.title}
+              animeTitle={anime?.title || ''}
+              episodeNumber={episode.episode_number}
+              seasonNumber={currentSeason?.season_number || 1}
+              episodeId={episode.id}
+              poster={anime?.cover_image || undefined}
+              isMovie={isMovie}
+              activeServer={activeServer}
+              isLoading={serverLoading}
+              audioLanguage={episode.audio_language || undefined}
+              captionsUrl={episode.captions_url}
+              isEncoding={isVideoEncoding}
+              onTimeUpdate={updateWatchProgress}
+              hasNextEpisode={!!nextEpisode}
+              lockedQuality={2160}
+              onNextEpisode={nextEpisode ? () => navigate(`/watch/${nextEpisode.id}`, { replace: true }) : undefined}
+              introStartTime={episode.intro_start_time}
+              introEndTime={episode.intro_end_time}
+              outroStartTime={episode.outro_start_time}
+              outroEndTime={episode.outro_end_time}
+              savedPlaybackProgress={savedPlaybackProgress}
+              onResumeChoice={(resume) => {
+                if (!resume) {
+                  setSavedPlaybackProgress(0);
+                }
+              }}
+              onVideoLoadSuccess={onVideoLoadSuccess}
+              onVideoLoadError={onVideoLoadError}
+            />
+
+            {/* Server-mismatch modal — centered inside the player area, never collapsed */}
+            {serverBlockMessage && (
+              <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm rounded-md">
+                <div
+                  role="alertdialog"
+                  aria-modal="true"
+                  className="mx-4 w-full max-w-sm rounded-xl border border-border/60 bg-card shadow-2xl p-5 text-center"
+                >
+                  <h3 className="text-base md:text-lg font-semibold text-foreground mb-2">
+                    Server unavailable
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-5">
+                    {serverBlockMessage}
+                  </p>
+                  <Button
+                    size="sm"
+                    className="min-w-[96px]"
+                    onClick={() => setServerBlockMessage(null)}
+                  >
+                    OK
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Player Strip — anime thumbnail + name (non-fullscreen) */}
           {anime && (
