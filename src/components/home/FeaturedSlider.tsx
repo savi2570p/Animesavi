@@ -3,7 +3,7 @@ import { preloadImages } from '@/lib/imageOptimization';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Play, Plus, Info, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { Play, Plus, Info, ChevronLeft, ChevronRight, Eye, Sparkles, Flame } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -163,48 +163,54 @@ export function FeaturedSlider() {
           <div className="absolute inset-0 z-30 flex items-center">
             <div className="container">
               <div className="max-w-2xl space-y-5">
-                {/* Status & views */}
+                {/* Featured pill + slide counter */}
                 <div className="flex items-center gap-3">
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-primary shadow-lg shadow-primary/10">
+                    <Sparkles className="h-3 w-3" />
+                    Featured · #{currentIndex + 1}
+                  </div>
                   {current.status === 'ongoing' && (
-                    <span className="badge-glass-og text-[10px] uppercase tracking-wider">
-                      OG
-                    </span>
+                    <span className="badge-glass-og text-[10px] uppercase tracking-wider">OG</span>
                   )}
-                  <div className="flex items-center gap-1.5 text-sm text-foreground/80">
-                    <Eye className="h-4 w-4" />
-                    {formatViews(current.views)} views
+                  <div className="flex items-center gap-1.5 text-sm text-foreground/80 backdrop-blur-sm bg-background/20 rounded-full px-2.5 py-1 border border-border/30">
+                    <Eye className="h-3.5 w-3.5" />
+                    <span className="font-semibold">{formatViews(current.views)}</span>
                   </div>
                 </div>
 
                 {/* Title */}
-                <h1 className="text-4xl lg:text-5xl xl:text-6xl font-heading font-extrabold leading-tight drop-shadow-lg">
-                  {current.title}
+                <h1 className="text-4xl lg:text-5xl xl:text-6xl font-heading font-extrabold leading-[1.05] drop-shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
+                  <span className="bg-gradient-to-br from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent">
+                    {current.title}
+                  </span>
                 </h1>
 
-                {/* Genres */}
-                <div className="flex flex-wrap gap-2">
+                {/* Genres — chips */}
+                <div className="flex flex-wrap items-center gap-1.5">
                   {current.genres.slice(0, 4).map((genre, i) => (
-                    <span key={i} className="text-sm text-foreground/70 font-medium">
-                      {i > 0 && <span className="mr-2">•</span>}
+                    <span
+                      key={i}
+                      className="text-xs font-semibold px-2.5 py-1 rounded-full border border-foreground/15 bg-foreground/5 backdrop-blur-md text-foreground/80 hover:border-primary/40 hover:text-primary transition-colors"
+                    >
                       {genre}
                     </span>
                   ))}
                 </div>
 
                 {/* Description */}
-                <p className="text-base text-foreground/70 line-clamp-3 max-w-lg leading-relaxed">
+                <p className="text-base text-foreground/75 line-clamp-3 max-w-lg leading-relaxed border-l-2 border-primary/50 pl-3">
                   {current.description || 'No description available.'}
                 </p>
 
                 {/* Action buttons */}
                 <div className="flex items-center gap-3 pt-2">
-                  <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 text-base px-8 h-12 rounded-lg shadow-lg shadow-primary/30">
+                  <Button asChild size="lg" className="group bg-gradient-to-r from-primary via-primary to-primary/80 text-primary-foreground hover:scale-[1.03] text-base px-8 h-12 rounded-xl shadow-2xl shadow-primary/40 transition-all">
                     <Link to={`/anime/${current.id}`}>
-                      <Play className="h-5 w-5 mr-2 fill-current" />
+                      <Play className="h-5 w-5 mr-2 fill-current group-hover:translate-x-0.5 transition-transform" />
                       Watch Now
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" size="lg" className="border-foreground/30 text-foreground hover:bg-foreground/10 h-12 px-6 rounded-lg backdrop-blur-sm">
+                  <Button asChild variant="outline" size="lg" className="border-foreground/20 bg-foreground/5 text-foreground hover:bg-foreground/15 hover:border-foreground/40 h-12 px-6 rounded-xl backdrop-blur-md transition-all">
                     <Link to={`/anime/${current.id}`}>
                       <Info className="h-5 w-5 mr-2" />
                       More Info
@@ -215,17 +221,17 @@ export function FeaturedSlider() {
             </div>
           </div>
 
-          {/* Navigation arrows */}
+          {/* Navigation arrows — refined glassy */}
           <button
             onClick={handlePrev}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-40 w-10 h-10 rounded-full bg-background/40 backdrop-blur-md flex items-center justify-center hover:bg-background/60 transition-all border border-border/30"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-40 w-11 h-11 rounded-full bg-background/30 backdrop-blur-xl flex items-center justify-center hover:bg-primary/20 hover:border-primary/50 hover:scale-110 transition-all border border-foreground/15 shadow-xl"
             aria-label="Previous"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           <button
             onClick={handleNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-40 w-10 h-10 rounded-full bg-background/40 backdrop-blur-md flex items-center justify-center hover:bg-background/60 transition-all border border-border/30"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-40 w-11 h-11 rounded-full bg-background/30 backdrop-blur-xl flex items-center justify-center hover:bg-primary/20 hover:border-primary/50 hover:scale-110 transition-all border border-foreground/15 shadow-xl"
             aria-label="Next"
           >
             <ChevronRight className="h-5 w-5" />
@@ -281,51 +287,55 @@ export function FeaturedSlider() {
         <div className="absolute inset-0 z-20 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-1/2 z-20 bg-gradient-to-t from-background to-transparent" />
 
-        {/* Content overlay */}
+        {/* Content overlay — mobile */}
         <div className="absolute inset-0 z-30 flex items-end pb-12 px-3">
-          <div className="w-full space-y-1.5 max-w-full overflow-hidden">
-            {/* Status & views */}
-            <div className="flex items-center gap-2">
+          <div className="w-full space-y-2 max-w-full overflow-hidden">
+            {/* Featured pill + views */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <div className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/15 backdrop-blur-md px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-primary">
+                <Sparkles className="h-2.5 w-2.5" />
+                #{currentIndex + 1}
+              </div>
               {current.status === 'ongoing' && (
-                <span className="badge-glass-og text-[8px] uppercase tracking-wider font-bold">
-                  OG
-                </span>
+                <span className="badge-glass-og text-[8px] uppercase tracking-wider font-bold">OG</span>
               )}
-              <div className="flex items-center gap-1 text-[11px] text-foreground/90 font-medium">
-                <Eye className="h-3 w-3" />
-                {formatViews(current.views)} views
+              <div className="flex items-center gap-1 text-[10px] text-foreground/90 font-semibold backdrop-blur-sm bg-background/30 rounded-full px-1.5 py-0.5 border border-border/30">
+                <Eye className="h-2.5 w-2.5" />
+                {formatViews(current.views)}
               </div>
             </div>
 
             {/* Title */}
-            <h2 className="text-lg font-heading font-extrabold leading-tight line-clamp-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+            <h2 className="text-lg font-heading font-extrabold leading-tight line-clamp-2 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] bg-gradient-to-br from-foreground to-foreground/80 bg-clip-text text-transparent">
               {current.title}
             </h2>
 
-            {/* Genres */}
-            <div className="flex flex-wrap gap-1">
+            {/* Genres — chips */}
+            <div className="flex flex-wrap items-center gap-1">
               {current.genres.slice(0, 3).map((genre, i) => (
-                <span key={i} className="text-[11px] text-foreground/80 font-medium">
-                  {i > 0 && <span className="mr-1">•</span>}
+                <span
+                  key={i}
+                  className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full border border-foreground/15 bg-foreground/10 backdrop-blur-md text-foreground/85"
+                >
                   {genre}
                 </span>
               ))}
             </div>
 
             {/* Description */}
-            <p className="text-[12px] text-foreground/70 line-clamp-2 leading-relaxed drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+            <p className="text-[12px] text-foreground/75 line-clamp-2 leading-relaxed drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)] border-l-2 border-primary/50 pl-2">
               {current.description || 'No description available.'}
             </p>
 
             {/* Action buttons */}
             <div className="flex items-center gap-2 pt-1">
-              <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 text-xs px-4 h-8 rounded-lg shadow-lg shadow-primary/30 font-semibold">
+              <Button asChild size="sm" className="bg-gradient-to-r from-primary to-primary/85 text-primary-foreground hover:bg-primary text-xs px-4 h-8 rounded-lg shadow-lg shadow-primary/40 font-semibold">
                 <Link to={`/anime/${current.id}`}>
                   <Play className="h-3.5 w-3.5 mr-1 fill-current" />
                   Watch Now
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="sm" className="border-foreground/40 text-foreground hover:bg-foreground/10 h-8 px-3 rounded-lg backdrop-blur-md text-xs font-semibold">
+              <Button asChild variant="outline" size="sm" className="border-foreground/20 bg-foreground/10 text-foreground hover:bg-foreground/20 h-8 px-3 rounded-lg backdrop-blur-md text-xs font-semibold">
                 <Link to={`/anime/${current.id}`}>
                   <Info className="h-3.5 w-3.5 mr-1" />
                   Info
@@ -338,14 +348,14 @@ export function FeaturedSlider() {
         {/* Navigation arrows */}
         <button
           onClick={handlePrev}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-40 w-8 h-8 rounded-full bg-background/50 backdrop-blur-sm flex items-center justify-center border border-border/20"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-40 w-8 h-8 rounded-full bg-background/40 backdrop-blur-md flex items-center justify-center border border-foreground/15 shadow-lg"
           aria-label="Previous"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
         <button
           onClick={handleNext}
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-40 w-8 h-8 rounded-full bg-background/50 backdrop-blur-sm flex items-center justify-center border border-border/20"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-40 w-8 h-8 rounded-full bg-background/40 backdrop-blur-md flex items-center justify-center border border-foreground/15 shadow-lg"
           aria-label="Next"
         >
           <ChevronRight className="h-4 w-4" />
