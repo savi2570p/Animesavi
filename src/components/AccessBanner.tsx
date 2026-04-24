@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Clock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useCastDetection } from '@/hooks/useCastDetection';
 
 const SUPER_ADMIN_EMAILS = [
   'savi2570p@gmail.com',
