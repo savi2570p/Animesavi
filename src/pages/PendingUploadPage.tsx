@@ -4,9 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Clock, ArrowLeft, AlertCircle, Upload, Lock } from 'lucide-react';
+import { Clock, AlertCircle, Upload, Lock, Hourglass, Activity, FileVideo, ListChecks, Pencil } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
+import { SeeAllHeader } from '@/components/layout/SeeAllHeader';
 
 interface NoEpisodesPopupProps {
   isOpen: boolean;
@@ -228,118 +229,224 @@ export default function PendingUploadPage() {
     );
   }
 
+  // Daysince helper
+  const daysSince = (iso: string) => {
+    const ms = Date.now() - new Date(iso).getTime();
+    return Math.max(0, Math.floor(ms / (1000 * 60 * 60 * 24)));
+  };
+
+  const overdueCount = animeList.filter(a => daysSince(a.created_at) >= 7).length;
+  const recentCount = animeList.filter(a => daysSince(a.created_at) < 2).length;
+
   return (
     <div className="min-h-screen">
-      {/* Content Navigation Tabs */}
       <ContentNavTabs />
-      
+
       <NoEpisodesPopup
         isOpen={noEpisodesPopup.isOpen}
         onClose={() => setNoEpisodesPopup({ isOpen: false, animeTitle: '' })}
         animeTitle={noEpisodesPopup.animeTitle}
       />
-      
-      {/* Hero Header */}
-      <div className="relative overflow-x-hidden overflow-y-visible px-4 py-12">
-        <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 via-transparent to-transparent" />
-        <div className="absolute top-0 right-1/3 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
-        
-        <div className="container relative">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 rounded-xl bg-amber-500/10">
-              <Clock className="h-6 w-6 text-amber-500" />
+
+      <SeeAllHeader
+        icon={Hourglass}
+        title="Pending Upload"
+        subtitle="Anime entries awaiting episode uploads — track upload progress and pick up where you left off."
+        eyebrow="Upload Queue"
+        iconGradient="from-amber-500 via-orange-500 to-rose-500"
+        glowTone="bg-amber-500/20"
+        stats={[
+          { icon: ListChecks, value: animeList.length, label: 'Pending', tone: 'text-amber-400' },
+          { icon: Activity, value: recentCount, label: 'Just Added', tone: 'text-emerald-400' },
+          { icon: AlertCircle, value: overdueCount, label: '7+ Days', tone: 'text-red-400' },
+        ]}
+      />
+
+      <div className="container px-4 pb-12">
+        {/* Live progress strip */}
+        {!isLoading && animeList.length > 0 && canAccess && (
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-500/[0.06] via-orange-500/[0.04] to-transparent p-4 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="absolute inset-0 bg-amber-500/40 blur-lg rounded-full" />
+                <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg">
+                  <FileVideo className="w-5 h-5 text-white" />
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-bold">Click any title to continue uploading</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Episodes will go live the moment encoding finishes — page auto-refreshes.
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-heading font-bold">Pending Upload</h1>
-              <p className="text-muted-foreground">Anime entries awaiting episode uploads</p>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+              </span>
+              <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider">
+                Live Sync
+              </span>
             </div>
           </div>
-        </div>
-      </div>
+        )}
 
-      <div className="container pb-12">
+        {/* Section header */}
+        <div className="flex items-center gap-3 mb-5">
+          <div className="h-6 w-1 rounded-full bg-gradient-to-b from-amber-400 to-orange-500" />
+          <h2 className="text-lg md:text-xl font-heading font-black">In the Queue</h2>
+          <span className="text-xs text-muted-foreground">({animeList.length})</span>
+        </div>
+
         {isLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="space-y-2">
-                <Skeleton className="aspect-[2/3] rounded-lg" />
+                <Skeleton className="aspect-[2/3] rounded-xl" />
                 <Skeleton className="h-4 w-3/4" />
               </div>
             ))}
           </div>
         ) : animeList.length === 0 ? (
-          <div className="text-center py-16">
-            <Upload className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">All Caught Up!</h3>
-            <p className="text-muted-foreground mb-6">No anime entries are pending episode uploads.</p>
-            <Button asChild>
-              <Link to="/upload">Upload New Anime</Link>
+          <div className="text-center py-20 rounded-2xl border border-dashed border-border/50 bg-card/30">
+            <div className="relative w-fit mx-auto mb-4">
+              <div className="absolute inset-0 bg-emerald-500/30 blur-2xl rounded-full" />
+              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-2xl">
+                <Upload className="h-7 w-7 text-white" />
+              </div>
+            </div>
+            <h3 className="text-xl font-bold mb-1">All Caught Up!</h3>
+            <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
+              No anime entries are waiting for episodes right now. Add a new title to get started.
+            </p>
+            <Button asChild className="gap-2">
+              <Link to="/upload">
+                <Upload className="h-4 w-4" /> Upload New Anime
+              </Link>
             </Button>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {animeList.map((anime, index) => (
-              <AnimeCardContextMenu 
-                key={anime.id} 
-                animeTitle={anime.title}
-                animeUrl={`/anime/${anime.id}`}
-                coverImage={anime.cover_image}
-              >
-                <div
-                  onClick={(e) => handleAnimeClick(anime, e)}
-                  className="group relative cursor-pointer animate-fade-in"
-                  style={{ animationDelay: `${index * 50}ms` }}
+            {animeList.map((anime, index) => {
+              const days = daysSince(anime.created_at);
+              const isOverdue = days >= 7;
+              const isRecent = days < 2;
+              return (
+                <AnimeCardContextMenu
+                  key={anime.id}
+                  animeTitle={anime.title}
+                  animeUrl={`/anime/${anime.id}`}
+                  coverImage={anime.cover_image}
                 >
-                  <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-muted">
-                    {anime.cover_image ? (
-                      <img
-                        src={anime.cover_image}
-                        alt={anime.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        loading="lazy"
+                  <div
+                    onClick={(e) => handleAnimeClick(anime, e)}
+                    className="group relative cursor-pointer animate-fade-in"
+                    style={{ animationDelay: `${Math.min(index * 30, 600)}ms` }}
+                  >
+                    <div
+                      className={`relative aspect-[2/3] rounded-xl overflow-hidden bg-muted ring-1 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl ${
+                        isOverdue
+                          ? 'ring-red-500/30 group-hover:ring-red-500/60 group-hover:shadow-red-500/20'
+                          : 'ring-amber-500/20 group-hover:ring-amber-500/50 group-hover:shadow-amber-500/20'
+                      }`}
+                    >
+                      {anime.cover_image ? (
+                        <img
+                          src={anime.cover_image}
+                          alt={anime.title}
+                          className="w-full h-full object-cover blur-[2px] brightness-50 transition-all duration-500 group-hover:blur-0 group-hover:brightness-75"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20">
+                          <span className="text-muted-foreground text-xs">No Image</span>
+                        </div>
+                      )}
+
+                      {/* Overlay scanline */}
+                      <div
+                        className="absolute inset-0 opacity-30 pointer-events-none"
+                        style={{
+                          backgroundImage:
+                            'repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 4px)',
+                        }}
                       />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20">
-                        <span className="text-muted-foreground">No Image</span>
+
+                      {/* Status badges top-left */}
+                      <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                        {anime.type && (
+                          <div className="px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[9px] font-bold text-white uppercase tracking-wider border border-white/10">
+                            {anime.type}
+                          </div>
+                        )}
+                        {isOverdue && (
+                          <div className="px-2 py-0.5 rounded-md bg-red-500/90 text-[9px] font-black text-white uppercase tracking-wider shadow-md flex items-center gap-1">
+                            <AlertCircle className="h-2.5 w-2.5" />
+                            Overdue
+                          </div>
+                        )}
                       </div>
-                    )}
-                    
-                    {/* Episodes Under Progress Badge */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                      <div className="text-center px-3">
-                        <Clock className="h-6 w-6 text-amber-400 mx-auto mb-1" />
-                        <span className="text-white text-xs font-medium leading-tight block">
-                          Episodes Under Progress
+
+                      {/* New chip top-right */}
+                      {isRecent && (
+                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-gradient-to-r from-emerald-500 to-green-500 text-[9px] font-black text-white uppercase tracking-wider shadow-md z-10">
+                          New
+                        </div>
+                      )}
+
+                      {/* Center status */}
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-3 z-[5]">
+                        <div className="relative mb-2">
+                          <div
+                            className={`absolute inset-0 blur-lg rounded-full ${
+                              isOverdue ? 'bg-red-500/50' : 'bg-amber-500/40'
+                            }`}
+                          />
+                          <div
+                            className={`relative w-11 h-11 rounded-full flex items-center justify-center shadow-xl ${
+                              isOverdue
+                                ? 'bg-gradient-to-br from-red-500 to-rose-600'
+                                : 'bg-gradient-to-br from-amber-500 to-orange-500'
+                            }`}
+                          >
+                            <Hourglass className="h-5 w-5 text-white animate-pulse" />
+                          </div>
+                        </div>
+                        <span className="text-white text-[11px] font-bold leading-tight block drop-shadow">
+                          Episodes Pending
                         </span>
+                        <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-white/80 font-medium px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-sm border border-white/10">
+                          <Clock className="h-2.5 w-2.5" />
+                          {days === 0 ? 'Added today' : `${days}d in queue`}
+                        </span>
+                      </div>
+
+                      {/* Hover action overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4 z-20">
+                        {canAccess ? (
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500 text-white text-[11px] font-black shadow-2xl shadow-amber-500/40 uppercase tracking-wider">
+                            <Pencil className="h-3 w-3" /> Continue Upload
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/95 text-foreground text-[11px] font-black shadow-2xl uppercase tracking-wider">
+                            <AlertCircle className="h-3 w-3" /> Details
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    {/* Type badge */}
-                    {anime.type && (
-                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-muted/90 text-[10px] font-bold uppercase">
-                        {anime.type}
-                      </div>
-                    )}
-
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                    {/* Upload button for uploaders */}
-                    {canAccess && (
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        <div className="p-3 rounded-full bg-primary/90 shadow-lg">
-                          <Upload className="h-5 w-5 text-primary-foreground" />
-                        </div>
-                      </div>
-                    )}
+                    <h3
+                      className={`mt-2.5 text-sm font-semibold line-clamp-2 transition-colors ${
+                        isOverdue ? 'group-hover:text-red-400' : 'group-hover:text-amber-400'
+                      }`}
+                    >
+                      {anime.title}
+                    </h3>
                   </div>
-
-                  <h3 className="mt-2 text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                    {anime.title}
-                  </h3>
-                </div>
-              </AnimeCardContextMenu>
-            ))}
+                </AnimeCardContextMenu>
+              );
+            })}
           </div>
         )}
       </div>

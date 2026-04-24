@@ -1611,17 +1611,6 @@ export default function ShadowFlix() {
                 </ul>
               </div>
 
-              {/* Hint */}
-              <div className="flex items-start gap-2.5 rounded-xl p-3 bg-amber-500/[0.06] border border-amber-500/20">
-                <KeyRound className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                <div className="text-[11px] leading-relaxed">
-                  <p className="text-white/80">
-                    <span className="font-bold text-amber-300">Hint:</span> the access code is the
-                    Shadow Toons × AnimeSavi codename — uppercase, 3 words, separated by{' '}
-                    <span className="font-mono text-amber-300">×</span> .
-                  </p>
-                </div>
-              </div>
             </div>
 
             {/* Password input */}
