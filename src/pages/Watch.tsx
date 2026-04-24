@@ -191,6 +191,7 @@ export default function Watch() {
   const [savedPlaybackProgress, setSavedPlaybackProgress] = useState(0);
   const [userProfile, setUserProfile] = useState<{ avatar_url: string | null } | null>(null);
   const [isVideoEncoding, setIsVideoEncoding] = useState(false);
+  const [serverBlockMessage, setServerBlockMessage] = useState<string | null>(null);
   const ensureHistoryInFlightRef = useRef(false);
   
 
