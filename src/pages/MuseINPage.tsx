@@ -519,26 +519,11 @@ function LiveListingView() {
 const BYPASS_EMAIL = 'savi2570p@gmail.com';
 
 export default function MuseINPage() {
-  const [launchDate] = useState(getLaunchDate);
-  const { timeLeft, isExpired } = useCountdown(launchDate);
-  const [canBypass, setCanBypass] = useState(false);
-
-  useEffect(() => {
-    const checkBypass = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.email?.toLowerCase() === BYPASS_EMAIL) {
-        setCanBypass(true);
-      }
-    };
-    checkBypass();
-  }, []);
-
-  const showListing = isExpired || canBypass;
-
+  // Countdown disabled — MuseIN now opens directly into the live listing.
   return (
     <div className="min-h-screen">
       <ContentNavTabs />
-      {showListing ? <LiveListingView /> : <ComingSoonView timeLeft={timeLeft} />}
+      <LiveListingView />
     </div>
   );
 }
