@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { isEmbedUrlAllowed, getHostname } from '@/lib/embedAllowlist';
 
 interface PureEmbedPlayerProps {
   url: string;
