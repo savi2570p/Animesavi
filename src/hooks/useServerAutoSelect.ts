@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { isIOSDevice } from '@/lib/deviceUtils';
 
-export type ServerType = 'PLAY' | 'SHORT' | 'Zex' | 'XPLUS';
+export type ServerType = 'PLAY' | 'SHORT' | 'Zex' | 'XPLUS' | 'EMBED';
 
 interface ServerConfig {
   id: ServerType;
@@ -40,6 +40,13 @@ export const SERVER_CONFIGS: Record<ServerType, ServerConfig> = {
     features: ['Flat controls', 'Download support', 'CC support'],
     supportedPlatforms: ['ios', 'android', 'desktop'],
   },
+  EMBED: {
+    id: 'EMBED',
+    name: 'Embed',
+    description: 'External Embed 🌐',
+    features: ['Pure iframe', 'External hosts', 'No restrictions'],
+    supportedPlatforms: ['ios', 'android', 'desktop'],
+  },
 };
 
 const SERVER_PREF_KEY = 'preferred_video_server';
@@ -52,9 +59,9 @@ const AUTO_SERVER_CHAIN: ServerType[] = ['PLAY', 'Zex', 'XPLUS'];
 export function getAvailableServers(): ServerType[] {
   const isIOS = isIOSDevice();
   if (isIOS) {
-    return ['PLAY', 'Zex', 'XPLUS'];
+    return ['PLAY', 'Zex', 'XPLUS', 'EMBED'];
   }
-  return ['PLAY', 'SHORT', 'Zex', 'XPLUS'];
+  return ['PLAY', 'SHORT', 'Zex', 'XPLUS', 'EMBED'];
 }
 
 /**
@@ -67,7 +74,7 @@ export function getDefaultServer(): ServerType {
   const saved = localStorage.getItem(SERVER_PREF_KEY) as ServerType | null;
   if (saved) {
     if (isIOS && saved === 'SHORT') return 'XPLUS';
-    if (['PLAY', 'SHORT', 'Zex', 'XPLUS'].includes(saved)) return saved;
+    if (['PLAY', 'SHORT', 'Zex', 'XPLUS', 'EMBED'].includes(saved)) return saved;
   }
 
   if (isIOS) return 'XPLUS';
