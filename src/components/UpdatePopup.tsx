@@ -243,7 +243,33 @@ export function UpdatePopup() {
   if (step === 'downloading') {
     const radius = 56;
     const circumference = 2 * Math.PI * radius;
-    const dashOffset = circumference - (progress / 100) * circumference;
+    const dashOffset = circumference - (displayProgress / 100) * circumference;
+    const downloadedMb = (displayProgress / 100) * TOTAL_MB;
+    const remainingMb = Math.max(0, TOTAL_MB - downloadedMb);
+    // ETA in seconds based on current speed (Mbps → MB/s ÷8)
+    const mbPerSec = Math.max(0.1, speedMbps / 8);
+    const etaSec = displayProgress >= 100 ? 0 : Math.ceil(remainingMb / mbPerSec);
+    const etaLabel = etaSec >= 60 ? `${Math.floor(etaSec / 60)}m ${etaSec % 60}s` : `${etaSec}s`;
+
+    // Sparkline points for speed history (24 samples)
+    const maxSpeed = Math.max(12, ...speedHistory);
+    const sparkW = 100;
+    const sparkH = 24;
+    const sparkPoints = speedHistory.length > 1
+      ? speedHistory.map((s, i) => {
+          const x = (i / (speedHistory.length - 1)) * sparkW;
+          const y = sparkH - (s / maxSpeed) * sparkH;
+          return `${x.toFixed(1)},${y.toFixed(1)}`;
+        }).join(' ')
+      : '';
+
+    // Phase label
+    const phaseLabel = displayProgress >= 100
+      ? 'Verifying'
+      : displayProgress < 15 ? 'Connecting'
+      : displayProgress < 75 ? 'Downloading'
+      : 'Finalizing';
+
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-300">
         <div className="relative w-full max-w-sm mx-4 overflow-hidden rounded-2xl border border-red-600/30 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-red-900/40 p-8 text-center space-y-6 animate-in zoom-in-95 duration-300">
@@ -272,7 +298,7 @@ export function UpdatePopup() {
                 fill="none"
                 strokeDasharray={circumference}
                 strokeDashoffset={dashOffset}
-                style={{ transition: 'stroke-dashoffset 100ms linear', filter: 'drop-shadow(0 0 8px rgba(220,38,38,0.6))' }}
+                style={{ filter: 'drop-shadow(0 0 8px rgba(220,38,38,0.6))' }}
               />
               <defs>
                 <linearGradient id="dlGrad" x1="0" y1="0" x2="1" y2="1">
@@ -283,13 +309,13 @@ export function UpdatePopup() {
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-3xl font-bold font-mono bg-gradient-to-br from-white to-red-300 bg-clip-text text-transparent tabular-nums">
-                {Math.round(progress)}<span className="text-lg text-red-400">%</span>
+                {displayProgress.toFixed(1)}<span className="text-lg text-red-400">%</span>
               </span>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500 mt-0.5">{progress < 100 ? 'Fetching' : 'Verifying'}</span>
+              <span className="text-[10px] uppercase tracking-wider text-zinc-500 mt-0.5">{phaseLabel}</span>
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1">
             <h2 className="text-lg font-bold text-white">Downloading Update</h2>
             <p className="text-xs text-zinc-500">Securing the latest features and improvements…</p>
           </div>
@@ -297,22 +323,72 @@ export function UpdatePopup() {
           {/* Linear progress bar with shine */}
           <div className="relative h-1.5 rounded-full bg-zinc-800/80 overflow-hidden">
             <div
-              className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-red-600 via-red-500 to-orange-400 shadow-[0_0_12px_rgba(220,38,38,0.6)] transition-all duration-100 ease-linear"
-              style={{ width: `${progress}%` }}
+              className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-red-600 via-red-500 to-orange-400 shadow-[0_0_12px_rgba(220,38,38,0.6)]"
+              style={{ width: `${displayProgress}%` }}
             />
             <div
               className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine"
-              style={{ left: `${Math.max(0, progress - 33)}%` }}
+              style={{ left: `${Math.max(0, displayProgress - 33)}%` }}
             />
           </div>
 
-          {/* Stats row */}
-          <div className="flex items-center justify-between text-[10px] text-zinc-500 font-mono">
-            <span className="uppercase tracking-wider">{(progress * 0.42).toFixed(1)} MB / 42 MB</span>
-            <span className="uppercase tracking-wider text-red-400/80">{Math.max(1, Math.round((100 - progress) / 10))}s left</span>
+          {/* Live metrics: speed + sparkline + ETA */}
+          <div className="grid grid-cols-3 gap-2 text-left">
+            <div className="rounded-lg border border-white/5 bg-white/[0.03] px-2.5 py-2">
+              <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Speed</div>
+              <div className="text-[13px] font-bold font-mono text-white tabular-nums leading-tight">
+                {speedMbps.toFixed(1)}
+                <span className="text-[9px] text-zinc-500 ml-0.5">Mbps</span>
+              </div>
+            </div>
+            <div className="rounded-lg border border-white/5 bg-white/[0.03] px-2.5 py-2">
+              <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Size</div>
+              <div className="text-[13px] font-bold font-mono text-white tabular-nums leading-tight">
+                {downloadedMb.toFixed(1)}
+                <span className="text-[9px] text-zinc-500 ml-0.5">/{TOTAL_MB}MB</span>
+              </div>
+            </div>
+            <div className="rounded-lg border border-white/5 bg-white/[0.03] px-2.5 py-2">
+              <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">ETA</div>
+              <div className="text-[13px] font-bold font-mono text-red-300 tabular-nums leading-tight">
+                {etaLabel}
+              </div>
+            </div>
+          </div>
+
+          {/* Speed sparkline */}
+          <div className="relative h-7 rounded-md border border-white/5 bg-black/40 overflow-hidden px-1.5">
+            {sparkPoints ? (
+              <svg viewBox={`0 0 ${sparkW} ${sparkH}`} preserveAspectRatio="none" className="h-full w-full">
+                <defs>
+                  <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
+                    <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <polygon
+                  points={`0,${sparkH} ${sparkPoints} ${sparkW},${sparkH}`}
+                  fill="url(#sparkFill)"
+                />
+                <polyline
+                  points={sparkPoints}
+                  fill="none"
+                  stroke="#f87171"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ filter: 'drop-shadow(0 0 3px rgba(248,113,113,0.6))' }}
+                />
+              </svg>
+            ) : (
+              <div className="flex items-center justify-center h-full text-[9px] uppercase tracking-wider text-zinc-600">
+                Measuring network…
+              </div>
+            )}
           </div>
         </div>
       </div>
+
     );
   }
 
