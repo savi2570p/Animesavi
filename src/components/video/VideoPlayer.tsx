@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { DownloadVerificationDialog } from './DownloadVerificationDialog';
+import { ThemePickerButton, buildThemeStyle, type PlayerThemeKey } from './PlayerThemePicker';
 import { QualityOverlay } from './QualityOverlay';
 import { BufferingIndicator } from './BufferingIndicator';
 import { VolumeSlider } from './VolumeSlider';
@@ -292,6 +293,8 @@ export function VideoPlayer({
   // Settings menu state
   const [settingsMenu, setSettingsMenu] = useState<SettingsMenu>('main');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Player theme — session only (no persistence)
+  const [playerTheme, setPlayerTheme] = useState<PlayerThemeKey>('classic');
   
   // Keyboard shortcuts info state
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
@@ -2252,6 +2255,7 @@ export function VideoPlayer({
         paddingBottom: isFullscreen ? 'env(safe-area-inset-bottom)' : undefined,
         paddingLeft: isFullscreen ? 'env(safe-area-inset-left)' : undefined,
         paddingRight: isFullscreen ? 'env(safe-area-inset-right)' : undefined,
+        ...buildThemeStyle(playerTheme),
       }}
       onClick={handleVideoAreaClick}
       onMouseMove={handleMouseMove}
@@ -2836,6 +2840,12 @@ export function VideoPlayer({
                     >
                       <Subtitles className={`${isIOS ? 'w-3.5 h-3.5' : 'w-5 h-5 md:w-6 md:h-6'} ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`} />
                     </button>
+                    <ThemePickerButton
+                      value={playerTheme}
+                      onChange={setPlayerTheme}
+                      iconClassName={isIOS ? 'w-3.5 h-3.5' : 'w-5 h-5 md:w-6 md:h-6'}
+                      containerEl={containerRef.current}
+                    />
                     <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
                       <DropdownMenuTrigger asChild>
                         <button 
@@ -2914,6 +2924,12 @@ export function VideoPlayer({
                     <Download className="w-3 h-3 md:w-[18px] md:h-[18px]" />
                   </button>
                 )}
+                <ThemePickerButton
+                  value={playerTheme}
+                  onChange={setPlayerTheme}
+                  iconClassName="w-3 h-3 md:w-[18px] md:h-[18px]"
+                  containerEl={containerRef.current}
+                />
                 <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
                   <DropdownMenuTrigger asChild>
                     <button 
@@ -3130,6 +3146,12 @@ export function VideoPlayer({
                   >
                     <Subtitles className={`${isIOS ? 'w-3 h-3' : 'w-4.5 h-4.5 md:w-5 md:h-5'} ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`} />
                   </button>
+                  <ThemePickerButton
+                    value={playerTheme}
+                    onChange={setPlayerTheme}
+                    iconClassName={isIOS ? 'w-3 h-3' : 'w-4.5 h-4.5 md:w-5 md:h-5'}
+                    containerEl={containerRef.current}
+                  />
                   <DropdownMenu 
                     modal={false} 
                     open={settingsOpen}
@@ -3244,6 +3266,12 @@ export function VideoPlayer({
                 </button>
               )}
               {/* Settings Menu */}
+              <ThemePickerButton
+                value={playerTheme}
+                onChange={setPlayerTheme}
+                iconClassName="w-3 h-3 md:w-[18px] md:h-[18px]"
+                containerEl={containerRef.current}
+              />
               <DropdownMenu 
                 modal={false} 
                 open={settingsOpen}
