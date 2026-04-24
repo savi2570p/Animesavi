@@ -145,6 +145,14 @@ function TokenAccessSyncInitializer() {
   return null;
 }
 
+function RoutePrefetchInitializer() {
+  useEffect(() => {
+    // Hover/touch prefetch — chunks load before the user clicks.
+    installRoutePrefetch();
+  }, []);
+  return null;
+}
+
 function ScrollRecoveryInitializer() {
   const location = useLocation();
 
