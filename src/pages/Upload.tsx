@@ -28,6 +28,12 @@ import {
   Wrench,
   Key,
   CalendarClock,
+  Tv,
+  Layers,
+  Sparkles,
+  Search as SearchIcon,
+  Activity,
+  ListVideo,
 } from 'lucide-react';
 import { UpcomingCountdownDialog } from '@/components/home/UpcomingCountdownDialog';
 
