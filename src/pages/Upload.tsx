@@ -701,15 +701,25 @@ export default function Upload() {
           )}
         </TabsContent>
 
-        <TabsContent value="new">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Film className="h-5 w-5" />
-                Add New Anime Series
+        <TabsContent value="new" className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="h-7 w-1 rounded-full bg-gradient-to-b from-primary to-pink-500" />
+            <div>
+              <h2 className="text-lg md:text-xl font-heading font-black">Add New Anime Series</h2>
+              <p className="text-[11px] text-muted-foreground">Create a series entry — episodes can be added next</p>
+            </div>
+          </div>
+          <Card className="bg-card/60 backdrop-blur-sm border-border/40 rounded-2xl overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-primary via-pink-500 to-purple-500" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center shadow-md">
+                  <Film className="h-4 w-4 text-white" />
+                </div>
+                Series Details
               </CardTitle>
-              <CardDescription>
-                Fill in the details to add a new anime series to the platform
+              <CardDescription className="text-xs">
+                Fill in the metadata. You can auto-fill from MyAnimeList using the title field.
               </CardDescription>
             </CardHeader>
             <CardContent>
