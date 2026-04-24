@@ -23,6 +23,7 @@ import { fetchTokenAccessFromDB, isSuperAdmin } from '@/components/AccessBanner'
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useCastDetection } from '@/hooks/useCastDetection';
 
 interface Props {
   open: boolean;
@@ -39,6 +40,7 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
   const [role, setRole] = useState<string>('Member');
   const [now, setNow] = useState(Date.now());
   const [copied, setCopied] = useState(false);
+  const isCasting = useCastDetection();
 
   const superAdmin = isSuperAdmin(user?.email);
 
@@ -102,12 +104,13 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
     })();
   }, [open, user?.email, user?.id, isAdmin, superAdmin]);
 
-  // Tick every second for live countdown
+  // Tick every second for live countdown — paused while casting/mirroring
   useEffect(() => {
     if (!open || status !== 'active' || !expiresAt) return;
+    if (isCasting) return; // freeze "time remaining" UI during cast
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [open, status, expiresAt]);
+  }, [open, status, expiresAt, isCasting]);
 
   const isActive = status === 'active';
 

@@ -2242,6 +2242,25 @@ export function VideoPlayer({
       onMouseLeave={() => isPlaying && !settingsOpen && setShowControls(false)}
     >
 
+      {/* Casting / Simple Mode indicator — visible whenever AirPlay/Chromecast/Remote Playback is active */}
+      {isCasting && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[120] pointer-events-none animate-fade-in">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-md border border-white/15 shadow-lg">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-sky-400" />
+            </span>
+            <Cast className="h-3.5 w-3.5 text-sky-300" />
+            <span className="text-[11px] font-semibold tracking-wide text-white">
+              Casting · Simple Mode
+            </span>
+          </div>
+          <p className="mt-1 text-center text-[9px] text-white/70 uppercase tracking-widest">
+            Custom overlays disabled
+          </p>
+        </div>
+      )}
+
       {/* Encoding Overlay - shows when video is being encoded */}
       <EncodingOverlay
         isVisible={showEncodingOverlay}
