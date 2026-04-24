@@ -1135,89 +1135,116 @@ export default function Watch() {
       </div>
 
       {/* Episode Info & Navigation */}
-      <div className="container py-6">
-        <div className="flex flex-col gap-8">
-          {/* Breadcrumb with Format Indicator */}
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Link to={`/anime/${anime?.id}`} className="hover:text-primary">
-                {anime?.title}
-              </Link>
-              <ChevronRight className="h-4 w-4" />
-              <span>Episode {episode.episode_number}</span>
+      <div className="container py-5 md:py-8">
+        <div className="relative rounded-xl md:rounded-3xl border border-border/40 bg-gradient-to-br from-card/70 via-background/40 to-card/50 backdrop-blur-xl p-4 md:p-7 shadow-xl shadow-black/20 overflow-hidden">
+          {/* Decorative glows */}
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative flex flex-col gap-4 md:gap-6">
+            {/* Breadcrumb with Format Indicator */}
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-1.5 text-xs md:text-sm">
+                <Link to={`/anime/${anime?.id}`} className="text-muted-foreground hover:text-primary transition-colors font-medium">
+                  {anime?.title}
+                </Link>
+                <ChevronRight className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground/60" />
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/30 text-primary font-bold text-[11px] md:text-xs">
+                  S{currentSeason?.season_number || 1} · E{episode.episode_number}
+                </span>
+              </div>
+              {(isAdmin || isUploader) && (
+                <VideoFormatIndicator
+                  servedFormat={deviceOptimizedVideo.servedFormat}
+                  device={deviceOptimizedVideo.device}
+                  conversionStatus={deviceOptimizedVideo.conversionStatus}
+                  isHLS={deviceOptimizedVideo.videoUrl?.includes('.m3u8') || false}
+                />
+              )}
             </div>
-            
-            {/* Video Format Indicator - Only visible to admin/uploader */}
-            {(isAdmin || isUploader) && (
-              <VideoFormatIndicator
-                servedFormat={deviceOptimizedVideo.servedFormat}
-                device={deviceOptimizedVideo.device}
-                conversionStatus={deviceOptimizedVideo.conversionStatus}
-                isHLS={deviceOptimizedVideo.videoUrl?.includes('.m3u8') || false}
-              />
-            )}
-          </div>
 
-          {/* Anime Title */}
-          <h1 className="text-2xl md:text-3xl font-heading font-bold">
-            {episode.title}
-          </h1>
+            {/* Episode Title */}
+            <div className="space-y-2">
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-accent/15 border border-accent/30 text-[10px] md:text-xs font-bold uppercase tracking-wider text-accent-foreground">
+                <span className="w-1 h-1 rounded-full bg-accent animate-pulse" />
+                Now Playing
+              </span>
+              <h1 className="text-lg md:text-3xl font-heading font-bold leading-tight text-foreground">
+                {episode.title}
+              </h1>
+            </div>
 
-          {/* Edit Episode and Watch Party */}
-          <div className="flex items-center gap-4">
-            {(isAdmin || isUploader) && anime && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate(`/upload/anime/${anime.id}/episode/${episode.id}/edit`)}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Episode
-              </Button>
+            {/* Description */}
+            {episode.description && (
+              <p className="text-xs md:text-sm leading-relaxed text-muted-foreground border-l-2 border-primary/40 pl-3 md:pl-4 py-1">
+                {episode.description}
+              </p>
             )}
-            
-            {/* Watch Party Button */}
-            {anime && (
-              <WatchParty
+
+            {/* Quick actions row: Edit + Watch Party */}
+            {((isAdmin || isUploader) || anime) && (
+              <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+                {(isAdmin || isUploader) && anime && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/upload/anime/${anime.id}/episode/${episode.id}/edit`)}
+                    className="h-8 md:h-9 text-xs"
+                  >
+                    <Edit className="h-3.5 w-3.5 mr-1.5" />
+                    Edit
+                  </Button>
+                )}
+                {anime && (
+                  <WatchParty
+                    episodeId={episode.id}
+                    videoRef={{ current: document.querySelector('video') } as React.RefObject<HTMLVideoElement>}
+                    animeTitle={anime.title || ''}
+                    episodeNumber={episode.episode_number}
+                    seasonNumber={currentSeason?.season_number || 1}
+                    animeId={anime.id}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+
+            {/* Episode Navigation */}
+            <div className="flex flex-wrap items-center gap-2 md:gap-3">
+              {prevEpisode && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/watch/${prevEpisode.id}`, { replace: true })}
+                  className="h-9 md:h-10 text-xs md:text-sm border-border/60 hover:border-primary/60 hover:bg-primary/5"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5" />
+                  Previous
+                </Button>
+              )}
+              {nextEpisode && (
+                <Button
+                  size="sm"
+                  className="anime-button h-9 md:h-10 text-xs md:text-sm shadow-lg shadow-primary/20"
+                  onClick={() => navigate(`/watch/${nextEpisode.id}`, { replace: true })}
+                >
+                  Next Episode
+                  <ChevronRight className="h-3.5 w-3.5 md:h-4 md:w-4 ml-1.5" />
+                </Button>
+              )}
+
+              {/* Offline Download Button */}
+              <OfflineDownloadButton
+                videoUrl={episode.video_url}
+                iosVideoUrl={deviceOptimizedVideo.device === 'iOS' ? deviceOptimizedVideo.videoUrl : null}
                 episodeId={episode.id}
-                videoRef={{ current: document.querySelector('video') } as React.RefObject<HTMLVideoElement>}
-                animeTitle={anime.title || ''}
-                episodeNumber={episode.episode_number}
-                seasonNumber={currentSeason?.season_number || 1}
-                animeId={anime.id}
+                episodeTitle={episode.title}
+                animeTitle={anime?.title || 'Unknown'}
+                thumbnail={episode.thumbnail}
+                isIOSDevice={deviceOptimizedVideo.device === 'iOS'}
               />
-            )}
-          </div>
-
-          {episode.description && (
-            <p className="text-muted-foreground">{episode.description}</p>
-          )}
-
-          {/* Episode Navigation */}
-          <div className="flex flex-wrap items-center gap-4">
-            {prevEpisode && (
-              <Button variant="outline" onClick={() => navigate(`/watch/${prevEpisode.id}`, { replace: true })}>
-                <ChevronLeft className="h-4 w-4 mr-2" />
-                Previous Episode
-              </Button>
-            )}
-            {nextEpisode && (
-              <Button className="anime-button" onClick={() => navigate(`/watch/${nextEpisode.id}`, { replace: true })}>
-                Next Episode
-                <ChevronRight className="h-4 w-4 ml-2" />
-              </Button>
-            )}
-            
-            {/* Offline Download Button */}
-            <OfflineDownloadButton
-              videoUrl={episode.video_url}
-              iosVideoUrl={deviceOptimizedVideo.device === 'iOS' ? deviceOptimizedVideo.videoUrl : null}
-              episodeId={episode.id}
-              episodeTitle={episode.title}
-              animeTitle={anime?.title || 'Unknown'}
-              thumbnail={episode.thumbnail}
-              isIOSDevice={deviceOptimizedVideo.device === 'iOS'}
-            />
             
             {(() => {
               const animeSlug = anime?.title
