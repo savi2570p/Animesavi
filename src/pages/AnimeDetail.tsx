@@ -231,16 +231,22 @@ export default function AnimeDetail() {
   };
 
   const fetchEpisodes = async (seasonId: string) => {
-    const { data } = await supabase
-      .from('episodes')
-      .select('*')
-      .eq('season_id', seasonId)
-      .order('episode_number');
+    setSeasonLoading(true);
+    setEpisodes([]);
+    try {
+      const { data } = await supabase
+        .from('episodes')
+        .select('*')
+        .eq('season_id', seasonId)
+        .order('episode_number');
 
-    if (data) {
-      setEpisodes(data);
-      // Preload first 8 episode thumbnails
-      preloadImages(data.slice(0, 8).map(ep => ep.thumbnail));
+      if (data) {
+        setEpisodes(data);
+        preloadImages(data.slice(0, 8).map(ep => ep.thumbnail));
+      }
+    } finally {
+      // Small min-delay so the skeleton is perceptible even on fast networks
+      setTimeout(() => setSeasonLoading(false), 250);
     }
   };
 
