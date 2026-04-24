@@ -66,10 +66,10 @@ export function getAvailableServers(): ServerType[] {
 
 /**
  * Returns the best default server for the current device.
+ * Default: X-PLUS for both Desktop and Android (and iOS) — most reliable, recommended.
  */
 export function getDefaultServer(): ServerType {
   const isIOS = isIOSDevice();
-  const isMobile = typeof window !== 'undefined' && /Android/i.test(navigator.userAgent);
 
   const saved = localStorage.getItem(SERVER_PREF_KEY) as ServerType | null;
   if (saved) {
@@ -77,9 +77,8 @@ export function getDefaultServer(): ServerType {
     if (['PLAY', 'SHORT', 'Zex', 'XPLUS', 'EMBED'].includes(saved)) return saved;
   }
 
-  if (isIOS) return 'XPLUS';
-  if (isMobile) return 'PLAY';
-  return 'PLAY';
+  // Default to X-PLUS for all platforms (desktop, Android, iOS).
+  return 'XPLUS';
 }
 
 interface UseServerAutoSelectOptions {
