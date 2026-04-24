@@ -22,6 +22,7 @@ import { TokenExpiredGlobalPopup } from "@/components/TokenExpiredGlobalPopup";
 import { AdminTrialPopup } from "@/components/AdminTrialPopup";
 import { ReportButton } from "@/components/ReportButton";
 import { BanGuard } from "@/components/BanGuard";
+import { installRoutePrefetch } from "@/lib/routePrefetch";
 
 // Critical pages loaded eagerly for instant navigation
 import Index from "./pages/Index";
@@ -144,6 +145,14 @@ function TokenAccessSyncInitializer() {
   return null;
 }
 
+function RoutePrefetchInitializer() {
+  useEffect(() => {
+    // Hover/touch prefetch — chunks load before the user clicks.
+    installRoutePrefetch();
+  }, []);
+  return null;
+}
+
 function ScrollRecoveryInitializer() {
   const location = useLocation();
 
@@ -193,6 +202,7 @@ const App = () => (
               <BackgroundSyncInitializer />
               <AutoVideoScanInitializer />
               <TokenAccessSyncInitializer />
+              <RoutePrefetchInitializer />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/auth" element={<Auth />} />
