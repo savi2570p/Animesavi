@@ -780,41 +780,76 @@ export default function AnimeDetail() {
 
         {/* Recommendations */}
         {recommendations.length > 0 && (
-          <div className="mt-16">
-            <h2 className="text-3xl font-heading font-bold mb-8 flex items-center gap-3">
-              <span className="w-1.5 h-8 bg-accent rounded-full" />
-              You Might Also Like
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
+          <div className="mt-12 md:mt-20 relative">
+            {/* Section header */}
+            <div className="flex items-end justify-between mb-5 md:mb-8 gap-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/30 text-[10px] md:text-xs font-bold uppercase tracking-wider text-primary">
+                    <Sparkles className="h-3 w-3" />
+                    For You
+                  </span>
+                </div>
+                <h2 className="text-xl md:text-4xl font-heading font-bold flex items-center gap-3 leading-tight">
+                  <span className="w-1 md:w-1.5 h-6 md:h-9 bg-gradient-to-b from-primary via-accent to-primary rounded-full" />
+                  You Might Also Like
+                </h2>
+                <p className="text-xs md:text-sm text-muted-foreground pl-3 md:pl-4">
+                  Hand-picked anime based on this title's vibe
+                </p>
+              </div>
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-card/40 border border-border/40 px-3 py-1.5 rounded-lg backdrop-blur-sm">
+                <Flame className="h-3.5 w-3.5 text-orange-400" />
+                {recommendations.length} picks
+              </span>
+            </div>
+
+            {/* Cards grid */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 md:gap-5">
               {recommendations.map((rec, index) => (
-                <Link 
-                  key={rec.id} 
-                  to={`/anime/${rec.id}`} 
-                  className="browse-card animate-fade-in"
+                <Link
+                  key={rec.id}
+                  to={`/anime/${rec.id}`}
+                  className="group relative animate-fade-in"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="aspect-[3/4] relative overflow-hidden rounded-t-xl">
+                  <div className="relative aspect-[2/3] overflow-hidden rounded-lg md:rounded-2xl bg-card/60 border border-border/40 shadow-lg shadow-black/20 transition-all duration-500 group-hover:border-primary/60 group-hover:shadow-primary/20 group-hover:-translate-y-1">
+                    {/* Rank badge */}
+                    <div className="absolute top-1.5 left-1.5 md:top-2.5 md:left-2.5 z-20 w-6 h-6 md:w-8 md:h-8 rounded-md md:rounded-lg bg-black/70 backdrop-blur-md border border-white/10 flex items-center justify-center text-[10px] md:text-xs font-black text-white shadow-lg">
+                      #{index + 1}
+                    </div>
+
+                    {/* Cover */}
                     <img
                       src={rec.cover_image || '/placeholder.svg'}
                       alt={rec.title}
-                      className="browse-card-image"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       loading="lazy"
                     />
-                    <div className="browse-card-overlay" />
-                    <div className="browse-card-content">
-                      <Button size="sm" className="anime-button w-full">
-                        <Play className="h-4 w-4 mr-2 fill-current" />
-                        Watch
-                      </Button>
+
+                    {/* Gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                    {/* Bottom info */}
+                    <div className="absolute inset-x-0 bottom-0 p-2 md:p-3 space-y-1">
+                      <h3 className="font-bold text-[11px] md:text-sm leading-tight line-clamp-2 text-white drop-shadow-lg group-hover:text-primary transition-colors">
+                        {rec.title}
+                      </h3>
+                      {rec.release_year && (
+                        <div className="flex items-center gap-1.5 text-[9px] md:text-[10px] text-white/70">
+                          <CalendarClock className="h-2.5 w-2.5 md:h-3 md:w-3" />
+                          <span>{rec.release_year}</span>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
-                      {rec.title}
-                    </h3>
-                    {rec.release_year && (
-                      <p className="text-xs text-muted-foreground mt-1">{rec.release_year}</p>
-                    )}
+
+                    {/* Hover play button */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-primary/95 flex items-center justify-center shadow-xl shadow-primary/50 scale-90 group-hover:scale-100 transition-transform">
+                        <Play className="h-4 w-4 md:h-6 md:w-6 text-white fill-current ml-0.5" />
+                      </div>
+                    </div>
                   </div>
                 </Link>
               ))}
