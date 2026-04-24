@@ -58,6 +58,7 @@ import { useVideoGestures } from '@/hooks/useVideoGestures';
 import { ScreenMirroringDialog } from './ScreenMirroringDialog';
 import { YouTubeEmbed, isYouTubeUrl } from './YouTubeEmbed';
 import { EmbedIframePlayer } from './EmbedIframePlayer';
+import { PureEmbedPlayer } from './PureEmbedPlayer';
 
 interface AudioTrackInfo {
   id: number;
@@ -134,6 +135,11 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
     name: 'X-PLUS',
     features: ['watch', 'quality', 'download', 'cc'],
     playerStyle: 'xplus'
+  },
+  EMBED: {
+    name: 'Embed',
+    features: ['iframe'],
+    playerStyle: 'embed'
   },
 };
 
@@ -1857,6 +1863,27 @@ export function VideoPlayer({
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
           <p className="text-white text-lg">Loading {serverConfigs[activeServer]?.name || activeServer} server...</p>
         </div>
+      </div>
+    );
+  }
+
+  // EMBED server: pure iframe playback for any external embed link.
+  // Skips all custom-player logic, sandbox, overlays and direct-file detection.
+  if (activeServer === 'EMBED' && anyVideoUrl) {
+    return (
+      <div
+        ref={containerRef}
+        className={`relative bg-black w-full ${isFullscreen ? 'fixed inset-0 z-[9999]' : ''}`}
+        style={{
+          aspectRatio: isFullscreen ? undefined : '16/9',
+          maxHeight: isFullscreen ? '100vh' : '70vh',
+          height: isFullscreen ? '100vh' : undefined,
+        }}
+      >
+        <PureEmbedPlayer
+          url={anyVideoUrl}
+          title={`${animeTitle} - Episode ${episodeNumber}`}
+        />
       </div>
     );
   }
