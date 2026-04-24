@@ -1230,3 +1230,46 @@ section:first-of-type .relative > div > img {
   }
 }
 
+
+/* ---------- Global performance hints (April 2026) ---------- */
+
+/* Hint browser to skip layout/paint for offscreen homepage rows.
+   `contain-intrinsic-size` reserves space so scroll doesn't jump. */
+main > section,
+main > div > section {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 600px;
+}
+
+/* All <img> tags default to lazy + async decode unless explicitly overridden.
+   Massively reduces main-thread blocking during scroll on Android/iOS. */
+img:not([loading]) { loading: lazy; }
+img:not([decoding]) { decoding: async; }
+
+/* Smoother momentum scrolling on iOS Safari + clip-paint isolation
+   so each anime card row paints independently — no full-page reflow. */
+.snap-row {
+  -webkit-overflow-scrolling: touch;
+  contain: content;
+  overscroll-behavior-x: contain;
+}
+
+/* Reduce GPU work on low-end Android — drop blur/saturate on cheap devices */
+@media (max-width: 480px) and (max-resolution: 1.5dppx) {
+  .backdrop-blur-xl,
+  .backdrop-blur-lg,
+  .backdrop-blur-md {
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+  }
+}
+
+/* Defer non-critical animations until idle on the slow user-data-saver mode */
+@media (prefers-reduced-data: reduce) {
+  .nf-ken-burns,
+  .skeleton-shimmer,
+  .animate-shine,
+  .animate-pulse {
+    animation: none !important;
+  }
+}
