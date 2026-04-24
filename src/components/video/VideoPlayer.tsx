@@ -26,6 +26,7 @@ import {
   Info,
   Keyboard,
   Cast,
+  RotateCcw,
 } from 'lucide-react';
 import { 
   getAudioTrackLabel, 
@@ -245,6 +246,7 @@ export function VideoPlayer({
   const hlsRef = useRef<Hls | null>(null);
   
   const [isPlaying, setIsPlaying] = useState(false);
+  const [hasEnded, setHasEnded] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1);
   const [brightness, setBrightness] = useState(1);
@@ -2425,6 +2427,7 @@ export function VideoPlayer({
         onTimeUpdate={handleTimeUpdate}
         onPlay={() => {
           setIsPlaying(true);
+          setHasEnded(false);
           setHasUserInteracted(true);
           // Hide premium loader on play
           setShowPremiumLoader(false);
@@ -2436,6 +2439,10 @@ export function VideoPlayer({
           }
         }}
         onPause={() => setIsPlaying(false)}
+        onEnded={() => {
+          setIsPlaying(false);
+          setHasEnded(true);
+        }}
         onLoadedMetadata={() => {
           if (videoRef.current) {
             setDuration(videoRef.current.duration);
@@ -2660,16 +2667,39 @@ export function VideoPlayer({
           {/* Top gradient */}
           <div className="h-24 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
 
-          {/* Center Play/Pause Button - only show when paused and not loading */}
-          {!isPlaying && showControls && !showPremiumLoader && !isLoading && (
+          {/* Center Play / Rewatch Button — show on initial state or when ended (not on simple pause) */}
+          {(!hasUserInteracted || hasEnded) && showControls && !showPremiumLoader && !isLoading && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 2147483647 }}>
-              <div 
-                className="w-10 h-10 md:w-16 md:h-16 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
-                onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (hasEnded && videoRef.current) {
+                    videoRef.current.currentTime = 0;
+                    setHasEnded(false);
+                    videoRef.current.play().catch(() => {});
+                  } else {
+                    togglePlay();
+                  }
+                }}
+                aria-label={hasEnded ? 'Rewatch' : 'Play'}
+                className="group relative w-12 h-12 md:w-16 md:h-16 rounded-full bg-primary/90 hover:bg-primary text-primary-foreground flex items-center justify-center cursor-pointer shadow-2xl transition-all hover:scale-105"
                 style={{ pointerEvents: 'auto' }}
               >
-                <Play className="w-5 h-5 md:w-8 md:h-8 text-white fill-current ml-0.5" />
-              </div>
+                {hasEnded && (
+                  <span className="absolute inset-0 rounded-full ring-2 ring-primary/50 animate-ping" />
+                )}
+                {hasEnded ? (
+                  <RotateCcw className="relative w-5 h-5 md:w-7 md:h-7" strokeWidth={2.5} />
+                ) : (
+                  <Play className="relative w-5 h-5 md:w-8 md:h-8 fill-current ml-0.5" />
+                )}
+                {hasEnded && (
+                  <span className="absolute -bottom-7 md:-bottom-8 left-1/2 -translate-x-1/2 text-[10px] md:text-xs font-semibold uppercase tracking-wider text-white drop-shadow-lg whitespace-nowrap">
+                    Rewatch
+                  </span>
+                )}
+              </button>
             </div>
           )}
 
@@ -2911,16 +2941,39 @@ export function VideoPlayer({
           {/* Top gradient */}
           <div className="h-24 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
 
-          {/* Center Play/Pause Button - only show when paused and not loading */}
-          {!isPlaying && showControls && !showPremiumLoader && !isLoading && (
+          {/* Center Play / Rewatch Button — show on initial state or when ended (not on simple pause) */}
+          {(!hasUserInteracted || hasEnded) && showControls && !showPremiumLoader && !isLoading && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[60]">
-              <div 
-                className="w-10 h-10 md:w-16 md:h-16 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer hover:bg-primary transition-colors shadow-2xl" 
-                onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (hasEnded && videoRef.current) {
+                    videoRef.current.currentTime = 0;
+                    setHasEnded(false);
+                    videoRef.current.play().catch(() => {});
+                  } else {
+                    togglePlay();
+                  }
+                }}
+                aria-label={hasEnded ? 'Rewatch' : 'Play'}
+                className="group relative w-12 h-12 md:w-16 md:h-16 rounded-full bg-primary/90 hover:bg-primary text-primary-foreground flex items-center justify-center cursor-pointer shadow-2xl transition-all hover:scale-105"
                 style={{ pointerEvents: 'auto' }}
               >
-                <Play className="w-5 h-5 md:w-8 md:h-8 text-white fill-current ml-0.5" />
-              </div>
+                {hasEnded && (
+                  <span className="absolute inset-0 rounded-full ring-2 ring-primary/50 animate-ping" />
+                )}
+                {hasEnded ? (
+                  <RotateCcw className="relative w-5 h-5 md:w-7 md:h-7" strokeWidth={2.5} />
+                ) : (
+                  <Play className="relative w-5 h-5 md:w-8 md:h-8 fill-current ml-0.5" />
+                )}
+                {hasEnded && (
+                  <span className="absolute -bottom-7 md:-bottom-8 left-1/2 -translate-x-1/2 text-[10px] md:text-xs font-semibold uppercase tracking-wider text-white drop-shadow-lg whitespace-nowrap">
+                    Rewatch
+                  </span>
+                )}
+              </button>
             </div>
           )}
 
