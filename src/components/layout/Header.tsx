@@ -30,7 +30,8 @@ import {
   Sparkles,
   Home,
   Download,
-  ListVideo
+  ListVideo,
+  RefreshCw
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -58,6 +59,33 @@ export function Header() {
   const closeMenuThen = (callback: () => void) => {
     setMobileMenuOpen(false);
     window.setTimeout(callback, 120);
+  };
+
+  const handleHardRefresh = async () => {
+    try {
+      toast.info('Refreshing app... fetching latest version');
+      // Clear all browser caches (Cache API used by service workers/PWA)
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+      // Unregister service workers so the next load fetches fresh assets
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+      // Clear update-related localStorage so What's New can re-show if newer
+      try {
+        localStorage.removeItem('notice_popup_seen_version');
+      } catch {}
+    } catch (e) {
+      // ignore errors, still force reload
+    } finally {
+      // Cache-busting hard reload
+      const url = new URL(window.location.href);
+      url.searchParams.set('_r', Date.now().toString());
+      window.location.replace(url.toString());
+    }
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -609,6 +637,18 @@ export function Header() {
                         <Sparkles className="h-3.5 w-3.5 text-amber-500" />
                       </div>
                       <span>What's New</span>
+                    </button>
+                    <button
+                      onClick={() => closeMenuThen(handleHardRefresh)}
+                      className="flex items-center gap-2.5 text-[12px] font-semibold py-2 px-2.5 rounded-lg bg-card/50 hover:bg-card border border-border/40 transition-all w-full text-left"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-sky-500/15 flex items-center justify-center">
+                        <RefreshCw className="h-3.5 w-3.5 text-sky-500" />
+                      </div>
+                      <div className="flex-1">
+                        <span className="block leading-tight">Refresh App</span>
+                        <span className="text-[9px] text-muted-foreground font-medium">Force latest update</span>
+                      </div>
                     </button>
                   </div>
 
