@@ -81,91 +81,117 @@ function ComingSoonView({ timeLeft }: { timeLeft: TimeLeft }) {
   const progressPct = Math.max(0, Math.min(100, ((totalMs - remainingMs) / totalMs) * 100));
 
   return (
-    <div className="container py-16 md:py-24 flex flex-col items-center text-center">
-      <div className="relative mb-8">
-        <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl scale-150" />
-        <img src={museinLogo} alt="MuseIN" className="relative h-24 w-24 md:h-32 md:w-32 rounded-full object-cover border-4 border-primary/30 shadow-xl" />
-      </div>
+    <div className="relative min-h-[80vh] overflow-hidden">
+      {/* Cinematic background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-rose-500/15 via-pink-500/8 to-transparent" />
+      <div className="absolute -top-32 left-1/4 w-[32rem] h-[32rem] bg-rose-500/20 rounded-full blur-[140px]" />
+      <div className="absolute top-20 right-1/4 w-[24rem] h-[24rem] bg-pink-400/15 rounded-full blur-[120px]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--background)),transparent_70%)]" />
 
-      <h1 className="text-4xl md:text-5xl font-heading font-bold mb-3">
-        Muse<span className="anime-gradient-text">IN</span>
-      </h1>
-      <p className="text-lg text-muted-foreground mb-2">Hindi Dubbed Anime by Muse India</p>
+      <div className="container relative py-14 md:py-20 flex flex-col items-center text-center px-4">
+        {/* Logo */}
+        <div className="relative mb-7">
+          <div className="absolute inset-0 bg-rose-500/30 rounded-full blur-2xl scale-150 animate-pulse" />
+          <div className="relative w-28 h-28 md:w-36 md:h-36 rounded-full p-1 bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600">
+            <img src={museinLogo} alt="MuseIN" className="w-full h-full rounded-full object-cover border-2 border-background" />
+          </div>
+          <div className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-rose-500 border-4 border-background flex items-center justify-center shadow-lg">
+            <Sparkles className="h-4 w-4 text-white animate-pulse" />
+          </div>
+        </div>
 
-      <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 border border-primary/20 mb-8">
-        <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-        <span className="text-sm font-semibold text-primary">Launching Soon</span>
-      </div>
+        {/* Live badge */}
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 mb-4">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-500" />
+          </span>
+          <span className="text-[10px] font-bold text-rose-300 uppercase tracking-[0.15em]">Launching Soon</span>
+        </div>
 
-      {/* Countdown Timer */}
-      <div className="flex items-center gap-3 md:gap-5 mb-6">
-        {[
-          { value: timeLeft.days, label: 'Days' },
-          { value: timeLeft.hours, label: 'Hours' },
-          { value: timeLeft.minutes, label: 'Minutes' },
-          { value: timeLeft.seconds, label: 'Seconds' },
-        ].map((unit, i) => (
-          <div key={unit.label} className="flex items-center gap-3 md:gap-5">
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl bg-muted/60 border border-border/50 flex items-center justify-center">
-                <span className="text-2xl md:text-3xl font-heading font-bold text-primary tabular-nums">
-                  {pad(unit.value)}
-                </span>
+        <h1 className="text-5xl md:text-7xl font-heading font-black tracking-tight leading-none mb-3">
+          Muse<span className="bg-gradient-to-r from-rose-400 via-pink-500 to-rose-500 bg-clip-text text-transparent">IN</span>
+        </h1>
+        <p className="text-base md:text-lg text-muted-foreground mb-2 max-w-md">
+          Premium Hindi Dubbed Anime by Muse India — coming to your screens.
+        </p>
+
+        {/* Countdown Timer */}
+        <div className="flex items-center gap-2 md:gap-4 my-8">
+          {[
+            { value: timeLeft.days, label: 'Days' },
+            { value: timeLeft.hours, label: 'Hours' },
+            { value: timeLeft.minutes, label: 'Minutes' },
+            { value: timeLeft.seconds, label: 'Seconds' },
+          ].map((unit, i) => (
+            <div key={unit.label} className="flex items-center gap-2 md:gap-4">
+              <div className="flex flex-col items-center">
+                <div className="relative w-[68px] h-[68px] md:w-[88px] md:h-[88px] rounded-2xl bg-gradient-to-br from-card to-card/40 border border-rose-500/20 backdrop-blur-sm flex items-center justify-center overflow-hidden shadow-xl">
+                  <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-rose-500/10 to-transparent" />
+                  <span className="relative text-3xl md:text-4xl font-heading font-black text-foreground tabular-nums">
+                    {pad(unit.value)}
+                  </span>
+                </div>
+                <span className="text-[9px] md:text-[10px] text-muted-foreground mt-2 uppercase tracking-[0.2em] font-bold">{unit.label}</span>
               </div>
-              <span className="text-[10px] md:text-xs text-muted-foreground mt-1.5 uppercase tracking-wider">{unit.label}</span>
+              {i < 3 && <span className="text-2xl md:text-3xl font-black text-rose-500/40 -mt-5">:</span>}
             </div>
-            {i < 3 && <span className="text-xl md:text-2xl font-bold text-muted-foreground/50 -mt-5">:</span>}
+          ))}
+        </div>
+
+        {/* Progress bar */}
+        <div className="w-full max-w-sm mb-5">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Launch Progress</span>
+            <span className="text-[10px] font-black text-rose-400">{Math.round(progressPct)}%</span>
           </div>
-        ))}
-      </div>
-
-      {/* Progress bar */}
-      <div className="w-full max-w-md mb-3">
-        <div className="h-2 rounded-full bg-muted/60 overflow-hidden">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all duration-1000"
-            style={{ width: `${progressPct}%` }}
-          />
-        </div>
-        <p className="text-[11px] text-muted-foreground mt-1.5">{Math.round(progressPct)}% ready</p>
-      </div>
-
-      {/* Stats badges */}
-      <div className="flex items-center gap-3 mb-8">
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border/40">
-          <Film className="h-3.5 w-3.5 text-primary" />
-          <span className="text-xs font-medium">{museCount} Anime Queued</span>
-        </div>
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border/40">
-          <Globe className="h-3.5 w-3.5 text-primary" />
-          <span className="text-xs font-medium">Hindi Dubbed</span>
-        </div>
-      </div>
-
-      <p className="max-w-lg text-muted-foreground mb-10">
-        We're building a dedicated space for all <span className="font-semibold text-foreground">Muse India</span> Hindi dubbed anime.
-        Stay tuned — your favorite shows will be available here very soon!
-      </p>
-
-      {/* Feature Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-3xl w-full mb-12">
-        {[
-          { icon: Film, title: 'Official Hindi Dub', desc: 'Licensed content from Muse India' },
-          { icon: Globe, title: 'HD & 4K Quality', desc: 'Crystal clear streaming' },
-          { icon: Clock, title: 'Regular Updates', desc: 'New episodes added frequently' },
-          { icon: Sparkles, title: 'Exclusive Collection', desc: 'Curated anime library' },
-        ].map((f) => (
-          <div key={f.title} className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/40 border border-border/50">
-            <f.icon className="h-6 w-6 text-primary" />
-            <h3 className="text-sm font-semibold">{f.title}</h3>
-            <p className="text-[11px] text-muted-foreground">{f.desc}</p>
+          <div className="h-1.5 rounded-full bg-muted/60 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-rose-400 via-pink-500 to-rose-500 transition-all duration-1000 shadow-[0_0_10px_rgba(244,63,94,0.5)]"
+              style={{ width: `${progressPct}%` }}
+            />
           </div>
-        ))}
-      </div>
+        </div>
 
-      <p className="text-xs text-muted-foreground">
-        Anime marked with <span className="inline-block px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded">H-DUB</span> will appear here automatically.
-      </p>
+        {/* Stats badges */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/60 border border-border/40 backdrop-blur-sm">
+            <Film className="h-3.5 w-3.5 text-rose-400" />
+            <span className="text-xs font-semibold">{museCount} Anime Queued</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/60 border border-border/40 backdrop-blur-sm">
+            <Languages className="h-3.5 w-3.5 text-rose-400" />
+            <span className="text-xs font-semibold">Hindi Dubbed</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/60 border border-border/40 backdrop-blur-sm">
+            <Star className="h-3.5 w-3.5 text-amber-400" />
+            <span className="text-xs font-semibold">4K Premium</span>
+          </div>
+        </div>
+
+        {/* Feature Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 max-w-3xl w-full mb-10">
+          {[
+            { icon: Film, title: 'Official Hindi Dub', desc: 'Licensed from Muse India' },
+            { icon: Globe, title: 'HD & 4K Quality', desc: 'Crystal clear streaming' },
+            { icon: Clock, title: 'Regular Updates', desc: 'New episodes weekly' },
+            { icon: Sparkles, title: 'Curated Library', desc: 'Hand-picked anime' },
+          ].map((f) => (
+            <div key={f.title} className="group relative overflow-hidden flex flex-col items-center gap-2 p-4 rounded-2xl bg-card/50 border border-border/40 backdrop-blur-sm hover:border-rose-500/40 hover:-translate-y-0.5 transition-all">
+              <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-rose-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="p-2 rounded-xl bg-gradient-to-br from-rose-500/15 to-pink-500/10 border border-rose-500/20">
+                <f.icon className="h-4 w-4 text-rose-400" />
+              </div>
+              <h3 className="text-xs font-bold">{f.title}</h3>
+              <p className="text-[10px] text-muted-foreground leading-snug">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        <p className="text-[11px] text-muted-foreground">
+          Anime marked with <span className="inline-block px-1.5 py-0.5 text-[9px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded uppercase tracking-wider">H-DUB</span> will appear here automatically.
+        </p>
+      </div>
     </div>
   );
 }
