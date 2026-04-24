@@ -499,71 +499,102 @@ export default function Upload() {
           {(() => {
             const filteredAnime = myAnime.filter(a => a.type !== 'movie' && a.status !== 'upcoming' && a.title.toLowerCase().includes(animeSearchQuery.toLowerCase()));
             return filteredAnime.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <UploadIcon className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No anime series yet</h3>
-                <p className="text-muted-foreground mb-4">Start by adding your first anime series</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4">
-              {filteredAnime.map((anime) => (
-                <Card key={anime.id}>
-                  <CardContent className="flex items-center gap-4 p-4">
-                    <img
-                      src={anime.cover_image || '/placeholder.svg'}
-                      alt={anime.title}
-                      className="w-20 h-28 object-cover rounded-lg"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-lg">{anime.title}</h3>
-                      <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <Badge variant="outline" className="capitalize">
-                          {anime.status}
-                        </Badge>
-                        {anime.total_episodes != null && (
-                          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
-                            {anime.total_episodes} EP
-                          </Badge>
+              <div className="rounded-2xl border border-dashed border-border/50 bg-card/30 py-14 text-center">
+                <div className="relative w-fit mx-auto mb-3">
+                  <div className="absolute inset-0 bg-sky-500/30 blur-2xl rounded-full" />
+                  <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-2xl">
+                    <Tv className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-bold mb-1">No anime series yet</h3>
+                <p className="text-muted-foreground text-sm mb-4">Start by adding your first anime series</p>
+                <Button onClick={() => setActiveTab('new')} className="bg-gradient-to-r from-sky-500 to-blue-500 text-white hover:opacity-90">
+                  <Plus className="h-4 w-4 mr-1.5" /> Add New Series
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredAnime.map((anime) => (
+                  <div
+                    key={anime.id}
+                    className="group relative overflow-hidden rounded-2xl border border-border/40 bg-card/60 backdrop-blur-sm hover:border-sky-500/50 hover:shadow-2xl hover:shadow-sky-500/10 transition-all duration-300"
+                  >
+                    {/* Blurred backdrop */}
+                    {anime.cover_image && (
+                      <div
+                        className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity"
+                        style={{
+                          backgroundImage: `url(${anime.cover_image})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          filter: 'blur(20px)',
+                        }}
+                      />
+                    )}
+                    <div className="relative flex gap-3 p-3">
+                      <div className="relative w-20 h-28 shrink-0 rounded-xl overflow-hidden ring-1 ring-border/50 group-hover:ring-sky-500/50 transition-all">
+                        <img
+                          src={anime.cover_image || '/placeholder.svg'}
+                          alt={anime.title}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        {anime.type && (
+                          <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[8px] font-black uppercase text-white">
+                            {anime.type}
+                          </div>
                         )}
+                      </div>
+                      <div className="flex-1 min-w-0 flex flex-col">
+                        <h3 className="font-bold text-sm line-clamp-2 group-hover:text-sky-400 transition-colors">{anime.title}</h3>
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                            anime.status === 'ongoing' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' :
+                            anime.status === 'completed' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' :
+                            'bg-muted text-muted-foreground border border-border/50'
+                          }`}>
+                            {anime.status}
+                          </span>
+                          {anime.total_episodes != null && (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-primary/10 text-primary border border-primary/20 inline-flex items-center gap-0.5">
+                              <ListVideo className="h-2.5 w-2.5" />{anime.total_episodes}EP
+                            </span>
+                          )}
+                          {anime.release_year && (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-muted text-muted-foreground border border-border/50">
+                              {anime.release_year}
+                            </span>
+                          )}
+                        </div>
                         {anime.studio && (
-                          <Badge variant="secondary" className="bg-accent/10 text-accent-foreground border-accent/20 truncate max-w-[180px]">
-                            🎬 {anime.studio}
-                          </Badge>
+                          <p className="text-[10px] text-muted-foreground mt-1 truncate">🎬 {anime.studio}</p>
                         )}
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(anime.created_at).toLocaleDateString()}
-                        </span>
+                        <p className="text-[10px] text-muted-foreground/70 mt-auto">Added {new Date(anime.created_at).toLocaleDateString()}</p>
+                        <div className="flex items-center gap-1 mt-2">
+                          <Button variant="outline" size="sm" asChild className="h-7 text-[10px] flex-1 px-2">
+                            <a href={`/anime/${anime.id}`} target="_blank" rel="noopener">
+                              <Eye className="h-3 w-3 mr-0.5" /> View
+                            </a>
+                          </Button>
+                          <Button variant="outline" size="sm" asChild className="h-7 text-[10px] flex-1 px-2 border-sky-500/40 text-sky-400 hover:bg-sky-500/10">
+                            <a href={`/upload/anime/${anime.id}`}>
+                              <Edit className="h-3 w-3 mr-0.5" /> Edit
+                            </a>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+                            onClick={() => handleDeleteAnime(anime.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={`/anime/${anime.id}`} target="_blank" rel="noopener">
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </a>
-                      </Button>
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={`/upload/anime/${anime.id}`}>
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </a>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => handleDeleteAnime(anime.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          );
+                  </div>
+                ))}
+              </div>
+            );
           })()}
         </TabsContent>
 
