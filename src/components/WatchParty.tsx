@@ -1295,5 +1295,3 @@ export function ViewPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
     </Dialog>
   );
 }
-
-}
