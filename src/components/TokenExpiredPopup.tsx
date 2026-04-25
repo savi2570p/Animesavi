@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Lock, Ban, Globe, ExternalLink, RefreshCw, Tv, Download, Zap, Crown, Sparkles, BookOpen } from 'lucide-react';
+import { Lock, Ban, Globe, ExternalLink, RefreshCw, Tv, Download, Zap, Crown, Sparkles, BookOpen, Home } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 type Language = 'en' | 'hinglish' | 'hi' | 'bn' | 'ta' | 'te';
 
