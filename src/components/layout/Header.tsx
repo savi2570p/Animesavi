@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -49,12 +49,14 @@ import { SearchSuggestions } from '@/components/SearchSuggestions';
 export function Header() {
   const { user, isUploader, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { showWhatsNewManually } = usePopupQueue();
+  const hasPremium = !!user && (isAdmin || hasValidTokenAccess(user?.email));
 
   const closeMenuThen = (callback: () => void) => {
     setMobileMenuOpen(false);
@@ -133,9 +135,9 @@ export function Header() {
 
   const isActivePath = (to: string) => {
     const [path, query] = to.split('?');
-    if (path !== window.location.pathname) return false;
-    if (!query) return window.location.search === '' || path === '/';
-    return window.location.search.includes(query);
+    if (path !== location.pathname) return false;
+    if (!query) return location.search === '' || path === '/';
+    return location.search.includes(query);
   };
 
   return (
