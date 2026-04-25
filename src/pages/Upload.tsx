@@ -394,6 +394,18 @@ export default function Upload() {
   const upcomingCount = (isAdmin ? allAnime : myAnime).filter(a => a.status === 'upcoming').length;
   const ongoingCount = myAnime.filter(a => a.status === 'ongoing').length;
 
+  // Last upload (most recent)
+  const lastUpload = [...myAnime]
+    .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())[0];
+  const lastUploadAgoMs = lastUpload?.created_at ? Date.now() - new Date(lastUpload.created_at).getTime() : null;
+  const lastUploadLabel = lastUploadAgoMs == null
+    ? 'No uploads yet'
+    : lastUploadAgoMs < 3_600_000
+    ? `${Math.max(1, Math.floor(lastUploadAgoMs / 60_000))}m ago`
+    : lastUploadAgoMs < 86_400_000
+    ? `${Math.floor(lastUploadAgoMs / 3_600_000)}h ago`
+    : `${Math.floor(lastUploadAgoMs / 86_400_000)}d ago`;
+
   return (
     <div className="min-h-screen">
       {/* Cinematic dashboard hero */}
@@ -402,20 +414,44 @@ export default function Upload() {
         <div className="absolute -top-24 right-1/4 w-[28rem] h-[28rem] bg-primary/20 rounded-full blur-[120px]" />
         <div className="absolute -top-12 left-1/3 w-[20rem] h-[20rem] bg-pink-500/15 rounded-full blur-[100px]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--background)),transparent_70%)]" />
+        {/* Subtle scan line */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(0deg, hsl(var(--foreground)) 0px, hsl(var(--foreground)) 1px, transparent 1px, transparent 4px)',
+          }}
+        />
 
-        <div className="container relative px-4 pt-8 pb-10">
+        <div className="container relative px-4 pt-7 pb-9">
           <div className="flex flex-col md:flex-row md:items-end gap-5 md:gap-7">
             <div className="relative shrink-0">
-              <div className="absolute inset-0 bg-primary/30 blur-2xl rounded-full" />
+              <div className="absolute inset-0 bg-primary/30 blur-2xl rounded-full animate-pulse" />
               <div className="relative flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-primary via-pink-500 to-purple-500 shadow-2xl">
                 <UploadIcon className="h-7 w-7 md:h-9 md:w-9 text-white" />
               </div>
+              {/* Live status dot */}
+              <span className="absolute -bottom-1 -right-1 flex h-4 w-4">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                <span className="relative inline-flex h-4 w-4 rounded-full bg-emerald-500 ring-2 ring-background" />
+              </span>
             </div>
 
             <div className="flex-1 min-w-0">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 mb-3">
-                <Sparkles className="h-3 w-3 text-primary" />
-                <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Creator Studio</span>
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
+                  <Sparkles className="h-3 w-3 text-primary" />
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Creator Studio</span>
+                </div>
+                {isAdmin && (
+                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30">
+                    <span className="text-[9px] font-black text-amber-300 uppercase tracking-widest">Admin Mode</span>
+                  </div>
+                )}
+                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[9px] font-black text-emerald-300 uppercase tracking-widest">Pipeline Online</span>
+                </div>
               </div>
               <h1 className="text-3xl md:text-5xl font-heading font-black tracking-tight leading-none">
                 <span className="anime-gradient-text">Upload</span> Dashboard
@@ -424,20 +460,43 @@ export default function Upload() {
                 Manage your library, publish new titles, and monitor encoding pipelines from one place.
               </p>
 
-              {/* Stat chips */}
-              <div className="flex flex-wrap gap-2 mt-4">
+              {/* Stat tiles */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-5 max-w-2xl">
                 {[
-                  { icon: Tv, value: seriesCount, label: 'Series', tone: 'text-sky-400' },
-                  { icon: Film, value: moviesCount, label: 'Movies', tone: 'text-violet-400' },
-                  { icon: Activity, value: ongoingCount, label: 'Ongoing', tone: 'text-emerald-400' },
-                  { icon: CalendarClock, value: upcomingCount, label: 'Upcoming', tone: 'text-orange-400' },
+                  { icon: Tv, value: seriesCount, label: 'Series', tone: 'from-sky-500/15 to-sky-500/0 text-sky-400 border-sky-500/25' },
+                  { icon: Film, value: moviesCount, label: 'Movies', tone: 'from-violet-500/15 to-violet-500/0 text-violet-400 border-violet-500/25' },
+                  { icon: Activity, value: ongoingCount, label: 'Ongoing', tone: 'from-emerald-500/15 to-emerald-500/0 text-emerald-400 border-emerald-500/25' },
+                  { icon: CalendarClock, value: upcomingCount, label: 'Upcoming', tone: 'from-orange-500/15 to-orange-500/0 text-orange-400 border-orange-500/25' },
                 ].map((s) => (
-                  <div key={s.label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card/60 border border-border/40 backdrop-blur-sm">
-                    <s.icon className={`h-3.5 w-3.5 ${s.tone}`} />
-                    <span className="text-xs font-semibold tabular-nums">{s.value}</span>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{s.label}</span>
+                  <div
+                    key={s.label}
+                    className={`relative overflow-hidden rounded-xl bg-gradient-to-br ${s.tone} border backdrop-blur-sm p-3 hover:scale-[1.02] transition-transform`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <s.icon className={`h-4 w-4 ${s.tone.split(' ').find(c => c.startsWith('text-'))}`} />
+                      <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-black">
+                        {s.label}
+                      </span>
+                    </div>
+                    <div className="mt-1.5 text-2xl font-black tabular-nums leading-none">
+                      {s.value}
+                    </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Activity row */}
+              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <Activity className="h-3 w-3 text-emerald-400" />
+                  <span>Last upload: <span className="font-semibold text-foreground">{lastUploadLabel}</span></span>
+                </div>
+                {lastUpload && (
+                  <div className="flex items-center gap-1.5">
+                    <Tv className="h-3 w-3 text-primary" />
+                    <span className="truncate max-w-[200px]">{lastUpload.title}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

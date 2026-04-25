@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Lock, Ban, Globe, ExternalLink, RefreshCw, Tv, Download, Zap, Crown, Sparkles, BookOpen } from 'lucide-react';
+import { Lock, Ban, Globe, ExternalLink, RefreshCw, Tv, Download, Zap, Crown, Sparkles, BookOpen, Home } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 type Language = 'en' | 'hinglish' | 'hi' | 'bn' | 'ta' | 'te';
 
@@ -131,6 +132,7 @@ const langLabels: Record<Language, string> = {
 export function TokenExpiredPopup() {
   const [lang, setLang] = useState<Language>('en');
   const [reloading, setReloading] = useState(false);
+  const navigate = useNavigate();
   const t = translations[lang];
 
   const handleReload = async () => {
@@ -324,6 +326,15 @@ export function TokenExpiredPopup() {
               {reloading ? '...' : t.reload}
             </button>
           </div>
+
+          {/* Back to Home — escape hatch */}
+          <button
+            onClick={() => navigate('/')}
+            className="mt-1 w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-[11px] text-muted-foreground hover:text-foreground bg-transparent hover:bg-muted/30 border border-border/40 hover:border-border transition-all"
+          >
+            <Home className="h-3.5 w-3.5" />
+            Back to Home
+          </button>
         </div>
       </div>
     </div>

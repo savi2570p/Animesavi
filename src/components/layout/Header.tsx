@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -49,12 +49,14 @@ import { SearchSuggestions } from '@/components/SearchSuggestions';
 export function Header() {
   const { user, isUploader, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { showWhatsNewManually } = usePopupQueue();
+  const hasPremium = !!user && (isAdmin || hasValidTokenAccess(user?.email));
 
   const closeMenuThen = (callback: () => void) => {
     setMobileMenuOpen(false);
@@ -133,9 +135,9 @@ export function Header() {
 
   const isActivePath = (to: string) => {
     const [path, query] = to.split('?');
-    if (path !== window.location.pathname) return false;
-    if (!query) return window.location.search === '' || path === '/';
-    return window.location.search.includes(query);
+    if (path !== location.pathname) return false;
+    if (!query) return location.search === '' || path === '/';
+    return location.search.includes(query);
   };
 
   return (
@@ -539,6 +541,64 @@ export function Header() {
               </div>
 
               <div className="p-3 space-y-4">
+                {/* Premium CTA — adaptive */}
+                {user && (
+                  hasPremium ? (
+                    <div
+                      className="relative overflow-hidden rounded-2xl p-3 border border-amber-500/30"
+                      style={{
+                        background:
+                          'linear-gradient(135deg, hsla(45,95%,55%,0.18) 0%, hsla(20,90%,55%,0.12) 50%, hsla(0,75%,55%,0.18) 100%)',
+                      }}
+                    >
+                      <div className="absolute -top-8 -right-6 w-28 h-28 bg-amber-500/30 rounded-full blur-2xl" />
+                      <div className="relative flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                          <Crown className="h-5 w-5 text-amber-950" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] font-black text-amber-300 leading-tight">Premium Active</p>
+                          <p className="text-[10px] text-amber-200/70">Enjoy 4K · Ad-free · Multi-audio</p>
+                        </div>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[9px] font-black text-emerald-300 uppercase tracking-wider">
+                          PRO
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => closeMenuThen(() => window.open('https://t.me/getunlocktoken', '_blank', 'noopener'))}
+                      className="group relative w-full overflow-hidden rounded-2xl p-3 border border-primary/30 text-left transition-transform active:scale-[0.99]"
+                      style={{
+                        background:
+                          'linear-gradient(135deg, hsla(0,72%,50%,0.18) 0%, hsla(340,75%,50%,0.18) 100%)',
+                        boxShadow: '0 0 25px -8px hsla(0,72%,50%,0.4)',
+                      }}
+                    >
+                      <span
+                        className="absolute inset-y-0 -inset-x-1/3 opacity-60 group-hover:opacity-100 transition-opacity"
+                        style={{
+                          background:
+                            'linear-gradient(110deg, transparent 30%, hsla(0,0%,100%,0.12) 50%, transparent 70%)',
+                          animation: 'shimmer 4s linear infinite',
+                        }}
+                      />
+                      <div className="relative flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center shadow-lg shadow-primary/40">
+                          <Crown className="h-5 w-5 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] font-black leading-tight">Get Premium Access</p>
+                          <p className="text-[10px] text-muted-foreground">Unlock 4K · Ad-free · Downloads</p>
+                        </div>
+                        <span className="inline-flex items-center gap-0.5 px-2 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-wider shadow-md">
+                          Get
+                        </span>
+                      </div>
+                    </button>
+                  )
+                )}
+
                 {/* Search */}
                 <form onSubmit={handleSearch}>
                   <div className="relative">
@@ -568,21 +628,28 @@ export function Header() {
                     Discover
                   </p>
                   <nav className="grid grid-cols-2 gap-1.5">
-                    {navLinks.map((link) => (
-                      <Link
-                        key={link.label}
-                        to={link.to}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-2 text-[12px] font-semibold py-2 px-2.5 rounded-lg bg-card/50 hover:bg-card border border-border/40 hover:border-primary/40 transition-all"
-                      >
-                        {link.icon ? (
-                          <link.icon className="h-3.5 w-3.5 text-primary" />
-                        ) : (
-                          <Home className="h-3.5 w-3.5 text-primary" />
-                        )}
-                        <span className="truncate">{link.label}</span>
-                      </Link>
-                    ))}
+                    {navLinks.map((link) => {
+                      const active = isActivePath(link.to);
+                      const Icon = link.icon || Home;
+                      return (
+                        <Link
+                          key={link.label}
+                          to={link.to}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`relative flex items-center gap-2 text-[12px] font-semibold py-2 px-2.5 rounded-lg border transition-all ${
+                            active
+                              ? 'bg-gradient-to-br from-primary/20 to-pink-500/15 border-primary/40 text-foreground shadow-md shadow-primary/10'
+                              : 'bg-card/50 hover:bg-card border-border/40 hover:border-primary/40'
+                          }`}
+                        >
+                          <Icon className={`h-3.5 w-3.5 ${active ? 'text-primary' : 'text-primary'}`} />
+                          <span className="truncate">{link.label}</span>
+                          {active && (
+                            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
+                          )}
+                        </Link>
+                      );
+                    })}
                   </nav>
                 </div>
 
@@ -598,19 +665,29 @@ export function Header() {
                         { to: '/history', icon: History, label: 'History', tone: 'text-violet-500 bg-violet-500/10' },
                         { to: '/downloads', icon: Download, label: 'Saved', tone: 'text-emerald-500 bg-emerald-500/10' },
                         { to: '/watchlist', icon: ListVideo, label: 'List', tone: 'text-sky-500 bg-sky-500/10' },
-                      ].map((it) => (
-                        <Link
-                          key={it.to}
-                          to={it.to}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex flex-col items-center gap-1 py-2.5 px-1 rounded-lg bg-card/50 border border-border/40 hover:border-primary/40 hover:-translate-y-0.5 transition-all"
-                        >
-                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${it.tone}`}>
-                            <it.icon className="h-3.5 w-3.5" />
-                          </div>
-                          <span className="text-[10px] font-semibold">{it.label}</span>
-                        </Link>
-                      ))}
+                      ].map((it) => {
+                        const active = location.pathname === it.to;
+                        return (
+                          <Link
+                            key={it.to}
+                            to={it.to}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={`relative flex flex-col items-center gap-1 py-2.5 px-1 rounded-lg border transition-all ${
+                              active
+                                ? 'bg-card border-primary/50 shadow-md shadow-primary/10'
+                                : 'bg-card/50 border-border/40 hover:border-primary/40 hover:-translate-y-0.5'
+                            }`}
+                          >
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${it.tone}`}>
+                              <it.icon className="h-3.5 w-3.5" />
+                            </div>
+                            <span className="text-[10px] font-semibold">{it.label}</span>
+                            {active && (
+                              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]" />
+                            )}
+                          </Link>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

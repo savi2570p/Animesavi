@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Clock } from 'lucide-react';
+import { Clock, Crown, Cloud, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useCastDetection } from '@/hooks/useCastDetection';
@@ -185,37 +185,92 @@ export function AccessBanner() {
 
   if (isEmbedRoute || superAdmin || !time || isCasting) return null;
 
+  // Compute friendly date/time of expiry + urgency tier
+  const expDate = expiresAt ? new Date(expiresAt) : null;
+  const totalMinutes = time.hours * 60 + time.minutes;
+  const isCritical = totalMinutes < 30;
+  const isLow = totalMinutes < 120 && !isCritical;
+
+  const tone = isCritical
+    ? { ring: 'hsl(0 90% 55%)', glow: 'hsla(0,90%,55%,0.55)', dot: 'bg-rose-300', label: 'Expiring soon' }
+    : isLow
+    ? { ring: 'hsl(35 95% 55%)', glow: 'hsla(35,95%,55%,0.45)', dot: 'bg-amber-200', label: 'Heads up' }
+    : { ring: 'hsl(150 70% 45%)', glow: 'hsla(150,70%,45%,0.4)', dot: 'bg-emerald-200', label: 'Premium active' };
+
+  const dateLabel = expDate
+    ? expDate.toLocaleString(undefined, {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : '';
+
   return (
     <div
-      className="sticky top-0 z-[60] text-white px-3 py-1 animate-fade-in"
+      className="sticky top-0 z-[60] text-white animate-fade-in relative"
       style={{
-        background: 'linear-gradient(135deg, hsl(0 72% 30%) 0%, hsl(0 80% 42%) 50%, hsl(0 72% 30%) 100%)',
-        boxShadow: '0 2px 10px hsla(0, 80%, 40%, 0.3)',
+        background:
+          'linear-gradient(90deg, hsl(0 0% 6%) 0%, hsl(0 60% 16%) 35%, hsl(0 75% 30%) 65%, hsl(0 0% 6%) 100%)',
+        boxShadow: `0 6px 20px -8px ${tone.glow}, inset 0 -1px 0 hsla(0,0%,100%,0.06)`,
       }}
     >
-      <div className="container flex items-center justify-center">
-        <div className="flex items-center gap-2 text-xs font-medium tracking-wide">
-          <Clock className="h-3 w-3 animate-pulse" />
-          <span className="opacity-90">Expires</span>
-          <span
-            className="font-mono font-bold text-xs px-1.5 py-0.5 rounded"
-            style={{
-              background: 'hsla(0, 0%, 0%, 0.3)',
-              textShadow: '0 0 8px hsla(0, 80%, 60%, 0.6)',
-              letterSpacing: '0.08em',
-            }}
-          >
-            {String(time.hours).padStart(2, '0')}:{String(time.minutes).padStart(2, '0')}
+      {/* animated shine */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-60">
+        <div
+          className="absolute inset-y-0 -inset-x-1/3"
+          style={{
+            background:
+              'linear-gradient(110deg, transparent 30%, hsla(0,0%,100%,0.08) 50%, transparent 70%)',
+            animation: 'shimmer 5s linear infinite',
+          }}
+        />
+      </div>
+
+      <div className="container relative flex items-center justify-between gap-2 px-3 py-1">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="relative flex h-2 w-2 shrink-0">
+            <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping ${tone.dot}`} />
+            <span className={`relative inline-flex h-2 w-2 rounded-full ${tone.dot}`} />
           </span>
-          {isSynced && (
-            <span
-              className="text-[10px] px-1 py-px rounded-full opacity-70"
-              style={{ background: 'hsla(210, 80%, 50%, 0.25)' }}
-              title="Synced from account"
-            >
-              ☁️
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.18em] opacity-90 truncate">
+            {tone.label}
+          </span>
+          {isCritical && <AlertTriangle className="h-3 w-3 text-amber-200 shrink-0" />}
+        </div>
+
+        <div
+          className="flex items-center gap-1.5 px-2 py-0.5 rounded-full backdrop-blur-md shrink-0"
+          style={{
+            background: 'hsla(0, 0%, 0%, 0.45)',
+            border: `1px solid ${tone.ring}`,
+            boxShadow: `0 0 12px -2px ${tone.glow}`,
+          }}
+        >
+          <Clock className="h-3 w-3 opacity-90" />
+          <span
+            className="font-mono font-black text-[11px] sm:text-xs tabular-nums tracking-widest"
+            style={{ textShadow: `0 0 10px ${tone.glow}` }}
+          >
+            {String(time.hours).padStart(2, '0')}h {String(time.minutes).padStart(2, '0')}m
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1.5 min-w-0">
+          {dateLabel && (
+            <span className="hidden sm:inline-flex text-[10px] font-medium opacity-80 truncate">
+              ends · {dateLabel}
             </span>
           )}
+          <span
+            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+            style={{ background: 'hsla(45, 95%, 55%, 0.18)', color: 'hsl(45, 95%, 75%)' }}
+          >
+            <Crown className="h-2.5 w-2.5" />
+            <span className="hidden xs:inline">PRO</span>
+          </span>
+          {isSynced && <Cloud className="h-3 w-3 opacity-70" aria-label="Synced from cloud" />}
         </div>
       </div>
     </div>

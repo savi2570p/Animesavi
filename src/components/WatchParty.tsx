@@ -865,26 +865,27 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
   );
 }
 
-// Join Party Dialog Component for use in Header/Menu
+// ─────────────────────────────────────────────────────────────────────
+// JOIN PARTY DIALOG — Premium cinematic redesign
+// ─────────────────────────────────────────────────────────────────────
 export function JoinPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [joinCode, setJoinCode] = useState('');
   const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const handleJoin = async () => {
     if (!user) {
       toast.error('Please sign in to join a watch party');
       return;
     }
-
     if (!joinCode || joinCode.length !== 6) {
       toast.error('Please enter a valid 6-character party code');
       return;
     }
-
+    setBusy(true);
     try {
-      // Find the party
       const { data: party, error } = await supabase
         .from('watch_parties')
         .select('*')
@@ -894,19 +895,22 @@ export function JoinPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
 
       if (error || !party) {
         toast.error('Party not found or has ended');
+        setBusy(false);
         return;
       }
 
       toast.success(`Joining party for ${party.anime_title}...`);
       setOpen(false);
-      
-      // Navigate to the episode with party code
       navigate(`/watch/${party.episode_id}?party=${party.code}`);
-    } catch (error) {
-      console.error('Error finding party:', error);
+    } catch {
       toast.error('Failed to find watch party');
+    } finally {
+      setBusy(false);
     }
   };
+
+  // Render code as 6 individual cells
+  const cells = Array.from({ length: 6 }, (_, i) => joinCode[i] || '');
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -918,61 +922,143 @@ export function JoinPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <UserPlus className="h-5 w-5 text-primary" />
-            Join Watch Party
-          </DialogTitle>
-          <DialogDescription>
-            Enter the party code shared by your friend to watch anime together in sync
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <Input
-            placeholder="Enter 6-character code"
-            value={joinCode}
-            onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-            maxLength={6}
-            className="text-center text-2xl tracking-widest font-mono"
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden border border-purple-500/30 bg-card">
+        {/* Cinematic header */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/25 via-pink-500/10 to-transparent" />
+          <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full blur-3xl bg-purple-500/30 animate-pulse" />
+          <div
+            className="absolute -bottom-24 -left-16 w-64 h-64 rounded-full blur-3xl bg-pink-500/25 animate-pulse"
+            style={{ animationDelay: '0.6s' }}
           />
-          <Button onClick={handleJoin} className="w-full gap-2" disabled={joinCode.length !== 6}>
-            <Link2 className="h-4 w-4" />
-            Join Party
+
+          <DialogHeader className="relative px-6 pt-7 pb-3">
+            <div className="mx-auto relative">
+              <div className="absolute inset-0 bg-purple-500/40 blur-2xl rounded-2xl animate-pulse" />
+              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 via-fuchsia-500 to-pink-500 flex items-center justify-center shadow-2xl mx-auto rotate-3">
+                <UserPlus className="h-7 w-7 text-white drop-shadow" strokeWidth={2.5} />
+              </div>
+            </div>
+            <div className="mt-3 mx-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/15 border border-purple-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-purple-300">
+                Live Sync · Watch Together
+              </span>
+            </div>
+            <DialogTitle className="text-center text-xl sm:text-2xl font-black mt-2">
+              Join a Watch Party
+            </DialogTitle>
+            <DialogDescription className="text-center text-xs text-muted-foreground max-w-[320px] mx-auto">
+              Enter the <span className="font-bold text-foreground">6-character code</span> shared by your friend to watch in perfect sync.
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+
+        {/* Code cells display + hidden input for typing */}
+        <div className="px-6 pb-2">
+          <div className="relative">
+            <div className="grid grid-cols-6 gap-1.5">
+              {cells.map((char, i) => (
+                <div
+                  key={i}
+                  className={`aspect-square rounded-xl flex items-center justify-center font-mono font-black text-xl sm:text-2xl uppercase border-2 transition-all ${
+                    char
+                      ? 'bg-gradient-to-br from-purple-500/20 to-pink-500/15 border-purple-500/50 text-foreground shadow-md shadow-purple-500/20'
+                      : 'bg-muted/30 border-border/50 text-muted-foreground/40'
+                  } ${i === joinCode.length ? 'ring-2 ring-purple-500/60 animate-pulse' : ''}`}
+                >
+                  {char}
+                </div>
+              ))}
+            </div>
+            <Input
+              autoFocus
+              placeholder=""
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
+              maxLength={6}
+              className="absolute inset-0 opacity-0 cursor-pointer text-center"
+              aria-label="Party code"
+            />
+          </div>
+          <p className="mt-2 text-center text-[10px] text-muted-foreground">
+            Tap or type to enter the code · letters &amp; numbers only
+          </p>
+        </div>
+
+        {/* CTA */}
+        <div className="p-6 pt-3">
+          <Button
+            onClick={handleJoin}
+            disabled={joinCode.length !== 6 || busy}
+            className="w-full h-11 rounded-xl font-black text-sm text-white relative overflow-hidden group disabled:opacity-50"
+            style={{
+              background: 'linear-gradient(135deg, hsl(270, 75%, 50%) 0%, hsl(330, 75%, 55%) 100%)',
+              boxShadow: '0 0 25px hsla(280, 75%, 55%, 0.4), 0 8px 20px hsla(0, 0%, 0%, 0.4)',
+            }}
+          >
+            <span
+              className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"
+              style={{ background: 'linear-gradient(90deg, transparent, hsla(0,0%,100%,0.25), transparent)' }}
+            />
+            <Link2 className="h-4 w-4 mr-2 relative z-10" />
+            <span className="relative z-10">{busy ? 'Joining...' : 'Join Party'}</span>
           </Button>
+          <p className="mt-2 text-center text-[10px] text-muted-foreground">
+            Synced playback · live chat · emoji reactions
+          </p>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-// View Party Component - Shows joined parties
+// ─────────────────────────────────────────────────────────────────────
+// VIEW PARTY DIALOG — Premium redesign + auto-cleanup of empty parties
+// ─────────────────────────────────────────────────────────────────────
+const EMPTY_PARTY_TIMEOUT_MS = 30_000; // 30s
+
 export function ViewPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [parties, setParties] = useState<JoinedParty[]>([]);
+  const [parties, setParties] = useState<(JoinedParty & { memberCount: number; ageMs: number })[]>([]);
   const [loading, setLoading] = useState(false);
+  const [purging, setPurging] = useState(false);
 
-  useEffect(() => {
-    if (open && user) {
-      loadJoinedParties();
+  const sweepEmptyParties = useCallback(async (rows: JoinedParty[]) => {
+    // For each party, count members. If memberCount <= 1 AND age > timeout → end it.
+    const now = Date.now();
+    const enriched: (JoinedParty & { memberCount: number; ageMs: number })[] = [];
+    for (const p of rows) {
+      const { count } = await supabase
+        .from('watch_party_members')
+        .select('id', { count: 'exact', head: true })
+        .eq('party_id', p.id);
+      const memberCount = count ?? 0;
+      const ageMs = now - new Date((p as any).created_at || now).getTime();
+      const isOrphan = memberCount <= 1 && ageMs > EMPTY_PARTY_TIMEOUT_MS;
+      if (isOrphan) {
+        // Auto-close on every device
+        await supabase.from('watch_parties').update({ is_active: false }).eq('id', p.id);
+        continue; // skip from list
+      }
+      enriched.push({ ...p, memberCount, ageMs });
     }
-  }, [open, user]);
+    return enriched;
+  }, []);
 
-  const loadJoinedParties = async () => {
+  const loadJoinedParties = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-
     try {
-      // Get parties user is a member of
       const { data: memberships } = await supabase
         .from('watch_party_members')
         .select('party_id')
         .eq('user_id', user.id);
 
       if (memberships && memberships.length > 0) {
-        const partyIds = memberships.map(m => m.party_id);
+        const partyIds = memberships.map((m) => m.party_id);
         const { data: partyData } = await supabase
           .from('watch_parties')
           .select('*')
@@ -980,7 +1066,8 @@ export function ViewPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
           .eq('is_active', true)
           .order('created_at', { ascending: false });
 
-        setParties((partyData || []) as JoinedParty[]);
+        const enriched = await sweepEmptyParties((partyData || []) as JoinedParty[]);
+        setParties(enriched);
       } else {
         setParties([]);
       }
@@ -989,7 +1076,16 @@ export function ViewPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, sweepEmptyParties]);
+
+  useEffect(() => {
+    if (open && user) {
+      loadJoinedParties();
+      // Periodic re-sweep every 15s while dialog open
+      const id = setInterval(loadJoinedParties, 15_000);
+      return () => clearInterval(id);
+    }
+  }, [open, user, loadJoinedParties]);
 
   const handleJoinParty = (party: JoinedParty) => {
     setOpen(false);
@@ -999,24 +1095,50 @@ export function ViewPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
   const handleEndParty = async (e: React.MouseEvent, partyId: string) => {
     e.stopPropagation();
     try {
-      const { error } = await supabase
-        .from('watch_parties')
-        .update({ is_active: false })
-        .eq('id', partyId);
-      
-      if (error) {
-        console.error('Error ending party:', error);
-        toast.error('Failed to end party');
-        return;
-      }
-      
+      const { error } = await supabase.from('watch_parties').update({ is_active: false }).eq('id', partyId);
+      if (error) throw error;
       toast.success('Party ended');
-      // Remove from local state immediately
-      setParties(prev => prev.filter(p => p.id !== partyId));
-    } catch (error) {
-      console.error('Error ending party:', error);
+      setParties((prev) => prev.filter((p) => p.id !== partyId));
+    } catch {
       toast.error('Failed to end party');
     }
+  };
+
+  // Clear ALL parties this user is involved in — across every device
+  const handleClearAll = async () => {
+    if (!user || parties.length === 0) return;
+    setPurging(true);
+    try {
+      const ids = parties.map((p) => p.id);
+      // 1) End any party I host (this hides from all members on every device)
+      const hosted = parties.filter((p) => p.host_id === user.id).map((p) => p.id);
+      if (hosted.length > 0) {
+        await supabase.from('watch_parties').update({ is_active: false }).in('id', hosted);
+      }
+      // 2) Remove my membership from non-hosted parties (clears my own device list)
+      const guestIds = ids.filter((id) => !hosted.includes(id));
+      if (guestIds.length > 0) {
+        await supabase
+          .from('watch_party_members')
+          .delete()
+          .eq('user_id', user.id)
+          .in('party_id', guestIds);
+      }
+      setParties([]);
+      toast.success('All saved parties cleared');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to clear parties');
+    } finally {
+      setPurging(false);
+    }
+  };
+
+  const fmtAge = (ms: number) => {
+    if (ms < 60_000) return 'just now';
+    if (ms < 3_600_000) return `${Math.floor(ms / 60_000)}m ago`;
+    if (ms < 86_400_000) return `${Math.floor(ms / 3_600_000)}h ago`;
+    return `${Math.floor(ms / 86_400_000)}d ago`;
   };
 
   return (
@@ -1029,68 +1151,143 @@ export function ViewPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Eye className="h-5 w-5 text-primary" />
-            Your Watch Parties
-          </DialogTitle>
-          <DialogDescription>
-            Active watch parties you've joined
-          </DialogDescription>
-        </DialogHeader>
-        <div className="py-4">
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden border border-cyan-500/30 bg-card">
+        {/* Cinematic header */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/25 via-blue-500/10 to-transparent" />
+          <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full blur-3xl bg-cyan-500/30 animate-pulse" />
+
+          <DialogHeader className="relative px-6 pt-7 pb-3">
+            <div className="mx-auto relative">
+              <div className="absolute inset-0 bg-cyan-500/40 blur-2xl rounded-2xl animate-pulse" />
+              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500 via-sky-500 to-blue-500 flex items-center justify-center shadow-2xl mx-auto -rotate-3">
+                <Eye className="h-7 w-7 text-white drop-shadow" strokeWidth={2.5} />
+              </div>
+            </div>
+            <div className="mt-3 mx-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-300">
+                Live Parties
+              </span>
+            </div>
+            <DialogTitle className="text-center text-xl sm:text-2xl font-black mt-2">
+              Your Watch Parties
+            </DialogTitle>
+            <DialogDescription className="text-center text-xs text-muted-foreground max-w-[320px] mx-auto">
+              Active rooms you've joined. Empty parties auto-close after{' '}
+              <span className="font-bold text-foreground">30 seconds</span>.
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+
+        {/* Body */}
+        <div className="px-5 pb-5">
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500" />
             </div>
           ) : parties.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>No active watch parties</p>
-              <p className="text-sm mt-1">Join or create a party to watch together!</p>
+            <div className="text-center py-10">
+              <div className="mx-auto w-14 h-14 rounded-2xl bg-muted/40 border border-border/50 flex items-center justify-center mb-3">
+                <MessageSquare className="h-6 w-6 text-muted-foreground/60" />
+              </div>
+              <p className="text-sm font-bold">No active parties</p>
+              <p className="text-xs text-muted-foreground mt-1">Join or create a party to watch together!</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {parties.map((party) => (
-                <div
-                  key={party.id}
-                  className="bg-muted/50 rounded-lg p-3 hover:bg-muted transition-colors cursor-pointer"
-                  onClick={() => handleJoinParty(party)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm bg-primary/20 text-primary px-2 py-0.5 rounded">
+            <div className="space-y-2.5">
+              {parties.map((party) => {
+                const isHost = party.host_id === user?.id;
+                const aloneAndOld =
+                  party.memberCount <= 1 &&
+                  EMPTY_PARTY_TIMEOUT_MS - party.ageMs < 15_000 &&
+                  party.ageMs < EMPTY_PARTY_TIMEOUT_MS;
+                return (
+                  <button
+                    key={party.id}
+                    onClick={() => handleJoinParty(party)}
+                    className="group relative w-full text-left rounded-xl bg-gradient-to-br from-card to-card/60 hover:from-card hover:to-card border border-border/50 hover:border-cyan-500/40 p-3 transition-all overflow-hidden"
+                  >
+                    {/* Live shine */}
+                    <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute inset-y-0 -inset-x-full bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent group-hover:translate-x-full transition-transform duration-1000" />
+                    </div>
+
+                    <div className="relative flex items-start gap-3">
+                      {/* Code badge */}
+                      <div className="shrink-0 flex flex-col items-center">
+                        <div className="px-2 py-1 rounded-lg bg-gradient-to-br from-cyan-500/25 to-blue-500/15 border border-cyan-500/40 font-mono font-black text-xs tracking-widest text-cyan-300 shadow-md shadow-cyan-500/10">
                           {party.code}
-                        </span>
-                        <span className="text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full">
+                        </div>
+                        <span className="mt-1.5 inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-emerald-400">
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          </span>
                           LIVE
                         </span>
                       </div>
-                      <p className="font-medium text-sm mt-2">{party.anime_title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Season {party.season_number} • Episode {party.episode_number}
-                      </p>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm truncate flex items-center gap-1.5">
+                          {isHost && <Crown className="h-3.5 w-3.5 text-amber-400 shrink-0" />}
+                          {party.anime_title}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          S{party.season_number} · E{party.episode_number}
+                        </p>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/50 text-[9px] font-bold text-muted-foreground">
+                            <Users className="h-2.5 w-2.5" />
+                            {party.memberCount}
+                          </span>
+                          <span className="text-[9px] text-muted-foreground/70">
+                            · {fmtAge(party.ageMs)}
+                          </span>
+                          {aloneAndOld && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-[9px] font-black text-amber-300 uppercase">
+                              auto-close soon
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="shrink-0 flex flex-col gap-1">
+                        <span className="inline-flex items-center justify-center gap-1 h-7 w-16 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 text-white text-[10px] font-black uppercase tracking-wider shadow-md shadow-cyan-500/20">
+                          <Play className="h-3 w-3" />
+                          Watch
+                        </span>
+                        <button
+                          onClick={(e) => handleEndParty(e, party.id)}
+                          className="inline-flex items-center justify-center gap-1 h-7 w-16 rounded-lg bg-destructive/15 hover:bg-destructive/25 border border-destructive/30 text-destructive text-[10px] font-black uppercase tracking-wider transition-colors"
+                        >
+                          <X className="h-3 w-3" />
+                          End
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <Button size="sm" variant="outline" className="gap-1">
-                        <Play className="h-3 w-3" />
-                        Watch
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        className="gap-1"
-                        onClick={(e) => handleEndParty(e, party.id)}
-                      >
-                        <X className="h-3 w-3" />
-                        End
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {parties.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-border/40">
+              <Button
+                variant="outline"
+                onClick={handleClearAll}
+                disabled={purging}
+                className="w-full h-9 text-[11px] font-bold border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <X className="h-3.5 w-3.5 mr-1.5" />
+                {purging ? 'Clearing...' : `Clear all ${parties.length} parties (every device)`}
+              </Button>
+              <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
+                Removes hosted parties for everyone &amp; your saved entries on all devices.
+              </p>
             </div>
           )}
         </div>
