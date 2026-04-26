@@ -767,279 +767,422 @@ export default function Upload() {
           )}
         </TabsContent>
 
-        <TabsContent value="new" className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="h-7 w-1 rounded-full bg-gradient-to-b from-primary to-pink-500" />
-            <div>
-              <h2 className="text-lg md:text-xl font-heading font-black">Add New Anime Series</h2>
-              <p className="text-[11px] text-muted-foreground">Create a series entry — episodes can be added next</p>
+        <TabsContent value="new" className="space-y-5">
+          {/* Hero header */}
+          <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-primary/15 via-pink-500/10 to-purple-500/15 p-5 md:p-6">
+            <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-primary/30 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full bg-pink-500/20 blur-3xl pointer-events-none" />
+            <div className="relative flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
+                <Film className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-xl md:text-2xl font-heading font-black tracking-tight">Add New Anime Series</h2>
+                <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                  Build a cinematic series entry. Auto-fill from MyAnimeList, then fine-tune metadata and artwork.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30">STEP 1 · Series</span>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted/50 text-muted-foreground border border-border/40">STEP 2 · Episodes</span>
+                </div>
+              </div>
             </div>
           </div>
+
           <Card className="bg-card/60 backdrop-blur-sm border-border/40 rounded-2xl overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-primary via-pink-500 to-purple-500" />
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center shadow-md">
-                  <Film className="h-4 w-4 text-white" />
-                </div>
-                Series Details
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Fill in the metadata. You can auto-fill from MyAnimeList using the title field.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmitAnime} className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Title *</Label>
-                    <Input
-                      id="title"
-                      placeholder="Anime title"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      required
-                      className="bg-muted/50"
-                    />
+            <div className="h-[3px] bg-gradient-to-r from-primary via-pink-500 to-purple-500" />
+            <CardContent className="p-5 md:p-7">
+              <form onSubmit={handleSubmitAnime} className="space-y-7">
+
+                {/* SECTION 1 — IDENTITY */}
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center">
+                      <TypeIcon className="h-3.5 w-3.5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold tracking-tight">Identity</h3>
+                      <p className="text-[10px] text-muted-foreground">Title, year & synopsis</p>
+                    </div>
+                    <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
                   </div>
 
-                   <div className="space-y-2">
-                     <Label htmlFor="releaseYear">
-                       {status === 'upcoming' ? 'Release Date' : 'Release Year'}
-                     </Label>
-                     {status === 'upcoming' ? (
-                       <Popover>
-                         <PopoverTrigger asChild>
-                           <Button
-                             variant="outline"
-                             className="w-full justify-start text-left font-normal bg-muted/50"
-                           >
-                             {releaseDate ? format(releaseDate, 'PPP') : 'Pick a date'}
-                           </Button>
-                         </PopoverTrigger>
-                         <PopoverContent className="w-auto p-0" align="start">
-                           <Calendar
-                             mode="single"
-                             selected={releaseDate}
-                             onSelect={setReleaseDate}
-                             disabled={(date) =>
-                               date < new Date() || date.getFullYear() > 2037
-                             }
-                             initialFocus
-                             className="p-3 pointer-events-auto"
-                           />
-                         </PopoverContent>
-                       </Popover>
-                     ) : (
-                       <Input
-                         id="releaseYear"
-                         type="number"
-                         placeholder="2024"
-                         value={releaseYear}
-                         onChange={(e) => setReleaseYear(e.target.value)}
-                         min="1900"
-                         max={new Date().getFullYear()}
-                         className="bg-muted/50"
-                       />
-                     )}
-                   </div>
-                </div>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="md:col-span-2 space-y-1.5">
+                      <Label htmlFor="title" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Title <span className="text-primary">*</span></Label>
+                      <Input
+                        id="title"
+                        placeholder="e.g. Solo Leveling"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        required
+                        className="h-11 bg-muted/40 border-border/50 focus-visible:border-primary/60 focus-visible:ring-primary/20"
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="A brief description of the anime..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="min-h-[100px] bg-muted/50"
-                  />
-                </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="releaseYear" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        {status === 'upcoming' ? 'Release Date' : 'Release Year'}
+                      </Label>
+                      {status === 'upcoming' ? (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="h-11 w-full justify-start text-left font-normal bg-muted/40 border-border/50"
+                            >
+                              <CalendarClock className="h-4 w-4 mr-2 text-primary" />
+                              {releaseDate ? format(releaseDate, 'PPP') : 'Pick a date'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={releaseDate}
+                              onSelect={setReleaseDate}
+                              disabled={(date) => date < new Date() || date.getFullYear() > 2037}
+                              initialFocus
+                              className="p-3 pointer-events-auto"
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      ) : (
+                        <Input
+                          id="releaseYear"
+                          type="number"
+                          placeholder="2024"
+                          value={releaseYear}
+                          onChange={(e) => setReleaseYear(e.target.value)}
+                          min="1900"
+                          max={new Date().getFullYear()}
+                          className="h-11 bg-muted/40 border-border/50 focus-visible:border-primary/60 focus-visible:ring-primary/20"
+                        />
+                      )}
+                    </div>
+                  </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <FileUploadInput
-                    label="Cover Image"
-                    accept="image"
-                    value={coverImage}
-                    onChange={setCoverImage}
-                    folder="covers"
-                    placeholder="https://example.com/cover.jpg"
-                  />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="description" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Synopsis</Label>
+                    <Textarea
+                      id="description"
+                      placeholder="A brief, spoiler-free description that hooks the viewer…"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="min-h-[110px] bg-muted/40 border-border/50 focus-visible:border-primary/60 focus-visible:ring-primary/20 resize-none"
+                    />
+                    <p className="text-[10px] text-muted-foreground/80 flex items-center gap-1">
+                      <Info className="h-3 w-3" /> 1–3 short sentences work best for hero cards.
+                    </p>
+                  </div>
+                </section>
 
-                  <FileUploadInput
-                    label="Banner Image"
-                    accept="image"
-                    value={bannerImage}
-                    onChange={setBannerImage}
-                    folder="banners"
-                    placeholder="https://example.com/banner.jpg"
-                  />
-                </div>
+                {/* SECTION 2 — ARTWORK */}
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-pink-500/15 border border-pink-500/25 flex items-center justify-center">
+                      <ImageIcon className="h-3.5 w-3.5 text-pink-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold tracking-tight">Artwork</h3>
+                      <p className="text-[10px] text-muted-foreground">Cover (2:3) & Banner (16:9)</p>
+                    </div>
+                    <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="trailerUrl">Trailer URL (Optional)</Label>
-                  <Input
-                    id="trailerUrl"
-                    placeholder="https://youtube.com/watch?v=... or direct video URL"
-                    value={trailerUrl}
-                    onChange={(e) => setTrailerUrl(e.target.value)}
-                    className="bg-muted/50"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Add a YouTube link or direct video URL for the official trailer
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="rounded-xl border border-border/40 bg-muted/20 p-3">
+                      <FileUploadInput
+                        label="Cover Image"
+                        accept="image"
+                        value={coverImage}
+                        onChange={setCoverImage}
+                        folder="covers"
+                        placeholder="https://example.com/cover.jpg"
+                      />
+                    </div>
+                    <div className="rounded-xl border border-border/40 bg-muted/20 p-3">
+                      <FileUploadInput
+                        label="Banner Image"
+                        accept="image"
+                        value={bannerImage}
+                        onChange={setBannerImage}
+                        folder="banners"
+                        placeholder="https://example.com/banner.jpg"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="trailerUrl" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Youtube className="h-3.5 w-3.5 text-red-500" /> Trailer URL <span className="text-muted-foreground/60 normal-case font-normal">(optional)</span>
+                    </Label>
+                    <Input
+                      id="trailerUrl"
+                      placeholder="https://youtube.com/watch?v=…  or direct video URL"
+                      value={trailerUrl}
+                      onChange={(e) => setTrailerUrl(e.target.value)}
+                      className="h-11 bg-muted/40 border-border/50 focus-visible:border-primary/60 focus-visible:ring-primary/20"
+                    />
+                  </div>
+                </section>
+
+                {/* SECTION 3 — METADATA */}
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
+                      <Settings2 className="h-3.5 w-3.5 text-amber-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold tracking-tight">Metadata</h3>
+                      <p className="text-[10px] text-muted-foreground">Type, status, studio & rating</p>
+                    </div>
+                    <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
+                  </div>
+
+                  {/* Auto-fill banner — premium */}
+                  <div className="relative overflow-hidden rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent p-3.5">
+                    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-amber-500/15 blur-2xl pointer-events-none" />
+                    <div className="relative flex items-center justify-between gap-3 flex-wrap">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-md shadow-amber-500/30 shrink-0">
+                          <Sparkles className="h-4 w-4 text-white" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-amber-400">Auto-fill from MyAnimeList</p>
+                          <p className="text-[11px] text-muted-foreground">Pull studio, episodes, source & rating from the title.</p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleFetchMetadata}
+                        disabled={isFetchingMeta}
+                        className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border-0 shadow-md shadow-amber-500/20 gap-1.5"
+                      >
+                        <Wrench className="h-3.5 w-3.5" />
+                        {isFetchingMeta ? 'Fetching…' : 'Fetch metadata'}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</Label>
+                      <Select value={type} onValueChange={setType}>
+                        <SelectTrigger className="h-11 bg-muted/40 border-border/50">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="series">TV Series</SelectItem>
+                          <SelectItem value="movie">Movie</SelectItem>
+                          <SelectItem value="ova">OVA</SelectItem>
+                          <SelectItem value="special">Special</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</Label>
+                      <Select value={status} onValueChange={setStatus}>
+                        <SelectTrigger className="h-11 bg-muted/40 border-border/50">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ongoing">Ongoing</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="upcoming">Upcoming</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="studio" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Studio</Label>
+                      <Input
+                        id="studio"
+                        placeholder="e.g. MAPPA, Ufotable"
+                        value={studio}
+                        onChange={(e) => setStudio(e.target.value)}
+                        className="h-11 bg-muted/40 border-border/50 focus-visible:border-primary/60 focus-visible:ring-primary/20"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="totalEpisodes" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Episodes</Label>
+                      <Input
+                        id="totalEpisodes"
+                        type="number"
+                        placeholder="e.g. 12"
+                        value={totalEpisodes}
+                        onChange={(e) => setTotalEpisodes(e.target.value)}
+                        min="1"
+                        className="h-11 bg-muted/40 border-border/50 focus-visible:border-primary/60 focus-visible:ring-primary/20"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Source Material</Label>
+                      <Select value={sourceMaterial} onValueChange={setSourceMaterial}>
+                        <SelectTrigger className="h-11 bg-muted/40 border-border/50">
+                          <SelectValue placeholder="Select source" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Manga">Manga</SelectItem>
+                          <SelectItem value="Light Novel">Light Novel</SelectItem>
+                          <SelectItem value="Web Novel">Web Novel</SelectItem>
+                          <SelectItem value="Manhwa">Manhwa</SelectItem>
+                          <SelectItem value="Original">Original</SelectItem>
+                          <SelectItem value="Game">Game</SelectItem>
+                          <SelectItem value="Visual Novel">Visual Novel</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Content Rating</Label>
+                      <Select value={contentRating} onValueChange={setContentRating}>
+                        <SelectTrigger className="h-11 bg-muted/40 border-border/50">
+                          <SelectValue placeholder="Select rating" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="G">G – All Ages</SelectItem>
+                          <SelectItem value="PG">PG – Children</SelectItem>
+                          <SelectItem value="PG-13">PG-13 – Teens</SelectItem>
+                          <SelectItem value="R">R – 17+</SelectItem>
+                          <SelectItem value="R+">R+ – Mild Nudity</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </section>
+
+                {/* SECTION 4 — GENRES */}
+                <section className="space-y-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-purple-500/15 border border-purple-500/25 flex items-center justify-center">
+                      <Tag className="h-3.5 w-3.5 text-purple-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold tracking-tight">Genres & Tags</h3>
+                      <p className="text-[10px] text-muted-foreground">
+                        {selectedGenres.length} selected
+                      </p>
+                    </div>
+                    <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
+                  </div>
+                  <div className="rounded-xl border border-border/40 bg-muted/20 p-3.5">
+                    <div className="flex flex-wrap gap-2">
+                      {genres.map((genre) => {
+                        const active = selectedGenres.includes(genre);
+                        return (
+                          <button
+                            key={genre}
+                            type="button"
+                            onClick={() => toggleGenre(genre)}
+                            className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-all ${
+                              active
+                                ? 'bg-gradient-to-r from-primary to-pink-500 text-white border border-primary/40 shadow-md shadow-primary/20 scale-105'
+                                : 'bg-muted/60 text-muted-foreground border border-border/50 hover:border-primary/40 hover:text-foreground'
+                            }`}
+                          >
+                            {active && '✓ '}{genre}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </section>
+
+                {/* SECTION 5 — DISTRIBUTION */}
+                <section className="space-y-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center">
+                      <Layers className="h-3.5 w-3.5 text-emerald-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold tracking-tight">Distribution</h3>
+                      <p className="text-[10px] text-muted-foreground">Pin to special collections</p>
+                    </div>
+                    <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <label
+                      htmlFor="is_crunchyroll"
+                      className={`group flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
+                        isCrunchyroll
+                          ? 'border-orange-500/50 bg-orange-500/10 shadow-md shadow-orange-500/10'
+                          : 'border-border/40 bg-muted/20 hover:border-orange-500/30'
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-all ${
+                        isCrunchyroll ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow' : 'bg-muted/60 text-muted-foreground'
+                      }`}>
+                        <Sparkles className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold">Add to Crunchy Tab</p>
+                        <p className="text-[10px] text-muted-foreground">Show in the Crunchyroll collection</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        id="is_crunchyroll"
+                        checked={isCrunchyroll}
+                        onChange={(e) => setIsCrunchyroll(e.target.checked)}
+                        className="sr-only"
+                      />
+                      {isCrunchyroll && <CheckCircle2 className="h-5 w-5 text-orange-400 shrink-0" />}
+                    </label>
+
+                    <label
+                      htmlFor="is_muse"
+                      className={`group flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
+                        isMuse
+                          ? 'border-cyan-500/50 bg-cyan-500/10 shadow-md shadow-cyan-500/10'
+                          : 'border-border/40 bg-muted/20 hover:border-cyan-500/30'
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-all ${
+                        isMuse ? 'bg-gradient-to-br from-cyan-500 to-blue-500 text-white shadow' : 'bg-muted/60 text-muted-foreground'
+                      }`}>
+                        <Tv className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold">Add to MUSE</p>
+                        <p className="text-[10px] text-muted-foreground">Surface on the MuseIN listing page</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        id="is_muse"
+                        checked={isMuse}
+                        onChange={(e) => setIsMuse(e.target.checked)}
+                        className="sr-only"
+                      />
+                      {isMuse && <CheckCircle2 className="h-5 w-5 text-cyan-400 shrink-0" />}
+                    </label>
+                  </div>
+                </section>
+
+                {/* SUBMIT */}
+                <div className="sticky bottom-0 -mx-5 md:-mx-7 -mb-5 md:-mb-7 px-5 md:px-7 py-4 bg-gradient-to-t from-card via-card/95 to-card/80 backdrop-blur-md border-t border-border/40 mt-2">
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full h-12 text-sm font-bold bg-gradient-to-r from-primary via-pink-500 to-purple-500 hover:opacity-95 text-white shadow-lg shadow-primary/30 border-0 gap-2"
+                  >
+                    {isSubmitting ? (
+                      <>Creating…</>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4" /> Create Anime & Continue to Episodes
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground/70 text-center mt-2">
+                    Next, you'll be able to add episodes, video files & subtitles.
                   </p>
                 </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label>Type</Label>
-                    <Select value={type} onValueChange={setType}>
-                      <SelectTrigger className="bg-muted/50">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="series">TV Series</SelectItem>
-                        <SelectItem value="movie">Movie</SelectItem>
-                        <SelectItem value="ova">OVA</SelectItem>
-                        <SelectItem value="special">Special</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Status</Label>
-                    <Select value={status} onValueChange={setStatus}>
-                      <SelectTrigger className="bg-muted/50">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ongoing">Ongoing</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="upcoming">Upcoming</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Auto-fill from MyAnimeList (Jikan) */}
-                <div className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-medium text-amber-500">Auto-fill from MyAnimeList</p>
-                    <p className="text-xs text-muted-foreground">Fetches studio, episodes, source & rating using the title above.</p>
-                  </div>
-                  <Button type="button" variant="outline" size="sm" onClick={handleFetchMetadata} disabled={isFetchingMeta} className="border-amber-500/40 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400 gap-1.5">
-                    <Wrench className="h-3.5 w-3.5" />
-                    {isFetchingMeta ? 'Fetching…' : 'Fetch metadata'}
-                  </Button>
-                </div>
-
-                {/* Richer metadata for hero detail panel */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="studio">Studio</Label>
-                    <Input
-                      id="studio"
-                      placeholder="e.g. MAPPA, Ufotable"
-                      value={studio}
-                      onChange={(e) => setStudio(e.target.value)}
-                      className="bg-muted/50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="totalEpisodes">Total Episodes</Label>
-                    <Input
-                      id="totalEpisodes"
-                      type="number"
-                      placeholder="e.g. 12"
-                      value={totalEpisodes}
-                      onChange={(e) => setTotalEpisodes(e.target.value)}
-                      min="1"
-                      className="bg-muted/50"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label>Source Material</Label>
-                    <Select value={sourceMaterial} onValueChange={setSourceMaterial}>
-                      <SelectTrigger className="bg-muted/50">
-                        <SelectValue placeholder="Select source" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Manga">Manga</SelectItem>
-                        <SelectItem value="Light Novel">Light Novel</SelectItem>
-                        <SelectItem value="Web Novel">Web Novel</SelectItem>
-                        <SelectItem value="Manhwa">Manhwa</SelectItem>
-                        <SelectItem value="Original">Original</SelectItem>
-                        <SelectItem value="Game">Game</SelectItem>
-                        <SelectItem value="Visual Novel">Visual Novel</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Content Rating</Label>
-                    <Select value={contentRating} onValueChange={setContentRating}>
-                      <SelectTrigger className="bg-muted/50">
-                        <SelectValue placeholder="Select rating" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="G">G - All Ages</SelectItem>
-                        <SelectItem value="PG">PG - Children</SelectItem>
-                        <SelectItem value="PG-13">PG-13 - Teens</SelectItem>
-                        <SelectItem value="R">R - 17+</SelectItem>
-                        <SelectItem value="R+">R+ - Mild Nudity</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Genres</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {genres.map((genre) => (
-                      <Button
-                        key={genre}
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => toggleGenre(genre)}
-                        className={selectedGenres.includes(genre) ? 'bg-primary text-primary-foreground' : ''}
-                      >
-                        {genre}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 p-4 rounded-lg border border-border bg-muted/30">
-                  <input
-                    type="checkbox"
-                    id="is_crunchyroll"
-                    checked={isCrunchyroll}
-                    onChange={(e) => setIsCrunchyroll(e.target.checked)}
-                    className="h-4 w-4 rounded border-primary text-primary focus:ring-primary"
-                  />
-                  <Label htmlFor="is_crunchyroll" className="cursor-pointer">
-                    Add to Crunchy Tab
-                  </Label>
-                </div>
-
-                <div className="flex items-center gap-3 p-4 rounded-lg border border-border bg-muted/30">
-                  <input
-                    type="checkbox"
-                    id="is_muse"
-                    checked={isMuse}
-                    onChange={(e) => setIsMuse(e.target.checked)}
-                    className="h-4 w-4 rounded border-primary text-primary focus:ring-primary"
-                  />
-                  <Label htmlFor="is_muse" className="cursor-pointer">
-                    Add to MUSE
-                  </Label>
-                </div>
-
-                <Button type="submit" disabled={isSubmitting} className="anime-button">
-                  {isSubmitting ? 'Creating...' : 'Create Anime & Add Episodes'}
-                </Button>
               </form>
             </CardContent>
           </Card>
