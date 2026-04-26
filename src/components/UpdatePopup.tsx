@@ -20,12 +20,27 @@ interface VersionGroup {
   items: ChangelogItem[];
 }
 
-const APP_VERSION = 'v22.1';
+const APP_VERSION = 'v23';
 
 const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'v22.1',
+    version: 'v23',
     date: 'Latest',
+    highlight: 'A site-wide polish update — H-DUB tags everywhere, smarter mobile popups, and a refreshed Welcome experience for new fans.',
+    items: [
+      { icon: '🇮🇳', badge: 'NEW', title: 'H-DUB Tag Everywhere', desc: 'The amber H-DUB badge now appears across every home row (Continue Watching, Recommended, Latest Series & Movies, Recently Completed), the Browse grid, search suggestions, the Watch List, and detail pages.' },
+      { icon: '📱', badge: 'FIX', title: 'Mobile Upcoming Popup', desc: 'Tapping an upcoming title on mobile opens a properly redesigned popup with the live countdown — no more stuck tab behavior.' },
+      { icon: '🎉', badge: 'IMPROVED', title: 'Welcome Popup Refresh', desc: 'New cinematic intro popup with animated blur orbs, feature pills (4K, Hindi DUB, Offline) and a polished CTA.' },
+      { icon: '⏳', badge: 'IMPROVED', title: 'Token Expiry Bar', desc: 'Smarter urgency tiers (emerald → amber → red) with a glowing countdown chip and full expiry timestamp.' },
+      { icon: '🎉', badge: 'IMPROVED', title: 'Watch Party Cleanup', desc: 'Empty parties now auto-end after 30 seconds, and you can clear all saved parties from every device with one tap.' },
+      { icon: '🏠', badge: 'NEW', title: 'Back to Home in Token Popup', desc: 'The "token expired" popup in the player now has a Back to Home button so you can leave the watch page in one tap.' },
+      { icon: '⬆️', badge: 'IMPROVED', title: 'Upload Studio Hero', desc: 'Creator Studio now opens with live status pips, four gradient stat tiles, and a recent activity log.' },
+      { icon: '🧭', badge: 'IMPROVED', title: 'Mobile Navigation Sheet', desc: 'Grouped links, active route highlighting, and a dedicated premium CTA card right inside the mobile menu.' },
+    ],
+  },
+  {
+    version: 'v22.1',
+    date: 'Previous',
     highlight: 'A focused maintenance update — sharper player behavior, smarter server selection, and a polished Report &amp; Telegram experience.',
     items: [
       { icon: '🎬', badge: 'FIX', title: 'Embed Server Guardrails', desc: 'Picking "Embed" on a file-uploaded episode (or another server on an embed-only episode) now shows a centered modal instead of collapsing inside the player.' },
@@ -40,7 +55,7 @@ const VERSION_GROUPS: VersionGroup[] = [
   },
   {
     version: 'v22',
-    date: 'Previous',
+    date: 'Older',
     highlight: 'Cinematic detail pages, smoother season switching, and a 3-second auto-loop hero with direction-aware transitions.',
     items: [
       { icon: '🎬', badge: 'IMPROVED', title: 'Hero Banner Auto-Loop', desc: 'New 3-second loop with cinematic blur, scale, and direction-aware slide animations on every change.' },

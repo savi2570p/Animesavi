@@ -166,7 +166,7 @@ export function LatestMovies() {
                     Movie
                   </span>
 
-                  {/* Top-right NEW + 4K stack */}
+                  {/* Top-right NEW + 4K + H-DUB stack */}
                   <div className="absolute top-2 right-2 z-[5] flex flex-col gap-1 items-end">
                     {isNew(movie.created_at) && (
                       <span className="badge-glass-new animate-pulse">NEW</span>
@@ -174,6 +174,7 @@ export function LatestMovies() {
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
                       4K
                     </span>
+                    <span className="badge-glass-hdub">H-DUB</span>
                   </div>
 
                   {movie.status === 'upcoming' && (

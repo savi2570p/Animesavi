@@ -123,6 +123,8 @@ export default function WatchList() {
                   <div className="relative aspect-[3/4] overflow-hidden">
                     <img src={img} alt={item.animeTitle} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                    {/* Top-right H-DUB */}
+                    <span className="absolute top-2 right-2 badge-glass-hdub">H-DUB</span>
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="p-3 rounded-full bg-primary/90 shadow-lg">
                         <Play className="w-5 h-5 text-primary-foreground fill-current" />

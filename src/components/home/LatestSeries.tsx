@@ -214,7 +214,7 @@ export function LatestSeries() {
                   {/* Hover overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-                  {/* Top-right: NEW + 4K stack */}
+                  {/* Top-right: NEW + 4K + H-DUB stack */}
                   <div className="absolute top-2 right-2 flex flex-col gap-1 items-end pointer-events-none">
                     {isNew(anime) && (
                       <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded bg-primary text-primary-foreground shadow-md animate-pulse">
@@ -224,6 +224,7 @@ export function LatestSeries() {
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
                       4K
                     </span>
+                    <span className="badge-glass-hdub">H-DUB</span>
                   </div>
 
                   {/* Top-left: status */}
