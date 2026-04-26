@@ -34,6 +34,13 @@ import {
   Search as SearchIcon,
   Activity,
   ListVideo,
+  Image as ImageIcon,
+  Type as TypeIcon,
+  Tag,
+  Settings2,
+  CheckCircle2,
+  Youtube,
+  Info,
 } from 'lucide-react';
 import { UpcomingCountdownDialog } from '@/components/home/UpcomingCountdownDialog';
 
