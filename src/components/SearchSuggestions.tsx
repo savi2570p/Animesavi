@@ -89,7 +89,10 @@ export function SearchSuggestions({ query, isVisible, onSelect, className }: Sea
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground line-clamp-1">{anime.title}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-medium text-foreground line-clamp-1">{anime.title}</p>
+                  <span className="badge-glass-hdub shrink-0">H-DUB</span>
+                </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   {anime.type && (
                     <span className="text-[10px] font-semibold uppercase text-primary">{anime.type}</span>

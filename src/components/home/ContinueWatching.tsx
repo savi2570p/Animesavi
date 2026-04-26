@@ -263,9 +263,12 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
                             </span>
                           )}
                         </div>
-                        <span className="px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-semibold text-white tabular-nums">
-                          {Math.round(progressPct)}%
-                        </span>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-semibold text-white tabular-nums">
+                            {Math.round(progressPct)}%
+                          </span>
+                          <span className="badge-glass-hdub">H-DUB</span>
+                        </div>
                       </div>
 
                       {/* Center play hint — desktop hover only, never blocks taps */}

@@ -214,10 +214,13 @@ export function RecommendedAnime() {
                     </span>
                   )}
 
-                  {/* Top-right 4K */}
-                  <span className="absolute top-2 right-2 z-[5] text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
-                    4K
-                  </span>
+                  {/* Top-right: 4K + H-DUB */}
+                  <div className="absolute top-2 right-2 z-[5] flex flex-col gap-1 items-end pointer-events-none">
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
+                      4K
+                    </span>
+                    <span className="badge-glass-hdub">H-DUB</span>
+                  </div>
 
                   {/* Crown */}
                   <div className="pointer-events-none">

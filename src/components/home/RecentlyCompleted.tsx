@@ -181,6 +181,9 @@ export function RecentlyCompleted() {
                     COMPLETE
                   </div>
 
+                  {/* Top-right H-DUB */}
+                  <span className="absolute top-2 right-2 badge-glass-hdub">H-DUB</span>
+
                   {/* Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
