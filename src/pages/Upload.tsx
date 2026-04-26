@@ -1189,148 +1189,166 @@ export default function Upload() {
         </TabsContent>
 
         {/* Add New Movie Tab - Only Movie, Thumbnail, Banner, Description */}
-        <TabsContent value="new-movie" className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="h-7 w-1 rounded-full bg-gradient-to-b from-rose-400 to-pink-500" />
-            <div>
-              <h2 className="text-lg md:text-xl font-heading font-black">Add New Movie</h2>
-              <p className="text-[11px] text-muted-foreground">Single feature film — no seasons or episodes required</p>
+        <TabsContent value="new-movie" className="space-y-5 pb-24">
+          {/* Hero header */}
+          <div className="relative overflow-hidden rounded-2xl border border-rose-500/20 bg-gradient-to-br from-rose-500/10 via-pink-500/5 to-violet-500/10 p-5">
+            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-rose-500/20 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-violet-500/20 blur-3xl pointer-events-none" />
+            <div className="relative flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500 via-pink-500 to-violet-500 flex items-center justify-center shadow-xl shadow-rose-500/40 ring-1 ring-white/20">
+                <Film className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="text-xl md:text-2xl font-heading font-black bg-gradient-to-r from-rose-400 via-pink-400 to-violet-400 bg-clip-text text-transparent">Add New Movie</h2>
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 uppercase tracking-wider">Cinematic</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Single feature film — no seasons or episodes required. One-shot upload.</p>
+                <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-rose-300/80">
+                  <Sparkles className="h-3 w-3" /> One step · Auto-published
+                </div>
+              </div>
             </div>
           </div>
+
           <Card className="bg-card/60 backdrop-blur-sm border-border/40 rounded-2xl overflow-hidden">
             <div className="h-1 bg-gradient-to-r from-rose-500 via-pink-500 to-violet-500" />
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center shadow-md">
-                  <Film className="h-4 w-4 text-white" />
-                </div>
-                Movie Details
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Cover, banner, video file and metadata for the standalone release.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
+            <CardContent className="p-4 md:p-6">
+              <form className="space-y-7">
+                {/* SECTION 1 — Identity */}
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-center">
+                      <Film className="h-3.5 w-3.5 text-rose-400" />
+                    </div>
+                    <h3 className="text-sm font-bold tracking-tight">Identity</h3>
+                    <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
+                  </div>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="movie-title" className="text-xs font-semibold">Movie Title *</Label>
+                      <Input
+                        id="movie-title"
+                        placeholder="e.g. Your Name"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        required
+                        className="bg-muted/50 h-10"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="movie-releaseYear" className="text-xs font-semibold">
+                        {status === 'upcoming' ? 'Release Date' : 'Release Year'}
+                      </Label>
+                      {status === 'upcoming' ? (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full justify-start text-left font-normal bg-muted/50 h-10">
+                              {releaseDate ? format(releaseDate, 'PPP') : 'Pick a date'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar mode="single" selected={releaseDate} onSelect={setReleaseDate} disabled={(date) => date < new Date() || date.getFullYear() > 2037} initialFocus className="p-3 pointer-events-auto" />
+                          </PopoverContent>
+                        </Popover>
+                      ) : (
+                        <Input id="movie-releaseYear" type="number" placeholder="2024" value={releaseYear} onChange={(e) => setReleaseYear(e.target.value)} min="1900" max={2099} className="bg-muted/50 h-10" />
+                      )}
+                    </div>
+                  </div>
                   <div className="space-y-2">
-                    <Label htmlFor="movie-title">Movie Title *</Label>
-                    <Input
-                      id="movie-title"
-                      placeholder="Movie title"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      required
-                      className="bg-muted/50"
+                    <Label htmlFor="movie-description" className="text-xs font-semibold">Synopsis</Label>
+                    <Textarea
+                      id="movie-description"
+                      placeholder="A brief description of the movie..."
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="min-h-[100px] bg-muted/50 resize-none"
                     />
                   </div>
+                </section>
 
-                   <div className="space-y-2">
-                     <Label htmlFor="movie-releaseYear">
-                       {status === 'upcoming' ? 'Release Date' : 'Release Year'}
-                     </Label>
-                     {status === 'upcoming' ? (
-                       <Popover>
-                         <PopoverTrigger asChild>
-                           <Button
-                             variant="outline"
-                             className="w-full justify-start text-left font-normal bg-muted/50"
-                           >
-                             {releaseDate ? format(releaseDate, 'PPP') : 'Pick a date'}
-                           </Button>
-                         </PopoverTrigger>
-                         <PopoverContent className="w-auto p-0" align="start">
-                           <Calendar
-                             mode="single"
-                             selected={releaseDate}
-                             onSelect={setReleaseDate}
-                             disabled={(date) =>
-                               date < new Date() || date.getFullYear() > 2037
-                             }
-                             initialFocus
-                             className="p-3 pointer-events-auto"
-                           />
-                         </PopoverContent>
-                       </Popover>
-                     ) : (
-                       <Input
-                         id="movie-releaseYear"
-                         type="number"
-                         placeholder="2024"
-                         value={releaseYear}
-                         onChange={(e) => setReleaseYear(e.target.value)}
-                         min="1900"
-                         max={2099}
-                         className="bg-muted/50"
-                       />
-                     )}
-                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="movie-description">Description</Label>
-                  <Textarea
-                    id="movie-description"
-                    placeholder="A brief description of the movie..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="min-h-[100px] bg-muted/50"
-                  />
-                </div>
-
-                {/* Movie Video Upload */}
-                <FileUploadInput
-                  label="Movie Video *"
-                  accept="video"
-                  value={episodeVideoUrl}
-                  onChange={setEpisodeVideoUrl}
-                  folder="movies"
-                  placeholder="https://example.com/movie.mp4"
-                  contentType="movie"
-                />
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <FileUploadInput
-                    label="Cover Image (Thumbnail)"
-                    accept="image"
-                    value={coverImage}
-                    onChange={setCoverImage}
-                    folder="covers"
-                    placeholder="https://example.com/cover.jpg"
-                  />
-
-                  <FileUploadInput
-                    label="Banner Image"
-                    accept="image"
-                    value={bannerImage}
-                    onChange={setBannerImage}
-                    folder="banners"
-                    placeholder="https://example.com/banner.jpg"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Genres</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {genres.map((genre) => (
-                      <Button
-                        key={genre}
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => toggleGenre(genre)}
-                        className={selectedGenres.includes(genre) ? 'bg-primary text-primary-foreground' : ''}
-                      >
-                        {genre}
-                      </Button>
-                    ))}
+                {/* SECTION 2 — Video File */}
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-violet-500/15 border border-violet-500/30 flex items-center justify-center">
+                      <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+                    </div>
+                    <h3 className="text-sm font-bold tracking-tight">Video File</h3>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 uppercase tracking-wider">Required</span>
+                    <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
                   </div>
-                </div>
+                  <FileUploadInput
+                    label="Movie Video *"
+                    accept="video"
+                    value={episodeVideoUrl}
+                    onChange={setEpisodeVideoUrl}
+                    folder="movies"
+                    placeholder="https://example.com/movie.mp4"
+                    contentType="movie"
+                  />
+                </section>
 
-                <Button 
-                  type="button" 
-                  disabled={isSubmitting} 
-                  className="anime-button"
+                {/* SECTION 3 — Artwork */}
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-pink-500/15 border border-pink-500/30 flex items-center justify-center">
+                      <ImageIcon className="h-3.5 w-3.5 text-pink-400" />
+                    </div>
+                    <h3 className="text-sm font-bold tracking-tight">Artwork</h3>
+                    <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <FileUploadInput label="Cover (Poster)" accept="image" value={coverImage} onChange={setCoverImage} folder="covers" placeholder="https://example.com/cover.jpg" />
+                    <FileUploadInput label="Banner (Wide)" accept="image" value={bannerImage} onChange={setBannerImage} folder="banners" placeholder="https://example.com/banner.jpg" />
+                  </div>
+                </section>
+
+                {/* SECTION 4 — Genres */}
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-fuchsia-500/15 border border-fuchsia-500/30 flex items-center justify-center">
+                      <Sparkles className="h-3.5 w-3.5 text-fuchsia-400" />
+                    </div>
+                    <h3 className="text-sm font-bold tracking-tight">Genres</h3>
+                    <span className="text-[10px] text-muted-foreground font-medium">{selectedGenres.length} selected</span>
+                    <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {genres.map((genre) => {
+                      const active = selectedGenres.includes(genre);
+                      return (
+                        <button
+                          key={genre}
+                          type="button"
+                          onClick={() => toggleGenre(genre)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                            active
+                              ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white border-transparent shadow-md shadow-rose-500/30 scale-105'
+                              : 'bg-muted/40 border-border/40 text-muted-foreground hover:bg-muted hover:text-foreground hover:border-border'
+                          }`}
+                        >
+                          {active && '✓ '}{genre}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Sticky CTA */}
+          <div className="sticky bottom-0 -mx-2 px-2 pt-3 pb-3 bg-gradient-to-t from-card via-card/95 to-card/0 backdrop-blur-md z-10">
+            <div className="flex items-center gap-3 p-3 rounded-2xl border border-rose-500/20 bg-card/80 backdrop-blur-md shadow-xl">
+              <div className="hidden sm:flex flex-col flex-1 min-w-0">
+                <span className="text-xs font-bold truncate">{title || 'Untitled Movie'}</span>
+                <span className="text-[10px] text-muted-foreground">{selectedGenres.length} genres · {episodeVideoUrl ? '✓ Video ready' : 'No video'}</span>
+              </div>
+              <Button
+                type="button"
+                disabled={isSubmitting}
+                className="flex-1 sm:flex-none bg-gradient-to-r from-rose-500 via-pink-500 to-violet-500 text-white font-bold shadow-lg shadow-rose-500/30 hover:opacity-90 h-11 px-6"
                   onClick={async (e) => {
                     e.preventDefault();
                     if (!title.trim()) {
@@ -1410,11 +1428,10 @@ export default function Upload() {
                     setIsSubmitting(false);
                   }}
                 >
-                  {isSubmitting ? 'Creating Movie...' : 'Create Movie'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+                  {isSubmitting ? 'Creating Movie...' : '🎬 Create Movie'}
+              </Button>
+            </div>
+          </div>
         </TabsContent>
 
 

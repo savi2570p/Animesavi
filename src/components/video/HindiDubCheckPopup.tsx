@@ -66,8 +66,8 @@ export function HindiDubCheckPopup({ audioLanguage, episodeId, onContinueJapanes
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-      <div className="relative w-full max-w-md mx-4 rounded-2xl border border-red-500/30 bg-gradient-to-b from-zinc-900/95 to-black/95 shadow-2xl shadow-red-900/20 p-8 text-center space-y-5 animate-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-300 px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 sm:pb-3">
+      <div className="relative w-full max-w-md mx-auto rounded-2xl sm:rounded-2xl border border-red-500/30 bg-gradient-to-b from-zinc-900/95 to-black/95 shadow-2xl shadow-red-900/20 p-6 sm:p-8 text-center space-y-5 animate-in zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-300 max-h-[calc(100vh-2rem)] overflow-y-auto">
         {/* Close button */}
         <button
           onClick={handleNoThanks}
