@@ -1327,7 +1327,7 @@ export default function Upload() {
                           onClick={() => toggleGenre(genre)}
                           className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
                             active
-                              ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white border-transparent shadow-md shadow-rose-500/30 scale-105'
+                              ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-transparent shadow-md shadow-purple-600/30 scale-105'
                               : 'bg-muted/40 border-border/40 text-muted-foreground hover:bg-muted hover:text-foreground hover:border-border'
                           }`}
                         >
