@@ -1343,15 +1343,28 @@ export default function Upload() {
 
           {/* Sticky CTA */}
           <div className="sticky bottom-0 -mx-2 px-2 pt-3 pb-3 bg-gradient-to-t from-card via-card/95 to-card/0 backdrop-blur-md z-10">
-            <div className="flex items-center gap-3 p-3 rounded-2xl border border-rose-500/20 bg-card/80 backdrop-blur-md shadow-xl">
+            <div className="flex items-center gap-3 p-3 rounded-2xl border border-purple-500/25 bg-card/80 backdrop-blur-md shadow-xl shadow-purple-900/20">
               <div className="hidden sm:flex flex-col flex-1 min-w-0">
                 <span className="text-xs font-bold truncate">{title || 'Untitled Movie'}</span>
-                <span className="text-[10px] text-muted-foreground">{selectedGenres.length} genres · {episodeVideoUrl ? '✓ Video ready' : 'No video'}</span>
+                <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
+                  <span className={`flex items-center gap-1 ${title.trim() ? 'text-emerald-400' : ''}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${title.trim() ? 'bg-emerald-400' : 'bg-muted-foreground/40'}`} /> Title
+                  </span>
+                  <span className={`flex items-center gap-1 ${episodeVideoUrl ? 'text-emerald-400' : ''}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${episodeVideoUrl ? 'bg-emerald-400' : 'bg-muted-foreground/40'}`} /> Video
+                  </span>
+                  <span className={`flex items-center gap-1 ${coverImage ? 'text-emerald-400' : ''}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${coverImage ? 'bg-emerald-400' : 'bg-muted-foreground/40'}`} /> Cover
+                  </span>
+                  <span className={`flex items-center gap-1 ${selectedGenres.length > 0 ? 'text-emerald-400' : ''}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${selectedGenres.length > 0 ? 'bg-emerald-400' : 'bg-muted-foreground/40'}`} /> {selectedGenres.length} genres
+                  </span>
+                </div>
               </div>
               <Button
                 type="button"
                 disabled={isSubmitting}
-                className="flex-1 sm:flex-none bg-gradient-to-r from-rose-500 via-pink-500 to-violet-500 text-white font-bold shadow-lg shadow-rose-500/30 hover:opacity-90 h-11 px-6"
+                className="flex-1 sm:flex-none bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600 text-white font-bold shadow-lg shadow-purple-600/30 hover:opacity-90 h-11 px-6"
                   onClick={async (e) => {
                     e.preventDefault();
                     if (!title.trim()) {
