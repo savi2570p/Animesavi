@@ -519,6 +519,94 @@ export function UpdatePopup() {
     );
   }
 
+  /* ── STEP 3.5: Entering — first-time post-update transition ── */
+  if (step === 'entering') {
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black animate-in fade-in duration-500">
+        {/* Layered atmospheric glows */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-96 w-96 rounded-full bg-purple-600/25 blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 left-1/4 h-72 w-72 rounded-full bg-violet-500/20 blur-3xl animate-pulse" style={{ animationDelay: '0.6s' }} />
+          <div className="absolute top-1/3 right-1/4 h-64 w-64 rounded-full bg-indigo-500/15 blur-3xl animate-pulse" style={{ animationDelay: '1.2s' }} />
+          {/* Subtle grid */}
+          <div
+            className="absolute inset-0 opacity-[0.06]"
+            style={{
+              backgroundImage:
+                'linear-gradient(rgba(168,85,247,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(168,85,247,0.6) 1px, transparent 1px)',
+              backgroundSize: '48px 48px',
+            }}
+          />
+          {/* Floating particles */}
+          {Array.from({ length: 18 }).map((_, i) => (
+            <span
+              key={i}
+              className="absolute h-1 w-1 rounded-full bg-purple-300/70 shadow-[0_0_8px_rgba(192,132,252,0.9)]"
+              style={{
+                top: `${(i * 53) % 100}%`,
+                left: `${(i * 37) % 100}%`,
+                animation: `pulse ${2 + (i % 4) * 0.4}s ease-in-out ${i * 0.12}s infinite`,
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative z-10 flex flex-col items-center gap-6 px-6 text-center">
+          {/* Concentric rings */}
+          <div className="relative h-32 w-32">
+            <div className="absolute inset-0 rounded-full border-2 border-purple-500/20" />
+            <div
+              className="absolute inset-0 rounded-full border-2 border-transparent border-t-purple-400 border-r-purple-500"
+              style={{ animation: 'spin 1.4s linear infinite' }}
+            />
+            <div
+              className="absolute inset-3 rounded-full border-2 border-transparent border-b-violet-300 border-l-violet-400"
+              style={{ animation: 'spin 2s linear infinite reverse' }}
+            />
+            <div
+              className="absolute inset-6 rounded-full border border-transparent border-t-indigo-300"
+              style={{ animation: 'spin 2.8s linear infinite' }}
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 via-violet-500 to-indigo-600 shadow-[0_0_40px_rgba(168,85,247,0.7)] flex items-center justify-center">
+                <Sparkles className="h-6 w-6 text-white drop-shadow" />
+              </div>
+            </div>
+          </div>
+
+          {/* Headline with shimmer */}
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.2em] text-purple-200">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-400 opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-purple-400" />
+              </span>
+              {APP_VERSION} • Ready
+            </div>
+            <h2 className="bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-2xl font-bold text-transparent sm:text-3xl">
+              Entering the latest version
+            </h2>
+            <p className="text-xs text-zinc-400 sm:text-sm">
+              Loading your refreshed experience…
+            </p>
+          </div>
+
+          {/* Indeterminate progress bar */}
+          <div className="relative h-1 w-64 overflow-hidden rounded-full bg-white/5 sm:w-80">
+            <div className="absolute inset-y-0 left-0 w-1/3 rounded-full bg-gradient-to-r from-transparent via-purple-400 to-transparent shadow-[0_0_12px_rgba(168,85,247,0.8)] animate-[shine_1.4s_ease-in-out_infinite]" />
+          </div>
+
+          {/* Stage chips */}
+          <div className="flex flex-wrap items-center justify-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider text-zinc-500">
+            <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-emerald-300/90">Synced</span>
+            <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-purple-200/90">Booting UI</span>
+            <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1">Routing Home</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   /* ── STEP 4: Complete / What's New — compact cinematic redesign ── */
   return (
     <div
