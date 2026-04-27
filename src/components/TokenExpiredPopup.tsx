@@ -291,7 +291,7 @@ export function TokenExpiredPopup() {
             rel="noopener noreferrer"
             className="group relative flex items-center justify-center gap-2 w-full py-3 rounded-xl font-black text-sm text-white overflow-hidden transition-transform hover:scale-[1.02] active:scale-[0.98]"
             style={{
-              background: 'linear-gradient(135deg, hsl(0, 72%, 50%) 0%, hsl(340, 75%, 50%) 100%)',
+              background: 'linear-gradient(135deg, hsl(270, 75%, 55%) 0%, hsl(290, 75%, 55%) 100%)',
               boxShadow: '0 0 25px hsla(0, 72%, 50%, 0.45), 0 8px 20px hsla(0, 0%, 0%, 0.4)',
             }}
           >

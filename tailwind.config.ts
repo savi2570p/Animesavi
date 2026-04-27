@@ -91,9 +91,9 @@ export default {
   				foreground: 'hsl(var(--card-foreground))'
   			},
   			anime: {
-  				orange: 'hsl(0 84% 50%)',
-  				'orange-light': 'hsl(0 84% 60%)',
-  				'orange-dark': 'hsl(0 84% 40%)',
+  				orange: 'hsl(270 75% 55%)',
+  				'orange-light': 'hsl(270 80% 65%)',
+  				'orange-dark': 'hsl(270 70% 45%)',
   				pink: 'hsl(340 80% 60%)',
   				purple: 'hsl(270 70% 55%)'
   			},
@@ -172,10 +172,10 @@ export default {
   			},
   			'pulse-glow': {
   				'0%, 100%': {
-  					boxShadow: '0 0 20px hsl(0 84% 50% / 0.3)'
+  					boxShadow: '0 0 20px hsl(270 75% 55% / 0.3)'
   				},
   				'50%': {
-  					boxShadow: '0 0 40px hsl(0 84% 50% / 0.6)'
+  					boxShadow: '0 0 40px hsl(270 75% 55% / 0.6)'
   				}
   			},
   			shimmer: {
@@ -219,8 +219,8 @@ export default {
 		},
   		backgroundImage: {
   			'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-  			'gradient-primary': 'linear-gradient(135deg, hsl(0 84% 50%), hsl(0 84% 60%))',
-  			'gradient-accent': 'linear-gradient(135deg, hsl(0 84% 55%), hsl(10 90% 50%))'
+  			'gradient-primary': 'linear-gradient(135deg, hsl(270 75% 55%), hsl(270 80% 65%))',
+  			'gradient-accent': 'linear-gradient(135deg, hsl(270 78% 60%), hsl(290 80% 60%))'
   		},
   		boxShadow: {
   			'2xs': 'var(--shadow-2xs)',
