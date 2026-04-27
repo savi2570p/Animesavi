@@ -118,7 +118,7 @@ export function UpdatePopup() {
   const rafRef = useRef<number | null>(null);
   const touchStartX = useRef<number | null>(null);
 
-  const TOTAL_MB = 2.31;
+  const TOTAL_MB = RANDOM_DOWNLOAD_MB;
 
   const isActive = activePopup === 'whatsNew';
 
