@@ -20,9 +20,30 @@ interface VersionGroup {
   items: ChangelogItem[];
 }
 
-const APP_VERSION = 'v23';
+const APP_VERSION = 'v24';
+
+// Random download size between 10MB and 50MB — generated once per session so the
+// number stays stable while the popup is open.
+const RANDOM_DOWNLOAD_MB = (() => {
+  const min = 10;
+  const max = 50;
+  return Math.round((Math.random() * (max - min) + min) * 100) / 100;
+})();
 
 const VERSION_GROUPS: VersionGroup[] = [
+  {
+    version: 'v24',
+    date: 'Latest',
+    highlight: 'A full purple rebrand to match the new logo, smoother server switching, and a quieter player — no more "Embed under development" toast on every episode.',
+    items: [
+      { icon: '💜', badge: 'NEW', title: 'Purple Brand Refresh', desc: 'Site-wide theme migrated from red to purple to match the new logo — popups, accents, scrollbars, and the What\'s New card all rebranded.' },
+      { icon: '🎬', badge: 'FIX', title: 'Smoother Server Switching', desc: 'Switching between H.Savi, SAVI.IN, Multi.Savi and X-PLUS no longer gets stuck on a black loading screen — a 6-second safety timer dismisses the loader if the source stalls.' },
+      { icon: '🤫', badge: 'FIX', title: 'Quieter Player Entry', desc: 'Removed the recurring "Embed server is under development" toast that appeared on every episode entry.' },
+      { icon: '🎞️', badge: 'IMPROVED', title: 'Add Movie Studio', desc: 'Movie upload tab fully redesigned with sticky CTA, live readiness pips (Title / Video / Cover / Genres), and the new purple gradient identity.' },
+      { icon: '📱', badge: 'FIX', title: 'Mobile Popup Centering', desc: 'The Telegram and Hindi-DUB popups on the video player are now properly centered with safe-area insets on iOS & Android — they no longer escape the viewport.' },
+      { icon: '✨', badge: 'IMPROVED', title: 'More Info Loader', desc: 'Cinematic 4-stage loading screen (Connecting → Fetching → Episodes → Artwork) with animated particle field for anime detail pages.' },
+    ],
+  },
   {
     version: 'v23',
     date: 'Latest',
@@ -110,7 +131,7 @@ export function UpdatePopup() {
   const rafRef = useRef<number | null>(null);
   const touchStartX = useRef<number | null>(null);
 
-  const TOTAL_MB = 2.31;
+  const TOTAL_MB = RANDOM_DOWNLOAD_MB;
 
   const isActive = activePopup === 'whatsNew';
 
@@ -218,8 +239,8 @@ export function UpdatePopup() {
   if (step === 'alert') {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-lg animate-in fade-in duration-300">
-        <div className="relative w-full max-w-sm mx-4 rounded-2xl border border-red-600/30 bg-gradient-to-b from-zinc-900/95 to-black/95 shadow-2xl shadow-red-900/20 p-8 text-center space-y-5 animate-in zoom-in-95 duration-300">
-          <div className="mx-auto w-16 h-16 rounded-full bg-red-600/15 flex items-center justify-center">
+        <div className="relative w-full max-w-sm mx-4 rounded-2xl border border-purple-600/30 bg-gradient-to-b from-zinc-900/95 to-black/95 shadow-2xl shadow-purple-900/20 p-8 text-center space-y-5 animate-in zoom-in-95 duration-300">
+          <div className="mx-auto w-16 h-16 rounded-full bg-purple-600/15 flex items-center justify-center">
             <span className="text-3xl">🔥</span>
           </div>
           <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
@@ -231,7 +252,7 @@ export function UpdatePopup() {
           </div>
           <h2 className="text-xl font-bold text-white">New Version Ready to Install</h2>
           <p className="text-sm text-zinc-400">Tap Download to install the latest features and improvements.</p>
-          <span className="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-red-600/20 text-red-400">{APP_VERSION}</span>
+          <span className="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-purple-600/20 text-purple-400">{APP_VERSION}</span>
 
           <div className="space-y-1.5 text-left max-h-[30vh] overflow-y-auto pr-1">
             {VERSION_GROUPS[0].items.map((item) => (
@@ -250,7 +271,7 @@ export function UpdatePopup() {
 
           <button
             onClick={handleDownload}
-            className="w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-red-700 to-red-500 hover:from-red-600 hover:to-red-400 transition-all shadow-lg shadow-red-900/30"
+            className="w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-purple-700 to-purple-500 hover:from-purple-600 hover:to-purple-400 transition-all shadow-lg shadow-purple-900/30"
           >
             Download
           </button>
@@ -292,16 +313,16 @@ export function UpdatePopup() {
 
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-300">
-        <div className="relative w-full max-w-sm mx-4 overflow-hidden rounded-2xl border border-red-600/30 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-red-900/40 p-8 text-center space-y-6 animate-in zoom-in-95 duration-300">
+        <div className="relative w-full max-w-sm mx-4 overflow-hidden rounded-2xl border border-purple-600/30 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-purple-900/40 p-8 text-center space-y-6 animate-in zoom-in-95 duration-300">
           {/* Decorative glows */}
-          <div className="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full bg-red-600/20 blur-3xl animate-pulse" />
-          <div className="pointer-events-none absolute -bottom-24 -left-20 h-52 w-52 rounded-full bg-red-500/15 blur-3xl" />
+          <div className="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full bg-purple-600/20 blur-3xl animate-pulse" />
+          <div className="pointer-events-none absolute -bottom-24 -left-20 h-52 w-52 rounded-full bg-purple-500/15 blur-3xl" />
 
           {/* Header pill */}
-          <div className="relative inline-flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-red-300">
+          <div className="relative inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-purple-300">
             <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-400" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-400 opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-purple-400" />
             </span>
             Downloading {APP_VERSION}
           </div>
@@ -318,18 +339,18 @@ export function UpdatePopup() {
                 fill="none"
                 strokeDasharray={circumference}
                 strokeDashoffset={dashOffset}
-                style={{ filter: 'drop-shadow(0 0 8px rgba(220,38,38,0.6))' }}
+                style={{ filter: 'drop-shadow(0 0 8px rgba(168,85,247,0.6))' }}
               />
               <defs>
                 <linearGradient id="dlGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#ef4444" />
-                  <stop offset="100%" stopColor="#f97316" />
+                  <stop offset="0%" stopColor="#a855f7" />
+                  <stop offset="100%" stopColor="#7c3aed" />
                 </linearGradient>
               </defs>
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-bold font-mono bg-gradient-to-br from-white to-red-300 bg-clip-text text-transparent tabular-nums">
-                {displayProgress.toFixed(1)}<span className="text-lg text-red-400">%</span>
+              <span className="text-3xl font-bold font-mono bg-gradient-to-br from-white to-purple-300 bg-clip-text text-transparent tabular-nums">
+                {displayProgress.toFixed(1)}<span className="text-lg text-purple-400">%</span>
               </span>
               <span className="text-[10px] uppercase tracking-wider text-zinc-500 mt-0.5">{phaseLabel}</span>
             </div>
@@ -343,7 +364,7 @@ export function UpdatePopup() {
           {/* Linear progress bar with shine */}
           <div className="relative h-1.5 rounded-full bg-zinc-800/80 overflow-hidden">
             <div
-              className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-red-600 via-red-500 to-orange-400 shadow-[0_0_12px_rgba(220,38,38,0.6)]"
+              className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-purple-600 via-purple-500 to-orange-400 shadow-[0_0_12px_rgba(168,85,247,0.6)]"
               style={{ width: `${displayProgress}%` }}
             />
             <div
@@ -370,7 +391,7 @@ export function UpdatePopup() {
             </div>
             <div className="rounded-lg border border-white/5 bg-white/[0.03] px-2.5 py-2">
               <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">ETA</div>
-              <div className="text-[13px] font-bold font-mono text-red-300 tabular-nums leading-tight">
+              <div className="text-[13px] font-bold font-mono text-purple-300 tabular-nums leading-tight">
                 {etaLabel}
               </div>
             </div>
@@ -382,8 +403,8 @@ export function UpdatePopup() {
               <svg viewBox={`0 0 ${sparkW} ${sparkH}`} preserveAspectRatio="none" className="h-full w-full">
                 <defs>
                   <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+                    <stop offset="0%" stopColor="#a855f7" stopOpacity="0.5" />
+                    <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
                   </linearGradient>
                 </defs>
                 <polygon
@@ -397,7 +418,7 @@ export function UpdatePopup() {
                   strokeWidth="1.2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  style={{ filter: 'drop-shadow(0 0 3px rgba(248,113,113,0.6))' }}
+                  style={{ filter: 'drop-shadow(0 0 3px rgba(192,132,252,0.6))' }}
                 />
               </svg>
             ) : (
@@ -422,10 +443,10 @@ export function UpdatePopup() {
     ];
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-300">
-        <div className="relative w-full max-w-sm mx-4 overflow-hidden rounded-2xl border border-red-600/30 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-red-900/40 p-8 text-center space-y-6 animate-in zoom-in-95 duration-300">
+        <div className="relative w-full max-w-sm mx-4 overflow-hidden rounded-2xl border border-purple-600/30 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-purple-900/40 p-8 text-center space-y-6 animate-in zoom-in-95 duration-300">
           {/* Decorative glows */}
-          <div className="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full bg-red-600/20 blur-3xl animate-pulse" />
-          <div className="pointer-events-none absolute -bottom-24 -left-20 h-52 w-52 rounded-full bg-red-500/15 blur-3xl" />
+          <div className="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full bg-purple-600/20 blur-3xl animate-pulse" />
+          <div className="pointer-events-none absolute -bottom-24 -left-20 h-52 w-52 rounded-full bg-purple-500/15 blur-3xl" />
 
           {/* Header pill */}
           <div className="relative inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">
@@ -435,8 +456,8 @@ export function UpdatePopup() {
 
           {/* Animated install icon */}
           <div className="relative mx-auto h-24 w-24">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-red-500/30 to-orange-500/20 blur-xl animate-pulse" />
-            <div className="absolute inset-2 rounded-full border-2 border-red-500/40 border-t-red-500 animate-spin" style={{ animationDuration: '1.4s' }} />
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500/30 to-orange-500/20 blur-xl animate-pulse" />
+            <div className="absolute inset-2 rounded-full border-2 border-purple-500/40 border-t-purple-500 animate-spin" style={{ animationDuration: '1.4s' }} />
             <div className="absolute inset-5 rounded-full border-2 border-amber-500/30 border-b-amber-400 animate-spin" style={{ animationDuration: '1.8s', animationDirection: 'reverse' }} />
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="text-3xl">⚙️</span>
@@ -458,7 +479,7 @@ export function UpdatePopup() {
               >
                 <span className="text-base shrink-0">{stage.icon}</span>
                 <span className="flex-1 text-[11px] font-semibold text-white/90">{stage.label}</span>
-                <Loader2 className="h-3 w-3 text-red-400 animate-spin shrink-0" />
+                <Loader2 className="h-3 w-3 text-purple-400 animate-spin shrink-0" />
               </div>
             ))}
           </div>
@@ -466,7 +487,7 @@ export function UpdatePopup() {
           {/* Bouncing dots */}
           <div className="flex justify-center gap-1.5 pt-1">
             {[0, 1, 2].map(i => (
-              <div key={i} className="w-1.5 h-1.5 rounded-full bg-red-500 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+              <div key={i} className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
             ))}
           </div>
         </div>
@@ -482,11 +503,11 @@ export function UpdatePopup() {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md overflow-hidden rounded-2xl border border-red-600/25 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-red-900/30 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
+        className="relative w-full max-w-md overflow-hidden rounded-2xl border border-purple-600/25 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-purple-900/30 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
       >
         {/* Decorative glows */}
-        <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-red-600/15 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-red-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-purple-600/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-purple-500/10 blur-3xl" />
 
         {/* Close */}
         <button
@@ -499,8 +520,8 @@ export function UpdatePopup() {
 
         {/* Header — compact */}
         <div className="relative px-5 pt-5 pb-3 text-center">
-          <div className="mx-auto mb-2.5 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-600/30 to-red-500/10 ring-1 ring-red-500/30">
-            <Sparkles className="h-5 w-5 text-red-400" />
+          <div className="mx-auto mb-2.5 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-600/30 to-purple-500/10 ring-1 ring-purple-500/30">
+            <Sparkles className="h-5 w-5 text-purple-400" />
           </div>
           <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-300">
             <span className="relative flex h-1 w-1">
@@ -515,7 +536,7 @@ export function UpdatePopup() {
           <p className="mx-auto mt-1 max-w-xs text-[11px] leading-snug text-zinc-400">
             {currentGroup.highlight}
           </p>
-          <span className="mt-2 inline-block rounded-md border border-red-500/30 bg-red-600/15 px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-wider text-red-300">
+          <span className="mt-2 inline-block rounded-md border border-purple-500/30 bg-purple-600/15 px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-wider text-purple-300">
             {APP_VERSION}
           </span>
         </div>
@@ -536,7 +557,7 @@ export function UpdatePopup() {
                 key={g.version}
                 onClick={() => setVersionIndex(i)}
                 className={`h-1 rounded-full transition-all ${
-                  i === versionIndex ? 'w-5 bg-red-500' : 'w-1 bg-white/20 hover:bg-white/40'
+                  i === versionIndex ? 'w-5 bg-purple-500' : 'w-1 bg-white/20 hover:bg-white/40'
                 }`}
                 aria-label={`Go to ${g.version}`}
               />
@@ -551,7 +572,7 @@ export function UpdatePopup() {
             <ChevronRight className="h-3 w-3" />
           </button>
           <div className="ml-2 flex items-center gap-1.5">
-            <span className="rounded border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-red-300">
+            <span className="rounded border border-purple-500/30 bg-purple-500/10 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-purple-300">
               {currentGroup.version}
             </span>
             <span className="text-[9px] uppercase tracking-wider text-white/40">{currentGroup.date}</span>
@@ -567,7 +588,7 @@ export function UpdatePopup() {
           {currentGroup.items.map((item, idx) => (
             <div
               key={item.title}
-              className="group flex items-start gap-2.5 rounded-lg border border-white/5 bg-gradient-to-br from-white/[0.04] to-white/[0.01] p-2.5 transition-all hover:border-red-500/20 hover:from-red-500/5 animate-in fade-in slide-in-from-right-2 duration-300"
+              className="group flex items-start gap-2.5 rounded-lg border border-white/5 bg-gradient-to-br from-white/[0.04] to-white/[0.01] p-2.5 transition-all hover:border-purple-500/20 hover:from-purple-500/5 animate-in fade-in slide-in-from-right-2 duration-300"
               style={{ animationDelay: `${idx * 30}ms` }}
             >
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/5 text-sm">
@@ -594,7 +615,7 @@ export function UpdatePopup() {
         <div className="relative border-t border-white/5 bg-black/40 px-4 py-3">
           <button
             onClick={handleGo}
-            className="group flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-red-700 via-red-600 to-red-500 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-900/40 transition-all hover:from-red-600 hover:to-red-400 hover:shadow-red-700/50"
+            className="group flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-900/40 transition-all hover:from-purple-600 hover:to-purple-400 hover:shadow-purple-700/50"
           >
             Explore Now
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />

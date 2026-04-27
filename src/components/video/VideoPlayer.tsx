@@ -447,6 +447,14 @@ export function VideoPlayer({
       video.currentTime = 0;
       video.load();
     }
+
+    // Safety net: never let the premium loader stay stuck on a black screen.
+    // If neither `playing` nor `canplay` fires within 6s, dismiss it so the
+    // user can interact with controls / switch servers without confusion.
+    const loaderSafetyTimer = setTimeout(() => {
+      setShowPremiumLoader(false);
+    }, 6000);
+    return () => clearTimeout(loaderSafetyTimer);
   }, [videoUrl, externalUrl, activeServer]);
 
   // HLS.js initialization for multi-audio and subtitle support
