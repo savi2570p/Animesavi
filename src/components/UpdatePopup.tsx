@@ -330,8 +330,8 @@ export function UpdatePopup() {
               />
               <defs>
                 <linearGradient id="dlGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#ef4444" />
-                  <stop offset="100%" stopColor="#f97316" />
+                  <stop offset="0%" stopColor="#a855f7" />
+                  <stop offset="100%" stopColor="#7c3aed" />
                 </linearGradient>
               </defs>
             </svg>
@@ -390,8 +390,8 @@ export function UpdatePopup() {
               <svg viewBox={`0 0 ${sparkW} ${sparkH}`} preserveAspectRatio="none" className="h-full w-full">
                 <defs>
                   <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+                    <stop offset="0%" stopColor="#a855f7" stopOpacity="0.5" />
+                    <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
                   </linearGradient>
                 </defs>
                 <polygon
