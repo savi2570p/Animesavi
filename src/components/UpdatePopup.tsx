@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePopupQueue } from '@/contexts/PopupQueueContext';
 import { Loader2, ChevronLeft, ChevronRight, Sparkles, X, ArrowRight } from 'lucide-react';
 
-type UpdateStep = 'alert' | 'downloading' | 'installing' | 'complete';
+type UpdateStep = 'alert' | 'downloading' | 'installing' | 'complete' | 'entering';
 type BadgeKind = 'NEW' | 'IMPROVED' | 'FIX';
 
 interface ChangelogItem {
