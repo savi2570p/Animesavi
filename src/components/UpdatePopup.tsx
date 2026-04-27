@@ -117,6 +117,7 @@ const BADGE_DOT: Record<BadgeKind, string> = {
 };
 
 const DOWNLOAD_COMPLETED_KEY = `update_downloaded_${APP_VERSION}`;
+const ENTERING_SHOWN_KEY = `update_entering_shown_${APP_VERSION}`;
 
 export function UpdatePopup() {
   const { activePopup, dismissPopup, isManualWhatsNew } = usePopupQueue();
