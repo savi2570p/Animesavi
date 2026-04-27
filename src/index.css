@@ -203,7 +203,7 @@ img, video {
     --gradient-shine: linear-gradient(135deg, transparent 20%, hsl(0, 0%, 100%, 0.1) 50%, transparent 80%);
 
     /* Shadows */
-    --shadow-glow: 0 0 40px hsl(0, 84%, 50%, 0.4);
+    --shadow-glow: 0 0 40px hsl(270, 75%, 55%, 0.4);
     --shadow-card: 0 4px 24px hsl(0, 0%, 0%, 0.15);
     --shadow-hover: 0 12px 40px hsl(0, 0%, 0%, 0.25);
     --shadow-float: 0 20px 50px hsl(0, 0%, 0%, 0.3);
@@ -492,7 +492,7 @@ img, video {
   .video-player-container::before {
     content: '';
     @apply absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-500;
-    background: linear-gradient(135deg, hsl(0, 84%, 50%, 0.1), transparent 50%);
+    background: linear-gradient(135deg, hsl(270, 75%, 55%, 0.1), transparent 50%);
   }
 
   .video-player-container:hover::before {
@@ -521,7 +521,7 @@ img, video {
   .premium-progress-fill {
     @apply absolute left-0 top-0 h-full rounded-full;
     background: var(--gradient-primary);
-    box-shadow: 0 0 10px hsl(0, 84%, 50%, 0.6);
+    box-shadow: 0 0 10px hsl(270, 75%, 55%, 0.6);
   }
 
   .premium-progress-buffer {
@@ -547,7 +547,7 @@ img, video {
   .player-btn-primary {
     @apply w-14 h-14 bg-primary/90 rounded-full;
     @apply hover:bg-primary hover:scale-110;
-    box-shadow: 0 0 30px hsl(0, 84%, 50%, 0.4);
+    box-shadow: 0 0 30px hsl(270, 75%, 55%, 0.4);
   }
 
   /* Quality menu */
@@ -593,7 +593,7 @@ img, video {
 
   .episode-card:hover {
     @apply bg-card border-primary/30;
-    box-shadow: 0 4px 20px hsl(0, 84%, 50%, 0.15);
+    box-shadow: 0 4px 20px hsl(270, 75%, 55%, 0.15);
   }
 
   .episode-card.active {
@@ -791,7 +791,7 @@ img, video {
 
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 20px hsl(270, 75%, 55%, 0.3); }
-  50% { box-shadow: 0 0 50px hsl(0, 84%, 50%, 0.6); }
+  50% { box-shadow: 0 0 50px hsl(270, 75%, 55%, 0.6); }
 }
 
 @keyframes float {
@@ -861,8 +861,8 @@ img, video {
 }
 
 @keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 20px hsl(0, 84%, 50%, 0.2); }
-  50% { box-shadow: 0 0 40px hsl(0, 84%, 50%, 0.4); }
+  0%, 100% { box-shadow: 0 0 20px hsl(270, 75%, 55%, 0.2); }
+  50% { box-shadow: 0 0 40px hsl(270, 75%, 55%, 0.4); }
 }
 
 @keyframes slideUp {
