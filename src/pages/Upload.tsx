@@ -1191,20 +1191,20 @@ export default function Upload() {
         {/* Add New Movie Tab - Only Movie, Thumbnail, Banner, Description */}
         <TabsContent value="new-movie" className="space-y-5 pb-24">
           {/* Hero header */}
-          <div className="relative overflow-hidden rounded-2xl border border-rose-500/20 bg-gradient-to-br from-rose-500/10 via-pink-500/5 to-violet-500/10 p-5">
-            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-rose-500/20 blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-violet-500/20 blur-3xl pointer-events-none" />
+          <div className="relative overflow-hidden rounded-2xl border border-purple-500/25 bg-gradient-to-br from-purple-600/15 via-indigo-600/8 to-violet-600/15 p-5">
+            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-purple-600/25 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-indigo-600/25 blur-3xl pointer-events-none" />
             <div className="relative flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500 via-pink-500 to-violet-500 flex items-center justify-center shadow-xl shadow-rose-500/40 ring-1 ring-white/20">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-violet-600 flex items-center justify-center shadow-xl shadow-purple-600/40 ring-1 ring-white/20">
                 <Film className="h-6 w-6 text-white" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h2 className="text-xl md:text-2xl font-heading font-black bg-gradient-to-r from-rose-400 via-pink-400 to-violet-400 bg-clip-text text-transparent">Add New Movie</h2>
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 uppercase tracking-wider">Cinematic</span>
+                  <h2 className="text-xl md:text-2xl font-heading font-black bg-gradient-to-r from-purple-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent">Add New Movie</h2>
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 uppercase tracking-wider">Cinematic</span>
                 </div>
                 <p className="text-xs text-muted-foreground">Single feature film — no seasons or episodes required. One-shot upload.</p>
-                <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-rose-300/80">
+                <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-purple-300/80">
                   <Sparkles className="h-3 w-3" /> One step · Auto-published
                 </div>
               </div>
@@ -1212,7 +1212,7 @@ export default function Upload() {
           </div>
 
           <Card className="bg-card/60 backdrop-blur-sm border-border/40 rounded-2xl overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-rose-500 via-pink-500 to-violet-500" />
+            <div className="h-1 bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600" />
             <CardContent className="p-4 md:p-6">
               <form className="space-y-7">
                 {/* SECTION 1 — Identity */}
