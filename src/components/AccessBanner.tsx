@@ -192,7 +192,7 @@ export function AccessBanner() {
   const isLow = totalMinutes < 120 && !isCritical;
 
   const tone = isCritical
-    ? { ring: 'hsl(0 90% 55%)', glow: 'hsla(0,90%,55%,0.55)', dot: 'bg-rose-300', label: 'Expiring soon' }
+    ? { ring: 'hsl(270 80% 60%)', glow: 'hsla(270,80%,60%,0.55)', dot: 'bg-rose-300', label: 'Expiring soon' }
     : isLow
     ? { ring: 'hsl(35 95% 55%)', glow: 'hsla(35,95%,55%,0.45)', dot: 'bg-amber-200', label: 'Heads up' }
     : { ring: 'hsl(150 70% 45%)', glow: 'hsla(150,70%,45%,0.4)', dot: 'bg-emerald-200', label: 'Premium active' };

@@ -94,7 +94,7 @@ export default function TokenVerify() {
           background: status === 'success'
             ? 'radial-gradient(circle, hsl(142 76% 36% / 0.3), transparent 70%)'
             : status === 'error'
-            ? 'radial-gradient(circle, hsl(0 84% 60% / 0.2), transparent 70%)'
+            ? 'radial-gradient(circle, hsl(270 80% 65% / 0.2), transparent 70%)'
             : 'radial-gradient(circle, hsl(var(--primary) / 0.15), transparent 70%)',
         }}
       />
