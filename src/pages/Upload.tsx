@@ -524,7 +524,7 @@ export default function Upload() {
               <TabsTrigger value="new" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
                 <Plus className="h-3.5 w-3.5" /> Add Series
               </TabsTrigger>
-              <TabsTrigger value="new-movie" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-rose-500 data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
+              <TabsTrigger value="new-movie" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
                 <Film className="h-3.5 w-3.5" /> Add Movie
               </TabsTrigger>
               <TabsTrigger value="tools" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
@@ -1191,20 +1191,20 @@ export default function Upload() {
         {/* Add New Movie Tab - Only Movie, Thumbnail, Banner, Description */}
         <TabsContent value="new-movie" className="space-y-5 pb-24">
           {/* Hero header */}
-          <div className="relative overflow-hidden rounded-2xl border border-rose-500/20 bg-gradient-to-br from-rose-500/10 via-pink-500/5 to-violet-500/10 p-5">
-            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-rose-500/20 blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-violet-500/20 blur-3xl pointer-events-none" />
+          <div className="relative overflow-hidden rounded-2xl border border-purple-500/25 bg-gradient-to-br from-purple-600/15 via-indigo-600/8 to-violet-600/15 p-5">
+            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-purple-600/25 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-indigo-600/25 blur-3xl pointer-events-none" />
             <div className="relative flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500 via-pink-500 to-violet-500 flex items-center justify-center shadow-xl shadow-rose-500/40 ring-1 ring-white/20">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-violet-600 flex items-center justify-center shadow-xl shadow-purple-600/40 ring-1 ring-white/20">
                 <Film className="h-6 w-6 text-white" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h2 className="text-xl md:text-2xl font-heading font-black bg-gradient-to-r from-rose-400 via-pink-400 to-violet-400 bg-clip-text text-transparent">Add New Movie</h2>
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 uppercase tracking-wider">Cinematic</span>
+                  <h2 className="text-xl md:text-2xl font-heading font-black bg-gradient-to-r from-purple-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent">Add New Movie</h2>
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 uppercase tracking-wider">Cinematic</span>
                 </div>
                 <p className="text-xs text-muted-foreground">Single feature film — no seasons or episodes required. One-shot upload.</p>
-                <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-rose-300/80">
+                <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-purple-300/80">
                   <Sparkles className="h-3 w-3" /> One step · Auto-published
                 </div>
               </div>
@@ -1212,14 +1212,14 @@ export default function Upload() {
           </div>
 
           <Card className="bg-card/60 backdrop-blur-sm border-border/40 rounded-2xl overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-rose-500 via-pink-500 to-violet-500" />
+            <div className="h-1 bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600" />
             <CardContent className="p-4 md:p-6">
               <form className="space-y-7">
                 {/* SECTION 1 — Identity */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-center">
-                      <Film className="h-3.5 w-3.5 text-rose-400" />
+                    <div className="w-7 h-7 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center">
+                      <Film className="h-3.5 w-3.5 text-purple-400" />
                     </div>
                     <h3 className="text-sm font-bold tracking-tight">Identity</h3>
                     <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
@@ -1271,11 +1271,14 @@ export default function Upload() {
                 {/* SECTION 2 — Video File */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-violet-500/15 border border-violet-500/30 flex items-center justify-center">
-                      <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+                    <div className="w-7 h-7 rounded-lg bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center">
+                      <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
                     </div>
                     <h3 className="text-sm font-bold tracking-tight">Video File</h3>
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 uppercase tracking-wider">Required</span>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 uppercase tracking-wider">Required</span>
+                    {episodeVideoUrl && (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider">✓ Ready</span>
+                    )}
                     <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
                   </div>
                   <FileUploadInput
@@ -1292,8 +1295,8 @@ export default function Upload() {
                 {/* SECTION 3 — Artwork */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-pink-500/15 border border-pink-500/30 flex items-center justify-center">
-                      <ImageIcon className="h-3.5 w-3.5 text-pink-400" />
+                    <div className="w-7 h-7 rounded-lg bg-violet-500/15 border border-violet-500/30 flex items-center justify-center">
+                      <ImageIcon className="h-3.5 w-3.5 text-violet-400" />
                     </div>
                     <h3 className="text-sm font-bold tracking-tight">Artwork</h3>
                     <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
@@ -1324,7 +1327,7 @@ export default function Upload() {
                           onClick={() => toggleGenre(genre)}
                           className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
                             active
-                              ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white border-transparent shadow-md shadow-rose-500/30 scale-105'
+                              ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-transparent shadow-md shadow-purple-600/30 scale-105'
                               : 'bg-muted/40 border-border/40 text-muted-foreground hover:bg-muted hover:text-foreground hover:border-border'
                           }`}
                         >
@@ -1340,15 +1343,28 @@ export default function Upload() {
 
           {/* Sticky CTA */}
           <div className="sticky bottom-0 -mx-2 px-2 pt-3 pb-3 bg-gradient-to-t from-card via-card/95 to-card/0 backdrop-blur-md z-10">
-            <div className="flex items-center gap-3 p-3 rounded-2xl border border-rose-500/20 bg-card/80 backdrop-blur-md shadow-xl">
+            <div className="flex items-center gap-3 p-3 rounded-2xl border border-purple-500/25 bg-card/80 backdrop-blur-md shadow-xl shadow-purple-900/20">
               <div className="hidden sm:flex flex-col flex-1 min-w-0">
                 <span className="text-xs font-bold truncate">{title || 'Untitled Movie'}</span>
-                <span className="text-[10px] text-muted-foreground">{selectedGenres.length} genres · {episodeVideoUrl ? '✓ Video ready' : 'No video'}</span>
+                <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
+                  <span className={`flex items-center gap-1 ${title.trim() ? 'text-emerald-400' : ''}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${title.trim() ? 'bg-emerald-400' : 'bg-muted-foreground/40'}`} /> Title
+                  </span>
+                  <span className={`flex items-center gap-1 ${episodeVideoUrl ? 'text-emerald-400' : ''}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${episodeVideoUrl ? 'bg-emerald-400' : 'bg-muted-foreground/40'}`} /> Video
+                  </span>
+                  <span className={`flex items-center gap-1 ${coverImage ? 'text-emerald-400' : ''}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${coverImage ? 'bg-emerald-400' : 'bg-muted-foreground/40'}`} /> Cover
+                  </span>
+                  <span className={`flex items-center gap-1 ${selectedGenres.length > 0 ? 'text-emerald-400' : ''}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${selectedGenres.length > 0 ? 'bg-emerald-400' : 'bg-muted-foreground/40'}`} /> {selectedGenres.length} genres
+                  </span>
+                </div>
               </div>
               <Button
                 type="button"
                 disabled={isSubmitting}
-                className="flex-1 sm:flex-none bg-gradient-to-r from-rose-500 via-pink-500 to-violet-500 text-white font-bold shadow-lg shadow-rose-500/30 hover:opacity-90 h-11 px-6"
+                className="flex-1 sm:flex-none bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600 text-white font-bold shadow-lg shadow-purple-600/30 hover:opacity-90 h-11 px-6"
                   onClick={async (e) => {
                     e.preventDefault();
                     if (!title.trim()) {
