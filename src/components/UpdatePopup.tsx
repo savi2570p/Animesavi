@@ -32,6 +32,19 @@ const RANDOM_DOWNLOAD_MB = (() => {
 
 const VERSION_GROUPS: VersionGroup[] = [
   {
+    version: 'v24',
+    date: 'Latest',
+    highlight: 'A full purple rebrand to match the new logo, smoother server switching, and a quieter player — no more "Embed under development" toast on every episode.',
+    items: [
+      { icon: '💜', badge: 'NEW', title: 'Purple Brand Refresh', desc: 'Site-wide theme migrated from red to purple to match the new logo — popups, accents, scrollbars, and the What\'s New card all rebranded.' },
+      { icon: '🎬', badge: 'FIX', title: 'Smoother Server Switching', desc: 'Switching between H.Savi, SAVI.IN, Multi.Savi and X-PLUS no longer gets stuck on a black loading screen — a 6-second safety timer dismisses the loader if the source stalls.' },
+      { icon: '🤫', badge: 'FIX', title: 'Quieter Player Entry', desc: 'Removed the recurring "Embed server is under development" toast that appeared on every episode entry.' },
+      { icon: '🎞️', badge: 'IMPROVED', title: 'Add Movie Studio', desc: 'Movie upload tab fully redesigned with sticky CTA, live readiness pips (Title / Video / Cover / Genres), and the new purple gradient identity.' },
+      { icon: '📱', badge: 'FIX', title: 'Mobile Popup Centering', desc: 'The Telegram and Hindi-DUB popups on the video player are now properly centered with safe-area insets on iOS & Android — they no longer escape the viewport.' },
+      { icon: '✨', badge: 'IMPROVED', title: 'More Info Loader', desc: 'Cinematic 4-stage loading screen (Connecting → Fetching → Episodes → Artwork) with animated particle field for anime detail pages.' },
+    ],
+  },
+  {
     version: 'v23',
     date: 'Latest',
     highlight: 'A site-wide polish update — H-DUB tags everywhere, smarter mobile popups, and a refreshed Welcome experience for new fans.',
