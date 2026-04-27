@@ -218,7 +218,30 @@ export function UpdatePopup() {
   }, [step]);
 
   const handleDownload = useCallback(() => setStep('downloading'), []);
-  const handleGo = useCallback(() => { dismissPopup(); navigate('/'); }, [dismissPopup, navigate]);
+  const handleGo = useCallback(() => {
+    // Show the cinematic "Entering the latest version" loader exactly once,
+    // the first time the user taps "Explore Now" after the v24 update.
+    // Manual What's New opens (after the flag is set) skip straight to the app.
+    let alreadyEntered = false;
+    try { alreadyEntered = localStorage.getItem(ENTERING_SHOWN_KEY) === 'true'; } catch { /* ignore */ }
+    if (alreadyEntered) {
+      dismissPopup();
+      navigate('/');
+      return;
+    }
+    try { localStorage.setItem(ENTERING_SHOWN_KEY, 'true'); } catch { /* ignore */ }
+    setStep('entering');
+  }, [dismissPopup, navigate]);
+
+  // Entering step: ~3.5s cinematic transition into the latest version, then route home.
+  useEffect(() => {
+    if (step !== 'entering') return;
+    const timer = setTimeout(() => {
+      dismissPopup();
+      navigate('/');
+    }, 3500);
+    return () => clearTimeout(timer);
+  }, [step, dismissPopup, navigate]);
 
   const goPrev = () => setVersionIndex((i) => Math.max(0, i - 1));
   const goNext = () => setVersionIndex((i) => Math.min(VERSION_GROUPS.length - 1, i + 1));
