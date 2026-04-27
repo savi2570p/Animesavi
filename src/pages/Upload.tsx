@@ -1218,8 +1218,8 @@ export default function Upload() {
                 {/* SECTION 1 — Identity */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-center">
-                      <Film className="h-3.5 w-3.5 text-rose-400" />
+                    <div className="w-7 h-7 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center">
+                      <Film className="h-3.5 w-3.5 text-purple-400" />
                     </div>
                     <h3 className="text-sm font-bold tracking-tight">Identity</h3>
                     <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
