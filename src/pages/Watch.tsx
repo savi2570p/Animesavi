@@ -297,14 +297,8 @@ export default function Watch() {
     handleServerSwitch(server);
   }, [handleServerSwitch, episode]);
 
-  // Show a one-time info message when entering an episode about Embed server status.
-  const entryMessageShownRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (!episode) return;
-    if (entryMessageShownRef.current === episode.id) return;
-    entryMessageShownRef.current = episode.id;
-    toast.info('The [Embed] server is not working. It\u2019s under development. Please use other servers.');
-  }, [episode]);
+  // (Removed) Previously showed a one-time "Embed server under development" toast on
+  // episode entry. Disabled per UX request — users can still switch servers freely.
 
   // Auto-assign EMBED server when the loaded episode only has an external embed link.
   // Runs once per episode so the user can still manually switch away afterward.
