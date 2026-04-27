@@ -1271,11 +1271,14 @@ export default function Upload() {
                 {/* SECTION 2 — Video File */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-violet-500/15 border border-violet-500/30 flex items-center justify-center">
-                      <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+                    <div className="w-7 h-7 rounded-lg bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center">
+                      <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
                     </div>
                     <h3 className="text-sm font-bold tracking-tight">Video File</h3>
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 uppercase tracking-wider">Required</span>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 uppercase tracking-wider">Required</span>
+                    {episodeVideoUrl && (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider">✓ Ready</span>
+                    )}
                     <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
                   </div>
                   <FileUploadInput
@@ -1292,8 +1295,8 @@ export default function Upload() {
                 {/* SECTION 3 — Artwork */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-pink-500/15 border border-pink-500/30 flex items-center justify-center">
-                      <ImageIcon className="h-3.5 w-3.5 text-pink-400" />
+                    <div className="w-7 h-7 rounded-lg bg-violet-500/15 border border-violet-500/30 flex items-center justify-center">
+                      <ImageIcon className="h-3.5 w-3.5 text-violet-400" />
                     </div>
                     <h3 className="text-sm font-bold tracking-tight">Artwork</h3>
                     <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
