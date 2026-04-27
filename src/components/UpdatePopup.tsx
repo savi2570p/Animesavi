@@ -20,7 +20,15 @@ interface VersionGroup {
   items: ChangelogItem[];
 }
 
-const APP_VERSION = 'v23';
+const APP_VERSION = 'v24';
+
+// Random download size between 10MB and 50MB — generated once per session so the
+// number stays stable while the popup is open.
+const RANDOM_DOWNLOAD_MB = (() => {
+  const min = 10;
+  const max = 50;
+  return Math.round((Math.random() * (max - min) + min) * 100) / 100;
+})();
 
 const VERSION_GROUPS: VersionGroup[] = [
   {
