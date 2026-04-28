@@ -393,6 +393,12 @@ export default function EmbedSlugPlayer() {
     setShowAudioMenu(false);
   };
 
+  const changePlaybackSpeed = (speed: number) => {
+    setPlaybackSpeed(speed);
+    if (videoRef.current) videoRef.current.playbackRate = speed;
+    setShowSpeedMenu(false);
+  };
+
   const handleDirectDownload = (quality: string) => {
     const url = episodeData?.videoUrl;
     if (!url) return;
@@ -456,6 +462,8 @@ export default function EmbedSlugPlayer() {
     toggleFullscreen,
     errorReason: error,
   });
+
+  const closeAllMenus = () => { setShowQualityMenu(false); setShowDownloadMenu(false); setShowAudioMenu(false); setShowEpisodePanel(false); setShowSpeedMenu(false); };
 
   useEffect(() => {
     const h = () => setIsFullscreen(!!(document.fullscreenElement || (document as any).webkitFullscreenElement));
