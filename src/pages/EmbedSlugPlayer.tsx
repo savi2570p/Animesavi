@@ -275,6 +275,18 @@ export default function EmbedSlugPlayer() {
           e.preventDefault();
           toggleMute();
           break;
+        case 'k':
+          e.preventDefault();
+          if (videoRef.current) isPlaying ? videoRef.current.pause() : videoRef.current.play();
+          break;
+        case ',':
+          e.preventDefault();
+          setPlaybackSpeed((s) => Math.max(0.5, +(s - 0.25).toFixed(2)));
+          break;
+        case '.':
+          e.preventDefault();
+          setPlaybackSpeed((s) => Math.min(2, +(s + 0.25).toFixed(2)));
+          break;
         case 'arrowright':
           e.preventDefault();
           if (videoRef.current) videoRef.current.currentTime = Math.min(videoRef.current.currentTime + 10, duration);
@@ -288,6 +300,10 @@ export default function EmbedSlugPlayer() {
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [isPlaying, duration]);
+
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.playbackRate = playbackSpeed;
+  }, [playbackSpeed, episodeData?.videoUrl]);
 
   // Video playback setup
   useEffect(() => {
