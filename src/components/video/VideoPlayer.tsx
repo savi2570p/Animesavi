@@ -1541,15 +1541,20 @@ export function VideoPlayer({
           setShowMobileUnmute(false);
           setWasMutedForAutoplay(false);
         }
+        setShowPremiumLoader(false);
         videoRef.current.play().catch((error) => {
           console.warn('Play failed:', error);
           // If play fails, try muted
           if (videoRef.current) {
+            videoRef.current.load();
             videoRef.current.muted = true;
             setIsMuted(true);
             setWasMutedForAutoplay(true);
             setShowMobileUnmute(true);
-            videoRef.current.play().catch(() => {});
+            videoRef.current.play().catch(() => {
+              setIsPlaying(false);
+              toast.error('Playback is still buffering. Please tap play again or switch server.');
+            });
           }
         });
       }
