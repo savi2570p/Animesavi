@@ -252,12 +252,13 @@ export function UpdatePopup() {
     const finish = setTimeout(() => {
       const startedFrom = enteringFromPathRef.current;
       dismissPopup();
-      // Only redirect home if the user is still on the same page they pressed
-      // "Explore Now" from. If they navigated to /auth, /anime/:id, /watch, etc.
-      // mid-transition, leave them where they are.
-      if (startedFrom && location.pathname === startedFrom && location.pathname !== '/') {
+      // Only redirect home if the user is STILL on the same page they pressed
+      // "Explore Now" from. If they navigated anywhere else mid-transition
+      // (e.g. /auth, /anime/:id, /watch/...), leave them exactly where they are.
+      if (startedFrom !== null && location.pathname === startedFrom && location.pathname !== '/') {
         navigate('/');
-      } else if (location.pathname === '/' || !startedFrom) {
+      } else if (startedFrom === '/') {
+        // Already on home — no-op navigate is fine, just refreshes scroll state.
         navigate('/');
       }
       enteringFromPathRef.current = null;
