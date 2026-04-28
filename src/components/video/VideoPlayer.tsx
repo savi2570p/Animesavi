@@ -820,6 +820,7 @@ export function VideoPlayer({
       } else {
         // Non-HLS video - use native playback
         video.src = effectiveVideoUrl;
+        video.load();
         
         // Try to detect audio tracks for MP4/MKV with multiple audio streams
         const detectNativeTracks = () => {
