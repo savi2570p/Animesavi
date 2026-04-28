@@ -613,8 +613,10 @@ export function UpdatePopup() {
             <h2 className="bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-2xl font-bold text-transparent sm:text-3xl">
               Entering the latest version
             </h2>
-            <p className="text-xs text-zinc-400 sm:text-sm">
-              Loading your refreshed experience…
+            <p className="text-xs text-zinc-400 sm:text-sm transition-all duration-300">
+              {enterStage === 0 && 'Synced — your library is up to date.'}
+              {enterStage === 1 && 'Booting UI — preparing the new purple experience.'}
+              {enterStage === 2 && 'Routing Home — taking you to the latest version.'}
             </p>
           </div>
 
@@ -623,11 +625,33 @@ export function UpdatePopup() {
             <div className="absolute inset-y-0 left-0 w-1/3 rounded-full bg-gradient-to-r from-transparent via-purple-400 to-transparent shadow-[0_0_12px_rgba(168,85,247,0.8)] animate-[shine_1.4s_ease-in-out_infinite]" />
           </div>
 
-          {/* Stage chips */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider text-zinc-500">
-            <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-emerald-300/90">Synced</span>
-            <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-purple-200/90">Booting UI</span>
-            <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1">Routing Home</span>
+          {/* Stage chips — animated step-by-step */}
+          <div className="flex flex-wrap items-center justify-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider">
+            {(['Synced', 'Booting UI', 'Routing Home'] as const).map((label, i) => {
+              const done = enterStage > i;
+              const active = enterStage === i;
+              return (
+                <span
+                  key={label}
+                  className={`flex items-center gap-1 rounded-md border px-2 py-1 transition-all duration-300 ${
+                    done
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                      : active
+                      ? 'border-purple-500/40 bg-purple-500/15 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.4)]'
+                      : 'border-white/10 bg-white/5 text-zinc-500'
+                  }`}
+                >
+                  {done ? (
+                    <Check className="h-2.5 w-2.5" />
+                  ) : active ? (
+                    <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                  ) : (
+                    <span className="h-1 w-1 rounded-full bg-current opacity-60" />
+                  )}
+                  {label}
+                </span>
+              );
+            })}
           </div>
         </div>
       </div>
