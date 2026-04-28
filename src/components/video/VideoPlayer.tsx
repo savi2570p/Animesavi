@@ -61,6 +61,11 @@ import { YouTubeEmbed, isYouTubeUrl } from './YouTubeEmbed';
 import { EmbedIframePlayer } from './EmbedIframePlayer';
 import { PureEmbedPlayer } from './PureEmbedPlayer';
 
+const playerControlButtonClass =
+  "rounded-full bg-primary/20 border border-primary/30 text-primary-foreground shadow-lg shadow-primary/20 backdrop-blur-sm hover:bg-primary/90 hover:border-primary hover:shadow-primary/40 active:scale-90 active:opacity-80 flex items-center justify-center transition-all duration-200";
+const flatPlayerControlButtonClass =
+  "text-primary-foreground hover:text-primary transition-colors drop-shadow-[0_0_8px_hsl(var(--primary)/0.45)]";
+
 interface AudioTrackInfo {
   id: number;
   label: string;
@@ -368,6 +373,8 @@ export function VideoPlayer({
   // Detect if mobile device (MUST be before hooks that use it)
   const isMobile = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const iosControlIconClass = "w-2.5 h-2.5";
+  const mobileVolumeIconClass = isIOS ? iosControlIconClass : "w-4 h-4";
   
   
   // Gesture controls hook for mobile
