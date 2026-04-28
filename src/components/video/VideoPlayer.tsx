@@ -949,104 +949,137 @@ export function VideoPlayer({
     setSettingsOpen(false);
   }, [qualityLevels]);
 
-  // Switch audio track - works with both HLS.js and native
-  // HLS.js is the primary method for audio switching on all platforms
-  // Native API works on Safari/Firefox/iOS, but not Chrome/Edge for MP4
+  // Switch audio track — works with HLS.js (Android/PC/Chrome/Edge/Firefox)
+  // and the native audioTracks API (iOS Safari, Firefox MP4 with multi-tracks).
+  // Strategy:
+  //  1. Snapshot currentTime + paused state.
+  //  2. Switch the active track on whichever pipeline is active.
+  //  3. Lock currentTime back (within ±0.1s tolerance) — silently auto-correct
+  //     any drift the engine introduces while swapping audio segments.
+  //  4. Resume playback from the SAME timestamp without reloading the source.
+  //  5. If switching fails entirely, soft-reload only the media source via
+  //     hls.recoverMediaError() and re-apply the selected audio track —
+  //     the page never reloads.
   const switchAudioTrack = useCallback((trackId: number) => {
     const video = videoRef.current;
     if (!video) return;
-    
+
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     const wasPlaying = !video.paused;
     const savedTime = video.currentTime;
-    
-    // Try HLS.js first - this is the primary and most reliable method
+    const SYNC_TOLERANCE = 0.1; // seconds — Netflix-style tight tolerance
+
+    // Helper: lock playback to savedTime within ±0.1s tolerance.
+    const lockSync = (attempts = 0) => {
+      if (!videoRef.current) return;
+      const v = videoRef.current;
+      const drift = Math.abs(v.currentTime - savedTime);
+      if (drift > SYNC_TOLERANCE && attempts < 5) {
+        v.currentTime = savedTime;
+        // Re-check after the seek settles
+        setTimeout(() => lockSync(attempts + 1), 80);
+      }
+    };
+
+    // ── Path A: HLS.js (primary on Android/PC/Chrome/Edge/Firefox) ──
     if (hlsRef.current && hlsRef.current.audioTracks.length > 0) {
-      console.log('Switching audio track via HLS.js:', trackId, 'on platform:', navigator.userAgent);
-      
-      hlsRef.current.audioTrack = trackId;
-      const track = hlsRef.current.audioTracks[trackId];
-      
-      // Save audio preference (both track index and language)
-      localStorage.setItem('preferred_audio_track', trackId.toString());
-      if (track?.lang) {
-        localStorage.setItem('preferred_audio_language', track.lang);
+      const targetTrack = hlsRef.current.audioTracks[trackId];
+      if (!targetTrack) {
+        toast.error('Audio track not available');
+        setSettingsOpen(false);
+        return;
       }
-      
-      toast.success(`Audio: ${track?.name || `Track ${trackId + 1}`}`);
-      setCurrentAudioTrack(trackId);
-      setSettingsOpen(false);
-      
-      // Resume playback if was playing (some browsers pause on track switch)
-      if (wasPlaying) {
+
+      try {
+        hlsRef.current.audioTrack = trackId;
+
+        // Persist preferences (track index + language code).
+        localStorage.setItem('preferred_audio_track', trackId.toString());
+        if (targetTrack.lang) {
+          localStorage.setItem('preferred_audio_language', targetTrack.lang);
+        }
+
+        toast.success(`Audio: ${targetTrack.name || `Track ${trackId + 1}`}`);
+        setCurrentAudioTrack(trackId);
+        setSettingsOpen(false);
+
+        // Lock sync — re-attach playback at the saved timestamp and silently
+        // auto-correct any drift HLS.js introduces while swapping the track.
         setTimeout(() => {
-          video.play().catch(() => {});
-        }, 100);
-      }
-      return;
-    }
-    
-    // Native audioTracks API - required for iOS Safari with MP4 files
-    const nativeAudioTracks = (video as any).audioTracks;
-    if (nativeAudioTracks && nativeAudioTracks.length > 0) {
-      console.log('Switching audio track via native API:', trackId, 'iOS:', isIOS, 'Safari:', isSafari);
-      
-      // iOS/Safari specific: disable all first, then enable target
-      for (let i = 0; i < nativeAudioTracks.length; i++) {
-        nativeAudioTracks[i].enabled = (i === trackId);
-      }
-      
-      const track = nativeAudioTracks[trackId];
-      
-      // Save preferences
-      localStorage.setItem('preferred_audio_track', trackId.toString());
-      if (track?.language) {
-        localStorage.setItem('preferred_audio_language', track.language);
-      }
-      
-      // iOS Safari may need a seek nudge to actually switch the audio stream
-      if (isIOS || isSafari) {
-        console.log('iOS/Safari: applying seek nudge for audio switch');
-        // Small seek to force audio pipeline refresh
-        video.currentTime = savedTime + 0.01;
-        
-        // Verify the switch took effect after a short delay
-        setTimeout(() => {
-          if (nativeAudioTracks[trackId] && !nativeAudioTracks[trackId].enabled) {
-            console.warn('iOS audio switch may not have taken effect, retrying...');
-            for (let i = 0; i < nativeAudioTracks.length; i++) {
-              nativeAudioTracks[i].enabled = (i === trackId);
-            }
-            video.currentTime = savedTime;
-          }
+          lockSync();
           if (wasPlaying) {
             video.play().catch(() => {});
           }
-        }, 200);
-      } else if (wasPlaying) {
+        }, 100);
+      } catch (err) {
+        // ── Failsafe: soft-reload ONLY the media source (not the page) ──
+        console.warn('HLS audio switch failed, attempting soft media recovery', err);
+        try {
+          hlsRef.current.recoverMediaError();
+          setTimeout(() => {
+            if (hlsRef.current) hlsRef.current.audioTrack = trackId;
+            video.currentTime = savedTime;
+            if (wasPlaying) video.play().catch(() => {});
+            setCurrentAudioTrack(trackId);
+          }, 250);
+        } catch {
+          toast.error('Audio track not available');
+        }
+      }
+      return;
+    }
+
+    // ── Path B: Native audioTracks API (iOS Safari, Firefox MP4) ──
+    const nativeAudioTracks = (video as any).audioTracks;
+    if (nativeAudioTracks && nativeAudioTracks.length > 0) {
+      const targetTrack = nativeAudioTracks[trackId];
+      if (!targetTrack) {
+        toast.error('Audio track not available');
+        setSettingsOpen(false);
+        return;
+      }
+
+      // Disable all, enable target — required for iOS/Safari semantics.
+      for (let i = 0; i < nativeAudioTracks.length; i++) {
+        nativeAudioTracks[i].enabled = (i === trackId);
+      }
+
+      localStorage.setItem('preferred_audio_track', trackId.toString());
+      if (targetTrack.language) {
+        localStorage.setItem('preferred_audio_language', targetTrack.language);
+      }
+
+      // iOS/Safari needs a tiny seek nudge to actually switch the audio stream.
+      if (isIOS || isSafari) {
+        video.currentTime = savedTime + 0.01;
         setTimeout(() => {
-          video.play().catch(() => {});
+          // Verify the switch took effect; retry once if not.
+          if (nativeAudioTracks[trackId] && !nativeAudioTracks[trackId].enabled) {
+            for (let i = 0; i < nativeAudioTracks.length; i++) {
+              nativeAudioTracks[i].enabled = (i === trackId);
+            }
+          }
+          // Lock back to the saved timestamp within tolerance.
+          lockSync();
+          if (wasPlaying) video.play().catch(() => {});
+        }, 200);
+      } else {
+        setTimeout(() => {
+          lockSync();
+          if (wasPlaying) video.play().catch(() => {});
         }, 100);
       }
-      
-      toast.success(`Audio: ${track?.label || `Track ${trackId + 1}`}`);
+
+      toast.success(`Audio: ${targetTrack.label || `Track ${trackId + 1}`}`);
       setCurrentAudioTrack(trackId);
       setSettingsOpen(false);
       return;
     }
-    
-    // No audio tracks available - inform user with helpful message
-    console.warn('No audio tracks available via native API');
-    const isChrome = /Chrome/.test(navigator.userAgent) && !/Edge/.test(navigator.userAgent);
-    const isWindows = /Windows/.test(navigator.userAgent);
-    const isAndroid = /Android/.test(navigator.userAgent);
-    
-    if ((isChrome || isWindows) && !isAndroid) {
-      toast.info('Audio track switching works best with HLS streams (.m3u8). For MP4 files, try using Safari or Firefox.');
-    } else {
-      toast.error('Audio track switching is not available for this video');
-    }
+
+    // ── No tracks available ──
+    console.warn('No audio tracks available via HLS.js or native API');
+    toast.info('Audio track not available');
     setSettingsOpen(false);
   }, []);
 
