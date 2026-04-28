@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Play, Pause, Volume2, VolumeX, Maximize,
   SkipForward, Loader2, AlertTriangle, RefreshCw,
   Settings, Check, ShieldAlert, Download, Headphones,
-  List, ChevronRight, X
+  List, ChevronRight, X, Gauge
 } from 'lucide-react';
 import Hls from 'hls.js';
 import { useEmbedPlayerBridge } from '@/hooks/useEmbedPlayerBridge';
@@ -39,6 +39,7 @@ const createSlug = (title: string): string =>
 
 export default function EmbedSlugPlayer() {
   const { animeSlug, seasonSlug, episodeSlug } = useParams<{ animeSlug: string; seasonSlug?: string; episodeSlug?: string }>();
+  const [searchParams] = useSearchParams();
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -63,6 +64,8 @@ export default function EmbedSlugPlayer() {
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
   const [showAudioMenu, setShowAudioMenu] = useState(false);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [audioTracks, setAudioTracks] = useState<{ id: number; name: string; lang: string }[]>([]);
   const [currentAudioTrack, setCurrentAudioTrack] = useState(0);
 
@@ -76,6 +79,7 @@ export default function EmbedSlugPlayer() {
 
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   const deviceInfo = detectDeviceInfo();
+  const isShadowTheme = searchParams.get('theme') === 'shadow';
 
   // Domain + admin validation
   useEffect(() => {
@@ -271,6 +275,18 @@ export default function EmbedSlugPlayer() {
           e.preventDefault();
           toggleMute();
           break;
+        case 'k':
+          e.preventDefault();
+          if (videoRef.current) isPlaying ? videoRef.current.pause() : videoRef.current.play();
+          break;
+        case ',':
+          e.preventDefault();
+          setPlaybackSpeed((s) => Math.max(0.5, +(s - 0.25).toFixed(2)));
+          break;
+        case '.':
+          e.preventDefault();
+          setPlaybackSpeed((s) => Math.min(2, +(s + 0.25).toFixed(2)));
+          break;
         case 'arrowright':
           e.preventDefault();
           if (videoRef.current) videoRef.current.currentTime = Math.min(videoRef.current.currentTime + 10, duration);
@@ -284,6 +300,10 @@ export default function EmbedSlugPlayer() {
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [isPlaying, duration]);
+
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.playbackRate = playbackSpeed;
+  }, [playbackSpeed, episodeData?.videoUrl]);
 
   // Video playback setup
   useEffect(() => {
@@ -373,6 +393,12 @@ export default function EmbedSlugPlayer() {
     setShowAudioMenu(false);
   };
 
+  const changePlaybackSpeed = (speed: number) => {
+    setPlaybackSpeed(speed);
+    if (videoRef.current) videoRef.current.playbackRate = speed;
+    setShowSpeedMenu(false);
+  };
+
   const handleDirectDownload = (quality: string) => {
     const url = episodeData?.videoUrl;
     if (!url) return;
@@ -437,6 +463,8 @@ export default function EmbedSlugPlayer() {
     errorReason: error,
   });
 
+  const closeAllMenus = () => { setShowQualityMenu(false); setShowDownloadMenu(false); setShowAudioMenu(false); setShowEpisodePanel(false); setShowSpeedMenu(false); };
+
   useEffect(() => {
     const h = () => setIsFullscreen(!!(document.fullscreenElement || (document as any).webkitFullscreenElement));
     document.addEventListener('fullscreenchange', h);
@@ -452,6 +480,7 @@ export default function EmbedSlugPlayer() {
         setShowQualityMenu(false);
         setShowDownloadMenu(false);
         setShowAudioMenu(false);
+        setShowSpeedMenu(false);
       }, 3000);
     }
     return () => { if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current); };
@@ -465,6 +494,7 @@ export default function EmbedSlugPlayer() {
       setShowQualityMenu(false);
       setShowDownloadMenu(false);
       setShowAudioMenu(false);
+      setShowSpeedMenu(false);
     }, 3000);
   }, [isPlaying]);
 
@@ -476,16 +506,11 @@ export default function EmbedSlugPlayer() {
     return hrs > 0 ? `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}` : `${mins}:${String(secs).padStart(2, '0')}`;
   };
 
-  const closeAllMenus = () => {
-    setShowQualityMenu(false);
-    setShowDownloadMenu(false);
-    setShowAudioMenu(false);
-  };
-
   // Mobile compact sizes
-  const btnSize = deviceInfo.isMobile ? 'w-[30px] h-[30px]' : 'w-9 h-9';
-  const iconSize = deviceInfo.isMobile ? 'w-[15px] h-[15px]' : 'w-5 h-5';
-  const gapSize = deviceInfo.isMobile ? 'gap-[6px]' : 'gap-2';
+  const btnSize = deviceInfo.isMobile ? 'w-[28px] h-[28px]' : 'w-9 h-9';
+  const iconSize = deviceInfo.isMobile ? 'w-[14px] h-[14px]' : 'w-5 h-5';
+  const gapSize = deviceInfo.isMobile ? 'gap-[5px]' : 'gap-2';
+  const controlButtonClass = `${btnSize} rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-90 ${isShadowTheme ? 'bg-primary/20 border border-primary/30 text-white hover:bg-primary/80 shadow-lg shadow-primary/20' : 'text-white hover:text-primary'}`;
 
   // Blocked domain
   if (domainAllowed === false) {
@@ -641,13 +666,13 @@ export default function EmbedSlugPlayer() {
           {/* Time + Controls */}
           <div className={`flex items-center justify-between ${gapSize}`}>
             <div className={`flex items-center ${gapSize}`}>
-              <button onClick={togglePlay} className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`}>
+              <button onClick={togglePlay} className={controlButtonClass}>
                 {isPlaying ? <Pause className={iconSize} /> : <Play className={`${iconSize} ml-0.5`} />}
               </button>
-              <button onClick={skipForward} className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`}>
+              <button onClick={skipForward} className={controlButtonClass}>
                 <SkipForward className={iconSize} />
               </button>
-              <button onClick={toggleMute} className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`}>
+              <button onClick={toggleMute} className={controlButtonClass}>
                 {isMuted ? <VolumeX className={iconSize} /> : <Volume2 className={iconSize} />}
               </button>
               <span className="text-white/80 text-[10px] sm:text-xs ml-1">{formatTime(currentTime)} / {formatTime(duration)}</span>
@@ -658,7 +683,7 @@ export default function EmbedSlugPlayer() {
               {audioTracks.length > 1 && (
                 <div className="relative">
                   <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowAudioMenu(!showAudioMenu); }}
-                    className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`} title="Audio Track">
+                    className={controlButtonClass} title="Audio Track">
                     <Headphones className={iconSize} />
                   </button>
                   {showAudioMenu && (
@@ -679,7 +704,7 @@ export default function EmbedSlugPlayer() {
               {hlsLevels.length > 0 && (
                 <div className="relative">
                   <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowQualityMenu(!showQualityMenu); }}
-                    className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`}>
+                    className={controlButtonClass}>
                     <Settings className={iconSize} />
                   </button>
                   {showQualityMenu && (
@@ -702,7 +727,7 @@ export default function EmbedSlugPlayer() {
               {/* Download with 480p/720p/1080p */}
               <div className="relative">
                 <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowDownloadMenu(!showDownloadMenu); }}
-                  className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`} title="Download">
+                  className={controlButtonClass} title="Download">
                   {isDownloading ? <Loader2 className={`${iconSize} animate-spin`} /> : <Download className={iconSize} />}
                 </button>
                 {showDownloadMenu && (
@@ -719,7 +744,23 @@ export default function EmbedSlugPlayer() {
                 )}
               </div>
 
-              <button onClick={toggleFullscreen} className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`}>
+              <div className="relative">
+                <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowSpeedMenu(!showSpeedMenu); }} className={controlButtonClass} title="Speed">
+                  <Gauge className={iconSize} />
+                </button>
+                {showSpeedMenu && (
+                  <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-primary/30 rounded-lg p-1 min-w-[110px] z-50">
+                    {[0.5, 0.75, 1, 1.25, 1.5, 2].map((speed) => (
+                      <button key={speed} onClick={(e) => { e.stopPropagation(); changePlaybackSpeed(speed); }}
+                        className={`w-full text-left px-3 py-1.5 text-xs rounded hover:bg-primary/15 flex items-center gap-2 ${playbackSpeed === speed ? 'text-primary' : 'text-white/80'}`}>
+                        {playbackSpeed === speed && <Check className="w-3 h-3" />} {speed}x
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <button onClick={toggleFullscreen} className={controlButtonClass}>
                 <Maximize className={iconSize} />
               </button>
             </div>
@@ -730,7 +771,7 @@ export default function EmbedSlugPlayer() {
       {/* Center play button when paused */}
       {!isPlaying && !isLoading && !isBuffering && (
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-          <div className="w-16 h-16 rounded-full bg-black/50 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-primary/70 shadow-2xl shadow-primary/30 flex items-center justify-center">
             <Play className="w-8 h-8 text-white fill-white" />
           </div>
         </div>

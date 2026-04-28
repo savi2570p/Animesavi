@@ -50,7 +50,6 @@ export const SERVER_CONFIGS: Record<ServerType, ServerConfig> = {
 };
 
 const SERVER_PREF_KEY = 'preferred_video_server';
-const AUTO_SERVER_CHAIN: ServerType[] = ['PLAY', 'Zex', 'XPLUS'];
 
 /**
  * Returns the list of servers available for the current device.
@@ -125,30 +124,6 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
     };
   }, []);
 
-  const getNextAutoServer = useCallback((server: ServerType) => {
-    const servers = getAvailableServers();
-    const chain = AUTO_SERVER_CHAIN.filter((candidate) => servers.includes(candidate));
-    const currentIndex = chain.indexOf(server);
-    return currentIndex >= 0 ? chain[currentIndex + 1] ?? null : chain[0] ?? null;
-  }, []);
-
-  const triggerAutoSwitch = useCallback((reason: string) => {
-    const nextServer = getNextAutoServer(activeServer);
-    if (!nextServer) return;
-
-    setFallbackOccurred(true);
-    setFallbackFrom(activeServer);
-    videoLoadedRef.current = false;
-    setFailedServers((prev) => new Set(prev).add(activeServer));
-    setIsServerLoading(true);
-    localStorage.setItem(SERVER_PREF_KEY, nextServer);
-    setActiveServer(nextServer);
-    options?.onServerSwitch?.(activeServer, nextServer, reason);
-
-    if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
-    loadingTimeoutRef.current = setTimeout(() => setIsServerLoading(false), 1200);
-  }, [activeServer, getNextAutoServer, options]);
-
   const switchServer = useCallback((server: ServerType) => {
     const servers = getAvailableServers();
     if (!servers.includes(server)) {
@@ -199,16 +174,13 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
   const onVideoLoadError = useCallback(() => {
     clearLoadingState();
     console.log(`Server ${activeServer} encountered an error`);
-    triggerAutoSwitch('error');
-  }, [activeServer, clearLoadingState, triggerAutoSwitch]);
+    setFailedServers((prev) => new Set(prev).add(activeServer));
+  }, [activeServer, clearLoadingState]);
 
   const startFallbackTimer = useCallback(() => {
-    videoLoadedRef.current = false;
     if (fallbackTimeoutRef.current) clearTimeout(fallbackTimeoutRef.current);
-    fallbackTimeoutRef.current = setTimeout(() => {
-      if (!videoLoadedRef.current) triggerAutoSwitch('timeout');
-    }, 3000);
-  }, [triggerAutoSwitch]);
+    videoLoadedRef.current = false;
+  }, []);
 
   return {
     activeServer,
