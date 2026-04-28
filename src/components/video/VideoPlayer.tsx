@@ -451,6 +451,7 @@ export function VideoPlayer({
     const video = videoRef.current;
     if (video) {
       video.pause();
+      video.removeAttribute('src');
       video.currentTime = 0;
       video.load();
     }
