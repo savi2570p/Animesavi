@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { usePopupQueue } from '@/contexts/PopupQueueContext';
-import { Loader2, ChevronLeft, ChevronRight, Sparkles, X, ArrowRight } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, Sparkles, X, ArrowRight, Check } from 'lucide-react';
 
 type UpdateStep = 'alert' | 'downloading' | 'installing' | 'complete' | 'entering';
 type BadgeKind = 'NEW' | 'IMPROVED' | 'FIX';
@@ -122,15 +122,21 @@ const ENTERING_SHOWN_KEY = `update_entering_shown_${APP_VERSION}`;
 export function UpdatePopup() {
   const { activePopup, dismissPopup, isManualWhatsNew } = usePopupQueue();
   const navigate = useNavigate();
+  const location = useLocation();
   const [step, setStep] = useState<UpdateStep>('alert');
   const [progress, setProgress] = useState(0);
   const [displayProgress, setDisplayProgress] = useState(0);
   const [speedMbps, setSpeedMbps] = useState(0);
   const [speedHistory, setSpeedHistory] = useState<number[]>([]);
   const [versionIndex, setVersionIndex] = useState(0);
+  const [enterStage, setEnterStage] = useState(0); // 0=Synced, 1=Booting UI, 2=Routing Home
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const rafRef = useRef<number | null>(null);
   const touchStartX = useRef<number | null>(null);
+  // Snapshot the route when "Explore Now" is clicked so we only auto-navigate
+  // home if the user is still on that same route 3.5s later (avoids hijacking
+  // navigation if they manually move to /auth, /anime/:id, /watch, etc.).
+  const enteringFromPathRef = useRef<string | null>(null);
 
   const TOTAL_MB = RANDOM_DOWNLOAD_MB;
 
@@ -230,18 +236,39 @@ export function UpdatePopup() {
       return;
     }
     try { localStorage.setItem(ENTERING_SHOWN_KEY, 'true'); } catch { /* ignore */ }
+    enteringFromPathRef.current = location.pathname;
+    setEnterStage(0);
     setStep('entering');
-  }, [dismissPopup, navigate]);
+  }, [dismissPopup, navigate, location.pathname]);
 
-  // Entering step: ~3.5s cinematic transition into the latest version, then route home.
+  // Entering step: ~3.5s cinematic transition into the latest version.
+  // Cycles stage text Synced → Booting UI → Routing Home, then routes home —
+  // BUT only if the user hasn't manually navigated elsewhere in the meantime.
   useEffect(() => {
     if (step !== 'entering') return;
-    const timer = setTimeout(() => {
+    setEnterStage(0);
+    const stage1 = setTimeout(() => setEnterStage(1), 1100);
+    const stage2 = setTimeout(() => setEnterStage(2), 2300);
+    const finish = setTimeout(() => {
+      const startedFrom = enteringFromPathRef.current;
       dismissPopup();
-      navigate('/');
+      // Only redirect home if the user is STILL on the same page they pressed
+      // "Explore Now" from. If they navigated anywhere else mid-transition
+      // (e.g. /auth, /anime/:id, /watch/...), leave them exactly where they are.
+      if (startedFrom !== null && location.pathname === startedFrom && location.pathname !== '/') {
+        navigate('/');
+      } else if (startedFrom === '/') {
+        // Already on home — no-op navigate is fine, just refreshes scroll state.
+        navigate('/');
+      }
+      enteringFromPathRef.current = null;
     }, 3500);
-    return () => clearTimeout(timer);
-  }, [step, dismissPopup, navigate]);
+    return () => {
+      clearTimeout(stage1);
+      clearTimeout(stage2);
+      clearTimeout(finish);
+    };
+  }, [step, dismissPopup, navigate, location.pathname]);
 
   const goPrev = () => setVersionIndex((i) => Math.max(0, i - 1));
   const goNext = () => setVersionIndex((i) => Math.min(VERSION_GROUPS.length - 1, i + 1));
@@ -586,8 +613,10 @@ export function UpdatePopup() {
             <h2 className="bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-2xl font-bold text-transparent sm:text-3xl">
               Entering the latest version
             </h2>
-            <p className="text-xs text-zinc-400 sm:text-sm">
-              Loading your refreshed experience…
+            <p className="text-xs text-zinc-400 sm:text-sm transition-all duration-300">
+              {enterStage === 0 && 'Synced — your library is up to date.'}
+              {enterStage === 1 && 'Booting UI — preparing the new purple experience.'}
+              {enterStage === 2 && 'Routing Home — taking you to the latest version.'}
             </p>
           </div>
 
@@ -596,11 +625,33 @@ export function UpdatePopup() {
             <div className="absolute inset-y-0 left-0 w-1/3 rounded-full bg-gradient-to-r from-transparent via-purple-400 to-transparent shadow-[0_0_12px_rgba(168,85,247,0.8)] animate-[shine_1.4s_ease-in-out_infinite]" />
           </div>
 
-          {/* Stage chips */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider text-zinc-500">
-            <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-emerald-300/90">Synced</span>
-            <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-purple-200/90">Booting UI</span>
-            <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1">Routing Home</span>
+          {/* Stage chips — animated step-by-step */}
+          <div className="flex flex-wrap items-center justify-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider">
+            {(['Synced', 'Booting UI', 'Routing Home'] as const).map((label, i) => {
+              const done = enterStage > i;
+              const active = enterStage === i;
+              return (
+                <span
+                  key={label}
+                  className={`flex items-center gap-1 rounded-md border px-2 py-1 transition-all duration-300 ${
+                    done
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                      : active
+                      ? 'border-purple-500/40 bg-purple-500/15 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.4)]'
+                      : 'border-white/10 bg-white/5 text-zinc-500'
+                  }`}
+                >
+                  {done ? (
+                    <Check className="h-2.5 w-2.5" />
+                  ) : active ? (
+                    <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                  ) : (
+                    <span className="h-1 w-1 rounded-full bg-current opacity-60" />
+                  )}
+                  {label}
+                </span>
+              );
+            })}
           </div>
         </div>
       </div>
