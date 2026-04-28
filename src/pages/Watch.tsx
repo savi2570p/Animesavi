@@ -1362,6 +1362,7 @@ export default function Watch() {
                   type="episode"
                   pageUrl={pageUrl}
                   embedUrl={embedUrl}
+                  rawVideoUrl={episode.video_url}
                   animeTitle={anime?.title || 'Episode'}
                 />
               );
