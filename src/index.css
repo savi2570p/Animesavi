@@ -339,12 +339,26 @@ img, video {
     @apply font-bold tracking-tight;
   }
 
-  /* Smoother touch interactions */
-  button, a, [role="button"] {
+  /* Smoother touch interactions.
+     NOTE: Do NOT apply -webkit-touch-callout: none to <a> globally — that
+     disables iOS Safari's native long-press preview / share sheet on every
+     anchor (anime cards, thumbnails, etc.). We restrict the callout disable
+     to buttons & role=button only, and let real links keep native behavior. */
+  button, [role="button"] {
     @apply touch-manipulation;
     -webkit-touch-callout: none;
-    /* Faster touch response */
     touch-action: manipulation;
+  }
+  a {
+    @apply touch-manipulation;
+    touch-action: manipulation;
+    /* Re-enable native iOS long-press preview / Open / Copy Link / Share */
+    -webkit-touch-callout: default;
+  }
+  /* Opt-out: anchors that act as buttons (logos, CTA chevrons) can add
+     `.no-touch-callout` to suppress the iOS preview popup. */
+  a.no-touch-callout {
+    -webkit-touch-callout: none;
   }
 
   /* Selection color */
