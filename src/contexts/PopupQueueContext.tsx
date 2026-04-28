@@ -40,6 +40,10 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isEmbedRoute || !isHomeRoute) {
+      // Clear any queued popups when navigating away from home so they
+      // never follow the user onto /auth, /watch, /anime/:id etc.
+      setQueue([]);
+      setManualWhatsNew(false);
       setReady(true);
       return;
     }
