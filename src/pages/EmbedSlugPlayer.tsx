@@ -504,12 +504,6 @@ export default function EmbedSlugPlayer() {
     return hrs > 0 ? `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}` : `${mins}:${String(secs).padStart(2, '0')}`;
   };
 
-  const closeAllMenus = () => {
-    setShowQualityMenu(false);
-    setShowDownloadMenu(false);
-    setShowAudioMenu(false);
-  };
-
   // Mobile compact sizes
   const btnSize = deviceInfo.isMobile ? 'w-[30px] h-[30px]' : 'w-9 h-9';
   const iconSize = deviceInfo.isMobile ? 'w-[15px] h-[15px]' : 'w-5 h-5';
