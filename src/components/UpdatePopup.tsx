@@ -236,18 +236,38 @@ export function UpdatePopup() {
       return;
     }
     try { localStorage.setItem(ENTERING_SHOWN_KEY, 'true'); } catch { /* ignore */ }
+    enteringFromPathRef.current = location.pathname;
+    setEnterStage(0);
     setStep('entering');
-  }, [dismissPopup, navigate]);
+  }, [dismissPopup, navigate, location.pathname]);
 
-  // Entering step: ~3.5s cinematic transition into the latest version, then route home.
+  // Entering step: ~3.5s cinematic transition into the latest version.
+  // Cycles stage text Synced → Booting UI → Routing Home, then routes home —
+  // BUT only if the user hasn't manually navigated elsewhere in the meantime.
   useEffect(() => {
     if (step !== 'entering') return;
-    const timer = setTimeout(() => {
+    setEnterStage(0);
+    const stage1 = setTimeout(() => setEnterStage(1), 1100);
+    const stage2 = setTimeout(() => setEnterStage(2), 2300);
+    const finish = setTimeout(() => {
+      const startedFrom = enteringFromPathRef.current;
       dismissPopup();
-      navigate('/');
+      // Only redirect home if the user is still on the same page they pressed
+      // "Explore Now" from. If they navigated to /auth, /anime/:id, /watch, etc.
+      // mid-transition, leave them where they are.
+      if (startedFrom && location.pathname === startedFrom && location.pathname !== '/') {
+        navigate('/');
+      } else if (location.pathname === '/' || !startedFrom) {
+        navigate('/');
+      }
+      enteringFromPathRef.current = null;
     }, 3500);
-    return () => clearTimeout(timer);
-  }, [step, dismissPopup, navigate]);
+    return () => {
+      clearTimeout(stage1);
+      clearTimeout(stage2);
+      clearTimeout(finish);
+    };
+  }, [step, dismissPopup, navigate, location.pathname]);
 
   const goPrev = () => setVersionIndex((i) => Math.max(0, i - 1));
   const goNext = () => setVersionIndex((i) => Math.min(VERSION_GROUPS.length - 1, i + 1));
