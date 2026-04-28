@@ -2869,26 +2869,26 @@ export function VideoPlayer({
                 /* X-PLUS: Flat minimal controls - Fullscreen */
                 <>
                   <div className="flex items-center gap-2 md:gap-5">
-                    <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
+                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
                       {isPlaying ? <Pause className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-7 md:h-7"} /> : <Play className={isIOS ? "w-4 h-4 fill-current" : "w-5 h-5 md:w-7 md:h-7 fill-current"} />}
                     </button>
-                    <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); skipBackward(); }} title="Skip back 10s">
+                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); skipBackward(); }} title="Skip back 10s">
                       <SkipBack className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
-                    <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); skipForward(); }} title="Skip forward 10s">
+                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); skipForward(); }} title="Skip forward 10s">
                       <SkipForward className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
-                    <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); toggleMute(); }}>
+                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); toggleMute(); }}>
                       {isMuted ? <VolumeX className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} /> : <Volume2 className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />}
                     </button>
                     <span className={`text-white/90 font-mono ${isIOS ? 'text-[10px]' : 'text-xs md:text-sm'}`}>{formatTime(currentTime)} / {formatTime(duration)}</span>
                   </div>
                   <div className="flex items-center gap-2 md:gap-5">
-                    <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); handleDownload(); }} title="Download">
+                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); handleDownload(); }} title="Download">
                       <Download className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                     <button 
-                      className="text-white hover:text-white/80 transition-colors" 
+                      className={flatPlayerControlButtonClass} 
                       onClick={(e) => { 
                         e.stopPropagation(); 
                         if (subtitleTracks.length > 0) {
@@ -2911,7 +2911,7 @@ export function VideoPlayer({
                     <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
                       <DropdownMenuTrigger asChild>
                         <button 
-                          className="text-white hover:text-white/80 transition-colors"
+                          className={flatPlayerControlButtonClass}
                           onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); setSettingsOpen(prev => !prev); }}
                           title="Settings"
                           style={{ touchAction: 'manipulation' }}
@@ -2932,10 +2932,10 @@ export function VideoPlayer({
                         {renderSettingsContent()}
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <button className="hidden md:block text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); togglePiP(); }} title="Picture-in-Picture">
+                    <button className={`hidden md:block ${flatPlayerControlButtonClass}`} onClick={(e) => { e.stopPropagation(); togglePiP(); }} title="Picture-in-Picture">
                       <PictureInPicture2 className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
-                    <button className="text-white hover:text-white/80 transition-colors" onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} title="Exit Fullscreen">
+                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} title="Exit Fullscreen">
                       <Minimize className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                   </div>
@@ -2945,62 +2945,62 @@ export function VideoPlayer({
                 <>
               <div className="flex items-center gap-2.5 md:gap-3">
                 <button 
-                  className="w-[24px] h-[24px] md:w-10 md:h-10 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                  className={`w-[20px] h-[20px] md:w-10 md:h-10 ${playerControlButtonClass}`} 
                   onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                 >
                   {isPlaying ? <Pause className="w-3.5 h-3.5 md:w-5 md:h-5" /> : <Play className="w-3.5 h-3.5 md:w-5 md:h-5 fill-current ml-0.5" />}
                 </button>
                 {hasNextEpisode && onNextEpisode && !isMovie && (
                   <button 
-                    className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                    className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`} 
                     onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
                     title="Next Episode"
                   >
-                    <SkipForward className="w-3 h-3 md:w-[18px] md:h-[18px]" />
+                    <SkipForward className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
                   </button>
                 )}
                 <button 
-                  className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                  className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`} 
                   onClick={(e) => { e.stopPropagation(); skipForward(); }} 
                   title="Skip forward 10s"
                 >
-                  <FastForward className="w-3 h-3 md:w-[18px] md:h-[18px]" />
+                  <FastForward className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
                 </button>
                 <div className="hidden md:block" onClick={(e) => e.stopPropagation()}>
                   <VolumeSlider volume={volume} isMuted={isMuted} onVolumeChange={handleVolumeChange} onMuteToggle={toggleMute} />
                 </div>
                 <button 
-                  className="md:hidden w-[24px] h-[24px] rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                  className={`md:hidden w-[20px] h-[20px] ${playerControlButtonClass}`} 
                   onClick={(e) => { e.stopPropagation(); toggleMute(); }}
                 >
-                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  {isMuted ? <VolumeX className={mobileVolumeIconClass} /> : <Volume2 className={mobileVolumeIconClass} />}
                 </button>
               </div>
               <div className="flex items-center gap-2 md:gap-2.5">
                 {features.includes('download') && (
                   <button 
-                    className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                    className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`} 
                     onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
                     title="Download"
                   >
-                    <Download className="w-3 h-3 md:w-[18px] md:h-[18px]" />
+                    <Download className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
                   </button>
                 )}
                 <ThemePickerButton
                   value={playerTheme}
                   onChange={setPlayerTheme}
-                  iconClassName="w-3 h-3 md:w-[18px] md:h-[18px]"
+                  iconClassName={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"}
                   containerEl={containerRef.current}
                 />
                 <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
                   <DropdownMenuTrigger asChild>
                     <button 
-                      className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200 relative"
+                      className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass} relative`}
                       onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); setSettingsOpen(prev => !prev); }}
                       title="Settings"
                       style={{ touchAction: 'manipulation' }}
                     >
-                      <Settings className="w-3 h-3 md:w-[18px] md:h-[18px]" />
+                      <Settings className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
@@ -3017,21 +3017,21 @@ export function VideoPlayer({
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <button 
-                  className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                  className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`} 
                   onClick={(e) => { e.stopPropagation(); setShowMirroringDialog(true); }} 
                   title="Screen Mirroring"
                 >
-                  <Cast className="w-3 h-3 md:w-[18px] md:h-[18px]" />
+                  <Cast className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
                 </button>
                 <button 
-                  className="hidden md:flex w-9 h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 items-center justify-center text-white transition-all duration-200" 
+                  className={`hidden md:flex w-9 h-9 ${playerControlButtonClass}`} 
                   onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                   title="Picture-in-Picture"
                 >
                   <PictureInPicture2 className="w-[18px] h-[18px]" />
                 </button>
                 <button 
-                  className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                  className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`} 
                   onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
                   title="Exit Fullscreen"
                 >
@@ -3156,28 +3156,28 @@ export function VideoPlayer({
               <>
                 <div className="flex items-center gap-2 md:gap-4">
                   <button 
-                    className="text-white hover:text-white/80 transition-colors" 
+                    className={flatPlayerControlButtonClass} 
                     onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                     title={isPlaying ? 'Pause' : 'Play'}
                   >
                     {isPlaying ? <Pause className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} /> : <Play className={isIOS ? "w-3.5 h-3.5 fill-current" : "w-5 h-5 md:w-6 md:h-6 fill-current"} />}
                   </button>
                   <button 
-                    className="text-white hover:text-white/80 transition-colors" 
+                    className={flatPlayerControlButtonClass} 
                     onClick={(e) => { e.stopPropagation(); skipBackward(); }}
                     title="Skip back 10s"
                   >
                     <SkipBack className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
                   </button>
                   <button 
-                    className="text-white hover:text-white/80 transition-colors" 
+                    className={flatPlayerControlButtonClass} 
                     onClick={(e) => { e.stopPropagation(); skipForward(); }}
                     title="Skip forward 10s"
                   >
                     <SkipForward className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
                   </button>
                   <button 
-                    className="text-white hover:text-white/80 transition-colors" 
+                    className={flatPlayerControlButtonClass} 
                     onClick={(e) => { e.stopPropagation(); toggleMute(); }}
                     title={isMuted ? 'Unmute' : 'Mute'}
                   >
@@ -3187,14 +3187,14 @@ export function VideoPlayer({
                 </div>
                 <div className="flex items-center gap-2 md:gap-4">
                   <button 
-                    className="text-white hover:text-white/80 transition-colors" 
+                    className={flatPlayerControlButtonClass} 
                     onClick={(e) => { e.stopPropagation(); handleDownload(); }}
                     title="Download"
                   >
                     <Download className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
                   </button>
                   <button 
-                    className="text-white hover:text-white/80 transition-colors" 
+                    className={flatPlayerControlButtonClass} 
                     onClick={(e) => { 
                       e.stopPropagation(); 
                       if (subtitleTracks.length > 0) {
@@ -3224,7 +3224,7 @@ export function VideoPlayer({
                   >
                     <DropdownMenuTrigger asChild>
                       <button 
-                        className="text-white hover:text-white/80 transition-colors"
+                        className={flatPlayerControlButtonClass}
                         onPointerDown={(e) => { 
                           e.stopPropagation(); 
                           e.preventDefault();
@@ -3251,14 +3251,14 @@ export function VideoPlayer({
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <button 
-                    className="hidden md:block text-white hover:text-white/80 transition-colors"
+                    className={`hidden md:block ${flatPlayerControlButtonClass}`}
                     onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                     title="Picture-in-Picture"
                   >
                     <PictureInPicture2 className="w-5 h-5" />
                   </button>
                   <button 
-                    className="text-white hover:text-white/80 transition-colors"
+                    className={flatPlayerControlButtonClass}
                     onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
                     title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
                   >
@@ -3272,7 +3272,7 @@ export function VideoPlayer({
              <div className="flex items-center gap-2.5 md:gap-3">
               {/* Play/Pause */}
               <button 
-                className="w-[24px] h-[24px] md:w-10 md:h-10 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                className={`w-[20px] h-[20px] md:w-10 md:h-10 ${playerControlButtonClass}`} 
                 onClick={(e) => { e.stopPropagation(); togglePlay(); }}
               >
                 {isPlaying ? <Pause className="w-3.5 h-3.5 md:w-5 md:h-5" /> : <Play className="w-3.5 h-3.5 md:w-5 md:h-5 fill-current ml-0.5" />}
@@ -3281,21 +3281,21 @@ export function VideoPlayer({
               {/* Next Episode */}
               {hasNextEpisode && onNextEpisode && !isMovie && (
                 <button 
-                  className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                  className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`} 
                   onClick={(e) => { e.stopPropagation(); onNextEpisode(); }} 
                   title="Next Episode"
                 >
-                  <SkipForward className="w-3 h-3 md:w-[18px] md:h-[18px]" />
+                  <SkipForward className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
                 </button>
               )}
 
               {/* Skip forward 10s */}
               <button 
-                className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`} 
                 onClick={(e) => { e.stopPropagation(); skipForward(); }} 
                 title="Skip forward 10s"
               >
-                <FastForward className="w-3 h-3 md:w-[18px] md:h-[18px]" />
+                <FastForward className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
               </button>
 
               {/* Volume Slider - Desktop */}
@@ -3309,10 +3309,10 @@ export function VideoPlayer({
               </div>
               {/* Volume Button - Mobile */}
               <button 
-                className="md:hidden w-[24px] h-[24px] rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                className={`md:hidden w-[20px] h-[20px] ${playerControlButtonClass}`} 
                 onClick={(e) => { e.stopPropagation(); toggleMute(); }}
               >
-                {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                {isMuted ? <VolumeX className={mobileVolumeIconClass} /> : <Volume2 className={mobileVolumeIconClass} />}
               </button>
             </div>
 
@@ -3320,18 +3320,18 @@ export function VideoPlayer({
               {/* Download - for RIP X and SAVI.IN */}
               {features.includes('download') && (
                 <button 
-                  className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200" 
+                  className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`} 
                   onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
                   title="Download"
                 >
-                  <Download className="w-3 h-3 md:w-[18px] md:h-[18px]" />
+                  <Download className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
                 </button>
               )}
               {/* Settings Menu */}
               <ThemePickerButton
                 value={playerTheme}
                 onChange={setPlayerTheme}
-                iconClassName="w-3 h-3 md:w-[18px] md:h-[18px]"
+                iconClassName={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"}
                 containerEl={containerRef.current}
               />
               <DropdownMenu 
@@ -3344,7 +3344,7 @@ export function VideoPlayer({
               >
                 <DropdownMenuTrigger asChild>
                   <button 
-                    className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200 relative"
+                    className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass} relative`}
                     onPointerDown={(e) => { 
                       e.stopPropagation(); 
                       e.preventDefault();
@@ -3353,7 +3353,7 @@ export function VideoPlayer({
                     title="Settings"
                     style={{ touchAction: 'manipulation' }}
                   >
-                    <Settings className="w-3 h-3 md:w-[18px] md:h-[18px]" />
+                    <Settings className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
@@ -3373,16 +3373,16 @@ export function VideoPlayer({
 
               {/* Screen Mirroring */}
               <button 
-                className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200"
+                className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`}
                 onClick={(e) => { e.stopPropagation(); setShowMirroringDialog(true); }} 
                 title="Screen Mirroring"
               >
-                <Cast className="w-3 h-3 md:w-[18px] md:h-[18px]" />
+                <Cast className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
               </button>
 
               {/* PiP - Desktop only */}
               <button 
-                className="hidden md:flex w-9 h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 items-center justify-center text-white transition-all duration-200"
+                className={`hidden md:flex w-9 h-9 ${playerControlButtonClass}`}
                 onClick={(e) => { e.stopPropagation(); togglePiP(); }} 
                 title="Picture-in-Picture"
               >
@@ -3391,11 +3391,11 @@ export function VideoPlayer({
 
               {/* Fullscreen */}
               <button 
-                className="w-[24px] h-[24px] md:w-9 md:h-9 rounded-full bg-white/[0.05] backdrop-blur-sm hover:bg-white/[0.18] active:scale-90 active:opacity-70 flex items-center justify-center text-white transition-all duration-200"
+                className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`}
                 onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
                 title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
               >
-                {isFullscreen ? <Minimize className="w-3 h-3 md:w-[18px] md:h-[18px]" /> : <Maximize className="w-3 h-3 md:w-[18px] md:h-[18px]" />}
+                {isFullscreen ? <Minimize className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} /> : <Maximize className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />}
               </button>
             </div>
               </>
