@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Play, Pause, Volume2, VolumeX, Maximize,
@@ -39,6 +39,7 @@ const createSlug = (title: string): string =>
 
 export default function EmbedSlugPlayer() {
   const { animeSlug, seasonSlug, episodeSlug } = useParams<{ animeSlug: string; seasonSlug?: string; episodeSlug?: string }>();
+  const [searchParams] = useSearchParams();
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -63,6 +64,8 @@ export default function EmbedSlugPlayer() {
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
   const [showAudioMenu, setShowAudioMenu] = useState(false);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [audioTracks, setAudioTracks] = useState<{ id: number; name: string; lang: string }[]>([]);
   const [currentAudioTrack, setCurrentAudioTrack] = useState(0);
 
@@ -76,6 +79,7 @@ export default function EmbedSlugPlayer() {
 
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   const deviceInfo = detectDeviceInfo();
+  const isShadowTheme = searchParams.get('theme') === 'shadow';
 
   // Domain + admin validation
   useEffect(() => {
