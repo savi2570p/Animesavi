@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { usePopupQueue } from '@/contexts/PopupQueueContext';
-import { Loader2, ChevronLeft, ChevronRight, Sparkles, X, ArrowRight } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, Sparkles, X, ArrowRight, Check } from 'lucide-react';
 
 type UpdateStep = 'alert' | 'downloading' | 'installing' | 'complete' | 'entering';
 type BadgeKind = 'NEW' | 'IMPROVED' | 'FIX';
