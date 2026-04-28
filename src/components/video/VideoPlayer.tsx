@@ -2108,17 +2108,24 @@ export function VideoPlayer({
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground">Audio Track</DropdownMenuLabel>
             {audioTracks.length > 0 ? (
-              audioTracks.map((track) => (
-                <button
-                  key={track.id}
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); switchAudioTrack(track.id); }}
-                  className={`${currentAudioTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm`}
-                >
-                  <span className="text-sm">{track.label}</span>
-                  {currentAudioTrack === track.id && <Check className="w-4 h-4 text-primary" />}
-                </button>
-              ))
+              audioTracks.map((track) => {
+                // Strip generic / "Unknown" labels — show clean name only.
+                const cleanLabel = (track.label || '')
+                  .replace(/\bunknown\b/gi, '')
+                  .replace(/\s+/g, ' ')
+                  .trim() || `Track ${track.id + 1}`;
+                return (
+                  <button
+                    key={track.id}
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); switchAudioTrack(track.id); }}
+                    className={`${currentAudioTrack === track.id ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm transition-colors`}
+                  >
+                    <span className="text-sm">{cleanLabel}</span>
+                    {currentAudioTrack === track.id && <Check className="w-4 h-4 text-primary" />}
+                  </button>
+                );
+              })
             ) : (
               <div className="flex items-center justify-between gap-4 w-full px-2 py-2 bg-primary/20 rounded-sm">
                 <span className="text-sm">🇮🇳 Hindi</span>
