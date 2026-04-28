@@ -666,13 +666,13 @@ export default function EmbedSlugPlayer() {
           {/* Time + Controls */}
           <div className={`flex items-center justify-between ${gapSize}`}>
             <div className={`flex items-center ${gapSize}`}>
-              <button onClick={togglePlay} className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`}>
+              <button onClick={togglePlay} className={controlButtonClass}>
                 {isPlaying ? <Pause className={iconSize} /> : <Play className={`${iconSize} ml-0.5`} />}
               </button>
-              <button onClick={skipForward} className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`}>
+              <button onClick={skipForward} className={controlButtonClass}>
                 <SkipForward className={iconSize} />
               </button>
-              <button onClick={toggleMute} className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`}>
+              <button onClick={toggleMute} className={controlButtonClass}>
                 {isMuted ? <VolumeX className={iconSize} /> : <Volume2 className={iconSize} />}
               </button>
               <span className="text-white/80 text-[10px] sm:text-xs ml-1">{formatTime(currentTime)} / {formatTime(duration)}</span>
@@ -683,7 +683,7 @@ export default function EmbedSlugPlayer() {
               {audioTracks.length > 1 && (
                 <div className="relative">
                   <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowAudioMenu(!showAudioMenu); }}
-                    className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`} title="Audio Track">
+                    className={controlButtonClass} title="Audio Track">
                     <Headphones className={iconSize} />
                   </button>
                   {showAudioMenu && (
@@ -704,7 +704,7 @@ export default function EmbedSlugPlayer() {
               {hlsLevels.length > 0 && (
                 <div className="relative">
                   <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowQualityMenu(!showQualityMenu); }}
-                    className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`}>
+                    className={controlButtonClass}>
                     <Settings className={iconSize} />
                   </button>
                   {showQualityMenu && (
@@ -727,7 +727,7 @@ export default function EmbedSlugPlayer() {
               {/* Download with 480p/720p/1080p */}
               <div className="relative">
                 <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowDownloadMenu(!showDownloadMenu); }}
-                  className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`} title="Download">
+                  className={controlButtonClass} title="Download">
                   {isDownloading ? <Loader2 className={`${iconSize} animate-spin`} /> : <Download className={iconSize} />}
                 </button>
                 {showDownloadMenu && (
@@ -744,7 +744,7 @@ export default function EmbedSlugPlayer() {
                 )}
               </div>
 
-              <button onClick={toggleFullscreen} className={`${btnSize} rounded-full flex items-center justify-center text-white hover:text-primary transition-colors`}>
+              <button onClick={toggleFullscreen} className={controlButtonClass}>
                 <Maximize className={iconSize} />
               </button>
             </div>
@@ -755,7 +755,7 @@ export default function EmbedSlugPlayer() {
       {/* Center play button when paused */}
       {!isPlaying && !isLoading && !isBuffering && (
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-          <div className="w-16 h-16 rounded-full bg-black/50 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-primary/70 shadow-2xl shadow-primary/30 flex items-center justify-center">
             <Play className="w-8 h-8 text-white fill-white" />
           </div>
         </div>
