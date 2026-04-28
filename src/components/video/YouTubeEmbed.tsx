@@ -72,12 +72,12 @@ export function YouTubeEmbed({ url, title = 'Video' }: YouTubeEmbedProps) {
           />
         )}
         <div className="relative z-10 flex flex-col items-center gap-4 text-center p-6">
-          <div className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center shadow-xl">
+          <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-xl">
             <Play className="w-8 h-8 text-white fill-white ml-1" />
           </div>
           <p className="text-white font-semibold text-lg">This video can't be embedded</p>
           <Button
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={() => window.open(url, '_blank', 'noopener')}
           >
             Watch on YouTube

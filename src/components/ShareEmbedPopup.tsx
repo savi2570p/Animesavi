@@ -90,7 +90,7 @@ export function ShareEmbedPopup({
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-accent text-left transition-colors"
             onClick={() => copyToClipboard(fullPageUrl, type === 'series' ? 'Series link' : 'Episode link')}
           >
-            <Link2 className="h-4 w-4 text-primary shrink-0" />
+            <Link2 className="h-4 w-4 text-primary-foreground shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium">Copy {type === 'series' ? 'Series' : 'Episode'} Link</p>
               <p className="text-xs text-muted-foreground truncate">{fullPageUrl}</p>
@@ -98,7 +98,7 @@ export function ShareEmbedPopup({
             {copiedItem === (type === 'series' ? 'Series link' : 'Episode link') ? (
               <Check className="h-4 w-4 text-green-500 shrink-0" />
             ) : (
-              <Copy className="h-4 w-4 text-muted-foreground shrink-0" />
+              <Copy className="h-4 w-4 text-primary-foreground/80 shrink-0" />
             )}
           </button>
 
@@ -118,35 +118,35 @@ export function ShareEmbedPopup({
           {type === 'episode' && fullEmbedUrl && (
             <>
               <button
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary/10 hover:bg-primary/20 text-left transition-colors"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-left transition-colors"
                 onClick={() => copyToClipboard(fullEmbedUrl, 'Embed link')}
               >
-                <Share2 className="h-4 w-4 text-primary shrink-0" />
+                <Share2 className="h-4 w-4 text-primary-foreground shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">Copy Embed Link</p>
-                  <p className="text-xs text-muted-foreground truncate">{fullEmbedUrl}</p>
+                  <p className="text-xs text-primary-foreground/75 truncate">{fullEmbedUrl}</p>
                 </div>
                 {copiedItem === 'Embed link' ? (
                   <Check className="h-4 w-4 text-green-500 shrink-0" />
                 ) : (
-                  <Copy className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <Copy className="h-4 w-4 text-primary-foreground/80 shrink-0" />
                 )}
               </button>
 
               {canSeeShadowLink && (
                 <button
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary/10 hover:bg-primary/20 text-left transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-left transition-colors"
                   onClick={() => copyToClipboard(shadowEmbedUrl, 'Shadow link')}
                 >
-                  <Share2 className="h-4 w-4 text-primary shrink-0" />
+                  <Share2 className="h-4 w-4 text-primary-foreground shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">Copy Shadow Link</p>
-                    <p className="text-xs text-muted-foreground truncate">{shadowEmbedUrl}</p>
+                    <p className="text-xs text-primary-foreground/75 truncate">{shadowEmbedUrl}</p>
                   </div>
                   {copiedItem === 'Shadow link' ? (
                     <Check className="h-4 w-4 text-green-500 shrink-0" />
                   ) : (
-                    <Copy className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <Copy className="h-4 w-4 text-primary-foreground/80 shrink-0" />
                   )}
                 </button>
               )}
@@ -157,13 +157,13 @@ export function ShareEmbedPopup({
                   download
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary/10 hover:bg-primary/20 text-left transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-left transition-colors"
                   onClick={() => toast.success('Raw quality download started.')}
                 >
-                  <Download className="h-4 w-4 text-primary shrink-0" />
+                  <Download className="h-4 w-4 text-primary-foreground shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">Download Raw Quality</p>
-                    <p className="text-xs text-muted-foreground truncate">Original video file</p>
+                    <p className="text-xs text-primary-foreground/75 truncate">Original video file</p>
                   </div>
                 </a>
               )}
@@ -172,7 +172,7 @@ export function ShareEmbedPopup({
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-accent text-left transition-colors"
                 onClick={() => copyToClipboard(iframeCode, 'Iframe code')}
               >
-                <Code className="h-4 w-4 text-primary shrink-0" />
+                <Code className="h-4 w-4 text-primary-foreground shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">Copy Iframe Code</p>
                   <p className="text-xs text-muted-foreground font-mono truncate">{'<iframe src="...">'}</p>
@@ -180,7 +180,7 @@ export function ShareEmbedPopup({
                 {copiedItem === 'Iframe code' ? (
                   <Check className="h-4 w-4 text-green-500 shrink-0" />
                 ) : (
-                  <Copy className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <Copy className="h-4 w-4 text-primary-foreground/80 shrink-0" />
                 )}
               </button>
             </>
