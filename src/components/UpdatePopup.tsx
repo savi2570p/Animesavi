@@ -122,15 +122,21 @@ const ENTERING_SHOWN_KEY = `update_entering_shown_${APP_VERSION}`;
 export function UpdatePopup() {
   const { activePopup, dismissPopup, isManualWhatsNew } = usePopupQueue();
   const navigate = useNavigate();
+  const location = useLocation();
   const [step, setStep] = useState<UpdateStep>('alert');
   const [progress, setProgress] = useState(0);
   const [displayProgress, setDisplayProgress] = useState(0);
   const [speedMbps, setSpeedMbps] = useState(0);
   const [speedHistory, setSpeedHistory] = useState<number[]>([]);
   const [versionIndex, setVersionIndex] = useState(0);
+  const [enterStage, setEnterStage] = useState(0); // 0=Synced, 1=Booting UI, 2=Routing Home
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const rafRef = useRef<number | null>(null);
   const touchStartX = useRef<number | null>(null);
+  // Snapshot the route when "Explore Now" is clicked so we only auto-navigate
+  // home if the user is still on that same route 3.5s later (avoids hijacking
+  // navigation if they manually move to /auth, /anime/:id, /watch, etc.).
+  const enteringFromPathRef = useRef<string | null>(null);
 
   const TOTAL_MB = RANDOM_DOWNLOAD_MB;
 
