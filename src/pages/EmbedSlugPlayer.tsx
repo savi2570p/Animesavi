@@ -5,7 +5,7 @@ import {
   Play, Pause, Volume2, VolumeX, Maximize,
   SkipForward, Loader2, AlertTriangle, RefreshCw,
   Settings, Check, ShieldAlert, Download, Headphones,
-  List, ChevronRight, X
+  List, ChevronRight, X, Gauge
 } from 'lucide-react';
 import Hls from 'hls.js';
 import { useEmbedPlayerBridge } from '@/hooks/useEmbedPlayerBridge';
@@ -738,6 +738,22 @@ export default function EmbedSlugPlayer() {
                         disabled={!!isDownloading}>
                         <Download className="w-3 h-3" /> {q}
                         {isDownloading === q && <Loader2 className="w-3 h-3 animate-spin" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="relative">
+                <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowSpeedMenu(!showSpeedMenu); }} className={controlButtonClass} title="Speed">
+                  <Gauge className={iconSize} />
+                </button>
+                {showSpeedMenu && (
+                  <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-primary/30 rounded-lg p-1 min-w-[110px] z-50">
+                    {[0.5, 0.75, 1, 1.25, 1.5, 2].map((speed) => (
+                      <button key={speed} onClick={(e) => { e.stopPropagation(); changePlaybackSpeed(speed); }}
+                        className={`w-full text-left px-3 py-1.5 text-xs rounded hover:bg-primary/15 flex items-center gap-2 ${playbackSpeed === speed ? 'text-primary' : 'text-white/80'}`}>
+                        {playbackSpeed === speed && <Check className="w-3 h-3" />} {speed}x
                       </button>
                     ))}
                   </div>
