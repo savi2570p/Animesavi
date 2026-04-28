@@ -507,9 +507,10 @@ export default function EmbedSlugPlayer() {
   };
 
   // Mobile compact sizes
-  const btnSize = deviceInfo.isMobile ? 'w-[30px] h-[30px]' : 'w-9 h-9';
-  const iconSize = deviceInfo.isMobile ? 'w-[15px] h-[15px]' : 'w-5 h-5';
-  const gapSize = deviceInfo.isMobile ? 'gap-[6px]' : 'gap-2';
+  const btnSize = deviceInfo.isMobile ? 'w-[28px] h-[28px]' : 'w-9 h-9';
+  const iconSize = deviceInfo.isMobile ? 'w-[14px] h-[14px]' : 'w-5 h-5';
+  const gapSize = deviceInfo.isMobile ? 'gap-[5px]' : 'gap-2';
+  const controlButtonClass = `${btnSize} rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-90 ${isShadowTheme ? 'bg-primary/20 border border-primary/30 text-white hover:bg-primary/80 shadow-lg shadow-primary/20' : 'text-white hover:text-primary'}`;
 
   // Blocked domain
   if (domainAllowed === false) {
