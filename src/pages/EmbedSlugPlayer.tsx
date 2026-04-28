@@ -480,6 +480,7 @@ export default function EmbedSlugPlayer() {
         setShowQualityMenu(false);
         setShowDownloadMenu(false);
         setShowAudioMenu(false);
+        setShowSpeedMenu(false);
       }, 3000);
     }
     return () => { if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current); };
@@ -493,6 +494,7 @@ export default function EmbedSlugPlayer() {
       setShowQualityMenu(false);
       setShowDownloadMenu(false);
       setShowAudioMenu(false);
+      setShowSpeedMenu(false);
     }, 3000);
   }, [isPlaying]);
 
