@@ -904,7 +904,7 @@ export function VideoPlayer({
         hlsRef.current = null;
       }
     };
-  }, [effectiveVideoUrl]);
+  }, [effectiveVideoUrl, activeServer, animeTitle, lockedQuality]);
 
   // Advanced multilingual audio label detection
   // Uses centralized utility for consistent language detection across the app
