@@ -611,7 +611,7 @@ export default function AnimeDetail() {
               </Button>
               <ShareEmbedPopup
                 type="series"
-                pageUrl={window.location.pathname}
+                pageUrl={`/${anime.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`}
                 animeTitle={anime.title}
                 size="lg"
                 className="h-11 md:h-14 px-4 md:px-5 rounded-xl border border-foreground/20 bg-foreground/5 backdrop-blur-md hover:border-primary/40"
