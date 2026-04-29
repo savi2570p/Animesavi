@@ -373,7 +373,7 @@ export function VideoPlayer({
   // Detect if mobile device (MUST be before hooks that use it)
   const isMobile = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const iosControlIconClass = "w-2.5 h-2.5";
+  const iosControlIconClass = "w-2 h-2";
   const mobileVolumeIconClass = isIOS ? iosControlIconClass : "w-4 h-4";
   
   
@@ -2816,7 +2816,7 @@ export function VideoPlayer({
               <div className="flex items-center gap-2 md:gap-3">
                  <span className="text-white/90 text-[10px] md:text-xs font-mono min-w-[36px] md:min-w-[44px]">{formatTime(currentTime)}</span>
                 <div 
-                  className="flex-1 relative h-1 md:h-1.5"
+                  className={`flex-1 relative ${isIOS ? 'h-[3px]' : 'h-1 md:h-1.5'}`}
                   onMouseMove={handleTimelineHover}
                   onMouseLeave={handleTimelineLeave}
                 >
@@ -2868,24 +2868,24 @@ export function VideoPlayer({
               {activeServer === 'XPLUS' ? (
                 /* X-PLUS: Flat minimal controls - Fullscreen */
                 <>
-                  <div className="flex items-center gap-2 md:gap-5">
+                  <div className={`flex items-center ${isIOS ? "gap-1" : "gap-2 md:gap-5"}`}>
                     <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
-                      {isPlaying ? <Pause className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-7 md:h-7"} /> : <Play className={isIOS ? "w-4 h-4 fill-current" : "w-5 h-5 md:w-7 md:h-7 fill-current"} />}
+                      {isPlaying ? <Pause className={isIOS ? "w-3 h-3" : "w-5 h-5 md:w-7 md:h-7"} /> : <Play className={isIOS ? "w-3 h-3 fill-current" : "w-5 h-5 md:w-7 md:h-7 fill-current"} />}
                     </button>
                     <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); skipBackward(); }} title="Skip back 10s">
-                      <SkipBack className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
+                      <SkipBack className={isIOS ? "w-2.5 h-2.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                     <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); skipForward(); }} title="Skip forward 10s">
-                      <SkipForward className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
+                      <SkipForward className={isIOS ? "w-2.5 h-2.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                     <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); toggleMute(); }}>
-                      {isMuted ? <VolumeX className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} /> : <Volume2 className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />}
+                      {isMuted ? <VolumeX className={isIOS ? "w-2.5 h-2.5" : "w-5 h-5 md:w-6 md:h-6"} /> : <Volume2 className={isIOS ? "w-2.5 h-2.5" : "w-5 h-5 md:w-6 md:h-6"} />}
                     </button>
-                    <span className={`text-white/90 font-mono ${isIOS ? 'text-[10px]' : 'text-xs md:text-sm'}`}>{formatTime(currentTime)} / {formatTime(duration)}</span>
+                    <span className={`text-white/90 font-mono ${isIOS ? 'text-[9px]' : 'text-xs md:text-sm'}`}>{formatTime(currentTime)} / {formatTime(duration)}</span>
                   </div>
-                  <div className="flex items-center gap-2 md:gap-5">
+                  <div className={`flex items-center ${isIOS ? "gap-1" : "gap-2 md:gap-5"}`}>
                     <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); handleDownload(); }} title="Download">
-                      <Download className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
+                      <Download className={isIOS ? "w-2.5 h-2.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                     <button 
                       className={flatPlayerControlButtonClass} 
@@ -2900,12 +2900,12 @@ export function VideoPlayer({
                       }}
                       title="Subtitles / CC"
                     >
-                      <Subtitles className={`${isIOS ? 'w-3.5 h-3.5' : 'w-5 h-5 md:w-6 md:h-6'} ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`} />
+                      <Subtitles className={`${isIOS ? 'w-2.5 h-2.5' : 'w-5 h-5 md:w-6 md:h-6'} ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`} />
                     </button>
                     <ThemePickerButton
                       value={playerTheme}
                       onChange={setPlayerTheme}
-                      iconClassName={isIOS ? 'w-3.5 h-3.5' : 'w-5 h-5 md:w-6 md:h-6'}
+                      iconClassName={isIOS ? 'w-2.5 h-2.5' : 'w-5 h-5 md:w-6 md:h-6'}
                       containerEl={containerRef.current}
                     />
                     <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
@@ -2916,7 +2916,7 @@ export function VideoPlayer({
                           title="Settings"
                           style={{ touchAction: 'manipulation' }}
                         >
-                          <Settings className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
+                          <Settings className={isIOS ? "w-2.5 h-2.5" : "w-5 h-5 md:w-6 md:h-6"} />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent 
@@ -2933,10 +2933,10 @@ export function VideoPlayer({
                       </DropdownMenuContent>
                     </DropdownMenu>
                     <button className={`hidden md:block ${flatPlayerControlButtonClass}`} onClick={(e) => { e.stopPropagation(); togglePiP(); }} title="Picture-in-Picture">
-                      <PictureInPicture2 className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
+                      <PictureInPicture2 className={isIOS ? "w-2.5 h-2.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                     <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} title="Exit Fullscreen">
-                      <Minimize className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} />
+                      <Minimize className={isIOS ? "w-2.5 h-2.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                   </div>
                 </>
@@ -3102,7 +3102,7 @@ export function VideoPlayer({
             <div className="flex items-center gap-2">
               <span className="text-white/90 text-[10px] md:text-xs font-mono min-w-[36px] md:min-w-[44px]">{formatTime(currentTime)}</span>
               <div 
-                className="flex-1 relative h-1 md:h-1.5"
+                className={`flex-1 relative ${isIOS ? 'h-[3px]' : 'h-1 md:h-1.5'}`}
                 onMouseMove={handleTimelineHover}
                 onMouseLeave={handleTimelineLeave}
               >
@@ -3160,30 +3160,30 @@ export function VideoPlayer({
                     onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                     title={isPlaying ? 'Pause' : 'Play'}
                   >
-                    {isPlaying ? <Pause className={isIOS ? "w-3.5 h-3.5" : "w-5 h-5 md:w-6 md:h-6"} /> : <Play className={isIOS ? "w-3.5 h-3.5 fill-current" : "w-5 h-5 md:w-6 md:h-6 fill-current"} />}
+                    {isPlaying ? <Pause className={isIOS ? "w-2.5 h-2.5" : "w-5 h-5 md:w-6 md:h-6"} /> : <Play className={isIOS ? "w-3.5 h-3.5 fill-current" : "w-5 h-5 md:w-6 md:h-6 fill-current"} />}
                   </button>
                   <button 
                     className={flatPlayerControlButtonClass} 
                     onClick={(e) => { e.stopPropagation(); skipBackward(); }}
                     title="Skip back 10s"
                   >
-                    <SkipBack className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
+                    <SkipBack className={isIOS ? "w-2 h-2" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
                   </button>
                   <button 
                     className={flatPlayerControlButtonClass} 
                     onClick={(e) => { e.stopPropagation(); skipForward(); }}
                     title="Skip forward 10s"
                   >
-                    <SkipForward className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
+                    <SkipForward className={isIOS ? "w-2 h-2" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
                   </button>
                   <button 
                     className={flatPlayerControlButtonClass} 
                     onClick={(e) => { e.stopPropagation(); toggleMute(); }}
                     title={isMuted ? 'Unmute' : 'Mute'}
                   >
-                    {isMuted ? <VolumeX className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} /> : <Volume2 className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} />}
+                    {isMuted ? <VolumeX className={isIOS ? "w-2 h-2" : "w-4.5 h-4.5 md:w-5 md:h-5"} /> : <Volume2 className={isIOS ? "w-2 h-2" : "w-4.5 h-4.5 md:w-5 md:h-5"} />}
                   </button>
-                  <span className={`text-white/90 font-mono ${isIOS ? 'text-[9px]' : 'text-xs md:text-sm'}`}>{formatTime(currentTime)} / {formatTime(duration)}</span>
+                  <span className={`text-white/90 font-mono ${isIOS ? 'text-[8px]' : 'text-xs md:text-sm'}`}>{formatTime(currentTime)} / {formatTime(duration)}</span>
                 </div>
                 <div className="flex items-center gap-2 md:gap-4">
                   <button 
@@ -3191,7 +3191,7 @@ export function VideoPlayer({
                     onClick={(e) => { e.stopPropagation(); handleDownload(); }}
                     title="Download"
                   >
-                    <Download className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
+                    <Download className={isIOS ? "w-2 h-2" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
                   </button>
                   <button 
                     className={flatPlayerControlButtonClass} 
@@ -3206,12 +3206,12 @@ export function VideoPlayer({
                     }}
                     title="Subtitles / CC"
                   >
-                    <Subtitles className={`${isIOS ? 'w-3 h-3' : 'w-4.5 h-4.5 md:w-5 md:h-5'} ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`} />
+                    <Subtitles className={`${isIOS ? 'w-2 h-2' : 'w-4.5 h-4.5 md:w-5 md:h-5'} ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`} />
                   </button>
                   <ThemePickerButton
                     value={playerTheme}
                     onChange={setPlayerTheme}
-                    iconClassName={isIOS ? 'w-3 h-3' : 'w-4.5 h-4.5 md:w-5 md:h-5'}
+                    iconClassName={isIOS ? 'w-2 h-2' : 'w-4.5 h-4.5 md:w-5 md:h-5'}
                     containerEl={containerRef.current}
                   />
                   <DropdownMenu 
@@ -3233,7 +3233,7 @@ export function VideoPlayer({
                         title="Settings"
                         style={{ touchAction: 'manipulation' }}
                       >
-                        <Settings className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
+                        <Settings className={isIOS ? "w-2 h-2" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent 
@@ -3262,7 +3262,7 @@ export function VideoPlayer({
                     onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} 
                     title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
                   >
-                    {isFullscreen ? <Minimize className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} /> : <Maximize className={isIOS ? "w-3 h-3" : "w-4.5 h-4.5 md:w-5 md:h-5"} />}
+                    {isFullscreen ? <Minimize className={isIOS ? "w-2 h-2" : "w-4.5 h-4.5 md:w-5 md:h-5"} /> : <Maximize className={isIOS ? "w-2 h-2" : "w-4.5 h-4.5 md:w-5 md:h-5"} />}
                   </button>
                 </div>
               </>

@@ -404,17 +404,20 @@ export default function EmbedSlugPlayer() {
     if (!url) return;
     setIsDownloading(quality);
     setShowDownloadMenu(false);
-    const safeName = episodeData?.title?.replace(/[^a-zA-Z0-9]/g, '_') || 'video';
-    const fileName = `AnimeSavi_${safeName}_${quality}.mp4`;
-    // Direct URL download - no blob fetch, instant start
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+
+    // Route through the cinematic /Shadow-Arise landing page so the user
+    // gets the proper preparation UI + auto-download with a clean filename.
+    const animeName = episodeData?.animeTitle || 'AnimeSavi';
+    const epNum = String(currentEpisodeNumber || 1).padStart(2, '0');
+    const params = new URLSearchParams({
+      quality,
+      anime: animeName,
+      ep: epNum,
+      url,
+    });
+    const target = `/Shadow-Arise?${params.toString()}`;
+    window.open(target, '_blank', 'noopener');
+
     setIsDownloading(null);
   };
 

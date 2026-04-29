@@ -20,20 +20,27 @@ interface VersionGroup {
   items: ChangelogItem[];
 }
 
-const APP_VERSION = 'v24';
+const APP_VERSION = 'v24.1';
 
-// Random download size between 10MB and 50MB — generated once per session so the
-// number stays stable while the popup is open.
-const RANDOM_DOWNLOAD_MB = (() => {
-  const min = 10;
-  const max = 50;
-  return Math.round((Math.random() * (max - min) + min) * 100) / 100;
-})();
+// Fixed download size for v24.1 (small patch update)
+const RANDOM_DOWNLOAD_MB = 2.43;
 
 const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'v24',
+    version: 'v24.1',
     date: 'Latest',
+    highlight: 'A focused patch — fixes only. Smaller iOS player controls, smoother server switching, embed download routed to Shadow-Arise, and animesavi.com share/embed links.',
+    items: [
+      { icon: '📱', badge: 'FIX', title: 'Smaller iOS Player Controls', desc: 'Buttons and the timeline on iPhone/iPad are now compact and never overlap, even on the smallest screens.' },
+      { icon: '🔗', badge: 'FIX', title: 'New Domain in Share Links', desc: 'Share & embed links now use animesavi.com (your new custom domain) instead of the lovable.app preview URL.' },
+      { icon: '⬇️', badge: 'FIX', title: 'Embed Download → Shadow-Arise', desc: 'Picking a quality from the Embed player\'s download menu now opens the dedicated /Shadow-Arise tab with the correct file name and auto-starts the download.' },
+      { icon: '🛰️', badge: 'FIX', title: 'CrunchyDownload Sync', desc: 'New episodes uploaded to AnimeSavi are now mirrored to CrunchyDownload through a signed webhook with retry on failure.' },
+      { icon: '🎬', badge: 'FIX', title: 'Server Switch Stability', desc: 'Additional safeguards when switching between H.Savi, SAVI.IN, Multi.Savi and X-PLUS to avoid black-screen buffering after server change.' },
+    ],
+  },
+  {
+    version: 'v24',
+    date: 'Previous',
     highlight: 'A full purple rebrand to match the new logo, smoother server switching, and a quieter player — no more "Embed under development" toast on every episode.',
     items: [
       { icon: '💜', badge: 'NEW', title: 'Purple Brand Refresh', desc: 'Site-wide theme migrated from red to purple to match the new logo — popups, accents, scrollbars, and the What\'s New card all rebranded.' },

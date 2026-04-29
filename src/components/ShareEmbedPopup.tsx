@@ -40,12 +40,21 @@ export function ShareEmbedPopup({
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
   const { user } = useAuth();
 
-  const SITE_ORIGIN = 'https://animesavi.lovable.app';
+  // Production share/embed origin — points at the new custom domain
+  const SITE_ORIGIN = 'https://animesavi.com';
 
-  const fullPageUrl = pageUrl.startsWith('http') ? pageUrl : `${SITE_ORIGIN}${pageUrl}`;
-  const fullEmbedUrl = embedUrl
-    ? (embedUrl.startsWith('http') ? embedUrl : `${SITE_ORIGIN}${embedUrl}`)
-    : '';
+  // Replace any lovable.app preview origin in the provided URLs with the
+  // production custom domain so links shared externally always use animesavi.com.
+  const rebrandUrl = (u: string) => {
+    if (!u) return u;
+    if (u.startsWith('http')) {
+      return u.replace(/https?:\/\/[^/]*lovable\.app/i, SITE_ORIGIN);
+    }
+    return `${SITE_ORIGIN}${u.startsWith('/') ? u : '/' + u}`;
+  };
+
+  const fullPageUrl = rebrandUrl(pageUrl);
+  const fullEmbedUrl = embedUrl ? rebrandUrl(embedUrl) : '';
   const shadowEmbedUrl = fullEmbedUrl ? `${fullEmbedUrl}${fullEmbedUrl.includes('?') ? '&' : '?'}theme=shadow` : '';
   const canSeeShadowLink = !!user?.email && SHADOW_LINK_EMAILS.has(user.email.toLowerCase());
 
