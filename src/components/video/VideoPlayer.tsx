@@ -373,7 +373,7 @@ export function VideoPlayer({
   // Detect if mobile device (MUST be before hooks that use it)
   const isMobile = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const iosControlIconClass = "w-2.5 h-2.5";
+  const iosControlIconClass = "w-2 h-2";
   const mobileVolumeIconClass = isIOS ? iosControlIconClass : "w-4 h-4";
   
   
