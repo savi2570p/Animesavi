@@ -132,9 +132,9 @@ export function AnimeCardContextMenu({
   };
 
   const handleShare = async () => {
-    // Use clean URL with anime slug instead of ID
+    // Always share via the production custom domain
     const animeSlug = createSlug(animeTitle);
-    const shareUrl = `${window.location.origin}/${animeSlug}`;
+    const shareUrl = `https://animesavi.com/${animeSlug}`;
     const shareData = {
       title: animeTitle,
       url: shareUrl,
