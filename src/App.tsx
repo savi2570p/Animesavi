@@ -57,6 +57,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Schedule = lazy(() => import("./pages/Schedule"));
 const UpcomingPage = lazy(() => import("./pages/UpcomingPage"));
 const EmbedSlugPlayer = lazy(() => import("./pages/EmbedSlugPlayer"));
+const MinimalEmbedPage = lazy(() => import("./pages/MinimalEmbedPage"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const Downloads = lazy(() => import("./pages/Downloads"));
 const WatchList = lazy(() => import("./pages/WatchList"));
@@ -212,7 +213,7 @@ const App = () => (
                   <Route path="/unlock/:token" element={<UnlockAccess />} />
                   <Route path="/external-player" element={<ExternalPlayer />} />
                   <Route path="/embed/:episodeId" element={<EmbedPlayer />} />
-                  <Route path="/embed/:animeSlug/:seasonSlug/:episodeSlug" element={<EmbedSlugPlayer />} />
+                  <Route path="/embed/:animeSlug/:seasonSlug/:episodeSlug" element={<MinimalEmbedPage />} />
                   <Route path="/embed/:animeSlug/:episodeSlug" element={<EmbedSlugPlayer />} />
                   <Route path="/welcome" element={<Welcome />} />
                   <Route path="/Shadow-Arise" element={<ShadowArise />} />
