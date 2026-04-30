@@ -194,6 +194,28 @@ export default function MinimalEmbedPage() {
     };
   }, [videoUrl, useIframe]);
 
+  if (!accessAllowed) {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: '#000',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'rgba(255,255,255,0.85)',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          fontSize: 14,
+          padding: 24,
+          textAlign: 'center',
+        }}
+      >
+        This embed is not authorized for this domain.
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
