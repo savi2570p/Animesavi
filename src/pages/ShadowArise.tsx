@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Cloud, Download, Shield, CheckCircle } from 'lucide-react';
+import { Cloud, Download, Shield, CheckCircle, Play, Pause } from 'lucide-react';
 
 export default function ShadowArise() {
   const [searchParams] = useSearchParams();
@@ -13,13 +13,21 @@ export default function ShadowArise() {
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<'processing' | 'ready'>('processing');
   const [downloadStarted, setDownloadStarted] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadPct, setDownloadPct] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const autoTriggeredRef = useRef(false);
+
+  // Mini player state
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [curTime, setCurTime] = useState(0);
+  const [dur, setDur] = useState(0);
 
   const statusText = quality === '720p' ? 'Converting to HD…' : 'Preparing Raw Video…';
   const safeAnime = animeName.replace(/[^a-zA-Z0-9]+/g, '');
   const fileName = `[AnimeSavi]_${quality}_${safeAnime}_Ep-${episodeCount}.mp4`;
 
+  // Processing simulation (10s)
   useEffect(() => {
     let elapsed = 0;
     timerRef.current = setInterval(() => {
@@ -34,55 +42,96 @@ export default function ShadowArise() {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
-  // Auto-trigger once when ready
-  useEffect(() => {
-    if (phase === 'ready' && videoUrl && !autoTriggeredRef.current) {
-      autoTriggeredRef.current = true;
-      triggerDownload();
-    }
-  }, [phase, videoUrl]);
+  // NOTE: No auto-trigger of download. User must explicitly click.
 
-  const triggerDownload = () => {
-    if (!videoUrl) return;
+  // Force a real file download via blob (so the OS treats it as a download,
+  // not a navigation to the default video player). Falls back to anchor for
+  // huge files / range-restricted CDNs.
+  const triggerDownload = async () => {
+    if (!videoUrl || downloading) return;
     setDownloadStarted(true);
-    // Strategy: use a hidden anchor with `download` attr (works for same-origin).
-    // For cross-origin URLs (Supabase storage etc.) browsers ignore the
-    // download attribute but will still navigate to the file — opening in a
-    // new tab so the current page stays usable.
+    setDownloading(true);
+    setDownloadPct(0);
+
     try {
+      const res = await fetch(videoUrl, { mode: 'cors', credentials: 'omit' });
+      if (!res.ok || !res.body) throw new Error('fetch failed');
+
+      const total = Number(res.headers.get('content-length') || '0');
+      const reader = res.body.getReader();
+      const chunks: Uint8Array[] = [];
+      let received = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) {
+          chunks.push(value);
+          received += value.length;
+          if (total > 0) setDownloadPct(Math.min(99, (received / total) * 100));
+        }
+      }
+
+      const blob = new Blob(chunks, { type: 'video/mp4' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setDownloadPct(100);
+    } catch {
+      // Fallback: anchor with download attribute (no new tab, no opener).
       const a = document.createElement('a');
       a.href = videoUrl;
       a.download = fileName;
       a.rel = 'noopener noreferrer';
-      // Try same-tab download first; if blocked, the user can use the button
-      // to retry which uses target=_blank.
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-    } catch {
-      window.open(videoUrl, '_blank', 'noopener');
+    } finally {
+      setDownloading(false);
     }
   };
 
-  const manualRetry = () => {
-    if (!videoUrl) return;
-    // Manual click — open in a new tab as a guaranteed fallback
-    window.open(videoUrl, '_blank', 'noopener');
+  // Mini player handlers
+  const togglePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) v.play().catch(() => {});
+    else v.pause();
+  };
+
+  const onSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = videoRef.current;
+    if (!v || !dur) return;
+    const t = (Number(e.target.value) / 100) * dur;
+    v.currentTime = t;
+    setCurTime(t);
+  };
+
+  const fmt = (s: number) => {
+    if (!isFinite(s) || s < 0) s = 0;
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center overflow-hidden"
+    <div className="fixed inset-0 flex items-center justify-center overflow-y-auto py-6"
       style={{
         background:
           'radial-gradient(ellipse at 20% 80%, hsl(270 70% 25% / 0.25) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, hsl(280 80% 30% / 0.2) 0%, transparent 50%), #0a0a0f',
       }}>
 
       {/* Ambient glow corners */}
-      <div className="absolute top-0 left-0 w-64 h-64 rounded-full opacity-25 blur-[100px]" style={{ background: 'hsl(270 80% 50%)' }} />
-      <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full opacity-20 blur-[100px]" style={{ background: 'hsl(280 90% 55%)' }} />
+      <div className="absolute top-0 left-0 w-64 h-64 rounded-full opacity-25 blur-[100px] pointer-events-none" style={{ background: 'hsl(270 80% 50%)' }} />
+      <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full opacity-20 blur-[100px] pointer-events-none" style={{ background: 'hsl(280 90% 55%)' }} />
 
       {/* Main Card */}
-      <div className="relative w-[90vw] max-w-md mx-4 rounded-2xl overflow-hidden"
+      <div className="relative w-[90vw] max-w-md mx-4 rounded-2xl overflow-hidden my-auto"
         style={{
           background: 'rgba(15, 8, 25, 0.85)',
           backdropFilter: 'blur(24px)',
@@ -149,21 +198,85 @@ export default function ShadowArise() {
           ) : (
             <>
               <div>
-                <p className="text-green-400 font-bold text-lg">Link Generated!</p>
+                <p className="text-green-400 font-bold text-lg">Ready</p>
                 <p className="text-white/50 text-xs mt-1">
-                  {downloadStarted ? 'Your download has started. Tap below if it didn\'t.' : 'Tap below to start your download.'}
+                  {downloading
+                    ? `Downloading… ${Math.floor(downloadPct)}%`
+                    : downloadStarted
+                      ? 'Download started. Tap to download again.'
+                      : 'Tap below to start your download.'}
                 </p>
               </div>
 
-              <button onClick={manualRetry}
-                className="w-full py-3 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95"
+              <button onClick={triggerDownload} disabled={downloading}
+                className="w-full py-3 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-70"
                 style={{
                   background: 'linear-gradient(135deg, hsl(270 90% 55%), hsl(285 95% 65%))',
                   boxShadow: '0 4px 20px hsl(270 90% 55% / 0.45)',
                 }}>
                 <Download className="w-4 h-4" />
-                Download Now
+                {downloading ? `Downloading ${Math.floor(downloadPct)}%` : 'Download Now'}
               </button>
+
+              {/* Download progress (only while downloading) */}
+              {downloading && (
+                <div className="w-full">
+                  <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                    <div className="h-full transition-all duration-150"
+                      style={{
+                        width: `${downloadPct}%`,
+                        background: 'linear-gradient(90deg, hsl(142 70% 50%), hsl(160 80% 60%))',
+                      }} />
+                  </div>
+                </div>
+              )}
+
+              {/* Custom mini video player — play/pause + timeline only (no fullscreen) */}
+              {videoUrl && (
+                <div className="w-full rounded-xl overflow-hidden"
+                  style={{ background: '#000', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <video
+                    ref={videoRef}
+                    src={videoUrl}
+                    playsInline
+                    preload="metadata"
+                    controlsList="nodownload nofullscreen noremoteplayback"
+                    disablePictureInPicture
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    onTimeUpdate={(e) => setCurTime(e.currentTarget.currentTime)}
+                    onLoadedMetadata={(e) => setDur(e.currentTarget.duration || 0)}
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDoubleClick={(e) => e.preventDefault()}
+                    style={{ width: '100%', display: 'block', maxHeight: 220, background: '#000', pointerEvents: 'none' }}
+                  />
+
+                  {/* Custom controls bar */}
+                  <div className="flex items-center gap-3 px-3 py-2"
+                    style={{ background: 'rgba(0,0,0,0.6)' }}>
+                    <button onClick={togglePlay} aria-label={isPlaying ? 'Pause' : 'Play'}
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white transition-transform active:scale-90"
+                      style={{ background: 'hsl(270 80% 55%)' }}>
+                      {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+                    </button>
+
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={0.1}
+                      value={dur ? (curTime / dur) * 100 : 0}
+                      onChange={onSeek}
+                      className="flex-1 accent-purple-500"
+                      style={{ height: 4 }}
+                    />
+
+                    <span className="text-[10px] text-white/70 font-mono tabular-nums whitespace-nowrap">
+                      {fmt(curTime)} / {fmt(dur)}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               <div className="w-full rounded-lg p-3 text-left" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <p className="text-white/30 text-[10px] uppercase tracking-wider mb-1">File</p>
