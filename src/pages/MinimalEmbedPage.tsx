@@ -12,9 +12,56 @@ import { extractEmbedSrc, isEmbedLikeUrl } from '@/components/video/PureEmbedPla
  * Design goals:
  *  - One media element only. No nested iframes. No overlays during playback.
  *  - Loads instantly on iOS Safari (no click-to-load, no autoplay dependency).
- *  - No referrer / domain restrictions — designed for external embedding.
  *  - Native browser controls = guaranteed iOS compatibility.
+ *
+ * Access control (Shadow embed link):
+ *  Only the two approved hosts may embed or open this page directly.
+ *  All other referrers / hosts get a clean "not authorized" message.
  */
+
+const ALLOWED_EMBED_HOSTS = [
+  'shadowflix.lovable.app',
+  'animesavi.com',
+  'www.animesavi.com',
+];
+
+function isHostAllowed(host: string | null | undefined): boolean {
+  if (!host) return false;
+  const h = host.toLowerCase();
+  return ALLOWED_EMBED_HOSTS.some((allowed) => h === allowed || h.endsWith('.' + allowed));
+}
+
+/**
+ * Decide whether the current load is allowed:
+ *  - If running inside an iframe → check the parent's referrer host.
+ *  - If opened directly → check the current window host.
+ *  - Lovable preview / sandbox hosts are allowed for development only.
+ */
+function checkEmbedAccess(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const currentHost = window.location.hostname.toLowerCase();
+
+  // Dev/preview escape hatch — never blocks Lovable preview iframes.
+  if (currentHost === 'localhost' || currentHost.endsWith('.lovable.app') || currentHost.endsWith('.lovableproject.com')) {
+    return true;
+  }
+
+  // Direct navigation (top-level): the page itself must be on an allowed host.
+  if (window.parent === window) {
+    return isHostAllowed(currentHost);
+  }
+
+  // Embedded in an iframe: trust the referrer host (best signal browsers expose).
+  try {
+    const ref = document.referrer;
+    if (!ref) return false;
+    const refHost = new URL(ref).hostname;
+    return isHostAllowed(refHost);
+  } catch {
+    return false;
+  }
+}
 
 const slugify = (t: string): string =>
   t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -40,6 +87,7 @@ export default function MinimalEmbedPage() {
     episodeSlug: string;
   }>();
 
+  const [accessAllowed] = useState<boolean>(() => checkEmbedAccess());
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [title, setTitle] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -48,8 +96,10 @@ export default function MinimalEmbedPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
 
+
   // Resolve the episode → video URL. One round-trip, three small queries.
   useEffect(() => {
+    if (!accessAllowed) return;
     let cancelled = false;
     (async () => {
       try {
@@ -99,7 +149,7 @@ export default function MinimalEmbedPage() {
     return () => {
       cancelled = true;
     };
-  }, [animeSlug, seasonSlug, episodeSlug]);
+  }, [animeSlug, seasonSlug, episodeSlug, accessAllowed]);
 
   // Decide whether the source should render as an iframe or as <video>.
   // External provider links → single iframe. Direct files / HLS → <video>.
@@ -143,6 +193,28 @@ export default function MinimalEmbedPage() {
       }
     };
   }, [videoUrl, useIframe]);
+
+  if (!accessAllowed) {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: '#000',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'rgba(255,255,255,0.85)',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          fontSize: 14,
+          padding: 24,
+          textAlign: 'center',
+        }}
+      >
+        This embed is not authorized for this domain.
+      </div>
+    );
+  }
 
   return (
     <div
