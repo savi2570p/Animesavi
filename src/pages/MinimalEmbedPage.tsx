@@ -99,6 +99,7 @@ export default function MinimalEmbedPage() {
 
   // Resolve the episode → video URL. One round-trip, three small queries.
   useEffect(() => {
+    if (!accessAllowed) return;
     let cancelled = false;
     (async () => {
       try {
@@ -148,7 +149,7 @@ export default function MinimalEmbedPage() {
     return () => {
       cancelled = true;
     };
-  }, [animeSlug, seasonSlug, episodeSlug]);
+  }, [animeSlug, seasonSlug, episodeSlug, accessAllowed]);
 
   // Decide whether the source should render as an iframe or as <video>.
   // External provider links → single iframe. Direct files / HLS → <video>.
