@@ -1,9 +1,16 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Hls from 'hls.js';
-import { Play, Pause, Maximize, Minimize, Download } from 'lucide-react';
+import { Play, Pause, Maximize, Minimize, Download, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { extractEmbedSrc, isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
+
+const QUALITY_TIERS: Array<{ label: string; tag: string }> = [
+  { label: '480p', tag: 'SD' },
+  { label: '720p', tag: 'HD' },
+  { label: '1080p', tag: 'FHD' },
+  { label: '2160p', tag: '4K' },
+];
 
 /**
  * MinimalEmbedPage — ultra-light single-element embed.
