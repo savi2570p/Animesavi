@@ -72,7 +72,7 @@ export default function ShadowArise() {
         }
       }
 
-      const blob = new Blob(chunks, { type: 'video/mp4' });
+      const blob = new Blob(chunks as BlobPart[], { type: 'video/mp4' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
