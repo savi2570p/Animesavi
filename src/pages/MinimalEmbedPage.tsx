@@ -107,6 +107,7 @@ export default function MinimalEmbedPage() {
   const [duration, setDuration] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const [showQualityPicker, setShowQualityPicker] = useState(false);
   const hideTimer = useRef<number | null>(null);
 
   // Resolve episode → video URL.
