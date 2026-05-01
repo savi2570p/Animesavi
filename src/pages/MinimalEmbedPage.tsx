@@ -1,22 +1,21 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Hls from 'hls.js';
+import { Play, Pause, Maximize, Minimize, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { extractEmbedSrc, isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 
 /**
- * MinimalEmbedPage — ultra-light, single-iframe (or single <video>) embed.
+ * MinimalEmbedPage — ultra-light single-element embed.
  *
  * Route: /embed/:animeSlug/:seasonSlug/:episodeSlug
  *
- * Design goals:
- *  - One media element only. No nested iframes. No overlays during playback.
- *  - Loads instantly on iOS Safari (no click-to-load, no autoplay dependency).
- *  - Native browser controls = guaranteed iOS compatibility.
+ * - Direct files / HLS → native <video> element with custom flat purple controls
+ *   (play/pause, timeline, fullscreen, download). No circular backgrounds.
+ * - External provider links → single top-level iframe, no overlays
+ *   (cross-origin makes custom controls impossible — provider's controls are used).
  *
- * Access control (Shadow embed link):
- *  Only the two approved hosts may embed or open this page directly.
- *  All other referrers / hosts get a clean "not authorized" message.
+ * Access control: only animesavi.com and shadowflix.lovable.app may embed.
  */
 
 const ALLOWED_EMBED_HOSTS = [
@@ -31,28 +30,15 @@ function isHostAllowed(host: string | null | undefined): boolean {
   return ALLOWED_EMBED_HOSTS.some((allowed) => h === allowed || h.endsWith('.' + allowed));
 }
 
-/**
- * Decide whether the current load is allowed:
- *  - If running inside an iframe → check the parent's referrer host.
- *  - If opened directly → check the current window host.
- *  - Lovable preview / sandbox hosts are allowed for development only.
- */
 function checkEmbedAccess(): boolean {
   if (typeof window === 'undefined') return false;
-
   const currentHost = window.location.hostname.toLowerCase();
-
-  // Dev/preview escape hatch — never blocks Lovable preview iframes.
   if (currentHost === 'localhost' || currentHost.endsWith('.lovable.app') || currentHost.endsWith('.lovableproject.com')) {
     return true;
   }
-
-  // Direct navigation (top-level): the page itself must be on an allowed host.
   if (window.parent === window) {
     return isHostAllowed(currentHost);
   }
-
-  // Embedded in an iframe: trust the referrer host (best signal browsers expose).
   try {
     const ref = document.referrer;
     if (!ref) return false;
@@ -80,6 +66,17 @@ function parseEpisodeNumber(slug?: string): number {
   return m ? parseInt(m[1], 10) : 1;
 }
 
+function formatTime(s: number): string {
+  if (!isFinite(s) || s < 0) return '0:00';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60).toString().padStart(2, '0');
+  const h = Math.floor(m / 60);
+  if (h > 0) {
+    return `${h}:${(m % 60).toString().padStart(2, '0')}:${sec}`;
+  }
+  return `${m}:${sec}`;
+}
+
 export default function MinimalEmbedPage() {
   const { animeSlug, seasonSlug, episodeSlug } = useParams<{
     animeSlug: string;
@@ -93,11 +90,19 @@ export default function MinimalEmbedPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
 
+  // Custom control state (only used when rendering native <video>)
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const hideTimer = useRef<number | null>(null);
 
-  // Resolve the episode → video URL. One round-trip, three small queries.
+  // Resolve episode → video URL.
   useEffect(() => {
     if (!accessAllowed) return;
     let cancelled = false;
@@ -106,7 +111,6 @@ export default function MinimalEmbedPage() {
         if (!animeSlug || !seasonSlug || !episodeSlug) {
           throw new Error('Invalid embed URL');
         }
-
         const seasonNumber = parseSeasonNumber(seasonSlug);
         const episodeNumber = parseEpisodeNumber(episodeSlug);
 
@@ -121,8 +125,7 @@ export default function MinimalEmbedPage() {
           .from('seasons')
           .select('id, season_number')
           .eq('anime_id', anime.id);
-        const season =
-          seasons?.find((s) => s.season_number === seasonNumber) ?? seasons?.[0];
+        const season = seasons?.find((s) => s.season_number === seasonNumber) ?? seasons?.[0];
         if (!season) throw new Error('Season not found');
 
         const { data: ep } = await supabase
@@ -146,17 +149,13 @@ export default function MinimalEmbedPage() {
         setLoading(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [animeSlug, seasonSlug, episodeSlug, accessAllowed]);
 
-  // Decide whether the source should render as an iframe or as <video>.
-  // External provider links → single iframe. Direct files / HLS → <video>.
   const useIframe = useMemo(() => (videoUrl ? isEmbedLikeUrl(videoUrl) : false), [videoUrl]);
   const iframeSrc = useMemo(() => (videoUrl ? extractEmbedSrc(videoUrl) : ''), [videoUrl]);
 
-  // HLS / direct file setup (only when we render <video>).
+  // HLS / direct file setup.
   useEffect(() => {
     if (useIframe || !videoUrl) return;
     const video = videoRef.current;
@@ -168,7 +167,6 @@ export default function MinimalEmbedPage() {
     }
 
     if (isHlsUrl(videoUrl)) {
-      // Native HLS (Safari / iOS) — preferred path, smallest overhead.
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = videoUrl;
       } else if (Hls.isSupported()) {
@@ -194,23 +192,89 @@ export default function MinimalEmbedPage() {
     };
   }, [videoUrl, useIframe]);
 
+  // Wire up native video → custom UI state.
+  useEffect(() => {
+    if (useIframe) return;
+    const v = videoRef.current;
+    if (!v) return;
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    const onTime = () => setCurrentTime(v.currentTime);
+    const onLoaded = () => setDuration(v.duration || 0);
+    v.addEventListener('play', onPlay);
+    v.addEventListener('pause', onPause);
+    v.addEventListener('timeupdate', onTime);
+    v.addEventListener('loadedmetadata', onLoaded);
+    v.addEventListener('durationchange', onLoaded);
+    return () => {
+      v.removeEventListener('play', onPlay);
+      v.removeEventListener('pause', onPause);
+      v.removeEventListener('timeupdate', onTime);
+      v.removeEventListener('loadedmetadata', onLoaded);
+      v.removeEventListener('durationchange', onLoaded);
+    };
+  }, [useIframe, videoUrl]);
+
+  // Track fullscreen state.
+  useEffect(() => {
+    const onFs = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onFs);
+    return () => document.removeEventListener('fullscreenchange', onFs);
+  }, []);
+
+  const togglePlay = useCallback(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) v.play().catch(() => {});
+    else v.pause();
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.();
+    } else {
+      el.requestFullscreen?.().catch(() => {});
+    }
+  }, []);
+
+  const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = videoRef.current;
+    if (!v || !duration) return;
+    const pct = parseFloat(e.target.value);
+    v.currentTime = (pct / 100) * duration;
+  }, [duration]);
+
+  const handleDownload = useCallback(() => {
+    if (!videoUrl) return;
+    const a = document.createElement('a');
+    a.href = videoUrl;
+    a.download = `${title || 'video'}.mp4`;
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }, [videoUrl, title]);
+
+  const bumpControls = useCallback(() => {
+    setShowControls(true);
+    if (hideTimer.current) window.clearTimeout(hideTimer.current);
+    hideTimer.current = window.setTimeout(() => {
+      if (videoRef.current && !videoRef.current.paused) setShowControls(false);
+    }, 3000);
+  }, []);
+
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
   if (!accessAllowed) {
     return (
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          background: '#000',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'rgba(255,255,255,0.85)',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-          fontSize: 14,
-          padding: 24,
-          textAlign: 'center',
-        }}
-      >
+      <div style={{
+        position: 'fixed', inset: 0, background: '#000',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'rgba(255,255,255,0.85)', fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontSize: 14, padding: 24, textAlign: 'center',
+      }}>
         This embed is not authorized for this domain.
       </div>
     );
@@ -218,80 +282,49 @@ export default function MinimalEmbedPage() {
 
   return (
     <div
+      ref={containerRef}
+      onMouseMove={bumpControls}
+      onTouchStart={bumpControls}
       style={{
-        position: 'fixed',
-        inset: 0,
-        background: '#000',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        margin: 0,
-        padding: 0,
-        overflow: 'hidden',
+        position: 'fixed', inset: 0, background: '#000',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        margin: 0, padding: 0, overflow: 'hidden',
       }}
     >
-      <div
-        style={{
-          position: 'relative',
-          width: '100%',
-          height: '100%',
-          maxWidth: '100vw',
-          maxHeight: '100vh',
-          aspectRatio: '16 / 9',
-          background: '#000',
-          borderRadius: 0,
-          overflow: 'hidden',
-        }}
-      >
-        {/* Subtle loading spinner — shown only until the source is resolved. */}
+      <div style={{
+        position: 'relative', width: '100%', height: '100%',
+        maxWidth: '100vw', maxHeight: '100vh', aspectRatio: '16 / 9',
+        background: '#000', overflow: 'hidden',
+      }}>
         {loading && !error && (
-          <div
-            aria-label="Loading"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1,
-            }}
-          >
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                border: '2px solid rgba(255,255,255,0.2)',
-                borderTopColor: '#fff',
-                borderRadius: '50%',
-                animation: 'embed-spin 0.8s linear infinite',
-              }}
-            />
+          <div style={{
+            position: 'absolute', inset: 0, display: 'flex',
+            alignItems: 'center', justifyContent: 'center', zIndex: 1,
+          }}>
+            <div style={{
+              width: 36, height: 36,
+              border: '2px solid rgba(255,255,255,0.2)',
+              borderTopColor: 'hsl(var(--primary))',
+              borderRadius: '50%',
+              animation: 'embed-spin 0.8s linear infinite',
+            }} />
             <style>{`@keyframes embed-spin { to { transform: rotate(360deg); } }`}</style>
           </div>
         )}
 
         {error && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'rgba(255,255,255,0.85)',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-              fontSize: 14,
-              padding: 24,
-              textAlign: 'center',
-            }}
-          >
+          <div style={{
+            position: 'absolute', inset: 0, display: 'flex',
+            alignItems: 'center', justifyContent: 'center',
+            color: 'rgba(255,255,255,0.85)',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: 14, padding: 24, textAlign: 'center',
+          }}>
             Video cannot be played on this device
           </div>
         )}
 
         {!error && videoUrl && useIframe && (
-          // Single, top-level iframe → no nesting, no postMessage handshake,
-          // no sandbox (globally stripped). iOS-safe.
           <iframe
             src={iframeSrc}
             title={title || 'Embedded video'}
@@ -299,33 +332,148 @@ export default function MinimalEmbedPage() {
             allowFullScreen
             referrerPolicy="no-referrer-when-downgrade"
             style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              border: 0,
-              background: '#000',
+              position: 'absolute', inset: 0,
+              width: '100%', height: '100%',
+              border: 0, background: '#000',
             }}
           />
         )}
 
         {!error && videoUrl && !useIframe && (
-          <video
-            ref={videoRef}
-            controls
-            playsInline
-            // No autoplay → satisfies iOS user-activation rules; user taps play.
-            preload="metadata"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              background: '#000',
-              objectFit: 'contain',
-            }}
-            onError={() => setError('Video cannot be played on this device')}
-          />
+          <>
+            <video
+              ref={videoRef}
+              playsInline
+              preload="metadata"
+              onClick={togglePlay}
+              style={{
+                position: 'absolute', inset: 0,
+                width: '100%', height: '100%',
+                background: '#000', objectFit: 'contain',
+              }}
+              onError={() => setError('Video cannot be played on this device')}
+            />
+
+            {/* Flat custom controls — purple themed, no circular backgrounds. */}
+            <div
+              style={{
+                position: 'absolute', left: 0, right: 0, bottom: 0,
+                padding: '40px 16px 14px',
+                background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)',
+                opacity: showControls || !isPlaying ? 1 : 0,
+                transition: 'opacity 200ms ease',
+                pointerEvents: showControls || !isPlaying ? 'auto' : 'none',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Timeline */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 11, fontFamily: 'ui-monospace, monospace', minWidth: 42 }}>
+                  {formatTime(currentTime)}
+                </span>
+                <div style={{ position: 'relative', flex: 1, height: 4 }}>
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'rgba(255,255,255,0.25)', borderRadius: 9999,
+                  }} />
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, height: '100%',
+                    width: `${progress}%`,
+                    background: 'hsl(var(--primary))',
+                    borderRadius: 9999,
+                    boxShadow: '0 0 8px hsl(var(--primary) / 0.6)',
+                  }} />
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step="any"
+                    value={isNaN(progress) ? 0 : progress}
+                    onChange={handleSeek}
+                    className="embed-range"
+                    style={{
+                      position: 'absolute', inset: 0,
+                      width: '100%', height: '100%',
+                      background: 'transparent',
+                      WebkitAppearance: 'none',
+                      appearance: 'none',
+                      cursor: 'pointer',
+                      margin: 0,
+                    }}
+                  />
+                </div>
+                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 11, fontFamily: 'ui-monospace, monospace', minWidth: 42, textAlign: 'right' }}>
+                  {formatTime(duration)}
+                </span>
+              </div>
+
+              {/* Buttons row — flat icons, purple hover, no circle bg. */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                  <button
+                    onClick={togglePlay}
+                    aria-label={isPlaying ? 'Pause' : 'Play'}
+                    className="embed-ctrl-btn"
+                  >
+                    {isPlaying ? <Pause size={22} /> : <Play size={22} fill="currentColor" />}
+                  </button>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                  <button
+                    onClick={handleDownload}
+                    aria-label="Download"
+                    className="embed-ctrl-btn"
+                  >
+                    <Download size={20} />
+                  </button>
+                  <button
+                    onClick={toggleFullscreen}
+                    aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+                    className="embed-ctrl-btn"
+                  >
+                    {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <style>{`
+              .embed-ctrl-btn {
+                background: transparent;
+                border: 0;
+                padding: 4px;
+                color: #fff;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                transition: color 150ms ease, transform 150ms ease;
+                filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.5));
+              }
+              .embed-ctrl-btn:hover { color: hsl(var(--primary)); }
+              .embed-ctrl-btn:active { transform: scale(0.92); }
+              .embed-range::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 14px; height: 14px;
+                border-radius: 50%;
+                background: hsl(var(--primary));
+                box-shadow: 0 0 8px hsl(var(--primary) / 0.7);
+                cursor: pointer;
+                border: 0;
+              }
+              .embed-range::-moz-range-thumb {
+                width: 14px; height: 14px;
+                border-radius: 50%;
+                background: hsl(var(--primary));
+                box-shadow: 0 0 8px hsl(var(--primary) / 0.7);
+                cursor: pointer;
+                border: 0;
+              }
+              .embed-range::-webkit-slider-runnable-track { background: transparent; }
+              .embed-range::-moz-range-track { background: transparent; }
+            `}</style>
+          </>
         )}
       </div>
     </div>
