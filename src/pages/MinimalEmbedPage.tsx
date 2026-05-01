@@ -491,6 +491,87 @@ export default function MinimalEmbedPage() {
             `}</style>
           </>
         )}
+
+        {/* Quality picker overlay — shown when user clicks Download */}
+        {showQualityPicker && videoUrl && (
+          <div
+            onClick={() => setShowQualityPicker(false)}
+            style={{
+              position: 'absolute', inset: 0, zIndex: 20,
+              background: 'rgba(0,0,0,0.85)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: 16,
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: 'rgba(15, 8, 25, 0.95)',
+                border: '1px solid hsl(var(--primary) / 0.4)',
+                borderRadius: 16,
+                padding: '20px 18px',
+                width: '100%', maxWidth: 360,
+                boxShadow: '0 0 40px hsl(var(--primary) / 0.25)',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                color: '#fff',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Download size={16} style={{ color: 'hsl(var(--primary))' }} />
+                  <span style={{ fontSize: 14, fontWeight: 700 }}>Select Quality</span>
+                </div>
+                <button
+                  onClick={() => setShowQualityPicker(false)}
+                  aria-label="Close"
+                  style={{ background: 'transparent', border: 0, color: 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: 4 }}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {QUALITY_TIERS.map((q) => (
+                  <button
+                    key={q.label}
+                    onClick={() => handleQualitySelect(q.label)}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '10px 12px',
+                      borderRadius: 10,
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      background: 'rgba(255,255,255,0.04)',
+                      color: '#fff',
+                      fontSize: 13, fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 150ms ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = 'hsl(var(--primary))';
+                      e.currentTarget.style.background = 'hsl(var(--primary) / 0.12)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                    }}
+                  >
+                    <span>{q.label}</span>
+                    <span style={{
+                      fontSize: 9, fontWeight: 800,
+                      padding: '2px 6px', borderRadius: 4,
+                      background: 'hsl(var(--primary) / 0.2)',
+                      color: 'hsl(var(--primary))',
+                    }}>{q.tag}</span>
+                  </button>
+                ))}
+              </div>
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 12, textAlign: 'center' }}>
+                Opens secure download page
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
