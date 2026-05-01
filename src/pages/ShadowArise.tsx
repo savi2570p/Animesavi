@@ -83,14 +83,27 @@ export default function ShadowArise() {
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       setDownloadPct(100);
     } catch {
-      // Fallback: anchor with download attribute (no new tab, no opener).
-      const a = document.createElement('a');
-      a.href = videoUrl;
-      a.download = fileName;
-      a.rel = 'noopener noreferrer';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      // Fallback when CORS blocks fetch: use a hidden iframe to trigger
+      // the download without navigating the current tab. This prevents
+      // the OS default video player (Windows Media / QuickTime) from opening.
+      try {
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = videoUrl;
+        document.body.appendChild(iframe);
+        setTimeout(() => {
+          try { document.body.removeChild(iframe); } catch {}
+        }, 60000);
+      } catch {
+        // Last resort: anchor with download attribute (no new tab).
+        const a = document.createElement('a');
+        a.href = videoUrl;
+        a.download = fileName;
+        a.rel = 'noopener noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
     } finally {
       setDownloading(false);
     }
