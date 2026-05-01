@@ -61,10 +61,12 @@ import { YouTubeEmbed, isYouTubeUrl } from './YouTubeEmbed';
 import { EmbedIframePlayer } from './EmbedIframePlayer';
 import { PureEmbedPlayer } from './PureEmbedPlayer';
 
+// Unified flat control style — purple-tinted, no circular background.
+// Matches the X-PLUS minimal aesthetic across every server.
 const playerControlButtonClass =
-  "rounded-full bg-primary/20 border border-primary/30 text-primary-foreground shadow-lg shadow-primary/20 backdrop-blur-sm hover:bg-primary/90 hover:border-primary hover:shadow-primary/40 active:scale-90 active:opacity-80 flex items-center justify-center transition-all duration-200";
+  "text-white hover:text-primary active:scale-90 active:opacity-80 flex items-center justify-center transition-colors duration-200 drop-shadow-[0_0_8px_hsl(var(--primary)/0.45)] bg-transparent border-0";
 const flatPlayerControlButtonClass =
-  "text-primary-foreground hover:text-primary transition-colors drop-shadow-[0_0_8px_hsl(var(--primary)/0.45)]";
+  "text-white hover:text-primary transition-colors drop-shadow-[0_0_8px_hsl(var(--primary)/0.45)] bg-transparent border-0";
 
 interface AudioTrackInfo {
   id: number;
