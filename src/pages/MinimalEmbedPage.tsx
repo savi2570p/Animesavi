@@ -436,7 +436,7 @@ export default function MinimalEmbedPage() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
                   <button
-                    onClick={handleDownload}
+                    onClick={handleDownloadClick}
                     aria-label="Download"
                     className="embed-ctrl-btn"
                   >
