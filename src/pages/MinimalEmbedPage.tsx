@@ -254,15 +254,23 @@ export default function MinimalEmbedPage() {
     v.currentTime = (pct / 100) * duration;
   }, [duration]);
 
-  const handleDownload = useCallback(() => {
+  const handleDownloadClick = useCallback(() => {
+    setShowQualityPicker(true);
+  }, []);
+
+  const handleQualitySelect = useCallback((quality: string) => {
     if (!videoUrl) return;
-    const a = document.createElement('a');
-    a.href = videoUrl;
-    a.download = `${title || 'video'}.mp4`;
-    a.rel = 'noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const animeName = (title.split('•')[0] || 'video').trim();
+    const epMatch = title.match(/S(\d+)E(\d+)/i);
+    const ep = epMatch ? `${epMatch[1].padStart(2, '0')}` : '01';
+    const params = new URLSearchParams({
+      quality,
+      anime: animeName,
+      ep,
+      url: videoUrl,
+    });
+    // Same-tab navigation → no default OS player, no popup blockers.
+    window.location.href = `/shadow-arise?${params.toString()}`;
   }, [videoUrl, title]);
 
   const bumpControls = useCallback(() => {
