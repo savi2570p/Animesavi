@@ -61,18 +61,14 @@ export function getAvailableServers(): ServerType[] {
 
 /**
  * Returns the best default server for the current device.
- * Default: X-PLUS for both Desktop and Android (and iOS) — most reliable, recommended.
+ * Default: X-PLUS — most reliable, recommended.
  */
 export function getDefaultServer(): ServerType {
-  const isIOS = isIOSDevice();
-
   const saved = localStorage.getItem(SERVER_PREF_KEY) as ServerType | null;
   if (saved) {
-    if (isIOS && saved === 'SHORT') return 'XPLUS';
-    if (['PLAY', 'SHORT', 'Zex', 'XPLUS', 'EMBED'].includes(saved)) return saved;
+    if (saved === 'SHORT') return 'XPLUS'; // legacy SAVI.IN preference → upgrade
+    if (['PLAY', 'Zex', 'XPLUS', 'EMBED'].includes(saved)) return saved;
   }
-
-  // Default to X-PLUS for all platforms (desktop, Android, iOS).
   return 'XPLUS';
 }
 
