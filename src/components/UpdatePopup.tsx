@@ -668,12 +668,16 @@ export function UpdatePopup() {
   /* ── STEP 4: Complete / What's New — compact cinematic redesign ── */
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/85 p-3 backdrop-blur-xl animate-in fade-in duration-300 sm:items-center sm:p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 p-3 backdrop-blur-xl animate-in fade-in duration-300 sm:p-4"
+      style={{
+        paddingTop: 'max(0.75rem, env(safe-area-inset-top))',
+        paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))',
+      }}
       onClick={dismissPopup}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md overflow-hidden rounded-2xl border border-purple-600/25 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-purple-900/30 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
+        className="relative w-full max-w-sm sm:max-w-md max-h-[calc(100dvh-1.5rem)] flex flex-col overflow-hidden rounded-2xl border border-purple-600/25 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-purple-900/30 animate-in zoom-in-95 duration-300"
       >
         {/* Decorative glows */}
         <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-purple-600/15 blur-3xl" />
@@ -751,7 +755,7 @@ export function UpdatePopup() {
 
         {/* Items — compact rows, scroll-locked height */}
         <div
-          className="relative max-h-[42vh] space-y-1.5 overflow-y-auto px-4 py-3 sm:max-h-[40vh]"
+          className="relative flex-1 min-h-0 space-y-1.5 overflow-y-auto px-4 py-3"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
@@ -782,7 +786,7 @@ export function UpdatePopup() {
         </div>
 
         {/* CTA */}
-        <div className="relative border-t border-white/5 bg-black/40 px-4 py-3">
+        <div className="relative shrink-0 border-t border-white/5 bg-black/40 px-4 py-3">
           <button
             onClick={handleGo}
             className="group flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-900/40 transition-all hover:from-purple-600 hover:to-purple-400 hover:shadow-purple-700/50"

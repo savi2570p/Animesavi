@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { isIOSDevice } from '@/lib/deviceUtils';
+
 
 export type ServerType = 'PLAY' | 'SHORT' | 'Zex' | 'XPLUS' | 'EMBED';
 
@@ -53,30 +53,22 @@ const SERVER_PREF_KEY = 'preferred_video_server';
 
 /**
  * Returns the list of servers available for the current device.
- * iOS users cannot see SAVI.IN (SHORT).
+ * SAVI.IN (SHORT) was removed — all platforms now share the same server list.
  */
 export function getAvailableServers(): ServerType[] {
-  const isIOS = isIOSDevice();
-  if (isIOS) {
-    return ['PLAY', 'Zex', 'XPLUS', 'EMBED'];
-  }
-  return ['PLAY', 'SHORT', 'Zex', 'XPLUS', 'EMBED'];
+  return ['PLAY', 'Zex', 'XPLUS', 'EMBED'];
 }
 
 /**
  * Returns the best default server for the current device.
- * Default: X-PLUS for both Desktop and Android (and iOS) — most reliable, recommended.
+ * Default: X-PLUS — most reliable, recommended.
  */
 export function getDefaultServer(): ServerType {
-  const isIOS = isIOSDevice();
-
   const saved = localStorage.getItem(SERVER_PREF_KEY) as ServerType | null;
   if (saved) {
-    if (isIOS && saved === 'SHORT') return 'XPLUS';
-    if (['PLAY', 'SHORT', 'Zex', 'XPLUS', 'EMBED'].includes(saved)) return saved;
+    if (saved === 'SHORT') return 'XPLUS'; // legacy SAVI.IN preference → upgrade
+    if (['PLAY', 'Zex', 'XPLUS', 'EMBED'].includes(saved)) return saved;
   }
-
-  // Default to X-PLUS for all platforms (desktop, Android, iOS).
   return 'XPLUS';
 }
 

@@ -29,12 +29,12 @@ export interface PlayerTheme {
 export const PLAYER_THEMES: PlayerTheme[] = [
   {
     key: 'classic',
-    name: 'Classic Red',
-    swatch: 'linear-gradient(135deg, hsl(0 84% 50%), hsl(0 72% 35%))',
+    name: 'Royal Purple',
+    swatch: 'linear-gradient(135deg, hsl(270 75% 55%), hsl(280 70% 40%))',
     vars: {
-      '--primary': '0 84% 50%',
+      '--primary': '270 75% 55%',
       '--primary-foreground': '0 0% 100%',
-      '--player-accent-glow': 'rgba(239, 68, 68, 0.55)',
+      '--player-accent-glow': 'rgba(168, 85, 247, 0.55)',
     },
   },
   {
