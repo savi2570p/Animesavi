@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { isIOSDevice } from '@/lib/deviceUtils';
+
 
 export type ServerType = 'PLAY' | 'SHORT' | 'Zex' | 'XPLUS' | 'EMBED';
 
