@@ -2932,21 +2932,7 @@ export function VideoPlayer({
                     <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); handleDownload(); }} title="Download">
                       <Download className={isIOS ? "w-2.5 h-2.5" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
-                    <button 
-                      className={flatPlayerControlButtonClass} 
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        if (subtitleTracks.length > 0) {
-                          const nextTrack = currentSubtitleTrack === -1 ? 0 : (currentSubtitleTrack + 1 > subtitleTracks.length - 1 ? -1 : currentSubtitleTrack + 1);
-                          switchSubtitleTrack(nextTrack);
-                        } else {
-                          toast.info('No subtitles available for this episode');
-                        }
-                      }}
-                      title="Subtitles / CC"
-                    >
-                      <Subtitles className={`${isIOS ? 'w-2.5 h-2.5' : 'w-5 h-5 md:w-6 md:h-6'} ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`} />
-                    </button>
+                    {/* CC button removed from X-PLUS server per design request */}
                     <ThemePickerButton
                       value={playerTheme}
                       onChange={setPlayerTheme}
