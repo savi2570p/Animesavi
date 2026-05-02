@@ -91,6 +91,10 @@ export default function MinimalEmbedPage() {
     episodeSlug: string;
   }>();
 
+  // Shadow theme = stripped-down embed (no download button).
+  const isShadowTheme = typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('theme') === 'shadow';
+
   const [accessAllowed] = useState<boolean>(() => checkEmbedAccess());
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [title, setTitle] = useState<string>('');
