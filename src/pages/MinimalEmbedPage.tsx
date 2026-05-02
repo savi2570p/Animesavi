@@ -95,7 +95,9 @@ export default function MinimalEmbedPage() {
   const isShadowTheme = typeof window !== 'undefined' &&
     new URLSearchParams(window.location.search).get('theme') === 'shadow';
 
-  const [accessAllowed] = useState<boolean>(() => checkEmbedAccess());
+  // Shadow theme bypasses host restrictions — usable from anywhere.
+  // Regular /embed/ links remain limited to the allowlisted hosts.
+  const [accessAllowed] = useState<boolean>(() => isShadowTheme || checkEmbedAccess());
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [title, setTitle] = useState<string>('');
   const [loading, setLoading] = useState(true);
