@@ -755,7 +755,7 @@ export function UpdatePopup() {
 
         {/* Items — compact rows, scroll-locked height */}
         <div
-          className="relative max-h-[42vh] space-y-1.5 overflow-y-auto px-4 py-3 sm:max-h-[40vh]"
+          className="relative flex-1 min-h-0 space-y-1.5 overflow-y-auto px-4 py-3"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
