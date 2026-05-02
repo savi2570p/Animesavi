@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
-const SHADOW_LINK_EMAILS = new Set(['savi2570p@gmail.com', 'shadowtoonsindia@gmail.com']);
+// Shadow Link is now available to everyone — no email gating.
 
 interface ShareEmbedPopupProps {
   /** 'series' shows only Copy Series Link; 'episode' shows episode + embed options */
@@ -56,7 +56,7 @@ export function ShareEmbedPopup({
   const fullPageUrl = rebrandUrl(pageUrl);
   const fullEmbedUrl = embedUrl ? rebrandUrl(embedUrl) : '';
   const shadowEmbedUrl = fullEmbedUrl ? `${fullEmbedUrl}${fullEmbedUrl.includes('?') ? '&' : '?'}theme=shadow` : '';
-  const canSeeShadowLink = !!user?.email && SHADOW_LINK_EMAILS.has(user.email.toLowerCase());
+  const canSeeShadowLink = !!fullEmbedUrl;
 
   const iframeCode = fullEmbedUrl
     ? `<iframe src="${fullEmbedUrl}" width="100%" height="500" frameborder="0" allowfullscreen></iframe>`
