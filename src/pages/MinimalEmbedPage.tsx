@@ -439,13 +439,15 @@ export default function MinimalEmbedPage() {
                   </button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-                  <button
-                    onClick={handleDownloadClick}
-                    aria-label="Download"
-                    className="embed-ctrl-btn"
-                  >
-                    <Download size={20} />
-                  </button>
+                  {!isShadowTheme && (
+                    <button
+                      onClick={handleDownloadClick}
+                      aria-label="Download"
+                      className="embed-ctrl-btn"
+                    >
+                      <Download size={20} />
+                    </button>
+                  )}
                   <button
                     onClick={toggleFullscreen}
                     aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
