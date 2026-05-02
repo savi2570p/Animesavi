@@ -984,13 +984,13 @@ export default function Watch() {
         const tgCopy = resolveTelegramCopy(episode?.audio_language);
         return (
           <div
-            className="fixed z-[60] left-1/2 -translate-x-1/2 bottom-[max(5.5rem,calc(env(safe-area-inset-bottom)+1rem))] sm:left-auto sm:right-4 sm:translate-x-0 sm:bottom-[max(1.25rem,env(safe-area-inset-bottom))] w-[min(calc(100vw-1.5rem),22rem)] animate-slide-in-right pointer-events-none"
+            className="fixed z-[60] left-1/2 -translate-x-1/2 bottom-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.75rem))] w-[min(calc(100vw-1.5rem),26rem)] pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-500"
             role="status"
             aria-live="polite"
             aria-label={tgCopy.aria}
             dir={resolveTelegramCopy(episode?.audio_language) === TELEGRAM_COPY.ar ? 'rtl' : 'ltr'}
           >
-            <div className="pointer-events-auto relative flex items-center gap-2.5 rounded-2xl border border-[#0088cc]/30 bg-card/95 backdrop-blur-xl shadow-2xl pl-3 pr-2 py-2.5">
+            <div className="pointer-events-auto relative flex items-center gap-3 rounded-2xl border border-[#0088cc]/40 bg-card/95 backdrop-blur-xl shadow-[0_20px_50px_-10px_rgba(0,136,204,0.45)] pl-3.5 pr-2.5 py-3">
               <button
                 onClick={handleTelegramDismiss}
                 className="absolute -top-2 -right-2 h-6 w-6 rounded-full flex items-center justify-center bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-md"
@@ -998,7 +998,7 @@ export default function Watch() {
               >
                 <X className="h-3.5 w-3.5" />
               </button>
-              <div className="flex-shrink-0 h-9 w-9 rounded-full bg-[#0088cc] flex items-center justify-center shadow-md">
+              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-[#29b6f6] to-[#0077b5] flex items-center justify-center shadow-md ring-1 ring-white/10">
                 <Send className="h-4 w-4 text-white" />
               </div>
               <div className="flex-1 min-w-0 pr-1">
@@ -1008,7 +1008,7 @@ export default function Watch() {
               <Button
                 onClick={handleTelegramJoin}
                 size="sm"
-                className="flex-shrink-0 h-8 px-3 text-xs font-semibold bg-[#0088cc] hover:bg-[#0077b5] text-white rounded-lg min-w-[3.5rem]"
+                className="flex-shrink-0 h-8 px-3.5 text-xs font-semibold bg-[#0088cc] hover:bg-[#0077b5] text-white rounded-lg min-w-[3.5rem]"
               >
                 {tgCopy.cta}
               </Button>
