@@ -467,6 +467,49 @@ export function VideoPlayer({
     return () => clearTimeout(loaderSafetyTimer);
   }, [videoUrl, externalUrl, activeServer]);
 
+  // ── Media Session API: dynamic per-episode metadata for iOS / Android lock
+  // screens, AirPlay, Bluetooth widgets, etc. Replaces any static "AnimeSavi"
+  // branding with the actual episode/anime info + episode artwork.
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+
+    const dynamicTitle = isMovie
+      ? animeTitle
+      : `${animeTitle} • Season ${seasonNumber} Episode ${episodeNumber}${title ? ` — ${title}` : ''}`;
+    const artworkSrc = poster || '';
+
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: dynamicTitle,
+        artist: animeTitle,
+        album: 'AnimeSavi',
+        artwork: artworkSrc
+          ? [
+              { src: artworkSrc, sizes: '512x512', type: 'image/png' },
+              { src: artworkSrc, sizes: '256x256', type: 'image/png' },
+              { src: artworkSrc, sizes: '96x96', type: 'image/png' },
+            ]
+          : [],
+      });
+
+      // Wire transport controls to the video element so OS-level play/pause
+      // / seek widgets stay in sync.
+      const v = videoRef.current;
+      if (v) {
+        navigator.mediaSession.setActionHandler?.('play', () => v.play().catch(() => {}));
+        navigator.mediaSession.setActionHandler?.('pause', () => v.pause());
+        navigator.mediaSession.setActionHandler?.('seekbackward', (d) => {
+          v.currentTime = Math.max(0, v.currentTime - (d.seekOffset ?? 10));
+        });
+        navigator.mediaSession.setActionHandler?.('seekforward', (d) => {
+          v.currentTime = Math.min(v.duration || v.currentTime, v.currentTime + (d.seekOffset ?? 10));
+        });
+      }
+    } catch {
+      // Older browsers — ignore silently.
+    }
+  }, [animeTitle, title, seasonNumber, episodeNumber, isMovie, poster]);
+
   // HLS.js initialization for multi-audio and subtitle support
   useEffect(() => {
     const video = videoRef.current;
