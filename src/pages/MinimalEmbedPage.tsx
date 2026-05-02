@@ -91,7 +91,13 @@ export default function MinimalEmbedPage() {
     episodeSlug: string;
   }>();
 
-  const [accessAllowed] = useState<boolean>(() => checkEmbedAccess());
+  // Shadow theme = stripped-down embed (no download button).
+  const isShadowTheme = typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('theme') === 'shadow';
+
+  // Shadow theme bypasses host restrictions — usable from anywhere.
+  // Regular /embed/ links remain limited to the allowlisted hosts.
+  const [accessAllowed] = useState<boolean>(() => isShadowTheme || checkEmbedAccess());
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [title, setTitle] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -435,13 +441,15 @@ export default function MinimalEmbedPage() {
                   </button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-                  <button
-                    onClick={handleDownloadClick}
-                    aria-label="Download"
-                    className="embed-ctrl-btn"
-                  >
-                    <Download size={20} />
-                  </button>
+                  {!isShadowTheme && (
+                    <button
+                      onClick={handleDownloadClick}
+                      aria-label="Download"
+                      className="embed-ctrl-btn"
+                    >
+                      <Download size={20} />
+                    </button>
+                  )}
                   <button
                     onClick={toggleFullscreen}
                     aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
