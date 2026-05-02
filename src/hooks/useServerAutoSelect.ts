@@ -53,14 +53,10 @@ const SERVER_PREF_KEY = 'preferred_video_server';
 
 /**
  * Returns the list of servers available for the current device.
- * iOS users cannot see SAVI.IN (SHORT).
+ * SAVI.IN (SHORT) was removed — all platforms now share the same server list.
  */
 export function getAvailableServers(): ServerType[] {
-  const isIOS = isIOSDevice();
-  if (isIOS) {
-    return ['PLAY', 'Zex', 'XPLUS', 'EMBED'];
-  }
-  return ['PLAY', 'SHORT', 'Zex', 'XPLUS', 'EMBED'];
+  return ['PLAY', 'Zex', 'XPLUS', 'EMBED'];
 }
 
 /**
