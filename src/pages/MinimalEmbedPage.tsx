@@ -158,8 +158,23 @@ export default function MinimalEmbedPage() {
         const url = ep.video_url || ep.external_url;
         if (!url) throw new Error('No video available');
 
+        // Fetch sibling episodes for the Episodes tab (Shadow Link only).
+        let siblings: Array<{ episode_number: number; title: string | null }> = [];
+        if (isShadowTheme) {
+          const { data: epList } = await supabase
+            .from('episodes')
+            .select('episode_number, title')
+            .eq('season_id', season.id)
+            .order('episode_number', { ascending: true });
+          siblings = (epList || []) as Array<{ episode_number: number; title: string | null }>;
+        }
+
         if (cancelled) return;
         setTitle(`${anime.title} • S${seasonNumber}E${episodeNumber}`);
+        setAnimeTitle(anime.title);
+        setSeasonNum(seasonNumber);
+        setCurrentEpisodeNum(episodeNumber);
+        setEpisodeList(siblings);
         setVideoUrl(url);
         setLoading(false);
       } catch (e) {
