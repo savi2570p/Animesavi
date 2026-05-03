@@ -276,7 +276,7 @@ export default function Watch() {
 
   // Handle server change - delegates to useServerAutoSelect.
   // Enforce source-type compatibility:
-  //  - File-uploaded videos (video_url present) → only PLAY / SHORT / Zex / XPLUS allowed.
+  //  - File-uploaded videos (video_url present) → only PLAY / Zex / XPLUS allowed.
   //  - Embed-link episodes (no video_url, external_url is embed) → only EMBED allowed.
   const handleServerChange = useCallback((server: ServerType) => {
     const hasDirectVideo = !!episode?.video_url;
