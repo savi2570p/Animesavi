@@ -610,6 +610,97 @@ export default function MinimalEmbedPage() {
             </div>
           </div>
         )}
+
+        {/* Shadow Link Episodes drawer */}
+        {isShadowTheme && showEpisodes && (
+          <div
+            onClick={() => setShowEpisodes(false)}
+            style={{
+              position: 'absolute', inset: 0, zIndex: 25,
+              background: 'rgba(0,0,0,0.7)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              display: 'flex', justifyContent: 'flex-end',
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: '100%', maxWidth: 360, height: '100%',
+                background: 'rgba(15, 8, 25, 0.96)',
+                borderLeft: '1px solid hsl(var(--primary) / 0.3)',
+                display: 'flex', flexDirection: 'column',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                color: '#fff',
+                animation: 'embed-slide-in 220ms ease-out',
+              }}
+            >
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)',
+              }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {animeTitle}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
+                    Season {seasonNum} • {episodeList.length} episodes
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowEpisodes(false)}
+                  aria-label="Close"
+                  style={{ background: 'transparent', border: 0, color: 'rgba(255,255,255,0.7)', cursor: 'pointer', padding: 4 }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+                {episodeList.map((e) => {
+                  const active = e.episode_number === currentEpisodeNum;
+                  return (
+                    <button
+                      key={e.episode_number}
+                      onClick={() => {
+                        const epSlug = `episode-${e.episode_number}`;
+                        const seasonSlugCurrent = `season-${seasonNum}`;
+                        const search = window.location.search;
+                        window.location.href = `/embed/${animeSlug}/${seasonSlugCurrent}/${epSlug}${search}`;
+                      }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        width: '100%', textAlign: 'left',
+                        padding: '10px 12px', marginBottom: 4,
+                        borderRadius: 8,
+                        border: active ? '1px solid hsl(var(--primary))' : '1px solid rgba(255,255,255,0.08)',
+                        background: active ? 'hsl(var(--primary) / 0.18)' : 'rgba(255,255,255,0.03)',
+                        color: '#fff', cursor: 'pointer',
+                      }}
+                    >
+                      <span style={{
+                        flexShrink: 0,
+                        width: 32, height: 32, borderRadius: 6,
+                        background: active ? 'hsl(var(--primary))' : 'rgba(255,255,255,0.06)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 12, fontWeight: 800,
+                      }}>
+                        {e.episode_number}
+                      </span>
+                      <span style={{
+                        fontSize: 12, fontWeight: 600,
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        flex: 1,
+                      }}>
+                        {e.title || `Episode ${e.episode_number}`}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <style>{`@keyframes embed-slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } }`}</style>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
