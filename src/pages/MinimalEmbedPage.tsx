@@ -461,6 +461,16 @@ export default function MinimalEmbedPage() {
                   </button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                  {isShadowTheme && episodeList.length > 1 && (
+                    <button
+                      onClick={() => setShowEpisodes(true)}
+                      aria-label="Episodes"
+                      className="embed-ctrl-btn"
+                      title="Episodes"
+                    >
+                      <List size={20} />
+                    </button>
+                  )}
                   {!isShadowTheme && (
                     <button
                       onClick={handleDownloadClick}
