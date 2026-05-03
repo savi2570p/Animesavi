@@ -23,7 +23,11 @@ export function useServerPreference() {
   useEffect(() => {
     try {
       const savedServer = localStorage.getItem(SERVER_PREFERENCE_KEY) as ServerType | null;
-      if (savedServer && ['PLAY', 'SHORT', 'Zex', 'XPLUS'].includes(savedServer)) {
+      // SAVI.IN (SHORT) was removed — migrate any legacy saved preference to XPLUS.
+      if (savedServer === 'SHORT') {
+        localStorage.setItem(SERVER_PREFERENCE_KEY, 'XPLUS');
+        setPreferredServer('XPLUS');
+      } else if (savedServer && ['PLAY', 'Zex', 'XPLUS', 'EMBED'].includes(savedServer)) {
         setPreferredServer(savedServer);
       }
 

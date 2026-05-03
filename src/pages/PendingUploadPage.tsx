@@ -116,7 +116,7 @@ function NoEpisodesPopup({ isOpen, onClose, animeTitle }: NoEpisodesPopupProps) 
     { Icon: ListChecks, title: 'Upload queue', desc: 'Season links, posters and episode files added.', tone: 'sky' },
     { Icon: ShieldCheck, title: 'Audio + E-sub check', desc: 'Multi-audio + subtitle timing verified.', tone: 'amber' },
     { Icon: RefreshCw, title: 'HLS encoding', desc: 'Adaptive streaming (480p → 4K) in progress.', tone: 'violet' },
-    { Icon: ServerCog, title: 'Server deployment', desc: 'Distributed to H.Savi, SAVI.IN, Multi.Savi & X-PLUS.', tone: 'fuchsia' },
+    { Icon: ServerCog, title: 'Server deployment', desc: 'Distributed to H.Savi, Multi.Savi & X-PLUS.', tone: 'fuchsia' },
     { Icon: PackageCheck, title: 'Quality assurance', desc: 'Tested on mobile, desktop & TV before going live.', tone: 'emerald' },
   ] as const;
 
