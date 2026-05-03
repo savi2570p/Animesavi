@@ -20,22 +20,35 @@ interface VersionGroup {
   items: ChangelogItem[];
 }
 
-const APP_VERSION = 'v24.1';
+const APP_VERSION = 'v25';
 
-// Fixed download size for v24.1 (small patch update)
-const RANDOM_DOWNLOAD_MB = 2.43;
+// Fixed download size for v25
+const RANDOM_DOWNLOAD_MB = 31.5;
 
 const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'v24.1',
+    version: 'v25',
     date: 'Latest',
+    highlight: 'A polish + cleanup release — SAVI.IN fully removed, X-PLUS minus the CC button, smoother iOS popups, and a brand-new Episodes tab inside the Shadow Link embed player.',
+    items: [
+      { icon: '🧹', badge: 'FIX', title: 'SAVI.IN Server Removed', desc: 'Legacy SAVI.IN (SHORT) is fully retired. Saved preferences automatically migrate to X-PLUS — no broken server picker entries.' },
+      { icon: '🎬', badge: 'IMPROVED', title: 'Unified Purple Player', desc: 'Timeline, play/pause, fullscreen, and download icons now share the same flat purple styling across H.Savi, Multi.Savi, X-PLUS and the Shadow Link embed.' },
+      { icon: '🚫', badge: 'FIX', title: 'CC Button Off X-PLUS', desc: 'The CC caption shortcut is gone from the X-PLUS toolbar. Subtitles & captions still switchable from the gear / settings menu as before.' },
+      { icon: '📱', badge: 'FIX', title: 'iOS What\'s New Centering', desc: 'The What\'s New / Explore Now modal is now properly centered with notch and dynamic-viewport safe areas — the CTA stays tappable on every iPhone.' },
+      { icon: '✈️', badge: 'FIX', title: 'Telegram Popup Placement', desc: 'On iOS & Android the Telegram popup sits at bottom-center clear of the player controls and respects the home-bar safe area — never overlaps.' },
+      { icon: '📺', badge: 'NEW', title: 'Episodes Tab in Shadow Link', desc: 'Shadow Link embed now includes a slide-out Episodes tab so viewers can switch between episodes in the same season without leaving the embed.' },
+    ],
+  },
+  {
+    version: 'v24.1',
+    date: 'Previous',
     highlight: 'A focused patch — fixes only. Smaller iOS player controls, smoother server switching, embed download routed to Shadow-Arise, and animesavi.com share/embed links.',
     items: [
       { icon: '📱', badge: 'FIX', title: 'Smaller iOS Player Controls', desc: 'Buttons and the timeline on iPhone/iPad are now compact and never overlap, even on the smallest screens.' },
       { icon: '🔗', badge: 'FIX', title: 'New Domain in Share Links', desc: 'Share & embed links now use animesavi.com (your new custom domain) instead of the lovable.app preview URL.' },
       { icon: '⬇️', badge: 'FIX', title: 'Embed Download → Shadow-Arise', desc: 'Picking a quality from the Embed player\'s download menu now opens the dedicated /Shadow-Arise tab with the correct file name and auto-starts the download.' },
       { icon: '🛰️', badge: 'FIX', title: 'CrunchyDownload Sync', desc: 'New episodes uploaded to AnimeSavi are now mirrored to CrunchyDownload through a signed webhook with retry on failure.' },
-      { icon: '🎬', badge: 'FIX', title: 'Server Switch Stability', desc: 'Additional safeguards when switching between H.Savi, SAVI.IN, Multi.Savi and X-PLUS to avoid black-screen buffering after server change.' },
+      { icon: '🎬', badge: 'FIX', title: 'Server Switch Stability', desc: 'Additional safeguards when switching between H.Savi, Multi.Savi and X-PLUS to avoid black-screen buffering after server change.' },
     ],
   },
   {

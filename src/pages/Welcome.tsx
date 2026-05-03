@@ -48,7 +48,7 @@ const FAQ_ITEMS = [
   { q: 'How do Watch Parties work?', a: 'Open any episode, start a Watch Party, and share the code with friends. Playback stays in sync and you can chat together in real time.' },
   { q: 'Do I need an account to watch?', a: 'No, browsing and watching are open to everyone. Creating a free account unlocks Watch List, Continue Watching, favorites, and release reminders.' },
   { q: 'Can I install AnimeSavi as an app?', a: 'Yes. On Android Chrome use "Add to Home Screen" from the menu; on iPhone Safari tap Share → "Add to Home Screen". It runs like a native app with PWA support.' },
-  { q: 'Why are there multiple servers?', a: 'We offer H.Savi, SAVI.IN, Multi.Savi and X-PLUS so you can pick whatever streams best on your device. Your last choice is remembered — no forced switching.' },
+  { q: 'Why are there multiple servers?', a: 'We offer H.Savi, Multi.Savi and X-PLUS so you can pick whatever streams best on your device. Your last choice is remembered — no forced switching.' },
   { q: 'How do I report a broken episode?', a: 'Use the ⚠️ report button on the watch page or message us on Telegram @Lv_Savi. Reports are reviewed quickly and broken links are usually fixed within 24 hours.' },
 ];
 
@@ -158,7 +158,7 @@ export default function Welcome() {
   ];
 
   const features = [
-    { icon: Zap, title: 'Lightning Fast', desc: 'Stream instantly with H.Savi, SAVI.IN, Multi.Savi, and X-PLUS. Pick your favorite server anytime with no forced switching.', highlight: true },
+    { icon: Zap, title: 'Lightning Fast', desc: 'Stream instantly with H.Savi, Multi.Savi, and X-PLUS. Pick your favorite server anytime with no forced switching.', highlight: true },
     { icon: Shield, title: '100% Ad-Free', desc: 'No ads, no popups, no interruptions. Just pure, uninterrupted anime watching experience from start to finish.', highlight: true },
     { icon: Download, title: 'Smart Downloads', desc: 'Download in 480p, 720p, 1080p or even 2160p (4K) with proper episode names, codec info & quality tags.' },
     { icon: Smartphone, title: 'Mobile First', desc: 'Designed for phones with compact controls, gesture navigation, PiP, and iOS-optimized H.Savi server.' },
