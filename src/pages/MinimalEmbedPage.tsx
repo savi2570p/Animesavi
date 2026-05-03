@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Hls from 'hls.js';
-import { Play, Pause, Maximize, Minimize, Download, X } from 'lucide-react';
+import { Play, Pause, Maximize, Minimize, Download, X, List } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { extractEmbedSrc, isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 
@@ -100,6 +100,11 @@ export default function MinimalEmbedPage() {
   const [accessAllowed] = useState<boolean>(() => isShadowTheme || checkEmbedAccess());
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [title, setTitle] = useState<string>('');
+  const [animeTitle, setAnimeTitle] = useState<string>('');
+  const [seasonNum, setSeasonNum] = useState<number>(1);
+  const [currentEpisodeNum, setCurrentEpisodeNum] = useState<number>(1);
+  const [episodeList, setEpisodeList] = useState<Array<{ episode_number: number; title: string | null }>>([]);
+  const [showEpisodes, setShowEpisodes] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
