@@ -349,135 +349,148 @@ export default function UploadAnimeEdit() {
       </Button>
 
       <div className="mb-8">
-        <h1 className="text-3xl font-heading font-bold mb-2">
-          Edit: <span className="anime-gradient-text">{anime?.title}</span>
-        </h1>
-        <p className="text-muted-foreground">Manage seasons, episodes and status</p>
-        
-        {/* Status Editor */}
-        <div className="mt-4 flex items-center gap-4 p-4 bg-card/50 rounded-xl border border-border/50">
-          <Label className="text-sm font-medium">Anime Status:</Label>
-          <Select value={animeStatus} onValueChange={handleUpdateStatus} disabled={isSavingStatus}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="upcoming">Upcoming</SelectItem>
-              <SelectItem value="ongoing">Ongoing</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-            </SelectContent>
-          </Select>
-          {isSavingStatus && (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
-          )}
+        <div className="flex items-start justify-between gap-4 flex-wrap mb-2">
+          <div>
+            <h1 className="text-3xl font-heading font-bold mb-2">
+              Edit: <span className="anime-gradient-text">{anime?.title}</span>
+            </h1>
+            <p className="text-muted-foreground">Manage seasons, episodes and status</p>
+          </div>
         </div>
 
-        {/* Crunchy Toggle */}
-        <div className="mt-4 flex items-center gap-4 p-4 bg-card/50 rounded-xl border border-border/50">
-          <label htmlFor="edit_is_crunchyroll" className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              id="edit_is_crunchyroll"
-              checked={isCrunchyroll}
-              onChange={async (e) => {
-                const val = e.target.checked;
-                setIsCrunchyroll(val);
-                setIsSavingCrunchy(true);
-                const { error } = await supabase
-                  .from('anime')
-                  .update({ is_crunchyroll: val } as any)
-                  .eq('id', animeId);
-                if (error) {
-                  toast.error('Failed to update Crunchy status');
-                  setIsCrunchyroll(!val);
-                } else {
-                  toast.success(val ? 'Added to Crunchy tab' : 'Removed from Crunchy tab');
-                }
-                setIsSavingCrunchy(false);
-              }}
-              className="w-5 h-5 rounded border-border accent-primary"
-            />
-            <span className="text-sm font-medium">Add to Crunchy Tab</span>
-          </label>
-          {isSavingCrunchy && (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
-          )}
+        {/* Settings card — grouped: Status / Visibility / Schedule */}
+        <div className="mt-6 p-5 sm:p-6 bg-card/50 rounded-2xl border border-border/50 space-y-6">
+          <div className="flex items-center justify-between gap-3 pb-1">
+            <div>
+              <h3 className="text-sm font-bold text-foreground">Series Settings</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Status, tab visibility and release calendar</p>
+            </div>
+            {(isSavingStatus || isSavingCrunchy || isSavingMuse || isSavingSchedule) && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                Saving…
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Status */}
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Anime Status</Label>
+              <Select value={animeStatus} onValueChange={handleUpdateStatus} disabled={isSavingStatus}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="upcoming">Upcoming</SelectItem>
+                  <SelectItem value="ongoing">Ongoing</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Schedule */}
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Release Calendar Day</Label>
+              <Select
+                value={scheduleDay}
+                onValueChange={async (val) => {
+                  setScheduleDay(val);
+                  setIsSavingSchedule(true);
+                  const dayValue = val === 'auto' ? null : parseInt(val);
+                  const { error } = await supabase
+                    .from('anime')
+                    .update({ schedule_day: dayValue } as any)
+                    .eq('id', animeId);
+                  if (error) {
+                    toast.error('Failed to update schedule day');
+                  } else {
+                    toast.success(val === 'auto' ? 'Schedule day set to auto' : parseInt(val) === 7 ? 'Schedule day set to Everyday' : `Schedule day set to ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][parseInt(val)]}`);
+                  }
+                  setIsSavingSchedule(false);
+                }}
+                disabled={isSavingSchedule}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select day" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Auto (default)</SelectItem>
+                  <SelectItem value="7">Everyday</SelectItem>
+                  <SelectItem value="0">Sunday</SelectItem>
+                  <SelectItem value="1">Monday</SelectItem>
+                  <SelectItem value="2">Tuesday</SelectItem>
+                  <SelectItem value="3">Wednesday</SelectItem>
+                  <SelectItem value="4">Thursday</SelectItem>
+                  <SelectItem value="5">Friday</SelectItem>
+                  <SelectItem value="6">Saturday</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Tab Visibility */}
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tab Visibility</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <label htmlFor="edit_is_crunchyroll" className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-muted/30 border border-border/40 hover:border-primary/40 transition-colors">
+                <input
+                  type="checkbox"
+                  id="edit_is_crunchyroll"
+                  checked={isCrunchyroll}
+                  onChange={async (e) => {
+                    const val = e.target.checked;
+                    setIsCrunchyroll(val);
+                    setIsSavingCrunchy(true);
+                    const { error } = await supabase
+                      .from('anime')
+                      .update({ is_crunchyroll: val } as any)
+                      .eq('id', animeId);
+                    if (error) { toast.error('Failed to update Crunchy status'); setIsCrunchyroll(!val); }
+                    else { toast.success(val ? 'Added to Crunchy tab' : 'Removed from Crunchy tab'); }
+                    setIsSavingCrunchy(false);
+                  }}
+                  className="w-5 h-5 rounded border-border accent-primary"
+                />
+                <div className="flex-1">
+                  <span className="text-sm font-medium block">Add to Crunchy Tab</span>
+                  <span className="text-[10px] text-muted-foreground">Show under the Crunchyroll collection</span>
+                </div>
+              </label>
+
+              <label htmlFor="edit_is_muse" className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-muted/30 border border-border/40 hover:border-primary/40 transition-colors">
+                <input
+                  type="checkbox"
+                  id="edit_is_muse"
+                  checked={isMuse}
+                  onChange={async (e) => {
+                    const val = e.target.checked;
+                    setIsMuse(val);
+                    setIsSavingMuse(true);
+                    const { error } = await supabase
+                      .from('anime')
+                      .update({ is_muse: val } as any)
+                      .eq('id', animeId);
+                    if (error) { toast.error('Failed to update MUSE status'); setIsMuse(!val); }
+                    else { toast.success(val ? 'Added to MUSE tab' : 'Removed from MUSE tab'); }
+                    setIsSavingMuse(false);
+                  }}
+                  className="w-5 h-5 rounded border-border accent-primary"
+                />
+                <div className="flex-1">
+                  <span className="text-sm font-medium block">Add to MUSE Tab</span>
+                  <span className="text-[10px] text-muted-foreground">Show under the MuseIN collection</span>
+                </div>
+              </label>
+            </div>
+          </div>
         </div>
 
-        {/* MUSE Toggle */}
-        <div className="mt-4 flex items-center gap-4 p-4 bg-card/50 rounded-xl border border-border/50">
-          <label htmlFor="edit_is_muse" className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              id="edit_is_muse"
-              checked={isMuse}
-              onChange={async (e) => {
-                const val = e.target.checked;
-                setIsMuse(val);
-                setIsSavingMuse(true);
-                const { error } = await supabase
-                  .from('anime')
-                  .update({ is_muse: val } as any)
-                  .eq('id', animeId);
-                if (error) {
-                  toast.error('Failed to update MUSE status');
-                  setIsMuse(!val);
-                } else {
-                  toast.success(val ? 'Added to MUSE tab' : 'Removed from MUSE tab');
-                }
-                setIsSavingMuse(false);
-              }}
-              className="w-5 h-5 rounded border-border accent-primary"
-            />
-            <span className="text-sm font-medium">Add to MUSE Tab</span>
-          </label>
-          {isSavingMuse && (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
-          )}
-        </div>
-
-        <div className="mt-4 flex items-center gap-4 p-4 bg-card/50 rounded-xl border border-border/50">
-          <Label className="text-sm font-medium">Release Calendar Day:</Label>
-          <Select
-            value={scheduleDay}
-            onValueChange={async (val) => {
-              setScheduleDay(val);
-              setIsSavingSchedule(true);
-              const dayValue = val === 'auto' ? null : parseInt(val);
-              const { error } = await supabase
-                .from('anime')
-                .update({ schedule_day: dayValue } as any)
-                .eq('id', animeId);
-              if (error) {
-                toast.error('Failed to update schedule day');
-              } else {
-                toast.success(val === 'auto' ? 'Schedule day set to auto' : parseInt(val) === 7 ? 'Schedule day set to Everyday' : `Schedule day set to ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][parseInt(val)]}`);
-              }
-              setIsSavingSchedule(false);
-            }}
-            disabled={isSavingSchedule}
-          >
-            <SelectTrigger className="w-44">
-              <SelectValue placeholder="Select day" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="auto">Auto (default)</SelectItem>
-              <SelectItem value="7">Everyday</SelectItem>
-              <SelectItem value="0">Sunday</SelectItem>
-              <SelectItem value="1">Monday</SelectItem>
-              <SelectItem value="2">Tuesday</SelectItem>
-              <SelectItem value="3">Wednesday</SelectItem>
-              <SelectItem value="4">Thursday</SelectItem>
-              <SelectItem value="5">Friday</SelectItem>
-              <SelectItem value="6">Saturday</SelectItem>
-            </SelectContent>
-          </Select>
-          {isSavingSchedule && (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
-          )}
-        </div>
-        <div className="mt-4 p-4 bg-card/50 rounded-xl border border-border/50 space-y-4">
-          <h3 className="text-sm font-semibold">Edit Series Info</h3>
+        <div className="mt-4 p-5 sm:p-6 bg-card/50 rounded-2xl border border-border/50 space-y-4">
+          <div>
+            <h3 className="text-sm font-bold text-foreground">Edit Series Info</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Title, year, artwork, genres and studio</p>
+          </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Series Title</Label>
