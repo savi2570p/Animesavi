@@ -789,6 +789,63 @@ export default function Welcome() {
           </div>
         </div>
 
+        {/* Compare AnimeSavi vs Others */}
+        <div className="w-full max-w-4xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '978ms' }}>
+          <div className="text-center mb-10">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Why Switch</span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">AnimeSavi vs Other Sites</h2>
+            <p className="text-muted-foreground text-sm mt-2">No premium walls. No ads. Just anime.</p>
+          </div>
+          <div className="overflow-hidden rounded-2xl border border-border/30 bg-card/40">
+            <div className="grid grid-cols-3 text-xs sm:text-sm">
+              <div className="px-3 sm:px-5 py-3 font-semibold text-foreground/70 border-b border-border/30">Feature</div>
+              <div className="px-3 sm:px-5 py-3 font-bold text-primary border-b border-l border-border/30 text-center">AnimeSavi</div>
+              <div className="px-3 sm:px-5 py-3 font-semibold text-muted-foreground border-b border-l border-border/30 text-center">Others</div>
+              {[
+                ['4K streaming', '✓ Free', 'Premium only'],
+                ['Hindi dubs', '✓ Native multi-audio', 'Limited / dubbed sites'],
+                ['Ads & popups', 'Zero', 'Heavy'],
+                ['Offline downloads', '✓ All qualities', '✗ or paid'],
+                ['Watch parties', '✓ Built-in', 'Extension required'],
+                ['Account required', 'Optional', 'Required + paid'],
+                ['Payments', 'Never', '₹499–999/mo'],
+              ].map((row, i) => (
+                <div key={i} className="contents">
+                  <div className={`px-3 sm:px-5 py-3 text-foreground/80 ${i % 2 ? 'bg-card/30' : ''}`}>{row[0]}</div>
+                  <div className={`px-3 sm:px-5 py-3 border-l border-border/30 text-center font-semibold text-emerald-400 ${i % 2 ? 'bg-card/30' : ''}`}>{row[1]}</div>
+                  <div className={`px-3 sm:px-5 py-3 border-l border-border/30 text-center text-muted-foreground ${i % 2 ? 'bg-card/30' : ''}`}>{row[2]}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Community */}
+        <div className="w-full max-w-5xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '982ms' }}>
+          <div className="text-center mb-10">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Community</span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Join 50,000+ Anime Fans</h2>
+            <p className="text-muted-foreground text-sm mt-2">Get notified about new drops, share recommendations, talk theories.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            {[
+              { icon: Send, title: 'Telegram Channel', desc: 'Daily upload alerts + early Hindi dub announcements.', cta: 'Join Channel', href: 'https://t.me/Lv_Savi' },
+              { icon: MessageCircle, title: 'Discussion Group', desc: 'Chat with other fans, request titles, share theories.', cta: 'Open Group', href: 'https://t.me/Lv_Savi' },
+              { icon: Share2, title: 'Refer a Friend', desc: 'Share AnimeSavi — there\'s no signup wall to scare them off.', cta: 'Copy Link', href: '#' },
+            ].map((c, i) => (
+              <a key={i} href={c.href} target="_blank" rel="noopener noreferrer" className="group flex flex-col items-center text-center gap-3 p-6 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/40 hover:bg-card/60 transition-all duration-300">
+                <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center group-hover:scale-110 transition-transform"><c.icon className="w-6 h-6 text-primary" /></div>
+                <h3 className="text-base font-bold text-foreground">{c.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{c.desc}</p>
+                <span className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-primary">
+                  {c.cta}
+                  <ChevronRight className="w-3 h-3" />
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+
         {/* Final CTA */}
         <div className="w-full max-w-2xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '950ms' }}>
           <div className="text-center p-8 sm:p-12 rounded-3xl border border-border/30" style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.05), hsl(var(--card) / 0.5))' }}>
