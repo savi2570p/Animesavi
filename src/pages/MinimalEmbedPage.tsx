@@ -341,6 +341,37 @@ export default function MinimalEmbedPage() {
         position: 'relative', width: '100%', height: '100%',
         background: '#000', overflow: 'hidden',
       }}>
+        {/* Top-right Episodes button (Shadow Link only) */}
+        {isShadowTheme && episodeList.length > 1 && (
+          <button
+            onClick={() => setShowEpisodes(true)}
+            aria-label="Episodes"
+            title="Episodes"
+            style={{
+              position: 'absolute',
+              top: 'max(12px, env(safe-area-inset-top))',
+              right: 'max(12px, env(safe-area-inset-right))',
+              zIndex: 30,
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '8px 12px',
+              background: 'rgba(0,0,0,0.55)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              border: '1px solid hsl(var(--primary) / 0.5)',
+              borderRadius: 9999,
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+              opacity: showControls ? 1 : 0,
+              pointerEvents: showControls ? 'auto' : 'none',
+              transition: 'opacity 200ms ease',
+            }}
+          >
+            <List size={16} />
+            <span>Episodes</span>
+          </button>
+        )}
         {loading && !error && (
           <div style={{
             position: 'absolute', inset: 0, display: 'flex',
