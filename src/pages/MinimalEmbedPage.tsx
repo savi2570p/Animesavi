@@ -328,14 +328,17 @@ export default function MinimalEmbedPage() {
       onMouseMove={bumpControls}
       onTouchStart={bumpControls}
       style={{
-        position: 'fixed', inset: 0, background: '#000',
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+        width: '100%', height: '100%', minHeight: '100dvh',
+        background: '#000',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         margin: 0, padding: 0, overflow: 'hidden',
       }}
     >
+      {/* Force html/body to fill viewport so iOS Safari renders the embed reliably. */}
+      <style>{`html,body,#root{margin:0;padding:0;width:100%;height:100%;min-height:100dvh;background:#000;overflow:hidden;}`}</style>
       <div style={{
         position: 'relative', width: '100%', height: '100%',
-        maxWidth: '100vw', maxHeight: '100vh', aspectRatio: '16 / 9',
         background: '#000', overflow: 'hidden',
       }}>
         {loading && !error && (
