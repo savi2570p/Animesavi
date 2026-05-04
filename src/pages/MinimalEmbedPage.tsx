@@ -328,16 +328,50 @@ export default function MinimalEmbedPage() {
       onMouseMove={bumpControls}
       onTouchStart={bumpControls}
       style={{
-        position: 'fixed', inset: 0, background: '#000',
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+        width: '100%', height: '100%', minHeight: '100dvh',
+        background: '#000',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         margin: 0, padding: 0, overflow: 'hidden',
       }}
     >
+      {/* Force html/body to fill viewport so iOS Safari renders the embed reliably. */}
+      <style>{`html,body,#root{margin:0;padding:0;width:100%;height:100%;min-height:100dvh;background:#000;overflow:hidden;}`}</style>
       <div style={{
         position: 'relative', width: '100%', height: '100%',
-        maxWidth: '100vw', maxHeight: '100vh', aspectRatio: '16 / 9',
         background: '#000', overflow: 'hidden',
       }}>
+        {/* Top-right Episodes button (Shadow Link only) */}
+        {isShadowTheme && episodeList.length > 1 && (
+          <button
+            onClick={() => setShowEpisodes(true)}
+            aria-label="Episodes"
+            title="Episodes"
+            style={{
+              position: 'absolute',
+              top: 'max(12px, env(safe-area-inset-top))',
+              right: 'max(12px, env(safe-area-inset-right))',
+              zIndex: 30,
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '8px 12px',
+              background: 'rgba(0,0,0,0.55)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              border: '1px solid hsl(var(--primary) / 0.5)',
+              borderRadius: 9999,
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+              opacity: showControls ? 1 : 0,
+              pointerEvents: showControls ? 'auto' : 'none',
+              transition: 'opacity 200ms ease',
+            }}
+          >
+            <List size={16} />
+            <span>Episodes</span>
+          </button>
+        )}
         {loading && !error && (
           <div style={{
             position: 'absolute', inset: 0, display: 'flex',
@@ -461,16 +495,6 @@ export default function MinimalEmbedPage() {
                   </button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-                  {isShadowTheme && episodeList.length > 1 && (
-                    <button
-                      onClick={() => setShowEpisodes(true)}
-                      aria-label="Episodes"
-                      className="embed-ctrl-btn"
-                      title="Episodes"
-                    >
-                      <List size={20} />
-                    </button>
-                  )}
                   {!isShadowTheme && (
                     <button
                       onClick={handleDownloadClick}
