@@ -363,8 +363,8 @@ export default function MinimalEmbedPage() {
               fontSize: 12,
               fontWeight: 600,
               cursor: 'pointer',
-              opacity: showControls ? 1 : 0,
-              pointerEvents: showControls ? 'auto' : 'none',
+              opacity: 1,
+              pointerEvents: 'auto',
               transition: 'opacity 200ms ease',
             }}
           >
