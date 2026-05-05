@@ -488,9 +488,47 @@ export default function UploadAnimeEdit() {
         </div>
 
         <div className="mt-4 p-5 sm:p-6 bg-card/50 rounded-2xl border border-border/50 space-y-4">
-          <div>
-            <h3 className="text-sm font-bold text-foreground">Edit Series Info</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Title, year, artwork, genres and studio</p>
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <h3 className="text-sm font-bold text-foreground">Edit Series Info</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Title, year, artwork, genres and studio</p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const query = editTitle.trim() || anime?.title;
+                if (!query) { toast.error('Enter a title first'); return; }
+                const t = toast.loading('Fetching metadata from AniList…');
+                try {
+                  const gql = `query ($search: String) { Media(search: $search, type: ANIME) { title { romaji english } description(asHtml: false) seasonYear genres studios { nodes { name } } coverImage { extraLarge large } bannerImage episodes } }`;
+                  const res = await fetch('https://graphql.anilist.co', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ query: gql, variables: { search: query } }),
+                  });
+                  const json = await res.json();
+                  const m = json?.data?.Media;
+                  if (!m) throw new Error('Not found on AniList');
+                  if (m.title?.english || m.title?.romaji) setEditTitle(m.title.english || m.title.romaji);
+                  if (m.coverImage?.extraLarge || m.coverImage?.large) setEditCoverImage(m.coverImage.extraLarge || m.coverImage.large);
+                  if (m.bannerImage) setEditBannerImage(m.bannerImage);
+                  if (m.seasonYear) setEditReleaseYear(String(m.seasonYear));
+                  if (m.studios?.nodes?.[0]?.name) setEditStudio(m.studios.nodes[0].name);
+                  if (typeof m.episodes === 'number') setEditTotalEpisodes(String(m.episodes));
+                  if (Array.isArray(m.genres) && m.genres.length) {
+                    setEditGenres(prev => Array.from(new Set([...(prev || []), ...m.genres])));
+                  }
+                  toast.success('Metadata loaded — review & Save.', { id: t });
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : 'Fetch failed', { id: t });
+                }
+              }}
+            >
+              <Save className="h-3.5 w-3.5 mr-1.5" />
+              Fetch Metadata
+            </Button>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
