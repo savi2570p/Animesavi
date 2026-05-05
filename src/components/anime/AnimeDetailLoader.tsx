@@ -9,15 +9,27 @@ interface AnimeDetailLoaderProps {
 /**
  * Skeleton-style placeholder that mirrors the AnimeDetail layout —
  * blurred backdrop, hero/poster blocks, action buttons, episode rail.
- * Uses the brand shimmer (animate-pulse) over muted blocks.
+ * Includes an animated 0→100% progress bar with percentage label.
  */
 export function AnimeDetailLoader({ isReady, backdrop }: AnimeDetailLoaderProps) {
   const [hidden, setHidden] = useState(false);
+  const [progress, setProgress] = useState(8);
 
   useEffect(() => {
-    if (!isReady) return;
-    const t = setTimeout(() => setHidden(true), 280);
-    return () => clearTimeout(t);
+    if (isReady) {
+      setProgress(100);
+      const t = setTimeout(() => setHidden(true), 320);
+      return () => clearTimeout(t);
+    }
+    const id = window.setInterval(() => {
+      setProgress((p) => {
+        if (p >= 92) return p;
+        const remaining = 92 - p;
+        const step = Math.max(0.6, remaining * 0.08);
+        return Math.min(92, p + step);
+      });
+    }, 180);
+    return () => window.clearInterval(id);
   }, [isReady]);
 
   if (hidden) return null;
