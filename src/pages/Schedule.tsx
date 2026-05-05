@@ -84,6 +84,7 @@ export default function Schedule() {
   // Distribute anime across days based on their updated_at date
   const getAnimeForDay = (dayIndex: number) => {
     return animeList.filter((anime) => {
+      if (anime.schedule_day === -1) return false; // Hidden from calendar
       if (anime.schedule_day !== null && anime.schedule_day !== undefined) {
         return anime.schedule_day === dayIndex;
       }
