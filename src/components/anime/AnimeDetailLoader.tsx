@@ -9,15 +9,27 @@ interface AnimeDetailLoaderProps {
 /**
  * Skeleton-style placeholder that mirrors the AnimeDetail layout —
  * blurred backdrop, hero/poster blocks, action buttons, episode rail.
- * Uses the brand shimmer (animate-pulse) over muted blocks.
+ * Includes an animated 0→100% progress bar with percentage label.
  */
 export function AnimeDetailLoader({ isReady, backdrop }: AnimeDetailLoaderProps) {
   const [hidden, setHidden] = useState(false);
+  const [progress, setProgress] = useState(8);
 
   useEffect(() => {
-    if (!isReady) return;
-    const t = setTimeout(() => setHidden(true), 280);
-    return () => clearTimeout(t);
+    if (isReady) {
+      setProgress(100);
+      const t = setTimeout(() => setHidden(true), 320);
+      return () => clearTimeout(t);
+    }
+    const id = window.setInterval(() => {
+      setProgress((p) => {
+        if (p >= 92) return p;
+        const remaining = 92 - p;
+        const step = Math.max(0.6, remaining * 0.08);
+        return Math.min(92, p + step);
+      });
+    }, 180);
+    return () => window.clearInterval(id);
   }, [isReady]);
 
   if (hidden) return null;
@@ -30,6 +42,22 @@ export function AnimeDetailLoader({ isReady, backdrop }: AnimeDetailLoaderProps)
       role="status"
       aria-busy="true"
     >
+      {/* Top progress bar with percentage */}
+      <div className="fixed top-0 left-0 right-0 z-[90] px-4 sm:px-6 pt-3 pointer-events-none">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground mb-1.5">
+            <span className="uppercase tracking-wider">Loading details</span>
+            <span className="text-foreground/80 tabular-nums">{Math.round(progress)}%</span>
+          </div>
+          <div className="h-1 w-full rounded-full bg-muted/40 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-200 ease-out"
+              style={{ width: `${progress}%`, boxShadow: '0 0 8px hsl(var(--primary) / 0.6)' }}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Hero backdrop */}
       <div className="relative h-[58vh] min-h-[360px] w-full overflow-hidden">
         {backdrop ? (

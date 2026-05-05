@@ -20,7 +20,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { extractEmbedSrc } from '@/components/video/PureEmbedPlayer';
 
-const ALL_GENRES = ['Action', 'Adventure', 'Animation', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Mysterious', 'Anime', 'Anime Series', 'Hindi', 'English', 'Tamil', 'Telugu', 'Japanese', 'Crunchyroll', 'Muse India', 'Amazon Prime'];
+const ALL_GENRES = ['Action', 'Adventure', 'Animation', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Mysterious', 'Hentai', 'Anime', 'Anime Series', 'Hindi', 'English', 'Tamil', 'Telugu', 'Japanese', 'Crunchyroll', 'Muse India', 'Amazon Prime', 'Netflix', 'Zee 5'];
 
 interface Anime {
   id: string;
@@ -405,7 +405,7 @@ export default function UploadAnimeEdit() {
                   if (error) {
                     toast.error('Failed to update schedule day');
                   } else {
-                    toast.success(val === 'auto' ? 'Schedule day set to auto' : parseInt(val) === 7 ? 'Schedule day set to Everyday' : `Schedule day set to ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][parseInt(val)]}`);
+                    toast.success(val === 'auto' ? 'Schedule day set to auto' : val === '-1' ? "Hidden from release calendar" : parseInt(val) === 7 ? 'Schedule day set to Everyday' : `Schedule day set to ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][parseInt(val)]}`);
                   }
                   setIsSavingSchedule(false);
                 }}
@@ -416,6 +416,7 @@ export default function UploadAnimeEdit() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="auto">Auto (default)</SelectItem>
+                  <SelectItem value="-1">Don't show (hide from calendar)</SelectItem>
                   <SelectItem value="7">Everyday</SelectItem>
                   <SelectItem value="0">Sunday</SelectItem>
                   <SelectItem value="1">Monday</SelectItem>
@@ -487,9 +488,47 @@ export default function UploadAnimeEdit() {
         </div>
 
         <div className="mt-4 p-5 sm:p-6 bg-card/50 rounded-2xl border border-border/50 space-y-4">
-          <div>
-            <h3 className="text-sm font-bold text-foreground">Edit Series Info</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Title, year, artwork, genres and studio</p>
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <h3 className="text-sm font-bold text-foreground">Edit Series Info</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Title, year, artwork, genres and studio</p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const query = editTitle.trim() || anime?.title;
+                if (!query) { toast.error('Enter a title first'); return; }
+                const t = toast.loading('Fetching metadata from AniList…');
+                try {
+                  const gql = `query ($search: String) { Media(search: $search, type: ANIME) { title { romaji english } description(asHtml: false) seasonYear genres studios { nodes { name } } coverImage { extraLarge large } bannerImage episodes } }`;
+                  const res = await fetch('https://graphql.anilist.co', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ query: gql, variables: { search: query } }),
+                  });
+                  const json = await res.json();
+                  const m = json?.data?.Media;
+                  if (!m) throw new Error('Not found on AniList');
+                  if (m.title?.english || m.title?.romaji) setEditTitle(m.title.english || m.title.romaji);
+                  if (m.coverImage?.extraLarge || m.coverImage?.large) setEditCoverImage(m.coverImage.extraLarge || m.coverImage.large);
+                  if (m.bannerImage) setEditBannerImage(m.bannerImage);
+                  if (m.seasonYear) setEditReleaseYear(String(m.seasonYear));
+                  if (m.studios?.nodes?.[0]?.name) setEditStudio(m.studios.nodes[0].name);
+                  if (typeof m.episodes === 'number') setEditTotalEpisodes(String(m.episodes));
+                  if (Array.isArray(m.genres) && m.genres.length) {
+                    setEditGenres(prev => Array.from(new Set([...(prev || []), ...m.genres])));
+                  }
+                  toast.success('Metadata loaded — review & Save.', { id: t });
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : 'Fetch failed', { id: t });
+                }
+              }}
+            >
+              <Save className="h-3.5 w-3.5 mr-1.5" />
+              Fetch Metadata
+            </Button>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
