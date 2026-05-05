@@ -42,6 +42,22 @@ export function AnimeDetailLoader({ isReady, backdrop }: AnimeDetailLoaderProps)
       role="status"
       aria-busy="true"
     >
+      {/* Top progress bar with percentage */}
+      <div className="fixed top-0 left-0 right-0 z-[90] px-4 sm:px-6 pt-3 pointer-events-none">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground mb-1.5">
+            <span className="uppercase tracking-wider">Loading details</span>
+            <span className="text-foreground/80 tabular-nums">{Math.round(progress)}%</span>
+          </div>
+          <div className="h-1 w-full rounded-full bg-muted/40 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-200 ease-out"
+              style={{ width: `${progress}%`, boxShadow: '0 0 8px hsl(var(--primary) / 0.6)' }}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Hero backdrop */}
       <div className="relative h-[58vh] min-h-[360px] w-full overflow-hidden">
         {backdrop ? (
