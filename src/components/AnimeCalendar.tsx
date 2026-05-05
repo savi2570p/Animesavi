@@ -60,7 +60,9 @@ export function AnimeCalendar() {
           let releaseDay = 0;
           let latestEpisodeDate: string | null = null;
 
-          if ((anime as any).schedule_day !== null && (anime as any).schedule_day !== undefined) {
+          if ((anime as any).schedule_day === -1) {
+            return null; // Hidden from calendar
+          } else if ((anime as any).schedule_day !== null && (anime as any).schedule_day !== undefined) {
             releaseDay = (anime as any).schedule_day;
           } else if (seasons && seasons.length > 0) {
             const seasonIds = seasons.map(s => s.id);
