@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Hls from 'hls.js';
-import { Play, Pause, Maximize, Minimize, Download, X, List } from 'lucide-react';
+import { Play, Pause, Maximize, Minimize, Download, X, List, RotateCcw, RotateCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { extractEmbedSrc, isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 
@@ -487,11 +487,35 @@ export default function MinimalEmbedPage() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
                   <button
+                    onClick={() => {
+                      const v = videoRef.current;
+                      if (!v) return;
+                      v.currentTime = Math.max(0, v.currentTime - 10);
+                    }}
+                    aria-label="Back 10 seconds"
+                    title="Back 10s"
+                    className="embed-ctrl-btn"
+                  >
+                    <RotateCcw size={20} />
+                  </button>
+                  <button
                     onClick={togglePlay}
                     aria-label={isPlaying ? 'Pause' : 'Play'}
                     className="embed-ctrl-btn"
                   >
                     {isPlaying ? <Pause size={22} /> : <Play size={22} fill="currentColor" />}
+                  </button>
+                  <button
+                    onClick={() => {
+                      const v = videoRef.current;
+                      if (!v) return;
+                      v.currentTime = Math.min(v.duration || v.currentTime, v.currentTime + 10);
+                    }}
+                    aria-label="Forward 10 seconds"
+                    title="Forward 10s"
+                    className="embed-ctrl-btn"
+                  >
+                    <RotateCw size={20} />
                   </button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
