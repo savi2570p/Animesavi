@@ -490,9 +490,22 @@ export default function Watch() {
       }
 
       if (seekTime !== null) {
-        const videoElement = document.querySelector('video');
+        const videoElement = document.querySelector('video') as HTMLVideoElement | null;
         if (videoElement && Math.abs(videoElement.currentTime - seekTime) > 3) {
           videoElement.currentTime = seekTime;
+          // iOS Safari sometimes parks the player in a buffering state after a
+          // programmatic seek (especially right after a server switch). Nudge
+          // play() and, if that fails due to autoplay policy, retry muted so
+          // the user never gets stuck on a buffering wheel.
+          const tryPlay = () => {
+            videoElement.play().catch(() => {
+              try {
+                videoElement.muted = true;
+                videoElement.play().catch(() => {});
+              } catch {}
+            });
+          };
+          tryPlay();
           setShowResumeNotification(true);
           toast.success(label, {
             description: 'Your exact position was remembered',
