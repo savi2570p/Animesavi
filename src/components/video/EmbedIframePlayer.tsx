@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, Bug, CheckCircle2, ExternalLink, Pause, Play, RefreshCw, Timer, WifiOff } from 'lucide-react';
+import { AlertCircle, Bug, CheckCircle2, ExternalLink, Pause, Play, RefreshCw, RotateCcw, RotateCw, Timer, WifiOff } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -737,9 +737,39 @@ export function EmbedIframePlayer({
             size="icon"
             variant="ghost"
             className="h-8 w-8 rounded-full"
+            aria-label="Back 10 seconds"
+            title="Back 10s"
+            onClick={() => {
+              const next = Math.max(0, (remoteState.currentTime || 0) - 10);
+              sendCommand('seek', { time: next, offset: -10 }, 'Skip back 10s requested from parent controls.');
+            }}
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 rounded-full"
             onClick={() => sendCommand(remoteState.isPlaying ? 'pause' : 'play', {}, remoteState.isPlaying ? 'Pause requested from parent controls.' : 'Play requested from parent controls.')}
           >
             {remoteState.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          </Button>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 rounded-full"
+            aria-label="Forward 10 seconds"
+            title="Forward 10s"
+            onClick={() => {
+              const dur = remoteState.duration || 0;
+              const cur = remoteState.currentTime || 0;
+              const next = dur > 0 ? Math.min(dur, cur + 10) : cur + 10;
+              sendCommand('seek', { time: next, offset: 10 }, 'Skip forward 10s requested from parent controls.');
+            }}
+          >
+            <RotateCw className="h-4 w-4" />
           </Button>
           <Button
             type="button"

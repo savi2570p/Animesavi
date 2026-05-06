@@ -294,8 +294,20 @@ export default function Watch() {
       return;
     }
 
+    // Snapshot the current playback position BEFORE remounting the player so
+    // the new server resumes from the same spot instead of restarting from 0.
+    // Stored under the same `resume:<episodeId>` key the player reads on init.
+    try {
+      const v = document.querySelector('video') as HTMLVideoElement | null;
+      if (v && episodeId && Number.isFinite(v.currentTime) && v.currentTime > 1) {
+        localStorage.setItem(`resume:${episodeId}`, String(Math.floor(v.currentTime)));
+      }
+    } catch {}
+    // Reset the one-shot resume guard so the new player instance can seek.
+    setInitialSeekDone(false);
+
     handleServerSwitch(server);
-  }, [handleServerSwitch, episode]);
+  }, [handleServerSwitch, episode, episodeId]);
 
   // (Removed) Previously showed a one-time "Embed server under development" toast on
   // episode entry. Disabled per UX request — users can still switch servers freely.
@@ -478,9 +490,22 @@ export default function Watch() {
       }
 
       if (seekTime !== null) {
-        const videoElement = document.querySelector('video');
+        const videoElement = document.querySelector('video') as HTMLVideoElement | null;
         if (videoElement && Math.abs(videoElement.currentTime - seekTime) > 3) {
           videoElement.currentTime = seekTime;
+          // iOS Safari sometimes parks the player in a buffering state after a
+          // programmatic seek (especially right after a server switch). Nudge
+          // play() and, if that fails due to autoplay policy, retry muted so
+          // the user never gets stuck on a buffering wheel.
+          const tryPlay = () => {
+            videoElement.play().catch(() => {
+              try {
+                videoElement.muted = true;
+                videoElement.play().catch(() => {});
+              } catch {}
+            });
+          };
+          tryPlay();
           setShowResumeNotification(true);
           toast.success(label, {
             description: 'Your exact position was remembered',
