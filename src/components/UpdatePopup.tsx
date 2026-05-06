@@ -20,16 +20,28 @@ interface VersionGroup {
   items: ChangelogItem[];
 }
 
-const APP_VERSION = 'v25';
+const APP_VERSION = 'v25.1';
 
-// Fixed download size for v25
+// Fixed download size for v25.1
 const RANDOM_DOWNLOAD_MB = 31.5;
 
 const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'v25',
+    version: 'v25.1',
     date: 'Latest',
-    highlight: 'A polish + cleanup release — SAVI.IN fully removed, X-PLUS minus the CC button, smoother iOS popups, and a brand-new Episodes tab inside the Shadow Link embed player.',
+    highlight: 'Website-only fixes — reliable resume on server switch, no more buffering loops on iOS, ±10s skip on every embed player, and a properly working Refresh App button.',
+    items: [
+      { icon: '⏱️', badge: 'FIX', title: 'Resume After Server Switch', desc: 'When you change servers mid-episode, your timestamp is captured and the new server resumes from the exact same spot instead of restarting from zero.' },
+      { icon: '📱', badge: 'FIX', title: 'iOS Server-Switch Buffering', desc: 'Switching H.Savi → Multi.Savi → X-PLUS on iPhone no longer gets stuck on a buffering wheel — playback resumes cleanly after the new source loads.' },
+      { icon: '⏭️', badge: 'NEW', title: '±10s Skip on Every Embed', desc: 'Both the regular embed player and the Shadow Link embed now have ±10 second skip controls visible alongside play/pause.' },
+      { icon: '🔄', badge: 'FIX', title: 'Refresh App Stuck Loading', desc: 'The "Refresh App" button in the hamburger menu no longer leaves you on a black screen on iOS Safari & Chrome — the reload is now hard-capped to 1.2s and always lands on the home page.' },
+      { icon: '🧹', badge: 'FIX', title: 'Episode Button Visibility (Shadow Link)', desc: 'Top-right "Episodes" button in the Shadow Link embed stays visible at all times instead of fading with the controls.' },
+    ],
+  },
+  {
+    version: 'v25',
+    date: 'Previous',
+    highlight: 'A polish + cleanup release — SAVI.IN fully removed, X-PLUS minus the CC button, smoother iOS popups, and a new Episodes tab inside the Shadow Link embed player.',
     items: [
       { icon: '🧹', badge: 'FIX', title: 'SAVI.IN Server Removed', desc: 'Legacy SAVI.IN (SHORT) is fully retired. Saved preferences automatically migrate to X-PLUS — no broken server picker entries.' },
       { icon: '🎬', badge: 'IMPROVED', title: 'Unified Purple Player', desc: 'Timeline, play/pause, fullscreen, and download icons now share the same flat purple styling across H.Savi, Multi.Savi, X-PLUS and the Shadow Link embed.' },
