@@ -66,28 +66,45 @@ export function Header() {
   const handleHardRefresh = async () => {
     try {
       toast.info('Refreshing app... fetching latest version');
-      // Clear all browser caches (Cache API used by service workers/PWA)
-      if ('caches' in window) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map((k) => caches.delete(k)));
-      }
-      // Unregister service workers so the next load fetches fresh assets
-      if ('serviceWorker' in navigator) {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map((r) => r.unregister()));
-      }
-      // Clear update-related localStorage so What's New can re-show if newer
+    } catch {}
+
+    // Best-effort cache + SW cleanup, but never block the reload on it.
+    // Previously a slow / hanging caches.delete() or SW unregister could leave
+    // the user stuck on a black screen after we'd already torn down chunk URLs.
+    const cleanup = (async () => {
       try {
-        localStorage.removeItem('notice_popup_seen_version');
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map((k) => caches.delete(k).catch(() => {})));
+        }
       } catch {}
-    } catch (e) {
-      // ignore errors, still force reload
-    } finally {
-      // Cache-busting hard reload
-      const url = new URL(window.location.href);
-      url.searchParams.set('_r', Date.now().toString());
-      window.location.replace(url.toString());
-    }
+      try {
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map((r) => r.unregister().catch(() => false)));
+        }
+      } catch {}
+      try { localStorage.removeItem('notice_popup_seen_version'); } catch {}
+    })();
+
+    // Hard upper-bound — reload after at most 1.2s no matter what so the
+    // user is never stuck on a black "loading" screen.
+    const reload = () => {
+      try {
+        // Always land on a known-good route (home) to avoid stuck lazy chunks
+        // for routes that may have been removed in the new build.
+        const target = `${window.location.origin}/?_r=${Date.now()}`;
+        window.location.replace(target);
+      } catch {
+        window.location.href = '/';
+      }
+    };
+
+    const safety = window.setTimeout(reload, 1200);
+    cleanup.finally(() => {
+      window.clearTimeout(safety);
+      reload();
+    });
   };
 
   const handleSearch = (e: React.FormEvent) => {
