@@ -420,7 +420,8 @@ export default function MinimalEmbedPage() {
             <video
               ref={videoRef}
               playsInline
-              preload="metadata"
+              autoPlay
+              preload="auto"
               onClick={togglePlay}
               style={{
                 position: 'absolute', inset: 0,

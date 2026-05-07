@@ -29,109 +29,17 @@ const VERSION_GROUPS: VersionGroup[] = [
   {
     version: 'v25.1',
     date: 'Latest',
-    highlight: 'Website-only fixes — reliable resume on server switch, no more buffering loops on iOS, ±10s skip on every embed player, and a properly working Refresh App button.',
+    highlight: 'Website-only fixes — keyboard ±10s skip on embeds, embed autoplay, reliable server switching, animesavi.com share links, smaller iOS Telegram popup, and a cleaner What\'s New popup.',
     items: [
-      { icon: '⏱️', badge: 'FIX', title: 'Resume After Server Switch', desc: 'When you change servers mid-episode, your timestamp is captured and the new server resumes from the exact same spot instead of restarting from zero.' },
-      { icon: '📱', badge: 'FIX', title: 'iOS Server-Switch Buffering', desc: 'Switching H.Savi → Multi.Savi → X-PLUS on iPhone no longer gets stuck on a buffering wheel — playback resumes cleanly after the new source loads.' },
-      { icon: '⏭️', badge: 'NEW', title: '±10s Skip on Every Embed', desc: 'Both the regular embed player and the Shadow Link embed now have ±10 second skip controls visible alongside play/pause.' },
-      { icon: '🔄', badge: 'FIX', title: 'Refresh App Stuck Loading', desc: 'The "Refresh App" button in the hamburger menu no longer leaves you on a black screen on iOS Safari & Chrome — the reload is now hard-capped to 1.2s and always lands on the home page.' },
-      { icon: '🧹', badge: 'FIX', title: 'Episode Button Visibility (Shadow Link)', desc: 'Top-right "Episodes" button in the Shadow Link embed stays visible at all times instead of fading with the controls.' },
-    ],
-  },
-  {
-    version: 'v25',
-    date: 'Previous',
-    highlight: 'A polish + cleanup release — SAVI.IN fully removed, X-PLUS minus the CC button, smoother iOS popups, and a new Episodes tab inside the Shadow Link embed player.',
-    items: [
-      { icon: '🧹', badge: 'FIX', title: 'SAVI.IN Server Removed', desc: 'Legacy SAVI.IN (SHORT) is fully retired. Saved preferences automatically migrate to X-PLUS — no broken server picker entries.' },
-      { icon: '🎬', badge: 'IMPROVED', title: 'Unified Purple Player', desc: 'Timeline, play/pause, fullscreen, and download icons now share the same flat purple styling across H.Savi, Multi.Savi, X-PLUS and the Shadow Link embed.' },
-      { icon: '🚫', badge: 'FIX', title: 'CC Button Off X-PLUS', desc: 'The CC caption shortcut is gone from the X-PLUS toolbar. Subtitles & captions still switchable from the gear / settings menu as before.' },
-      { icon: '📱', badge: 'FIX', title: 'iOS What\'s New Centering', desc: 'The What\'s New / Explore Now modal is now properly centered with notch and dynamic-viewport safe areas — the CTA stays tappable on every iPhone.' },
-      { icon: '✈️', badge: 'FIX', title: 'Telegram Popup Placement', desc: 'On iOS & Android the Telegram popup sits at bottom-center clear of the player controls and respects the home-bar safe area — never overlaps.' },
-      { icon: '📺', badge: 'NEW', title: 'Episodes Tab in Shadow Link', desc: 'Shadow Link embed now includes a slide-out Episodes tab so viewers can switch between episodes in the same season without leaving the embed.' },
-    ],
-  },
-  {
-    version: 'v24.1',
-    date: 'Previous',
-    highlight: 'A focused patch — fixes only. Smaller iOS player controls, smoother server switching, embed download routed to Shadow-Arise, and animesavi.com share/embed links.',
-    items: [
-      { icon: '📱', badge: 'FIX', title: 'Smaller iOS Player Controls', desc: 'Buttons and the timeline on iPhone/iPad are now compact and never overlap, even on the smallest screens.' },
-      { icon: '🔗', badge: 'FIX', title: 'New Domain in Share Links', desc: 'Share & embed links now use animesavi.com (your new custom domain) instead of the lovable.app preview URL.' },
-      { icon: '⬇️', badge: 'FIX', title: 'Embed Download → Shadow-Arise', desc: 'Picking a quality from the Embed player\'s download menu now opens the dedicated /Shadow-Arise tab with the correct file name and auto-starts the download.' },
-      { icon: '🛰️', badge: 'FIX', title: 'CrunchyDownload Sync', desc: 'New episodes uploaded to AnimeSavi are now mirrored to CrunchyDownload through a signed webhook with retry on failure.' },
-      { icon: '🎬', badge: 'FIX', title: 'Server Switch Stability', desc: 'Additional safeguards when switching between H.Savi, Multi.Savi and X-PLUS to avoid black-screen buffering after server change.' },
-    ],
-  },
-  {
-    version: 'v24',
-    date: 'Previous',
-    highlight: 'A full purple rebrand to match the new logo, smoother server switching, and a quieter player — no more "Embed under development" toast on every episode.',
-    items: [
-      { icon: '💜', badge: 'NEW', title: 'Purple Brand Refresh', desc: 'Site-wide theme migrated from red to purple to match the new logo — popups, accents, scrollbars, and the What\'s New card all rebranded.' },
-      { icon: '🎬', badge: 'FIX', title: 'Smoother Server Switching', desc: 'Switching between H.Savi, SAVI.IN, Multi.Savi and X-PLUS no longer gets stuck on a black loading screen — a 6-second safety timer dismisses the loader if the source stalls.' },
-      { icon: '🤫', badge: 'FIX', title: 'Quieter Player Entry', desc: 'Removed the recurring "Embed server is under development" toast that appeared on every episode entry.' },
-      { icon: '🎞️', badge: 'IMPROVED', title: 'Add Movie Studio', desc: 'Movie upload tab fully redesigned with sticky CTA, live readiness pips (Title / Video / Cover / Genres), and the new purple gradient identity.' },
-      { icon: '📱', badge: 'FIX', title: 'Mobile Popup Centering', desc: 'The Telegram and Hindi-DUB popups on the video player are now properly centered with safe-area insets on iOS & Android — they no longer escape the viewport.' },
-      { icon: '✨', badge: 'IMPROVED', title: 'More Info Loader', desc: 'Cinematic 4-stage loading screen (Connecting → Fetching → Episodes → Artwork) with animated particle field for anime detail pages.' },
-    ],
-  },
-  {
-    version: 'v23',
-    date: 'Latest',
-    highlight: 'A site-wide polish update — H-DUB tags everywhere, smarter mobile popups, and a refreshed Welcome experience for new fans.',
-    items: [
-      { icon: '🇮🇳', badge: 'NEW', title: 'H-DUB Tag Everywhere', desc: 'The amber H-DUB badge now appears across every home row (Continue Watching, Recommended, Latest Series & Movies, Recently Completed), the Browse grid, search suggestions, the Watch List, and detail pages.' },
-      { icon: '📱', badge: 'FIX', title: 'Mobile Upcoming Popup', desc: 'Tapping an upcoming title on mobile opens a properly redesigned popup with the live countdown — no more stuck tab behavior.' },
-      { icon: '🎉', badge: 'IMPROVED', title: 'Welcome Popup Refresh', desc: 'New cinematic intro popup with animated blur orbs, feature pills (4K, Hindi DUB, Offline) and a polished CTA.' },
-      { icon: '⏳', badge: 'IMPROVED', title: 'Token Expiry Bar', desc: 'Smarter urgency tiers (emerald → amber → red) with a glowing countdown chip and full expiry timestamp.' },
-      { icon: '🎉', badge: 'IMPROVED', title: 'Watch Party Cleanup', desc: 'Empty parties now auto-end after 30 seconds, and you can clear all saved parties from every device with one tap.' },
-      { icon: '🏠', badge: 'NEW', title: 'Back to Home in Token Popup', desc: 'The "token expired" popup in the player now has a Back to Home button so you can leave the watch page in one tap.' },
-      { icon: '⬆️', badge: 'IMPROVED', title: 'Upload Studio Hero', desc: 'Creator Studio now opens with live status pips, four gradient stat tiles, and a recent activity log.' },
-      { icon: '🧭', badge: 'IMPROVED', title: 'Mobile Navigation Sheet', desc: 'Grouped links, active route highlighting, and a dedicated premium CTA card right inside the mobile menu.' },
-    ],
-  },
-  {
-    version: 'v22.1',
-    date: 'Previous',
-    highlight: 'A focused maintenance update — sharper player behavior, smarter server selection, and a polished Report &amp; Telegram experience.',
-    items: [
-      { icon: '🎬', badge: 'FIX', title: 'Embed Server Guardrails', desc: 'Picking "Embed" on a file-uploaded episode (or another server on an embed-only episode) now shows a centered modal instead of collapsing inside the player.' },
-      { icon: '🖥️', badge: 'FIX', title: 'Default Server', desc: 'Desktop and Android now default to X-PLUS for the most reliable, recommended playback out of the box.' },
-      { icon: 'ℹ️', badge: 'FIX', title: 'Episode Entry Notice', desc: 'A one-time message on every episode entry warns that the [Embed] server is under development — use other servers.' },
-      { icon: '🚩', badge: 'FIX', title: 'Report Dialog', desc: 'Cinematic redesign with icon-tagged categories, character counter, and an optional screenshot upload (paste, replace, or remove).' },
-      { icon: '📎', badge: 'FIX', title: 'Screenshot Auto-Save', desc: 'Attached screenshots are saved to your device on send, so you can drop them into Telegram in one tap.' },
-      { icon: '✈️', badge: 'FIX', title: 'Telegram FAB', desc: 'Tapping the Telegram button now opens a polished menu with two clear options: Join Channel and Personal Message (@Lv_Savi).' },
-      { icon: '🛡️', badge: 'FIX', title: 'Iframe Sandbox Removal', desc: 'Global guard ensures no iframe ever carries a sandbox attribute, fixing "sandbox not allowed" errors on external embed hosts.' },
-      { icon: '🎞️', badge: 'FIX', title: 'Direct Embed Rendering', desc: 'Embed server now renders the iframe directly without any custom player wrapper, overlays, or restrictions.' },
-    ],
-  },
-  {
-    version: 'v22',
-    date: 'Older',
-    highlight: 'Cinematic detail pages, smoother season switching, and a 3-second auto-loop hero with direction-aware transitions.',
-    items: [
-      { icon: '🎬', badge: 'IMPROVED', title: 'Hero Banner Auto-Loop', desc: 'New 3-second loop with cinematic blur, scale, and direction-aware slide animations on every change.' },
-      { icon: '✨', badge: 'NEW', title: 'Redesigned More Info Page', desc: 'Glow-haloed poster, gradient title, glassy meta chips, and a refined CTA row with primary glow shadow.' },
-      { icon: '💀', badge: 'NEW', title: 'Realistic Skeleton Loaders', desc: 'Detail page skeletons now mirror the actual layout — hero, poster, chips, description, buttons, and episode grid.' },
-      { icon: '🌊', badge: 'IMPROVED', title: 'Smooth Section Stagger', desc: 'Each "More Info" section fades and slides in sequentially for a buttery, premium feel.' },
-      { icon: '📺', badge: 'NEW', title: 'Season Switch Skeletons', desc: 'Switching seasons now shows a staggered episode skeleton grid before fading in the new episodes.' },
-      { icon: '🎯', badge: 'IMPROVED', title: 'Crossfade Transitions', desc: 'Skeleton-to-content swap uses a 500ms crossfade so the page never flashes empty.' },
-      { icon: '⏯️', badge: 'FIX', title: 'Player Pause Cleanup', desc: 'Pausing no longer shows a redundant center play icon. Finished episodes now show a "Rewatch" control.' },
-      { icon: '📰', badge: 'IMPROVED', title: 'What\'s New Popup', desc: 'Tighter glass card with pulsing live indicator, dot-based version pager, and color-coded change tags.' },
-    ],
-  },
-  {
-    version: 'v21',
-    date: 'Older',
-    highlight: 'Cinematic Netflix-style redesign, smarter Telegram toast, and buttery-smooth playback across every device.',
-    items: [
-      { icon: '🎬', badge: 'NEW', title: 'Cinematic Hero Banner', desc: 'Auto-rotating featured slides with Ken Burns zoom-pan, 7s timing, and slim progress bars.' },
-      { icon: '✨', badge: 'IMPROVED', title: 'Netflix-Style UI Polish', desc: 'Red accent section headers, hover scale with red shadows, and edge-fade row masks site-wide.' },
-      { icon: '🌟', badge: 'NEW', title: 'Featured Anime Refresh', desc: 'Witch Hat Atelier and Grand Blue Dreaming now headline the hero rotation with curated view counts.' },
-      { icon: '📺', badge: 'IMPROVED', title: 'Continue Watching', desc: 'Faster loading, deduplicated entries, and a tighter row layout for quicker resume.' },
-      { icon: '🔥', badge: 'IMPROVED', title: 'Discovery Rows', desc: 'Recommended, Most Popular, Latest Series/Episodes/Movies, Coming Soon, and Recently Completed all refreshed.' },
-      { icon: '💬', badge: 'NEW', title: 'Language-Aware Telegram Toast', desc: 'Toast text now adapts to your subtitle/audio language with browser fallback (8 languages).' },
+      { icon: '⌨️', badge: 'NEW', title: 'Keyboard ±10s on Embeds', desc: 'Use ← / → arrow keys to skip 10 seconds backward or forward in both the normal embed and Shadow Link embed players.' },
+      { icon: '▶️', badge: 'NEW', title: 'Embed Autoplay', desc: 'Embed players now start playing automatically — no need to tap play after the page loads.' },
+      { icon: '🎬', badge: 'FIX', title: 'Server Switch Playback', desc: 'Switching servers mid-episode now resumes playback automatically instead of getting stuck on a buffering wheel.' },
+      { icon: '🔗', badge: 'FIX', title: 'Share Links → animesavi.com', desc: '"Share with Friends" now copies https://animesavi.com instead of the old lovable.app preview URL.' },
+      { icon: '📎', badge: 'FIX', title: 'Report Screenshot Attachment', desc: 'Screenshots attached to a report now save to your device with a clear filename so you can drop them straight into Telegram.' },
+      { icon: '✈️', badge: 'FIX', title: 'Smaller iOS Telegram Popup', desc: 'The Telegram popup on the watch page is more compact on iPhone so it never overlaps the player controls.' },
+      { icon: '🧹', badge: 'FIX', title: 'Cleaner What\'s New Popup', desc: 'Removed the decorative big circles and old version history — only the latest version is shown.' },
+      { icon: '📺', badge: 'NEW', title: 'iOS Native Fullscreen', desc: 'Tapping fullscreen in any embed player on iPhone/iPad now uses the native iOS video player for a true full-screen experience.' },
+      { icon: '✨', badge: 'IMPROVED', title: 'Smart Recommendations 2.0', desc: 'The "Recommended for You" row is now genre + mood-aware, tuned by your real watch history and ratings.' },
     ],
   },
 ];
@@ -527,9 +435,6 @@ export function UpdatePopup() {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-300">
         <div className="relative w-full max-w-sm mx-4 overflow-hidden rounded-2xl border border-purple-600/30 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-purple-900/40 p-8 text-center space-y-6 animate-in zoom-in-95 duration-300">
-          {/* Decorative glows */}
-          <div className="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full bg-purple-600/20 blur-3xl animate-pulse" />
-          <div className="pointer-events-none absolute -bottom-24 -left-20 h-52 w-52 rounded-full bg-purple-500/15 blur-3xl" />
 
           {/* Header pill */}
           <div className="relative inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">
@@ -740,43 +645,7 @@ export function UpdatePopup() {
           </span>
         </div>
 
-        {/* Version pager — slim */}
-        <div className="relative flex items-center justify-center gap-2 border-y border-white/5 bg-black/30 px-5 py-2">
-          <button
-            onClick={goPrev}
-            disabled={versionIndex === 0}
-            className="rounded-md border border-white/10 bg-white/5 p-1 text-white/60 transition hover:bg-white/10 hover:text-white disabled:opacity-25"
-            aria-label="Previous version"
-          >
-            <ChevronLeft className="h-3 w-3" />
-          </button>
-          <div className="flex items-center gap-1.5">
-            {VERSION_GROUPS.map((g, i) => (
-              <button
-                key={g.version}
-                onClick={() => setVersionIndex(i)}
-                className={`h-1 rounded-full transition-all ${
-                  i === versionIndex ? 'w-5 bg-purple-500' : 'w-1 bg-white/20 hover:bg-white/40'
-                }`}
-                aria-label={`Go to ${g.version}`}
-              />
-            ))}
-          </div>
-          <button
-            onClick={goNext}
-            disabled={versionIndex === VERSION_GROUPS.length - 1}
-            className="rounded-md border border-white/10 bg-white/5 p-1 text-white/60 transition hover:bg-white/10 hover:text-white disabled:opacity-25"
-            aria-label="Next version"
-          >
-            <ChevronRight className="h-3 w-3" />
-          </button>
-          <div className="ml-2 flex items-center gap-1.5">
-            <span className="rounded border border-purple-500/30 bg-purple-500/10 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-purple-300">
-              {currentGroup.version}
-            </span>
-            <span className="text-[9px] uppercase tracking-wider text-white/40">{currentGroup.date}</span>
-          </div>
-        </div>
+        {/* Single-version mode — pager hidden */}
 
         {/* Items — compact rows, scroll-locked height */}
         <div
