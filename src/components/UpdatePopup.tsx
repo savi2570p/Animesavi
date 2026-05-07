@@ -435,9 +435,6 @@ export function UpdatePopup() {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-300">
         <div className="relative w-full max-w-sm mx-4 overflow-hidden rounded-2xl border border-purple-600/30 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-purple-900/40 p-8 text-center space-y-6 animate-in zoom-in-95 duration-300">
-          {/* Decorative glows */}
-          <div className="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full bg-purple-600/20 blur-3xl animate-pulse" />
-          <div className="pointer-events-none absolute -bottom-24 -left-20 h-52 w-52 rounded-full bg-purple-500/15 blur-3xl" />
 
           {/* Header pill */}
           <div className="relative inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">
