@@ -645,43 +645,7 @@ export function UpdatePopup() {
           </span>
         </div>
 
-        {/* Version pager — slim */}
-        <div className="relative flex items-center justify-center gap-2 border-y border-white/5 bg-black/30 px-5 py-2">
-          <button
-            onClick={goPrev}
-            disabled={versionIndex === 0}
-            className="rounded-md border border-white/10 bg-white/5 p-1 text-white/60 transition hover:bg-white/10 hover:text-white disabled:opacity-25"
-            aria-label="Previous version"
-          >
-            <ChevronLeft className="h-3 w-3" />
-          </button>
-          <div className="flex items-center gap-1.5">
-            {VERSION_GROUPS.map((g, i) => (
-              <button
-                key={g.version}
-                onClick={() => setVersionIndex(i)}
-                className={`h-1 rounded-full transition-all ${
-                  i === versionIndex ? 'w-5 bg-purple-500' : 'w-1 bg-white/20 hover:bg-white/40'
-                }`}
-                aria-label={`Go to ${g.version}`}
-              />
-            ))}
-          </div>
-          <button
-            onClick={goNext}
-            disabled={versionIndex === VERSION_GROUPS.length - 1}
-            className="rounded-md border border-white/10 bg-white/5 p-1 text-white/60 transition hover:bg-white/10 hover:text-white disabled:opacity-25"
-            aria-label="Next version"
-          >
-            <ChevronRight className="h-3 w-3" />
-          </button>
-          <div className="ml-2 flex items-center gap-1.5">
-            <span className="rounded border border-purple-500/30 bg-purple-500/10 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-purple-300">
-              {currentGroup.version}
-            </span>
-            <span className="text-[9px] uppercase tracking-wider text-white/40">{currentGroup.date}</span>
-          </div>
-        </div>
+        {/* Single-version mode — pager hidden */}
 
         {/* Items — compact rows, scroll-locked height */}
         <div
