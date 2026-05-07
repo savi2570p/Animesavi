@@ -36,7 +36,7 @@ export function SocialShare({ className = '' }: SocialShareProps) {
   const [templateId, setTemplateId] = useState(MESSAGE_TEMPLATES[0].id);
   const [showTemplates, setShowTemplates] = useState(false);
 
-  const websiteUrl = 'https://animesavi.lovable.app';
+  const websiteUrl = 'https://animesavi.com';
   const template = MESSAGE_TEMPLATES.find(t => t.id === templateId) || MESSAGE_TEMPLATES[0];
   const fullMessage = `${template.text} ${websiteUrl}`;
 
