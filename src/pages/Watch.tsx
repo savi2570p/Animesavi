@@ -307,6 +307,23 @@ export default function Watch() {
     setInitialSeekDone(false);
 
     handleServerSwitch(server);
+
+    // After the new <video> mounts, force playback. iOS often parks the new
+    // player on the buffering wheel after a server swap unless we explicitly
+    // call play() (muted as a fallback so autoplay policies don't block us).
+    let attempts = 0;
+    const kick = window.setInterval(() => {
+      attempts += 1;
+      const v = document.querySelector('video') as HTMLVideoElement | null;
+      if (v && v.readyState >= 1) {
+        v.play().catch(() => {
+          try { v.muted = true; v.play().catch(() => {}); } catch {}
+        });
+        window.clearInterval(kick);
+      } else if (attempts >= 20) {
+        window.clearInterval(kick);
+      }
+    }, 250);
   }, [handleServerSwitch, episode, episodeId]);
 
   // (Removed) Previously showed a one-time "Embed server under development" toast on
