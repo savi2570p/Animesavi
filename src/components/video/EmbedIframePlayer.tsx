@@ -801,7 +801,23 @@ export function EmbedIframePlayer({
             size="icon"
             variant="ghost"
             className="h-8 w-8 rounded-full"
-            onClick={() => sendCommand('fullscreen', {}, 'Fullscreen requested from parent controls.')}
+            onClick={() => {
+              // iOS: try native fullscreen on the iframe so Safari hands off to
+              // the system video player. Fall back to postMessage fullscreen.
+              const ua = navigator.userAgent;
+              const isIOS = /iPad|iPhone|iPod/.test(ua) || (ua.includes('Mac') && 'ontouchend' in document);
+              const ifr = iframeRef.current as (HTMLIFrameElement & { webkitEnterFullscreen?: () => void }) | null;
+              if (isIOS && ifr?.webkitEnterFullscreen) {
+                try { ifr.webkitEnterFullscreen(); return; } catch {}
+              }
+              if (isIOS && ifr?.requestFullscreen) {
+                ifr.requestFullscreen().catch(() => {
+                  sendCommand('fullscreen', {}, 'Fullscreen requested from parent controls.');
+                });
+                return;
+              }
+              sendCommand('fullscreen', {}, 'Fullscreen requested from parent controls.');
+            }}
           >
             <ExternalLink className="h-4 w-4" />
           </Button>
