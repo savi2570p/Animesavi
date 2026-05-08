@@ -358,7 +358,7 @@ export function ReportButton() {
               <Paperclip className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
               <p className="text-[10.5px] leading-relaxed text-muted-foreground">
                 Your report opens in <span className="font-semibold text-foreground">Telegram</span> with page, device, OS &amp; browser info.
-                {' '}If you attach a screenshot, we'll save it to your device so you can drop it into Telegram in one tap.
+                {' '}Attached screenshots are uploaded and sent as a previewable image link — Telegram renders it inline as a photo.
               </p>
             </div>
           </div>
