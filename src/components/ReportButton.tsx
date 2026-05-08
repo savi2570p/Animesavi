@@ -378,11 +378,11 @@ export function ReportButton() {
               size="sm"
               variant="destructive"
               onClick={handleSend}
-              disabled={!canSend}
+              disabled={!canSend || isSending}
               className="min-w-[140px] shadow-md shadow-destructive/25"
             >
               <Send className="h-3.5 w-3.5 mr-1.5" />
-              Send Report
+              {isSending ? 'Uploading…' : 'Send Report'}
             </Button>
           </div>
         </DialogContent>
