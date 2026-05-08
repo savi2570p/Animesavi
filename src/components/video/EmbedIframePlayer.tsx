@@ -441,6 +441,31 @@ export function EmbedIframePlayer({
     return () => window.removeEventListener('message', handleMessage);
   }, [iframeMeta.origin, instanceId, onPlaybackStateChange, onReady, onTimeUpdate, pushDebugEvent, reportError, sendCommand]);
 
+  // Keyboard shortcuts (←/→ skip ±10s, Space toggles play). Only active when
+  // the trusted handshake is established so the iframe can act on commands.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (handshakeStateRef.current !== 'ready') return;
+      const cur = remoteStateRef.current.currentTime || 0;
+      const dur = remoteStateRef.current.duration || 0;
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        sendCommand('seek', { time: Math.max(0, cur - 10), offset: -10 }, 'Keyboard ← skip back 10s');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const next = dur > 0 ? Math.min(dur, cur + 10) : cur + 10;
+        sendCommand('seek', { time: next, offset: 10 }, 'Keyboard → skip forward 10s');
+      } else if (e.key === ' ' || e.key === 'k') {
+        e.preventDefault();
+        sendCommand(remoteStateRef.current.isPlaying ? 'pause' : 'play', {}, 'Keyboard play/pause toggle');
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [sendCommand]);
+
   const handleIframeLoad = () => {
     setIsIframeLoaded(true);
     pushDebugEvent('system', 'iframe-load', {
