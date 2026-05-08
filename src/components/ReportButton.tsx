@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const REPORT_CATEGORIES = [
   { label: 'Bug / Glitch', value: 'Bug', icon: Bug },
@@ -96,6 +97,8 @@ export function ReportButton() {
 
   const removeScreenshot = () => setScreenshot(null);
 
+  const [isSending, setIsSending] = useState(false);
+
   const handleSend = async () => {
     if (!category) {
       toast.error('Please select a category');
@@ -124,29 +127,40 @@ export function ReportButton() {
       return 'Other';
     })();
 
-    const screenshotLine = screenshot
-      ? `\n📎 Screenshot: attached (${(screenshot.size / 1024).toFixed(0)} KB)`
+    setIsSending(true);
+
+    // Upload screenshot to public storage so Telegram renders it as an inline
+    // photo preview from the URL — no manual attach step needed.
+    let screenshotUrl: string | null = null;
+    if (screenshot) {
+      try {
+        const ext = (screenshot.name.split('.').pop() || 'png').toLowerCase();
+        const stamp = Date.now();
+        const rand = Math.random().toString(36).slice(2, 8);
+        const path = `reports/${stamp}-${rand}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from('anime-thumbnails')
+          .upload(path, screenshot, {
+            contentType: screenshot.type || 'image/png',
+            upsert: false,
+          });
+        if (upErr) throw upErr;
+        const { data } = supabase.storage.from('anime-thumbnails').getPublicUrl(path);
+        screenshotUrl = data.publicUrl;
+      } catch (err) {
+        console.error('[Report] screenshot upload failed', err);
+        toast.error('Could not upload screenshot — sending report without it');
+      }
+    }
+
+    const screenshotLine = screenshotUrl
+      ? `\n📎 Screenshot: ${screenshotUrl}`
       : '';
 
     const text = `🚨 Report from AnimeSavi\n\n📂 Category: ${category}\n📄 Page: ${window.location.pathname}\n📱 Device: ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}\n🖥️ OS: ${osInfo}\n🌐 Browser: ${browserInfo}\n📐 Screen: ${window.innerWidth}x${window.innerHeight}\n🕐 Time: ${new Date().toLocaleString('en-IN')}${screenshotLine}\n\n💬 Details:\n${message.trim()}`;
 
-    // Auto-download the screenshot so the user can attach it in Telegram in one tap.
-    if (screenshot) {
-      const ext = screenshot.name.split('.').pop()?.toLowerCase() || 'png';
-      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filename = `animesavi-report-${stamp}.${ext}`;
-      const url = URL.createObjectURL(screenshot);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-      toast.success('Screenshot saved — attach it in Telegram');
-    } else {
-      toast.success('Opening Telegram to send your report');
-    }
+    setIsSending(false);
+    toast.success(screenshotUrl ? 'Opening Telegram with your screenshot' : 'Opening Telegram to send your report');
 
     const tgUrl = `https://t.me/Lv_Savi?text=${encodeURIComponent(text)}`;
     window.open(tgUrl, '_blank', 'noopener,noreferrer');
@@ -344,7 +358,7 @@ export function ReportButton() {
               <Paperclip className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
               <p className="text-[10.5px] leading-relaxed text-muted-foreground">
                 Your report opens in <span className="font-semibold text-foreground">Telegram</span> with page, device, OS &amp; browser info.
-                {' '}If you attach a screenshot, we'll save it to your device so you can drop it into Telegram in one tap.
+                {' '}Attached screenshots are uploaded and sent as a previewable image link — Telegram renders it inline as a photo.
               </p>
             </div>
           </div>
@@ -364,11 +378,11 @@ export function ReportButton() {
               size="sm"
               variant="destructive"
               onClick={handleSend}
-              disabled={!canSend}
+              disabled={!canSend || isSending}
               className="min-w-[140px] shadow-md shadow-destructive/25"
             >
               <Send className="h-3.5 w-3.5 mr-1.5" />
-              Send Report
+              {isSending ? 'Uploading…' : 'Send Report'}
             </Button>
           </div>
         </DialogContent>

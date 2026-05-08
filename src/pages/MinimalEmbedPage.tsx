@@ -264,7 +264,15 @@ export default function MinimalEmbedPage() {
   }, []);
 
   const toggleFullscreen = useCallback(() => {
+    const v = videoRef.current;
     const el = containerRef.current;
+    // iOS Safari: prefer the native iPhone/iPad fullscreen video player.
+    const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (ua.includes('Mac') && 'ontouchend' in document);
+    const vAny = v as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
+    if (isIOS && vAny?.webkitEnterFullscreen) {
+      try { vAny.webkitEnterFullscreen(); return; } catch {}
+    }
     if (!el) return;
     if (document.fullscreenElement) {
       document.exitFullscreen?.();
@@ -272,6 +280,29 @@ export default function MinimalEmbedPage() {
       el.requestFullscreen?.().catch(() => {});
     }
   }, []);
+
+  // Keyboard shortcuts: ←/→ to skip ±10s
+  useEffect(() => {
+    if (useIframe) return;
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const v = videoRef.current;
+      if (!v) return;
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        v.currentTime = Math.max(0, v.currentTime - 10);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        v.currentTime = Math.min(v.duration || v.currentTime, v.currentTime + 10);
+      } else if (e.key === ' ' || e.key === 'k') {
+        e.preventDefault();
+        if (v.paused) v.play().catch(() => {}); else v.pause();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [useIframe]);
 
   const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const v = videoRef.current;

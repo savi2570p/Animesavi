@@ -441,6 +441,31 @@ export function EmbedIframePlayer({
     return () => window.removeEventListener('message', handleMessage);
   }, [iframeMeta.origin, instanceId, onPlaybackStateChange, onReady, onTimeUpdate, pushDebugEvent, reportError, sendCommand]);
 
+  // Keyboard shortcuts (←/→ skip ±10s, Space toggles play). Only active when
+  // the trusted handshake is established so the iframe can act on commands.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (handshakeStateRef.current !== 'ready') return;
+      const cur = remoteStateRef.current.currentTime || 0;
+      const dur = remoteStateRef.current.duration || 0;
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        sendCommand('seek', { time: Math.max(0, cur - 10), offset: -10 }, 'Keyboard ← skip back 10s');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const next = dur > 0 ? Math.min(dur, cur + 10) : cur + 10;
+        sendCommand('seek', { time: next, offset: 10 }, 'Keyboard → skip forward 10s');
+      } else if (e.key === ' ' || e.key === 'k') {
+        e.preventDefault();
+        sendCommand(remoteStateRef.current.isPlaying ? 'pause' : 'play', {}, 'Keyboard play/pause toggle');
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [sendCommand]);
+
   const handleIframeLoad = () => {
     setIsIframeLoaded(true);
     pushDebugEvent('system', 'iframe-load', {
@@ -776,7 +801,23 @@ export function EmbedIframePlayer({
             size="icon"
             variant="ghost"
             className="h-8 w-8 rounded-full"
-            onClick={() => sendCommand('fullscreen', {}, 'Fullscreen requested from parent controls.')}
+            onClick={() => {
+              // iOS: try native fullscreen on the iframe so Safari hands off to
+              // the system video player. Fall back to postMessage fullscreen.
+              const ua = navigator.userAgent;
+              const isIOS = /iPad|iPhone|iPod/.test(ua) || (ua.includes('Mac') && 'ontouchend' in document);
+              const ifr = iframeRef.current as (HTMLIFrameElement & { webkitEnterFullscreen?: () => void }) | null;
+              if (isIOS && ifr?.webkitEnterFullscreen) {
+                try { ifr.webkitEnterFullscreen(); return; } catch {}
+              }
+              if (isIOS && ifr?.requestFullscreen) {
+                ifr.requestFullscreen().catch(() => {
+                  sendCommand('fullscreen', {}, 'Fullscreen requested from parent controls.');
+                });
+                return;
+              }
+              sendCommand('fullscreen', {}, 'Fullscreen requested from parent controls.');
+            }}
           >
             <ExternalLink className="h-4 w-4" />
           </Button>
