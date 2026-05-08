@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const REPORT_CATEGORIES = [
   { label: 'Bug / Glitch', value: 'Bug', icon: Bug },
