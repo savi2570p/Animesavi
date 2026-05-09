@@ -64,9 +64,9 @@ import { PureEmbedPlayer } from './PureEmbedPlayer';
 // Unified flat control style — purple-tinted, no circular background.
 // Matches the X-PLUS minimal aesthetic across every server.
 const playerControlButtonClass =
-  "text-white hover:text-primary active:scale-90 active:opacity-80 flex items-center justify-center transition-colors duration-200 drop-shadow-[0_0_8px_hsl(var(--primary)/0.45)] bg-transparent border-0";
+  "text-white hover:text-primary active:scale-90 active:opacity-80 flex items-center justify-center transition-colors duration-200 drop-shadow-[0_0_8px_hsl(var(--primary)/0.45)] bg-transparent border-0 touch-manipulation min-w-9 min-h-9 md:min-w-10 md:min-h-10";
 const flatPlayerControlButtonClass =
-  "text-white hover:text-primary transition-colors drop-shadow-[0_0_8px_hsl(var(--primary)/0.45)] bg-transparent border-0";
+  "text-white hover:text-primary transition-colors drop-shadow-[0_0_8px_hsl(var(--primary)/0.45)] bg-transparent border-0 touch-manipulation min-w-9 min-h-9 md:min-w-10 md:min-h-10 flex items-center justify-center";
 
 interface AudioTrackInfo {
   id: number;
@@ -375,7 +375,7 @@ export function VideoPlayer({
   // Detect if mobile device (MUST be before hooks that use it)
   const isMobile = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const iosControlIconClass = "w-2 h-2";
+  const iosControlIconClass = "w-4 h-4";
   const mobileVolumeIconClass = isIOS ? iosControlIconClass : "w-4 h-4";
   
   
@@ -1883,6 +1883,13 @@ export function VideoPlayer({
 
   // Touch end handler for mobile
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    const target = e.target as HTMLElement | null;
+    const interactiveSelector = 'button, a, input, textarea, select, [role="menuitem"], [role="option"], [data-radix-collection-item]';
+    if (target?.closest(interactiveSelector)) {
+      lastTapRef.current = { time: 0, x: 0 };
+      return;
+    }
+
     const now = Date.now();
     const touch = e.changedTouches[0];
     const x = touch.clientX;
@@ -1912,11 +1919,7 @@ export function VideoPlayer({
     } else {
       lastTapRef.current = { time: now, x };
       
-      const target = e.target as HTMLElement;
-      const interactiveSelector = 'button, a, input, textarea, select, [role="menuitem"]';
-      if (!target.closest(interactiveSelector)) {
-        setShowControls(true);
-      }
+      setShowControls(true);
     }
   }, [skipForward, skipBackward, togglePlay]);
 
