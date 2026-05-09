@@ -171,6 +171,12 @@ export default function Welcome() {
     return () => clearInterval(interval);
   }, [featuredAnime.length]);
 
+  useEffect(() => {
+    if (!referOpen || referBanUntil <= Date.now()) return;
+    const id = setInterval(() => setReferNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [referOpen, referBanUntil]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
