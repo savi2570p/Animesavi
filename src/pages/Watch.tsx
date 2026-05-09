@@ -1106,7 +1106,7 @@ export default function Watch() {
               poster={anime?.cover_image || undefined}
               isMovie={isMovie}
               activeServer={activeServer}
-              isLoading={serverLoading}
+              isLoading={false}
               audioLanguage={episode.audio_language || undefined}
               captionsUrl={episode.captions_url}
               isEncoding={isVideoEncoding}

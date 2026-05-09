@@ -80,8 +80,16 @@ export default function Welcome() {
       await navigator.clipboard.writeText(REFER_LINK);
     } catch {
       const el = document.createElement('textarea');
-      el.value = REFER_LINK; document.body.appendChild(el); el.select();
-      document.execCommand('copy'); document.body.removeChild(el);
+      el.value = REFER_LINK;
+      el.setAttribute('readonly', '');
+      el.style.position = 'fixed';
+      el.style.top = '0';
+      el.style.opacity = '0';
+      document.body.appendChild(el);
+      el.focus();
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
     }
     const used = Number(localStorage.getItem('refer_used_count') || 0) + 1;
     localStorage.setItem('refer_used_count', String(used));
@@ -938,17 +946,22 @@ export default function Welcome() {
           className="fixed inset-0 z-[180] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-fade-in"
           role="dialog"
           aria-modal="true"
-          onClick={() => setReferOpen(false)}
+          onPointerDown={(e) => {
+            if (e.target === e.currentTarget) setReferOpen(false);
+          }}
         >
           <div
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md rounded-2xl border border-border/40 bg-card p-6 shadow-2xl"
+            className="relative w-full max-w-md rounded-2xl border border-border/40 bg-card p-6 shadow-2xl pointer-events-auto"
             style={{ background: 'linear-gradient(135deg, hsl(var(--card)), hsl(var(--card) / 0.9))' }}
           >
             <button
-              onClick={() => setReferOpen(false)}
+              type="button"
+              onPointerDown={(e) => { e.stopPropagation(); setReferOpen(false); }}
+              onClick={(e) => { e.stopPropagation(); setReferOpen(false); }}
               aria-label="Close"
-              className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition"
+              className="absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition touch-manipulation"
             >
               ✕
             </button>
@@ -970,9 +983,10 @@ export default function Welcome() {
                 />
                 <button
                   type="button"
-                  onClick={handleCopyReferral}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => { e.stopPropagation(); handleCopyReferral(); }}
                   disabled={referBanLeft > 0}
-                  className="px-3 py-2 rounded-lg text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  className="px-4 py-2.5 rounded-lg text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition touch-manipulation shrink-0"
                 >
                   {referCopied ? 'Copied!' : 'Copy Link'}
                 </button>

@@ -43,14 +43,26 @@ export function ShareEmbedPopup({
   // Production share/embed origin — points at the new custom domain
   const SITE_ORIGIN = 'https://animesavi.com';
 
-  // Replace any lovable.app preview origin in the provided URLs with the
-  // production custom domain so links shared externally always use animesavi.com.
+  const slugify = (value: string) =>
+    value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+  // Replace preview origins and any UUID detail route with clean animesavi.com slugs
+  // so iOS copy always shares a stable public URL, never /anime/<uuid>.
   const rebrandUrl = (u: string) => {
     if (!u) return u;
-    if (u.startsWith('http')) {
-      return u.replace(/https?:\/\/[^/]*lovable\.app/i, SITE_ORIGIN);
+    const slug = slugify(animeTitle || 'anime');
+    const input = u.startsWith('http') ? u : `${SITE_ORIGIN}${u.startsWith('/') ? u : '/' + u}`;
+    try {
+      const url = new URL(input.replace(/https?:\/\/[^/]*lovable\.app/i, SITE_ORIGIN));
+      url.protocol = 'https:';
+      url.host = 'animesavi.com';
+      if (/^\/anime\/[0-9a-f-]{20,}/i.test(url.pathname)) {
+        url.pathname = `/${slug}`;
+      }
+      return url.toString();
+    } catch {
+      return `${SITE_ORIGIN}/${slug}`;
     }
-    return `${SITE_ORIGIN}${u.startsWith('/') ? u : '/' + u}`;
   };
 
   const fullPageUrl = rebrandUrl(pageUrl);
@@ -64,13 +76,27 @@ export function ShareEmbedPopup({
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
-      await navigator.clipboard.writeText(text);
-      setCopiedItem(label);
-      toast.success(`${label} copied successfully.`);
-      setTimeout(() => setCopiedItem(null), 2000);
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        throw new Error('Clipboard API unavailable');
+      }
     } catch {
-      toast.error('Failed to copy');
+      const el = document.createElement('textarea');
+      el.value = text;
+      el.setAttribute('readonly', '');
+      el.style.position = 'fixed';
+      el.style.top = '0';
+      el.style.opacity = '0';
+      document.body.appendChild(el);
+      el.focus();
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
     }
+    setCopiedItem(label);
+    toast.success(`${label} copied successfully.`);
+    setTimeout(() => setCopiedItem(null), 2000);
   };
 
   const shareToWhatsApp = () => {

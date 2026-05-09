@@ -30,8 +30,16 @@ export function AnimeCalendar() {
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
   const [, setFavorites] = useState<Set<string>>(new Set());
   const [activeFilter, setActiveFilter] = useState<'all' | 'favorites' | 'new'>('all');
+  const [selectedCountdown, setSelectedCountdown] = useState<ScheduleAnime | null>(null);
+  const [now, setNow] = useState(Date.now());
 
   useEffect(() => { fetchScheduleData(); }, [user]);
+
+  useEffect(() => {
+    if (!selectedCountdown) return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [selectedCountdown]);
 
   const fetchScheduleData = async () => {
     setIsLoading(true);
@@ -131,6 +139,24 @@ export function AnimeCalendar() {
   const totalThisWeek = weekDates.reduce((s, _, i) => s + getAnimeForDay(i).length, 0);
   const favCount = animeList.filter(a => a.is_favorite).length;
   const newCount = animeList.filter(a => a.has_recent_upload).length;
+
+  const getNextReleaseDate = (anime: ScheduleAnime) => {
+    const current = new Date();
+    const day = anime.release_day === 7 ? current.getDay() + 1 : anime.release_day;
+    let daysUntil = ((day % 7) - current.getDay() + 7) % 7;
+    if (daysUntil === 0) daysUntil = 7;
+    const next = addDays(current, daysUntil);
+    return new Date(next.getFullYear(), next.getMonth(), next.getDate(), 0, 0, 0, 0);
+  };
+
+  const formatCountdown = (target: Date) => {
+    const diff = Math.max(0, target.getTime() - now);
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const minutes = Math.floor((diff % 3600000) / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    return { days, hours, minutes, seconds };
+  };
 
   if (isLoading) {
     return (
@@ -309,7 +335,7 @@ export function AnimeCalendar() {
                   ) : (
                     <div className="flex gap-2 md:gap-3 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
                       {dayAnime.map((anime) => (
-                        <Link key={anime.id} to={`/anime/${anime.id}`} className="shrink-0 group">
+                        <button key={anime.id} type="button" onClick={() => { setSelectedCountdown(anime); setNow(Date.now()); }} className="shrink-0 group text-left touch-manipulation">
                           <div className="relative w-[64px] md:w-[82px]">
                             <div className="relative">
                               <img
@@ -346,7 +372,7 @@ export function AnimeCalendar() {
                               {anime.title}
                             </p>
                           </div>
-                        </Link>
+                        </button>
                       ))}
                     </div>
                   )}
@@ -356,6 +382,43 @@ export function AnimeCalendar() {
           })}
         </div>
       </div>
+
+      {selectedCountdown && (() => {
+        const target = getNextReleaseDate(selectedCountdown);
+        const c = formatCountdown(target);
+        return (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-background/80 backdrop-blur-md p-4" onClick={() => setSelectedCountdown(null)}>
+            <div className="w-full max-w-sm rounded-2xl border border-border/60 bg-card shadow-2xl p-5" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-primary">Next Episode Countdown</p>
+                  <h3 className="text-lg font-bold text-foreground leading-tight mt-1">{selectedCountdown.title}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Resets weekly after release day • {DAYS_FULL[selectedCountdown.release_day === 7 ? new Date().getDay() : selectedCountdown.release_day]}</p>
+                </div>
+                <button type="button" onClick={() => setSelectedCountdown(null)} className="h-9 w-9 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground" aria-label="Close">×</button>
+              </div>
+
+              <div className="grid grid-cols-4 gap-2 my-5">
+                {[
+                  { v: c.days, l: 'Days' },
+                  { v: c.hours, l: 'Hrs' },
+                  { v: c.minutes, l: 'Min' },
+                  { v: c.seconds, l: 'Sec' },
+                ].map((item) => (
+                  <div key={item.l} className="rounded-xl bg-primary/10 border border-primary/20 py-3 text-center">
+                    <div className="text-xl font-black tabular-nums text-primary">{String(item.v).padStart(2, '0')}</div>
+                    <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{item.l}</div>
+                  </div>
+                ))}
+              </div>
+
+              <Link to={`/anime/${selectedCountdown.id}`} className="block w-full rounded-xl bg-primary text-primary-foreground text-center text-sm font-bold py-3 hover:opacity-90 transition">
+                Open Series
+              </Link>
+            </div>
+          </div>
+        );
+      })()}
     </section>
   );
 }

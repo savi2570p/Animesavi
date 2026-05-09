@@ -146,7 +146,7 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
     requestAnimationFrame(() => {
       loadingTimeoutRef.current = setTimeout(() => {
         setIsServerLoading(false);
-      }, 1500);
+      }, 250);
     });
   }, [activeServer]);
 
