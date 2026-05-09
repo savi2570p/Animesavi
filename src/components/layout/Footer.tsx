@@ -24,6 +24,7 @@ const footerLinks = {
     { label: 'Romance', href: '/browse?genre=romance' },
     { label: 'Comedy', href: '/browse?genre=comedy' },
     { label: 'Fantasy', href: '/browse?genre=fantasy' },
+    { label: 'Sony YAY', href: '/browse?genre=Sony%20YAY' },
   ],
   support: [
     { label: 'Help Center', href: 'https://t.me/AnimeSaviInhindiDUB', external: true },
