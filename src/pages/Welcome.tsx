@@ -932,6 +932,71 @@ export default function Welcome() {
         </div>
       </div>
 
+      {/* Refer a Friend dialog */}
+      {referOpen && (
+        <div
+          className="fixed inset-0 z-[180] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setReferOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-md rounded-2xl border border-border/40 bg-card p-6 shadow-2xl"
+            style={{ background: 'linear-gradient(135deg, hsl(var(--card)), hsl(var(--card) / 0.9))' }}
+          >
+            <button
+              onClick={() => setReferOpen(false)}
+              aria-label="Close"
+              className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition"
+            >
+              ✕
+            </button>
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center mb-3">
+                <Share2 className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground">Refer a Friend</h3>
+              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                Share our website link to your friend to get 2 Day free subscription.
+              </p>
+
+              <div className="w-full mt-4 flex items-stretch gap-2 rounded-xl border border-border/50 bg-muted/30 p-1.5">
+                <input
+                  readOnly
+                  value={REFER_LINK}
+                  className="flex-1 bg-transparent px-3 text-sm text-foreground/90 outline-none truncate"
+                  onFocus={(e) => e.currentTarget.select()}
+                />
+                <button
+                  type="button"
+                  onClick={handleCopyReferral}
+                  disabled={referBanLeft > 0}
+                  className="px-3 py-2 rounded-lg text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                >
+                  {referCopied ? 'Copied!' : 'Copy Link'}
+                </button>
+              </div>
+
+              <p className="text-xs text-muted-foreground mt-4 leading-relaxed">
+                When your friend opens our website and logs in or signs up, you and your friend will automatically get 2 Day free subscription access. You must be logged in first.
+              </p>
+
+              <div className="mt-4 w-full flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
+                <Shield className="w-3 h-3 text-primary" />
+                <span>One referral per user. Repeated copies trigger a 10-minute cooldown.</span>
+              </div>
+
+              {referBanLeft > 0 && (
+                <div className="mt-3 w-full px-3 py-2 rounded-lg bg-destructive/10 border border-destructive/30 text-xs text-destructive font-semibold">
+                  Cooldown active — try again in {Math.floor(referBanLeft / 60000)}m {Math.floor((referBanLeft % 60000) / 1000)}s.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Realistic launch loading overlay — shown when user clicks "Start Watching" */}
       {isLaunching && (
         <div
