@@ -861,21 +861,54 @@ export default function Welcome() {
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Join 50,000+ Anime Fans</h2>
             <p className="text-muted-foreground text-sm mt-2">Get notified about new drops, share recommendations, talk theories.</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-3xl mx-auto">
             {[
-              { icon: Send, title: 'Telegram Channel', desc: 'Daily upload alerts + early Hindi dub announcements.', cta: 'Join Channel', href: 'https://t.me/Lv_Savi' },
-              { icon: MessageCircle, title: 'Discussion Group', desc: 'Chat with other fans, request titles, share theories.', cta: 'Open Group', href: 'https://t.me/Lv_Savi' },
-              { icon: Share2, title: 'Refer a Friend', desc: 'Share AnimeSavi — there\'s no signup wall to scare them off.', cta: 'Copy Link', href: '#' },
-            ].map((c, i) => (
-              <a key={i} href={c.href} target="_blank" rel="noopener noreferrer" className="group flex flex-col items-center text-center gap-3 p-6 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/40 hover:bg-card/60 transition-all duration-300">
-                <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center group-hover:scale-110 transition-transform"><c.icon className="w-6 h-6 text-primary" /></div>
-                <h3 className="text-base font-bold text-foreground">{c.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{c.desc}</p>
-                <span className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-primary">
-                  {c.cta}
-                  <ChevronRight className="w-3 h-3" />
-                </span>
-              </a>
+              { icon: Send, title: 'Telegram Channel', desc: 'Daily upload alerts + early Hindi dub announcements.', cta: 'Join Channel', href: 'https://t.me/Lv_Savi', kind: 'link' as const },
+              { icon: Share2, title: 'Refer a Friend', desc: 'Invite a friend and you both unlock 2 days of free premium access.', cta: 'Get Referral Link', kind: 'refer' as const },
+            ].map((c, i) =>
+              c.kind === 'refer' ? (
+                <button key={i} type="button" onClick={() => setReferOpen(true)} className="group flex flex-col items-center text-center gap-3 p-6 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/40 hover:bg-card/60 transition-all duration-300">
+                  <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center group-hover:scale-110 transition-transform"><c.icon className="w-6 h-6 text-primary" /></div>
+                  <h3 className="text-base font-bold text-foreground">{c.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{c.desc}</p>
+                  <span className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-primary">
+                    {c.cta}
+                    <ChevronRight className="w-3 h-3" />
+                  </span>
+                </button>
+              ) : (
+                <a key={i} href={c.href} target="_blank" rel="noopener noreferrer" className="group flex flex-col items-center text-center gap-3 p-6 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/40 hover:bg-card/60 transition-all duration-300">
+                  <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center group-hover:scale-110 transition-transform"><c.icon className="w-6 h-6 text-primary" /></div>
+                  <h3 className="text-base font-bold text-foreground">{c.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{c.desc}</p>
+                  <span className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-primary">
+                    {c.cta}
+                    <ChevronRight className="w-3 h-3" />
+                  </span>
+                </a>
+              )
+            )}
+          </div>
+
+          {/* More info: Quick Facts grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
+            {[
+              { icon: Zap, title: '< 2s', sub: 'Avg load time' },
+              { icon: Globe, title: '180+', sub: 'Countries served' },
+              { icon: Layers, title: '4K HDR', sub: 'Top quality tier' },
+              { icon: Wifi, title: 'Offline', sub: 'Watch anywhere' },
+              { icon: Headphones, title: 'Multi-Audio', sub: 'Hindi / EN / JP' },
+              { icon: Bell, title: 'Live Alerts', sub: 'Pre-release pings' },
+              { icon: Cast, title: 'Cast & PiP', sub: 'TV + mini player' },
+              { icon: Lock, title: 'Privacy First', sub: 'No trackers' },
+            ].map((f, i) => (
+              <div key={i} className="flex items-center gap-2 p-3 rounded-xl bg-card/30 border border-border/20">
+                <f.icon className="w-4 h-4 text-primary shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-foreground truncate">{f.title}</div>
+                  <div className="text-[10px] text-muted-foreground truncate">{f.sub}</div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
