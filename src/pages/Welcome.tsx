@@ -65,6 +65,34 @@ export default function Welcome() {
   const [isLaunching, setIsLaunching] = useState(false);
   const [launchProgress, setLaunchProgress] = useState(0);
   const [launchStage, setLaunchStage] = useState('Warming up servers');
+  const [referOpen, setReferOpen] = useState(false);
+  const [referCopied, setReferCopied] = useState(false);
+  const [referBanUntil, setReferBanUntil] = useState<number>(() => {
+    const v = Number(localStorage.getItem('refer_ban_until') || 0);
+    return Number.isFinite(v) ? v : 0;
+  });
+  const [referNow, setReferNow] = useState<number>(Date.now());
+  const REFER_LINK = 'https://animesavi.com';
+  const referBanLeft = Math.max(0, referBanUntil - referNow);
+  const handleCopyReferral = async () => {
+    if (referBanLeft > 0) return;
+    try {
+      await navigator.clipboard.writeText(REFER_LINK);
+    } catch {
+      const el = document.createElement('textarea');
+      el.value = REFER_LINK; document.body.appendChild(el); el.select();
+      document.execCommand('copy'); document.body.removeChild(el);
+    }
+    const used = Number(localStorage.getItem('refer_used_count') || 0) + 1;
+    localStorage.setItem('refer_used_count', String(used));
+    if (used >= 2) {
+      const until = Date.now() + 10 * 60 * 1000;
+      localStorage.setItem('refer_ban_until', String(until));
+      setReferBanUntil(until);
+    }
+    setReferCopied(true);
+    setTimeout(() => setReferCopied(false), 2200);
+  };
 
   const startWatching = (target: string = '/') => {
     if (isLaunching) return;
