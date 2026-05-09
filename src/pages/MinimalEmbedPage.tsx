@@ -374,33 +374,34 @@ export default function MinimalEmbedPage() {
       }}>
         {/* Top-right Episodes button (Shadow Link only) */}
         {isShadowTheme && episodeList.length > 1 && (
-          <button
-            onClick={() => setShowEpisodes(true)}
+           <button
+            onClick={() => setShowEpisodes((v) => !v)}
             aria-label="Episodes"
+            aria-expanded={showEpisodes}
             title="Episodes"
             style={{
               position: 'absolute',
-              top: 'max(12px, env(safe-area-inset-top))',
-              right: 'max(12px, env(safe-area-inset-right))',
+              top: 'max(10px, env(safe-area-inset-top))',
+              right: 'max(10px, env(safe-area-inset-right))',
               zIndex: 30,
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '8px 12px',
-              background: 'rgba(0,0,0,0.55)',
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '5px 9px',
+              background: showEpisodes ? 'hsl(var(--primary) / 0.85)' : 'rgba(0,0,0,0.55)',
               backdropFilter: 'blur(8px)',
               WebkitBackdropFilter: 'blur(8px)',
               border: '1px solid hsl(var(--primary) / 0.5)',
               borderRadius: 9999,
               color: '#fff',
-              fontSize: 12,
+              fontSize: 10.5,
               fontWeight: 600,
               cursor: 'pointer',
               opacity: 1,
               pointerEvents: 'auto',
-              transition: 'opacity 200ms ease',
+              transition: 'all 200ms ease',
             }}
           >
-            <List size={16} />
-            <span>Episodes</span>
+            <List size={12} />
+            <span>{showEpisodes ? 'Close' : 'Episodes'}</span>
           </button>
         )}
         {loading && !error && (
