@@ -140,13 +140,26 @@ export function AnimeCalendar() {
   const favCount = animeList.filter(a => a.is_favorite).length;
   const newCount = animeList.filter(a => a.has_recent_upload).length;
 
+  // Reset hour: 3 PM local (15:00). Never midnight.
+  const RESET_HOUR = 15;
   const getNextReleaseDate = (anime: ScheduleAnime) => {
     const current = new Date();
-    const day = anime.release_day === 7 ? current.getDay() + 1 : anime.release_day;
-    let daysUntil = ((day % 7) - current.getDay() + 7) % 7;
-    if (daysUntil === 0) daysUntil = 7;
+    // Auto-reset: if a new episode dropped within the last 7 days,
+    // base the next target on that upload + 7 days at 3 PM.
+    if (anime.latest_episode_date) {
+      const last = parseISO(anime.latest_episode_date);
+      const sinceLast = current.getTime() - last.getTime();
+      if (sinceLast >= 0 && sinceLast < 7 * 86400000) {
+        const next = addDays(last, 7);
+        return new Date(next.getFullYear(), next.getMonth(), next.getDate(), RESET_HOUR, 0, 0, 0);
+      }
+    }
+    const targetDay = anime.release_day === 7 ? current.getDay() : anime.release_day;
+    let daysUntil = ((targetDay % 7) - current.getDay() + 7) % 7;
+    // If today is the release day but it's already past 3 PM, push to next week.
+    if (daysUntil === 0 && current.getHours() >= RESET_HOUR) daysUntil = 7;
     const next = addDays(current, daysUntil);
-    return new Date(next.getFullYear(), next.getMonth(), next.getDate(), 0, 0, 0, 0);
+    return new Date(next.getFullYear(), next.getMonth(), next.getDate(), RESET_HOUR, 0, 0, 0);
   };
 
   const formatCountdown = (target: Date) => {

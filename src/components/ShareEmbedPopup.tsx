@@ -46,22 +46,17 @@ export function ShareEmbedPopup({
   const slugify = (value: string) =>
     value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-  // Replace preview origins and any UUID detail route with clean animesavi.com slugs
-  // so iOS copy always shares a stable public URL, never /anime/<uuid>.
+  // Preserve the exact route (including /anime/<uuid>) — only swap the host to animesavi.com.
   const rebrandUrl = (u: string) => {
     if (!u) return u;
-    const slug = slugify(animeTitle || 'anime');
     const input = u.startsWith('http') ? u : `${SITE_ORIGIN}${u.startsWith('/') ? u : '/' + u}`;
     try {
       const url = new URL(input.replace(/https?:\/\/[^/]*lovable\.app/i, SITE_ORIGIN));
       url.protocol = 'https:';
       url.host = 'animesavi.com';
-      if (/^\/anime\/[0-9a-f-]{20,}/i.test(url.pathname)) {
-        url.pathname = `/${slug}`;
-      }
       return url.toString();
     } catch {
-      return `${SITE_ORIGIN}/${slug}`;
+      return `${SITE_ORIGIN}/${slugify(animeTitle || 'anime')}`;
     }
   };
 
