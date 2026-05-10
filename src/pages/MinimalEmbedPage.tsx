@@ -574,18 +574,23 @@ export default function MinimalEmbedPage() {
 
             <style>{`
               .embed-ctrl-btn {
-                background: transparent;
-                border: 0;
-                padding: 4px;
+                background: rgba(0,0,0,0.35);
+                border: 1px solid rgba(255,255,255,0.12);
+                border-radius: 999px;
+                min-width: 44px;
+                min-height: 44px;
+                padding: 8px;
                 color: #fff;
                 cursor: pointer;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                transition: color 150ms ease, transform 150ms ease;
+                transition: color 150ms ease, transform 150ms ease, background 150ms ease;
                 filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.5));
+                -webkit-tap-highlight-color: transparent;
+                touch-action: manipulation;
               }
-              .embed-ctrl-btn:hover { color: hsl(var(--primary)); }
+              .embed-ctrl-btn:hover { color: hsl(var(--primary)); background: rgba(0,0,0,0.55); }
               .embed-ctrl-btn:active { transform: scale(0.92); }
               .embed-range::-webkit-slider-thumb {
                 -webkit-appearance: none;
