@@ -7,28 +7,38 @@ interface AnimeDetailLoaderProps {
 }
 
 /**
- * Skeleton-style placeholder that mirrors the AnimeDetail layout —
- * blurred backdrop, hero/poster blocks, action buttons, episode rail.
- * Includes an animated 0→100% progress bar with percentage label.
+ * Cinematic loading screen for the Anime Detail page.
+ * Uses the anime's own backdrop as a parallax hero, with an orbital
+ * ring loader, animated brand mark, progress bar with stage labels,
+ * and skeleton episode rail.
  */
-export function AnimeDetailLoader({ isReady, backdrop }: AnimeDetailLoaderProps) {
+export function AnimeDetailLoader({ isReady, backdrop, title }: AnimeDetailLoaderProps) {
   const [hidden, setHidden] = useState(false);
-  const [progress, setProgress] = useState(8);
+  const [progress, setProgress] = useState(6);
+
+  const stages = [
+    { at: 0, label: 'Connecting to server' },
+    { at: 25, label: 'Fetching metadata' },
+    { at: 55, label: 'Loading episodes' },
+    { at: 80, label: 'Preparing playback' },
+    { at: 95, label: 'Almost there' },
+  ];
+  const currentStage = stages.reduce((acc, s) => (progress >= s.at ? s : acc), stages[0]);
 
   useEffect(() => {
     if (isReady) {
       setProgress(100);
-      const t = setTimeout(() => setHidden(true), 320);
+      const t = setTimeout(() => setHidden(true), 380);
       return () => clearTimeout(t);
     }
     const id = window.setInterval(() => {
       setProgress((p) => {
         if (p >= 92) return p;
         const remaining = 92 - p;
-        const step = Math.max(0.6, remaining * 0.08);
+        const step = Math.max(0.7, remaining * 0.09);
         return Math.min(92, p + step);
       });
-    }, 180);
+    }, 160);
     return () => window.clearInterval(id);
   }, [isReady]);
 
@@ -36,98 +46,178 @@ export function AnimeDetailLoader({ isReady, backdrop }: AnimeDetailLoaderProps)
 
   return (
     <div
-      className={`fixed inset-0 z-[80] overflow-hidden bg-background transition-opacity duration-300 ${
+      className={`fixed inset-0 z-[80] overflow-hidden bg-background transition-opacity duration-400 ${
         isReady ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
       role="status"
       aria-busy="true"
+      aria-label={title ? `Loading ${title}` : 'Loading anime details'}
     >
-      {/* Top progress bar with percentage */}
-      <div className="fixed top-0 left-0 right-0 z-[90] px-4 sm:px-6 pt-3 pointer-events-none">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground mb-1.5">
-            <span className="uppercase tracking-wider">Loading details</span>
-            <span className="text-foreground/80 tabular-nums">{Math.round(progress)}%</span>
-          </div>
-          <div className="h-1 w-full rounded-full bg-muted/40 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-200 ease-out"
-              style={{ width: `${progress}%`, boxShadow: '0 0 8px hsl(var(--primary) / 0.6)' }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Hero backdrop */}
-      <div className="relative h-[58vh] min-h-[360px] w-full overflow-hidden">
+      {/* Cinematic backdrop */}
+      <div className="absolute inset-0">
         {backdrop ? (
-          <div
-            className="absolute inset-0 bg-cover bg-center scale-110 blur-2xl opacity-40 animate-pulse"
-            style={{ backgroundImage: `url(${backdrop})` }}
-          />
+          <>
+            <div
+              className="absolute inset-0 bg-cover bg-center scale-110"
+              style={{
+                backgroundImage: `url(${backdrop})`,
+                filter: 'blur(28px) saturate(1.2) brightness(0.55)',
+                animation: 'kenburns 12s ease-in-out infinite alternate',
+              }}
+            />
+          </>
         ) : (
-          <div className="absolute inset-0 bg-muted/40 animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-br from-card via-background to-card animate-pulse" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/40 to-background" />
+        {/* Vignette + brand wash */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/40 to-background" />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse at center, transparent 30%, hsl(var(--background)) 95%), radial-gradient(circle at 30% 20%, hsl(var(--primary) / 0.18), transparent 50%)',
+          }}
+        />
+        {/* Subtle grid */}
+        <div
+          className="absolute inset-0 opacity-[0.05] pointer-events-none"
+          style={{
+            backgroundImage:
+              'linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)',
+            backgroundSize: '64px 64px',
+            maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 80%)',
+          }}
+        />
+      </div>
 
-        {/* Hero content skeleton */}
-        <div className="relative z-10 h-full max-w-6xl mx-auto px-4 sm:px-6 flex items-end pb-10">
-          <div className="flex gap-5 w-full">
-            {/* Poster */}
-            <div className="hidden sm:block h-56 w-40 rounded-xl bg-muted/60 animate-pulse shrink-0 ring-1 ring-border/40" />
+      {/* Top scan lines */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
 
-            <div className="flex-1 space-y-3">
-              <div className="h-3 w-24 rounded-full bg-muted/60 animate-pulse" />
-              <div className="h-8 sm:h-10 w-3/4 rounded-lg bg-muted/70 animate-pulse" />
-              <div className="h-4 w-1/2 rounded-md bg-muted/50 animate-pulse" />
-              <div className="flex gap-2 pt-2">
-                {[0, 1, 2, 3].map((i) => (
-                  <div key={i} className="h-6 w-16 rounded-full bg-muted/50 animate-pulse" />
-                ))}
-              </div>
-              <div className="flex gap-3 pt-3">
-                <div className="h-10 w-32 rounded-md bg-primary/40 animate-pulse" />
-                <div className="h-10 w-10 rounded-md bg-muted/50 animate-pulse" />
-                <div className="h-10 w-10 rounded-md bg-muted/50 animate-pulse" />
-              </div>
+      {/* Center cluster */}
+      <div className="relative z-10 h-full w-full flex items-center justify-center px-6">
+        <div className="w-full max-w-md flex flex-col items-center gap-7 text-center">
+          {/* Orbital loader */}
+          <div className="relative w-28 h-28 flex items-center justify-center">
+            <svg
+              className="absolute inset-0 w-full h-full"
+              viewBox="0 0 120 120"
+              style={{ animation: 'spin 5s linear infinite' }}
+            >
+              <circle
+                cx="60"
+                cy="60"
+                r="56"
+                fill="none"
+                stroke="hsl(var(--primary))"
+                strokeWidth="1.5"
+                strokeDasharray="4 8"
+                opacity="0.5"
+              />
+            </svg>
+            <svg
+              className="absolute inset-0 w-full h-full"
+              viewBox="0 0 120 120"
+              style={{ animation: 'spin 2.4s cubic-bezier(0.4,0,0.6,1) infinite' }}
+            >
+              <circle
+                cx="60"
+                cy="60"
+                r="48"
+                fill="none"
+                stroke="hsl(var(--primary))"
+                strokeWidth="2.5"
+                strokeDasharray="60 240"
+                strokeLinecap="round"
+                style={{ filter: 'drop-shadow(0 0 6px hsl(var(--primary) / 0.7))' }}
+              />
+            </svg>
+            <span className="absolute inset-6 rounded-full border border-primary/30 animate-ping" />
+            <div
+              className="relative w-14 h-14 rounded-2xl flex items-center justify-center"
+              style={{
+                background:
+                  'linear-gradient(135deg, hsl(var(--primary) / 0.4), hsl(330 80% 55% / 0.4))',
+                boxShadow: '0 0 40px hsl(var(--primary) / 0.55)',
+              }}
+            >
+              <span className="text-2xl drop-shadow">🎬</span>
+            </div>
+          </div>
+
+          {/* Title block */}
+          <div className="space-y-2">
+            <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-primary">
+              Now loading
+            </p>
+            <h2 className="text-xl sm:text-2xl font-extrabold leading-tight max-w-sm mx-auto line-clamp-2">
+              {title || 'Preparing your stream'}
+            </h2>
+            <p className="text-[11px] text-muted-foreground font-semibold tracking-wider uppercase flex items-center justify-center gap-2">
+              <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+              {currentStage.label}
+              <span
+                className="w-1 h-1 rounded-full bg-primary animate-pulse"
+                style={{ animationDelay: '0.3s' }}
+              />
+            </p>
+          </div>
+
+          {/* Progress bar */}
+          <div className="w-full space-y-2">
+            <div
+              className="relative h-1.5 w-full rounded-full overflow-hidden border border-border/40"
+              style={{ background: 'hsl(var(--card) / 0.6)' }}
+            >
+              <div
+                className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-200 ease-out"
+                style={{
+                  width: `${progress}%`,
+                  background:
+                    'linear-gradient(90deg, hsl(var(--primary)), hsl(330 85% 60%), hsl(var(--primary)))',
+                  backgroundSize: '200% 100%',
+                  animation: 'shimmer-bar 2s linear infinite',
+                  boxShadow: '0 0 12px hsl(var(--primary) / 0.7)',
+                }}
+              />
+              <div
+                className="absolute inset-y-0 w-1/3 pointer-events-none"
+                style={{
+                  background:
+                    'linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.3), transparent)',
+                  animation: 'sweep 1.6s ease-in-out infinite',
+                }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground font-semibold tabular-nums">
+              <span className="text-foreground/90">{Math.round(progress)}%</span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_hsl(142_72%_45%)]" />
+                4K · H.Savi
+              </span>
+            </div>
+          </div>
+
+          {/* Episode skeleton rail */}
+          <div className="w-full pt-2">
+            <div className="flex gap-2 overflow-hidden justify-center">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="h-14 w-24 rounded-md bg-card/50 border border-border/30 animate-pulse shrink-0"
+                  style={{ animationDelay: `${i * 120}ms` }}
+                />
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Body skeleton */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* Synopsis lines */}
-        <div className="space-y-2">
-          <div className="h-3 w-full rounded-full bg-muted/50 animate-pulse" />
-          <div className="h-3 w-11/12 rounded-full bg-muted/50 animate-pulse" />
-          <div className="h-3 w-9/12 rounded-full bg-muted/50 animate-pulse" />
-        </div>
-
-        {/* Episodes header */}
-        <div className="flex items-center justify-between pt-2">
-          <div className="h-5 w-32 rounded-md bg-muted/60 animate-pulse" />
-          <div className="h-8 w-24 rounded-md bg-muted/40 animate-pulse" />
-        </div>
-
-        {/* Episode thumbnails row */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          {[...Array(10)].map((_, i) => (
-            <div key={i} className="space-y-2">
-              <div className="aspect-video w-full rounded-lg bg-muted/60 animate-pulse" />
-              <div className="h-3 w-3/4 rounded-md bg-muted/50 animate-pulse" />
-              <div className="h-2.5 w-1/2 rounded-md bg-muted/40 animate-pulse" />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Subtle shimmer sweep */}
-      <div
-        className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_2.2s_infinite] bg-gradient-to-r from-transparent via-white/[0.04] to-transparent"
-        style={{ width: '50%' }}
-      />
-      <style>{`@keyframes shimmer { 0%{transform:translateX(-100%);} 100%{transform:translateX(300%);} }`}</style>
+      <style>{`
+        @keyframes shimmer-bar { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+        @keyframes sweep { 0%{transform:translateX(-100%)} 100%{transform:translateX(400%)} }
+        @keyframes kenburns { 0%{transform:scale(1.1) translate(0,0)} 100%{transform:scale(1.18) translate(-1.5%, -1%)} }
+      `}</style>
     </div>
   );
 }
