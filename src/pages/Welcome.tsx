@@ -1015,72 +1015,169 @@ export default function Welcome() {
         </div>
       )}
 
-      {/* Realistic launch loading overlay — shown when user clicks "Start Watching" */}
+      {/* Cinematic launch loader — shown when user clicks "Start Watching" */}
       {isLaunching && (
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-background/95 backdrop-blur-xl animate-fade-in"
+          className="fixed inset-0 z-[200] flex items-center justify-center overflow-hidden animate-fade-in"
           role="dialog"
           aria-modal="true"
           aria-label="Loading AnimeSavi"
+          style={{
+            background:
+              'radial-gradient(ellipse at top, hsl(var(--primary) / 0.18), transparent 55%), radial-gradient(ellipse at bottom, hsl(330 80% 50% / 0.12), transparent 55%), hsl(var(--background))',
+          }}
         >
-          {/* Ambient glow */}
+          {/* Animated grid backdrop */}
           <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.18) 0%, transparent 60%)' }}
+            className="absolute inset-0 opacity-[0.07] pointer-events-none"
+            style={{
+              backgroundImage:
+                'linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)',
+              backgroundSize: '48px 48px',
+              maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 75%)',
+            }}
           />
-          <div className="relative w-full max-w-md mx-auto px-6 flex flex-col items-center gap-7 text-center">
-            {/* Logo with pulse rings */}
-            <div className="relative w-24 h-24 flex items-center justify-center">
-              <span className="absolute inset-0 rounded-3xl border-2 border-primary/40 animate-ping" />
-              <span className="absolute inset-2 rounded-3xl border border-primary/30 animate-pulse" />
+
+          {/* Floating orbs */}
+          <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full blur-3xl bg-primary/25 animate-pulse pointer-events-none" />
+          <div
+            className="absolute bottom-1/4 right-1/4 w-72 h-72 rounded-full blur-3xl bg-fuchsia-500/20 animate-pulse pointer-events-none"
+            style={{ animationDelay: '0.8s' }}
+          />
+
+          {/* Top scan line */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent opacity-60" />
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent opacity-60" />
+
+          <div className="relative w-full max-w-md mx-auto px-6 flex flex-col items-center gap-8 text-center">
+            {/* Orbital logo */}
+            <div className="relative w-32 h-32 flex items-center justify-center">
+              {/* Outer rotating ring */}
+              <svg
+                className="absolute inset-0 w-full h-full"
+                viewBox="0 0 120 120"
+                style={{ animation: 'spin 6s linear infinite' }}
+              >
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="56"
+                  fill="none"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth="1.5"
+                  strokeDasharray="6 10"
+                  opacity="0.55"
+                />
+              </svg>
+              {/* Inner counter-rotating ring */}
+              <svg
+                className="absolute inset-2 w-[calc(100%-1rem)] h-[calc(100%-1rem)]"
+                viewBox="0 0 120 120"
+                style={{ animation: 'spin 4s linear infinite reverse' }}
+              >
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  fill="none"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth="2"
+                  strokeDasharray="80 220"
+                  strokeLinecap="round"
+                />
+              </svg>
+              {/* Pulse halos */}
+              <span className="absolute inset-4 rounded-3xl border border-primary/30 animate-ping" />
+              {/* Logo core */}
               <div
                 className="relative w-20 h-20 rounded-3xl flex items-center justify-center overflow-hidden"
                 style={{
-                  background: 'linear-gradient(135deg, hsl(var(--primary) / 0.25), hsl(var(--accent)))',
-                  boxShadow: '0 0 60px hsl(var(--primary) / 0.5)',
+                  background:
+                    'linear-gradient(135deg, hsl(var(--primary) / 0.35), hsl(330 80% 55% / 0.4))',
+                  boxShadow:
+                    '0 0 80px hsl(var(--primary) / 0.55), inset 0 1px 0 hsl(0 0% 100% / 0.25)',
                 }}
               >
-                <img src={logo} alt="AnimeSavi" className="w-12 h-12 object-contain" />
+                <img src={logo} alt="AnimeSavi" className="w-12 h-12 object-contain drop-shadow-lg" />
               </div>
             </div>
 
             {/* Title */}
-            <div className="space-y-1.5">
-              <h2 className="text-2xl font-extrabold tracking-tight">
-                <span className="text-primary">Anime</span>
-                <span className="text-foreground">Savi</span>
+            <div className="space-y-2">
+              <h2 className="text-3xl font-extrabold tracking-tight">
+                <span
+                  className="bg-gradient-to-r from-primary via-rose-400 to-fuchsia-500 bg-clip-text text-transparent"
+                  style={{ backgroundSize: '200% 100%', animation: 'shimmer-text 3s linear infinite' }}
+                >
+                  AnimeSavi
+                </span>
               </h2>
-              <p className="text-xs text-muted-foreground font-medium tracking-wide uppercase">
+              <p className="text-[11px] text-muted-foreground font-semibold tracking-[0.25em] uppercase flex items-center justify-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
                 {launchStage}
+                <span className="w-1 h-1 rounded-full bg-primary animate-pulse" style={{ animationDelay: '0.3s' }} />
               </p>
             </div>
 
-            {/* Progress bar */}
-            <div className="w-full space-y-2">
-              <div className="h-1.5 w-full rounded-full bg-card/80 overflow-hidden border border-border/30">
+            {/* Progress bar — premium */}
+            <div className="w-full space-y-2.5">
+              <div
+                className="relative h-2 w-full rounded-full overflow-hidden border border-border/40"
+                style={{ background: 'hsl(var(--card) / 0.6)' }}
+              >
                 <div
-                  className="h-full rounded-full transition-[width] duration-150 ease-out"
+                  className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-200 ease-out"
                   style={{
                     width: `${launchProgress}%`,
-                    background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.7))',
-                    boxShadow: '0 0 12px hsl(var(--primary) / 0.6)',
+                    background:
+                      'linear-gradient(90deg, hsl(var(--primary)), hsl(330 85% 60%), hsl(var(--primary)))',
+                    backgroundSize: '200% 100%',
+                    animation: 'shimmer-text 2s linear infinite',
+                    boxShadow: '0 0 16px hsl(var(--primary) / 0.7)',
+                  }}
+                />
+                {/* Sweep highlight */}
+                <div
+                  className="absolute inset-y-0 w-1/3 pointer-events-none"
+                  style={{
+                    background:
+                      'linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.35), transparent)',
+                    animation: 'sweep 1.6s ease-in-out infinite',
                   }}
                 />
               </div>
-              <div className="flex items-center justify-between text-[10px] text-muted-foreground font-medium tabular-nums">
-                <span>{Math.floor(launchProgress)}%</span>
-                <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground font-semibold tabular-nums">
+                <span className="text-foreground/90">{Math.floor(launchProgress)}%</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_hsl(142_72%_45%)]" />
                   H.Savi · 4K Ready
                 </span>
               </div>
             </div>
 
+            {/* Feature pills */}
+            <div className="flex items-center gap-2 flex-wrap justify-center">
+              {['Ad-free', 'Hindi DUB', 'Offline', 'No Login'].map((label, i) => (
+                <span
+                  key={label}
+                  className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-border/40 bg-card/50 backdrop-blur animate-fade-in"
+                  style={{ animationDelay: `${i * 120}ms` }}
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+
             {/* Tip */}
             <p className="text-[11px] text-muted-foreground/70 max-w-xs leading-relaxed">
-              Tip: Pin AnimeSavi to your home screen for an instant native-app experience.
+              Pin AnimeSavi to your home screen for an instant native-app experience.
             </p>
           </div>
+
+          <style>{`
+            @keyframes shimmer-text { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+            @keyframes sweep { 0%{transform:translateX(-100%)} 100%{transform:translateX(400%)} }
+          `}</style>
         </div>
       )}
 
