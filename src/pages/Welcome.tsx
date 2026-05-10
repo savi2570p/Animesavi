@@ -853,7 +853,7 @@ export default function Welcome() {
                 ['Ads & popups', 'Zero', 'Heavy'],
                 ['Offline downloads', '✓ All qualities', '✗ or paid'],
                 ['Watch parties', '✓ Built-in', 'Extension required'],
-                ['Account required', 'Optional', 'Required + paid'],
+                ['Account required', 'Only for token', 'Required + paid'],
                 ['Payments', 'Never', '₹499–999/mo'],
               ].map((row, i) => (
                 <div key={i} className="contents">
