@@ -20,14 +20,14 @@ interface VersionGroup {
   items: ChangelogItem[];
 }
 
-const APP_VERSION = 'v25.1';
+const APP_VERSION = 'v26';
 
-// Fixed download size for v25.1
-const RANDOM_DOWNLOAD_MB = 31.5;
+// Fixed download size for v26
+const RANDOM_DOWNLOAD_MB = 12.3;
 
 const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'v25.1',
+    version: 'v26',
     date: 'Latest',
     highlight: 'Website-only fixes — keyboard ±10s skip on embeds, embed autoplay, reliable server switching, animesavi.com share links, smaller iOS Telegram popup, and a cleaner What\'s New popup.',
     items: [
