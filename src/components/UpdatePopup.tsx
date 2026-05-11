@@ -229,10 +229,10 @@ export function UpdatePopup() {
   /* ── STEP 1: Update Alert ── */
   if (step === 'alert') {
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-lg animate-in fade-in duration-300">
-        <div className="relative w-full max-w-sm mx-4 rounded-2xl border border-purple-600/30 bg-gradient-to-b from-zinc-900/95 to-black/95 shadow-2xl shadow-purple-900/20 p-8 text-center space-y-5 animate-in zoom-in-95 duration-300">
-          <div className="mx-auto w-16 h-16 rounded-full bg-purple-600/15 flex items-center justify-center">
-            <span className="text-3xl">🔥</span>
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-lg animate-in fade-in duration-300 p-3 sm:p-4">
+        <div className="relative w-full max-w-[92vw] sm:max-w-sm rounded-2xl border border-purple-600/30 bg-gradient-to-b from-zinc-900/95 to-black/95 shadow-2xl shadow-purple-900/20 p-4 sm:p-8 text-center space-y-3 sm:space-y-5 animate-in zoom-in-95 duration-300 max-h-[88dvh] overflow-y-auto">
+          <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-purple-600/15 flex items-center justify-center">
+            <span className="text-2xl sm:text-3xl">🔥</span>
           </div>
           <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
             <span className="relative flex h-1.5 w-1.5">
@@ -241,20 +241,20 @@ export function UpdatePopup() {
             </span>
             Update Available • Download Ready
           </div>
-          <h2 className="text-xl font-bold text-white">New Version Ready to Install</h2>
-          <p className="text-sm text-zinc-400">Tap Download to install the latest features and improvements.</p>
+          <h2 className="text-base sm:text-xl font-bold text-white">New Version Ready to Install</h2>
+          <p className="text-xs sm:text-sm text-zinc-400">Tap Download to install the latest features and improvements.</p>
           <span className="inline-block text-[10px] font-mono px-2 py-0.5 rounded bg-purple-600/20 text-purple-400">{APP_VERSION}</span>
 
-          <div className="space-y-1.5 text-left max-h-[30vh] overflow-y-auto pr-1">
+          <div className="space-y-1.5 text-left max-h-[28vh] sm:max-h-[30vh] overflow-y-auto pr-1">
             {VERSION_GROUPS[0].items.map((item) => (
-              <div key={item.title} className="flex items-center gap-2.5 p-2 bg-white/5 rounded-md">
-                <span className="text-sm shrink-0">{item.icon}</span>
+              <div key={item.title} className="flex items-center gap-2 sm:gap-2.5 p-1.5 sm:p-2 bg-white/5 rounded-md">
+                <span className="text-xs sm:text-sm shrink-0">{item.icon}</span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <h4 className="text-xs font-semibold text-white leading-tight truncate">{item.title}</h4>
+                    <h4 className="text-[11px] sm:text-xs font-semibold text-white leading-tight truncate">{item.title}</h4>
                     <span className={`shrink-0 rounded border px-1 py-px text-[8px] font-bold uppercase tracking-wider ${BADGE_STYLES[item.badge]}`}>{item.badge}</span>
                   </div>
-                  <p className="text-[10px] text-zinc-500 leading-tight">{item.desc}</p>
+                  <p className="text-[10px] text-zinc-500 leading-tight line-clamp-2">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -262,7 +262,7 @@ export function UpdatePopup() {
 
           <button
             onClick={handleDownload}
-            className="w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-purple-700 to-purple-500 hover:from-purple-600 hover:to-purple-400 transition-all shadow-lg shadow-purple-900/30"
+            className="w-full py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-purple-700 to-purple-500 hover:from-purple-600 hover:to-purple-400 transition-all shadow-lg shadow-purple-900/30"
           >
             Download
           </button>

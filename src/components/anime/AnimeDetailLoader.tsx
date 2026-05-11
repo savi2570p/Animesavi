@@ -31,14 +31,24 @@ export function AnimeDetailLoader({ isReady, backdrop, title }: AnimeDetailLoade
       const t = setTimeout(() => setHidden(true), 380);
       return () => clearTimeout(t);
     }
+    let stallUntil = 0;
     const id = window.setInterval(() => {
       setProgress((p) => {
-        if (p >= 92) return p;
-        const remaining = 92 - p;
-        const step = Math.max(0.7, remaining * 0.09);
-        return Math.min(92, p + step);
+        if (p >= 94) return p;
+        // Occasional micro-stalls to feel like real network activity
+        if (Date.now() < stallUntil) return p;
+        if (Math.random() < 0.06 && p > 18) {
+          stallUntil = Date.now() + 400 + Math.random() * 600;
+          return p;
+        }
+        // Variable step: faster early, slower past 70%, with jitter
+        const remaining = 94 - p;
+        const ease = p < 30 ? 0.18 : p < 70 ? 0.11 : 0.05;
+        const jitter = (Math.random() - 0.3) * 0.8;
+        const step = Math.max(0.25, remaining * ease + jitter);
+        return Math.min(94, p + step);
       });
-    }, 160);
+    }, 180);
     return () => window.clearInterval(id);
   }, [isReady]);
 
