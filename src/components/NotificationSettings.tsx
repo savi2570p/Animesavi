@@ -58,7 +58,16 @@ export function NotificationSettings() {
           </div>
           
           {permission === 'granted' ? (
-            <Switch checked disabled />
+            <div className="flex items-center gap-2">
+              {isSubscribed && (
+                <Button size="sm" variant="outline" onClick={sendTestNotification}>Test</Button>
+              )}
+              {!isSubscribed && (
+                <Button size="sm" onClick={requestPermission} className="gap-2">
+                  <Bell className="h-4 w-4" /> Subscribe
+                </Button>
+              )}
+            </div>
           ) : permission === 'denied' ? (
             <Button variant="outline" size="sm" disabled>
               Blocked
@@ -70,6 +79,12 @@ export function NotificationSettings() {
             </Button>
           )}
         </div>
+
+        {isIOS && !isStandalone && (
+          <p className="text-xs text-muted-foreground bg-muted/40 p-3 rounded-lg border border-border/40">
+            <strong>iPhone tip:</strong> Web Push only works on iOS when AnimeSavi is added to your Home Screen. Tap Share → Add to Home Screen, then open it from the icon to enable notifications.
+          </p>
+        )}
 
         {permission === 'granted' && (
           <>
