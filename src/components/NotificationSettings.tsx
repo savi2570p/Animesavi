@@ -7,7 +7,9 @@ import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { Separator } from '@/components/ui/separator';
 
 export function NotificationSettings() {
-  const { isSupported, permission, settings, updateSettings, requestPermission } = usePushNotifications();
+  const { isSupported, permission, settings, isSubscribed, updateSettings, requestPermission, sendTestNotification } = usePushNotifications();
+  const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone = typeof window !== 'undefined' && ((window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator as any).standalone === true);
 
   if (!isSupported) {
     return (
