@@ -441,6 +441,48 @@ export type Database = {
           },
         ]
       }
+      notification_queue: {
+        Row: {
+          anime_id: string | null
+          body: string
+          created_at: string
+          delivered_via: string
+          episode_id: string | null
+          id: string
+          image_url: string | null
+          is_read: boolean
+          link: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          anime_id?: string | null
+          body: string
+          created_at?: string
+          delivered_via?: string
+          episode_id?: string | null
+          id?: string
+          image_url?: string | null
+          is_read?: boolean
+          link?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          anime_id?: string | null
+          body?: string
+          created_at?: string
+          delivered_via?: string
+          episode_id?: string | null
+          id?: string
+          image_url?: string | null
+          is_read?: boolean
+          link?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -462,6 +504,39 @@ export type Database = {
           id?: string
           updated_at?: string
           username?: string | null
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -509,6 +584,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sent_push_log: {
+        Row: {
+          episode_id: string
+          id: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          episode_id: string
+          id?: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          episode_id?: string
+          id?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       shadow_flix_content: {
         Row: {
