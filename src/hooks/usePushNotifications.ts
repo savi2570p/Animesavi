@@ -3,10 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-const NOTIFICATION_PERMISSION_KEY = 'push_notification_permission';
-const LAST_CHECK_KEY = 'last_episode_check';
 const NOTIFICATION_SETTINGS_KEY = 'notification_settings';
-const CHECK_INTERVAL = 15 * 60 * 1000; // 15 minutes
+const SW_PATH = '/push-sw.js';
 
 interface NotificationSettings {
   newEpisodes: boolean;
@@ -17,306 +15,210 @@ interface NotificationSettings {
 const DEFAULT_SETTINGS: NotificationSettings = {
   newEpisodes: true,
   favorites: true,
-  sound: true
+  sound: true,
 };
+
+function urlBase64ToUint8Array(base64: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64.length % 4)) % 4);
+  const b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(b64);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
+function arrayBufferToBase64(buf: ArrayBuffer | null): string {
+  if (!buf) return '';
+  const bytes = new Uint8Array(buf);
+  let bin = '';
+  for (let i = 0; i < bytes.byteLength; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
 
 export function usePushNotifications() {
   const { user } = useAuth();
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [isSupported, setIsSupported] = useState(false);
-  const [isChecking, setIsChecking] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
   const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_SETTINGS);
-  const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const vapidKeyRef = useRef<string | null>(null);
 
-  // Load settings from localStorage
+  // Load saved settings
   useEffect(() => {
     try {
-      const savedSettings = localStorage.getItem(NOTIFICATION_SETTINGS_KEY);
-      if (savedSettings) {
-        setSettings(JSON.parse(savedSettings));
-      }
-    } catch (error) {
-      console.error('Error loading notification settings:', error);
-    }
+      const s = localStorage.getItem(NOTIFICATION_SETTINGS_KEY);
+      if (s) setSettings(JSON.parse(s));
+    } catch {}
   }, []);
 
-  // Check if notifications are supported
+  // Detect support — push + SW + permissions
   useEffect(() => {
-    if ('Notification' in window) {
-      setIsSupported(true);
-      setPermission(Notification.permission);
-    }
-
-    return () => {
-      if (checkIntervalRef.current) {
-        clearInterval(checkIntervalRef.current);
-      }
-    };
+    const supported =
+      typeof window !== 'undefined' &&
+      'Notification' in window &&
+      'serviceWorker' in navigator &&
+      'PushManager' in window;
+    setIsSupported(supported);
+    if (supported) setPermission(Notification.permission);
   }, []);
 
-  // Save settings to localStorage
-  const updateSettings = useCallback((newSettings: Partial<NotificationSettings>) => {
-    setSettings(prev => {
-      const updated = { ...prev, ...newSettings };
-      localStorage.setItem(NOTIFICATION_SETTINGS_KEY, JSON.stringify(updated));
-      return updated;
+  // Check existing subscription
+  useEffect(() => {
+    if (!isSupported) return;
+    (async () => {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration(SW_PATH);
+        const sub = await reg?.pushManager.getSubscription();
+        setIsSubscribed(!!sub);
+      } catch {}
+    })();
+  }, [isSupported, user?.id]);
+
+  const updateSettings = useCallback((next: Partial<NotificationSettings>) => {
+    setSettings((prev) => {
+      const merged = { ...prev, ...next };
+      localStorage.setItem(NOTIFICATION_SETTINGS_KEY, JSON.stringify(merged));
+      return merged;
     });
   }, []);
 
-  const requestPermission = useCallback(async () => {
+  const fetchVapidKey = useCallback(async (): Promise<string | null> => {
+    if (vapidKeyRef.current) return vapidKeyRef.current;
+    try {
+      const { data, error } = await supabase.functions.invoke('get-vapid-public-key');
+      if (error || !data?.publicKey) {
+        console.log('[push] failed to fetch VAPID key', error);
+        return null;
+      }
+      vapidKeyRef.current = data.publicKey as string;
+      return vapidKeyRef.current;
+    } catch (e) {
+      console.log('[push] VAPID fetch error', e);
+      return null;
+    }
+  }, []);
+
+  const subscribe = useCallback(async (): Promise<boolean> => {
     if (!isSupported) {
       toast.error('Push notifications are not supported on this device');
       return false;
     }
+    if (!user) {
+      toast.error('Please sign in to enable notifications');
+      return false;
+    }
 
     try {
-      const result = await Notification.requestPermission();
-      setPermission(result);
-      localStorage.setItem(NOTIFICATION_PERMISSION_KEY, result);
-      
-      if (result === 'granted') {
-        toast.success('Push notifications enabled! You\'ll be notified of new episodes.');
-        checkNewEpisodes();
-        return true;
-      } else if (result === 'denied') {
-        toast.error('Push notifications were denied. You can enable them in browser settings.');
+      // Register the dedicated push service worker
+      const reg = await navigator.serviceWorker.register(SW_PATH, { scope: '/' });
+      await navigator.serviceWorker.ready;
+
+      const vapid = await fetchVapidKey();
+      if (!vapid) {
+        toast.error('Notification service is not configured yet.');
         return false;
       }
-      return false;
-    } catch (error) {
-      console.error('Error requesting notification permission:', error);
-      toast.error('Failed to request notification permission');
-      return false;
-    }
-  }, [isSupported]);
 
-  const sendNotification = useCallback((title: string, options?: NotificationOptions) => {
-    if (permission !== 'granted') return;
-
-    try {
-      if (document.hidden) {
-        const notification = new Notification(title, {
-          icon: 'https://storage.googleapis.com/gpt-engineer-file-uploads/9zI1yCNlGfZymWSADZuYy9FGrtQ2/uploads/1768537236542-logo.png',
-          badge: 'https://storage.googleapis.com/gpt-engineer-file-uploads/9zI1yCNlGfZymWSADZuYy9FGrtQ2/uploads/1768537236542-logo.png',
-          requireInteraction: true,
-          silent: !settings.sound,
-          ...options,
-        });
-
-        notification.onclick = () => {
-          window.focus();
-          if (options?.data?.url) {
-            window.location.href = options.data.url;
-          }
-          notification.close();
-        };
-
-        setTimeout(() => notification.close(), 10000);
-      } else {
-        toast.info(`${title}${options?.body ? `: ${options.body}` : ''}`, {
-          action: options?.data?.url ? {
-            label: 'Watch Now',
-            onClick: () => window.location.href = options.data.url,
-          } : undefined,
-          duration: 8000,
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapid),
         });
       }
-    } catch (error) {
-      console.error('Error sending notification:', error);
-    }
-  }, [permission, settings.sound]);
 
-  const checkNewEpisodes = useCallback(async () => {
-    if (!user || permission !== 'granted' || isChecking || !settings.newEpisodes) return;
+      const json: any = sub.toJSON();
+      const endpoint = sub.endpoint;
+      const p256dh = json?.keys?.p256dh || arrayBufferToBase64(sub.getKey('p256dh'));
+      const auth = json?.keys?.auth || arrayBufferToBase64(sub.getKey('auth'));
 
-    setIsChecking(true);
+      const { error } = await supabase
+        .from('push_subscriptions')
+        .upsert(
+          {
+            user_id: user.id,
+            endpoint,
+            p256dh,
+            auth,
+            user_agent: navigator.userAgent,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'endpoint' }
+        );
 
-    try {
-      const lastCheck = localStorage.getItem(LAST_CHECK_KEY);
-      const checkTime = lastCheck ? new Date(lastCheck) : new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-      if (!settings.favorites) {
-        // Check all new episodes if favorites notifications are disabled
-        const { data: newEpisodes } = await supabase
-          .from('episodes')
-          .select(`
-            id,
-            title,
-            episode_number,
-            created_at,
-            season:season_id (
-              anime:anime_id (
-                id,
-                title
-              )
-            )
-          `)
-          .gt('created_at', checkTime.toISOString())
-          .order('created_at', { ascending: false })
-          .limit(5);
-
-        if (newEpisodes && newEpisodes.length > 0) {
-          newEpisodes.slice(0, 3).forEach((episode: any, i: number) => {
-            setTimeout(() => {
-              sendNotification(`New Episode: ${episode.season?.anime?.title}`, {
-                body: `Episode ${episode.episode_number}: ${episode.title}`,
-                tag: `episode-${episode.id}`,
-                data: { url: `/watch/${episode.id}` },
-              });
-            }, i * 1500);
-          });
-        }
-      } else {
-        // Get user's favorite anime IDs
-        const { data: favorites } = await supabase
-          .from('user_favorites')
-          .select('anime_id')
-          .eq('user_id', user.id);
-
-        if (!favorites || favorites.length === 0) {
-          setIsChecking(false);
-          return;
-        }
-
-        const animeIds = favorites.map(f => f.anime_id);
-
-        const { data: newEpisodes } = await supabase
-          .from('episodes')
-          .select(`
-            id,
-            title,
-            episode_number,
-            created_at,
-            season:season_id (
-              anime:anime_id (
-                id,
-                title
-              )
-            )
-          `)
-          .gt('created_at', checkTime.toISOString())
-          .order('created_at', { ascending: false })
-          .limit(10);
-
-        if (newEpisodes && newEpisodes.length > 0) {
-          const relevantEpisodes = newEpisodes.filter((ep: any) => 
-            ep.season?.anime && animeIds.includes(ep.season.anime.id)
-          );
-
-          relevantEpisodes.slice(0, 3).forEach((episode: any, i: number) => {
-            setTimeout(() => {
-              sendNotification(`New Episode: ${episode.season?.anime?.title}`, {
-                body: `Episode ${episode.episode_number}: ${episode.title}`,
-                tag: `episode-${episode.id}`,
-                data: { url: `/watch/${episode.id}` },
-              });
-            }, i * 1500);
-          });
-        }
+      if (error) {
+        console.log('[push] save failed', error);
+        toast.error('Could not save your device. Please try again.');
+        return false;
       }
 
-      localStorage.setItem(LAST_CHECK_KEY, new Date().toISOString());
-    } catch (error) {
-      console.error('Error checking new episodes:', error);
-    } finally {
-      setIsChecking(false);
+      console.log('[push] subscribed & saved', endpoint.slice(-24));
+      setIsSubscribed(true);
+      return true;
+    } catch (e: any) {
+      console.log('[push] subscribe error', e);
+      toast.error(e?.message || 'Failed to subscribe to push notifications');
+      return false;
     }
-  }, [user, permission, sendNotification, isChecking, settings]);
+  }, [isSupported, user, fetchVapidKey]);
 
-  // Set up periodic checking
-  useEffect(() => {
-    if (permission === 'granted' && user && settings.newEpisodes) {
-      checkNewEpisodes();
-      checkIntervalRef.current = setInterval(checkNewEpisodes, CHECK_INTERVAL);
-      
-      const handleVisibilityChange = () => {
-        if (!document.hidden) {
-          checkNewEpisodes();
-        }
-      };
-      
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-      
-      return () => {
-        if (checkIntervalRef.current) {
-          clearInterval(checkIntervalRef.current);
-        }
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-      };
+  const requestPermission = useCallback(async (): Promise<boolean> => {
+    if (!isSupported) {
+      toast.error('Push notifications are not supported on this device');
+      return false;
     }
-  }, [permission, user, checkNewEpisodes, settings.newEpisodes]);
+    try {
+      // iOS Safari: only works as installed PWA
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator as any).standalone === true;
+      if (isIOS && !isStandalone) {
+        toast.error('On iPhone, add AnimeSavi to your Home Screen first to enable push notifications.');
+        return false;
+      }
 
-  // Real-time subscription for instant notifications
-  useEffect(() => {
-    if (permission !== 'granted' || !user || !settings.newEpisodes) return;
+      const result = await Notification.requestPermission();
+      setPermission(result);
+      if (result === 'granted') {
+        console.log('[push] permission granted');
+        const ok = await subscribe();
+        if (ok) toast.success("Notifications enabled — you'll be alerted on new episodes.");
+        return ok;
+      }
+      if (result === 'denied') {
+        console.log('[push] permission denied');
+        toast.error('Notifications were blocked. You can re-enable them from your browser site settings.');
+      }
+      return false;
+    } catch (e) {
+      console.log('[push] permission error', e);
+      return false;
+    }
+  }, [isSupported, subscribe]);
 
-    const channel = supabase
-      .channel('new-episodes-notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'episodes',
-        },
-        async (payload) => {
-          if (!settings.favorites) {
-            const episode = payload.new;
-            const { data: season } = await supabase
-              .from('seasons')
-              .select('anime:anime_id(id, title)')
-              .eq('id', episode.season_id)
-              .single();
-
-            if (season?.anime) {
-              sendNotification(`New Episode: ${(season.anime as any).title}`, {
-                body: `Episode ${episode.episode_number}: ${episode.title}`,
-                tag: `episode-${episode.id}`,
-                data: { url: `/watch/${episode.id}` },
-              });
-            }
-            return;
-          }
-
-          const { data: favorites } = await supabase
-            .from('user_favorites')
-            .select('anime_id')
-            .eq('user_id', user.id);
-
-          if (!favorites) return;
-
-          const episode = payload.new;
-          
-          const { data: season } = await supabase
-            .from('seasons')
-            .select('anime:anime_id(id, title)')
-            .eq('id', episode.season_id)
-            .single();
-
-          if (season?.anime && favorites.some(f => f.anime_id === (season.anime as any).id)) {
-            sendNotification(`New Episode: ${(season.anime as any).title}`, {
-              body: `Episode ${episode.episode_number}: ${episode.title}`,
-              tag: `episode-${episode.id}`,
-              data: { url: `/watch/${episode.id}` },
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [permission, user, sendNotification, settings]);
+  const sendTestNotification = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('send-test-push');
+      if (error || data?.error) {
+        toast.error(data?.error || 'Failed to send test');
+        return;
+      }
+      toast.success(`Test sent to ${data.sent} device(s).`);
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to send test');
+    }
+  }, []);
 
   return {
     isSupported,
     permission,
+    isSubscribed,
     settings,
     updateSettings,
     requestPermission,
-    sendNotification,
-    checkNewEpisodes,
-    isChecking,
+    sendTestNotification,
+    // Legacy compatibility (no-op): in-app polling replaced by DB push
+    sendNotification: () => {},
+    checkNewEpisodes: () => {},
+    isChecking: false,
   };
 }
