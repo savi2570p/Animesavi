@@ -99,6 +99,9 @@ export default function MinimalEmbedPage() {
   // Regular /embed/ links remain limited to the allowlisted hosts.
   const [accessAllowed] = useState<boolean>(() => isShadowTheme || checkEmbedAccess());
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [captionsUrl, setCaptionsUrl] = useState<string | null>(null);
+  const [audioLanguage, setAudioLanguage] = useState<string>('original');
+  const [ccEnabled, setCcEnabled] = useState(false);
   const [title, setTitle] = useState<string>('');
   const [animeTitle, setAnimeTitle] = useState<string>('');
   const [seasonNum, setSeasonNum] = useState<number>(1);
@@ -149,7 +152,7 @@ export default function MinimalEmbedPage() {
 
         const { data: ep } = await supabase
           .from('episodes')
-          .select('title, video_url, external_url')
+          .select('title, video_url, external_url, captions_url, audio_language')
           .eq('season_id', season.id)
           .eq('episode_number', episodeNumber)
           .maybeSingle();
@@ -176,6 +179,11 @@ export default function MinimalEmbedPage() {
         setCurrentEpisodeNum(episodeNumber);
         setEpisodeList(siblings);
         setVideoUrl(url);
+        setCaptionsUrl(ep.captions_url || null);
+        const lang = (ep.audio_language || 'original').toLowerCase();
+        setAudioLanguage(lang);
+        // Auto-CC: Japanese audio defaults to subs ON; Hindi defaults to OFF; others ON if subs exist.
+        setCcEnabled(!!ep.captions_url && lang !== 'hindi' && lang !== 'hi' && lang !== 'hindi-dub');
         setLoading(false);
       } catch (e) {
         if (cancelled) return;
