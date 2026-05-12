@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Hls from 'hls.js';
-import { Play, Pause, Maximize, Minimize, Download, X, List, RotateCcw, RotateCw } from 'lucide-react';
+import { Play, Pause, Maximize, Minimize, Download, X, List, RotateCcw, RotateCw, Subtitles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { extractEmbedSrc, isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 
@@ -462,14 +462,29 @@ export default function MinimalEmbedPage() {
               playsInline
               autoPlay
               preload="auto"
+              crossOrigin={captionsUrl ? 'anonymous' : undefined}
               onClick={togglePlay}
               style={{
                 position: 'absolute', inset: 0,
                 width: '100%', height: '100%',
                 background: '#000', objectFit: 'contain',
+                // Avoid transforms — they break touch hit-test in landscape on iOS/Android.
+                transform: 'translateZ(0)',
+                touchAction: 'manipulation',
               }}
               onError={() => setError('Video cannot be played on this device')}
-            />
+            >
+              {captionsUrl && (
+                <track
+                  key={captionsUrl}
+                  kind="subtitles"
+                  src={captionsUrl}
+                  srcLang={audioLanguage === 'hindi' ? 'hi' : 'en'}
+                  label={audioLanguage === 'hindi' ? 'Hindi' : 'English'}
+                  default={ccEnabled}
+                />
+              )}
+            </video>
 
             {/* Flat custom controls — purple themed, no circular backgrounds. */}
             <div
