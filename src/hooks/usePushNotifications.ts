@@ -195,6 +195,32 @@ export function usePushNotifications() {
     }
   }, [isSupported, subscribe]);
 
+  const unsubscribe = useCallback(async (): Promise<boolean> => {
+    if (!isSupported || !user) return false;
+    try {
+      const reg = await navigator.serviceWorker.getRegistration(SW_PATH);
+      const sub = await reg?.pushManager.getSubscription();
+      const endpoint = sub?.endpoint;
+      if (sub) {
+        try { await sub.unsubscribe(); } catch (e) { console.log('[push] browser unsub failed', e); }
+      }
+      // Delete from DB — by endpoint if we have it, otherwise nuke all for the user.
+      if (endpoint) {
+        await supabase.from('push_subscriptions').delete().eq('endpoint', endpoint);
+      } else {
+        await supabase.from('push_subscriptions').delete().eq('user_id', user.id);
+      }
+      setIsSubscribed(false);
+      console.log('[push] unsubscribed & removed from DB');
+      toast.success('Push notifications turned off on this device.');
+      return true;
+    } catch (e: any) {
+      console.log('[push] unsubscribe error', e);
+      toast.error(e?.message || 'Failed to unsubscribe');
+      return false;
+    }
+  }, [isSupported, user]);
+
   const sendTestNotification = useCallback(async () => {
     try {
       const { data, error } = await supabase.functions.invoke('send-test-push');
@@ -215,6 +241,7 @@ export function usePushNotifications() {
     settings,
     updateSettings,
     requestPermission,
+    unsubscribe,
     sendTestNotification,
     // Legacy compatibility (no-op): in-app polling replaced by DB push
     sendNotification: () => {},

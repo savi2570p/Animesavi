@@ -30,6 +30,8 @@ self.addEventListener('push', (event) => {
     tag: data.tag || 'animesavi-episode',
     renotify: true,
     requireInteraction: false,
+    // Persist the deep-link URL so notificationclick can route to the
+    // exact anime/episode page even after the page is reloaded.
     data: { url: data.url || '/', ...(data.data || {}) },
     vibrate: [80, 40, 80],
   };
@@ -42,11 +44,14 @@ self.addEventListener('notificationclick', (event) => {
   const target = (event.notification.data && event.notification.data.url) || '/';
   event.waitUntil((async () => {
     const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    // Try to focus an existing tab and navigate it directly to the target.
     for (const c of all) {
       try {
         const url = new URL(c.url);
         if (url.origin === self.location.origin) {
           await c.focus();
+          // postMessage so SPA can client-side-route without a hard reload.
+          try { c.postMessage({ type: 'PUSH_NAVIGATE', url: target }); } catch (_) {}
           if ('navigate' in c) {
             try { await c.navigate(target); } catch (_) {}
           }
@@ -54,6 +59,7 @@ self.addEventListener('notificationclick', (event) => {
         }
       } catch (_) {}
     }
+    // No tab open — open a new one straight to the deep link.
     await self.clients.openWindow(target);
   })());
 });

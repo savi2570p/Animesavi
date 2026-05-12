@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Hls from 'hls.js';
-import { Play, Pause, Maximize, Minimize, Download, X, List, RotateCcw, RotateCw } from 'lucide-react';
+import { Play, Pause, Maximize, Minimize, Download, X, List, RotateCcw, RotateCw, Subtitles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { extractEmbedSrc, isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 
@@ -99,6 +99,9 @@ export default function MinimalEmbedPage() {
   // Regular /embed/ links remain limited to the allowlisted hosts.
   const [accessAllowed] = useState<boolean>(() => isShadowTheme || checkEmbedAccess());
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [captionsUrl, setCaptionsUrl] = useState<string | null>(null);
+  const [audioLanguage, setAudioLanguage] = useState<string>('original');
+  const [ccEnabled, setCcEnabled] = useState(false);
   const [title, setTitle] = useState<string>('');
   const [animeTitle, setAnimeTitle] = useState<string>('');
   const [seasonNum, setSeasonNum] = useState<number>(1);
@@ -149,7 +152,7 @@ export default function MinimalEmbedPage() {
 
         const { data: ep } = await supabase
           .from('episodes')
-          .select('title, video_url, external_url')
+          .select('title, video_url, external_url, captions_url, audio_language')
           .eq('season_id', season.id)
           .eq('episode_number', episodeNumber)
           .maybeSingle();
@@ -176,6 +179,11 @@ export default function MinimalEmbedPage() {
         setCurrentEpisodeNum(episodeNumber);
         setEpisodeList(siblings);
         setVideoUrl(url);
+        setCaptionsUrl(ep.captions_url || null);
+        const lang = (ep.audio_language || 'original').toLowerCase();
+        setAudioLanguage(lang);
+        // Auto-CC: Japanese audio defaults to subs ON; Hindi defaults to OFF; others ON if subs exist.
+        setCcEnabled(!!ep.captions_url && lang !== 'hindi' && lang !== 'hi' && lang !== 'hindi-dub');
         setLoading(false);
       } catch (e) {
         if (cancelled) return;
@@ -249,12 +257,42 @@ export default function MinimalEmbedPage() {
     };
   }, [useIframe, videoUrl]);
 
-  // Track fullscreen state.
+  // Track fullscreen state + force layout recalc on orientation change so
+  // touch coordinates stay aligned with the visual controls in landscape.
   useEffect(() => {
     const onFs = () => setIsFullscreen(!!document.fullscreenElement);
+    const onOrient = () => {
+      // Force reflow so 100dvh recomputes against the new viewport
+      const el = containerRef.current;
+      if (el) {
+        el.style.display = 'none';
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        el.offsetHeight;
+        el.style.display = '';
+      }
+    };
     document.addEventListener('fullscreenchange', onFs);
-    return () => document.removeEventListener('fullscreenchange', onFs);
+    window.addEventListener('orientationchange', onOrient);
+    window.addEventListener('resize', onOrient);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFs);
+      window.removeEventListener('orientationchange', onOrient);
+      window.removeEventListener('resize', onOrient);
+    };
   }, []);
+
+  // Apply CC enable/disable to the actual TextTrack once metadata loads
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const apply = () => {
+      const tracks = v.textTracks;
+      for (let i = 0; i < tracks.length; i++) tracks[i].mode = ccEnabled ? 'showing' : 'disabled';
+    };
+    apply();
+    v.addEventListener('loadedmetadata', apply);
+    return () => v.removeEventListener('loadedmetadata', apply);
+  }, [ccEnabled, captionsUrl]);
 
   const togglePlay = useCallback(() => {
     const v = videoRef.current;
@@ -454,40 +492,57 @@ export default function MinimalEmbedPage() {
               playsInline
               autoPlay
               preload="auto"
+              crossOrigin={captionsUrl ? 'anonymous' : undefined}
               onClick={togglePlay}
               style={{
                 position: 'absolute', inset: 0,
                 width: '100%', height: '100%',
                 background: '#000', objectFit: 'contain',
+                // Avoid transforms — they break touch hit-test in landscape on iOS/Android.
+                transform: 'translateZ(0)',
+                touchAction: 'manipulation',
               }}
               onError={() => setError('Video cannot be played on this device')}
-            />
+            >
+              {captionsUrl && (
+                <track
+                  key={captionsUrl}
+                  kind="subtitles"
+                  src={captionsUrl}
+                  srcLang={audioLanguage === 'hindi' ? 'hi' : 'en'}
+                  label={audioLanguage === 'hindi' ? 'Hindi' : 'English'}
+                  default={ccEnabled}
+                />
+              )}
+            </video>
 
             {/* Flat custom controls — purple themed, no circular backgrounds. */}
             <div
               style={{
                 position: 'absolute', left: 0, right: 0, bottom: 0,
-                padding: '40px 16px 14px',
+                padding: 'max(40px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(14px, env(safe-area-inset-bottom, 14px)) max(16px, env(safe-area-inset-left, 0px))',
                 background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)',
                 opacity: showControls || !isPlaying ? 1 : 0,
                 transition: 'opacity 200ms ease',
                 pointerEvents: showControls || !isPlaying ? 'auto' : 'none',
+                touchAction: 'manipulation',
+                zIndex: 5,
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Timeline */}
+              {/* Timeline — wrapper enlarged to 22px for hit-test, visual bar stays 4px */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                 <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 11, fontFamily: 'ui-monospace, monospace', minWidth: 42 }}>
                   {formatTime(currentTime)}
                 </span>
-                <div style={{ position: 'relative', flex: 1, height: 4 }}>
+                <div style={{ position: 'relative', flex: 1, height: 22, display: 'flex', alignItems: 'center', touchAction: 'pan-x' }}>
                   <div style={{
-                    position: 'absolute', inset: 0,
+                    position: 'absolute', left: 0, right: 0, top: '50%', height: 4, transform: 'translateY(-50%)',
                     background: 'rgba(255,255,255,0.25)', borderRadius: 9999,
                   }} />
                   <div style={{
-                    position: 'absolute', top: 0, left: 0, height: '100%',
-                    width: `${progress}%`,
+                    position: 'absolute', top: '50%', left: 0, height: 4,
+                    width: `${progress}%`, transform: 'translateY(-50%)',
                     background: 'hsl(var(--primary))',
                     borderRadius: 9999,
                     boxShadow: '0 0 8px hsl(var(--primary) / 0.6)',
@@ -552,6 +607,24 @@ export default function MinimalEmbedPage() {
                   </button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                  {captionsUrl && (
+                    <button
+                      onClick={() => {
+                        setCcEnabled((v) => {
+                          const next = !v;
+                          const tracks = videoRef.current?.textTracks;
+                          if (tracks) for (let i = 0; i < tracks.length; i++) tracks[i].mode = next ? 'showing' : 'disabled';
+                          return next;
+                        });
+                      }}
+                      aria-label={ccEnabled ? 'Hide captions' : 'Show captions'}
+                      title={ccEnabled ? 'CC On' : 'CC Off'}
+                      className="embed-ctrl-btn"
+                      style={{ opacity: ccEnabled ? 1 : 0.55 }}
+                    >
+                      <Subtitles size={20} />
+                    </button>
+                  )}
                   {!isShadowTheme && (
                     <button
                       onClick={handleDownloadClick}

@@ -26,8 +26,22 @@ const supabase = createClient(
   { auth: { persistSession: false } }
 );
 
+// Shared secret the DB trigger sends. Public callers without it are rejected.
+const WEBHOOK_SECRET = 'whk_8f3c1a92b04e47d6a5e1c7b0d2f8a39c4';
+
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: { ...corsHeaders, 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-secret' } });
+
+  // Reject any caller that isn't the DB trigger.
+  const provided = req.headers.get('x-webhook-secret');
+  if (provided !== WEBHOOK_SECRET) {
+    console.log('[send-episode-push] unauthorized call', { hasHeader: !!provided });
+    return new Response(JSON.stringify({ error: 'unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     const { episode_id } = await req.json();
     if (!episode_id) {
@@ -57,7 +71,8 @@ Deno.serve(async (req) => {
     const animeTitle: string = anime.title;
     const cover: string | null = ep.thumbnail || anime.cover_image || null;
     const epNum: number = ep.episode_number;
-    const link = `/anime/${animeId}`;
+    // Deep link directly to the watch page for this episode so a tap opens the player.
+    const link = `/watch/${episode_id}`;
 
     // Find favorited users
     const { data: favs } = await supabase
