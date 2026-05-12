@@ -257,12 +257,42 @@ export default function MinimalEmbedPage() {
     };
   }, [useIframe, videoUrl]);
 
-  // Track fullscreen state.
+  // Track fullscreen state + force layout recalc on orientation change so
+  // touch coordinates stay aligned with the visual controls in landscape.
   useEffect(() => {
     const onFs = () => setIsFullscreen(!!document.fullscreenElement);
+    const onOrient = () => {
+      // Force reflow so 100dvh recomputes against the new viewport
+      const el = containerRef.current;
+      if (el) {
+        el.style.display = 'none';
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        el.offsetHeight;
+        el.style.display = '';
+      }
+    };
     document.addEventListener('fullscreenchange', onFs);
-    return () => document.removeEventListener('fullscreenchange', onFs);
+    window.addEventListener('orientationchange', onOrient);
+    window.addEventListener('resize', onOrient);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFs);
+      window.removeEventListener('orientationchange', onOrient);
+      window.removeEventListener('resize', onOrient);
+    };
   }, []);
+
+  // Apply CC enable/disable to the actual TextTrack once metadata loads
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const apply = () => {
+      const tracks = v.textTracks;
+      for (let i = 0; i < tracks.length; i++) tracks[i].mode = ccEnabled ? 'showing' : 'disabled';
+    };
+    apply();
+    v.addEventListener('loadedmetadata', apply);
+    return () => v.removeEventListener('loadedmetadata', apply);
+  }, [ccEnabled, captionsUrl]);
 
   const togglePlay = useCallback(() => {
     const v = videoRef.current;
