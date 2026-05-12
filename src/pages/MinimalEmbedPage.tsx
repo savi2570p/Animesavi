@@ -577,6 +577,24 @@ export default function MinimalEmbedPage() {
                   </button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                  {captionsUrl && (
+                    <button
+                      onClick={() => {
+                        setCcEnabled((v) => {
+                          const next = !v;
+                          const tracks = videoRef.current?.textTracks;
+                          if (tracks) for (let i = 0; i < tracks.length; i++) tracks[i].mode = next ? 'showing' : 'disabled';
+                          return next;
+                        });
+                      }}
+                      aria-label={ccEnabled ? 'Hide captions' : 'Show captions'}
+                      title={ccEnabled ? 'CC On' : 'CC Off'}
+                      className="embed-ctrl-btn"
+                      style={{ opacity: ccEnabled ? 1 : 0.55 }}
+                    >
+                      <Subtitles size={20} />
+                    </button>
+                  )}
                   {!isShadowTheme && (
                     <button
                       onClick={handleDownloadClick}
