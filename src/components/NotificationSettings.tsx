@@ -7,7 +7,7 @@ import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { Separator } from '@/components/ui/separator';
 
 export function NotificationSettings() {
-  const { isSupported, permission, settings, isSubscribed, updateSettings, requestPermission, sendTestNotification } = usePushNotifications();
+  const { isSupported, permission, settings, isSubscribed, updateSettings, requestPermission, sendTestNotification, unsubscribe } = usePushNotifications();
   const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isStandalone = typeof window !== 'undefined' && ((window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator as any).standalone === true);
 
@@ -60,7 +60,12 @@ export function NotificationSettings() {
           {permission === 'granted' ? (
             <div className="flex items-center gap-2">
               {isSubscribed && (
-                <Button size="sm" variant="outline" onClick={sendTestNotification}>Test</Button>
+                <>
+                  <Button size="sm" variant="outline" onClick={sendTestNotification}>Test</Button>
+                  <Button size="sm" variant="ghost" onClick={unsubscribe} className="gap-1 text-destructive hover:text-destructive">
+                    <BellOff className="h-4 w-4" /> Unsubscribe
+                  </Button>
+                </>
               )}
               {!isSubscribed && (
                 <Button size="sm" onClick={requestPermission} className="gap-2">

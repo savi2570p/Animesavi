@@ -3,6 +3,7 @@ import {
   Flag, Send, X, Sparkles, Bug, PlayCircle, Volume2, Palette, Zap, Lightbulb,
   Lock, Server, Download, Bell, FileWarning, MoreHorizontal,
   ImagePlus, Trash2, Paperclip,
+  Subtitles, Languages, ImageOff, EyeOff, Loader, Wifi, AudioLines, Captions,
 } from 'lucide-react';
 import {
   Dialog,
@@ -27,6 +28,16 @@ const REPORT_CATEGORIES = [
   { label: 'Download issue', value: 'Download Issue', icon: Download },
   { label: 'Notification', value: 'Notification Issue', icon: Bell },
   { label: 'Wrong info', value: 'Wrong Info', icon: FileWarning },
+  // — Content accuracy —
+  { label: 'Wrong audio language', value: 'Wrong Audio', icon: Languages },
+  { label: 'Wrong subtitles', value: 'Wrong Subtitles', icon: Subtitles },
+  { label: 'Spoiler in title/desc', value: 'Spoiler', icon: EyeOff },
+  { label: 'Low quality encode', value: 'Low Quality', icon: ImageOff },
+  // — Playback —
+  { label: 'Server not loading', value: 'Server Down', icon: Wifi },
+  { label: 'Buffering issues', value: 'Buffering', icon: Loader },
+  { label: 'A/V sync issue', value: 'AV Sync', icon: AudioLines },
+  { label: 'Subtitle out of sync', value: 'Subtitle Sync', icon: Captions },
   { label: 'Other', value: 'Other', icon: MoreHorizontal },
 ] as const;
 
