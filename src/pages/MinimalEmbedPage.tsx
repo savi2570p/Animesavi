@@ -490,27 +490,29 @@ export default function MinimalEmbedPage() {
             <div
               style={{
                 position: 'absolute', left: 0, right: 0, bottom: 0,
-                padding: '40px 16px 14px',
+                padding: 'max(40px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(14px, env(safe-area-inset-bottom, 14px)) max(16px, env(safe-area-inset-left, 0px))',
                 background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)',
                 opacity: showControls || !isPlaying ? 1 : 0,
                 transition: 'opacity 200ms ease',
                 pointerEvents: showControls || !isPlaying ? 'auto' : 'none',
+                touchAction: 'manipulation',
+                zIndex: 5,
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Timeline */}
+              {/* Timeline — wrapper enlarged to 22px for hit-test, visual bar stays 4px */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                 <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 11, fontFamily: 'ui-monospace, monospace', minWidth: 42 }}>
                   {formatTime(currentTime)}
                 </span>
-                <div style={{ position: 'relative', flex: 1, height: 4 }}>
+                <div style={{ position: 'relative', flex: 1, height: 22, display: 'flex', alignItems: 'center', touchAction: 'pan-x' }}>
                   <div style={{
-                    position: 'absolute', inset: 0,
+                    position: 'absolute', left: 0, right: 0, top: '50%', height: 4, transform: 'translateY(-50%)',
                     background: 'rgba(255,255,255,0.25)', borderRadius: 9999,
                   }} />
                   <div style={{
-                    position: 'absolute', top: 0, left: 0, height: '100%',
-                    width: `${progress}%`,
+                    position: 'absolute', top: '50%', left: 0, height: 4,
+                    width: `${progress}%`, transform: 'translateY(-50%)',
                     background: 'hsl(var(--primary))',
                     borderRadius: 9999,
                     boxShadow: '0 0 8px hsl(var(--primary) / 0.6)',
