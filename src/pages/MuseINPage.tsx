@@ -15,6 +15,7 @@ import { TrendingUp, Eye, Sparkles, Clock, Film, Globe, Play, Flame, Star, Langu
 import museinLogo from '@/assets/musein-logo.jpg';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
+import { PageLoader } from '@/components/layout/PageLoader';
 
 // Launch date: 7 days from first deployment (set a fixed date)
 const LAUNCH_DATE_KEY = 'musein_launch_date';
