@@ -2,12 +2,34 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Bell, BellOff, BellRing, Volume2, VolumeX, Heart } from 'lucide-react';
+import { Bell, BellOff, BellRing, Volume2, VolumeX, Heart, Smartphone, Monitor, Tablet, Trash2, Laptop } from 'lucide-react';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { Separator } from '@/components/ui/separator';
 
+function parseUA(ua: string | null) {
+  if (!ua) return { name: 'Unknown device', icon: Monitor };
+  const isIPad = /iPad/.test(ua);
+  const isIOS = /iPhone|iPod/.test(ua);
+  const isAndroid = /Android/.test(ua);
+  const isMac = /Macintosh/.test(ua);
+  const isWin = /Windows/.test(ua);
+  const isLinux = /Linux/.test(ua) && !isAndroid;
+  const browser = /Edg\//.test(ua) ? 'Edge'
+    : /Chrome\//.test(ua) && !/Edg\//.test(ua) ? 'Chrome'
+    : /Firefox\//.test(ua) ? 'Firefox'
+    : /Safari\//.test(ua) && !/Chrome/.test(ua) ? 'Safari'
+    : 'Browser';
+  if (isIPad) return { name: `iPad · ${browser}`, icon: Tablet };
+  if (isIOS) return { name: `iPhone · ${browser}`, icon: Smartphone };
+  if (isAndroid) return { name: `Android · ${browser}`, icon: Smartphone };
+  if (isMac) return { name: `Mac · ${browser}`, icon: Laptop };
+  if (isWin) return { name: `Windows · ${browser}`, icon: Monitor };
+  if (isLinux) return { name: `Linux · ${browser}`, icon: Monitor };
+  return { name: browser, icon: Monitor };
+}
+
 export function NotificationSettings() {
-  const { isSupported, permission, settings, isSubscribed, updateSettings, requestPermission, sendTestNotification, unsubscribe } = usePushNotifications();
+  const { isSupported, permission, settings, isSubscribed, updateSettings, requestPermission, sendTestNotification, unsubscribe, devices, removeDevice } = usePushNotifications();
   const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isStandalone = typeof window !== 'undefined' && ((window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator as any).standalone === true);
 
