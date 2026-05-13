@@ -179,6 +179,50 @@ export function NotificationSettings() {
                 />
               </div>
             </div>
+
+            {devices.length > 0 && (
+              <>
+                <Separator />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium">Registered Devices ({devices.length})</h4>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Tap to remove</span>
+                  </div>
+                  <ul className="space-y-2">
+                    {devices.map((d) => {
+                      const meta = parseUA(d.user_agent);
+                      const Icon = meta.icon;
+                      const lastSeen = new Date(d.updated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+                      return (
+                        <li key={d.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30 border border-border/40">
+                          <div className={`shrink-0 p-2 rounded-md ${d.isThisDevice ? 'bg-primary/15 text-primary' : 'bg-muted/60 text-muted-foreground'}`}>
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium truncate">{meta.name}</p>
+                              {d.isThisDevice && (
+                                <span className="shrink-0 rounded-full bg-primary/15 text-primary text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5">This device</span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-muted-foreground">Last active {lastSeen}</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => removeDevice(d.id)}
+                            className="shrink-0 h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            aria-label={`Remove ${meta.name}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              </>
+            )}
           </>
         )}
 
