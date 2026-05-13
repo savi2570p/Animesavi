@@ -27,7 +27,7 @@ const footerLinks = {
     { label: 'Sony YAY', href: '/browse?genre=Sony%20YAY' },
   ],
   support: [
-    { label: 'Help Center', href: 'https://t.me/Lv_Savi', external: true },
+    { label: 'Help Center · @animesaviinhindidub', href: 'https://t.me/animesaviinhindidub', external: true },
     { label: 'Contact Us · @Lv_Savi', href: 'https://t.me/Lv_Savi', external: true },
     { label: 'Terms of Service', href: '/terms', isTerms: true },
     { label: 'Privacy Policy', href: '/privacy', isPrivacy: true },
@@ -269,9 +269,11 @@ export function Footer() {
             </p>
             <div className="flex items-center gap-2">
               <a
-                href="https://t.me/Lv_Savi"
+                href="https://t.me/animesaviinhindidub"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Open Telegram group @animesaviinhindidub"
+                title="Message the group · @animesaviinhindidub"
                 className="p-2.5 rounded-xl bg-secondary/50 hover:bg-primary/20 hover:text-primary transition-all duration-300"
               >
                 <MessageCircle className="h-4 w-4" />

@@ -35,12 +35,23 @@ function arrayBufferToBase64(buf: ArrayBuffer | null): string {
   return btoa(bin);
 }
 
+export interface PushDevice {
+  id: string;
+  endpoint: string;
+  user_agent: string | null;
+  created_at: string;
+  updated_at: string;
+  isThisDevice: boolean;
+}
+
 export function usePushNotifications() {
   const { user } = useAuth();
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_SETTINGS);
+  const [devices, setDevices] = useState<PushDevice[]>([]);
+  const [currentEndpoint, setCurrentEndpoint] = useState<string | null>(null);
   const vapidKeyRef = useRef<string | null>(null);
 
   // Load saved settings
@@ -62,7 +73,7 @@ export function usePushNotifications() {
     if (supported) setPermission(Notification.permission);
   }, []);
 
-  // Check existing subscription
+  // Check existing subscription + capture this device's endpoint
   useEffect(() => {
     if (!isSupported) return;
     (async () => {
@@ -70,9 +81,24 @@ export function usePushNotifications() {
         const reg = await navigator.serviceWorker.getRegistration(SW_PATH);
         const sub = await reg?.pushManager.getSubscription();
         setIsSubscribed(!!sub);
+        setCurrentEndpoint(sub?.endpoint ?? null);
       } catch {}
     })();
   }, [isSupported, user?.id]);
+
+  const refreshDevices = useCallback(async () => {
+    if (!user) { setDevices([]); return; }
+    const { data, error } = await supabase
+      .from('push_subscriptions')
+      .select('id, endpoint, user_agent, created_at, updated_at')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false });
+    if (error) { console.log('[push] devices fetch error', error); return; }
+    setDevices((data || []).map((d: any) => ({ ...d, isThisDevice: d.endpoint === currentEndpoint })));
+  }, [user, currentEndpoint]);
+
+  // Auto-load device list when user/endpoint changes
+  useEffect(() => { refreshDevices(); }, [refreshDevices]);
 
   const updateSettings = useCallback((next: Partial<NotificationSettings>) => {
     setSettings((prev) => {
@@ -154,13 +180,15 @@ export function usePushNotifications() {
 
       console.log('[push] subscribed & saved', endpoint.slice(-24));
       setIsSubscribed(true);
+      setCurrentEndpoint(endpoint);
+      refreshDevices();
       return true;
     } catch (e: any) {
       console.log('[push] subscribe error', e);
       toast.error(e?.message || 'Failed to subscribe to push notifications');
       return false;
     }
-  }, [isSupported, user, fetchVapidKey]);
+  }, [isSupported, user, fetchVapidKey, refreshDevices]);
 
   const requestPermission = useCallback(async (): Promise<boolean> => {
     if (!isSupported) {
@@ -204,13 +232,14 @@ export function usePushNotifications() {
       if (sub) {
         try { await sub.unsubscribe(); } catch (e) { console.log('[push] browser unsub failed', e); }
       }
-      // Delete from DB — by endpoint if we have it, otherwise nuke all for the user.
       if (endpoint) {
         await supabase.from('push_subscriptions').delete().eq('endpoint', endpoint);
       } else {
         await supabase.from('push_subscriptions').delete().eq('user_id', user.id);
       }
       setIsSubscribed(false);
+      setCurrentEndpoint(null);
+      refreshDevices();
       console.log('[push] unsubscribed & removed from DB');
       toast.success('Push notifications turned off on this device.');
       return true;
@@ -219,7 +248,32 @@ export function usePushNotifications() {
       toast.error(e?.message || 'Failed to unsubscribe');
       return false;
     }
-  }, [isSupported, user]);
+  }, [isSupported, user, refreshDevices]);
+
+  // Remove a specific device (by row id). If it's THIS device, also unsubscribe locally.
+  const removeDevice = useCallback(async (deviceId: string): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      const target = devices.find((d) => d.id === deviceId);
+      // If removing this device, also tell the browser to drop the push subscription.
+      if (target?.isThisDevice) {
+        const reg = await navigator.serviceWorker.getRegistration(SW_PATH);
+        const sub = await reg?.pushManager.getSubscription();
+        if (sub) { try { await sub.unsubscribe(); } catch {} }
+        setIsSubscribed(false);
+        setCurrentEndpoint(null);
+      }
+      const { error } = await supabase.from('push_subscriptions').delete().eq('id', deviceId).eq('user_id', user.id);
+      if (error) throw error;
+      toast.success(target?.isThisDevice ? 'This device unsubscribed.' : 'Device removed.');
+      refreshDevices();
+      return true;
+    } catch (e: any) {
+      console.log('[push] remove device error', e);
+      toast.error(e?.message || 'Failed to remove device');
+      return false;
+    }
+  }, [user, devices, refreshDevices]);
 
   const sendTestNotification = useCallback(async () => {
     try {
@@ -239,9 +293,13 @@ export function usePushNotifications() {
     permission,
     isSubscribed,
     settings,
+    devices,
+    currentEndpoint,
     updateSettings,
     requestPermission,
     unsubscribe,
+    removeDevice,
+    refreshDevices,
     sendTestNotification,
     // Legacy compatibility (no-op): in-app polling replaced by DB push
     sendNotification: () => {},
