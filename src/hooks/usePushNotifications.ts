@@ -35,12 +35,23 @@ function arrayBufferToBase64(buf: ArrayBuffer | null): string {
   return btoa(bin);
 }
 
+export interface PushDevice {
+  id: string;
+  endpoint: string;
+  user_agent: string | null;
+  created_at: string;
+  updated_at: string;
+  isThisDevice: boolean;
+}
+
 export function usePushNotifications() {
   const { user } = useAuth();
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_SETTINGS);
+  const [devices, setDevices] = useState<PushDevice[]>([]);
+  const [currentEndpoint, setCurrentEndpoint] = useState<string | null>(null);
   const vapidKeyRef = useRef<string | null>(null);
 
   // Load saved settings
@@ -62,7 +73,7 @@ export function usePushNotifications() {
     if (supported) setPermission(Notification.permission);
   }, []);
 
-  // Check existing subscription
+  // Check existing subscription + capture this device's endpoint
   useEffect(() => {
     if (!isSupported) return;
     (async () => {
@@ -70,9 +81,24 @@ export function usePushNotifications() {
         const reg = await navigator.serviceWorker.getRegistration(SW_PATH);
         const sub = await reg?.pushManager.getSubscription();
         setIsSubscribed(!!sub);
+        setCurrentEndpoint(sub?.endpoint ?? null);
       } catch {}
     })();
   }, [isSupported, user?.id]);
+
+  const refreshDevices = useCallback(async () => {
+    if (!user) { setDevices([]); return; }
+    const { data, error } = await supabase
+      .from('push_subscriptions')
+      .select('id, endpoint, user_agent, created_at, updated_at')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false });
+    if (error) { console.log('[push] devices fetch error', error); return; }
+    setDevices((data || []).map((d: any) => ({ ...d, isThisDevice: d.endpoint === currentEndpoint })));
+  }, [user, currentEndpoint]);
+
+  // Auto-load device list when user/endpoint changes
+  useEffect(() => { refreshDevices(); }, [refreshDevices]);
 
   const updateSettings = useCallback((next: Partial<NotificationSettings>) => {
     setSettings((prev) => {
