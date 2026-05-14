@@ -761,8 +761,8 @@ export default function EmbedSlugPlayer() {
           </div>
 
           {/* Time + Controls */}
-          <div className={`flex items-center justify-between ${gapSize}`}>
-            <div className={`flex items-center ${gapSize}`}>
+          <div className={`flex items-center justify-between gap-2 flex-wrap`}>
+            <div className={`flex items-center ${gapSize} shrink-0`}>
               <button onClick={togglePlay} className={controlButtonClass}>
                 {isPlaying ? <Pause className={iconSize} /> : <Play className={`${iconSize} ml-0.5`} />}
               </button>
@@ -775,7 +775,36 @@ export default function EmbedSlugPlayer() {
               <span className="text-white/80 text-[10px] sm:text-xs ml-1">{formatTime(currentTime)} / {formatTime(duration)}</span>
             </div>
 
-            <div className={`flex items-center ${gapSize}`}>
+            <div className={`flex items-center ${gapSize} flex-wrap justify-end`}>
+              {/* CC subtitles */}
+              {(captionsUrl || subtitleTracks.length > 0) && (
+                <div className="relative">
+                  <button onClick={(e) => {
+                    e.stopPropagation();
+                    if (subtitleTracks.length > 1) { closeAllMenus(); setShowCcMenu(!showCcMenu); }
+                    else { setCcEnabled(v => !v); }
+                  }}
+                    className={`${controlButtonClass} ${ccEnabled ? '!bg-primary/80 !text-white' : ''}`} title="Captions">
+                    {ccEnabled ? <Captions className={iconSize} /> : <CaptionsOff className={iconSize} />}
+                  </button>
+                  {showCcMenu && subtitleTracks.length > 1 && (
+                    <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[140px] z-50">
+                      <button onClick={() => { setCcEnabled(false); setShowCcMenu(false); }}
+                        className={`w-full text-left px-3 py-1.5 text-xs rounded ${!ccEnabled ? 'text-primary' : 'text-white/80'} hover:bg-white/10 flex items-center gap-2`}>
+                        {!ccEnabled && <Check className="w-3 h-3" />} Off
+                      </button>
+                      {subtitleTracks.map(t => (
+                        <button key={t.id} onClick={() => { setCurrentSubtitleTrack(t.id); setCcEnabled(true); setShowCcMenu(false); }}
+                          className={`w-full text-left px-3 py-1.5 text-xs rounded ${ccEnabled && currentSubtitleTrack === t.id ? 'text-primary' : 'text-white/80'} hover:bg-white/10 flex items-center gap-2`}>
+                          {ccEnabled && currentSubtitleTrack === t.id && <Check className="w-3 h-3" />}
+                          {t.name || t.lang || `Subtitle ${t.id + 1}`}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Audio switch */}
               {audioTracks.length > 1 && (
                 <div className="relative">
