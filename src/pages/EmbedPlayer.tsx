@@ -250,7 +250,7 @@ export default function EmbedPlayer() {
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = videoUrl;
       } else if (Hls.isSupported()) {
-        const hls = new Hls({ enableWorker: true, lowLatencyMode: true, startLevel: 0, maxBufferLength: 10 });
+        const hls = new Hls(getLowBandwidthHlsConfig());
         hlsRef.current = hls;
         hls.loadSource(videoUrl);
         hls.attachMedia(video);
@@ -264,14 +264,20 @@ export default function EmbedPlayer() {
           }
           if (hls.audioTracks?.length > 1) {
             setAudioTracks(hls.audioTracks.map((t, i) => ({
-              id: i, name: t.name || `Audio ${i + 1}`, lang: t.lang || ''
+              id: i, name: t.name || t.lang || `Audio ${i + 1}`, lang: t.lang || ''
             })));
             setCurrentAudioTrack(hls.audioTrack);
+          }
+          if (hls.subtitleTracks?.length) {
+            setSubtitleTracks(hls.subtitleTracks.map((t, i) => ({
+              id: i, name: t.name || t.lang || `Subtitle ${i + 1}`, lang: t.lang || ''
+            })));
           }
           video.play().catch(() => {});
         });
         hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => setCurrentLevel(data.level));
         hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (_, data) => setCurrentAudioTrack(data.id));
+        hls.on(Hls.Events.SUBTITLE_TRACK_SWITCH, (_, data) => setCurrentSubtitleTrack(data.id));
         hls.on(Hls.Events.ERROR, (_, data) => { if (data.fatal) setError('Playback error - please retry'); });
       }
     } else {
