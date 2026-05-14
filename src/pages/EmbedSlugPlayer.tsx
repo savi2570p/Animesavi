@@ -441,6 +441,27 @@ export default function EmbedSlugPlayer() {
     };
   }, [episodeData?.videoUrl]);
 
+  // Apply CC enable state
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (hlsRef.current && hlsRef.current.subtitleTracks?.length) {
+      hlsRef.current.subtitleDisplay = ccEnabled;
+      if (ccEnabled && currentSubtitleTrack < 0) {
+        hlsRef.current.subtitleTrack = 0;
+        setCurrentSubtitleTrack(0);
+      } else if (!ccEnabled) {
+        hlsRef.current.subtitleTrack = -1;
+      }
+    }
+    const tt = video.textTracks;
+    if (tt) {
+      for (let i = 0; i < tt.length; i++) {
+        tt[i].mode = ccEnabled ? (i === Math.max(0, currentSubtitleTrack) ? 'showing' : 'disabled') : 'disabled';
+      }
+    }
+  }, [ccEnabled, currentSubtitleTrack, captionsUrl, episodeData?.videoUrl]);
+
   // Controls
   const togglePlay = () => (isPlaying ? videoRef.current?.pause() : videoRef.current?.play());
   const toggleMute = () => { if (videoRef.current) { videoRef.current.muted = !isMuted; setIsMuted(!isMuted); } };
@@ -449,10 +470,15 @@ export default function EmbedSlugPlayer() {
   }, [duration]);
 
   const switchAudioTrack = (trackId: number) => {
-    if (hlsRef.current) {
+    if (hlsRef.current && hlsRef.current.audioTracks?.length) {
       hlsRef.current.audioTrack = trackId;
-      setCurrentAudioTrack(trackId);
+    } else {
+      const native = (videoRef.current as any)?.audioTracks;
+      if (native && native.length) {
+        for (let i = 0; i < native.length; i++) native[i].enabled = i === trackId;
+      }
     }
+    setCurrentAudioTrack(trackId);
     setShowAudioMenu(false);
   };
 
