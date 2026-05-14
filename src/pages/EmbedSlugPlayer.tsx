@@ -206,7 +206,7 @@ export default function EmbedSlugPlayer() {
       const targetSeason = seasons.find(s => s.season_number === seasonNumber) || seasons[0];
 
       const { data: ep } = await supabase
-        .from('episodes').select('id, title, video_url, external_url')
+        .from('episodes').select('id, title, video_url, external_url, captions_url')
         .eq('season_id', targetSeason.id).eq('episode_number', episodeNumber).single();
 
       if (!ep) { setFetchError(`S${seasonNumber}E${episodeNumber} not found`); return; }
@@ -215,6 +215,7 @@ export default function EmbedSlugPlayer() {
       if (!url) { setFetchError('No video available'); return; }
 
       setEpisodeData({ title: ep.title, videoUrl: url, animeTitle: anime.title || '' });
+      setCaptionsUrl(ep.captions_url || null);
       setResolvedAnimeId(anime.id || null);
       setCurrentSeasonNumber(seasonNumber);
       setCurrentEpisodeNumber(episodeNumber);
