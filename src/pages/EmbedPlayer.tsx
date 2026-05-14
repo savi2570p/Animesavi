@@ -504,7 +504,7 @@ export default function EmbedPlayer() {
     }
   };
 
-  const closeAllMenus = () => { setShowQualityMenu(false); setShowDownloadMenu(false); setShowAudioMenu(false); setShowEpisodePanel(false); };
+  const closeAllMenus = () => { setShowQualityMenu(false); setShowDownloadMenu(false); setShowAudioMenu(false); setShowEpisodePanel(false); setShowCcMenu(false); };
 
   const switchToEpisode = useCallback(async (ep: typeof allEpisodes[0]) => {
     setShowEpisodePanel(false);
