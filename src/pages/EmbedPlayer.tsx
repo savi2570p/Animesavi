@@ -298,7 +298,33 @@ export default function EmbedPlayer() {
       if (video.buffered.length > 0) setBufferedProgress(video.duration ? (video.buffered.end(video.buffered.length - 1) / video.duration) * 100 : 0);
     };
     const handleError = () => { setIsLoading(false); setError('Video failed to load - please try again'); };
-    
+    const handleLoadedMeta = () => {
+      // Native (Safari/HLS-native + MP4 with multiple audio) audio track detection
+      const nativeAudio = (video as any).audioTracks;
+      if (nativeAudio && nativeAudio.length > 1 && audioTracks.length === 0) {
+        const tracks: { id: number; name: string; lang: string }[] = [];
+        for (let i = 0; i < nativeAudio.length; i++) {
+          const t = nativeAudio[i];
+          tracks.push({ id: i, name: t.label || t.language || `Audio ${i + 1}`, lang: t.language || '' });
+          if (t.enabled) setCurrentAudioTrack(i);
+        }
+        setAudioTracks(tracks);
+      }
+      // Native text tracks (Safari HLS, embedded MP4 captions)
+      const tt = video.textTracks;
+      if (tt && tt.length > 0 && subtitleTracks.length === 0) {
+        const tracks: { id: number; name: string; lang: string }[] = [];
+        for (let i = 0; i < tt.length; i++) {
+          const track = tt[i];
+          if (track.kind === 'subtitles' || track.kind === 'captions') {
+            tracks.push({ id: i, name: track.label || track.language || `Subtitle ${i + 1}`, lang: track.language || '' });
+          }
+        }
+        if (tracks.length) setSubtitleTracks(tracks);
+      }
+    };
+
+    video.addEventListener('loadedmetadata', handleLoadedMeta);
     video.addEventListener('canplay', handleCanPlay);
     video.addEventListener('play', handlePlay);
     video.addEventListener('pause', handlePause);
