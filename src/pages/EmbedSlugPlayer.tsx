@@ -92,6 +92,11 @@ export default function EmbedSlugPlayer() {
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [audioTracks, setAudioTracks] = useState<{ id: number; name: string; lang: string }[]>([]);
   const [currentAudioTrack, setCurrentAudioTrack] = useState(0);
+  const [captionsUrl, setCaptionsUrl] = useState<string | null>(null);
+  const [subtitleTracks, setSubtitleTracks] = useState<{ id: number; name: string; lang: string }[]>([]);
+  const [currentSubtitleTrack, setCurrentSubtitleTrack] = useState<number>(-1);
+  const [ccEnabled, setCcEnabled] = useState(false);
+  const [showCcMenu, setShowCcMenu] = useState(false);
 
   // Episode selection state
   const [allEpisodes, setAllEpisodes] = useState<{ id: string; title: string; episode_number: number; season_number: number; season_id: string }[]>([]);
