@@ -166,12 +166,13 @@ export default function EmbedPlayer() {
       if (!episodeId) { setFetchError('No episode ID provided'); return; }
       try {
         const { data, error } = await supabase
-          .from('episodes').select('video_url, external_url, title, season_id, episode_number')
+          .from('episodes').select('video_url, external_url, title, season_id, episode_number, captions_url')
           .eq('id', episodeId).single();
         if (error || !data) { setFetchError('Episode not found'); return; }
         const url = data.video_url || data.external_url;
         if (!url) { setFetchError('No video available'); return; }
         setEpisodeData({ title: data.title, videoUrl: url });
+        setCaptionsUrl(data.captions_url || null);
 
         // Fetch sibling episodes for episode selector
         if (data.season_id) {
