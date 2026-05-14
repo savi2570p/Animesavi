@@ -343,9 +343,33 @@ export default function EmbedPlayer() {
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('progress', handleProgress);
       video.removeEventListener('error', handleError);
+      video.removeEventListener('loadedmetadata', handleLoadedMeta);
       if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
     };
   }, [episodeData?.videoUrl, startTime]);
+
+  // Apply CC enable state to whichever subtitle layer is active
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    // HLS subtitle tracks
+    if (hlsRef.current && hlsRef.current.subtitleTracks?.length) {
+      hlsRef.current.subtitleDisplay = ccEnabled;
+      if (ccEnabled && currentSubtitleTrack < 0 && hlsRef.current.subtitleTracks.length > 0) {
+        hlsRef.current.subtitleTrack = 0;
+        setCurrentSubtitleTrack(0);
+      } else if (!ccEnabled) {
+        hlsRef.current.subtitleTrack = -1;
+      }
+    }
+    // Native text tracks (also covers our injected <track> element)
+    const tt = video.textTracks;
+    if (tt) {
+      for (let i = 0; i < tt.length; i++) {
+        tt[i].mode = ccEnabled ? (i === Math.max(0, currentSubtitleTrack) ? 'showing' : 'disabled') : 'disabled';
+      }
+    }
+  }, [ccEnabled, currentSubtitleTrack, captionsUrl, episodeData?.videoUrl]);
 
   const play = () => videoRef.current?.play();
   const pause = () => videoRef.current?.pause();
