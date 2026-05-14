@@ -592,7 +592,12 @@ export default function EmbedPlayer() {
         className="w-full h-full object-contain"
         autoPlay playsInline muted preload="auto"
         controlsList="nodownload noremoteplayback"
-      />
+        crossOrigin={captionsUrl ? 'anonymous' : undefined}
+      >
+        {captionsUrl && (
+          <track kind="subtitles" src={captionsUrl} srcLang="en" label="English" default />
+        )}
+      </video>
 
       {/* Controls overlay */}
       <div 
