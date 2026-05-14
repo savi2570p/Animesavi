@@ -84,6 +84,11 @@ export default function EmbedPlayer() {
   const [showEpisodePanel, setShowEpisodePanel] = useState(false);
   const [allEpisodes, setAllEpisodes] = useState<{ id: string; title: string; episode_number: number; season_number: number }[]>([]);
   const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(0);
+  const [captionsUrl, setCaptionsUrl] = useState<string | null>(null);
+  const [subtitleTracks, setSubtitleTracks] = useState<{ id: number; name: string; lang: string }[]>([]);
+  const [currentSubtitleTrack, setCurrentSubtitleTrack] = useState<number>(-1); // -1 = off
+  const [ccEnabled, setCcEnabled] = useState(false);
+  const [showCcMenu, setShowCcMenu] = useState(false);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
