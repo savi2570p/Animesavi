@@ -243,11 +243,14 @@ export default function EmbedSlugPlayer() {
     setShowEpisodePanel(false);
     setIsLoading(true);
     setError(null);
-    const { data } = await supabase.from('episodes').select('video_url, external_url, title').eq('id', ep.id).single();
+    const { data } = await supabase.from('episodes').select('video_url, external_url, title, captions_url').eq('id', ep.id).single();
     if (!data) { setError('Episode failed to load'); return; }
     const url = data.video_url || data.external_url;
     if (!url) { setError('No video available'); return; }
     setEpisodeData(prev => ({ title: data.title, videoUrl: url, animeTitle: prev?.animeTitle || '' }));
+    setCaptionsUrl(data.captions_url || null);
+    setSubtitleTracks([]);
+    setAudioTracks([]);
     setCurrentSeasonNumber(ep.season_number);
     setCurrentEpisodeNumber(ep.episode_number);
     const idx = allEpisodes.findIndex(e => e.id === ep.id);
