@@ -555,7 +555,7 @@ export default function EmbedSlugPlayer() {
     errorReason: error,
   });
 
-  const closeAllMenus = () => { setShowQualityMenu(false); setShowDownloadMenu(false); setShowAudioMenu(false); setShowEpisodePanel(false); setShowSpeedMenu(false); };
+  const closeAllMenus = () => { setShowQualityMenu(false); setShowDownloadMenu(false); setShowAudioMenu(false); setShowEpisodePanel(false); setShowSpeedMenu(false); setShowCcMenu(false); };
 
   useEffect(() => {
     const h = () => setIsFullscreen(!!(document.fullscreenElement || (document as any).webkitFullscreenElement));
