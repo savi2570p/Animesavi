@@ -356,7 +356,7 @@ export default function EmbedSlugPlayer() {
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = videoUrl;
       } else if (Hls.isSupported()) {
-        const hls = new Hls({ enableWorker: true, lowLatencyMode: true, startLevel: 0, maxBufferLength: 10 });
+        const hls = new Hls(getLowBandwidthHlsConfig());
         hlsRef.current = hls;
         hls.loadSource(videoUrl);
         hls.attachMedia(video);
@@ -367,17 +367,22 @@ export default function EmbedSlugPlayer() {
               label: l.height >= 2160 ? '4K' : l.height >= 1080 ? '1080p' : l.height >= 720 ? '720p' : l.height >= 480 ? '480p' : `${l.height}p`
             })));
           }
-          // Detect audio tracks
           if (hls.audioTracks?.length > 1) {
             setAudioTracks(hls.audioTracks.map((t, i) => ({
-              id: i, name: t.name || `Audio ${i + 1}`, lang: t.lang || ''
+              id: i, name: t.name || t.lang || `Audio ${i + 1}`, lang: t.lang || ''
             })));
             setCurrentAudioTrack(hls.audioTrack);
+          }
+          if (hls.subtitleTracks?.length) {
+            setSubtitleTracks(hls.subtitleTracks.map((t, i) => ({
+              id: i, name: t.name || t.lang || `Subtitle ${i + 1}`, lang: t.lang || ''
+            })));
           }
           video.play().catch(() => {});
         });
         hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => setCurrentLevel(data.level));
         hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (_, data) => setCurrentAudioTrack(data.id));
+        hls.on(Hls.Events.SUBTITLE_TRACK_SWITCH, (_, data) => setCurrentSubtitleTrack(data.id));
         hls.on(Hls.Events.ERROR, (_, data) => { if (data.fatal) setError('Playback error'); });
       }
     } else {
@@ -386,8 +391,32 @@ export default function EmbedSlugPlayer() {
 
     const onCanPlay = () => { setIsLoading(false); video.play().catch(() => {}); };
     const onError = () => { setIsLoading(false); setError('Video failed to load'); };
+    const onLoadedMeta = () => {
+      const nativeAudio = (video as any).audioTracks;
+      if (nativeAudio && nativeAudio.length > 1 && audioTracks.length === 0) {
+        const tracks: { id: number; name: string; lang: string }[] = [];
+        for (let i = 0; i < nativeAudio.length; i++) {
+          const t = nativeAudio[i];
+          tracks.push({ id: i, name: t.label || t.language || `Audio ${i + 1}`, lang: t.language || '' });
+          if (t.enabled) setCurrentAudioTrack(i);
+        }
+        setAudioTracks(tracks);
+      }
+      const tt = video.textTracks;
+      if (tt && tt.length > 0 && subtitleTracks.length === 0) {
+        const tracks: { id: number; name: string; lang: string }[] = [];
+        for (let i = 0; i < tt.length; i++) {
+          const track = tt[i];
+          if (track.kind === 'subtitles' || track.kind === 'captions') {
+            tracks.push({ id: i, name: track.label || track.language || `Subtitle ${i + 1}`, lang: track.language || '' });
+          }
+        }
+        if (tracks.length) setSubtitleTracks(tracks);
+      }
+    };
 
     video.addEventListener('canplay', onCanPlay);
+    video.addEventListener('loadedmetadata', onLoadedMeta);
     video.addEventListener('play', () => setIsPlaying(true));
     video.addEventListener('pause', () => setIsPlaying(false));
     video.addEventListener('waiting', () => setIsBuffering(true));
@@ -406,6 +435,7 @@ export default function EmbedSlugPlayer() {
 
     return () => {
       video.removeEventListener('canplay', onCanPlay);
+      video.removeEventListener('loadedmetadata', onLoadedMeta);
       video.removeEventListener('error', onError);
       if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
     };
