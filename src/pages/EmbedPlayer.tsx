@@ -377,7 +377,18 @@ export default function EmbedPlayer() {
   const toggleMute = () => { if (videoRef.current) { videoRef.current.muted = !isMuted; setIsMuted(!isMuted); } };
   const seek = (time: number) => { if (videoRef.current) videoRef.current.currentTime = Math.max(0, Math.min(time, duration)); };
   const setQualityLevel = (level: number) => { if (hlsRef.current) { hlsRef.current.currentLevel = level; setCurrentLevel(level); } };
-  const switchAudioTrack = (trackId: number) => { if (hlsRef.current) { hlsRef.current.audioTrack = trackId; setCurrentAudioTrack(trackId); } setShowAudioMenu(false); };
+  const switchAudioTrack = (trackId: number) => {
+    if (hlsRef.current && hlsRef.current.audioTracks?.length) {
+      hlsRef.current.audioTrack = trackId;
+    } else {
+      const native = (videoRef.current as any)?.audioTracks;
+      if (native && native.length) {
+        for (let i = 0; i < native.length; i++) native[i].enabled = i === trackId;
+      }
+    }
+    setCurrentAudioTrack(trackId);
+    setShowAudioMenu(false);
+  };
   const retry = () => { setError(null); setIsLoading(true); videoRef.current?.load(); };
 
   const handleDirectDownload = (quality: string) => {
