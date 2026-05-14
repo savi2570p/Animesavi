@@ -7,8 +7,32 @@ import {
   Settings, Check, ShieldAlert, Download, Headphones,
   List, ChevronRight, X, Gauge
 } from 'lucide-react';
+import { Captions, CaptionsOff } from 'lucide-react';
 import Hls from 'hls.js';
 import { useEmbedPlayerBridge } from '@/hooks/useEmbedPlayerBridge';
+import { getNetworkInfo } from '@/lib/videoUtils';
+
+function getLowBandwidthHlsConfig() {
+  const { isSlowNetwork, isCellular, saveData } = getNetworkInfo();
+  const slow = isSlowNetwork || saveData;
+  return {
+    enableWorker: true,
+    lowLatencyMode: false,
+    startLevel: 0,
+    autoStartLoad: true,
+    maxBufferLength: slow ? 6 : 12,
+    maxMaxBufferLength: slow ? 20 : 60,
+    maxBufferSize: slow ? 20 * 1000 * 1000 : 60 * 1000 * 1000,
+    backBufferLength: slow ? 8 : 20,
+    abrEwmaDefaultEstimate: slow ? 250000 : isCellular ? 1200000 : 2500000,
+    abrBandWidthFactor: slow ? 0.6 : 0.8,
+    abrBandWidthUpFactor: slow ? 0.4 : 0.6,
+    fragLoadingTimeOut: 30000,
+    fragLoadingMaxRetry: 8,
+    manifestLoadingTimeOut: 15000,
+    manifestLoadingMaxRetry: 6,
+  };
+}
 
 const ALLOWED_DOMAINS = [
   'shadow-arise.lovable.app',
@@ -68,6 +92,11 @@ export default function EmbedSlugPlayer() {
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [audioTracks, setAudioTracks] = useState<{ id: number; name: string; lang: string }[]>([]);
   const [currentAudioTrack, setCurrentAudioTrack] = useState(0);
+  const [captionsUrl, setCaptionsUrl] = useState<string | null>(null);
+  const [subtitleTracks, setSubtitleTracks] = useState<{ id: number; name: string; lang: string }[]>([]);
+  const [currentSubtitleTrack, setCurrentSubtitleTrack] = useState<number>(-1);
+  const [ccEnabled, setCcEnabled] = useState(false);
+  const [showCcMenu, setShowCcMenu] = useState(false);
 
   // Episode selection state
   const [allEpisodes, setAllEpisodes] = useState<{ id: string; title: string; episode_number: number; season_number: number; season_id: string }[]>([]);
@@ -177,7 +206,7 @@ export default function EmbedSlugPlayer() {
       const targetSeason = seasons.find(s => s.season_number === seasonNumber) || seasons[0];
 
       const { data: ep } = await supabase
-        .from('episodes').select('id, title, video_url, external_url')
+        .from('episodes').select('id, title, video_url, external_url, captions_url')
         .eq('season_id', targetSeason.id).eq('episode_number', episodeNumber).single();
 
       if (!ep) { setFetchError(`S${seasonNumber}E${episodeNumber} not found`); return; }
@@ -186,6 +215,7 @@ export default function EmbedSlugPlayer() {
       if (!url) { setFetchError('No video available'); return; }
 
       setEpisodeData({ title: ep.title, videoUrl: url, animeTitle: anime.title || '' });
+      setCaptionsUrl(ep.captions_url || null);
       setResolvedAnimeId(anime.id || null);
       setCurrentSeasonNumber(seasonNumber);
       setCurrentEpisodeNumber(episodeNumber);
@@ -213,11 +243,14 @@ export default function EmbedSlugPlayer() {
     setShowEpisodePanel(false);
     setIsLoading(true);
     setError(null);
-    const { data } = await supabase.from('episodes').select('video_url, external_url, title').eq('id', ep.id).single();
+    const { data } = await supabase.from('episodes').select('video_url, external_url, title, captions_url').eq('id', ep.id).single();
     if (!data) { setError('Episode failed to load'); return; }
     const url = data.video_url || data.external_url;
     if (!url) { setError('No video available'); return; }
     setEpisodeData(prev => ({ title: data.title, videoUrl: url, animeTitle: prev?.animeTitle || '' }));
+    setCaptionsUrl(data.captions_url || null);
+    setSubtitleTracks([]);
+    setAudioTracks([]);
     setCurrentSeasonNumber(ep.season_number);
     setCurrentEpisodeNumber(ep.episode_number);
     const idx = allEpisodes.findIndex(e => e.id === ep.id);
@@ -323,7 +356,7 @@ export default function EmbedSlugPlayer() {
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = videoUrl;
       } else if (Hls.isSupported()) {
-        const hls = new Hls({ enableWorker: true, lowLatencyMode: true, startLevel: 0, maxBufferLength: 10 });
+        const hls = new Hls(getLowBandwidthHlsConfig());
         hlsRef.current = hls;
         hls.loadSource(videoUrl);
         hls.attachMedia(video);
@@ -334,17 +367,22 @@ export default function EmbedSlugPlayer() {
               label: l.height >= 2160 ? '4K' : l.height >= 1080 ? '1080p' : l.height >= 720 ? '720p' : l.height >= 480 ? '480p' : `${l.height}p`
             })));
           }
-          // Detect audio tracks
           if (hls.audioTracks?.length > 1) {
             setAudioTracks(hls.audioTracks.map((t, i) => ({
-              id: i, name: t.name || `Audio ${i + 1}`, lang: t.lang || ''
+              id: i, name: t.name || t.lang || `Audio ${i + 1}`, lang: t.lang || ''
             })));
             setCurrentAudioTrack(hls.audioTrack);
+          }
+          if (hls.subtitleTracks?.length) {
+            setSubtitleTracks(hls.subtitleTracks.map((t, i) => ({
+              id: i, name: t.name || t.lang || `Subtitle ${i + 1}`, lang: t.lang || ''
+            })));
           }
           video.play().catch(() => {});
         });
         hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => setCurrentLevel(data.level));
         hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (_, data) => setCurrentAudioTrack(data.id));
+        hls.on(Hls.Events.SUBTITLE_TRACK_SWITCH, (_, data) => setCurrentSubtitleTrack(data.id));
         hls.on(Hls.Events.ERROR, (_, data) => { if (data.fatal) setError('Playback error'); });
       }
     } else {
@@ -353,8 +391,32 @@ export default function EmbedSlugPlayer() {
 
     const onCanPlay = () => { setIsLoading(false); video.play().catch(() => {}); };
     const onError = () => { setIsLoading(false); setError('Video failed to load'); };
+    const onLoadedMeta = () => {
+      const nativeAudio = (video as any).audioTracks;
+      if (nativeAudio && nativeAudio.length > 1 && audioTracks.length === 0) {
+        const tracks: { id: number; name: string; lang: string }[] = [];
+        for (let i = 0; i < nativeAudio.length; i++) {
+          const t = nativeAudio[i];
+          tracks.push({ id: i, name: t.label || t.language || `Audio ${i + 1}`, lang: t.language || '' });
+          if (t.enabled) setCurrentAudioTrack(i);
+        }
+        setAudioTracks(tracks);
+      }
+      const tt = video.textTracks;
+      if (tt && tt.length > 0 && subtitleTracks.length === 0) {
+        const tracks: { id: number; name: string; lang: string }[] = [];
+        for (let i = 0; i < tt.length; i++) {
+          const track = tt[i];
+          if (track.kind === 'subtitles' || track.kind === 'captions') {
+            tracks.push({ id: i, name: track.label || track.language || `Subtitle ${i + 1}`, lang: track.language || '' });
+          }
+        }
+        if (tracks.length) setSubtitleTracks(tracks);
+      }
+    };
 
     video.addEventListener('canplay', onCanPlay);
+    video.addEventListener('loadedmetadata', onLoadedMeta);
     video.addEventListener('play', () => setIsPlaying(true));
     video.addEventListener('pause', () => setIsPlaying(false));
     video.addEventListener('waiting', () => setIsBuffering(true));
@@ -373,10 +435,32 @@ export default function EmbedSlugPlayer() {
 
     return () => {
       video.removeEventListener('canplay', onCanPlay);
+      video.removeEventListener('loadedmetadata', onLoadedMeta);
       video.removeEventListener('error', onError);
       if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
     };
   }, [episodeData?.videoUrl]);
+
+  // Apply CC enable state
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (hlsRef.current && hlsRef.current.subtitleTracks?.length) {
+      hlsRef.current.subtitleDisplay = ccEnabled;
+      if (ccEnabled && currentSubtitleTrack < 0) {
+        hlsRef.current.subtitleTrack = 0;
+        setCurrentSubtitleTrack(0);
+      } else if (!ccEnabled) {
+        hlsRef.current.subtitleTrack = -1;
+      }
+    }
+    const tt = video.textTracks;
+    if (tt) {
+      for (let i = 0; i < tt.length; i++) {
+        tt[i].mode = ccEnabled ? (i === Math.max(0, currentSubtitleTrack) ? 'showing' : 'disabled') : 'disabled';
+      }
+    }
+  }, [ccEnabled, currentSubtitleTrack, captionsUrl, episodeData?.videoUrl]);
 
   // Controls
   const togglePlay = () => (isPlaying ? videoRef.current?.pause() : videoRef.current?.play());
@@ -386,10 +470,15 @@ export default function EmbedSlugPlayer() {
   }, [duration]);
 
   const switchAudioTrack = (trackId: number) => {
-    if (hlsRef.current) {
+    if (hlsRef.current && hlsRef.current.audioTracks?.length) {
       hlsRef.current.audioTrack = trackId;
-      setCurrentAudioTrack(trackId);
+    } else {
+      const native = (videoRef.current as any)?.audioTracks;
+      if (native && native.length) {
+        for (let i = 0; i < native.length; i++) native[i].enabled = i === trackId;
+      }
     }
+    setCurrentAudioTrack(trackId);
     setShowAudioMenu(false);
   };
 
@@ -466,7 +555,7 @@ export default function EmbedSlugPlayer() {
     errorReason: error,
   });
 
-  const closeAllMenus = () => { setShowQualityMenu(false); setShowDownloadMenu(false); setShowAudioMenu(false); setShowEpisodePanel(false); setShowSpeedMenu(false); };
+  const closeAllMenus = () => { setShowQualityMenu(false); setShowDownloadMenu(false); setShowAudioMenu(false); setShowEpisodePanel(false); setShowSpeedMenu(false); setShowCcMenu(false); };
 
   useEffect(() => {
     const h = () => setIsFullscreen(!!(document.fullscreenElement || (document as any).webkitFullscreenElement));
@@ -580,7 +669,12 @@ export default function EmbedSlugPlayer() {
         className="w-full h-full object-contain"
         autoPlay playsInline muted preload="auto"
         controlsList="nodownload noremoteplayback"
-      />
+        crossOrigin={captionsUrl ? 'anonymous' : undefined}
+      >
+        {captionsUrl && (
+          <track kind="subtitles" src={captionsUrl} srcLang="en" label="English" default />
+        )}
+      </video>
 
       {/* Controls */}
       <div
@@ -667,8 +761,8 @@ export default function EmbedSlugPlayer() {
           </div>
 
           {/* Time + Controls */}
-          <div className={`flex items-center justify-between ${gapSize}`}>
-            <div className={`flex items-center ${gapSize}`}>
+          <div className={`flex items-center justify-between gap-2 flex-wrap`}>
+            <div className={`flex items-center ${gapSize} shrink-0`}>
               <button onClick={togglePlay} className={controlButtonClass}>
                 {isPlaying ? <Pause className={iconSize} /> : <Play className={`${iconSize} ml-0.5`} />}
               </button>
@@ -681,7 +775,36 @@ export default function EmbedSlugPlayer() {
               <span className="text-white/80 text-[10px] sm:text-xs ml-1">{formatTime(currentTime)} / {formatTime(duration)}</span>
             </div>
 
-            <div className={`flex items-center ${gapSize}`}>
+            <div className={`flex items-center ${gapSize} flex-wrap justify-end`}>
+              {/* CC subtitles */}
+              {(captionsUrl || subtitleTracks.length > 0) && (
+                <div className="relative">
+                  <button onClick={(e) => {
+                    e.stopPropagation();
+                    if (subtitleTracks.length > 1) { closeAllMenus(); setShowCcMenu(!showCcMenu); }
+                    else { setCcEnabled(v => !v); }
+                  }}
+                    className={`${controlButtonClass} ${ccEnabled ? '!bg-primary/80 !text-white' : ''}`} title="Captions">
+                    {ccEnabled ? <Captions className={iconSize} /> : <CaptionsOff className={iconSize} />}
+                  </button>
+                  {showCcMenu && subtitleTracks.length > 1 && (
+                    <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[140px] z-50">
+                      <button onClick={() => { setCcEnabled(false); setShowCcMenu(false); }}
+                        className={`w-full text-left px-3 py-1.5 text-xs rounded ${!ccEnabled ? 'text-primary' : 'text-white/80'} hover:bg-white/10 flex items-center gap-2`}>
+                        {!ccEnabled && <Check className="w-3 h-3" />} Off
+                      </button>
+                      {subtitleTracks.map(t => (
+                        <button key={t.id} onClick={() => { setCurrentSubtitleTrack(t.id); setCcEnabled(true); setShowCcMenu(false); }}
+                          className={`w-full text-left px-3 py-1.5 text-xs rounded ${ccEnabled && currentSubtitleTrack === t.id ? 'text-primary' : 'text-white/80'} hover:bg-white/10 flex items-center gap-2`}>
+                          {ccEnabled && currentSubtitleTrack === t.id && <Check className="w-3 h-3" />}
+                          {t.name || t.lang || `Subtitle ${t.id + 1}`}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Audio switch */}
               {audioTracks.length > 1 && (
                 <div className="relative">

@@ -7,8 +7,32 @@ import {
   RefreshCw, Settings, Check, Download, Headphones, ShieldAlert,
   List, X
 } from 'lucide-react';
+import { Captions, CaptionsOff } from 'lucide-react';
 import Hls from 'hls.js';
 import { useEmbedPlayerBridge } from '@/hooks/useEmbedPlayerBridge';
+import { getNetworkInfo } from '@/lib/videoUtils';
+
+function getLowBandwidthHlsConfig() {
+  const { isSlowNetwork, isCellular, saveData } = getNetworkInfo();
+  const slow = isSlowNetwork || saveData;
+  return {
+    enableWorker: true,
+    lowLatencyMode: false,
+    startLevel: 0,                     // start at lowest rendition for instant play
+    autoStartLoad: true,
+    maxBufferLength: slow ? 6 : 12,
+    maxMaxBufferLength: slow ? 20 : 60,
+    maxBufferSize: slow ? 20 * 1000 * 1000 : 60 * 1000 * 1000,
+    backBufferLength: slow ? 8 : 20,
+    abrEwmaDefaultEstimate: slow ? 250000 : isCellular ? 1200000 : 2500000,
+    abrBandWidthFactor: slow ? 0.6 : 0.8,
+    abrBandWidthUpFactor: slow ? 0.4 : 0.6,
+    fragLoadingTimeOut: 30000,
+    fragLoadingMaxRetry: 8,
+    manifestLoadingTimeOut: 15000,
+    manifestLoadingMaxRetry: 6,
+  };
+}
 
 const ALLOWED_DOMAINS = [
   'shadow-arise.lovable.app',
@@ -60,6 +84,11 @@ export default function EmbedPlayer() {
   const [showEpisodePanel, setShowEpisodePanel] = useState(false);
   const [allEpisodes, setAllEpisodes] = useState<{ id: string; title: string; episode_number: number; season_number: number }[]>([]);
   const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(0);
+  const [captionsUrl, setCaptionsUrl] = useState<string | null>(null);
+  const [subtitleTracks, setSubtitleTracks] = useState<{ id: number; name: string; lang: string }[]>([]);
+  const [currentSubtitleTrack, setCurrentSubtitleTrack] = useState<number>(-1); // -1 = off
+  const [ccEnabled, setCcEnabled] = useState(false);
+  const [showCcMenu, setShowCcMenu] = useState(false);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -137,12 +166,13 @@ export default function EmbedPlayer() {
       if (!episodeId) { setFetchError('No episode ID provided'); return; }
       try {
         const { data, error } = await supabase
-          .from('episodes').select('video_url, external_url, title, season_id, episode_number')
+          .from('episodes').select('video_url, external_url, title, season_id, episode_number, captions_url')
           .eq('id', episodeId).single();
         if (error || !data) { setFetchError('Episode not found'); return; }
         const url = data.video_url || data.external_url;
         if (!url) { setFetchError('No video available'); return; }
         setEpisodeData({ title: data.title, videoUrl: url });
+        setCaptionsUrl(data.captions_url || null);
 
         // Fetch sibling episodes for episode selector
         if (data.season_id) {
@@ -220,7 +250,7 @@ export default function EmbedPlayer() {
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = videoUrl;
       } else if (Hls.isSupported()) {
-        const hls = new Hls({ enableWorker: true, lowLatencyMode: true, startLevel: 0, maxBufferLength: 10 });
+        const hls = new Hls(getLowBandwidthHlsConfig());
         hlsRef.current = hls;
         hls.loadSource(videoUrl);
         hls.attachMedia(video);
@@ -234,14 +264,20 @@ export default function EmbedPlayer() {
           }
           if (hls.audioTracks?.length > 1) {
             setAudioTracks(hls.audioTracks.map((t, i) => ({
-              id: i, name: t.name || `Audio ${i + 1}`, lang: t.lang || ''
+              id: i, name: t.name || t.lang || `Audio ${i + 1}`, lang: t.lang || ''
             })));
             setCurrentAudioTrack(hls.audioTrack);
+          }
+          if (hls.subtitleTracks?.length) {
+            setSubtitleTracks(hls.subtitleTracks.map((t, i) => ({
+              id: i, name: t.name || t.lang || `Subtitle ${i + 1}`, lang: t.lang || ''
+            })));
           }
           video.play().catch(() => {});
         });
         hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => setCurrentLevel(data.level));
         hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (_, data) => setCurrentAudioTrack(data.id));
+        hls.on(Hls.Events.SUBTITLE_TRACK_SWITCH, (_, data) => setCurrentSubtitleTrack(data.id));
         hls.on(Hls.Events.ERROR, (_, data) => { if (data.fatal) setError('Playback error - please retry'); });
       }
     } else {
@@ -262,7 +298,33 @@ export default function EmbedPlayer() {
       if (video.buffered.length > 0) setBufferedProgress(video.duration ? (video.buffered.end(video.buffered.length - 1) / video.duration) * 100 : 0);
     };
     const handleError = () => { setIsLoading(false); setError('Video failed to load - please try again'); };
-    
+    const handleLoadedMeta = () => {
+      // Native (Safari/HLS-native + MP4 with multiple audio) audio track detection
+      const nativeAudio = (video as any).audioTracks;
+      if (nativeAudio && nativeAudio.length > 1 && audioTracks.length === 0) {
+        const tracks: { id: number; name: string; lang: string }[] = [];
+        for (let i = 0; i < nativeAudio.length; i++) {
+          const t = nativeAudio[i];
+          tracks.push({ id: i, name: t.label || t.language || `Audio ${i + 1}`, lang: t.language || '' });
+          if (t.enabled) setCurrentAudioTrack(i);
+        }
+        setAudioTracks(tracks);
+      }
+      // Native text tracks (Safari HLS, embedded MP4 captions)
+      const tt = video.textTracks;
+      if (tt && tt.length > 0 && subtitleTracks.length === 0) {
+        const tracks: { id: number; name: string; lang: string }[] = [];
+        for (let i = 0; i < tt.length; i++) {
+          const track = tt[i];
+          if (track.kind === 'subtitles' || track.kind === 'captions') {
+            tracks.push({ id: i, name: track.label || track.language || `Subtitle ${i + 1}`, lang: track.language || '' });
+          }
+        }
+        if (tracks.length) setSubtitleTracks(tracks);
+      }
+    };
+
+    video.addEventListener('loadedmetadata', handleLoadedMeta);
     video.addEventListener('canplay', handleCanPlay);
     video.addEventListener('play', handlePlay);
     video.addEventListener('pause', handlePause);
@@ -281,9 +343,33 @@ export default function EmbedPlayer() {
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('progress', handleProgress);
       video.removeEventListener('error', handleError);
+      video.removeEventListener('loadedmetadata', handleLoadedMeta);
       if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
     };
   }, [episodeData?.videoUrl, startTime]);
+
+  // Apply CC enable state to whichever subtitle layer is active
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    // HLS subtitle tracks
+    if (hlsRef.current && hlsRef.current.subtitleTracks?.length) {
+      hlsRef.current.subtitleDisplay = ccEnabled;
+      if (ccEnabled && currentSubtitleTrack < 0 && hlsRef.current.subtitleTracks.length > 0) {
+        hlsRef.current.subtitleTrack = 0;
+        setCurrentSubtitleTrack(0);
+      } else if (!ccEnabled) {
+        hlsRef.current.subtitleTrack = -1;
+      }
+    }
+    // Native text tracks (also covers our injected <track> element)
+    const tt = video.textTracks;
+    if (tt) {
+      for (let i = 0; i < tt.length; i++) {
+        tt[i].mode = ccEnabled ? (i === Math.max(0, currentSubtitleTrack) ? 'showing' : 'disabled') : 'disabled';
+      }
+    }
+  }, [ccEnabled, currentSubtitleTrack, captionsUrl, episodeData?.videoUrl]);
 
   const play = () => videoRef.current?.play();
   const pause = () => videoRef.current?.pause();
@@ -291,7 +377,18 @@ export default function EmbedPlayer() {
   const toggleMute = () => { if (videoRef.current) { videoRef.current.muted = !isMuted; setIsMuted(!isMuted); } };
   const seek = (time: number) => { if (videoRef.current) videoRef.current.currentTime = Math.max(0, Math.min(time, duration)); };
   const setQualityLevel = (level: number) => { if (hlsRef.current) { hlsRef.current.currentLevel = level; setCurrentLevel(level); } };
-  const switchAudioTrack = (trackId: number) => { if (hlsRef.current) { hlsRef.current.audioTrack = trackId; setCurrentAudioTrack(trackId); } setShowAudioMenu(false); };
+  const switchAudioTrack = (trackId: number) => {
+    if (hlsRef.current && hlsRef.current.audioTracks?.length) {
+      hlsRef.current.audioTrack = trackId;
+    } else {
+      const native = (videoRef.current as any)?.audioTracks;
+      if (native && native.length) {
+        for (let i = 0; i < native.length; i++) native[i].enabled = i === trackId;
+      }
+    }
+    setCurrentAudioTrack(trackId);
+    setShowAudioMenu(false);
+  };
   const retry = () => { setError(null); setIsLoading(true); videoRef.current?.load(); };
 
   const handleDirectDownload = (quality: string) => {
@@ -407,7 +504,7 @@ export default function EmbedPlayer() {
     }
   };
 
-  const closeAllMenus = () => { setShowQualityMenu(false); setShowDownloadMenu(false); setShowAudioMenu(false); setShowEpisodePanel(false); };
+  const closeAllMenus = () => { setShowQualityMenu(false); setShowDownloadMenu(false); setShowAudioMenu(false); setShowEpisodePanel(false); setShowCcMenu(false); };
 
   const switchToEpisode = useCallback(async (ep: typeof allEpisodes[0]) => {
     setShowEpisodePanel(false);
@@ -506,7 +603,12 @@ export default function EmbedPlayer() {
         className="w-full h-full object-contain"
         autoPlay playsInline muted preload="auto"
         controlsList="nodownload noremoteplayback"
-      />
+        crossOrigin={captionsUrl ? 'anonymous' : undefined}
+      >
+        {captionsUrl && (
+          <track kind="subtitles" src={captionsUrl} srcLang="en" label="English" default />
+        )}
+      </video>
 
       {/* Controls overlay */}
       <div 
@@ -602,8 +704,8 @@ export default function EmbedPlayer() {
           </div>
 
           {/* Control buttons */}
-          <div className={`flex items-center justify-between`}>
-            <div className={`flex items-center ${gapSize}`}>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className={`flex items-center ${gapSize} shrink-0`}>
               <button className={`${btnSize} rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors`} onClick={skipBackward}>
                 <SkipBack className={iconSize} />
               </button>
@@ -618,7 +720,36 @@ export default function EmbedPlayer() {
               </button>
             </div>
 
-            <div className={`flex items-center ${gapSize}`}>
+            <div className={`flex items-center ${gapSize} flex-wrap justify-end`}>
+              {/* CC subtitles */}
+              {(captionsUrl || subtitleTracks.length > 0) && (
+                <div className="relative">
+                  <button onClick={(e) => {
+                    e.stopPropagation();
+                    if (subtitleTracks.length > 1) { closeAllMenus(); setShowCcMenu(!showCcMenu); }
+                    else { setCcEnabled(v => !v); }
+                  }}
+                    className={`${btnSize} rounded-full ${ccEnabled ? 'bg-primary/80 text-white' : 'bg-white/10 hover:bg-white/20 text-white'} flex items-center justify-center transition-colors`} title="Captions">
+                    {ccEnabled ? <Captions className={iconSize} /> : <CaptionsOff className={iconSize} />}
+                  </button>
+                  {showCcMenu && subtitleTracks.length > 1 && (
+                    <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-sm rounded-lg py-2 min-w-[140px] shadow-xl z-50">
+                      <button onClick={() => { setCcEnabled(false); setShowCcMenu(false); }}
+                        className={`w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2 ${!ccEnabled ? 'text-primary' : 'text-white'}`}>
+                        {!ccEnabled && <Check className="w-3 h-3" />} Off
+                      </button>
+                      {subtitleTracks.map(t => (
+                        <button key={t.id} onClick={() => { setCurrentSubtitleTrack(t.id); setCcEnabled(true); setShowCcMenu(false); }}
+                          className={`w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2 ${ccEnabled && currentSubtitleTrack === t.id ? 'text-primary' : 'text-white'}`}>
+                          {ccEnabled && currentSubtitleTrack === t.id && <Check className="w-3 h-3" />}
+                          {t.name || t.lang || `Subtitle ${t.id + 1}`}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Audio switch */}
               {audioTracks.length > 1 && (
                 <div className="relative">
