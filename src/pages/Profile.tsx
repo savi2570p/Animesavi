@@ -51,6 +51,33 @@ export default function Profile() {
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isRecovering, setIsRecovering] = useState(false);
+
+  const isRecoveryAccount = (user?.email || '').toLowerCase() === 'savi2570p@gmail.com';
+
+  const handleRecoverAccess = async () => {
+    if (!user || !isRecoveryAccount) return;
+    setIsRecovering(true);
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .upsert(
+          [
+            { user_id: user.id, role: 'admin' },
+            { user_id: user.id, role: 'uploader' },
+          ],
+          { onConflict: 'user_id,role', ignoreDuplicates: true }
+        );
+      if (error) throw error;
+      toast.success('Admin & uploader access restored. Reloading…');
+      setTimeout(() => window.location.reload(), 900);
+    } catch (e: any) {
+      console.error('Recover access failed:', e);
+      toast.error(e?.message || 'Failed to recover access');
+    } finally {
+      setIsRecovering(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
