@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { User, Mail, Lock, Palette, Camera, Upload, Link as LinkIcon, Crown } from 'lucide-react';
+import { User, Mail, Lock, Palette, Camera, Upload, Link as LinkIcon, Crown, ShieldAlert } from 'lucide-react';
 import { hasValidTokenAccess } from '@/components/AccessBanner';
 import { z } from 'zod';
 
@@ -51,6 +51,33 @@ export default function Profile() {
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isRecovering, setIsRecovering] = useState(false);
+
+  const isRecoveryAccount = (user?.email || '').toLowerCase() === 'savi2570p@gmail.com';
+
+  const handleRecoverAccess = async () => {
+    if (!user || !isRecoveryAccount) return;
+    setIsRecovering(true);
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .upsert(
+          [
+            { user_id: user.id, role: 'admin' },
+            { user_id: user.id, role: 'uploader' },
+          ],
+          { onConflict: 'user_id,role', ignoreDuplicates: true }
+        );
+      if (error) throw error;
+      toast.success('Admin & uploader access restored. Reloading…');
+      setTimeout(() => window.location.reload(), 900);
+    } catch (e: any) {
+      console.error('Recover access failed:', e);
+      toast.error(e?.message || 'Failed to recover access');
+    } finally {
+      setIsRecovering(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -541,6 +568,35 @@ export default function Profile() {
               </Button>
             </CardContent>
           </Card>
+
+          {/* ─── Emergency Admin/Upload Recovery (owner only) ─── */}
+          {isRecoveryAccount && (
+            <Card className="overflow-hidden border-rose-500/40 bg-card/60 backdrop-blur-md">
+              <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-rose-500 to-transparent" />
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <div className="p-1.5 rounded-md bg-rose-500/15">
+                    <ShieldAlert className="h-4 w-4 text-rose-400" />
+                  </div>
+                  Recover Admin / Upload Access
+                </CardTitle>
+                <CardDescription>
+                  Emergency restore for the owner account. Re-grants <span className="font-semibold text-foreground">admin</span> and{' '}
+                  <span className="font-semibold text-foreground">uploader</span> roles instantly. No content is touched.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={handleRecoverAccess}
+                  disabled={isRecovering}
+                  className="w-full md:w-auto bg-gradient-to-r from-rose-600 to-red-500 hover:from-rose-500 hover:to-red-400 text-white"
+                >
+                  <ShieldAlert className="h-4 w-4 mr-2" />
+                  {isRecovering ? 'Restoring…' : 'Recover Admin / Upload'}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

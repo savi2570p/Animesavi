@@ -20,26 +20,20 @@ interface VersionGroup {
   items: ChangelogItem[];
 }
 
-const APP_VERSION = 'v26';
+const APP_VERSION = 'V 26.1';
 
-// Fixed download size for v26
-const RANDOM_DOWNLOAD_MB = 12.3;
+// Fixed download size for V 26.1
+const RANDOM_DOWNLOAD_MB = 1.11;
 
 const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'v26',
+    version: 'V 26.1',
     date: 'Latest',
-    highlight: 'Website-only fixes — keyboard ±10s skip on embeds, embed autoplay, reliable server switching, animesavi.com share links, smaller iOS Telegram popup, and a cleaner What\'s New popup.',
+    highlight: 'fix token system error, fix upload and admin access, more faster and more secure.',
     items: [
-      { icon: '⌨️', badge: 'NEW', title: 'Keyboard ±10s on Embeds', desc: 'Use ← / → arrow keys to skip 10 seconds backward or forward in both the normal embed and Shadow Link embed players.' },
-      { icon: '▶️', badge: 'NEW', title: 'Embed Autoplay', desc: 'Embed players now start playing automatically — no need to tap play after the page loads.' },
-      { icon: '🎬', badge: 'FIX', title: 'Server Switch Playback', desc: 'Switching servers mid-episode now resumes playback automatically instead of getting stuck on a buffering wheel.' },
-      { icon: '🔗', badge: 'FIX', title: 'Share Links → animesavi.com', desc: '"Share with Friends" now copies https://animesavi.com instead of the old lovable.app preview URL.' },
-      { icon: '📎', badge: 'FIX', title: 'Report Screenshot Attachment', desc: 'Screenshots attached to a report now save to your device with a clear filename so you can drop them straight into Telegram.' },
-      { icon: '✈️', badge: 'FIX', title: 'Smaller iOS Telegram Popup', desc: 'The Telegram popup on the watch page is more compact on iPhone so it never overlaps the player controls.' },
-      { icon: '🧹', badge: 'FIX', title: 'Cleaner What\'s New Popup', desc: 'Removed the decorative big circles and old version history — only the latest version is shown.' },
-      { icon: '📺', badge: 'NEW', title: 'iOS Native Fullscreen', desc: 'Tapping fullscreen in any embed player on iPhone/iPad now uses the native iOS video player for a true full-screen experience.' },
-      { icon: '✨', badge: 'IMPROVED', title: 'Smart Recommendations 2.0', desc: 'The "Recommended for You" row is now genre + mood-aware, tuned by your real watch history and ratings.' },
+      { icon: '🔑', badge: 'FIX', title: 'Token System Restored', desc: 'Fixed token system error — 24-hour and 3-month reactivation links now activate access correctly.' },
+      { icon: '🛡️', badge: 'FIX', title: 'Upload & Admin Access', desc: 'Fixed missing upload and admin access. Owner & uploader dashboards are visible again.' },
+      { icon: '⚡', badge: 'IMPROVED', title: 'Faster & More Secure', desc: 'Tightened backend permissions and tuned data fetching — the app is noticeably faster and more secure.' },
     ],
   },
 ];
