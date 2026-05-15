@@ -103,6 +103,7 @@ interface VideoPlayerProps {
   seasonNumber?: number;
   episodeId: string;
   poster?: string;
+  bannerImage?: string | null;
   isMovie?: boolean;
   activeServer: ServerType;
   isLoading?: boolean;
