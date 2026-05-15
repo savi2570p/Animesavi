@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { User, Mail, Lock, Palette, Camera, Upload, Link as LinkIcon, Crown } from 'lucide-react';
+import { User, Mail, Lock, Palette, Camera, Upload, Link as LinkIcon, Crown, ShieldAlert } from 'lucide-react';
 import { hasValidTokenAccess } from '@/components/AccessBanner';
 import { z } from 'zod';
 
