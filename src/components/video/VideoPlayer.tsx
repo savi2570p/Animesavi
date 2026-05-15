@@ -237,6 +237,7 @@ export function VideoPlayer({
   seasonNumber = 1,
   episodeId,
   poster,
+  bannerImage,
   isMovie = false,
   activeServer,
   isLoading = false,
