@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { isIOSDevice } from '@/lib/deviceUtils';
 import { preloadImages } from '@/lib/imageOptimization';
 import { BatchDownload } from '@/components/download/BatchDownload';
 import { AnimeReviews } from '@/components/anime/AnimeReviews';
@@ -477,21 +478,23 @@ export default function AnimeDetail() {
           <div className="flex-shrink-0 animate-fade-in">
             <div
               className="relative group"
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-              onTouchMove={handleTouchMove}
+              onTouchStart={isIOSDevice() ? undefined : handleTouchStart}
+              onTouchEnd={isIOSDevice() ? undefined : handleTouchEnd}
+              onTouchMove={isIOSDevice() ? undefined : handleTouchMove}
             >
               {/* Glow halo behind poster */}
-              <div className="absolute -inset-3 rounded-2xl bg-gradient-to-br from-primary/40 via-primary/10 to-transparent blur-2xl opacity-60 group-hover:opacity-90 transition-opacity duration-500" />
+              <div className="absolute -inset-3 rounded-2xl bg-gradient-to-br from-primary/40 via-primary/10 to-transparent blur-2xl opacity-60 group-hover:opacity-90 transition-opacity duration-500 pointer-events-none" />
               <img
                 src={anime.cover_image || '/placeholder.svg'}
                 alt={anime.title}
+                draggable={isIOSDevice() ? true : false}
+                style={isIOSDevice() ? { WebkitTouchCallout: 'default', WebkitUserSelect: 'auto', touchAction: 'auto' } as React.CSSProperties : undefined}
                 className="relative w-28 md:w-72 rounded-xl md:rounded-2xl shadow-[0_25px_60px_-15px_hsl(var(--primary)/0.5),0_15px_40px_-15px_hsl(0_0%_0%/0.7)] border border-border/40 transition-transform duration-500 group-hover:scale-[1.03] cursor-pointer"
               />
-              <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-              {/* Quick play */}
-              {nextEpisode && (
+              {/* Quick play — hidden on iOS so native long-press image preview works */}
+              {nextEpisode && !isIOSDevice() && (
                 <Link
                   to={`/watch/${nextEpisode.id}`}
                   className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"

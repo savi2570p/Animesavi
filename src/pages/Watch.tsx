@@ -1104,6 +1104,7 @@ export default function Watch() {
               seasonNumber={currentSeason?.season_number || 1}
               episodeId={episode.id}
               poster={anime?.cover_image || undefined}
+              bannerImage={episode.thumbnail || anime?.cover_image || null}
               isMovie={isMovie}
               activeServer={activeServer}
               isLoading={false}
