@@ -1,0 +1,21 @@
+# AnimeSavi
+
+> AnimeSavi is a free streaming platform for anime in official Hindi DUB, with same-day episode releases, multi-server playback, and offline downloads.
+
+AnimeSavi catalogs anime series, movies, and ongoing seasons with Hindi, English, Tamil, Telugu, and Japanese audio tracks. Users can browse the calendar, follow upcoming releases, save watchlists, and watch in 4K with multiple playback servers.
+
+## Pages
+
+- [Home](/): Featured anime, trending now, latest episodes and continue-watching.
+- [Browse](/browse): Full catalog with filters by genre, language, and status.
+- [Latest Episodes](/latest-episodes): Newest episode releases across all series.
+- [Latest Series](/latest-series): Recently added anime series.
+- [Latest Movies](/latest-movies): Recently added anime movies.
+- [Schedule](/schedule): Weekly release calendar by day of the week.
+- [Upcoming](/upcoming): Anime scheduled for future release with countdowns.
+- [Crunchy](/crunchy): Crunchyroll-collection discovery row.
+- [MuseIN](/musein): Muse India sub/dub listings.
+
+## Optional
+
+- [Welcome](/welcome): First-time visitor landing page.
