@@ -419,6 +419,36 @@ export default function EpisodeEdit() {
             </div>
           )}
 
+          {/* Extract CC from uploaded video — Japanese only */}
+          <div className="space-y-2 p-4 rounded-lg border border-border/50 bg-muted/30">
+            <Label className="flex items-center gap-2">
+              <Wand2 className="h-4 w-4 text-primary" />
+              Extract CC from Video File
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Automatically pulls embedded subtitle tracks from the uploaded video.
+              Only enabled when Audio Language is set to <strong>Original (Japanese)</strong>.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleExtractCC}
+              disabled={isExtractingCC || !videoUrl || audioLanguage !== 'original'}
+              className="w-full sm:w-auto"
+            >
+              {isExtractingCC ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Extracting…</>
+              ) : (
+                <><Wand2 className="h-4 w-4 mr-2" /> Extract CC</>
+              )}
+            </Button>
+            {audioLanguage !== 'original' && (
+              <p className="text-xs text-amber-400">
+                Switch audio to Original (Japanese) to enable CC extraction.
+              </p>
+            )}
+          </div>
+
           {/* CC Subtitle Editor */}
           <SubtitleEditor
             compact={true}
