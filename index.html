@@ -49,7 +49,32 @@
     
     <!-- Manifest for PWA -->
     <link rel="manifest" href="/manifest.json">
-    
+
+    <!-- JSON-LD: Organization + WebSite for rich results -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "name": "AnimeSavi",
+          "url": "https://animesavi.com/",
+          "logo": "https://storage.googleapis.com/gpt-engineer-file-uploads/9zI1yCNlGfZymWSADZuYy9FGrtQ2/uploads/1768537236542-logo.png",
+          "sameAs": ["https://t.me/Lv_Savi"]
+        },
+        {
+          "@type": "WebSite",
+          "name": "AnimeSavi",
+          "url": "https://animesavi.com/",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://animesavi.com/browse?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    }
+    </script>
   
   
   
