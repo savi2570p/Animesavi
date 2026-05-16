@@ -9,12 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { ArrowLeft, Save, Film, Volume2, Subtitles } from 'lucide-react';
+import { ArrowLeft, Save, Film, Volume2, Subtitles, Wand2, Loader2 } from 'lucide-react';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { IntroOutroEditor } from '@/components/upload/IntroOutroEditor';
 import { VideoFormatConverter } from '@/components/upload/VideoFormatConverter';
 import { SubtitleEditor } from '@/components/upload/SubtitleEditor';
 import { extractEmbedSrc } from '@/components/video/PureEmbedPlayer';
+import { extractEmbeddedCaptionsToVTT } from '@/lib/extractEmbeddedCaptions';
 
 const AUDIO_LANGUAGES = [
   { value: 'original', label: 'Original (Japanese)' },
@@ -66,6 +67,7 @@ export default function EpisodeEdit() {
   const [isSaving, setIsSaving] = useState(false);
   const [isMuse, setIsMuse] = useState(false);
   const [isSavingMuse, setIsSavingMuse] = useState(false);
+  const [isExtractingCC, setIsExtractingCC] = useState(false);
 
   const isAuthReady = !isAuthLoading && isRolesLoaded;
 
@@ -190,6 +192,53 @@ export default function EpisodeEdit() {
     }
 
     setIsSaving(false);
+  };
+
+  const handleExtractCC = async () => {
+    if (!videoUrl) {
+      toast.error('Upload or paste a video URL first');
+      return;
+    }
+    if (audioLanguage !== 'original') {
+      toast.error('Switch Audio Language to Original (Japanese) to extract CC');
+      return;
+    }
+    setIsExtractingCC(true);
+    const loadingId = toast.loading('Analyzing video for embedded captions…');
+    try {
+      const result = await extractEmbeddedCaptionsToVTT(videoUrl, { preferLang: 'ja' });
+      if (!result) {
+        toast.error('No extractable captions found in this video file', { id: loadingId });
+        return;
+      }
+      const fileName = `anime/${animeId}/subtitles/ep_${episodeId}_ja.vtt`;
+      const blob = new Blob([result.vtt], { type: 'text/vtt' });
+      const { error: uploadError } = await supabase.storage
+        .from('anime-subtitles')
+        .upload(fileName, blob, { upsert: true, contentType: 'text/vtt' });
+      if (uploadError) {
+        toast.error('Failed to upload extracted captions', { id: loadingId });
+        return;
+      }
+      const { data: urlData } = supabase.storage
+        .from('anime-subtitles')
+        .getPublicUrl(fileName);
+      const { error } = await supabase
+        .from('episodes')
+        .update({ captions_url: urlData.publicUrl })
+        .eq('id', episodeId);
+      if (error) {
+        toast.error('Failed to attach captions to episode', { id: loadingId });
+        return;
+      }
+      setEpisode(prev => prev ? { ...prev, captions_url: urlData.publicUrl } : null);
+      toast.success(`Captions extracted (${result.trackLabel || 'JA'}) and attached`, { id: loadingId });
+    } catch (e) {
+      console.error('Extract CC failed:', e);
+      toast.error('Extraction failed — try a different source or upload a .vtt manually', { id: loadingId });
+    } finally {
+      setIsExtractingCC(false);
+    }
   };
 
   if (!isAuthReady || isLoading) {
@@ -369,6 +418,36 @@ export default function EpisodeEdit() {
               </div>
             </div>
           )}
+
+          {/* Extract CC from uploaded video — Japanese only */}
+          <div className="space-y-2 p-4 rounded-lg border border-border/50 bg-muted/30">
+            <Label className="flex items-center gap-2">
+              <Wand2 className="h-4 w-4 text-primary" />
+              Extract CC from Video File
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Automatically pulls embedded subtitle tracks from the uploaded video.
+              Only enabled when Audio Language is set to <strong>Original (Japanese)</strong>.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleExtractCC}
+              disabled={isExtractingCC || !videoUrl || audioLanguage !== 'original'}
+              className="w-full sm:w-auto"
+            >
+              {isExtractingCC ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Extracting…</>
+              ) : (
+                <><Wand2 className="h-4 w-4 mr-2" /> Extract CC</>
+              )}
+            </Button>
+            {audioLanguage !== 'original' && (
+              <p className="text-xs text-amber-400">
+                Switch audio to Original (Japanese) to enable CC extraction.
+              </p>
+            )}
+          </div>
 
           {/* CC Subtitle Editor */}
           <SubtitleEditor
