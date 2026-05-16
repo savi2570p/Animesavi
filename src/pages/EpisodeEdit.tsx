@@ -194,6 +194,53 @@ export default function EpisodeEdit() {
     setIsSaving(false);
   };
 
+  const handleExtractCC = async () => {
+    if (!videoUrl) {
+      toast.error('Upload or paste a video URL first');
+      return;
+    }
+    if (audioLanguage !== 'original') {
+      toast.error('Switch Audio Language to Original (Japanese) to extract CC');
+      return;
+    }
+    setIsExtractingCC(true);
+    const loadingId = toast.loading('Analyzing video for embedded captions…');
+    try {
+      const result = await extractEmbeddedCaptionsToVTT(videoUrl, { preferLang: 'ja' });
+      if (!result) {
+        toast.error('No extractable captions found in this video file', { id: loadingId });
+        return;
+      }
+      const fileName = `anime/${animeId}/subtitles/ep_${episodeId}_ja.vtt`;
+      const blob = new Blob([result.vtt], { type: 'text/vtt' });
+      const { error: uploadError } = await supabase.storage
+        .from('anime-subtitles')
+        .upload(fileName, blob, { upsert: true, contentType: 'text/vtt' });
+      if (uploadError) {
+        toast.error('Failed to upload extracted captions', { id: loadingId });
+        return;
+      }
+      const { data: urlData } = supabase.storage
+        .from('anime-subtitles')
+        .getPublicUrl(fileName);
+      const { error } = await supabase
+        .from('episodes')
+        .update({ captions_url: urlData.publicUrl })
+        .eq('id', episodeId);
+      if (error) {
+        toast.error('Failed to attach captions to episode', { id: loadingId });
+        return;
+      }
+      setEpisode(prev => prev ? { ...prev, captions_url: urlData.publicUrl } : null);
+      toast.success(`Captions extracted (${result.trackLabel || 'JA'}) and attached`, { id: loadingId });
+    } catch (e) {
+      console.error('Extract CC failed:', e);
+      toast.error('Extraction failed — try a different source or upload a .vtt manually', { id: loadingId });
+    } finally {
+      setIsExtractingCC(false);
+    }
+  };
+
   if (!isAuthReady || isLoading) {
     return (
       <div className="container py-12 flex items-center justify-center">
