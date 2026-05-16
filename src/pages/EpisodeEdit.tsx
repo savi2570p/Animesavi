@@ -67,6 +67,7 @@ export default function EpisodeEdit() {
   const [isSaving, setIsSaving] = useState(false);
   const [isMuse, setIsMuse] = useState(false);
   const [isSavingMuse, setIsSavingMuse] = useState(false);
+  const [isExtractingCC, setIsExtractingCC] = useState(false);
 
   const isAuthReady = !isAuthLoading && isRolesLoaded;
 
