@@ -99,7 +99,7 @@ export default function EmbedSlugPlayer() {
   const [showCcMenu, setShowCcMenu] = useState(false);
 
   // Episode selection state
-  const [allEpisodes, setAllEpisodes] = useState<{ id: string; title: string; episode_number: number; season_number: number; season_id: string }[]>([]);
+  const [allEpisodes, setAllEpisodes] = useState<{ id: string; title: string; episode_number: number; season_number: number; season_id: string; video_url?: string | null; external_url?: string | null; captions_url?: string | null }[]>([]);
   const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(0);
   const [showEpisodePanel, setShowEpisodePanel] = useState(false);
   const [currentSeasonNumber, setCurrentSeasonNumber] = useState(1);
