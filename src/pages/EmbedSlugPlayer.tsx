@@ -254,19 +254,35 @@ export default function EmbedSlugPlayer() {
     resolveEpisode();
   }, [animeSlug, seasonSlug, episodeSlug, domainAllowed]);
 
-  // Switch episode handler
+  // Switch episode handler — uses prefetched URLs for instant switching
   const switchToEpisode = useCallback(async (ep: typeof allEpisodes[0]) => {
     setShowEpisodePanel(false);
-    setIsLoading(true);
-    setError(null);
-    const { data } = await supabase.from('episodes').select('video_url, external_url, title, captions_url').eq('id', ep.id).single();
-    if (!data) { setError('Episode failed to load'); return; }
-    const url = data.video_url || data.external_url;
-    if (!url) { setError('No video available'); return; }
-    setEpisodeData(prev => ({ title: data.title, videoUrl: url, animeTitle: prev?.animeTitle || '' }));
-    setCaptionsUrl(data.captions_url || null);
+
+    // Tear down current playback IMMEDIATELY for snappy UI response
+    if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+    if (videoRef.current) { try { videoRef.current.pause(); videoRef.current.removeAttribute('src'); videoRef.current.load(); } catch {} }
+
     setSubtitleTracks([]);
     setAudioTracks([]);
+    setError(null);
+
+    let url = ep.video_url || ep.external_url || null;
+    let captions = ep.captions_url || null;
+    let title = ep.title;
+
+    // Fallback: fetch only if prefetched data is missing
+    if (!url) {
+      setIsLoading(true);
+      const { data } = await supabase.from('episodes').select('video_url, external_url, title, captions_url').eq('id', ep.id).single();
+      if (!data) { setError('Episode failed to load'); return; }
+      url = data.video_url || data.external_url;
+      captions = data.captions_url;
+      title = data.title;
+    }
+    if (!url) { setError('No video available'); return; }
+
+    setEpisodeData(prev => ({ title, videoUrl: url!, animeTitle: prev?.animeTitle || '' }));
+    setCaptionsUrl(captions);
     setCurrentSeasonNumber(ep.season_number);
     setCurrentEpisodeNumber(ep.episode_number);
     const idx = allEpisodes.findIndex(e => e.id === ep.id);
