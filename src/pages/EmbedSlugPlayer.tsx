@@ -220,17 +220,33 @@ export default function EmbedSlugPlayer() {
       setCurrentSeasonNumber(seasonNumber);
       setCurrentEpisodeNumber(episodeNumber);
 
-      // Fetch all episodes for episode selector
+      // Fetch all episodes for episode selector — prefetch video URLs in parallel for instant switching
+      const seasonResults = await Promise.all(
+        seasons.map((s) =>
+          supabase
+            .from('episodes')
+            .select('id, title, episode_number, video_url, external_url, captions_url')
+            .eq('season_id', s.id)
+            .order('episode_number')
+            .then(({ data }) => ({ s, eps: data || [] }))
+        )
+      );
       const allEps: typeof allEpisodes = [];
-      for (const s of seasons) {
-        const { data: eps } = await supabase
-          .from('episodes').select('id, title, episode_number')
-          .eq('season_id', s.id).order('episode_number');
-        if (eps) {
-          allEps.push(...eps.map(e => ({ ...e, season_number: s.season_number, season_id: s.id })));
-        }
-      }
-      setAllEpisodes(allEps);
+      seasonResults.forEach(({ s, eps }) => {
+        allEps.push(
+          ...eps.map((e: any) => ({
+            id: e.id,
+            title: e.title,
+            episode_number: e.episode_number,
+            season_number: s.season_number,
+            season_id: s.id,
+            video_url: e.video_url,
+            external_url: e.external_url,
+            captions_url: e.captions_url,
+          })) as any
+        );
+      });
+      setAllEpisodes(allEps as any);
       const idx = allEps.findIndex(e => e.episode_number === episodeNumber && e.season_number === seasonNumber);
       setCurrentEpisodeIndex(idx >= 0 ? idx : 0);
     };
