@@ -442,6 +442,20 @@ export default function Admin() {
           <UserManagement />
         </TabsContent>
       </Tabs>
+
+      {/* Quick link to dedicated Site Health (Lighthouse LCP + GSC verification) */}
+      <div className="mt-8 p-4 rounded-lg border border-border/60 bg-muted/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <div className="text-sm font-semibold text-foreground">Site Health</div>
+          <div className="text-xs text-muted-foreground">Latest Lighthouse LCP results after each publish and Search Console verification status for animesavi.com.</div>
+        </div>
+        <button
+          onClick={() => navigate('/admin/site-health')}
+          className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors self-start sm:self-auto"
+        >
+          Open Site Health →
+        </button>
+      </div>
     </div>
   );
 }

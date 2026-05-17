@@ -63,6 +63,7 @@ const Downloads = lazy(() => import("./pages/Downloads"));
 const WatchList = lazy(() => import("./pages/WatchList"));
 const ShadowArise = lazy(() => import("./pages/ShadowArise"));
 const ShadowFlix = lazy(() => import("./pages/ShadowFlix"));
+const SiteHealth = lazy(() => import("./pages/SiteHealth"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -236,6 +237,7 @@ const App = () => (
                     <Route path="/upload/anime/:animeId" element={<UploadAnimeEdit />} />
                     <Route path="/upload/anime/:animeId/episode/:episodeId/edit" element={<EpisodeEdit />} />
                     <Route path="/admin" element={<Admin />} />
+                    <Route path="/admin/site-health" element={<SiteHealth />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/stats" element={<UserStats />} />
