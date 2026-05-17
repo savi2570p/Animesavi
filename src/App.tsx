@@ -237,6 +237,7 @@ const App = () => (
                     <Route path="/upload/anime/:animeId" element={<UploadAnimeEdit />} />
                     <Route path="/upload/anime/:animeId/episode/:episodeId/edit" element={<EpisodeEdit />} />
                     <Route path="/admin" element={<Admin />} />
+                    <Route path="/admin/site-health" element={<SiteHealth />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/stats" element={<UserStats />} />
