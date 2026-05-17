@@ -837,26 +837,28 @@ export default function EmbedSlugPlayer() {
                 </div>
               )}
 
-              {/* Audio switch */}
-              {audioTracks.length > 1 && (
-                <div className="relative">
-                  <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowAudioMenu(!showAudioMenu); }}
-                    className={controlButtonClass} title="Audio Track">
-                    <Headphones className={iconSize} />
-                  </button>
-                  {showAudioMenu && (
-                    <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[130px] z-50">
-                      {audioTracks.map(t => (
+              {/* Audio switch — always visible so users can see/change track */}
+              <div className="relative">
+                <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowAudioMenu(!showAudioMenu); }}
+                  className={controlButtonClass} title="Audio Track">
+                  <Headphones className={iconSize} />
+                </button>
+                {showAudioMenu && (
+                  <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[150px] z-50">
+                    {audioTracks.length === 0 ? (
+                      <div className="px-3 py-1.5 text-xs text-white/60">Default audio (only track)</div>
+                    ) : (
+                      audioTracks.map(t => (
                         <button key={t.id} onClick={() => switchAudioTrack(t.id)}
                           className={`w-full text-left px-3 py-1.5 text-xs rounded flex items-center gap-2 ${currentAudioTrack === t.id ? 'text-primary' : 'text-white/80'} hover:bg-white/10`}>
                           {currentAudioTrack === t.id && <Check className="w-3 h-3" />}
                           {t.name || t.lang || `Audio ${t.id + 1}`}
                         </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Quality */}
               {hlsLevels.length > 0 && (
