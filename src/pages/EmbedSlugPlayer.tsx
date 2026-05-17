@@ -99,7 +99,7 @@ export default function EmbedSlugPlayer() {
   const [showCcMenu, setShowCcMenu] = useState(false);
 
   // Episode selection state
-  const [allEpisodes, setAllEpisodes] = useState<{ id: string; title: string; episode_number: number; season_number: number; season_id: string }[]>([]);
+  const [allEpisodes, setAllEpisodes] = useState<{ id: string; title: string; episode_number: number; season_number: number; season_id: string; video_url?: string | null; external_url?: string | null; captions_url?: string | null }[]>([]);
   const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(0);
   const [showEpisodePanel, setShowEpisodePanel] = useState(false);
   const [currentSeasonNumber, setCurrentSeasonNumber] = useState(1);
@@ -220,17 +220,33 @@ export default function EmbedSlugPlayer() {
       setCurrentSeasonNumber(seasonNumber);
       setCurrentEpisodeNumber(episodeNumber);
 
-      // Fetch all episodes for episode selector
+      // Fetch all episodes for episode selector — prefetch video URLs in parallel for instant switching
+      const seasonResults = await Promise.all(
+        seasons.map((s) =>
+          supabase
+            .from('episodes')
+            .select('id, title, episode_number, video_url, external_url, captions_url')
+            .eq('season_id', s.id)
+            .order('episode_number')
+            .then(({ data }) => ({ s, eps: data || [] }))
+        )
+      );
       const allEps: typeof allEpisodes = [];
-      for (const s of seasons) {
-        const { data: eps } = await supabase
-          .from('episodes').select('id, title, episode_number')
-          .eq('season_id', s.id).order('episode_number');
-        if (eps) {
-          allEps.push(...eps.map(e => ({ ...e, season_number: s.season_number, season_id: s.id })));
-        }
-      }
-      setAllEpisodes(allEps);
+      seasonResults.forEach(({ s, eps }) => {
+        allEps.push(
+          ...eps.map((e: any) => ({
+            id: e.id,
+            title: e.title,
+            episode_number: e.episode_number,
+            season_number: s.season_number,
+            season_id: s.id,
+            video_url: e.video_url,
+            external_url: e.external_url,
+            captions_url: e.captions_url,
+          })) as any
+        );
+      });
+      setAllEpisodes(allEps as any);
       const idx = allEps.findIndex(e => e.episode_number === episodeNumber && e.season_number === seasonNumber);
       setCurrentEpisodeIndex(idx >= 0 ? idx : 0);
     };
@@ -238,19 +254,35 @@ export default function EmbedSlugPlayer() {
     resolveEpisode();
   }, [animeSlug, seasonSlug, episodeSlug, domainAllowed]);
 
-  // Switch episode handler
+  // Switch episode handler — uses prefetched URLs for instant switching
   const switchToEpisode = useCallback(async (ep: typeof allEpisodes[0]) => {
     setShowEpisodePanel(false);
-    setIsLoading(true);
-    setError(null);
-    const { data } = await supabase.from('episodes').select('video_url, external_url, title, captions_url').eq('id', ep.id).single();
-    if (!data) { setError('Episode failed to load'); return; }
-    const url = data.video_url || data.external_url;
-    if (!url) { setError('No video available'); return; }
-    setEpisodeData(prev => ({ title: data.title, videoUrl: url, animeTitle: prev?.animeTitle || '' }));
-    setCaptionsUrl(data.captions_url || null);
+
+    // Tear down current playback IMMEDIATELY for snappy UI response
+    if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+    if (videoRef.current) { try { videoRef.current.pause(); videoRef.current.removeAttribute('src'); videoRef.current.load(); } catch {} }
+
     setSubtitleTracks([]);
     setAudioTracks([]);
+    setError(null);
+
+    let url = ep.video_url || ep.external_url || null;
+    let captions = ep.captions_url || null;
+    let title = ep.title;
+
+    // Fallback: fetch only if prefetched data is missing
+    if (!url) {
+      setIsLoading(true);
+      const { data } = await supabase.from('episodes').select('video_url, external_url, title, captions_url').eq('id', ep.id).single();
+      if (!data) { setError('Episode failed to load'); return; }
+      url = data.video_url || data.external_url;
+      captions = data.captions_url;
+      title = data.title;
+    }
+    if (!url) { setError('No video available'); return; }
+
+    setEpisodeData(prev => ({ title, videoUrl: url!, animeTitle: prev?.animeTitle || '' }));
+    setCaptionsUrl(captions);
     setCurrentSeasonNumber(ep.season_number);
     setCurrentEpisodeNumber(ep.episode_number);
     const idx = allEpisodes.findIndex(e => e.id === ep.id);
@@ -805,26 +837,28 @@ export default function EmbedSlugPlayer() {
                 </div>
               )}
 
-              {/* Audio switch */}
-              {audioTracks.length > 1 && (
-                <div className="relative">
-                  <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowAudioMenu(!showAudioMenu); }}
-                    className={controlButtonClass} title="Audio Track">
-                    <Headphones className={iconSize} />
-                  </button>
-                  {showAudioMenu && (
-                    <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[130px] z-50">
-                      {audioTracks.map(t => (
+              {/* Audio switch — always visible so users can see/change track */}
+              <div className="relative">
+                <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowAudioMenu(!showAudioMenu); }}
+                  className={controlButtonClass} title="Audio Track">
+                  <Headphones className={iconSize} />
+                </button>
+                {showAudioMenu && (
+                  <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[150px] z-50">
+                    {audioTracks.length === 0 ? (
+                      <div className="px-3 py-1.5 text-xs text-white/60">Default audio (only track)</div>
+                    ) : (
+                      audioTracks.map(t => (
                         <button key={t.id} onClick={() => switchAudioTrack(t.id)}
                           className={`w-full text-left px-3 py-1.5 text-xs rounded flex items-center gap-2 ${currentAudioTrack === t.id ? 'text-primary' : 'text-white/80'} hover:bg-white/10`}>
                           {currentAudioTrack === t.id && <Check className="w-3 h-3" />}
                           {t.name || t.lang || `Audio ${t.id + 1}`}
                         </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Quality */}
               {hlsLevels.length > 0 && (

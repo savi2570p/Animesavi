@@ -750,26 +750,28 @@ export default function EmbedPlayer() {
                 </div>
               )}
 
-              {/* Audio switch */}
-              {audioTracks.length > 1 && (
-                <div className="relative">
-                  <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowAudioMenu(!showAudioMenu); }}
-                    className={`${btnSize} rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors`} title="Audio Track">
-                    <Headphones className={iconSize} />
-                  </button>
-                  {showAudioMenu && (
-                    <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-sm rounded-lg py-2 min-w-[130px] shadow-xl z-50">
-                      {audioTracks.map(t => (
+              {/* Audio switch — always visible so users can see/change track */}
+              <div className="relative">
+                <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowAudioMenu(!showAudioMenu); }}
+                  className={`${btnSize} rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors`} title="Audio Track">
+                  <Headphones className={iconSize} />
+                </button>
+                {showAudioMenu && (
+                  <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-sm rounded-lg py-2 min-w-[150px] shadow-xl z-50">
+                    {audioTracks.length === 0 ? (
+                      <div className="px-4 py-2 text-sm text-white/60">Default audio (only track)</div>
+                    ) : (
+                      audioTracks.map(t => (
                         <button key={t.id} onClick={() => switchAudioTrack(t.id)}
                           className={`w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2 ${currentAudioTrack === t.id ? 'text-primary' : 'text-white'}`}>
                           {currentAudioTrack === t.id && <Check className="w-3 h-3" />}
                           {t.name || t.lang || `Audio ${t.id + 1}`}
                         </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Quality selector */}
               {isHlsActive && hlsLevels.length > 1 && (
