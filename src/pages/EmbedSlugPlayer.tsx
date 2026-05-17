@@ -691,10 +691,36 @@ export default function EmbedSlugPlayer() {
       onClick={(e) => { if (!(e.target as HTMLElement).closest('.controls-area')) { togglePlay(); closeAllMenus(); } }}
     >
       {(isLoading || isBuffering) && (
-        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-          <Loader2 className="w-12 h-12 text-primary animate-spin" />
+        <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
+          {/* Shimmer skeleton */}
+          <div className="absolute inset-0 bg-gradient-to-br from-black via-zinc-900 to-black" />
+          <div
+            className="absolute inset-0 opacity-30"
+            style={{
+              background: 'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%)',
+              backgroundSize: '200% 100%',
+              animation: 'embedShimmer 1.6s linear infinite',
+            }}
+          />
+          <style>{`@keyframes embedShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+            {episodeData?.title && (
+              <div className="text-center px-4">
+                <div className="text-white/90 text-sm font-medium line-clamp-1">{episodeData.title}</div>
+                <div className="text-white/50 text-xs mt-0.5">S{currentSeasonNumber} • E{currentEpisodeNumber} • Loading…</div>
+              </div>
+            )}
+          </div>
         </div>
       )}
+
+      {/* Prefetch next episode's video URL so the next switch is near-instant */}
+      {(() => {
+        const next = allEpisodes[currentEpisodeIndex + 1];
+        const nextUrl = next?.video_url || next?.external_url;
+        return nextUrl ? <link rel="prefetch" href={nextUrl} as="fetch" crossOrigin="anonymous" /> : null;
+      })()}
 
       <video
         ref={videoRef}
