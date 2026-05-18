@@ -11,6 +11,9 @@ import { toast } from 'sonner';
 const SITE_URL = 'https://animesavi.com/';
 const ADMIN_EMAIL = 'savi2570p@gmail.com';
 const LCP_STORAGE_KEY = 'siteHealth.lcpHistory.v1';
+const LCP_REGRESSION_THRESHOLD_MS = 300;
+const LAST_BUILD_KEY = 'siteHealth.lastBuildSig.v1';
+const LAST_REGRESSION_KEY = 'siteHealth.lastRegression.v1';
 
 interface LCPRun {
   ts: number;
@@ -47,6 +50,10 @@ export default function SiteHealth() {
   const [gscLoading, setGscLoading] = useState(false);
   const [gscError, setGscError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
+  const [liveMetaContent, setLiveMetaContent] = useState<string | null>(null);
+  const [liveMetaError, setLiveMetaError] = useState<string | null>(null);
+  const [liveMetaLoading, setLiveMetaLoading] = useState(false);
+  const [lastRegression, setLastRegression] = useState<{ ts: number; deltaMs: number } | null>(null);
 
   // Gate: only admins (or the explicit recovery account)
   useEffect(() => {
@@ -76,11 +83,10 @@ export default function SiteHealth() {
     try { localStorage.setItem(LCP_STORAGE_KEY, JSON.stringify(next.slice(0, 20))); } catch {}
   };
 
-  const runLighthouse = async () => {
+  const runLighthouse = useCallback(async (opts?: { silent?: boolean }) => {
     setLcpLoading(true);
     setLcpError(null);
     try {
-      // PageSpeed Insights public endpoint — no API key required for low volume.
       const res = await fetch(
         `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(SITE_URL)}&category=performance&strategy=mobile`
       );
@@ -96,15 +102,69 @@ export default function SiteHealth() {
         clsScore: audits['cumulative-layout-shift']?.numericValue ?? null,
         ttiMs: audits['interactive']?.numericValue ?? null,
       };
+
+      // Regression alert + admin notification — fires if LCP increased meaningfully
+      const prev = history[0];
+      if (prev?.lcpMs && run.lcpMs && run.lcpMs - prev.lcpMs > LCP_REGRESSION_THRESHOLD_MS) {
+        const deltaMs = run.lcpMs - prev.lcpMs;
+        const record = { ts: run.ts, deltaMs };
+        setLastRegression(record);
+        try { localStorage.setItem(LAST_REGRESSION_KEY, JSON.stringify(record)); } catch {}
+        toast.warning(`LCP regressed by ${(deltaMs / 1000).toFixed(2)}s vs the previous scan`, {
+          description: `Latest ${fmtMs(run.lcpMs)} · previous ${fmtMs(prev.lcpMs)}`,
+          duration: 8000,
+        });
+      }
+
       persistHistory([run, ...history]);
-      toast.success('Lighthouse scan complete');
+      if (!opts?.silent) toast.success('Lighthouse scan complete');
     } catch (e) {
       setLcpError(e instanceof Error ? e.message : String(e));
-      toast.error('Lighthouse scan failed');
+      if (!opts?.silent) toast.error('Lighthouse scan failed');
     } finally {
       setLcpLoading(false);
     }
-  };
+  }, [history]);
+
+  // Live verification-meta-tag fetch — confirms the production HTML actually
+  // serves the google-site-verification tag (proves the latest build is live).
+  const fetchLiveMeta = useCallback(async () => {
+    setLiveMetaLoading(true);
+    setLiveMetaError(null);
+    try {
+      const res = await fetch(`${SITE_URL}?_=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const html = await res.text();
+      const match = html.match(/<meta\s+name=["']google-site-verification["']\s+content=["']([^"']+)["']/i);
+      setLiveMetaContent(match ? match[1] : null);
+      if (!match) setLiveMetaError('Meta tag not found in production HTML — republish required');
+    } catch (e) {
+      setLiveMetaError(e instanceof Error ? e.message : 'Failed to fetch production HTML');
+    } finally {
+      setLiveMetaLoading(false);
+    }
+  }, []);
+
+  // Auto Lighthouse scan after every publish — detected via change in the
+  // production HTML signature (etag/last-modified or HTML hash fallback).
+  useEffect(() => {
+    if (!isAdmin) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${SITE_URL}?_=${Date.now()}`, { cache: 'no-store' });
+        const sig = res.headers.get('etag') || res.headers.get('last-modified') || String((await res.text()).length);
+        const prev = localStorage.getItem(LAST_BUILD_KEY);
+        if (cancelled) return;
+        if (prev && prev !== sig) {
+          toast.info('New build detected — running Lighthouse scan…');
+          await runLighthouse({ silent: true });
+        }
+        localStorage.setItem(LAST_BUILD_KEY, sig);
+      } catch {/* ignore */}
+    })();
+    return () => { cancelled = true; };
+  }, [isAdmin, runLighthouse]);
 
   const fetchGSC = async () => {
     setGscLoading(true);
