@@ -342,6 +342,8 @@ export default function MinimalEmbedPage() {
     setCurrentAudioTrack(trackId);
     setShowAudioMenu(false);
   }, []);
+
+  const toggleFullscreen = useCallback(() => {
     const v = videoRef.current;
     const el = containerRef.current;
     // iOS Safari: prefer the native iPhone/iPad fullscreen video player.
