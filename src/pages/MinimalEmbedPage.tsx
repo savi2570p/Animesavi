@@ -256,7 +256,20 @@ export default function MinimalEmbedPage() {
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
     const onTime = () => setCurrentTime(v.currentTime);
-    const onLoaded = () => setDuration(v.duration || 0);
+    const onLoaded = () => {
+      setDuration(v.duration || 0);
+      // Native audio track detection (Safari HLS, multi-audio MP4)
+      const nativeAudio = (v as any).audioTracks;
+      if (nativeAudio && nativeAudio.length > 1 && audioTracks.length === 0) {
+        const tracks: Array<{ id: number; name: string; lang: string }> = [];
+        for (let i = 0; i < nativeAudio.length; i++) {
+          const t = nativeAudio[i];
+          tracks.push({ id: i, name: t.label || t.language || `Audio ${i + 1}`, lang: t.language || '' });
+          if (t.enabled) setCurrentAudioTrack(i);
+        }
+        setAudioTracks(tracks);
+      }
+    };
     v.addEventListener('play', onPlay);
     v.addEventListener('pause', onPause);
     v.addEventListener('timeupdate', onTime);
