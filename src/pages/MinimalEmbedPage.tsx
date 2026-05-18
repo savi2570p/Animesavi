@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Hls from 'hls.js';
-import { Play, Pause, Maximize, Minimize, Download, X, List, RotateCcw, RotateCw, Subtitles } from 'lucide-react';
+import { Play, Pause, Maximize, Minimize, Download, X, List, RotateCcw, RotateCw, Subtitles, Headphones, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { extractEmbedSrc, isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 
@@ -122,6 +122,9 @@ export default function MinimalEmbedPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [showQualityPicker, setShowQualityPicker] = useState(false);
+  const [audioTracks, setAudioTracks] = useState<Array<{ id: number; name: string; lang: string }>>([]);
+  const [currentAudioTrack, setCurrentAudioTrack] = useState(0);
+  const [showAudioMenu, setShowAudioMenu] = useState(false);
   const hideTimer = useRef<number | null>(null);
 
   // Resolve episode → video URL.
