@@ -70,13 +70,18 @@ export default function SiteHealth() {
     })();
   }, [user]);
 
-  // Load history from localStorage
+  // Load history + last regression from localStorage
   useEffect(() => {
     try {
       const raw = localStorage.getItem(LCP_STORAGE_KEY);
       if (raw) setHistory(JSON.parse(raw));
+      const reg = localStorage.getItem(LAST_REGRESSION_KEY);
+      if (reg) setLastRegression(JSON.parse(reg));
     } catch {}
   }, []);
+
+  // Auto-load live meta on mount for admins
+  useEffect(() => { if (isAdmin) fetchLiveMeta(); }, [isAdmin]);
 
   const persistHistory = (next: LCPRun[]) => {
     setHistory(next);
