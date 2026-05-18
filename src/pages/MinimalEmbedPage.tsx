@@ -649,6 +649,56 @@ export default function MinimalEmbedPage() {
                   </button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                  {/* Audio track switcher — always visible (works for HLS + native multi-audio) */}
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowAudioMenu((v) => !v); }}
+                      aria-label="Audio track"
+                      title="Audio Track"
+                      className="embed-ctrl-btn"
+                    >
+                      <Headphones size={20} />
+                    </button>
+                    {showAudioMenu && (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          position: 'absolute', bottom: 'calc(100% + 8px)', right: 0,
+                          background: 'rgba(15,8,25,0.96)',
+                          border: '1px solid hsl(var(--primary) / 0.4)',
+                          borderRadius: 10, padding: 4, minWidth: 160, zIndex: 40,
+                          boxShadow: '0 8px 28px rgba(0,0,0,0.6)',
+                        }}
+                      >
+                        {audioTracks.length === 0 ? (
+                          <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
+                            Default audio (only track)
+                          </div>
+                        ) : (
+                          audioTracks.map((t) => {
+                            const active = currentAudioTrack === t.id;
+                            return (
+                              <button
+                                key={t.id}
+                                onClick={() => switchAudioTrack(t.id)}
+                                style={{
+                                  display: 'flex', alignItems: 'center', gap: 8,
+                                  width: '100%', textAlign: 'left',
+                                  padding: '8px 10px', borderRadius: 6,
+                                  background: active ? 'hsl(var(--primary) / 0.2)' : 'transparent',
+                                  color: active ? 'hsl(var(--primary))' : 'rgba(255,255,255,0.85)',
+                                  border: 0, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                                }}
+                              >
+                                {active && <Check size={12} />}
+                                <span>{t.name || t.lang || `Audio ${t.id + 1}`}</span>
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
+                  </div>
                   {captionsUrl && (
                     <button
                       onClick={() => {
