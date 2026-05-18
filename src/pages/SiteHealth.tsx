@@ -256,6 +256,16 @@ export default function SiteHealth() {
 
           {lcpError && <div className="text-sm text-destructive mb-3">{lcpError}</div>}
 
+          {lastRegression && (
+            <div className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded p-3 mb-3 flex items-start gap-2">
+              <ShieldAlert className="w-4 h-4 mt-0.5 shrink-0" />
+              <div>
+                <div className="font-semibold">LCP regression detected</div>
+                <div className="opacity-80">Last scan was {(lastRegression.deltaMs / 1000).toFixed(2)}s slower than the previous one ({new Date(lastRegression.ts).toLocaleString()}).</div>
+              </div>
+            </div>
+          )}
+
           {latest ? (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
               <Metric label="LCP" value={fmtMs(latest.lcpMs)} delta={lcpDelta != null ? fmtDeltaMs(lcpDelta) : null} good={latest.lcpMs != null && latest.lcpMs < 2500} bad={latest.lcpMs != null && latest.lcpMs > 4000} />
@@ -330,6 +340,35 @@ export default function SiteHealth() {
               <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2">
                 Open Google Search Console <ExternalLink className="w-3 h-3" />
               </a>
+
+              {/* Live verification meta tag — proves the tag is actually in production HTML */}
+              <div className="mt-4 pt-3 border-t border-border/40">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Live meta tag in production HTML</div>
+                  <Button onClick={fetchLiveMeta} disabled={liveMetaLoading} size="sm" variant="ghost" className="h-7 px-2 text-xs">
+                    {liveMetaLoading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-1" />}
+                    Re-fetch
+                  </Button>
+                </div>
+                {liveMetaContent ? (
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 rounded p-2 flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-xs text-emerald-400 font-semibold mb-1">Tag is live on {SITE_URL}</div>
+                      <code className="text-[10px] text-foreground/80 break-all block bg-background/40 rounded px-1.5 py-1">
+                        &lt;meta name="google-site-verification" content="{liveMetaContent}" /&gt;
+                      </code>
+                    </div>
+                  </div>
+                ) : liveMetaError ? (
+                  <div className="bg-destructive/10 border border-destructive/30 rounded p-2 flex items-start gap-2">
+                    <XCircle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+                    <div className="text-xs text-destructive">{liveMetaError}</div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted-foreground">{liveMetaLoading ? 'Fetching production HTML…' : '—'}</div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="text-sm text-muted-foreground py-6 text-center border border-dashed border-border/60 rounded-lg">
