@@ -20,17 +20,24 @@ export default function AnimeSlugRedirect() {
         return;
       }
 
-      // Fetch all anime and find the one matching the slug
-      const { data: animeList, error } = await supabase
-        .from('anime_public')
-        .select('id, title');
+      // Cache the slug → id map in sessionStorage so subsequent clicks are instant
+      // (previously every detail click refetched the entire anime list, which was
+      // the main source of the perceived lag / repeated loading screen).
+      let animeList: Array<{ id: string; title: string | null }> | null = null;
+      try {
+        const cached = sessionStorage.getItem('animeSlugIndex.v1');
+        if (cached) animeList = JSON.parse(cached);
+      } catch {}
 
-      if (error || !animeList) {
-        setNotFound(true);
-        return;
+      if (!animeList) {
+        const { data, error } = await supabase
+          .from('anime_public')
+          .select('id, title');
+        if (error || !data) { setNotFound(true); return; }
+        animeList = data;
+        try { sessionStorage.setItem('animeSlugIndex.v1', JSON.stringify(data)); } catch {}
       }
 
-      // Find anime by matching slug
       const anime = animeList.find(a => a.title && createSlug(a.title) === animeSlug);
 
       if (!anime) {

@@ -144,13 +144,18 @@ export default function AnimeDetail() {
     }
   }, []);
 
+  // Fetch anime details only when id changes — NOT when user resolves.
+  // Previously this depended on [id, user] which restarted the loader the
+  // moment the auth context hydrated, causing the visible "loading restart".
   useEffect(() => {
-    if (id) {
-      fetchAnimeDetails();
-      if (user) {
-        checkFavorite();
-        fetchWatchProgress();
-      }
+    if (id) fetchAnimeDetails();
+  }, [id]);
+
+  // User-scoped data is fetched independently so it never interrupts the page.
+  useEffect(() => {
+    if (id && user) {
+      checkFavorite();
+      fetchWatchProgress();
     }
   }, [id, user]);
 
