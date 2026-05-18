@@ -243,7 +243,7 @@ export default function SiteHealth() {
               <Gauge className="w-5 h-5 text-primary" />
               <h2 className="text-lg font-semibold">Lighthouse LCP</h2>
             </div>
-            <Button onClick={runLighthouse} disabled={lcpLoading} size="sm">
+            <Button onClick={() => runLighthouse()} disabled={lcpLoading} size="sm">
               {lcpLoading ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
               {lcpLoading ? 'Scanning…' : 'Run scan'}
             </Button>
