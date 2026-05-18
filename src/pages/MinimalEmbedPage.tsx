@@ -219,6 +219,17 @@ export default function MinimalEmbedPage() {
         hlsRef.current = hls;
         hls.loadSource(videoUrl);
         hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (hls.audioTracks?.length > 1) {
+            setAudioTracks(hls.audioTracks.map((t, i) => ({
+              id: i,
+              name: t.name || t.lang || `Audio ${i + 1}`,
+              lang: t.lang || '',
+            })));
+            setCurrentAudioTrack(hls.audioTrack);
+          }
+        });
+        hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (_, d) => setCurrentAudioTrack(d.id));
         hls.on(Hls.Events.ERROR, (_, data) => {
           if (data.fatal) setError('Video cannot be played on this device');
         });
