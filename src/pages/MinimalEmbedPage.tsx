@@ -211,6 +211,8 @@ export default function MinimalEmbedPage() {
       hlsRef.current = null;
     }
 
+    setAudioTracks([]);
+    setShowAudioMenu(false);
     if (isHlsUrl(videoUrl)) {
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = videoUrl;
@@ -328,7 +330,18 @@ export default function MinimalEmbedPage() {
     else v.pause();
   }, []);
 
-  const toggleFullscreen = useCallback(() => {
+  const switchAudioTrack = useCallback((trackId: number) => {
+    if (hlsRef.current && hlsRef.current.audioTracks?.length) {
+      hlsRef.current.audioTrack = trackId;
+    } else {
+      const native = (videoRef.current as any)?.audioTracks;
+      if (native && native.length) {
+        for (let i = 0; i < native.length; i++) native[i].enabled = i === trackId;
+      }
+    }
+    setCurrentAudioTrack(trackId);
+    setShowAudioMenu(false);
+  }, []);
     const v = videoRef.current;
     const el = containerRef.current;
     // iOS Safari: prefer the native iPhone/iPad fullscreen video player.
