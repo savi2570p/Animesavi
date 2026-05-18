@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Activity, Gauge, ShieldCheck, ShieldAlert, RefreshCw, Loader2, ExternalLink, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,9 @@ import { toast } from 'sonner';
 const SITE_URL = 'https://animesavi.com/';
 const ADMIN_EMAIL = 'savi2570p@gmail.com';
 const LCP_STORAGE_KEY = 'siteHealth.lcpHistory.v1';
+const LCP_REGRESSION_THRESHOLD_MS = 300;
+const LAST_BUILD_KEY = 'siteHealth.lastBuildSig.v1';
+const LAST_REGRESSION_KEY = 'siteHealth.lastRegression.v1';
 
 interface LCPRun {
   ts: number;
@@ -47,6 +50,10 @@ export default function SiteHealth() {
   const [gscLoading, setGscLoading] = useState(false);
   const [gscError, setGscError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
+  const [liveMetaContent, setLiveMetaContent] = useState<string | null>(null);
+  const [liveMetaError, setLiveMetaError] = useState<string | null>(null);
+  const [liveMetaLoading, setLiveMetaLoading] = useState(false);
+  const [lastRegression, setLastRegression] = useState<{ ts: number; deltaMs: number } | null>(null);
 
   // Gate: only admins (or the explicit recovery account)
   useEffect(() => {
@@ -63,24 +70,28 @@ export default function SiteHealth() {
     })();
   }, [user]);
 
-  // Load history from localStorage
+  // Load history + last regression from localStorage
   useEffect(() => {
     try {
       const raw = localStorage.getItem(LCP_STORAGE_KEY);
       if (raw) setHistory(JSON.parse(raw));
+      const reg = localStorage.getItem(LAST_REGRESSION_KEY);
+      if (reg) setLastRegression(JSON.parse(reg));
     } catch {}
   }, []);
+
+  // Auto-load live meta on mount for admins
+  useEffect(() => { if (isAdmin) fetchLiveMeta(); }, [isAdmin]);
 
   const persistHistory = (next: LCPRun[]) => {
     setHistory(next);
     try { localStorage.setItem(LCP_STORAGE_KEY, JSON.stringify(next.slice(0, 20))); } catch {}
   };
 
-  const runLighthouse = async () => {
+  const runLighthouse = useCallback(async (opts?: { silent?: boolean }) => {
     setLcpLoading(true);
     setLcpError(null);
     try {
-      // PageSpeed Insights public endpoint — no API key required for low volume.
       const res = await fetch(
         `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(SITE_URL)}&category=performance&strategy=mobile`
       );
@@ -96,15 +107,69 @@ export default function SiteHealth() {
         clsScore: audits['cumulative-layout-shift']?.numericValue ?? null,
         ttiMs: audits['interactive']?.numericValue ?? null,
       };
+
+      // Regression alert + admin notification — fires if LCP increased meaningfully
+      const prev = history[0];
+      if (prev?.lcpMs && run.lcpMs && run.lcpMs - prev.lcpMs > LCP_REGRESSION_THRESHOLD_MS) {
+        const deltaMs = run.lcpMs - prev.lcpMs;
+        const record = { ts: run.ts, deltaMs };
+        setLastRegression(record);
+        try { localStorage.setItem(LAST_REGRESSION_KEY, JSON.stringify(record)); } catch {}
+        toast.warning(`LCP regressed by ${(deltaMs / 1000).toFixed(2)}s vs the previous scan`, {
+          description: `Latest ${fmtMs(run.lcpMs)} · previous ${fmtMs(prev.lcpMs)}`,
+          duration: 8000,
+        });
+      }
+
       persistHistory([run, ...history]);
-      toast.success('Lighthouse scan complete');
+      if (!opts?.silent) toast.success('Lighthouse scan complete');
     } catch (e) {
       setLcpError(e instanceof Error ? e.message : String(e));
-      toast.error('Lighthouse scan failed');
+      if (!opts?.silent) toast.error('Lighthouse scan failed');
     } finally {
       setLcpLoading(false);
     }
-  };
+  }, [history]);
+
+  // Live verification-meta-tag fetch — confirms the production HTML actually
+  // serves the google-site-verification tag (proves the latest build is live).
+  const fetchLiveMeta = useCallback(async () => {
+    setLiveMetaLoading(true);
+    setLiveMetaError(null);
+    try {
+      const res = await fetch(`${SITE_URL}?_=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const html = await res.text();
+      const match = html.match(/<meta\s+name=["']google-site-verification["']\s+content=["']([^"']+)["']/i);
+      setLiveMetaContent(match ? match[1] : null);
+      if (!match) setLiveMetaError('Meta tag not found in production HTML — republish required');
+    } catch (e) {
+      setLiveMetaError(e instanceof Error ? e.message : 'Failed to fetch production HTML');
+    } finally {
+      setLiveMetaLoading(false);
+    }
+  }, []);
+
+  // Auto Lighthouse scan after every publish — detected via change in the
+  // production HTML signature (etag/last-modified or HTML hash fallback).
+  useEffect(() => {
+    if (!isAdmin) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${SITE_URL}?_=${Date.now()}`, { cache: 'no-store' });
+        const sig = res.headers.get('etag') || res.headers.get('last-modified') || String((await res.text()).length);
+        const prev = localStorage.getItem(LAST_BUILD_KEY);
+        if (cancelled) return;
+        if (prev && prev !== sig) {
+          toast.info('New build detected — running Lighthouse scan…');
+          await runLighthouse({ silent: true });
+        }
+        localStorage.setItem(LAST_BUILD_KEY, sig);
+      } catch {/* ignore */}
+    })();
+    return () => { cancelled = true; };
+  }, [isAdmin, runLighthouse]);
 
   const fetchGSC = async () => {
     setGscLoading(true);
@@ -183,13 +248,23 @@ export default function SiteHealth() {
               <Gauge className="w-5 h-5 text-primary" />
               <h2 className="text-lg font-semibold">Lighthouse LCP</h2>
             </div>
-            <Button onClick={runLighthouse} disabled={lcpLoading} size="sm">
+            <Button onClick={() => runLighthouse()} disabled={lcpLoading} size="sm">
               {lcpLoading ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
               {lcpLoading ? 'Scanning…' : 'Run scan'}
             </Button>
           </div>
 
           {lcpError && <div className="text-sm text-destructive mb-3">{lcpError}</div>}
+
+          {lastRegression && (
+            <div className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded p-3 mb-3 flex items-start gap-2">
+              <ShieldAlert className="w-4 h-4 mt-0.5 shrink-0" />
+              <div>
+                <div className="font-semibold">LCP regression detected</div>
+                <div className="opacity-80">Last scan was {(lastRegression.deltaMs / 1000).toFixed(2)}s slower than the previous one ({new Date(lastRegression.ts).toLocaleString()}).</div>
+              </div>
+            </div>
+          )}
 
           {latest ? (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
@@ -265,6 +340,35 @@ export default function SiteHealth() {
               <a href="https://search.google.com/search-console" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2">
                 Open Google Search Console <ExternalLink className="w-3 h-3" />
               </a>
+
+              {/* Live verification meta tag — proves the tag is actually in production HTML */}
+              <div className="mt-4 pt-3 border-t border-border/40">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Live meta tag in production HTML</div>
+                  <Button onClick={fetchLiveMeta} disabled={liveMetaLoading} size="sm" variant="ghost" className="h-7 px-2 text-xs">
+                    {liveMetaLoading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-1" />}
+                    Re-fetch
+                  </Button>
+                </div>
+                {liveMetaContent ? (
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 rounded p-2 flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-xs text-emerald-400 font-semibold mb-1">Tag is live on {SITE_URL}</div>
+                      <code className="text-[10px] text-foreground/80 break-all block bg-background/40 rounded px-1.5 py-1">
+                        &lt;meta name="google-site-verification" content="{liveMetaContent}" /&gt;
+                      </code>
+                    </div>
+                  </div>
+                ) : liveMetaError ? (
+                  <div className="bg-destructive/10 border border-destructive/30 rounded p-2 flex items-start gap-2">
+                    <XCircle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+                    <div className="text-xs text-destructive">{liveMetaError}</div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted-foreground">{liveMetaLoading ? 'Fetching production HTML…' : '—'}</div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="text-sm text-muted-foreground py-6 text-center border border-dashed border-border/60 rounded-lg">

@@ -181,23 +181,6 @@ export function ShareEmbedPopup({
                 </button>
               )}
 
-              {rawVideoUrl && (
-                <a
-                  href={rawVideoUrl}
-                  download
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-left transition-colors"
-                  onClick={() => toast.success('Raw quality download started.')}
-                >
-                  <Download className="h-4 w-4 text-primary-foreground shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">Download Raw Quality</p>
-                    <p className="text-xs text-primary-foreground/75 truncate">Original video file</p>
-                  </div>
-                </a>
-              )}
-
               <button
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-accent text-left transition-colors"
                 onClick={() => copyToClipboard(iframeCode, 'Iframe code')}

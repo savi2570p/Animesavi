@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import Hls from 'hls.js';
-import { Play, Pause, Maximize, Minimize, Download, X, List, RotateCcw, RotateCw, Subtitles } from 'lucide-react';
+import { Play, Pause, Maximize, Minimize, Download, X, List, RotateCcw, RotateCw, Subtitles, Headphones, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { extractEmbedSrc, isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 
@@ -122,6 +122,9 @@ export default function MinimalEmbedPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [showQualityPicker, setShowQualityPicker] = useState(false);
+  const [audioTracks, setAudioTracks] = useState<Array<{ id: number; name: string; lang: string }>>([]);
+  const [currentAudioTrack, setCurrentAudioTrack] = useState(0);
+  const [showAudioMenu, setShowAudioMenu] = useState(false);
   const hideTimer = useRef<number | null>(null);
 
   // Resolve episode → video URL.
@@ -208,6 +211,8 @@ export default function MinimalEmbedPage() {
       hlsRef.current = null;
     }
 
+    setAudioTracks([]);
+    setShowAudioMenu(false);
     if (isHlsUrl(videoUrl)) {
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = videoUrl;
@@ -216,6 +221,17 @@ export default function MinimalEmbedPage() {
         hlsRef.current = hls;
         hls.loadSource(videoUrl);
         hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (hls.audioTracks?.length > 1) {
+            setAudioTracks(hls.audioTracks.map((t, i) => ({
+              id: i,
+              name: t.name || t.lang || `Audio ${i + 1}`,
+              lang: t.lang || '',
+            })));
+            setCurrentAudioTrack(hls.audioTrack);
+          }
+        });
+        hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (_, d) => setCurrentAudioTrack(d.id));
         hls.on(Hls.Events.ERROR, (_, data) => {
           if (data.fatal) setError('Video cannot be played on this device');
         });
@@ -242,7 +258,20 @@ export default function MinimalEmbedPage() {
     const onPlay = () => setIsPlaying(true);
     const onPause = () => setIsPlaying(false);
     const onTime = () => setCurrentTime(v.currentTime);
-    const onLoaded = () => setDuration(v.duration || 0);
+    const onLoaded = () => {
+      setDuration(v.duration || 0);
+      // Native audio track detection (Safari HLS, multi-audio MP4)
+      const nativeAudio = (v as any).audioTracks;
+      if (nativeAudio && nativeAudio.length > 1 && audioTracks.length === 0) {
+        const tracks: Array<{ id: number; name: string; lang: string }> = [];
+        for (let i = 0; i < nativeAudio.length; i++) {
+          const t = nativeAudio[i];
+          tracks.push({ id: i, name: t.label || t.language || `Audio ${i + 1}`, lang: t.language || '' });
+          if (t.enabled) setCurrentAudioTrack(i);
+        }
+        setAudioTracks(tracks);
+      }
+    };
     v.addEventListener('play', onPlay);
     v.addEventListener('pause', onPause);
     v.addEventListener('timeupdate', onTime);
@@ -299,6 +328,19 @@ export default function MinimalEmbedPage() {
     if (!v) return;
     if (v.paused) v.play().catch(() => {});
     else v.pause();
+  }, []);
+
+  const switchAudioTrack = useCallback((trackId: number) => {
+    if (hlsRef.current && hlsRef.current.audioTracks?.length) {
+      hlsRef.current.audioTrack = trackId;
+    } else {
+      const native = (videoRef.current as any)?.audioTracks;
+      if (native && native.length) {
+        for (let i = 0; i < native.length; i++) native[i].enabled = i === trackId;
+      }
+    }
+    setCurrentAudioTrack(trackId);
+    setShowAudioMenu(false);
   }, []);
 
   const toggleFullscreen = useCallback(() => {
@@ -607,6 +649,56 @@ export default function MinimalEmbedPage() {
                   </button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                  {/* Audio track switcher — always visible (works for HLS + native multi-audio) */}
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowAudioMenu((v) => !v); }}
+                      aria-label="Audio track"
+                      title="Audio Track"
+                      className="embed-ctrl-btn"
+                    >
+                      <Headphones size={20} />
+                    </button>
+                    {showAudioMenu && (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          position: 'absolute', bottom: 'calc(100% + 8px)', right: 0,
+                          background: 'rgba(15,8,25,0.96)',
+                          border: '1px solid hsl(var(--primary) / 0.4)',
+                          borderRadius: 10, padding: 4, minWidth: 160, zIndex: 40,
+                          boxShadow: '0 8px 28px rgba(0,0,0,0.6)',
+                        }}
+                      >
+                        {audioTracks.length === 0 ? (
+                          <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
+                            Default audio (only track)
+                          </div>
+                        ) : (
+                          audioTracks.map((t) => {
+                            const active = currentAudioTrack === t.id;
+                            return (
+                              <button
+                                key={t.id}
+                                onClick={() => switchAudioTrack(t.id)}
+                                style={{
+                                  display: 'flex', alignItems: 'center', gap: 8,
+                                  width: '100%', textAlign: 'left',
+                                  padding: '8px 10px', borderRadius: 6,
+                                  background: active ? 'hsl(var(--primary) / 0.2)' : 'transparent',
+                                  color: active ? 'hsl(var(--primary))' : 'rgba(255,255,255,0.85)',
+                                  border: 0, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                                }}
+                              >
+                                {active && <Check size={12} />}
+                                <span>{t.name || t.lang || `Audio ${t.id + 1}`}</span>
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
+                  </div>
                   {captionsUrl && (
                     <button
                       onClick={() => {
