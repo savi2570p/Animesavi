@@ -300,9 +300,9 @@ export default function Welcome() {
                 <span className="text-foreground">Savi</span>
               </h1>
               <p className="text-base sm:text-xl text-foreground/80 max-w-xl mx-auto leading-relaxed font-medium">
-                Where every frame tells a story.
+                One home for every anime you love.
                 <span className="block text-sm sm:text-base text-muted-foreground mt-1.5 font-normal">
-                  Hand-curated anime in crisp 4K, dubbed in your language — built by fans, made for the late-night binge.
+                  Stream in crisp 4K with official Hindi dubs, instant downloads, and zero ads — built by fans, tuned for binge nights.
                 </span>
               </p>
             </div>
@@ -695,7 +695,7 @@ export default function Welcome() {
             {[
               { icon: Award, label: 'Avg. Start Time', value: '< 1.2s', color: 'text-emerald-400' },
               { icon: Layers, label: 'Quality Tiers', value: '144p–4K', color: 'text-primary' },
-              { icon: HardDrive, label: 'Storage Used', value: '12 TB+', color: 'text-blue-400' },
+              { icon: HardDrive, label: 'Storage Used', value: '48TB+', color: 'text-blue-400' },
               { icon: Radio, label: 'CDN Servers', value: '4 Active', color: 'text-pink-400' },
               { icon: Eye, label: 'Episodes Watched', value: '2.4M+', color: 'text-yellow-400' },
               { icon: Lock, label: 'DRM-Free', value: '100%', color: 'text-emerald-400' },
@@ -793,7 +793,7 @@ export default function Welcome() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             {[
               { icon: Crown, title: 'Persistent Watch Rooms', desc: 'Resume group sessions days later — chat history, queue and playback position all saved.', tag: 'Live', href: '/' },
-              { icon: Flame, title: 'Smart Recommendations 2.0', desc: 'Genre + mood-aware suggestions tuned by your real watch history and ratings.', tag: 'Beta', href: '/' },
+              { icon: Flame, title: 'Smart Recommendations 2.0', desc: 'Genre + mood-aware suggestions tuned by your real watch history and ratings.', tag: 'Live', href: '/' },
               { icon: Calendar, title: 'Seasonal Anime Tracker', desc: 'A single dashboard for every airing show this season with episode countdowns.', tag: 'Soon' },
               { icon: BarChart3, title: 'Personal Watch Stats', desc: 'Total hours watched, top genres, longest streaks and a year-in-review wrap.', tag: 'Live', href: '/stats' },
               { icon: MapPin, title: 'AI Episode Recaps', desc: 'Auto-generated 30-second recaps so you never lose track of long-running shows.', tag: 'Planned' },
