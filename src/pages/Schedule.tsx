@@ -174,17 +174,6 @@ export default function Schedule() {
         </p>
       </div>
 
-      {/* Week Navigation */}
-      <div className="flex items-center justify-between mb-6 bg-card/50 backdrop-blur rounded-xl p-4 border border-border/50">
-        <Button variant="ghost" size="icon" onClick={() => navigateWeek('prev')}>
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        
-        <div className="flex gap-1 md:gap-2 overflow-x-auto pb-2 scrollbar-hide">
-        <p className="text-muted-foreground">
-          Weekly release calendar for ongoing anime series
-        </p>
-      </div>
 
       {/* Filters & sorting */}
       <div className="mb-6 grid gap-3 md:grid-cols-[1fr_auto_auto_auto] items-stretch bg-card/40 backdrop-blur rounded-xl p-3 md:p-4 border border-border/50">
