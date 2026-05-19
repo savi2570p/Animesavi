@@ -28,8 +28,8 @@ const formatViews = (views: number): string => {
 const VIEW_COUNT_MAP: Record<string, number> = {
   'Your Name': 9500000,
   'Your lie in April': 3400000,
-  'The Angel Next Door Spoils me Rotten': 1200000,
-  'The angel next door spoils me rotten': 1200000,
+  'The Angel Next Door Spoils me Rotten': 3600000,
+  'The angel next door spoils me rotten': 3600000,
   'Mechanical Marie': 977000,
   'Solo Leveling': 730000,
   'Witch Hat atelier': 5400000,
@@ -43,7 +43,21 @@ const VIEW_COUNT_MAP: Record<string, number> = {
   'attack on titan': 8900000,
   'Attack on Titan': 8900000,
   'Attack on Titan OAD': 2100000,
+  'LIAR GAME': 7800000,
+  'Liar Game': 7800000,
+  'Dorohedoro': 6400000,
+  'Easygoing Territory Defense by the Optimistic Lord': 5200000,
 };
+
+// Curated hero lineup — these titles appear first in the slider (in this order).
+const HERO_PREFERRED_TITLES = [
+  'Liar Game',
+  'Dorohedoro',
+  'Easygoing Territory Defense by the Optimistic Lord',
+  'Solo Leveling',
+  'Jujutsu Kaisen',
+  'My Dress-Up Darling',
+];
 
 const getViewCount = (title: string, dbViewCount: number | null): number => {
   // Case-insensitive lookup against curated map
