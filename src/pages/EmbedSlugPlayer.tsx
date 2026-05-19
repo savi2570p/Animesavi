@@ -715,11 +715,17 @@ export default function EmbedSlugPlayer() {
         </div>
       )}
 
-      {/* Prefetch next episode's video URL so the next switch is near-instant */}
+      {/* Prefetch next episode's video + captions so the next switch is near-instant */}
       {(() => {
         const next = allEpisodes[currentEpisodeIndex + 1];
         const nextUrl = next?.video_url || next?.external_url;
-        return nextUrl ? <link rel="prefetch" href={nextUrl} as="fetch" crossOrigin="anonymous" /> : null;
+        const nextCaps = next?.captions_url;
+        return (
+          <>
+            {nextUrl && <link rel="prefetch" href={nextUrl} as="fetch" crossOrigin="anonymous" />}
+            {nextCaps && <link rel="prefetch" href={nextCaps} as="fetch" crossOrigin="anonymous" />}
+          </>
+        );
       })()}
 
       <video
