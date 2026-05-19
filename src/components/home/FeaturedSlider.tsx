@@ -85,12 +85,32 @@ export function FeaturedSlider() {
           .from('anime')
           .select('id, title, description, cover_image, banner_image, genres, view_count, status')
           .order('view_count', { ascending: false })
-          .limit(6);
+          .limit(80);
 
         if (error) throw error;
 
         if (data && data.length > 0) {
-          const items = data.map(anime => ({
+          // Pull curated hero titles to the front (in defined order), then top-viewed.
+          const seen = new Set<string>();
+          const matched: typeof data = [];
+          for (const target of HERO_PREFERRED_TITLES) {
+            const found = data.find(
+              a => a.title && a.title.toLowerCase() === target.toLowerCase() && !seen.has(a.id)
+            );
+            if (found) {
+              seen.add(found.id);
+              matched.push(found);
+            }
+          }
+          for (const a of data) {
+            if (matched.length >= 6) break;
+            if (!seen.has(a.id)) {
+              seen.add(a.id);
+              matched.push(a);
+            }
+          }
+
+          const items = matched.slice(0, 6).map(anime => ({
             id: anime.id,
             title: anime.title,
             description: anime.description,
