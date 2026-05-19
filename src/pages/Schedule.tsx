@@ -94,16 +94,38 @@ export default function Schedule() {
     setIsLoading(false);
   };
 
-  // Distribute anime across days based on their updated_at date
+  // All genres present in the current list, for the filter dropdown
+  const allGenres = useMemo(() => {
+    const s = new Set<string>();
+    animeList.forEach(a => (a.genres || []).forEach(g => g && s.add(g)));
+    return Array.from(s).sort();
+  }, [animeList]);
+
+  const matchesFilters = (anime: ScheduleAnime) => {
+    if (search && !anime.title.toLowerCase().includes(search.toLowerCase())) return false;
+    if (genreFilter !== 'all' && !(anime.genres || []).includes(genreFilter)) return false;
+    return true;
+  };
+
+  const sortList = (list: ScheduleAnime[]) => {
+    const copy = [...list];
+    if (sortBy === 'title-asc') copy.sort((a, b) => a.title.localeCompare(b.title));
+    else if (sortBy === 'title-desc') copy.sort((a, b) => b.title.localeCompare(a.title));
+    else copy.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+    return copy;
+  };
+
+  // Distribute anime across days based on schedule_day (or hash fallback) — filters applied
   const getAnimeForDay = (dayIndex: number) => {
-    return animeList.filter((anime) => {
+    const filtered = animeList.filter((anime) => {
       if (anime.schedule_day === -1) return false; // Hidden from calendar
-      if (anime.schedule_day !== null && anime.schedule_day !== undefined) {
-        return anime.schedule_day === dayIndex;
-      }
-      const hash = (anime.id || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      return hash % 7 === dayIndex;
+      const matchesDay = anime.schedule_day !== null && anime.schedule_day !== undefined
+        ? anime.schedule_day === dayIndex
+        : ((anime.id || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % 7 === dayIndex;
+      if (!matchesDay) return false;
+      return matchesFilters(anime);
     });
+    return sortList(filtered);
   };
 
   const navigateWeek = (direction: 'prev' | 'next') => {
@@ -111,8 +133,23 @@ export default function Schedule() {
     setWeekStart(addDays(weekStart, days));
   };
 
+  const jumpToAiringNow = () => {
+    const todayIdx = new Date().getDay();
+    setWeekStart(startOfWeek(new Date()));
+    setSelectedDay(todayIdx);
+    setAiringNowOnly(true);
+  };
+
+  const resetFilters = () => {
+    setSearch('');
+    setGenreFilter('all');
+    setSortBy('recent');
+    setAiringNowOnly(false);
+  };
+
   const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const today = new Date();
+
 
   if (isLoading) {
     return (
