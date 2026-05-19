@@ -794,16 +794,23 @@ export default function Welcome() {
             {[
               { icon: Crown, title: 'Persistent Watch Rooms', desc: 'Resume group sessions days later — chat history, queue and playback position all saved.', tag: 'Live', href: '/' },
               { icon: Flame, title: 'Smart Recommendations 2.0', desc: 'Genre + mood-aware suggestions tuned by your real watch history and ratings.', tag: 'Live', href: '/' },
-              { icon: Calendar, title: 'Seasonal Anime Tracker', desc: 'A single dashboard for every airing show this season with episode countdowns.', tag: 'Soon' },
+              { icon: Calendar, title: 'Seasonal Anime Tracker', desc: 'A single dashboard for every airing show this season with episode countdowns.', tag: 'Beta', href: '/schedule' },
               { icon: BarChart3, title: 'Personal Watch Stats', desc: 'Total hours watched, top genres, longest streaks and a year-in-review wrap.', tag: 'Live', href: '/stats' },
               { icon: MapPin, title: 'AI Episode Recaps', desc: 'Auto-generated 30-second recaps so you never lose track of long-running shows.', tag: 'Planned' },
             ].map((r, i) => {
               const isLive = r.tag === 'Live';
-              const Wrapper: any = isLive && r.href ? 'a' : 'div';
-              const wrapperProps = isLive && r.href ? { href: r.href } : {};
+              const isBeta = r.tag === 'Beta';
+              const isClickable = (isLive || isBeta) && !!r.href;
+              const Wrapper: any = isClickable ? 'a' : 'div';
+              const wrapperProps = isClickable ? { href: r.href } : {};
+              const badgeClass = isLive
+                ? 'bg-emerald-500/20 text-emerald-400'
+                : isBeta
+                  ? 'bg-amber-500/20 text-amber-400'
+                  : 'bg-primary/15 text-primary';
               return (
-                <Wrapper key={i} {...wrapperProps} className={`relative p-5 rounded-2xl bg-card/40 border border-border/30 transition-all duration-300 block ${isLive ? 'hover:border-primary/60 hover:bg-card/60 cursor-pointer' : 'hover:border-primary/30'}`}>
-                  <span className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${isLive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-primary/15 text-primary'}`}>{r.tag}</span>
+                <Wrapper key={i} {...wrapperProps} className={`relative p-5 rounded-2xl bg-card/40 border border-border/30 transition-all duration-300 block ${isClickable ? 'hover:border-primary/60 hover:bg-card/60 cursor-pointer' : 'hover:border-primary/30'}`}>
+                  <span className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${badgeClass}`}>{r.tag}</span>
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3"><r.icon className="w-5 h-5 text-primary" /></div>
                   <h3 className="text-sm font-bold text-foreground mb-1">{r.title}</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">{r.desc}</p>

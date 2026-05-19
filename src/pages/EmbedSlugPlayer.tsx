@@ -399,7 +399,7 @@ export default function EmbedSlugPlayer() {
               label: l.height >= 2160 ? '4K' : l.height >= 1080 ? '1080p' : l.height >= 720 ? '720p' : l.height >= 480 ? '480p' : `${l.height}p`
             })));
           }
-          if (hls.audioTracks?.length > 1) {
+          if (hls.audioTracks?.length) {
             setAudioTracks(hls.audioTracks.map((t, i) => ({
               id: i, name: t.name || t.lang || `Audio ${i + 1}`, lang: t.lang || ''
             })));
@@ -425,7 +425,7 @@ export default function EmbedSlugPlayer() {
     const onError = () => { setIsLoading(false); setError('Video failed to load'); };
     const onLoadedMeta = () => {
       const nativeAudio = (video as any).audioTracks;
-      if (nativeAudio && nativeAudio.length > 1 && audioTracks.length === 0) {
+      if (nativeAudio && nativeAudio.length && audioTracks.length === 0) {
         const tracks: { id: number; name: string; lang: string }[] = [];
         for (let i = 0; i < nativeAudio.length; i++) {
           const t = nativeAudio[i];
@@ -715,11 +715,17 @@ export default function EmbedSlugPlayer() {
         </div>
       )}
 
-      {/* Prefetch next episode's video URL so the next switch is near-instant */}
+      {/* Prefetch next episode's video + captions so the next switch is near-instant */}
       {(() => {
         const next = allEpisodes[currentEpisodeIndex + 1];
         const nextUrl = next?.video_url || next?.external_url;
-        return nextUrl ? <link rel="prefetch" href={nextUrl} as="fetch" crossOrigin="anonymous" /> : null;
+        const nextCaps = next?.captions_url;
+        return (
+          <>
+            {nextUrl && <link rel="prefetch" href={nextUrl} as="fetch" crossOrigin="anonymous" />}
+            {nextCaps && <link rel="prefetch" href={nextCaps} as="fetch" crossOrigin="anonymous" />}
+          </>
+        );
       })()}
 
       <video
