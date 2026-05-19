@@ -181,10 +181,75 @@ export default function Schedule() {
         </Button>
         
         <div className="flex gap-1 md:gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        <p className="text-muted-foreground">
+          Weekly release calendar for ongoing anime series
+        </p>
+      </div>
+
+      {/* Filters & sorting */}
+      <div className="mb-6 grid gap-3 md:grid-cols-[1fr_auto_auto_auto] items-stretch bg-card/40 backdrop-blur rounded-xl p-3 md:p-4 border border-border/50">
+        <Input
+          placeholder="Search ongoing anime..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-10"
+        />
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Select value={genreFilter} onValueChange={setGenreFilter}>
+            <SelectTrigger className="min-w-[150px]">
+              <SelectValue placeholder="Genre" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All genres</SelectItem>
+              {allGenres.map(g => (
+                <SelectItem key={g} value={g}>{g}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <ArrowUpDown className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+            <SelectTrigger className="min-w-[170px]">
+              <SelectValue placeholder="Sort" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="recent">Recently updated</SelectItem>
+              <SelectItem value="title-asc">Title A → Z</SelectItem>
+              <SelectItem value="title-desc">Title Z → A</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant={airingNowOnly ? 'default' : 'outline'}
+            onClick={() => (airingNowOnly ? setAiringNowOnly(false) : jumpToAiringNow())}
+            className="whitespace-nowrap"
+          >
+            <Clock className="h-4 w-4 mr-1.5" />
+            {airingNowOnly ? 'Airing now ✓' : 'Airing now'}
+          </Button>
+          {(search || genreFilter !== 'all' || sortBy !== 'recent' || airingNowOnly) && (
+            <Button variant="ghost" onClick={resetFilters} className="whitespace-nowrap">
+              Reset
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Week Navigation */}
+      <div className="flex items-center justify-between mb-6 bg-card/50 backdrop-blur rounded-xl p-4 border border-border/50">
+        <Button variant="ghost" size="icon" onClick={() => navigateWeek('prev')}>
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        
+        <div className="flex gap-1 md:gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {weekDates.map((date, index) => {
             const isToday = isSameDay(date, today);
             const isSelected = selectedDay === index;
             const animeCount = getAnimeForDay(index).length;
+
             
             return (
               <button
