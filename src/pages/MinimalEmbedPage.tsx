@@ -222,7 +222,7 @@ export default function MinimalEmbedPage() {
         hls.loadSource(videoUrl);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          if (hls.audioTracks?.length > 1) {
+          if (hls.audioTracks?.length) {
             setAudioTracks(hls.audioTracks.map((t, i) => ({
               id: i,
               name: t.name || t.lang || `Audio ${i + 1}`,
