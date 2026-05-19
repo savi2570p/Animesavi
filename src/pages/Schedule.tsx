@@ -335,33 +335,47 @@ export default function Schedule() {
         )}
       </div>
 
-      {/* All Ongoing Section */}
+      {/* All Ongoing Section — filtered + sorted */}
       <div className="mt-12">
-        <h2 className="text-2xl font-bold mb-6">All Ongoing Series</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {animeList.map((anime) => (
-            <Link key={anime.id} to={`/anime/${anime.id}`}>
-              <Card className="group overflow-hidden hover:border-primary/50 transition-all">
-                <CardContent className="flex items-center gap-3 p-3">
-                  <img
-                    src={anime.cover_image || '/placeholder.svg'}
-                    alt={anime.title}
-                    className="w-14 h-20 object-cover rounded-lg flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                      {anime.title}
-                    </h3>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Updated {format(new Date(anime.updated_at), 'MMM d')}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+        {(() => {
+          const visible = sortList(animeList.filter(matchesFilters));
+          return (
+            <>
+              <h2 className="text-2xl font-bold mb-6">
+                All Ongoing Series <span className="text-muted-foreground text-base">({visible.length})</span>
+              </h2>
+              {visible.length === 0 ? (
+                <p className="text-muted-foreground text-sm">No series match the current filters.</p>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {visible.map((anime) => (
+                    <Link key={anime.id} to={`/anime/${anime.id}`}>
+                      <Card className="group overflow-hidden hover:border-primary/50 transition-all">
+                        <CardContent className="flex items-center gap-3 p-3">
+                          <img
+                            src={anime.cover_image || '/placeholder.svg'}
+                            alt={anime.title}
+                            className="w-14 h-20 object-cover rounded-lg flex-shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                              {anime.title}
+                            </h3>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Updated {format(new Date(anime.updated_at), 'MMM d')}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </>
+          );
+        })()}
       </div>
     </div>
   );
 }
+
