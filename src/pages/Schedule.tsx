@@ -1,11 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Play, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, Play, ChevronLeft, ChevronRight, Filter, ArrowUpDown } from 'lucide-react';
 import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 interface ScheduleAnime {
   id: string;
@@ -24,6 +32,11 @@ export default function Schedule() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState(new Date().getDay());
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
+  const [search, setSearch] = useState('');
+  const [genreFilter, setGenreFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'recent' | 'title-asc' | 'title-desc'>('recent');
+  const [airingNowOnly, setAiringNowOnly] = useState(false);
+
 
   useEffect(() => {
     fetchOngoingAnime();
@@ -81,16 +94,38 @@ export default function Schedule() {
     setIsLoading(false);
   };
 
-  // Distribute anime across days based on their updated_at date
+  // All genres present in the current list, for the filter dropdown
+  const allGenres = useMemo(() => {
+    const s = new Set<string>();
+    animeList.forEach(a => (a.genres || []).forEach(g => g && s.add(g)));
+    return Array.from(s).sort();
+  }, [animeList]);
+
+  const matchesFilters = (anime: ScheduleAnime) => {
+    if (search && !anime.title.toLowerCase().includes(search.toLowerCase())) return false;
+    if (genreFilter !== 'all' && !(anime.genres || []).includes(genreFilter)) return false;
+    return true;
+  };
+
+  const sortList = (list: ScheduleAnime[]) => {
+    const copy = [...list];
+    if (sortBy === 'title-asc') copy.sort((a, b) => a.title.localeCompare(b.title));
+    else if (sortBy === 'title-desc') copy.sort((a, b) => b.title.localeCompare(a.title));
+    else copy.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+    return copy;
+  };
+
+  // Distribute anime across days based on schedule_day (or hash fallback) — filters applied
   const getAnimeForDay = (dayIndex: number) => {
-    return animeList.filter((anime) => {
+    const filtered = animeList.filter((anime) => {
       if (anime.schedule_day === -1) return false; // Hidden from calendar
-      if (anime.schedule_day !== null && anime.schedule_day !== undefined) {
-        return anime.schedule_day === dayIndex;
-      }
-      const hash = (anime.id || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      return hash % 7 === dayIndex;
+      const matchesDay = anime.schedule_day !== null && anime.schedule_day !== undefined
+        ? anime.schedule_day === dayIndex
+        : ((anime.id || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % 7 === dayIndex;
+      if (!matchesDay) return false;
+      return matchesFilters(anime);
     });
+    return sortList(filtered);
   };
 
   const navigateWeek = (direction: 'prev' | 'next') => {
@@ -98,8 +133,23 @@ export default function Schedule() {
     setWeekStart(addDays(weekStart, days));
   };
 
+  const jumpToAiringNow = () => {
+    const todayIdx = new Date().getDay();
+    setWeekStart(startOfWeek(new Date()));
+    setSelectedDay(todayIdx);
+    setAiringNowOnly(true);
+  };
+
+  const resetFilters = () => {
+    setSearch('');
+    setGenreFilter('all');
+    setSortBy('recent');
+    setAiringNowOnly(false);
+  };
+
   const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const today = new Date();
+
 
   if (isLoading) {
     return (
@@ -124,6 +174,59 @@ export default function Schedule() {
         </p>
       </div>
 
+
+      {/* Filters & sorting */}
+      <div className="mb-6 grid gap-3 md:grid-cols-[1fr_auto_auto_auto] items-stretch bg-card/40 backdrop-blur rounded-xl p-3 md:p-4 border border-border/50">
+        <Input
+          placeholder="Search ongoing anime..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-10"
+        />
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Select value={genreFilter} onValueChange={setGenreFilter}>
+            <SelectTrigger className="min-w-[150px]">
+              <SelectValue placeholder="Genre" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All genres</SelectItem>
+              {allGenres.map(g => (
+                <SelectItem key={g} value={g}>{g}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <ArrowUpDown className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+            <SelectTrigger className="min-w-[170px]">
+              <SelectValue placeholder="Sort" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="recent">Recently updated</SelectItem>
+              <SelectItem value="title-asc">Title A → Z</SelectItem>
+              <SelectItem value="title-desc">Title Z → A</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant={airingNowOnly ? 'default' : 'outline'}
+            onClick={() => (airingNowOnly ? setAiringNowOnly(false) : jumpToAiringNow())}
+            className="whitespace-nowrap"
+          >
+            <Clock className="h-4 w-4 mr-1.5" />
+            {airingNowOnly ? 'Airing now ✓' : 'Airing now'}
+          </Button>
+          {(search || genreFilter !== 'all' || sortBy !== 'recent' || airingNowOnly) && (
+            <Button variant="ghost" onClick={resetFilters} className="whitespace-nowrap">
+              Reset
+            </Button>
+          )}
+        </div>
+      </div>
+
       {/* Week Navigation */}
       <div className="flex items-center justify-between mb-6 bg-card/50 backdrop-blur rounded-xl p-4 border border-border/50">
         <Button variant="ghost" size="icon" onClick={() => navigateWeek('prev')}>
@@ -135,6 +238,7 @@ export default function Schedule() {
             const isToday = isSameDay(date, today);
             const isSelected = selectedDay === index;
             const animeCount = getAnimeForDay(index).length;
+
             
             return (
               <button
@@ -231,33 +335,47 @@ export default function Schedule() {
         )}
       </div>
 
-      {/* All Ongoing Section */}
+      {/* All Ongoing Section — filtered + sorted */}
       <div className="mt-12">
-        <h2 className="text-2xl font-bold mb-6">All Ongoing Series</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {animeList.map((anime) => (
-            <Link key={anime.id} to={`/anime/${anime.id}`}>
-              <Card className="group overflow-hidden hover:border-primary/50 transition-all">
-                <CardContent className="flex items-center gap-3 p-3">
-                  <img
-                    src={anime.cover_image || '/placeholder.svg'}
-                    alt={anime.title}
-                    className="w-14 h-20 object-cover rounded-lg flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                      {anime.title}
-                    </h3>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Updated {format(new Date(anime.updated_at), 'MMM d')}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+        {(() => {
+          const visible = sortList(animeList.filter(matchesFilters));
+          return (
+            <>
+              <h2 className="text-2xl font-bold mb-6">
+                All Ongoing Series <span className="text-muted-foreground text-base">({visible.length})</span>
+              </h2>
+              {visible.length === 0 ? (
+                <p className="text-muted-foreground text-sm">No series match the current filters.</p>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {visible.map((anime) => (
+                    <Link key={anime.id} to={`/anime/${anime.id}`}>
+                      <Card className="group overflow-hidden hover:border-primary/50 transition-all">
+                        <CardContent className="flex items-center gap-3 p-3">
+                          <img
+                            src={anime.cover_image || '/placeholder.svg'}
+                            alt={anime.title}
+                            className="w-14 h-20 object-cover rounded-lg flex-shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                              {anime.title}
+                            </h3>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Updated {format(new Date(anime.updated_at), 'MMM d')}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </>
+          );
+        })()}
       </div>
     </div>
   );
 }
+

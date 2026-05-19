@@ -258,7 +258,12 @@ function LiveListingView() {
 
             return {
               ...anime,
-              view_count: anime.view_count || Math.floor(Math.random() * (5000000 - 500000) + 500000),
+              // Real view counts on this tab are not yet seeded — anything below 1000
+              // is treated as an unset value and replaced with a curated 1M–10M range.
+              view_count:
+                anime.view_count && anime.view_count >= 1000
+                  ? anime.view_count
+                  : Math.floor(Math.random() * (9_500_000 - 1_000_000) + 1_000_000),
               episode_count: episodeCount,
               latest_episode_at: latestEpAt,
             };
