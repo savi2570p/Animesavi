@@ -262,7 +262,7 @@ export default function EmbedPlayer() {
               label: level.height >= 2160 ? '4K' : level.height >= 1080 ? '1080p' : level.height >= 720 ? '720p' : level.height >= 480 ? '480p' : `${level.height}p`
             })));
           }
-          if (hls.audioTracks?.length > 1) {
+          if (hls.audioTracks?.length) {
             setAudioTracks(hls.audioTracks.map((t, i) => ({
               id: i, name: t.name || t.lang || `Audio ${i + 1}`, lang: t.lang || ''
             })));
