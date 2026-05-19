@@ -1,11 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Play, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, Play, ChevronLeft, ChevronRight, Filter, ArrowUpDown } from 'lucide-react';
 import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 interface ScheduleAnime {
   id: string;
