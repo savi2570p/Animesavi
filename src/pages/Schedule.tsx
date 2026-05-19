@@ -32,6 +32,11 @@ export default function Schedule() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState(new Date().getDay());
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
+  const [search, setSearch] = useState('');
+  const [genreFilter, setGenreFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'recent' | 'title-asc' | 'title-desc'>('recent');
+  const [airingNowOnly, setAiringNowOnly] = useState(false);
+
 
   useEffect(() => {
     fetchOngoingAnime();
