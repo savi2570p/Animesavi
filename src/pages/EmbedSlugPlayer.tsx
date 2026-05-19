@@ -399,7 +399,7 @@ export default function EmbedSlugPlayer() {
               label: l.height >= 2160 ? '4K' : l.height >= 1080 ? '1080p' : l.height >= 720 ? '720p' : l.height >= 480 ? '480p' : `${l.height}p`
             })));
           }
-          if (hls.audioTracks?.length > 1) {
+          if (hls.audioTracks?.length) {
             setAudioTracks(hls.audioTracks.map((t, i) => ({
               id: i, name: t.name || t.lang || `Audio ${i + 1}`, lang: t.lang || ''
             })));
