@@ -262,7 +262,7 @@ export default function MinimalEmbedPage() {
       setDuration(v.duration || 0);
       // Native audio track detection (Safari HLS, multi-audio MP4)
       const nativeAudio = (v as any).audioTracks;
-      if (nativeAudio && nativeAudio.length > 1 && audioTracks.length === 0) {
+      if (nativeAudio && nativeAudio.length && audioTracks.length === 0) {
         const tracks: Array<{ id: number; name: string; lang: string }> = [];
         for (let i = 0; i < nativeAudio.length; i++) {
           const t = nativeAudio[i];
