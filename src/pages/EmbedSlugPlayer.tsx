@@ -425,7 +425,7 @@ export default function EmbedSlugPlayer() {
     const onError = () => { setIsLoading(false); setError('Video failed to load'); };
     const onLoadedMeta = () => {
       const nativeAudio = (video as any).audioTracks;
-      if (nativeAudio && nativeAudio.length > 1 && audioTracks.length === 0) {
+      if (nativeAudio && nativeAudio.length && audioTracks.length === 0) {
         const tracks: { id: number; name: string; lang: string }[] = [];
         for (let i = 0; i < nativeAudio.length; i++) {
           const t = nativeAudio[i];
