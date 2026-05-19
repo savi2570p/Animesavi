@@ -794,7 +794,7 @@ export default function Welcome() {
             {[
               { icon: Crown, title: 'Persistent Watch Rooms', desc: 'Resume group sessions days later — chat history, queue and playback position all saved.', tag: 'Live', href: '/' },
               { icon: Flame, title: 'Smart Recommendations 2.0', desc: 'Genre + mood-aware suggestions tuned by your real watch history and ratings.', tag: 'Live', href: '/' },
-              { icon: Calendar, title: 'Seasonal Anime Tracker', desc: 'A single dashboard for every airing show this season with episode countdowns.', tag: 'Soon' },
+              { icon: Calendar, title: 'Seasonal Anime Tracker', desc: 'A single dashboard for every airing show this season with episode countdowns.', tag: 'Beta', href: '/schedule' },
               { icon: BarChart3, title: 'Personal Watch Stats', desc: 'Total hours watched, top genres, longest streaks and a year-in-review wrap.', tag: 'Live', href: '/stats' },
               { icon: MapPin, title: 'AI Episode Recaps', desc: 'Auto-generated 30-second recaps so you never lose track of long-running shows.', tag: 'Planned' },
             ].map((r, i) => {
