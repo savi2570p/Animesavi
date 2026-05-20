@@ -415,14 +415,24 @@ export default function EmbedSlugPlayer() {
         hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => setCurrentLevel(data.level));
         hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (_, data) => setCurrentAudioTrack(data.id));
         hls.on(Hls.Events.SUBTITLE_TRACK_SWITCH, (_, data) => setCurrentSubtitleTrack(data.id));
-        hls.on(Hls.Events.ERROR, (_, data) => { if (data.fatal) setError('Playback error'); });
+        hls.on(Hls.Events.ERROR, (_, data) => {
+          if (!data.fatal) return;
+          if (data.type === 'networkError') { try { hls.startLoad(); } catch {} return; }
+          if (data.type === 'mediaError') { try { hls.recoverMediaError(); } catch {} return; }
+        });
       }
     } else {
       video.src = videoUrl;
     }
 
     const onCanPlay = () => { setIsLoading(false); video.play().catch(() => {}); };
-    const onError = () => { setIsLoading(false); setError('Video failed to load'); };
+    const onError = (e: Event) => {
+      setIsLoading(false);
+      const v = e.currentTarget as HTMLVideoElement;
+      if (v?.error && v.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+        setError('Video failed to load');
+      }
+    };
     const onLoadedMeta = () => {
       const nativeAudio = (video as any).audioTracks;
       if (nativeAudio && nativeAudio.length && audioTracks.length === 0) {
@@ -877,17 +887,18 @@ export default function EmbedSlugPlayer() {
                 </button>
                 {showAudioMenu && (
                   <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[150px] z-50">
-                    {audioTracks.length === 0 ? (
-                      <div className="px-3 py-1.5 text-xs text-white/60">Default audio (only track)</div>
-                    ) : (
-                      audioTracks.map(t => (
+                    {(() => {
+                      const tracksToShow = audioTracks.length > 0
+                        ? audioTracks
+                        : [{ id: 0, name: 'Original Audio', lang: '' }];
+                      return tracksToShow.map(t => (
                         <button key={t.id} onClick={() => switchAudioTrack(t.id)}
                           className={`w-full text-left px-3 py-1.5 text-xs rounded flex items-center gap-2 ${currentAudioTrack === t.id ? 'text-primary' : 'text-white/80'} hover:bg-white/10`}>
                           {currentAudioTrack === t.id && <Check className="w-3 h-3" />}
                           {t.name || t.lang || `Audio ${t.id + 1}`}
                         </button>
-                      ))
-                    )}
+                      ));
+                    })()}
                   </div>
                 )}
               </div>

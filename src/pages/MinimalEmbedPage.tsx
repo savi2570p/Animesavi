@@ -233,10 +233,16 @@ export default function MinimalEmbedPage() {
         });
         hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (_, d) => setCurrentAudioTrack(d.id));
         hls.on(Hls.Events.ERROR, (_, data) => {
-          if (data.fatal) setError('Video cannot be played on this device');
+          // Don't surface transient HLS errors as a blocking "cannot be played" overlay.
+          // The native <video onError> will fire for real, unrecoverable failures.
+          if (!data.fatal) return;
+          if (data.type === 'networkError') {
+            try { hls.startLoad(); } catch {}
+          }
         });
       } else {
-        setError('Video cannot be played on this device');
+        // No HLS support and no native — leave the player silent; <video onError>
+        // (if it triggers) will surface a real failure. Avoid an immediate overlay.
       }
     } else {
       video.src = videoUrl;
@@ -544,7 +550,15 @@ export default function MinimalEmbedPage() {
                 transform: 'translateZ(0)',
                 touchAction: 'manipulation',
               }}
-              onError={() => setError('Video cannot be played on this device')}
+              onError={(e) => {
+                // Only flag a real failure when the element actually has an error code
+                // AND has tried to load. Avoids spurious "cannot be played" toasts on
+                // iOS/Android right after a src swap.
+                const v = e.currentTarget;
+                if (v.error && v.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+                  setError('Video cannot be played on this device');
+                }
+              }}
             >
               {captionsUrl && (
                 <track
@@ -670,12 +684,21 @@ export default function MinimalEmbedPage() {
                           boxShadow: '0 8px 28px rgba(0,0,0,0.6)',
                         }}
                       >
-                        {audioTracks.length === 0 ? (
-                          <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
-                            Default audio (only track)
-                          </div>
-                        ) : (
-                          audioTracks.map((t) => {
+                        {(() => {
+                          const langLabel = (() => {
+                            const l = (audioLanguage || '').toLowerCase();
+                            if (l.includes('hindi')) return 'Hindi Dub';
+                            if (l.includes('japanese') || l === 'jp' || l === 'ja') return 'Japanese (Original)';
+                            if (l.includes('english') || l === 'en') return 'English Dub';
+                            if (l && l !== 'original' && l !== 'unknown') {
+                              return l.charAt(0).toUpperCase() + l.slice(1) + ' Audio';
+                            }
+                            return 'Original Audio';
+                          })();
+                          const tracksToShow = audioTracks.length > 0
+                            ? audioTracks
+                            : [{ id: 0, name: langLabel, lang: audioLanguage || '' }];
+                          return tracksToShow.map((t) => {
                             const active = currentAudioTrack === t.id;
                             return (
                               <button
@@ -694,8 +717,8 @@ export default function MinimalEmbedPage() {
                                 <span>{t.name || t.lang || `Audio ${t.id + 1}`}</span>
                               </button>
                             );
-                          })
-                        )}
+                          });
+                        })()}
                       </div>
                     )}
                   </div>

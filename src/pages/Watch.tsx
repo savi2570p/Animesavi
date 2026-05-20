@@ -342,6 +342,10 @@ export default function Watch() {
     if (!hasDirectVideo && externalIsEmbed && activeServer !== 'EMBED') {
       autoEmbedAppliedRef.current = episode.id;
       handleServerSwitch('EMBED');
+    } else if (hasDirectVideo && activeServer === 'EMBED') {
+      // Episode is a real video file → never stay on Embed. Auto-promote to X-PLUS.
+      autoEmbedAppliedRef.current = episode.id;
+      handleServerSwitch('XPLUS');
     } else if (hasDirectVideo || !externalIsEmbed) {
       autoEmbedAppliedRef.current = episode.id;
     }

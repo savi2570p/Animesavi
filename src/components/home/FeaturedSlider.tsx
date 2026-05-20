@@ -49,23 +49,11 @@ const VIEW_COUNT_MAP: Record<string, number> = {
   'Easygoing Territory Defense by the Optimistic Lord': 5200000,
 };
 
-// Curated hero lineup — these titles appear first in the slider (in this order).
-const HERO_PREFERRED_TITLES = [
-  'Liar Game',
-  'Dorohedoro',
-  'Easygoing Territory Defense by the Optimistic Lord',
-  'Solo Leveling',
-  'Jujutsu Kaisen',
-  'My Dress-Up Darling',
-];
-
 const getViewCount = (title: string, dbViewCount: number | null): number => {
-  // Case-insensitive lookup against curated map
   const mapKey = Object.keys(VIEW_COUNT_MAP).find(
     k => k.toLowerCase() === title.toLowerCase()
   );
   if (mapKey) return VIEW_COUNT_MAP[mapKey];
-  // Only trust DB count if it's a realistic value (>= 1000)
   if (dbViewCount && dbViewCount >= 1000) return dbViewCount;
   return Math.floor(Math.random() * (9000000 - 1000000) + 1000000);
 };
@@ -81,36 +69,23 @@ export function FeaturedSlider() {
   useEffect(() => {
     const fetchFeaturedAnime = async () => {
       try {
+        // Pull straight from "Most Popular": top viewed anime, sorted by view_count.
         const { data, error } = await supabase
           .from('anime')
           .select('id, title, description, cover_image, banner_image, genres, view_count, status')
           .order('view_count', { ascending: false })
-          .limit(80);
+          .limit(40);
 
         if (error) throw error;
 
         if (data && data.length > 0) {
-          // Pull curated hero titles to the front (in defined order), then top-viewed.
-          const seen = new Set<string>();
-          const matched: typeof data = [];
-          for (const target of HERO_PREFERRED_TITLES) {
-            const found = data.find(
-              a => a.title && a.title.toLowerCase() === target.toLowerCase() && !seen.has(a.id)
-            );
-            if (found) {
-              seen.add(found.id);
-              matched.push(found);
-            }
-          }
-          for (const a of data) {
-            if (matched.length >= 6) break;
-            if (!seen.has(a.id)) {
-              seen.add(a.id);
-              matched.push(a);
-            }
-          }
+          // Re-rank by the same curated view-count logic used in Most Popular so
+          // hero order matches what the user sees on the "Most Popular" row.
+          const ranked = [...data].sort((a, b) => {
+            return getViewCount(b.title, b.view_count) - getViewCount(a.title, a.view_count);
+          });
 
-          const items = matched.slice(0, 6).map(anime => ({
+          const items = ranked.slice(0, 10).map(anime => ({
             id: anime.id,
             title: anime.title,
             description: anime.description,

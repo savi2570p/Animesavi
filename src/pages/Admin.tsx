@@ -34,6 +34,7 @@ import { ConversionHealthDashboard } from '@/components/admin/ConversionHealthDa
 import { TokenManager } from '@/components/admin/TokenManager';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { EmbedAllowlistManager } from '@/components/admin/EmbedAllowlistManager';
+import { EmbedAudioDebugPanel } from '@/components/admin/EmbedAudioDebugPanel';
 
 interface Application {
   id: string;
@@ -442,6 +443,12 @@ export default function Admin() {
           <UserManagement />
         </TabsContent>
       </Tabs>
+
+      {/* 🎧 Embed audio-track inspector (normal vs shadow, iOS/Android/desktop) */}
+      <div className="mt-8">
+        <EmbedAudioDebugPanel />
+      </div>
+
 
       {/* Quick link to dedicated Site Health (Lighthouse LCP + GSC verification) */}
       <div className="mt-8 p-4 rounded-lg border border-border/60 bg-muted/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
