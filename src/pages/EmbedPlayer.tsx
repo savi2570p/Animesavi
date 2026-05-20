@@ -302,7 +302,13 @@ export default function EmbedPlayer() {
     const handleProgress = () => {
       if (video.buffered.length > 0) setBufferedProgress(video.duration ? (video.buffered.end(video.buffered.length - 1) / video.duration) * 100 : 0);
     };
-    const handleError = () => { setIsLoading(false); setError('Video failed to load - please try again'); };
+    const handleError = (e: Event) => {
+      const v = e.currentTarget as HTMLVideoElement;
+      setIsLoading(false);
+      if (v?.error && v.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+        setError('Video failed to load - please try again');
+      }
+    };
     const handleLoadedMeta = () => {
       // Native (Safari/HLS-native + MP4 with multiple audio) audio track detection
       const nativeAudio = (video as any).audioTracks;
