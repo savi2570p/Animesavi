@@ -278,7 +278,12 @@ export default function EmbedPlayer() {
         hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => setCurrentLevel(data.level));
         hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (_, data) => setCurrentAudioTrack(data.id));
         hls.on(Hls.Events.SUBTITLE_TRACK_SWITCH, (_, data) => setCurrentSubtitleTrack(data.id));
-        hls.on(Hls.Events.ERROR, (_, data) => { if (data.fatal) setError('Playback error - please retry'); });
+        hls.on(Hls.Events.ERROR, (_, data) => {
+          if (!data.fatal) return;
+          // Try to recover instead of slamming the user with an error overlay.
+          if (data.type === 'networkError') { try { hls.startLoad(); } catch {} return; }
+          if (data.type === 'mediaError') { try { hls.recoverMediaError(); } catch {} return; }
+        });
       }
     } else {
       video.src = videoUrl;
