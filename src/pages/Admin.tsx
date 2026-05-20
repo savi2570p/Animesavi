@@ -34,6 +34,7 @@ import { ConversionHealthDashboard } from '@/components/admin/ConversionHealthDa
 import { TokenManager } from '@/components/admin/TokenManager';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { EmbedAllowlistManager } from '@/components/admin/EmbedAllowlistManager';
+import { EmbedAudioDebugPanel } from '@/components/admin/EmbedAudioDebugPanel';
 
 interface Application {
   id: string;
