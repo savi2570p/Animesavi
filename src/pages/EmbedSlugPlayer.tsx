@@ -426,7 +426,13 @@ export default function EmbedSlugPlayer() {
     }
 
     const onCanPlay = () => { setIsLoading(false); video.play().catch(() => {}); };
-    const onError = () => { setIsLoading(false); setError('Video failed to load'); };
+    const onError = (e: Event) => {
+      setIsLoading(false);
+      const v = e.currentTarget as HTMLVideoElement;
+      if (v?.error && v.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+        setError('Video failed to load');
+      }
+    };
     const onLoadedMeta = () => {
       const nativeAudio = (video as any).audioTracks;
       if (nativeAudio && nativeAudio.length && audioTracks.length === 0) {
