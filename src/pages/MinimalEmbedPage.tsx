@@ -676,12 +676,21 @@ export default function MinimalEmbedPage() {
                           boxShadow: '0 8px 28px rgba(0,0,0,0.6)',
                         }}
                       >
-                        {audioTracks.length === 0 ? (
-                          <div style={{ padding: '8px 12px', fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
-                            Default audio (only track)
-                          </div>
-                        ) : (
-                          audioTracks.map((t) => {
+                        {(() => {
+                          const langLabel = (() => {
+                            const l = (audioLanguage || '').toLowerCase();
+                            if (l.includes('hindi')) return 'Hindi Dub';
+                            if (l.includes('japanese') || l === 'jp' || l === 'ja') return 'Japanese (Original)';
+                            if (l.includes('english') || l === 'en') return 'English Dub';
+                            if (l && l !== 'original' && l !== 'unknown') {
+                              return l.charAt(0).toUpperCase() + l.slice(1) + ' Audio';
+                            }
+                            return 'Original Audio';
+                          })();
+                          const tracksToShow = audioTracks.length > 0
+                            ? audioTracks
+                            : [{ id: 0, name: langLabel, lang: audioLanguage || '' }];
+                          return tracksToShow.map((t) => {
                             const active = currentAudioTrack === t.id;
                             return (
                               <button
@@ -700,8 +709,8 @@ export default function MinimalEmbedPage() {
                                 <span>{t.name || t.lang || `Audio ${t.id + 1}`}</span>
                               </button>
                             );
-                          })
-                        )}
+                          });
+                        })()}
                       </div>
                     )}
                   </div>
