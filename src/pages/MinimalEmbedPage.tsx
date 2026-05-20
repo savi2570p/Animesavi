@@ -550,7 +550,15 @@ export default function MinimalEmbedPage() {
                 transform: 'translateZ(0)',
                 touchAction: 'manipulation',
               }}
-              onError={() => setError('Video cannot be played on this device')}
+              onError={(e) => {
+                // Only flag a real failure when the element actually has an error code
+                // AND has tried to load. Avoids spurious "cannot be played" toasts on
+                // iOS/Android right after a src swap.
+                const v = e.currentTarget;
+                if (v.error && v.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+                  setError('Video cannot be played on this device');
+                }
+              }}
             >
               {captionsUrl && (
                 <track
