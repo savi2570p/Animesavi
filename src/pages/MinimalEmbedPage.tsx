@@ -233,10 +233,16 @@ export default function MinimalEmbedPage() {
         });
         hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (_, d) => setCurrentAudioTrack(d.id));
         hls.on(Hls.Events.ERROR, (_, data) => {
-          if (data.fatal) setError('Video cannot be played on this device');
+          // Don't surface transient HLS errors as a blocking "cannot be played" overlay.
+          // The native <video onError> will fire for real, unrecoverable failures.
+          if (!data.fatal) return;
+          if (data.type === 'networkError') {
+            try { hls.startLoad(); } catch {}
+          }
         });
       } else {
-        setError('Video cannot be played on this device');
+        // No HLS support and no native — leave the player silent; <video onError>
+        // (if it triggers) will surface a real failure. Avoid an immediate overlay.
       }
     } else {
       video.src = videoUrl;
