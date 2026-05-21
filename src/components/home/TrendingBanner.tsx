@@ -20,12 +20,18 @@ const formatViews = (count: number) => {
   return String(count);
 };
 
-// Hardcoded trending titles in priority order
+// Hardcoded trending titles in priority order (6 anime)
 const TRENDING_TITLES = [
-  'Jujutsu Kaisen',
-  'Invincible',
-  'Attack on Titan',
+  'The Angel Next Door Spoils me Rotten',
+  'Grand Blue Dreaming',
+  'Dr. Stone',
+  'Witch Hat Atelier',
+  'Wistoria: Wand and Sword',
+  'Liar Game',
+  'Snowball Earth',
 ];
+
+const TRENDING_LIMIT = 6;
 
 export function TrendingBanner() {
   const [trending, setTrending] = useState<TrendingAnime[]>([]);
@@ -50,16 +56,19 @@ export function TrendingBanner() {
         .from('anime_public')
         .select('id, title, cover_image, banner_image, view_count, genres, status')
         .order('view_count', { ascending: false })
-        .limit(50);
+        .limit(100);
 
       if (data && data.length > 0) {
-        // Try to match hardcoded trending titles
         const matched: TrendingAnime[] = [];
+        const seen = new Set<string>();
         for (const targetTitle of TRENDING_TITLES) {
-          const found = data.find(a => 
+          const found = data.find(a =>
+            a.title?.toLowerCase() === targetTitle.toLowerCase()
+          ) || data.find(a =>
             a.title?.toLowerCase().includes(targetTitle.toLowerCase())
           );
-          if (found) {
+          if (found && !seen.has(found.id!)) {
+            seen.add(found.id!);
             matched.push({
               ...found,
               view_count: found.view_count && found.view_count > 100000
@@ -69,12 +78,12 @@ export function TrendingBanner() {
           }
         }
 
-        // If we couldn't find all 3, fill from top viewed
-        if (matched.length < 3) {
-          const matchedIds = new Set(matched.map(m => m.id));
+        // Fill any missing slots from top viewed so we always show 6.
+        if (matched.length < TRENDING_LIMIT) {
           for (const a of data) {
-            if (matched.length >= 3) break;
-            if (matchedIds.has(a.id!)) continue;
+            if (matched.length >= TRENDING_LIMIT) break;
+            if (seen.has(a.id!)) continue;
+            seen.add(a.id!);
             matched.push({
               ...a,
               view_count: a.view_count && a.view_count > 100000
@@ -84,7 +93,7 @@ export function TrendingBanner() {
           }
         }
 
-        setTrending(matched.slice(0, 3));
+        setTrending(matched.slice(0, TRENDING_LIMIT));
       }
     } catch (e) {
       console.error('Trending fetch error:', e);
@@ -92,6 +101,7 @@ export function TrendingBanner() {
       setLoading(false);
     }
   };
+
 
   if (loading || trending.length === 0) return null;
 
