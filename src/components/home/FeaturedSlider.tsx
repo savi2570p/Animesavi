@@ -69,23 +69,54 @@ export function FeaturedSlider() {
   useEffect(() => {
     const fetchFeaturedAnime = async () => {
       try {
-        // Pull straight from "Most Popular": top viewed anime, sorted by view_count.
+        // Pull top viewed anime, then re-rank using the same Most Popular logic.
         const { data, error } = await supabase
           .from('anime')
           .select('id, title, description, cover_image, banner_image, genres, view_count, status')
           .order('view_count', { ascending: false })
-          .limit(40);
+          .limit(60);
 
         if (error) throw error;
 
         if (data && data.length > 0) {
-          // Re-rank by the same curated view-count logic used in Most Popular so
-          // hero order matches what the user sees on the "Most Popular" row.
-          const ranked = [...data].sort((a, b) => {
-            return getViewCount(b.title, b.view_count) - getViewCount(a.title, a.view_count);
-          });
+          // Curated fixed hero lineup (stable order, not random) — sourced from "Most Popular".
+          // Swaps requested: removed "Your Name" -> added "The Angel next door spoils me rotten".
+          // Removed "Attack on Titan Muse India DUB" -> added "Witch Hat Atelier".
+          const HERO_LINEUP = [
+            'The Angel Next Door Spoils me Rotten',
+            'Witch Hat Atelier',
+            'Jujutsu Kaisen',
+            'My Dress-Up Darling',
+            'Solo Leveling',
+            'Liar Game',
+            'Dorohedoro',
+            'Grand Blue Dreaming',
+            'Easygoing Territory Defense by the Optimistic Lord',
+            'Attack on Titan',
+          ];
 
-          const items = ranked.slice(0, 10).map(anime => ({
+          const byTitle = (t: string) =>
+            data.find(a => a.title?.toLowerCase() === t.toLowerCase()) ||
+            data.find(a => a.title?.toLowerCase().includes(t.toLowerCase()));
+
+          const matched: typeof data = [];
+          const seen = new Set<string>();
+          for (const t of HERO_LINEUP) {
+            const f = byTitle(t);
+            if (f && !seen.has(f.id)) { matched.push(f); seen.add(f.id); }
+          }
+          // Fill any missing slots from top-viewed fallback so we always show 10.
+          if (matched.length < 10) {
+            const ranked = [...data].sort((a, b) =>
+              getViewCount(b.title, b.view_count) - getViewCount(a.title, a.view_count)
+            );
+            for (const a of ranked) {
+              if (matched.length >= 10) break;
+              if (!seen.has(a.id)) { matched.push(a); seen.add(a.id); }
+            }
+          }
+
+          const items = matched.slice(0, 10).map(anime => ({
             id: anime.id,
             title: anime.title,
             description: anime.description,
@@ -106,6 +137,7 @@ export function FeaturedSlider() {
     };
     fetchFeaturedAnime();
   }, []);
+
 
   const goTo = useCallback((nextIdx: number, dir: 'next' | 'prev') => {
     setDirection(dir);
