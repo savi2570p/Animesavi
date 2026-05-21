@@ -2950,7 +2950,7 @@ export function VideoPlayer({
               {activeServer === 'XPLUS' ? (
                 /* X-PLUS: Flat minimal controls - Fullscreen */
                 <>
-                  <div className={`flex items-center ${isIOS ? "gap-1" : "gap-2 md:gap-5"}`}>
+                  <div className={`flex items-center ${isIOS ? "gap-2" : "gap-3 md:gap-3.5"}`}>
                     <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
                       {isPlaying ? <Pause className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-7 md:h-7"} /> : <Play className={isIOS ? "w-5 h-5 fill-current" : "w-5 h-5 md:w-7 md:h-7 fill-current"} />}
                     </button>
@@ -2963,9 +2963,9 @@ export function VideoPlayer({
                     <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); toggleMute(); }}>
                       {isMuted ? <VolumeX className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} /> : <Volume2 className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} />}
                     </button>
-                    <span className={`text-white/90 font-mono ${isIOS ? 'text-[10px]' : 'text-xs md:text-sm'}`}>{formatTime(currentTime)} / {formatTime(duration)}</span>
                   </div>
-                  <div className={`flex items-center ${isIOS ? "gap-1" : "gap-2 md:gap-5"}`}>
+                  <div className={`flex items-center ${isIOS ? "gap-2" : "gap-3 md:gap-3.5"}`}>
+
                     <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); handleDownload(); }} title="Download">
                       <Download className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
