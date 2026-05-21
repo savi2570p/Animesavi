@@ -3222,7 +3222,7 @@ export function VideoPlayer({
             {activeServer === 'XPLUS' ? (
               /* X-PLUS: Flat minimal controls like a cinema player */
               <>
-                <div className="flex items-center gap-2 md:gap-4">
+                <div className="flex items-center gap-3 md:gap-3.5">
                   <button 
                     className={flatPlayerControlButtonClass} 
                     onClick={(e) => { e.stopPropagation(); togglePlay(); }}
@@ -3251,9 +3251,9 @@ export function VideoPlayer({
                   >
                     {isMuted ? <VolumeX className={isIOS ? "w-4 h-4" : "w-4.5 h-4.5 md:w-5 md:h-5"} /> : <Volume2 className={isIOS ? "w-4 h-4" : "w-4.5 h-4.5 md:w-5 md:h-5"} />}
                   </button>
-                  <span className={`text-white/90 font-mono ${isIOS ? 'text-[10px]' : 'text-xs md:text-sm'}`}>{formatTime(currentTime)} / {formatTime(duration)}</span>
                 </div>
-                <div className="flex items-center gap-2 md:gap-4">
+                <div className="flex items-center gap-3 md:gap-3.5">
+
                   <button 
                     className={flatPlayerControlButtonClass} 
                     onClick={(e) => { e.stopPropagation(); handleDownload(); }}
