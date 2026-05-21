@@ -1,41 +1,82 @@
 // Sends a test push notification to all of the authenticated user's
-// subscribed devices. Useful for debugging the Web Push setup.
+// subscribed devices. Mirrors send-episode-push's load pattern so the
+// worker never crashes at module-init.
 
-// @ts-ignore
+// @ts-ignore - npm specifier resolved at runtime
 import webpush from 'npm:web-push@3.6.7';
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY')!;
-const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY')!;
+const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY') || '';
+const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') || '';
 const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') || 'mailto:admin@animesavi.com';
-webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
+const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || '';
+
+let vapidReady = false;
+try {
+  if (VAPID_PUBLIC && VAPID_PRIVATE) {
+    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
+    vapidReady = true;
+  }
+} catch (e) {
+  console.error('[send-test-push] VAPID init failed:', e);
+}
+
+const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
   try {
-    const auth = req.headers.get('Authorization') || '';
-    const token = auth.replace('Bearer ', '');
-    if (!token) {
-      return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!vapidReady) {
+      return new Response(JSON.stringify({ error: 'Push service not configured (missing VAPID keys).' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
-    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+
+    const auth = req.headers.get('Authorization') || '';
+    const token = auth.replace('Bearer ', '').trim();
+    if (!token) {
+      return new Response(JSON.stringify({ error: 'You must be signed in to send a test notification.' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Identify caller via anon-key client w/ their JWT
+    const userClient = createClient(SUPABASE_URL, ANON_KEY, {
       global: { headers: { Authorization: `Bearer ${token}` } },
       auth: { persistSession: false },
     });
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const { data: userData, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: 'Session expired. Please sign in again.' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
+    const user = userData.user;
 
-    const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
-    const { data: subs } = await admin.from('push_subscriptions').select('id, endpoint, p256dh, auth').eq('user_id', user.id);
+    const { data: subs, error: subErr } = await admin
+      .from('push_subscriptions')
+      .select('id, endpoint, p256dh, auth')
+      .eq('user_id', user.id);
+
+    if (subErr) {
+      console.error('[send-test-push] DB error:', subErr);
+      return new Response(JSON.stringify({ error: 'Could not load your devices. Try again.' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     if (!subs || subs.length === 0) {
-      return new Response(JSON.stringify({ error: 'No subscriptions on this account. Allow notifications first.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'No subscribed devices found. Enable notifications first.' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const payload = JSON.stringify({
@@ -48,10 +89,15 @@ Deno.serve(async (req) => {
     let sent = 0, failed = 0;
     for (const s of subs) {
       try {
-        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload, { TTL: 60 });
+        await webpush.sendNotification(
+          { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+          payload,
+          { TTL: 60 },
+        );
         sent++;
       } catch (err: any) {
         failed++;
+        console.error('[send-test-push] send error', err?.statusCode, err?.body || err?.message);
         if (err?.statusCode === 404 || err?.statusCode === 410) {
           await admin.from('push_subscriptions').delete().eq('id', s.id);
         }
@@ -61,7 +107,10 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: true, sent, failed, devices: subs.length }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-  } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  } catch (e: any) {
+    console.error('[send-test-push] fatal', e);
+    return new Response(JSON.stringify({ error: e?.message || 'Unexpected error' }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
