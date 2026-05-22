@@ -570,6 +570,25 @@ export default function Watch() {
     }
   }, [user, episodeId, anime, watchHistoryId, resumeProgress, initialSeekDone, searchParams]);
 
+  // ─── ULTRA BEAST EMBED CONTINUE WATCHING ───
+  // External iframe servers (EMBED) and any embed-like external_url cannot expose
+  // currentTime cross-origin. Run a smart estimating tracker that pipes ticks
+  // into the same updateWatchProgress + localStorage("resume:") pipeline used
+  // by direct file playback, so Continue Watching keeps working for Streamtape /
+  // Doodstream / Upnshare / RPMShare / Filemoon / Vidguard / etc.
+  const embedTrackingActive = !!episode && (
+    activeServer === 'EMBED' ||
+    (!episode.video_url && isEmbedLikeUrl(episode.external_url))
+  );
+  useEmbedWatchTracker({
+    enabled: embedTrackingActive,
+    episodeId: episodeId || null,
+    estimatedDuration: (episode as any)?.duration_seconds || (episode as any)?.duration || 24 * 60,
+    onTick: (curr, dur) => {
+      updateWatchProgress(curr, dur);
+    },
+  });
+
   const fetchEpisodeData = async (isEpisodeSwitch = false) => {
     if (!isEpisodeSwitch) setIsLoading(true);
 
