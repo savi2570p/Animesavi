@@ -719,6 +719,52 @@ export default function MinimalEmbedPage() {
                             );
                           });
                         })()}
+                        {/* Debug-style mapping line — shows why this label appears.
+                            Helps verify the audioLanguage → menu-label transform. */}
+                        <div
+                          style={{
+                            marginTop: 4,
+                            padding: '6px 10px 4px',
+                            borderTop: '1px solid rgba(255,255,255,0.08)',
+                            fontSize: 10,
+                            lineHeight: 1.4,
+                            color: 'rgba(255,255,255,0.55)',
+                            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                          }}
+                        >
+                          <div style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, marginBottom: 2 }}>
+                            track map
+                          </div>
+                          <div>
+                            audioLanguage:&nbsp;
+                            <span style={{ color: 'hsl(var(--primary))' }}>
+                              "{audioLanguage || 'original'}"
+                            </span>
+                          </div>
+                          <div>
+                            detected:&nbsp;
+                            <span style={{ color: 'rgba(255,255,255,0.85)' }}>
+                              {audioTracks.length > 0
+                                ? `${audioTracks.length} HLS/native track${audioTracks.length === 1 ? '' : 's'}`
+                                : 'none — using synthesized label'}
+                            </span>
+                          </div>
+                          {audioTracks.length === 0 && (
+                            <div>
+                              menu&nbsp;→&nbsp;
+                              <span style={{ color: 'rgba(255,255,255,0.85)' }}>
+                                "{(() => {
+                                  const l = (audioLanguage || '').toLowerCase();
+                                  if (l.includes('hindi')) return 'Hindi Dub';
+                                  if (l.includes('japanese') || l === 'jp' || l === 'ja') return 'Japanese (Original)';
+                                  if (l.includes('english') || l === 'en') return 'English Dub';
+                                  if (l && l !== 'original' && l !== 'unknown') return l.charAt(0).toUpperCase() + l.slice(1) + ' Audio';
+                                  return 'Original Audio';
+                                })()}"
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
