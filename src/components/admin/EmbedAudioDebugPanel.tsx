@@ -35,10 +35,20 @@ const DEVICE_UA: Record<'ios' | 'android' | 'desktop', string> = {
  * and lists the audio tracks the 🎧 menu will surface. Useful for verifying that
  * normal embed links and shadow embed links expose the same tracks across devices.
  */
+/**
+ * Admin-only inspector that loads an episode's video URL into a hidden HLS instance
+ * and lists the audio tracks the 🎧 menu will surface. Useful for verifying that
+ * normal embed links and shadow embed links expose the same tracks across devices.
+ *
+ * Supports a "Force play (iOS)" probe mode that briefly calls video.play() so
+ * Safari actually enumerates native audioTracks (iOS only populates the list
+ * after playback has begun).
+ */
 export function EmbedAudioDebugPanel() {
   const [episodeIdInput, setEpisodeIdInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<ProbeResult[]>([]);
+  const [forcePlayIOS, setForcePlayIOS] = useState(false);
 
   const probeUrl = async (
     url: string,
