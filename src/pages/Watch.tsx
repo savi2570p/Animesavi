@@ -22,6 +22,7 @@ import { ServerStatusIndicator } from '@/components/video/ServerStatusIndicator'
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
 import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hooks/useServerAutoSelect';
 import { isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
+import { useEmbedWatchTracker } from '@/hooks/useEmbedWatchTracker';
 import { z } from 'zod';
 import { hasValidTokenAccess, isSuperAdmin, fetchTokenSystemStatus } from '@/components/AccessBanner';
 import { TokenExpiredPopup } from '@/components/TokenExpiredPopup';
