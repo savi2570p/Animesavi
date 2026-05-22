@@ -109,18 +109,45 @@ export function EmbedAudioDebugPanel() {
         }
       } else {
         document.body.appendChild(video);
+        // iOS Safari requires playsInline + muted before play() will resolve
+        // without a real user gesture, and only enumerates audioTracks AFTER
+        // playback actually starts.
+        video.setAttribute('playsinline', '');
+        video.setAttribute('webkit-playsinline', '');
+        video.muted = true;
         video.src = url;
-        const onMeta = () => {
+
+        const collectAndFinish = (note: string | null = null) => {
           const tracks = native();
           finish(
-            tracks.length ? tracks : [{ id: 0, name: 'Original Audio', lang: '', source: 'native' }],
-            null
+            tracks.length
+              ? tracks
+              : [{ id: 0, name: note ? `Original Audio (${note})` : 'Original Audio', lang: '', source: 'native' }],
+            null,
           );
+        };
+
+        const onMeta = async () => {
+          if (forcePlayIOS && device === 'ios') {
+            try {
+              await video.play();
+              // Give Safari ~1.2s to populate audioTracks once playback starts.
+              setTimeout(() => {
+                try { video.pause(); } catch {}
+                collectAndFinish('after forced play()');
+              }, 1200);
+              return;
+            } catch (e: any) {
+              collectAndFinish(`play() blocked: ${e?.name || 'error'}`);
+              return;
+            }
+          }
+          collectAndFinish();
         };
         video.addEventListener('loadedmetadata', onMeta, { once: true });
         video.addEventListener('error', () => finish([], 'Video element error'), { once: true });
         // Safety timeout — embeds on real iOS often only expose tracks after play().
-        setTimeout(() => finish(native(), null), 6000);
+        setTimeout(() => finish(native(), null), forcePlayIOS ? 9000 : 6000);
       }
     });
   };
