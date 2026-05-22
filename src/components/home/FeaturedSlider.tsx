@@ -412,26 +412,62 @@ export function FeaturedSlider() {
         </button>
       </div>
 
-      {/* Slim progress bar - cross-platform consistent */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 w-[200px] flex items-center gap-1">
+      {/* Slim progress bar - iOS-hardened: kill default Safari button chrome
+          that turns 2px-tall <button>s into giant rounded pills/circles. */}
+      <div
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 px-2"
+        style={{
+          width: 'min(200px, 70vw)',
+          maxWidth: '70vw',
+          WebkitTransform: 'translate3d(-50%, 0, 0)',
+          transform: 'translate3d(-50%, 0, 0)',
+          WebkitBackfaceVisibility: 'hidden',
+          backfaceVisibility: 'hidden',
+        }}
+      >
         {featuredAnime.map((_, idx) => (
           <button
             key={idx}
             onClick={() => goTo(idx, idx > currentIndex ? 'next' : 'prev')}
-            className={`h-[2px] rounded-[1px] bg-foreground/20 overflow-hidden relative transition-all duration-500 ${idx === currentIndex ? 'flex-[2]' : 'flex-1'}`}
-            style={{ WebkitAppearance: 'none', minHeight: '2px', maxHeight: '2px' }}
+            className={`overflow-hidden relative transition-all duration-500 ${idx === currentIndex ? 'flex-[2]' : 'flex-1'}`}
+            style={{
+              // ── iOS Safari reset (no rounded mega-pills, no UA padding) ──
+              WebkitAppearance: 'none',
+              appearance: 'none',
+              padding: 0,
+              margin: 0,
+              border: 0,
+              outline: 'none',
+              boxSizing: 'border-box',
+              display: 'block',
+              height: '2px',
+              minHeight: '2px',
+              maxHeight: '2px',
+              borderRadius: '1px',
+              background: 'hsl(0 0% 100% / 0.2)',
+              cursor: 'pointer',
+              WebkitTapHighlightColor: 'transparent',
+            }}
             aria-label={`Go to slide ${idx + 1}`}
           >
             <div
               key={idx === currentIndex ? `mbar-${animKey}` : `mbar-${idx}`}
-              className={`absolute inset-y-0 left-0 rounded-[1px] ${
-                idx === currentIndex
-                  ? 'bg-primary shadow-[0_0_6px_hsl(var(--primary)/0.5)]'
-                  : idx < currentIndex
-                  ? 'bg-primary w-full'
-                  : 'w-0'
-              }`}
-              style={idx === currentIndex ? { animation: 'slider-fill 3s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
+              style={{
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                left: 0,
+                borderRadius: '1px',
+                background:
+                  idx === currentIndex || idx < currentIndex
+                    ? 'hsl(var(--primary))'
+                    : 'transparent',
+                width:
+                  idx < currentIndex ? '100%' : idx === currentIndex ? undefined : '0%',
+                ...(idx === currentIndex
+                  ? { animation: 'slider-fill 3s linear forwards' }
+                  : {}),
+              }}
             />
           </button>
         ))}
