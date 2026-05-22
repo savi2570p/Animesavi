@@ -223,6 +223,19 @@ export function EmbedAudioDebugPanel() {
         </Button>
       </div>
 
+      <label className="flex items-center gap-2 text-[11px] text-muted-foreground select-none cursor-pointer">
+        <input
+          type="checkbox"
+          checked={forcePlayIOS}
+          onChange={(e) => setForcePlayIOS(e.target.checked)}
+          className="h-3.5 w-3.5 accent-primary"
+        />
+        <span>
+          <strong className="text-foreground">Force play (iOS)</strong> — call <code>video.play()</code> for ~1.2s
+          on the iOS probe so Safari actually enumerates native audio tracks, then record exactly what the 🎧 menu would show.
+        </span>
+      </label>
+
       {results.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[360px] overflow-y-auto">
           {results.map((r, idx) => (
