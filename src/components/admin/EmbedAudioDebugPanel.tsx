@@ -35,10 +35,20 @@ const DEVICE_UA: Record<'ios' | 'android' | 'desktop', string> = {
  * and lists the audio tracks the 🎧 menu will surface. Useful for verifying that
  * normal embed links and shadow embed links expose the same tracks across devices.
  */
+/**
+ * Admin-only inspector that loads an episode's video URL into a hidden HLS instance
+ * and lists the audio tracks the 🎧 menu will surface. Useful for verifying that
+ * normal embed links and shadow embed links expose the same tracks across devices.
+ *
+ * Supports a "Force play (iOS)" probe mode that briefly calls video.play() so
+ * Safari actually enumerates native audioTracks (iOS only populates the list
+ * after playback has begun).
+ */
 export function EmbedAudioDebugPanel() {
   const [episodeIdInput, setEpisodeIdInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<ProbeResult[]>([]);
+  const [forcePlayIOS, setForcePlayIOS] = useState(false);
 
   const probeUrl = async (
     url: string,
@@ -99,18 +109,45 @@ export function EmbedAudioDebugPanel() {
         }
       } else {
         document.body.appendChild(video);
+        // iOS Safari requires playsInline + muted before play() will resolve
+        // without a real user gesture, and only enumerates audioTracks AFTER
+        // playback actually starts.
+        video.setAttribute('playsinline', '');
+        video.setAttribute('webkit-playsinline', '');
+        video.muted = true;
         video.src = url;
-        const onMeta = () => {
+
+        const collectAndFinish = (note: string | null = null) => {
           const tracks = native();
           finish(
-            tracks.length ? tracks : [{ id: 0, name: 'Original Audio', lang: '', source: 'native' }],
-            null
+            tracks.length
+              ? tracks
+              : [{ id: 0, name: note ? `Original Audio (${note})` : 'Original Audio', lang: '', source: 'native' }],
+            null,
           );
+        };
+
+        const onMeta = async () => {
+          if (forcePlayIOS && device === 'ios') {
+            try {
+              await video.play();
+              // Give Safari ~1.2s to populate audioTracks once playback starts.
+              setTimeout(() => {
+                try { video.pause(); } catch {}
+                collectAndFinish('after forced play()');
+              }, 1200);
+              return;
+            } catch (e: any) {
+              collectAndFinish(`play() blocked: ${e?.name || 'error'}`);
+              return;
+            }
+          }
+          collectAndFinish();
         };
         video.addEventListener('loadedmetadata', onMeta, { once: true });
         video.addEventListener('error', () => finish([], 'Video element error'), { once: true });
         // Safety timeout — embeds on real iOS often only expose tracks after play().
-        setTimeout(() => finish(native(), null), 6000);
+        setTimeout(() => finish(native(), null), forcePlayIOS ? 9000 : 6000);
       }
     });
   };
@@ -185,6 +222,19 @@ export function EmbedAudioDebugPanel() {
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Probe'}
         </Button>
       </div>
+
+      <label className="flex items-center gap-2 text-[11px] text-muted-foreground select-none cursor-pointer">
+        <input
+          type="checkbox"
+          checked={forcePlayIOS}
+          onChange={(e) => setForcePlayIOS(e.target.checked)}
+          className="h-3.5 w-3.5 accent-primary"
+        />
+        <span>
+          <strong className="text-foreground">Force play (iOS)</strong> — call <code>video.play()</code> for ~1.2s
+          on the iOS probe so Safari actually enumerates native audio tracks, then record exactly what the 🎧 menu would show.
+        </span>
+      </label>
 
       {results.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[360px] overflow-y-auto">
