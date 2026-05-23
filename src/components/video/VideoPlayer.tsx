@@ -263,7 +263,31 @@ export function VideoPlayer({
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasEnded, setHasEnded] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(() => {
+    // Persisted mute preference (24h TTL, shared across all episodes/anime)
+    try {
+      const raw = localStorage.getItem('player_mute_pref_v1');
+      if (!raw) return false;
+      const { muted, ts } = JSON.parse(raw);
+      if (Date.now() - ts > 24 * 60 * 60 * 1000) {
+        localStorage.removeItem('player_mute_pref_v1');
+        return false;
+      }
+      return !!muted;
+    } catch { return false; }
+  });
+
+  // Persist user mute choice for 24h across episodes/anime
+  const persistMutePref = useCallback((muted: boolean) => {
+    try {
+      localStorage.setItem('player_mute_pref_v1', JSON.stringify({ muted, ts: Date.now() }));
+    } catch {}
+  }, []);
+
+  // Keep video element synced with isMuted (overrides default muted attr after load)
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.muted = isMuted;
+  }, [isMuted]);
   const [volume, setVolume] = useState(1);
   const [brightness, setBrightness] = useState(1);
   const [zoom, setZoom] = useState(1);
