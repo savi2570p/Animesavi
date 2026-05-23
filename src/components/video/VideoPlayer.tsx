@@ -1677,10 +1677,17 @@ export function VideoPlayer({
 
   const toggleMute = useCallback(() => {
     if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
+      const next = !isMuted;
+      videoRef.current.muted = next;
+      setIsMuted(next);
+      persistMutePref(next);
+      if (!next) {
+        // Explicit unmute clears autoplay-mute indicator state
+        setWasMutedForAutoplay(false);
+        setShowMobileUnmute(false);
+      }
     }
-  }, [isMuted]);
+  }, [isMuted, persistMutePref]);
 
   const handleVolumeChange = useCallback((newVolume: number) => {
     if (videoRef.current) {
@@ -1689,12 +1696,16 @@ export function VideoPlayer({
       if (newVolume > 0 && isMuted) {
         videoRef.current.muted = false;
         setIsMuted(false);
+        persistMutePref(false);
+        setWasMutedForAutoplay(false);
+        setShowMobileUnmute(false);
       } else if (newVolume === 0 && !isMuted) {
         videoRef.current.muted = true;
         setIsMuted(true);
+        persistMutePref(true);
       }
     }
-  }, [isMuted]);
+  }, [isMuted, persistMutePref]);
 
   // ENHANCED Fullscreen toggle - fixes all control issues
   const toggleFullscreen = useCallback(async () => {
