@@ -63,7 +63,8 @@ export function ShareEmbedPopup({
   const fullPageUrl = rebrandUrl(pageUrl);
   const fullEmbedUrl = embedUrl ? rebrandUrl(embedUrl) : '';
   const shadowEmbedUrl = fullEmbedUrl ? `${fullEmbedUrl}${fullEmbedUrl.includes('?') ? '&' : '?'}theme=shadow` : '';
-  const canSeeShadowLink = !!fullEmbedUrl;
+  const SHADOW_LINK_EMAILS = ['savi2570p@gmail.com', 'shadowtoonsindia@gmail.com'];
+  const canSeeShadowLink = !!fullEmbedUrl && !!user?.email && SHADOW_LINK_EMAILS.includes(user.email.toLowerCase());
 
   const iframeCode = fullEmbedUrl
     ? `<iframe src="${fullEmbedUrl}" width="100%" height="500" frameborder="0" allowfullscreen></iframe>`
