@@ -28,70 +28,66 @@ export function TokenExpiredGlobalPopup() {
       }}
     >
       <div
-        className="relative w-full max-w-sm rounded-3xl overflow-hidden border border-primary/30 bg-card shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
+        className="relative w-full max-w-[19rem] rounded-2xl overflow-hidden border border-primary/30 bg-card shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
         style={{
           boxShadow:
-            '0 0 80px hsla(0, 70%, 40%, 0.25), 0 30px 60px hsla(0, 0%, 0%, 0.6)',
+            '0 0 60px hsla(0, 70%, 40%, 0.22), 0 20px 40px hsla(0, 0%, 0%, 0.55)',
         }}
       >
         {/* Cinematic header */}
         <div className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-rose-500/15 to-transparent" />
-          <div className="absolute -top-20 -right-16 w-56 h-56 rounded-full blur-3xl bg-primary/40 animate-pulse" />
-          <div
-            className="absolute -bottom-24 -left-16 w-56 h-56 rounded-full blur-3xl bg-rose-500/30 animate-pulse"
-            style={{ animationDelay: '0.6s' }}
-          />
+          <div className="absolute -top-16 -right-12 w-40 h-40 rounded-full blur-3xl bg-primary/40 animate-pulse" />
 
           {/* Close */}
           <button
             onClick={dismissPopup}
-            className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-background/40 hover:bg-background/70 border border-border/40 flex items-center justify-center backdrop-blur-md transition-colors"
+            className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-background/40 hover:bg-background/70 border border-border/40 flex items-center justify-center backdrop-blur-md transition-colors"
             aria-label="Dismiss"
           >
-            <X className="h-3.5 w-3.5 text-foreground/80" />
+            <X className="h-3 w-3 text-foreground/80" />
           </button>
 
-          <div className="relative px-6 pt-7 pb-5 flex flex-col items-center text-center">
-            {/* Animated lock badge */}
+          <div className="relative px-4 pt-5 pb-3 flex flex-col items-center text-center">
+            {/* Compact lock badge */}
             <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-primary/40 blur-2xl animate-pulse" />
-              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary via-rose-500 to-primary flex items-center justify-center shadow-2xl rotate-3">
-                <Lock className="h-8 w-8 text-white drop-shadow-lg" strokeWidth={2.5} />
+              <div className="absolute inset-0 rounded-full bg-primary/40 blur-xl animate-pulse" />
+              <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-primary via-rose-500 to-primary flex items-center justify-center shadow-xl rotate-3">
+                <Lock className="h-5 w-5 text-white drop-shadow" strokeWidth={2.5} />
               </div>
-              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center shadow-lg ring-2 ring-background">
-                <Sparkles className="h-2.5 w-2.5 text-amber-900" strokeWidth={3} />
+              <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-400 flex items-center justify-center shadow ring-2 ring-background">
+                <Sparkles className="h-2 w-2 text-amber-900" strokeWidth={3} />
               </div>
             </div>
 
-            <div className="mt-4 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-destructive/15 border border-destructive/30">
-              <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-destructive">
+            <div className="mt-2.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/15 border border-destructive/30">
+              <span className="w-1 h-1 rounded-full bg-destructive animate-pulse" />
+              <span className="text-[8px] font-black uppercase tracking-[0.18em] text-destructive">
                 Premium Expired
               </span>
             </div>
 
-            <h2 className="mt-3 text-xl font-black text-foreground leading-tight">
+            <h2 className="mt-2 text-sm font-black text-foreground leading-tight">
               Your Premium Access Ended
             </h2>
-            <p className="text-xs text-muted-foreground mt-1.5 max-w-[280px] leading-relaxed">
-              Reactivate your token to keep enjoying ad-free 4K streaming and all premium perks.
+            <p className="text-[10px] text-muted-foreground mt-1 max-w-[220px] leading-snug">
+              Reactivate your token to keep ad-free 4K streaming.
             </p>
           </div>
         </div>
 
-        {/* Perks grid */}
-        <div className="px-5 pt-1 pb-2">
-          <div className="grid grid-cols-4 gap-1.5">
+        {/* Perks grid — compact */}
+        <div className="px-4 pt-0 pb-1.5">
+          <div className="grid grid-cols-4 gap-1">
             {perks.map(({ icon: Icon, label, tone }) => (
               <div
                 key={label}
-                className="rounded-xl bg-muted/30 border border-border/30 p-2 flex flex-col items-center gap-1"
+                className="rounded-lg bg-muted/30 border border-border/30 p-1.5 flex flex-col items-center gap-0.5"
               >
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${tone}`}>
-                  <Icon className="h-3.5 w-3.5" />
+                <div className={`w-5 h-5 rounded-md flex items-center justify-center ${tone}`}>
+                  <Icon className="h-2.5 w-2.5" />
                 </div>
-                <span className="text-[8.5px] font-bold text-foreground/80 text-center leading-tight">
+                <span className="text-[7.5px] font-bold text-foreground/80 text-center leading-tight">
                   {label}
                 </span>
               </div>
@@ -100,32 +96,25 @@ export function TokenExpiredGlobalPopup() {
         </div>
 
         {/* Actions */}
-        <div className="p-5 pt-3 space-y-2">
+        <div className="px-4 pt-2 pb-4 space-y-1.5">
           <a
             href="https://t.me/getunlocktoken"
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative flex items-center justify-center gap-2 w-full py-3 rounded-xl font-black text-sm text-white overflow-hidden transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            className="group relative flex items-center justify-center gap-1.5 w-full py-2 rounded-lg font-black text-xs text-white overflow-hidden transition-transform hover:scale-[1.02] active:scale-[0.98]"
             style={{
               background: 'linear-gradient(135deg, hsl(270, 75%, 55%) 0%, hsl(290, 75%, 55%) 100%)',
-              boxShadow: '0 0 25px hsla(0, 72%, 50%, 0.45), 0 8px 20px hsla(0, 0%, 0%, 0.4)',
+              boxShadow: '0 0 18px hsla(0, 72%, 50%, 0.4), 0 6px 14px hsla(0, 0%, 0%, 0.35)',
             }}
           >
-            <span
-              className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"
-              style={{
-                background:
-                  'linear-gradient(90deg, transparent, hsla(0, 0%, 100%, 0.25), transparent)',
-              }}
-            />
-            <Crown className="h-4 w-4 relative z-10" />
+            <Crown className="h-3.5 w-3.5 relative z-10" />
             <span className="relative z-10">Reactivate Premium</span>
-            <ExternalLink className="h-3.5 w-3.5 relative z-10 opacity-80" />
+            <ExternalLink className="h-3 w-3 relative z-10 opacity-80" />
           </a>
 
           <button
             onClick={dismissPopup}
-            className="w-full py-2.5 rounded-xl font-semibold text-xs text-muted-foreground hover:text-foreground bg-muted/40 hover:bg-muted/70 border border-border/40 transition-colors"
+            className="w-full py-1.5 rounded-lg font-semibold text-[10px] text-muted-foreground hover:text-foreground bg-muted/40 hover:bg-muted/70 border border-border/40 transition-colors"
           >
             Continue with Limited Access
           </button>
