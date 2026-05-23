@@ -23,6 +23,7 @@ import { AdminTrialPopup } from "@/components/AdminTrialPopup";
 import { ReportButton } from "@/components/ReportButton";
 import { BanGuard } from "@/components/BanGuard";
 import { installRoutePrefetch } from "@/lib/routePrefetch";
+import { AntiPiracyShield } from "@/components/security/AntiPiracyShield";
 
 // Critical pages loaded eagerly for instant navigation
 import Index from "./pages/Index";
@@ -62,7 +63,7 @@ const Welcome = lazy(() => import("./pages/Welcome"));
 const Downloads = lazy(() => import("./pages/Downloads"));
 const WatchList = lazy(() => import("./pages/WatchList"));
 const ShadowArise = lazy(() => import("./pages/ShadowArise"));
-const ShadowFlix = lazy(() => import("./pages/ShadowFlix"));
+const FloxAnimePage = lazy(() => import("./pages/FloxAnimePage"));
 const SiteHealth = lazy(() => import("./pages/SiteHealth"));
 
 const queryClient = new QueryClient({
@@ -188,6 +189,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <PopupQueueProvider>
+              <AntiPiracyShield mode="soft" />
               <BanGuard />
               <ScrollRecoveryInitializer />
               <ScrollToTop />
@@ -243,7 +245,7 @@ const App = () => (
                     <Route path="/stats" element={<UserStats />} />
                     <Route path="/downloads" element={<Downloads />} />
                     <Route path="/watchlist" element={<WatchList />} />
-                    <Route path="/shadowflix" element={<ShadowFlix />} />
+                    <Route path="/flox" element={<FloxAnimePage />} />
                     <Route path="/:animeSlug/:episodeSlug" element={<AnimeSlugRedirect />} />
                     <Route path="/:animeSlug" element={<AnimeSlugRedirect />} />
                   </Route>

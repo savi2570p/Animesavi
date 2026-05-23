@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Tv, Play, Film, Clock, LayoutGrid, Cherry, ArrowLeft } from 'lucide-react';
 import museinLogo from '@/assets/musein-logo.jpg';
 import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
-import shadowFlixLogo from '@/assets/shadowflix-logo.jpg';
+import floxLogo from '@/assets/flox-anime-india-logo.jpg';
 import { Button } from '@/components/ui/button';
 
 interface NavTab {
@@ -26,10 +26,10 @@ export function ContentNavTabs() {
 
   const isOnCrunchy = location.pathname === '/crunchy';
   const isOnMuseIN = location.pathname === '/musein';
-  const isOnShadowFlix = location.pathname === '/shadowflix';
+  const isOnFlox = location.pathname === '/flox';
 
-  // On MuseIN, Crunchy, or ShadowFlix pages, show NO tabs — only back button
-  const hideAllTabs = isOnMuseIN || isOnCrunchy || isOnShadowFlix;
+  // On MuseIN, Crunchy, or Flox pages, show NO tabs — only back button
+  const hideAllTabs = isOnMuseIN || isOnCrunchy || isOnFlox;
 
   const tabs: NavTab[] = hideAllTabs
     ? []
@@ -39,7 +39,7 @@ export function ContentNavTabs() {
         { to: '/latest-episodes', label: 'Latest Episodes', icon: Play },
         { to: '/latest-movies', label: 'Latest Movies', icon: Film },
         { to: '/upcoming', label: 'Upcoming', icon: Cherry },
-        { to: '/shadowflix', label: 'ShadowFlx', customIcon: shadowFlixLogo },
+        { to: '/flox', label: 'Flox Anime India +', customIcon: floxLogo },
         ...(isRolesLoaded && canAccessPending
           ? [{ to: '/pending-upload', label: 'Pending Upload', icon: Clock, requiresUploader: true }]
           : []),
