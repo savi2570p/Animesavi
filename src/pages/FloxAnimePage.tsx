@@ -119,7 +119,6 @@ export default function FloxAnimePage() {
     const { error } = await supabase.from('flox_content').delete().eq('id', id);
     if (error) return toast.error(error.message);
     toast.success('Episode deleted');
-    if (playing?.id === id) setPlaying(null);
     load();
   };
 
@@ -129,9 +128,10 @@ export default function FloxAnimePage() {
     if (error) return toast.error(error.message);
     toast.success('Anime deleted');
     setSelectedTitle(null);
-    setPlaying(null);
     load();
   };
+
+  const openEpisode = (ep: FloxRow) => navigate(`/flox/watch/${ep.id}`);
 
   return (
     <AntiPiracyShield mode="strict" noRedirect>
