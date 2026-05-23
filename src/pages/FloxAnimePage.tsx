@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
+
 import { toast } from 'sonner';
-import { Loader2, Trash2, Upload as UploadIcon, PartyPopper, ArrowLeft, Plus, Pencil } from 'lucide-react';
+import { Loader2, Trash2, Upload as UploadIcon, PartyPopper, ArrowLeft, Plus, Pencil, Play } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -49,12 +50,12 @@ interface FloxAnime {
 
 export default function FloxAnimePage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL;
 
   const [rows, setRows] = useState<FloxRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
-  const [playing, setPlaying] = useState<FloxRow | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [editAnime, setEditAnime] = useState<FloxAnime | null>(null);
@@ -118,7 +119,6 @@ export default function FloxAnimePage() {
     const { error } = await supabase.from('flox_content').delete().eq('id', id);
     if (error) return toast.error(error.message);
     toast.success('Episode deleted');
-    if (playing?.id === id) setPlaying(null);
     load();
   };
 
@@ -128,9 +128,10 @@ export default function FloxAnimePage() {
     if (error) return toast.error(error.message);
     toast.success('Anime deleted');
     setSelectedTitle(null);
-    setPlaying(null);
     load();
   };
+
+  const openEpisode = (ep: FloxRow) => navigate(`/flox/watch/${ep.id}`);
 
   return (
     <AntiPiracyShield mode="strict" noRedirect>
@@ -175,7 +176,7 @@ export default function FloxAnimePage() {
         <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             {selectedAnime && (
-              <Button variant="ghost" size="icon" onClick={() => { setSelectedTitle(null); setPlaying(null); }}>
+              <Button variant="ghost" size="icon" onClick={() => setSelectedTitle(null)}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             )}
@@ -202,9 +203,8 @@ export default function FloxAnimePage() {
         {selectedAnime ? (
           <FloxDetailView
             anime={selectedAnime}
-            playing={playing}
-            setPlaying={setPlaying}
             isAdmin={isAdmin}
+            onPlayEpisode={openEpisode}
             onAddEpisode={() => { setEditAnime(selectedAnime); setUploadOpen(true); }}
             onEditAnime={() => { setEditAnime(selectedAnime); setUploadOpen(true); }}
             onDeleteAnime={() => removeAnime(selectedAnime.title)}
@@ -268,23 +268,22 @@ export default function FloxAnimePage() {
 
 function FloxDetailView({
   anime,
-  playing,
-  setPlaying,
   isAdmin,
+  onPlayEpisode,
   onAddEpisode,
   onEditAnime,
   onDeleteAnime,
   onDeleteEpisode,
 }: {
   anime: FloxAnime;
-  playing: FloxRow | null;
-  setPlaying: (r: FloxRow | null) => void;
   isAdmin: boolean;
+  onPlayEpisode: (r: FloxRow) => void;
   onAddEpisode: () => void;
   onEditAnime: () => void;
   onDeleteAnime: () => void;
   onDeleteEpisode: (id: string) => void;
 }) {
+  const firstEpisode = anime.episodes[0];
   return (
     <div className="space-y-5">
       {/* Banner hero with poster overlay */}
@@ -323,45 +322,29 @@ function FloxDetailView({
               <p className="text-sm text-muted-foreground max-w-2xl">{anime.description}</p>
             )}
             <p className="text-xs text-muted-foreground">{anime.episodes.length} episode(s)</p>
-            {isAdmin && (
-              <div className="flex gap-2 pt-1">
-                <Button size="sm" variant="outline" onClick={onAddEpisode}>
-                  <Plus className="h-4 w-4 mr-1" /> Add episode
+            <div className="flex flex-wrap gap-2 pt-1">
+              {firstEpisode && (
+                <Button size="sm" onClick={() => onPlayEpisode(firstEpisode)}>
+                  <Play className="h-4 w-4 mr-1 fill-current" /> Watch Now
                 </Button>
-                <Button size="sm" variant="outline" onClick={onEditAnime}>
-                  <Pencil className="h-4 w-4 mr-1" /> Edit
-                </Button>
-                <Button size="sm" variant="ghost" className="text-destructive" onClick={onDeleteAnime}>
-                  <Trash2 className="h-4 w-4 mr-1" /> Delete
-                </Button>
-              </div>
-            )}
+              )}
+              {isAdmin && (
+                <>
+                  <Button size="sm" variant="outline" onClick={onAddEpisode}>
+                    <Plus className="h-4 w-4 mr-1" /> Add episode
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={onEditAnime}>
+                    <Pencil className="h-4 w-4 mr-1" /> Edit
+                  </Button>
+                  <Button size="sm" variant="ghost" className="text-destructive" onClick={onDeleteAnime}>
+                    <Trash2 className="h-4 w-4 mr-1" /> Delete
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Player */}
-      {playing && (
-        <Card className="p-3 space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold">
-                Ep {playing.episode_number ?? '—'} · {anime.title}
-              </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">
-                Flox + (only server)
-              </span>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => setPlaying(null)}>Close</Button>
-          </div>
-          <FloxPlayer
-            sourceType={playing.source_type}
-            sourceUrl={playing.source_url}
-            poster={anime.poster_url || undefined}
-            title={anime.title}
-          />
-        </Card>
-      )}
 
       {/* Episode list */}
       <section className="space-y-2">
@@ -373,16 +356,19 @@ function FloxDetailView({
             {anime.episodes.map((ep) => (
               <div
                 key={ep.id}
-                className={`flex items-center gap-2 p-3 rounded-md border bg-card hover:border-primary/40 transition-colors ${
-                  playing?.id === ep.id ? 'border-primary/60' : 'border-border/40'
-                }`}
+                className="flex items-center gap-2 p-3 rounded-md border border-border/40 bg-card hover:border-primary/40 transition-colors"
               >
                 <button
-                  className="flex-1 text-left"
-                  onClick={() => setPlaying(ep)}
+                  className="flex-1 text-left flex items-center gap-3"
+                  onClick={() => onPlayEpisode(ep)}
                 >
-                  <p className="text-sm font-medium">Episode {ep.episode_number ?? '—'}</p>
-                  <p className="text-[11px] text-muted-foreground capitalize">{ep.source_type}</p>
+                  <div className="h-9 w-9 grid place-items-center rounded-full bg-primary/15 text-primary">
+                    <Play className="h-4 w-4 fill-current" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Episode {ep.episode_number ?? '—'}</p>
+                    <p className="text-[11px] text-muted-foreground capitalize">{ep.source_type}</p>
+                  </div>
                 </button>
                 {isAdmin && (
                   <Button

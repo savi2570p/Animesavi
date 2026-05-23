@@ -64,6 +64,7 @@ const Downloads = lazy(() => import("./pages/Downloads"));
 const WatchList = lazy(() => import("./pages/WatchList"));
 const ShadowArise = lazy(() => import("./pages/ShadowArise"));
 const FloxAnimePage = lazy(() => import("./pages/FloxAnimePage"));
+const FloxWatch = lazy(() => import("./pages/FloxWatch"));
 const SiteHealth = lazy(() => import("./pages/SiteHealth"));
 
 const queryClient = new QueryClient({
@@ -246,6 +247,7 @@ const App = () => (
                     <Route path="/downloads" element={<Downloads />} />
                     <Route path="/watchlist" element={<WatchList />} />
                     <Route path="/flox" element={<FloxAnimePage />} />
+                    <Route path="/flox/watch/:episodeId" element={<FloxWatch />} />
                     <Route path="/:animeSlug/:episodeSlug" element={<AnimeSlugRedirect />} />
                     <Route path="/:animeSlug" element={<AnimeSlugRedirect />} />
                   </Route>
