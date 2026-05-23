@@ -622,7 +622,7 @@ function FloxUploadDialog({
 
             {editing && (
               <div className="space-y-3 p-3 rounded-md border border-border/50 bg-muted/30">
-                <p className="text-xs font-medium text-muted-foreground">Edit details (poster is preserved)</p>
+                <p className="text-xs font-medium text-muted-foreground">Edit details</p>
                 <div className="space-y-1">
                   <Label>Title</Label>
                   <Input value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -631,6 +631,13 @@ function FloxUploadDialog({
                   <Label>Description</Label>
                   <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
                 </div>
+                <FileUploadInput
+                  label="Poster (replace, optional)"
+                  accept="image"
+                  value={posterUrl}
+                  onChange={setPosterUrl}
+                  folder="flox/posters"
+                />
                 <FileUploadInput
                   label="Banner (replace, optional)"
                   accept="image"
