@@ -1,16 +1,67 @@
-// AnimeSavi Push Service Worker
-// Handles incoming Web Push notifications and click routing.
-// Kept intentionally minimal — no caching, no offline handling, just push.
+// AnimeSavi Push + Icon-Cache Purge Service Worker
+// - Handles incoming Web Push notifications and click routing.
+// - On activate, force-claims clients and wipes ALL caches so stale
+//   favicon / apple-touch-icon / manifest responses are dropped immediately
+//   after every deploy.
+// Bump SW_VERSION whenever icon assets change to guarantee a fresh activate.
 
-const DEFAULT_ICON = '/logo-v2.png?v=2';
-const DEFAULT_BADGE = '/logo-v2.png?v=2';
+const SW_VERSION = 'v3-2026-05-23';
+const DEFAULT_ICON = '/logo-v2.png?v=3';
+const DEFAULT_BADGE = '/logo-v2.png?v=3';
 
 self.addEventListener('install', (event) => {
+  // Activate this worker immediately, do not wait for old SW to release.
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil((async () => {
+    // 1. Take control of all open clients right now.
+    await self.clients.claim();
+
+    // 2. Purge every Cache Storage entry so stale icons / manifest /
+    //    apple-touch-icon responses are forced to refetch from the network.
+    try {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k).catch(() => false)));
+    } catch (_) { /* ignore */ }
+
+    // 3. Tell every controlled page to drop in-memory icon URLs.
+    try {
+      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      clients.forEach((c) => c.postMessage({ type: 'ICON_CACHE_PURGED', version: SW_VERSION }));
+    } catch (_) { /* ignore */ }
+  })());
+});
+
+// Network-first for icon + manifest requests — never serve a stale copy.
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  let url;
+  try { url = new URL(req.url); } catch { return; }
+  if (url.origin !== self.location.origin) return;
+
+  const isIconAsset =
+    url.pathname === '/logo-v2.png' ||
+    url.pathname === '/favicon.ico' ||
+    url.pathname === '/favicon.png' ||
+    url.pathname === '/manifest.json' ||
+    url.pathname.startsWith('/apple-touch-icon');
+
+  if (!isIconAsset) return;
+
+  event.respondWith((async () => {
+    try {
+      // Always go to network; bypass HTTP cache too.
+      const fresh = await fetch(req, { cache: 'reload' });
+      return fresh;
+    } catch (e) {
+      // Fall back to whatever the browser has if the network is offline.
+      const cached = await caches.match(req);
+      return cached || Response.error();
+    }
+  })());
 });
 
 self.addEventListener('push', (event) => {
@@ -41,25 +92,18 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const target = (event.notification.data && event.notification.data.url) || '/';
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/';
   event.waitUntil((async () => {
     const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    // Try to focus an existing tab and navigate it directly to the target.
     for (const c of all) {
       try {
-        const url = new URL(c.url);
-        if (url.origin === self.location.origin) {
+        const u = new URL(c.url);
+        if (u.pathname === targetUrl || c.url.endsWith(targetUrl)) {
           await c.focus();
-          // postMessage so SPA can client-side-route without a hard reload.
-          try { c.postMessage({ type: 'PUSH_NAVIGATE', url: target }); } catch (_) {}
-          if ('navigate' in c) {
-            try { await c.navigate(target); } catch (_) {}
-          }
           return;
         }
       } catch (_) {}
     }
-    // No tab open — open a new one straight to the deep link.
-    await self.clients.openWindow(target);
+    await self.clients.openWindow(targetUrl);
   })());
 });
