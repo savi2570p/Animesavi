@@ -88,8 +88,8 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
           allow="autoplay; fullscreen; picture-in-picture"
           allowFullScreen
           referrerPolicy="no-referrer"
-          />
         />
+
       </div>
     );
   }
