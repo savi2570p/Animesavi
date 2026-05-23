@@ -145,26 +145,7 @@ export function ShareEmbedPopup({
             </div>
           </button>
 
-          {/* Embed options - only for episodes */}
-          {type === 'episode' && fullEmbedUrl && (
-            <>
-              <button
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-left transition-colors"
-                onClick={() => copyToClipboard(fullEmbedUrl, 'Embed link')}
-              >
-                <Share2 className="h-4 w-4 text-primary-foreground shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">Copy Embed Link</p>
-                  <p className="text-xs text-primary-foreground/75 truncate">{fullEmbedUrl}</p>
-                </div>
-                {copiedItem === 'Embed link' ? (
-                  <Check className="h-4 w-4 text-green-500 shrink-0" />
-                ) : (
-                  <Copy className="h-4 w-4 text-primary-foreground/80 shrink-0" />
-                )}
-              </button>
-
-          {/* Embed options - only Shadow Link for allowed emails */}
+          {/* Shadow Link - only for allowed admin emails */}
           {type === 'episode' && fullEmbedUrl && canSeeShadowLink && (
             <button
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-left transition-colors"
