@@ -20,20 +20,26 @@ interface VersionGroup {
   items: ChangelogItem[];
 }
 
-const APP_VERSION = 'V 26.1';
+const APP_VERSION = 'V 27';
 
-// Fixed download size for V 26.1
-const RANDOM_DOWNLOAD_MB = 1.11;
+// Fixed download size for V 27
+const RANDOM_DOWNLOAD_MB = 24.0;
 
 const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'V 26.1',
+    version: 'V 27',
     date: 'Latest',
-    highlight: 'fix token system error, fix upload and admin access, more faster and more secure.',
+    highlight: 'Flox Anime India + launch, faster uploads, smarter share menu, persistent unmute, and embed playback fixes.',
     items: [
-      { icon: '🔑', badge: 'FIX', title: 'Token System Restored', desc: 'Fixed token system error — 24-hour and 3-month reactivation links now activate access correctly.' },
-      { icon: '🛡️', badge: 'FIX', title: 'Upload & Admin Access', desc: 'Fixed missing upload and admin access. Owner & uploader dashboards are visible again.' },
-      { icon: '⚡', badge: 'IMPROVED', title: 'Faster & More Secure', desc: 'Tightened backend permissions and tuned data fetching — the app is noticeably faster and more secure.' },
+      { icon: '🇮🇳', badge: 'NEW', title: 'Flox Anime India + Tab', desc: 'Brand new Flox Anime India + section on the home page with official Hindi Dubbed streaming rights and a dedicated detail + watch experience.' },
+      { icon: '🎬', badge: 'NEW', title: 'Dedicated Flox Watch Page', desc: 'Episodes now open in a full-screen player page with poster, title, season & episode info, and the new "Flox +" server badge.' },
+      { icon: '⚡', badge: 'IMPROVED', title: '10-Second Flox Uploads', desc: 'Reworked Flox upload flow — create new anime or add episodes to existing ones in seconds, with poster only required on first creation.' },
+      { icon: '🛠️', badge: 'NEW', title: 'Edit, Delete & Add Episodes', desc: 'Manage uploaded Flox anime — edit poster & banner, delete entries, and add more episodes anytime from the top-right Upload menu.' },
+      { icon: '🔗', badge: 'IMPROVED', title: 'Cleaner Share Menu', desc: 'Removed "Copy Embed Link" and "Copy iFrame Code" from Share Episode. "Copy Shadow Link" is now restricted to authorized admin accounts only.' },
+      { icon: '🔊', badge: 'FIX', title: 'Unmute Stays Unmuted', desc: 'Tapping unmute now remembers your choice across every episode and anime for 24 hours before resetting.' },
+      { icon: '🖥️', badge: 'FIX', title: 'Full-Screen Player Fixed', desc: 'Android & PC now use the in-app player controls in full-screen, while iOS keeps its native full-screen experience.' },
+      { icon: '▶️', badge: 'FIX', title: 'Embed Playback Restored', desc: 'Removed sandbox & blocking iframe attributes so the Flox embed player loads and plays anime instantly without the "sandbox not allowed" popup.' },
+      { icon: '🎉', badge: 'NEW', title: 'Streaming Rights Announcement', desc: 'A celebratory popup welcomes users on /flox announcing our official streaming rights from Flox Anime India.' },
     ],
   },
 ];
