@@ -1534,6 +1534,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_allowed_short_uploader: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       is_flox_admin: { Args: { _user_id: string }; Returns: boolean }
       verify_unlock_token: {
         Args: { _token: string }
