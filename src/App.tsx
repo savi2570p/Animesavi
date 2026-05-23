@@ -247,6 +247,7 @@ const App = () => (
                     <Route path="/downloads" element={<Downloads />} />
                     <Route path="/watchlist" element={<WatchList />} />
                     <Route path="/flox" element={<FloxAnimePage />} />
+                    <Route path="/flox/watch/:episodeId" element={<FloxWatch />} />
                     <Route path="/:animeSlug/:episodeSlug" element={<AnimeSlugRedirect />} />
                     <Route path="/:animeSlug" element={<AnimeSlugRedirect />} />
                   </Route>
