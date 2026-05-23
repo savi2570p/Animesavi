@@ -7,7 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Loader2, Trash2, Upload as UploadIcon } from 'lucide-react';
+import { Loader2, Trash2, Upload as UploadIcon, PartyPopper } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { FloxPlayer } from '@/components/video/FloxPlayer';
 import { AntiPiracyShield } from '@/components/security/AntiPiracyShield';
 import floxLogo from '@/assets/flox-anime-india-logo.jpg';
@@ -34,6 +35,14 @@ export default function FloxAnimePage() {
   const [items, setItems] = useState<FloxItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<FloxItem | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  useEffect(() => {
+    if (!localStorage.getItem('flox_welcome_seen')) {
+      setShowWelcome(true);
+      localStorage.setItem('flox_welcome_seen', '1');
+    }
+  }, []);
 
   // Upload form state
   const [title, setTitle] = useState('');
@@ -128,6 +137,22 @@ export default function FloxAnimePage() {
 
   return (
     <AntiPiracyShield mode="strict" noRedirect>
+      <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <PartyPopper className="h-6 w-6 text-primary" />
+              <DialogTitle>Great news!</DialogTitle>
+            </div>
+            <DialogDescription className="pt-2 text-base">
+              Congratulations guys, we got the streaming rights from <span className="font-semibold text-foreground">Flox Anime India</span> to stream the Hindi Dubbed anime from Flox Anime India.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setShowWelcome(false)}>Let's go</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="container py-6 space-y-8 select-none">
         <header className="flex items-center gap-3">
           <img

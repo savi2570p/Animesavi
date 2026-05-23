@@ -63,7 +63,8 @@ export function ShareEmbedPopup({
   const fullPageUrl = rebrandUrl(pageUrl);
   const fullEmbedUrl = embedUrl ? rebrandUrl(embedUrl) : '';
   const shadowEmbedUrl = fullEmbedUrl ? `${fullEmbedUrl}${fullEmbedUrl.includes('?') ? '&' : '?'}theme=shadow` : '';
-  const canSeeShadowLink = !!fullEmbedUrl;
+  const SHADOW_LINK_EMAILS = ['savi2570p@gmail.com', 'shadowtoonsindia@gmail.com'];
+  const canSeeShadowLink = !!fullEmbedUrl && !!user?.email && SHADOW_LINK_EMAILS.includes(user.email.toLowerCase());
 
   const iframeCode = fullEmbedUrl
     ? `<iframe src="${fullEmbedUrl}" width="100%" height="500" frameborder="0" allowfullscreen></iframe>`
@@ -144,59 +145,23 @@ export function ShareEmbedPopup({
             </div>
           </button>
 
-          {/* Embed options - only for episodes */}
-          {type === 'episode' && fullEmbedUrl && (
-            <>
-              <button
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-left transition-colors"
-                onClick={() => copyToClipboard(fullEmbedUrl, 'Embed link')}
-              >
-                <Share2 className="h-4 w-4 text-primary-foreground shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">Copy Embed Link</p>
-                  <p className="text-xs text-primary-foreground/75 truncate">{fullEmbedUrl}</p>
-                </div>
-                {copiedItem === 'Embed link' ? (
-                  <Check className="h-4 w-4 text-green-500 shrink-0" />
-                ) : (
-                  <Copy className="h-4 w-4 text-primary-foreground/80 shrink-0" />
-                )}
-              </button>
-
-              {canSeeShadowLink && (
-                <button
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-left transition-colors"
-                  onClick={() => copyToClipboard(shadowEmbedUrl, 'Shadow link')}
-                >
-                  <Share2 className="h-4 w-4 text-primary-foreground shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">Copy Shadow Link</p>
-                    <p className="text-xs text-primary-foreground/75 truncate">{shadowEmbedUrl}</p>
-                  </div>
-                  {copiedItem === 'Shadow link' ? (
-                    <Check className="h-4 w-4 text-green-500 shrink-0" />
-                  ) : (
-                    <Copy className="h-4 w-4 text-primary-foreground/80 shrink-0" />
-                  )}
-                </button>
+          {/* Shadow Link - only for allowed admin emails */}
+          {type === 'episode' && fullEmbedUrl && canSeeShadowLink && (
+            <button
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-left transition-colors"
+              onClick={() => copyToClipboard(shadowEmbedUrl, 'Shadow link')}
+            >
+              <Share2 className="h-4 w-4 text-primary-foreground shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">Copy Shadow Link</p>
+                <p className="text-xs text-primary-foreground/75 truncate">{shadowEmbedUrl}</p>
+              </div>
+              {copiedItem === 'Shadow link' ? (
+                <Check className="h-4 w-4 text-green-500 shrink-0" />
+              ) : (
+                <Copy className="h-4 w-4 text-primary-foreground/80 shrink-0" />
               )}
-
-              <button
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-accent text-left transition-colors"
-                onClick={() => copyToClipboard(iframeCode, 'Iframe code')}
-              >
-                <Code className="h-4 w-4 text-primary shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">Copy Iframe Code</p>
-                  <p className="text-xs text-muted-foreground font-mono truncate">{'<iframe src="...">'}</p>
-                </div>
-                {copiedItem === 'Iframe code' ? (
-                  <Check className="h-4 w-4 text-green-500 shrink-0" />
-                ) : (
-                  <Copy className="h-4 w-4 text-muted-foreground shrink-0" />
-                )}
-              </button>
-            </>
+            </button>
           )}
         </div>
       </PopoverContent>
