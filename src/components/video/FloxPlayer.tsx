@@ -61,7 +61,15 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
 
   const toggleFs = async () => {
     const el = containerRef.current;
+    const v = videoRef.current;
     if (!el) return;
+    // iOS Safari: use native fullscreen on the video element (no custom controls)
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && (navigator as any).maxTouchPoints > 1);
+    if (isIOS && v && (v as any).webkitEnterFullscreen) {
+      try { (v as any).webkitEnterFullscreen(); } catch {}
+      return;
+    }
     if (!document.fullscreenElement) await el.requestFullscreen?.();
     else await document.exitFullscreen?.();
   };
