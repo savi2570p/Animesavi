@@ -137,6 +137,22 @@ export default function FloxAnimePage() {
 
   return (
     <AntiPiracyShield mode="strict" noRedirect>
+      <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <PartyPopper className="h-6 w-6 text-primary" />
+              <DialogTitle>Great news!</DialogTitle>
+            </div>
+            <DialogDescription className="pt-2 text-base">
+              Congratulations guys, we got the streaming rights from <span className="font-semibold text-foreground">Flox Anime India</span> to stream the Hindi Dubbed anime from Flox Anime India.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setShowWelcome(false)}>Let's go</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="container py-6 space-y-8 select-none">
         <header className="flex items-center gap-3">
           <img
