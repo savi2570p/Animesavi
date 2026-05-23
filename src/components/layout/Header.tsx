@@ -84,7 +84,16 @@ export function Header() {
           await Promise.all(regs.map((r) => r.unregister().catch(() => false)));
         }
       } catch {}
-      try { localStorage.removeItem('notice_popup_seen_version'); } catch {}
+      try {
+        localStorage.removeItem('notice_popup_seen_version');
+        // Wipe per-version update flow flags so the full "What's New" flow re-shows
+        Object.keys(localStorage).forEach((k) => {
+          if (k.startsWith('update_downloaded_') || k.startsWith('update_entering_shown_')) {
+            localStorage.removeItem(k);
+          }
+        });
+        sessionStorage.removeItem('token_expired_popup_shown');
+      } catch {}
     })();
 
     // Hard upper-bound — reload after at most 1.2s no matter what so the
