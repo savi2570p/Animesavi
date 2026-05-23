@@ -62,11 +62,11 @@ export default function Index() {
             MuseIN
           </Link>
           <Link
-            to="/shadowflix"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border bg-card/50 text-muted-foreground border-border/50 hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-400"
+            to="/flox"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border bg-card/50 text-muted-foreground border-border/50 hover:bg-primary/10 hover:border-primary/50 hover:text-primary"
           >
-            <img src={shadowFlixLogo} alt="ShadowFlx" className="h-5 w-5 rounded-full object-cover" />
-            ShadowFlx
+            <img src={floxLogo} alt="Flox Anime India +" className="h-5 w-5 rounded-full object-cover" />
+            Flox Anime India +
           </Link>
         </div>
       </section>
