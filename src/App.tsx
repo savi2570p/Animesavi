@@ -23,6 +23,7 @@ import { AdminTrialPopup } from "@/components/AdminTrialPopup";
 import { ReportButton } from "@/components/ReportButton";
 import { BanGuard } from "@/components/BanGuard";
 import { installRoutePrefetch } from "@/lib/routePrefetch";
+import { AntiPiracyShield } from "@/components/security/AntiPiracyShield";
 
 // Critical pages loaded eagerly for instant navigation
 import Index from "./pages/Index";
@@ -188,6 +189,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <PopupQueueProvider>
+              <AntiPiracyShield mode="soft" />
               <BanGuard />
               <ScrollRecoveryInitializer />
               <ScrollToTop />
