@@ -130,8 +130,8 @@ export default function Auth() {
       });
     } else {
       toast({
-        title: '🎉 Account created + 1 Hour Free Premium!',
-        description: 'Enjoy full access for 1 hour. After that, you\'ll need an unlock token to continue.',
+        title: 'Account created',
+        description: 'Welcome to AnimeSavi!',
       });
       navigate('/');
     }
