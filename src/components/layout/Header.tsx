@@ -86,9 +86,10 @@ export function Header() {
       } catch {}
       try {
         localStorage.removeItem('notice_popup_seen_version');
-        // Wipe per-version update flow flags so the full "What's New" flow re-shows
+        // Re-arm the "entering" transition, but keep DOWNLOAD_COMPLETED flags so
+        // the popup skips straight to "Explore Now" instead of re-downloading.
         Object.keys(localStorage).forEach((k) => {
-          if (k.startsWith('update_downloaded_') || k.startsWith('update_entering_shown_')) {
+          if (k.startsWith('update_entering_shown_')) {
             localStorage.removeItem(k);
           }
         });
