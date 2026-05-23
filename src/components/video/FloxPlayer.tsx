@@ -85,9 +85,9 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
           src={sourceUrl}
           title={title || 'Flox Embed'}
           className="absolute inset-0 w-full h-full border-0"
-          allow="autoplay; fullscreen; picture-in-picture"
+          allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write; accelerometer; gyroscope"
           allowFullScreen
-          referrerPolicy="no-referrer"
+          referrerPolicy="no-referrer-when-downgrade"
         />
 
       </div>
