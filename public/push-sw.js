@@ -2,8 +2,8 @@
 // Handles incoming Web Push notifications and click routing.
 // Kept intentionally minimal — no caching, no offline handling, just push.
 
-const DEFAULT_ICON = '/icon-512.png';
-const DEFAULT_BADGE = '/icon-192.png';
+const DEFAULT_ICON = '/logo-v2.png?v=2';
+const DEFAULT_BADGE = '/logo-v2.png?v=2';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
