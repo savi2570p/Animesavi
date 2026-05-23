@@ -486,109 +486,88 @@ export function UpdatePopup() {
   /* ── STEP 3.5: Entering — first-time post-update transition ── */
   if (step === 'entering') {
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black animate-in fade-in duration-500">
-        {/* Layered atmospheric glows */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-96 w-96 rounded-full bg-purple-600/25 blur-3xl animate-pulse" />
-          <div className="absolute bottom-0 left-1/4 h-72 w-72 rounded-full bg-violet-500/20 blur-3xl animate-pulse" style={{ animationDelay: '0.6s' }} />
-          <div className="absolute top-1/3 right-1/4 h-64 w-64 rounded-full bg-indigo-500/15 blur-3xl animate-pulse" style={{ animationDelay: '1.2s' }} />
-          {/* Subtle grid */}
-          <div
-            className="absolute inset-0 opacity-[0.06]"
-            style={{
-              backgroundImage:
-                'linear-gradient(rgba(168,85,247,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(168,85,247,0.6) 1px, transparent 1px)',
-              backgroundSize: '48px 48px',
-            }}
-          />
-          {/* Floating particles */}
-          {Array.from({ length: 18 }).map((_, i) => (
-            <span
-              key={i}
-              className="absolute h-1 w-1 rounded-full bg-purple-300/70 shadow-[0_0_8px_rgba(192,132,252,0.9)]"
-              style={{
-                top: `${(i * 53) % 100}%`,
-                left: `${(i * 37) % 100}%`,
-                animation: `pulse ${2 + (i % 4) * 0.4}s ease-in-out ${i * 0.12}s infinite`,
-              }}
-            />
-          ))}
-        </div>
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 animate-in fade-in duration-300"
+        style={{
+          paddingTop: 'max(1rem, env(safe-area-inset-top))',
+          paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
+        }}
+      >
+        <div className="relative w-full max-w-[19rem] rounded-2xl border border-purple-600/30 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-purple-900/40 px-5 py-6 animate-in zoom-in-95 duration-300 overflow-hidden">
+          {/* Subtle glows inside card */}
+          <div className="pointer-events-none absolute -top-16 -right-12 h-40 w-40 rounded-full bg-purple-600/20 blur-3xl animate-pulse" />
+          <div className="pointer-events-none absolute -bottom-20 -left-12 h-44 w-44 rounded-full bg-violet-500/15 blur-3xl" />
 
-        <div className="relative z-10 flex flex-col items-center gap-6 px-6 text-center">
-          {/* Concentric rings */}
-          <div className="relative h-32 w-32">
-            <div className="absolute inset-0 rounded-full border-2 border-purple-500/20" />
-            <div
-              className="absolute inset-0 rounded-full border-2 border-transparent border-t-purple-400 border-r-purple-500"
-              style={{ animation: 'spin 1.4s linear infinite' }}
-            />
-            <div
-              className="absolute inset-3 rounded-full border-2 border-transparent border-b-violet-300 border-l-violet-400"
-              style={{ animation: 'spin 2s linear infinite reverse' }}
-            />
-            <div
-              className="absolute inset-6 rounded-full border border-transparent border-t-indigo-300"
-              style={{ animation: 'spin 2.8s linear infinite' }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 via-violet-500 to-indigo-600 shadow-[0_0_40px_rgba(168,85,247,0.7)] flex items-center justify-center">
-                <Sparkles className="h-6 w-6 text-white drop-shadow" />
+          <div className="relative z-10 flex flex-col items-center gap-4 text-center">
+            {/* Concentric rings — compact */}
+            <div className="relative h-20 w-20">
+              <div className="absolute inset-0 rounded-full border-2 border-purple-500/20" />
+              <div
+                className="absolute inset-0 rounded-full border-2 border-transparent border-t-purple-400 border-r-purple-500"
+                style={{ animation: 'spin 1.4s linear infinite' }}
+              />
+              <div
+                className="absolute inset-2 rounded-full border-2 border-transparent border-b-violet-300 border-l-violet-400"
+                style={{ animation: 'spin 2s linear infinite reverse' }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-500 via-violet-500 to-indigo-600 shadow-[0_0_24px_rgba(168,85,247,0.7)] flex items-center justify-center">
+                  <Sparkles className="h-4 w-4 text-white drop-shadow" />
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Headline with shimmer */}
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.2em] text-purple-200">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-400 opacity-75" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-purple-400" />
-              </span>
-              {APP_VERSION} • Ready
-            </div>
-            <h2 className="bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-2xl font-bold text-transparent sm:text-3xl">
-              Entering the latest version
-            </h2>
-            <p className="text-xs text-zinc-400 sm:text-sm transition-all duration-300">
-              {enterStage === 0 && 'Synced — your library is up to date.'}
-              {enterStage === 1 && 'Booting UI — preparing the new purple experience.'}
-              {enterStage === 2 && 'Routing Home — taking you to the latest version.'}
-            </p>
-          </div>
-
-          {/* Indeterminate progress bar */}
-          <div className="relative h-1 w-64 overflow-hidden rounded-full bg-white/5 sm:w-80">
-            <div className="absolute inset-y-0 left-0 w-1/3 rounded-full bg-gradient-to-r from-transparent via-purple-400 to-transparent shadow-[0_0_12px_rgba(168,85,247,0.8)] animate-[shine_1.4s_ease-in-out_infinite]" />
-          </div>
-
-          {/* Stage chips — animated step-by-step */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider">
-            {(['Synced', 'Booting UI', 'Routing Home'] as const).map((label, i) => {
-              const done = enterStage > i;
-              const active = enterStage === i;
-              return (
-                <span
-                  key={label}
-                  className={`flex items-center gap-1 rounded-md border px-2 py-1 transition-all duration-300 ${
-                    done
-                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-                      : active
-                      ? 'border-purple-500/40 bg-purple-500/15 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.4)]'
-                      : 'border-white/10 bg-white/5 text-zinc-500'
-                  }`}
-                >
-                  {done ? (
-                    <Check className="h-2.5 w-2.5" />
-                  ) : active ? (
-                    <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                  ) : (
-                    <span className="h-1 w-1 rounded-full bg-current opacity-60" />
-                  )}
-                  {label}
+            {/* Headline */}
+            <div className="space-y-1.5">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.2em] text-purple-200">
+                <span className="relative flex h-1 w-1">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-400 opacity-75" />
+                  <span className="relative inline-flex h-1 w-1 rounded-full bg-purple-400" />
                 </span>
-              );
-            })}
+                {APP_VERSION} • Ready
+              </div>
+              <h2 className="bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-base font-bold text-transparent">
+                Entering the latest version
+              </h2>
+              <p className="text-[10px] text-zinc-400 transition-all duration-300 min-h-[1.25rem]">
+                {enterStage === 0 && 'Synced — your library is up to date.'}
+                {enterStage === 1 && 'Booting UI — preparing the new experience.'}
+                {enterStage === 2 && 'Routing Home — taking you to the latest.'}
+              </p>
+            </div>
+
+            {/* Indeterminate progress bar */}
+            <div className="relative h-1 w-full overflow-hidden rounded-full bg-white/5">
+              <div className="absolute inset-y-0 left-0 w-1/3 rounded-full bg-gradient-to-r from-transparent via-purple-400 to-transparent shadow-[0_0_12px_rgba(168,85,247,0.8)] animate-[shine_1.4s_ease-in-out_infinite]" />
+            </div>
+
+            {/* Stage chips */}
+            <div className="flex flex-wrap items-center justify-center gap-1 text-[8px] font-semibold uppercase tracking-wider">
+              {(['Synced', 'Booting UI', 'Routing Home'] as const).map((label, i) => {
+                const done = enterStage > i;
+                const active = enterStage === i;
+                return (
+                  <span
+                    key={label}
+                    className={`flex items-center gap-1 rounded-md border px-1.5 py-0.5 transition-all duration-300 ${
+                      done
+                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                        : active
+                        ? 'border-purple-500/40 bg-purple-500/15 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.4)]'
+                        : 'border-white/10 bg-white/5 text-zinc-500'
+                    }`}
+                  >
+                    {done ? (
+                      <Check className="h-2 w-2" />
+                    ) : active ? (
+                      <Loader2 className="h-2 w-2 animate-spin" />
+                    ) : (
+                      <span className="h-1 w-1 rounded-full bg-current opacity-60" />
+                    )}
+                    {label}
+                  </span>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
