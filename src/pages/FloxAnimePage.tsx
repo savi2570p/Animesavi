@@ -35,6 +35,14 @@ export default function FloxAnimePage() {
   const [items, setItems] = useState<FloxItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<FloxItem | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  useEffect(() => {
+    if (!localStorage.getItem('flox_welcome_seen')) {
+      setShowWelcome(true);
+      localStorage.setItem('flox_welcome_seen', '1');
+    }
+  }, []);
 
   // Upload form state
   const [title, setTitle] = useState('');
