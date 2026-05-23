@@ -68,15 +68,10 @@ export function ShortsUpload() {
   useEffect(() => {
     if (!user) return;
     const checkAccess = async () => {
-      const { data } = await supabase
-        .from('allowed_short_uploaders')
-        .select('email')
-        .limit(100);
-
-      if (data) {
-        const allowedEmails = data.map(d => d.email.toLowerCase());
-        setIsAllowed(allowedEmails.includes(user.email?.toLowerCase() ?? ''));
-      }
+      const { data } = await supabase.rpc('is_allowed_short_uploader', {
+        _user_id: user.id,
+      });
+      setIsAllowed(Boolean(data));
     };
     checkAccess();
   }, [user]);
