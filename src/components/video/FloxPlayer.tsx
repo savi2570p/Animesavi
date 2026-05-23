@@ -88,7 +88,7 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
           allow="autoplay; fullscreen; picture-in-picture"
           allowFullScreen
           referrerPolicy="no-referrer"
-          sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
+          />
         />
       </div>
     );
