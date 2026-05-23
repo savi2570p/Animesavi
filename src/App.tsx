@@ -62,7 +62,7 @@ const Welcome = lazy(() => import("./pages/Welcome"));
 const Downloads = lazy(() => import("./pages/Downloads"));
 const WatchList = lazy(() => import("./pages/WatchList"));
 const ShadowArise = lazy(() => import("./pages/ShadowArise"));
-const ShadowFlix = lazy(() => import("./pages/ShadowFlix"));
+const FloxAnimePage = lazy(() => import("./pages/FloxAnimePage"));
 const SiteHealth = lazy(() => import("./pages/SiteHealth"));
 
 const queryClient = new QueryClient({
@@ -243,7 +243,7 @@ const App = () => (
                     <Route path="/stats" element={<UserStats />} />
                     <Route path="/downloads" element={<Downloads />} />
                     <Route path="/watchlist" element={<WatchList />} />
-                    <Route path="/shadowflix" element={<ShadowFlix />} />
+                    <Route path="/flox" element={<FloxAnimePage />} />
                     <Route path="/:animeSlug/:episodeSlug" element={<AnimeSlugRedirect />} />
                     <Route path="/:animeSlug" element={<AnimeSlugRedirect />} />
                   </Route>
