@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import crunchyrollLogo from "@/assets/crunchyroll-logo.png";
 import museinLogo from "@/assets/musein-logo.jpg";
-import shadowFlixLogo from "@/assets/shadowflix-logo.jpg";
+import floxLogo from "@/assets/flox-anime-india-logo.jpg";
 import { FeaturedSlider } from "@/components/home/FeaturedSlider";
 import { ContinueWatching } from "@/components/home/ContinueWatching";
 import { RecommendedAnime } from "@/components/home/RecommendedAnime";
