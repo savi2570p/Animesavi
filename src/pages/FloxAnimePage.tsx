@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
+
 import { toast } from 'sonner';
 import { Loader2, Trash2, Upload as UploadIcon, PartyPopper, ArrowLeft, Plus, Pencil, Play } from 'lucide-react';
 import {
