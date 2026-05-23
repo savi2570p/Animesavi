@@ -50,12 +50,12 @@ interface FloxAnime {
 
 export default function FloxAnimePage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL;
 
   const [rows, setRows] = useState<FloxRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
-  const [playing, setPlaying] = useState<FloxRow | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [editAnime, setEditAnime] = useState<FloxAnime | null>(null);
