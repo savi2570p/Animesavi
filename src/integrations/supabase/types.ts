@@ -441,6 +441,57 @@ export type Database = {
           },
         ]
       }
+      flox_content: {
+        Row: {
+          banner_url: string | null
+          created_at: string
+          description: string | null
+          episode_number: number | null
+          id: string
+          is_featured: boolean
+          poster_url: string | null
+          season_number: number | null
+          sort_order: number
+          source_type: string
+          source_url: string
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          episode_number?: number | null
+          id?: string
+          is_featured?: boolean
+          poster_url?: string | null
+          season_number?: number | null
+          sort_order?: number
+          source_type: string
+          source_url: string
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          episode_number?: number | null
+          id?: string
+          is_featured?: boolean
+          poster_url?: string | null
+          season_number?: number | null
+          sort_order?: number
+          source_type?: string
+          source_url?: string
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       notification_queue: {
         Row: {
           anime_id: string | null
@@ -1483,6 +1534,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_flox_admin: { Args: { _user_id: string }; Returns: boolean }
       verify_unlock_token: {
         Args: { _token: string }
         Returns: {

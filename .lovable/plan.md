@@ -1,95 +1,83 @@
 ## Goals
 
-1. Make the Anime Detail / Welcome "Start Watching" loaders feel more realistic (not perfectly linear).
-2. Shrink the "What's New" popup on mobile so it fits the viewport without scroll.
-3. Replace the fake in-app-only notification with a real, end-to-end Web Push system (Android Chrome, desktop browsers, iOS Safari PWA) using VAPID + Service Worker + Supabase + an edge function that fires when a new episode is inserted.
+1. Remove the **ShadowFlx** tab and route (`/shadowflix`) from the main app.
+2. Create a new **Flox Anime India +** tab using the uploaded logo, route `/flox`.
+3. Admin-only upload (gated to `Savi2570p@gmail.com`) for:
+   - Banner image (file manager)
+   - Poster image (file manager)
+   - Episode video: either an **embed link** or a **video file** (file manager)
+4. New dedicated, ultra-minimal **flat** video player for Flox content with only: Play/Pause, Timeline, 10s skip back/forward, Fullscreen. No download, no quality/audio/captions menu, no share.
+5. Add a strong client-side **anti-piracy hardening layer**, applied across the site and especially inside Flox.
 
----
+## What to build
 
-## 1. Realistic loaders
+### Removal
+- Delete tab entry and `isOnShadowFlix` logic in `ContentNavTabs.tsx`.
+- Remove `/shadowflix` route and lazy import in `App.tsx`.
+- Keep `ShadowFlix.tsx` file but stop routing to it (safer than breaking imports elsewhere).
 
-- Update `src/components/anime/AnimeDetailLoader.tsx` and the launch loader in `src/pages/Welcome.tsx`:
-  - Replace fixed-interval progress with **easing + random micro-jitter** (variable step sizes, occasional pauses, slow-down near 90%).
-  - Stage labels switch based on real milestones (image preloaded, first fetch resolved) where possible, with fallback timers.
-  - Add a subtle "stall and recover" pattern so it doesn't feel scripted.
+### Flox Anime India + tab
+- Copy uploaded logo into `src/assets/flox-anime-india-logo.jpg`.
+- Add tab `{ to: '/flox', label: 'Flox Anime India +', customIcon: floxLogo }`.
+- New `src/pages/FloxAnimePage.tsx`:
+  - Public grid view of Flox content (banner + poster cards).
+  - Admin-only upload panel visible only when `user.email === 'savi2570p@gmail.com'`.
+  - Form fields: Title, Banner upload, Poster upload, Source type (`embed` | `file`), and either Embed URL or Video file upload.
+  - Stores rows in a new `flox_content` table (created via migration).
+  - Banner/poster/video uploads use existing `media` Supabase Storage bucket (reusing current upload helpers).
 
-## 2. Mobile "What's New" popup
+### Custom Flox player (`src/components/video/FloxPlayer.tsx`)
+- 100% flat controls bar, single row, monochrome:
+  - ⏮ -10s · Play/Pause · +10s ⏭ · Timeline (thin 2px bar, no thumb glow) · Fullscreen
+- For `embed` source: render a sandboxed iframe (no controls bar shown).
+- For `file` source: HTML5 `<video>` with custom controls overlay (no `controlsList="download"`, no native context menu).
+- Disables right-click, drag, picture-in-picture, remote playback, and download via `controlsList="nodownload noremoteplayback noplaybackrate"` and `disablePictureInPicture`.
 
-- In `src/components/UpdatePopup.tsx`:
-  - Cap dialog width with `max-w-[92vw] sm:max-w-md`, reduce padding (`p-4 sm:p-6`), shrink hero/illustration height on `< sm`, scale heading from `text-2xl` to `text-lg sm:text-xl`, and constrain max-height with internal scroll (`max-h-[85dvh] overflow-y-auto`).
-  - Smaller close button hit area on mobile, tighter changelog list spacing.
+### Anti-piracy layer (`src/lib/antiPiracy.ts` + `useAntiPiracy` hook)
+Realistic, production-ready protections. (Browsers cannot truly stop screen recording or determined extraction — I'll implement the strongest viable set and document the limits inline.)
+- Global right-click → pause any `<video>`, clear `src`, redirect to `/`.
+- Key blockers: F12, Ctrl/Cmd+Shift+I/J/C, Ctrl/Cmd+U, Ctrl/Cmd+S, Ctrl/Cmd+P, Ctrl/Cmd+C inside player.
+- CSS `user-select:none`, `-webkit-touch-callout:none`, `pointer-events` guards on `<video>` overlays, `draggable={false}` on images.
+- DevTools heuristic detection (window size delta + `debugger` timing trap). On detection: pause video, blur `<main>`, show full-screen red neon overlay "Inspection blocked".
+- iOS/Android long-press suppression on video container.
+- Iframe break-out: `if (window.top !== window.self) window.top.location = window.location;` for Flox pages.
+- Screen-capture *best-effort*: listen for `navigator.mediaDevices.getDisplayMedia` calls originating from the page (monkey-patch) → block + warn. Browsers do not expose external OS-level recording; that limit is documented.
+- All effects live behind `<AntiPiracyShield strict />` wrapper used on Flox pages and the Flox player; a lighter version applied app-wide.
 
-## 3. Real Web Push Notification System
+### Premium warning overlay
+- `src/components/security/SecurityOverlay.tsx`: fullscreen, red neon scanline animation, "Inspection / Recording detected" message, "Return Home" button.
 
-### 3a. Database (migration)
+## Out of scope / honest limits
 
-New tables:
+The following from the brief cannot be fully delivered from the frontend alone and would require backend infrastructure I won't fake:
+- **Tokenized signed HLS / expiring URLs / hotlink validation / Cloudflare signed playback** — requires a CDN + signing service. I'll leave a TODO in the player explaining what to plug in.
+- **True screen-recording detection** on iOS/Android/Desktop — OS-level, not exposable to web pages. I'll implement only `getDisplayMedia` interception (browser-level screen-share).
+- **Obfuscation of bundled JS** — Vite already minifies; meaningful obfuscation belongs in the build pipeline, not source.
 
-- `push_subscriptions`
-  - `id uuid pk`, `user_id uuid not null`, `endpoint text unique not null`, `p256dh text not null`, `auth text not null`, `user_agent text`, `created_at`, `updated_at`
-  - RLS: users can insert/select/update/delete only their own rows; admins can select all.
-- `notification_queue` (fallback when push send fails or user has no subscription)
-  - `id`, `user_id`, `anime_id`, `episode_id`, `title`, `body`, `image_url`, `link`, `is_read bool default false`, `delivered_via text` (`push` / `fallback`), `created_at`.
-  - RLS: user can select/update (mark read) their own rows; service role inserts.
-- `sent_push_log` (dedupe): unique `(user_id, episode_id)` to prevent duplicate sends.
+I'll surface these as inline `// LIMITATION:` notes so it's clear what's enforced vs aspirational.
 
-### 3b. VAPID keys
+## Files
 
-- Add two secrets via `add_secret`: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, plus `VAPID_SUBJECT` (mailto:...).
-- The public key is also exposed to the client via a tiny edge function `get-vapid-public-key` (or hard-coded as it is meant to be public — we'll fetch it from the edge function to avoid env coupling on the client).
+Create:
+- `src/assets/flox-anime-india-logo.jpg`
+- `src/pages/FloxAnimePage.tsx`
+- `src/components/video/FloxPlayer.tsx`
+- `src/lib/antiPiracy.ts`
+- `src/hooks/useAntiPiracy.ts`
+- `src/components/security/SecurityOverlay.tsx`
+- `src/components/security/AntiPiracyShield.tsx`
 
-### 3c. Service Worker
+Edit:
+- `src/components/layout/ContentNavTabs.tsx` (swap tab)
+- `src/App.tsx` (route swap + global shield)
+- `src/index.css` (security overlay + no-select utilities)
 
-- New file `public/push-sw.js`:
-  - `push` event → `showNotification(title, { body, icon, image, badge, data: { url } })`.
-  - `notificationclick` event → focus existing client or `clients.openWindow(data.url)`.
-  - Compatible with iOS 16.4+ PWA (only fires when installed to home screen on iOS).
-- Register from `src/hooks/usePushNotifications.ts` after permission granted; subscribe with the VAPID public key; POST subscription to Supabase via the existing client (RLS-protected insert into `push_subscriptions`, upsert on `endpoint`).
-- Console logs at every step: `[push] permission`, `[push] subscribed`, `[push] saved`, `[push] failed`, `[push] denied`.
+Migration:
+- New table `flox_content` with `title`, `banner_url`, `poster_url`, `source_type` (`embed`|`file`), `source_url`, plus RLS: public SELECT, INSERT/UPDATE/DELETE restricted to the admin email.
 
-### 3d. Sender edge function
+## Confirm
 
-- `supabase/functions/send-episode-push/index.ts`:
-  - Input: `{ episode_id }`.
-  - Loads episode → season → anime + favorited user IDs (`user_favorites`).
-  - For each favorited user, look up `push_subscriptions`. For each subscription, sign a VAPID JWT (using `npm:web-push` via esm) and POST to the endpoint with the payload (title, body, thumbnail, deep link to `/anime/{anime_id}` or `/watch/{episode_id}`).
-  - On 404/410 from the push service → delete that subscription row.
-  - Insert a row into `sent_push_log` first with `ON CONFLICT DO NOTHING` to dedupe.
-  - On any failure, insert into `notification_queue` so the in-app bell still shows it (fallback path).
-
-### 3e. Trigger on new episode
-
-- Database trigger `after insert on episodes` → calls `pg_net.http_post` to `send-episode-push` with the new episode id (service-role auth header). This guarantees push fires even when episodes are created via dashboards or scripts.
-
-### 3f. UI updates
-
-- `NotificationBell.tsx`: also read from `notification_queue` (unread rows) and merge with the existing favorited-episode logic. Badge count = unread queue + unread fallback.
-- `NotificationSettings.tsx`: wire the "Enable" button to the new subscribe flow, surface "Subscribed on this device" state, and a "Send test notification" button (calls a small `send-test-push` function) for debugging.
-- Add a status row that warns iOS users they must "Add to Home Screen" for push to work on iOS.
-
-### 3g. Safeguards
-
-- Permission popup: only requested on explicit user click; never auto-prompted on page load.
-- Subscriptions are upserted by `endpoint`, so re-enabling on the same device doesn't duplicate.
-- `sent_push_log` unique key prevents duplicate sends for the same `(user, episode)`.
-- All edge function responses include CORS headers.
-
----
-
-## Technical notes
-
-- iOS Safari supports Web Push **only** from installed PWAs (iOS 16.4+). We'll detect `navigator.standalone` / `display-mode: standalone` and show a helpful hint when not installed.
-- `web-push` runs in Deno via `npm:web-push@3.6.7`.
-- VAPID public key is safe to ship to clients; private key stays in edge function env only.
-- Service worker is registered at the site root (`/push-sw.js`) so its scope covers the whole app. It's separate from any other SW to avoid breaking preview iframes.
-
----
-
-## Files to add/edit
-
-- Add: `public/push-sw.js`, `supabase/functions/send-episode-push/index.ts`, `supabase/functions/send-test-push/index.ts`, `supabase/functions/get-vapid-public-key/index.ts`.
-- Edit: `src/hooks/usePushNotifications.ts`, `src/components/NotificationSettings.tsx`, `src/components/NotificationBell.tsx`, `src/components/UpdatePopup.tsx`, `src/components/anime/AnimeDetailLoader.tsx`, `src/pages/Welcome.tsx`.
-- Migration: new tables + trigger.
-- Secrets: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`.
-
-After approval I'll generate VAPID keys instructions and request the three secrets, then implement everything in one pass.
+Proceed with this scope? In particular confirm:
+- New route name `/flox` is fine.
+- It's OK to keep `ShadowFlix.tsx` file present but unrouted.
+- You accept the honest limits called out under *Out of scope*.
