@@ -176,7 +176,7 @@ export default function FloxAnimePage() {
         <header className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             {selectedAnime && (
-              <Button variant="ghost" size="icon" onClick={() => { setSelectedTitle(null); setPlaying(null); }}>
+              <Button variant="ghost" size="icon" onClick={() => setSelectedTitle(null)}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             )}
