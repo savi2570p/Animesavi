@@ -203,9 +203,8 @@ export default function FloxAnimePage() {
         {selectedAnime ? (
           <FloxDetailView
             anime={selectedAnime}
-            playing={playing}
-            setPlaying={setPlaying}
             isAdmin={isAdmin}
+            onPlayEpisode={openEpisode}
             onAddEpisode={() => { setEditAnime(selectedAnime); setUploadOpen(true); }}
             onEditAnime={() => { setEditAnime(selectedAnime); setUploadOpen(true); }}
             onDeleteAnime={() => removeAnime(selectedAnime.title)}
