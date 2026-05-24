@@ -217,16 +217,60 @@ export function installAntiPiracy(opts: InstallOptions = {}) {
   const devInterval = window.setInterval(detectDevtools, 1500);
   const capInterval = window.setInterval(detectCapture, 1000);
 
+  // 9. Android long-press "Download video" suppression.
+  //    Chrome/Samsung/Firefox Android fire `contextmenu` on long-press of a
+  //    <video>. We already preventDefault that globally, but we also harden
+  //    every <video> with controlsList="nodownload" + disablePictureInPicture
+  //    and intercept the touch path so the native popup never opens.
+  const hardenVideo = (v: HTMLVideoElement) => {
+    try {
+      v.setAttribute('controlsList', 'nodownload noplaybackrate noremoteplayback');
+      v.setAttribute('disablePictureInPicture', '');
+      v.setAttribute('disableRemotePlayback', '');
+      (v as any).disablePictureInPicture = true;
+      v.oncontextmenu = (e) => { e.preventDefault(); return false; };
+    } catch {}
+  };
+  document.querySelectorAll<HTMLVideoElement>('video').forEach(hardenVideo);
+  const moEl = document.body || document.documentElement;
+  const mo = new MutationObserver((muts) => {
+    muts.forEach((m) =>
+      m.addedNodes.forEach((n) => {
+        if (n instanceof HTMLVideoElement) hardenVideo(n);
+        else if (n instanceof HTMLElement) {
+          n.querySelectorAll?.<HTMLVideoElement>('video').forEach(hardenVideo);
+        }
+      }),
+    );
+  });
+  try { mo.observe(moEl, { subtree: true, childList: true }); } catch {}
+
+  // Touch-based long-press cancel — fires the contextmenu preventDefault before
+  // Android's download sheet can attach. Passive:false is required.
+  const onTouchStart = (e: TouchEvent) => {
+    const t = e.target as HTMLElement | null;
+    if (!t) return;
+    if (t.tagName === 'VIDEO' || t.tagName === 'IFRAME' || t.closest?.('.embed-player, .player-container')) {
+      // Prevent the long-press contextmenu *only* — single taps still work
+      // because we don't call stopPropagation, and `manipulation` touch-action
+      // already blocks double-tap zoom.
+      t.addEventListener('contextmenu', (ev) => ev.preventDefault(), { once: true });
+    }
+  };
+
   document.addEventListener('contextmenu', onContext);
   document.addEventListener('keydown', onKey, true);
   document.addEventListener('dragstart', onDragStart);
+  document.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
   try { navigator.mediaDevices?.addEventListener('devicechange', onDeviceChange); } catch {}
 
   return () => {
     document.removeEventListener('contextmenu', onContext);
     document.removeEventListener('keydown', onKey, true);
     document.removeEventListener('dragstart', onDragStart);
+    document.removeEventListener('touchstart', onTouchStart, true);
     try { navigator.mediaDevices?.removeEventListener('devicechange', onDeviceChange); } catch {}
+    try { mo.disconnect(); } catch {}
     window.clearInterval(devInterval);
     window.clearInterval(capInterval);
     if (originalGDM && navigator.mediaDevices) {
