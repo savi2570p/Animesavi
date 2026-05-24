@@ -128,22 +128,112 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
     setIsLoading(false);
   };
 
-  const handleMarkCompleted = async (e: React.MouseEvent, historyId: string, animeTitle: string) => {
+  const handleMarkCompleted = async (
+    e: React.MouseEvent,
+    historyId: string,
+    animeTitle: string,
+  ) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    const { error } = await supabase
+
+    const item = history.find((h) => h.id === historyId);
+    if (!item || !user) return;
+
+    // 1. Mark current episode as completed
+    const { error: updateErr } = await supabase
       .from('watch_history')
-      .update({ completed: true })
+      .update({ completed: true, progress: 100 })
       .eq('id', historyId);
-    
-    if (error) {
+
+    if (updateErr) {
       toast.error('Failed to mark as completed');
       return;
     }
-    
-    // Remove from local state immediately
-    setHistory(prev => prev.filter(item => item.id !== historyId));
+
+    // 2. Find next episode — same season first, then first ep of next season
+    let nextEpisode: { id: string; episode_number: number; season_id: string } | null = null;
+    let nextSeasonNumber: number | undefined = item.season?.season_number;
+
+    const { data: sameSeasonNext } = await supabase
+      .from('episodes')
+      .select('id, episode_number, season_id')
+      .eq('season_id', item.episode.season_id)
+      .gt('episode_number', item.episode.episode_number)
+      .order('episode_number', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (sameSeasonNext) {
+      nextEpisode = sameSeasonNext;
+    } else {
+      const { data: nextSeason } = await supabase
+        .from('seasons')
+        .select('id, season_number')
+        .eq('anime_id', item.anime.id)
+        .gt('season_number', item.season?.season_number || 1)
+        .order('season_number', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (nextSeason) {
+        const { data: firstEp } = await supabase
+          .from('episodes')
+          .select('id, episode_number, season_id')
+          .eq('season_id', nextSeason.id)
+          .order('episode_number', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (firstEp) {
+          nextEpisode = firstEp;
+          nextSeasonNumber = nextSeason.season_number;
+        }
+      }
+    }
+
+    // 3. Upsert a fresh continue-watching row pointing to the next episode
+    if (nextEpisode) {
+      const { data: newRow, error: upsertErr } = await supabase
+        .from('watch_history')
+        .upsert(
+          {
+            user_id: user.id,
+            anime_id: item.anime.id,
+            episode_id: nextEpisode.id,
+            progress: 0,
+            completed: false,
+            watched_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,anime_id' },
+        )
+        .select('*, anime:anime_id(*), episode:episode_id(*)')
+        .single();
+
+      if (!upsertErr && newRow) {
+        setHistory((prev) =>
+          prev.map((h) =>
+            h.id === historyId
+              ? {
+                  ...(newRow as WatchHistoryItem),
+                  season: {
+                    id: nextEpisode!.season_id,
+                    season_number: nextSeasonNumber || 1,
+                  },
+                  hasNewEpisode: false,
+                }
+              : h,
+          ),
+        );
+        toast.success(
+          nextSeasonNumber && nextSeasonNumber !== item.season?.season_number
+            ? `${animeTitle} — starting Season ${nextSeasonNumber}`
+            : `${animeTitle} — next episode ready`,
+        );
+        return;
+      }
+    }
+
+    // 4. No next episode found (series finished) — remove from list
+    setHistory((prev) => prev.filter((h) => h.id !== historyId));
     toast.success(`${animeTitle} marked as completed`);
   };
 
