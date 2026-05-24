@@ -1287,3 +1287,35 @@ img:not([decoding]) { decoding: async; }
     animation: none !important;
   }
 }
+
+/* ============================================================
+   Android long-press download / save protection for video area.
+   Blocks the "Download video" / "Save image" native popup on
+   Chrome / Samsung Internet / Firefox Android without breaking
+   playback, fullscreen, or custom controls.
+   ============================================================ */
+video,
+iframe.embed-frame,
+.embed-player,
+.player-container,
+.player-container video,
+.player-container iframe {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  /* `manipulation` keeps tap-to-play & double-tap-to-fullscreen working */
+  touch-action: manipulation !important;
+  -webkit-user-drag: none !important;
+}
+
+/* Block the long-press image save on poster frames too */
+video::-webkit-media-controls-overlay-play-button { -webkit-touch-callout: none; }
+.player-container img,
+.embed-player img {
+  -webkit-touch-callout: none !important;
+  -webkit-user-drag: none !important;
+  pointer-events: none;
+}
