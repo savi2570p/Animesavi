@@ -1539,6 +1539,14 @@ export type Database = {
         Returns: boolean
       }
       is_flox_admin: { Args: { _user_id: string }; Returns: boolean }
+      redeem_unlock_token: {
+        Args: { _token: string; _user_agent?: string; _user_id?: string }
+        Returns: {
+          duration_hours: number
+          expires_at: number
+          id: string
+        }[]
+      }
       verify_unlock_token: {
         Args: { _token: string }
         Returns: {

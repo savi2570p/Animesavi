@@ -22,8 +22,14 @@ export default function UnlockAccess() {
 
   const verifyToken = async (slug: string) => {
     try {
-      const { data: rows, error } = await supabase
-        .rpc('verify_unlock_token', { _token: slug });
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id ?? null;
+
+      const { data: rows, error } = await supabase.rpc('redeem_unlock_token', {
+        _token: slug,
+        _user_id: userId,
+        _user_agent: navigator.userAgent,
+      });
 
       const data = Array.isArray(rows) ? rows[0] : null;
 
@@ -34,21 +40,13 @@ export default function UnlockAccess() {
       }
 
       const hours = data.duration_hours || 24;
+      const expiresAt = Number(data.expires_at);
       setDurationHours(hours);
-      const durationMs = hours * 60 * 60 * 1000;
-      const expiresAt = Date.now() + durationMs;
+
       localStorage.setItem('unlock_token_expires', expiresAt.toString());
       localStorage.setItem('unlock_token_id', data.id);
-
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id || null;
-
-      await supabase.from('token_usage').insert({
-        token_id: data.id,
-        user_agent: navigator.userAgent,
-        user_id: userId,
-        expires_at: expiresAt,
-      });
+      localStorage.setItem('token_access_synced', 'true');
+      sessionStorage.removeItem('token_expired_popup_shown');
 
       setStatus('success');
       setTimeout(() => navigate('/'), 3000);
