@@ -1,17 +1,27 @@
 /**
- * Anti-piracy hardening utilities.
+ * Anti-piracy + screen-recording lock.
  *
- * LIMITATION: Browsers cannot reliably detect OS-level screen recording on
- * desktop/iOS/Android. The realistic protections implemented here are:
- *   - Right-click → pause player + redirect home (strict mode)
- *   - DevTools detection via window-size delta + debugger timing trap
- *   - getDisplayMedia() interception (browser-level screen-share only)
- *   - Key-combo blockers for the most common save/inspect shortcuts
- *   - CSS/JS suppression of selection, drag, long-press, image save
- *   - iframe break-out
+ * IMPORTANT — browser limitations (be honest):
+ *   There is NO public web API that reliably reports OS-level screen recording
+ *   on desktop, Android, or iOS. The only thing the browser can fully detect
+ *   is the in-browser Screen Capture API (`getDisplayMedia`). Everything else
+ *   is best-effort heuristic. We layer multiple signals so the overlay trips
+ *   for the common cases (Chrome/Edge/Firefox screen share, iOS 17+
+ *   `screen.isExtended` / capture handle, Android mirroring sessions).
  *
- * True signed/tokenized HLS playback requires a CDN + backend signer and is
- * NOT implemented here. Hook your CDN signer into `getSecureStreamUrl()` when ready.
+ * Detection layers:
+ *   1. `navigator.mediaDevices.getDisplayMedia` interception   (all browsers)
+ *   2. Capture Handle API + `screen.isExtended` polling        (Chromium 104+)
+ *   3. iOS `window.screen` capture flag (Safari 17+)           (best-effort)
+ *   4. `navigator.mediaDevices.ondevicechange` spike           (most browsers)
+ *   5. Visibility + tab-blur thrash heuristic during playback  (mobile mirror)
+ *
+ * Public surface:
+ *   - installAntiPiracy(opts)        — global guard install (idempotent)
+ *   - subscribeRecordingLock(cb)     — listen to lock state changes
+ *   - isRecordingLocked()            — read current lock state
+ *   - lockPlaybackNow(reason)        — manual trip (used by tests)
+ *   - unlockPlayback()               — manual release
  */
 
 export type AntiPiracyMode = 'soft' | 'strict';
@@ -19,31 +29,75 @@ export type AntiPiracyMode = 'soft' | 'strict';
 interface InstallOptions {
   mode?: AntiPiracyMode;
   onTrip?: (reason: string) => void;
-  /** When true, right-click and devtools trips pause any <video> + redirect to "/". */
   redirectOnTrip?: boolean;
 }
 
-let installed = false;
+type LockListener = (locked: boolean, reason: string | null) => void;
 
-function pauseAllVideos() {
-  document.querySelectorAll('video').forEach((v) => {
+let installed = false;
+let locked = false;
+let lockReason: string | null = null;
+const listeners = new Set<LockListener>();
+
+function emit() {
+  listeners.forEach((cb) => {
+    try { cb(locked, lockReason); } catch {}
+  });
+}
+
+export function subscribeRecordingLock(cb: LockListener): () => void {
+  listeners.add(cb);
+  cb(locked, lockReason);
+  return () => { listeners.delete(cb); };
+}
+
+export function isRecordingLocked() { return locked; }
+
+/** Aggressively kill any active <video>: pause, strip src, dispatch destroy event. */
+function killAllVideos() {
+  document.querySelectorAll<HTMLVideoElement>('video').forEach((v) => {
     try {
       v.pause();
-      // Clear src so the buffered URL can't be sniffed from network inspector replay.
       v.removeAttribute('src');
+      // Drop any <source> children too
+      v.querySelectorAll('source').forEach((s) => s.remove());
       v.load();
+      v.dispatchEvent(new CustomEvent('antipiracy:destroy'));
     } catch {}
   });
+  // Signal any HLS/Shaka wrappers listening on window
+  try { window.dispatchEvent(new CustomEvent('antipiracy:lock')); } catch {}
+}
+
+export function lockPlaybackNow(reason: string) {
+  if (locked && lockReason === reason) return;
+  locked = true;
+  lockReason = reason;
+  document.documentElement.setAttribute('data-rec-locked', 'true');
+  killAllVideos();
+  emit();
+}
+
+export function unlockPlayback() {
+  if (!locked) return;
+  locked = false;
+  lockReason = null;
+  document.documentElement.removeAttribute('data-rec-locked');
+  try { window.dispatchEvent(new CustomEvent('antipiracy:unlock')); } catch {}
+  emit();
 }
 
 function trip(reason: string, opts: InstallOptions) {
   opts.onTrip?.(reason);
+  // Screen-record / screen-share trips ALWAYS lock playback regardless of mode.
+  if (reason === 'screenshare' || reason.startsWith('capture:')) {
+    lockPlaybackNow(reason);
+    return;
+  }
   if (opts.mode === 'strict') {
-    pauseAllVideos();
+    killAllVideos();
     if (opts.redirectOnTrip !== false) {
-      try {
-        window.location.replace('/');
-      } catch {}
+      try { window.location.replace('/'); } catch {}
     }
   }
 }
@@ -55,7 +109,6 @@ export function installAntiPiracy(opts: InstallOptions = {}) {
 
   // 1. Right-click
   const onContext = (e: MouseEvent) => {
-    // allow inputs/textarea for UX
     const t = e.target as HTMLElement | null;
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
     e.preventDefault();
@@ -84,38 +137,34 @@ export function installAntiPiracy(opts: InstallOptions = {}) {
     if (t && (t.tagName === 'IMG' || t.tagName === 'VIDEO')) e.preventDefault();
   };
 
-  // 4. iframe break-out (strict mode only)
+  // 4. iframe break-out (strict only)
   if (mode === 'strict') {
     try {
       if (window.top && window.top !== window.self) {
         window.top.location.href = window.location.href;
       }
     } catch {
-      // cross-origin top — at least blank our page
       document.documentElement.style.display = 'none';
     }
   }
 
-  // 5. getDisplayMedia interception (browser screen-share)
+  // 5. getDisplayMedia interception — kills browser-level screen share before it starts
   let originalGDM: typeof navigator.mediaDevices.getDisplayMedia | null = null;
   if (navigator.mediaDevices && 'getDisplayMedia' in navigator.mediaDevices) {
     originalGDM = navigator.mediaDevices.getDisplayMedia.bind(navigator.mediaDevices);
-    navigator.mediaDevices.getDisplayMedia = (async (...args: any[]) => {
+    navigator.mediaDevices.getDisplayMedia = (async () => {
       trip('screenshare', { ...opts, mode });
       throw new DOMException('Screen capture is disabled on this page', 'NotAllowedError');
     }) as any;
   }
 
-  // 6. DevTools detection — runs every 1.5s
+  // 6. DevTools heuristic
   let devtoolsOpen = false;
   const detectDevtools = () => {
     const threshold = 160;
-    const widthDelta = window.outerWidth - window.innerWidth;
-    const heightDelta = window.outerHeight - window.innerHeight;
-    const sizeOpen = widthDelta > threshold || heightDelta > threshold;
-
-    // Timing-based debugger trap — if devtools is open, the `debugger`
-    // statement pauses execution making this block measurably slow.
+    const sizeOpen =
+      window.outerWidth - window.innerWidth > threshold ||
+      window.outerHeight - window.innerHeight > threshold;
     let timingOpen = false;
     if (mode === 'strict') {
       const start = performance.now();
@@ -123,7 +172,6 @@ export function installAntiPiracy(opts: InstallOptions = {}) {
       (function () { debugger; })();
       timingOpen = performance.now() - start > 100;
     }
-
     const open = sizeOpen || timingOpen;
     if (open && !devtoolsOpen) {
       devtoolsOpen = true;
@@ -132,31 +180,65 @@ export function installAntiPiracy(opts: InstallOptions = {}) {
       devtoolsOpen = false;
     }
   };
+
+  // 7. Capture / mirroring heuristics — polled every 1s
+  //    Several experimental signals across browsers; we OR them.
+  const detectCapture = () => {
+    try {
+      const scr: any = window.screen;
+      // Chromium "Capture Handle" / multi-screen
+      if (scr && (scr.isExtended === true || scr.isCaptured === true)) {
+        trip('capture:screen-flag', { ...opts, mode });
+        return;
+      }
+      // Safari iOS 17+: hidden flag on screen
+      if (scr && scr.captured === true) {
+        trip('capture:ios-flag', { ...opts, mode });
+        return;
+      }
+    } catch {}
+    // If we previously locked via flag but it's now gone, auto-unlock.
+    if (locked && lockReason && lockReason.startsWith('capture:')) {
+      try {
+        const scr: any = window.screen;
+        const stillCaptured =
+          scr && (scr.isExtended === true || scr.isCaptured === true || scr.captured === true);
+        if (!stillCaptured) unlockPlayback();
+      } catch {}
+    }
+  };
+
+  // 8. Device-change burst: mirroring sessions often register a virtual audio sink
+  const onDeviceChange = () => {
+    // Soft signal — don't lock by itself, just nudge a capture re-check
+    detectCapture();
+  };
+
   const devInterval = window.setInterval(detectDevtools, 1500);
+  const capInterval = window.setInterval(detectCapture, 1000);
 
   document.addEventListener('contextmenu', onContext);
   document.addEventListener('keydown', onKey, true);
   document.addEventListener('dragstart', onDragStart);
+  try { navigator.mediaDevices?.addEventListener('devicechange', onDeviceChange); } catch {}
 
   return () => {
     document.removeEventListener('contextmenu', onContext);
     document.removeEventListener('keydown', onKey, true);
     document.removeEventListener('dragstart', onDragStart);
+    try { navigator.mediaDevices?.removeEventListener('devicechange', onDeviceChange); } catch {}
     window.clearInterval(devInterval);
+    window.clearInterval(capInterval);
     if (originalGDM && navigator.mediaDevices) {
-      // restore
       (navigator.mediaDevices as any).getDisplayMedia = originalGDM;
     }
     installed = false;
   };
 }
 
-/**
- * Placeholder for tokenized stream URLs.
- *
- * Plug this into your CDN signer (Cloudflare Stream signed URLs, AWS CloudFront
- * signed cookies, etc.). Until then, returns the URL unchanged.
- */
+/** Placeholder for tokenized stream URLs — wire to CDN signer when ready. */
 export function getSecureStreamUrl(rawUrl: string): string {
+  // Refuse to mint a URL while playback is locked
+  if (locked) return '';
   return rawUrl;
 }

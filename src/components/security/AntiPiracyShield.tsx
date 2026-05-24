@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { installAntiPiracy, type AntiPiracyMode } from '@/lib/antiPiracy';
+import { installAntiPiracy, subscribeRecordingLock, type AntiPiracyMode } from '@/lib/antiPiracy';
 import { SecurityOverlay } from './SecurityOverlay';
 
 interface AntiPiracyShieldProps {
@@ -10,36 +10,62 @@ interface AntiPiracyShieldProps {
 }
 
 /**
- * Wraps a subtree with the anti-piracy layer. Mount once near the app root
- * for soft mode, and use again with `mode="strict"` around the Flox player.
+ * Mounts the anti-piracy guard once and renders the fullscreen recording-lock
+ * overlay whenever screen capture is detected — regardless of mode.
  */
 export function AntiPiracyShield({ mode = 'soft', noRedirect, children }: AntiPiracyShieldProps) {
-  const [tripReason, setTripReason] = useState<string | null>(null);
+  const [devtoolsTrip, setDevtoolsTrip] = useState(false);
+  const [recordingLocked, setRecordingLocked] = useState(false);
 
   useEffect(() => {
     const uninstall = installAntiPiracy({
       mode,
       redirectOnTrip: !noRedirect,
       onTrip: (reason) => {
-        if (reason === 'devtools' || reason === 'screenshare') {
-          setTripReason(reason);
-        }
+        if (reason === 'devtools') setDevtoolsTrip(true);
       },
     });
-    return uninstall;
+    const unsub = subscribeRecordingLock((locked) => setRecordingLocked(locked));
+    return () => { uninstall(); unsub(); };
   }, [mode, noRedirect]);
+
+  // While locked, defensively re-kill any <video> that tries to start.
+  useEffect(() => {
+    if (!recordingLocked) return;
+    const interval = window.setInterval(() => {
+      document.querySelectorAll<HTMLVideoElement>('video').forEach((v) => {
+        try {
+          if (!v.paused) v.pause();
+          if (v.src) v.removeAttribute('src');
+          v.style.filter = 'blur(40px)';
+        } catch {}
+      });
+    }, 250);
+    return () => {
+      window.clearInterval(interval);
+      document.querySelectorAll<HTMLVideoElement>('video').forEach((v) => {
+        try { v.style.filter = ''; } catch {}
+      });
+    };
+  }, [recordingLocked]);
+
+  const showRecording = recordingLocked;
+  const showDevtools = !recordingLocked && mode === 'strict' && devtoolsTrip;
 
   return (
     <>
       {children}
       <SecurityOverlay
-        visible={mode === 'strict' && tripReason !== null}
-        message={tripReason === 'screenshare' ? 'Stop screen recording to continue watching' : 'Inspection blocked'}
-        subtitle={
-          tripReason === 'screenshare'
-            ? 'Screen capture is not permitted while watching premium content.'
-            : 'Close developer tools to resume playback.'
-        }
+        visible={showRecording}
+        message="Screen Recording Detected"
+        subtitle="Please Stop Screen Recording To Continue Watching"
+        unclosable
+      />
+      <SecurityOverlay
+        visible={showDevtools}
+        message="Inspection Blocked"
+        subtitle="Close developer tools to resume playback."
+        unclosable={false}
       />
     </>
   );
