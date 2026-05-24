@@ -24,8 +24,14 @@ export default function TokenVerify() {
 
   const verifyToken = async (token: string) => {
     try {
-      const { data: rows, error } = await supabase
-        .rpc('verify_unlock_token', { _token: token });
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id ?? null;
+
+      const { data: rows, error } = await supabase.rpc('redeem_unlock_token', {
+        _token: token,
+        _user_id: userId,
+        _user_agent: navigator.userAgent,
+      });
 
       const data = Array.isArray(rows) ? rows[0] : null;
 
@@ -36,20 +42,13 @@ export default function TokenVerify() {
       }
 
       const hours = data.duration_hours as number;
-      const expiry = Date.now() + hours * 60 * 60 * 1000;
+      const expiry = Number(data.expires_at);
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id;
-
-      await supabase.from('token_usage').insert({
-        token_id: data.id,
-        user_agent: navigator.userAgent,
-        expires_at: expiry,
-        ...(userId ? { user_id: userId } : {}),
-      });
-
+      // Persist premium session locally for instant UI activation
       localStorage.setItem('unlock_token_expires', expiry.toString());
       localStorage.setItem('unlock_token_id', data.id);
+      localStorage.setItem('token_access_synced', 'true');
+      sessionStorage.removeItem('token_expired_popup_shown');
 
       setDurationHours(hours);
       setExpiresAt(expiry);
