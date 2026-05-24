@@ -1183,9 +1183,9 @@ export default function Watch() {
           {anime && (
             <Link
               to={`/anime/${anime.id}`}
-              className="group mt-2 md:mt-3 flex items-center gap-2.5 md:gap-3 px-2 md:px-3 py-1.5 md:py-2 rounded-lg border border-border/40 bg-gradient-to-r from-card/70 via-card/40 to-transparent backdrop-blur-md hover:border-primary/40 hover:bg-card/80 transition-all"
+              className="group mt-2 md:mt-3 flex items-center gap-2 md:gap-3 px-2 md:px-3 py-1.5 md:py-2 rounded-lg border border-border/40 bg-gradient-to-r from-card/70 via-card/40 to-transparent backdrop-blur-md hover:border-primary/40 hover:bg-card/80 transition-all w-full max-w-full overflow-hidden"
             >
-              <div className="relative w-9 h-12 md:w-11 md:h-14 rounded-md overflow-hidden shrink-0 ring-1 ring-border/60 group-hover:ring-primary/50 transition-all">
+              <div className="relative w-7 h-10 md:w-11 md:h-14 rounded-md overflow-hidden shrink-0 ring-1 ring-border/60 group-hover:ring-primary/50 transition-all">
                 {anime.cover_image ? (
                   <img
                     src={anime.cover_image}
@@ -1197,14 +1197,20 @@ export default function Watch() {
                   <div className="w-full h-full bg-muted" />
                 )}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-primary/80 leading-none mb-1">
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <p className="text-[9px] md:text-[11px] font-bold uppercase tracking-wider text-primary/80 leading-none mb-0.5 md:mb-1">
                   Now Watching
                 </p>
-                <p className="text-sm md:text-base font-semibold text-foreground truncate group-hover:text-primary transition-colors leading-tight">
+                <p
+                  className="font-semibold text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2 md:line-clamp-1 break-words [overflow-wrap:anywhere]"
+                  style={{ fontSize: 'clamp(12px, 2.8vw, 16px)', lineHeight: 1.3, wordBreak: 'break-word' }}
+                >
                   {anime.title}
                 </p>
-                <p className="text-[10px] md:text-xs text-muted-foreground truncate mt-0.5">
+                <p
+                  className="text-muted-foreground truncate mt-0.5 [overflow-wrap:anywhere]"
+                  style={{ fontSize: 'clamp(10px, 2.4vw, 12px)' }}
+                >
                   S{currentSeason?.season_number || 1} · E{episode.episode_number} — {episode.title}
                 </p>
               </div>
