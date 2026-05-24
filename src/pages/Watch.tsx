@@ -1183,9 +1183,9 @@ export default function Watch() {
           {anime && (
             <Link
               to={`/anime/${anime.id}`}
-              className="group mt-2 md:mt-3 flex items-center gap-2 md:gap-3 px-2 md:px-3 py-1.5 md:py-2 rounded-lg border border-border/40 bg-gradient-to-r from-card/70 via-card/40 to-transparent backdrop-blur-md hover:border-primary/40 hover:bg-card/80 transition-all w-full max-w-full overflow-hidden"
+              className="group mt-2 flex items-center gap-2 px-2 py-1.5 rounded-lg border border-border/40 bg-gradient-to-r from-card/70 via-card/40 to-transparent backdrop-blur-md hover:border-primary/40 hover:bg-card/80 transition-all w-full max-w-full overflow-hidden"
             >
-              <div className="relative w-7 h-10 md:w-11 md:h-14 rounded-md overflow-hidden shrink-0 ring-1 ring-border/60 group-hover:ring-primary/50 transition-all">
+              <div className="relative rounded-md overflow-hidden shrink-0 ring-1 ring-border/60 group-hover:ring-primary/50 transition-all" style={{ width: 34, height: 48, minWidth: 34 }}>
                 {anime.cover_image ? (
                   <img
                     src={anime.cover_image}
@@ -1198,25 +1198,26 @@ export default function Watch() {
                 )}
               </div>
               <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="text-[9px] md:text-[11px] font-bold uppercase tracking-wider text-primary/80 leading-none mb-0.5 md:mb-1">
+                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-primary/80 leading-none mb-0.5">
                   Now Watching
                 </p>
                 <p
-                  className="font-semibold text-foreground group-hover:text-primary transition-colors leading-tight line-clamp-2 md:line-clamp-1 break-words [overflow-wrap:anywhere]"
-                  style={{ fontSize: 'clamp(12px, 2.8vw, 16px)', lineHeight: 1.3, wordBreak: 'break-word' }}
+                  className="font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 [overflow-wrap:anywhere]"
+                  style={{ fontSize: 'clamp(11px, 2.6vw, 14px)', lineHeight: 1.25, wordBreak: 'break-word' }}
                 >
                   {anime.title}
                 </p>
                 <p
-                  className="text-muted-foreground truncate mt-0.5 [overflow-wrap:anywhere]"
-                  style={{ fontSize: 'clamp(10px, 2.4vw, 12px)' }}
+                  className="text-muted-foreground truncate [overflow-wrap:anywhere]"
+                  style={{ fontSize: 'clamp(9px, 2.2vw, 11px)', lineHeight: 1.2 }}
                 >
-                  S{currentSeason?.season_number || 1} · E{episode.episode_number} — {episode.title}
+                  S{currentSeason?.season_number || 1} · E{episode.episode_number}
                 </p>
               </div>
-              <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
             </Link>
           )}
+
         </div>
       </div>
 
