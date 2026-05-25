@@ -90,6 +90,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
       // IMPORTANT: keep this callback synchronous to avoid auth deadlocks.
+
+      // Guard against spurious SIGNED_OUT events (e.g. transient refresh
+      // failures around midnight when the JWT rolls over). If Supabase tells
+      // us we're signed out but its own storage still holds a refresh token,
+      // try to refresh the session before clearing local state. This stops
+      // the "auto logout at midnight" symptom users were reporting.
+      if (event === 'SIGNED_OUT' && !nextSession) {
+        const hasStoredSession = (() => {
+          try {
+            for (let i = 0; i < localStorage.length; i++) {
+              const k = localStorage.key(i);
+              if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+                const raw = localStorage.getItem(k);
+                if (raw && raw.includes('refresh_token')) return true;
+              }
+            }
+          } catch {}
+          return false;
+        })();
+
+        if (hasStoredSession) {
+          // Attempt recovery without blocking this callback.
+          setTimeout(() => {
+            supabase.auth.refreshSession().then(({ data }) => {
+              if (data?.session) {
+                setSession(data.session);
+                setUser(data.session.user);
+              }
+            }).catch(() => { /* truly signed out */ });
+          }, 0);
+          return; // don't clobber user state yet
+        }
+      }
+
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
 
