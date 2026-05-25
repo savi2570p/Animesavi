@@ -142,20 +142,19 @@ export default function Auth() {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/`,
-        },
+      const result = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: window.location.origin,
+        extraParams: { prompt: 'select_account' },
       });
-      
-      if (error) {
+
+      if (result.error) {
         toast({
           variant: 'destructive',
           title: 'Google Sign In Failed',
-          description: error.message,
+          description: result.error.message || 'Could not start Google sign-in.',
         });
       }
+      // If result.redirected, the browser navigates to Google.
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -164,6 +163,31 @@ export default function Auth() {
       });
     } finally {
       setIsGoogleLoading(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setIsAppleLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth('apple', {
+        redirect_uri: window.location.origin,
+      });
+
+      if (result.error) {
+        toast({
+          variant: 'destructive',
+          title: 'Apple Sign In Failed',
+          description: result.error.message || 'Could not start Apple sign-in.',
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to initiate Apple sign in',
+      });
+    } finally {
+      setIsAppleLoading(false);
     }
   };
 
