@@ -319,6 +319,14 @@ export default function SiteHealth() {
 
           {gscError && <div className="text-sm text-destructive mb-3">{gscError}</div>}
 
+          {gscStatus?.verified && (
+            <div className="mb-3 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+              <span className="text-sm font-semibold text-emerald-400">Verified by Google</span>
+              <span className="ml-auto text-[10px] uppercase tracking-wider text-emerald-500/80 font-bold">✓ Done</span>
+            </div>
+          )}
+
           {gscStatus ? (
             <div className="space-y-3">
               <Row icon={gscStatus.verified ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <XCircle className="w-5 h-5 text-destructive" />}
