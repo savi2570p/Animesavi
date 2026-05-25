@@ -6,8 +6,8 @@
 // Bump SW_VERSION whenever icon assets change to guarantee a fresh activate.
 
 const SW_VERSION = 'v3-2026-05-23';
-const DEFAULT_ICON = '/logo-v2.png?v=3';
-const DEFAULT_BADGE = '/logo-v2.png?v=3';
+const DEFAULT_ICON = '/Animesavi+.png?v=3';
+const DEFAULT_BADGE = '/Animesavi+.png?v=3';
 
 self.addEventListener('install', (event) => {
   // Activate this worker immediately, do not wait for old SW to release.
@@ -43,7 +43,7 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   const isIconAsset =
-    url.pathname === '/logo-v2.png' ||
+    url.pathname === '/Animesavi+.png' ||
     url.pathname === '/favicon.ico' ||
     url.pathname === '/favicon.png' ||
     url.pathname === '/manifest.json' ||
