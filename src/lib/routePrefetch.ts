@@ -85,4 +85,31 @@ export function installRoutePrefetch() {
   document.addEventListener('pointerenter', handler, { capture: true, passive: true });
   document.addEventListener('touchstart', handler, { capture: true, passive: true });
   document.addEventListener('focusin', handler, { capture: true, passive: true });
+
+  // Idle-time warm prefetch of the most-visited routes so subsequent
+  // navigations mount instantly without waiting for chunk download.
+  const warmRoutes = [
+    '/browse',
+    '/anime/_',
+    '/watch/_',
+    '/favorites',
+    '/history',
+    '/schedule',
+    '/downloads',
+    '/watchlist',
+    '/latest-episodes',
+  ];
+  const warm = () => {
+    warmRoutes.forEach((p, i) => {
+      // Stagger to avoid bursting the network thread.
+      setTimeout(() => prefetchRoute(p), i * 120);
+    });
+  };
+  const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void })
+    .requestIdleCallback;
+  if (typeof ric === 'function') {
+    ric(warm, { timeout: 3000 });
+  } else {
+    setTimeout(warm, 1500);
+  }
 }
