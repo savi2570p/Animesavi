@@ -109,20 +109,26 @@ export function PureEmbedPlayer({ url, title, onSwitchServer }: PureEmbedPlayerP
 
   return (
     <div
-      className="relative w-full bg-black overflow-hidden"
+      className="embed-player relative w-full bg-black overflow-hidden"
       style={{ aspectRatio: '16 / 9' }}
+      onContextMenu={(e) => e.preventDefault()}
     >
       {!hasError ? (
+        <>
         <iframe
           key={`${cleanUrl}-${reloadKey}`}
           src={cleanUrl}
           title={title}
-          className="absolute inset-0 w-full h-full border-0"
+          className="embed-frame absolute inset-0 w-full h-full border-0"
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write; accelerometer; gyroscope"
           allowFullScreen
           referrerPolicy="no-referrer-when-downgrade"
           onError={() => setHasError(true)}
+          onContextMenu={(e) => e.preventDefault()}
+          style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' } as React.CSSProperties}
         />
+        <div className="embed-frame-shield" aria-hidden="true" onContextMenu={(e) => e.preventDefault()} />
+        </>
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 bg-black">
           <AlertCircle className="h-10 w-10 text-amber-400 mb-3" />

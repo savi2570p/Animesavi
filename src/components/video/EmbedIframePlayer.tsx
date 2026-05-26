@@ -746,14 +746,18 @@ export function EmbedIframePlayer({
         key={iframeUrl}
         ref={iframeRef}
         src={iframeUrl}
-        className={className}
+        className={`embed-frame ${className ?? ''}`}
         allow={IFRAME_ALLOW}
         allowFullScreen
         title={title}
-        style={{ border: 'none' }}
+        style={{ border: 'none', WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' } as React.CSSProperties}
         onLoad={handleIframeLoad}
         onError={handleIframeError}
+        onContextMenu={(e) => e.preventDefault()}
       />
+      {/* Long-press shield — passes taps through, blocks the native
+          Android "Download video / Copy shadow link" popup. */}
+      <div className="embed-frame-shield" aria-hidden="true" onContextMenu={(e) => e.preventDefault()} />
 
       {handshakeState === 'ready' && (
         <div className="absolute bottom-3 right-3 z-20 flex items-center gap-2 rounded-full border border-border/80 bg-background/80 p-1.5 backdrop-blur-sm">

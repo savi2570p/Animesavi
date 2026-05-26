@@ -519,18 +519,24 @@ export default function MinimalEmbedPage() {
         )}
 
         {!error && videoUrl && useIframe && (
+          <>
           <iframe
             src={iframeSrc}
             title={title || 'Embedded video'}
+            className="embed-frame"
             allow="autoplay; fullscreen; picture-in-picture; encrypted-media; accelerometer; gyroscope"
             allowFullScreen
             referrerPolicy="no-referrer-when-downgrade"
+            onContextMenu={(e) => e.preventDefault()}
             style={{
               position: 'absolute', inset: 0,
               width: '100%', height: '100%',
               border: 0, background: '#000',
-            }}
+              WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
+            } as React.CSSProperties}
           />
+          <div className="embed-frame-shield" aria-hidden="true" onContextMenu={(e) => e.preventDefault()} />
+          </>
         )}
 
         {!error && videoUrl && !useIframe && (
