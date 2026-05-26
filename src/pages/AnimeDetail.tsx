@@ -457,6 +457,15 @@ export default function AnimeDetail() {
     <div className="min-h-screen detail-fade-swap">
       {/* Hero Banner — cinematic backdrop */}
       <div className="relative h-[42vh] md:h-[85vh] overflow-hidden">
+        {/* Back button — top left */}
+        <button
+          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
+          aria-label="Go back"
+          className="absolute top-4 left-4 z-30 flex items-center gap-2 px-3 py-2 rounded-full bg-background/60 backdrop-blur-md border border-white/10 text-foreground hover:bg-background/80 transition-colors shadow-lg"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm font-medium hidden sm:inline">Back</span>
+        </button>
         <div
           className="absolute inset-0 bg-cover bg-center scale-110 animate-[float_24s_ease-in-out_infinite]"
           style={{
