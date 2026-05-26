@@ -6,14 +6,28 @@ import { AnimatedPage } from './AnimatedPage';
 
 export function MainLayout() {
   const location = useLocation();
-  
+
+  // Animate home page "/" only the first time it is visited; afterwards render instantly.
+  const isHome = location.pathname === '/';
+  const homeAlreadyAnimated =
+    typeof window !== 'undefined' && localStorage.getItem('home_animated_once') === '1';
+  const shouldAnimate = !isHome || !homeAlreadyAnimated;
+
+  if (isHome && !homeAlreadyAnimated && typeof window !== 'undefined') {
+    localStorage.setItem('home_animated_once', '1');
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1">
-        <AnimatedPage key={location.pathname}>
+        {shouldAnimate ? (
+          <AnimatedPage key={location.pathname}>
+            <Outlet />
+          </AnimatedPage>
+        ) : (
           <Outlet />
-        </AnimatedPage>
+        )}
       </main>
       <Footer />
       <ContinueWatchingNotification />
