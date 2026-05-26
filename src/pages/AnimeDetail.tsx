@@ -31,6 +31,7 @@ import {
   ListVideo,
   Flame,
   CalendarClock,
+  ArrowLeft,
 } from 'lucide-react';
 
 // Helper to create slug from title
