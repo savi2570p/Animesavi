@@ -286,6 +286,9 @@ export function installAntiPiracy(opts: InstallOptions = {}) {
     document.removeEventListener('keydown', onKey, true);
     document.removeEventListener('dragstart', onDragStart);
     document.removeEventListener('touchstart', onTouchStart, true);
+    document.removeEventListener('touchend', onTouchEnd, true);
+    document.removeEventListener('touchcancel', onTouchEnd, true);
+    document.removeEventListener('touchmove', onTouchEnd, true);
     try { navigator.mediaDevices?.removeEventListener('devicechange', onDeviceChange); } catch {}
     try { mo.disconnect(); } catch {}
     window.clearInterval(devInterval);
