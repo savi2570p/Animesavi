@@ -82,6 +82,7 @@ interface WatchProgress {
 
 export default function AnimeDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [anime, setAnime] = useState<Anime | null>(null);
   const [seasons, setSeasons] = useState<Season[]>([]);
