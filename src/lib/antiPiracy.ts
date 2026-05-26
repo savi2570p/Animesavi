@@ -246,17 +246,31 @@ export function installAntiPiracy(opts: InstallOptions = {}) {
   try { mo.observe(moEl, { subtree: true, childList: true }); } catch {}
 
   // Touch-based long-press cancel — fires the contextmenu preventDefault before
-  // Android's download sheet can attach. Passive:false is required.
+  // Android's download / "Copy shadow link" sheet can attach. We arm a
+  // pre-emptive contextmenu killer AND set a 350ms timer that re-asserts it
+  // (the native popup uses ~500ms, so we win the race).
+  let longPressTimer: number | null = null;
+  const cancelLongPress = () => {
+    if (longPressTimer !== null) {
+      window.clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  };
   const onTouchStart = (e: TouchEvent) => {
     const t = e.target as HTMLElement | null;
     if (!t) return;
-    if (t.tagName === 'VIDEO' || t.tagName === 'IFRAME' || t.closest?.('.embed-player, .player-container')) {
-      // Prevent the long-press contextmenu *only* — single taps still work
-      // because we don't call stopPropagation, and `manipulation` touch-action
-      // already blocks double-tap zoom.
-      t.addEventListener('contextmenu', (ev) => ev.preventDefault(), { once: true });
-    }
+    const inPlayer = t.tagName === 'VIDEO' || t.tagName === 'IFRAME' ||
+      !!t.closest?.('.embed-player, .player-container, .embed-frame, .embed-frame-shield');
+    if (!inPlayer) return;
+    const killer = (ev: Event) => ev.preventDefault();
+    t.addEventListener('contextmenu', killer, { once: true });
+    document.addEventListener('contextmenu', killer, { once: true, capture: true });
+    cancelLongPress();
+    longPressTimer = window.setTimeout(() => {
+      document.addEventListener('contextmenu', killer, { once: true, capture: true });
+    }, 300);
   };
+  const onTouchEnd = () => cancelLongPress();
 
   document.addEventListener('contextmenu', onContext);
   document.addEventListener('keydown', onKey, true);
