@@ -19,6 +19,8 @@ import { SocialShare } from "@/components/home/SocialShare";
 import { MostPopular } from "@/components/home/MostPopular";
 import { AnimeCalendar } from "@/components/AnimeCalendar";
 import { TrendingBanner } from "@/components/home/TrendingBanner";
+import { SEO } from "@/components/SEO";
+
 
 export default function Index() {
   const { user } = useAuth();
