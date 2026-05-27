@@ -15,6 +15,7 @@ import { BatchDownload } from '@/components/download/BatchDownload';
 import { AnimeReviews } from '@/components/anime/AnimeReviews';
 import { AnimeDetailLoader } from '@/components/anime/AnimeDetailLoader';
 import { ShareEmbedPopup } from '@/components/ShareEmbedPopup';
+import { SEO } from '@/components/SEO';
 import {
   Play,
   Heart,
