@@ -502,7 +502,7 @@ export default function UploadAnimeEdit() {
                 if (!query) { toast.error('Enter a title first'); return; }
                 const t = toast.loading('Fetching metadata from AniList…');
                 try {
-                  const gql = `query ($search: String) { Media(search: $search, type: ANIME) { title { romaji english } description(asHtml: false) seasonYear genres studios { nodes { name } } coverImage { extraLarge large } bannerImage episodes } }`;
+                  const gql = `query ($search: String) { Media(search: $search, type: ANIME) { studios { nodes { name } } episodes } }`;
                   const res = await fetch('https://graphql.anilist.co', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -511,16 +511,11 @@ export default function UploadAnimeEdit() {
                   const json = await res.json();
                   const m = json?.data?.Media;
                   if (!m) throw new Error('Not found on AniList');
-                  if (m.title?.english || m.title?.romaji) setEditTitle(m.title.english || m.title.romaji);
-                  if (m.coverImage?.extraLarge || m.coverImage?.large) setEditCoverImage(m.coverImage.extraLarge || m.coverImage.large);
-                  if (m.bannerImage) setEditBannerImage(m.bannerImage);
-                  if (m.seasonYear) setEditReleaseYear(String(m.seasonYear));
-                  if (m.studios?.nodes?.[0]?.name) setEditStudio(m.studios.nodes[0].name);
-                  if (typeof m.episodes === 'number') setEditTotalEpisodes(String(m.episodes));
-                  if (Array.isArray(m.genres) && m.genres.length) {
-                    setEditGenres(prev => Array.from(new Set([...(prev || []), ...m.genres])));
-                  }
-                  toast.success('Metadata loaded — review & Save.', { id: t });
+                  let filled = 0;
+                  if (m.studios?.nodes?.[0]?.name) { setEditStudio(m.studios.nodes[0].name); filled++; }
+                  if (typeof m.episodes === 'number') { setEditTotalEpisodes(String(m.episodes)); filled++; }
+                  if (!filled) throw new Error('No studio / episodes found');
+                  toast.success('Studio & total episodes filled — review & Save.', { id: t });
                 } catch (e) {
                   toast.error(e instanceof Error ? e.message : 'Fetch failed', { id: t });
                 }
