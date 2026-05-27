@@ -69,9 +69,9 @@ export function installRoutePrefetch() {
   installed = true;
 
   const handler = (e: Event) => {
-    const target = e.target as HTMLElement | null;
-    if (!target) return;
-    const anchor = target.closest('a[href]') as HTMLAnchorElement | null;
+    const target = e.target as (Element | null);
+    if (!target || typeof (target as Element).closest !== 'function') return;
+    const anchor = (target as Element).closest('a[href]') as HTMLAnchorElement | null;
     if (!anchor) return;
     const href = anchor.getAttribute('href');
     if (!href || !href.startsWith('/')) return;
@@ -79,6 +79,7 @@ export function installRoutePrefetch() {
     const path = href.split('?')[0].split('#')[0];
     prefetchRoute(path);
   };
+
 
   // Use capture so we catch events even if the link stops propagation.
   // passive: true keeps the scroll thread free.
