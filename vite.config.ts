@@ -28,18 +28,19 @@ export default defineConfig(({ mode }) => ({
         start_url: '/',
         icons: [
           {
-            src: 'https://storage.googleapis.com/gpt-engineer-file-uploads/9zI1yCNlGfZymWSADZuYy9FGrtQ2/uploads/1768537236542-logo.png',
+            src: '/Animesavi+.png?v=4',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable'
           },
           {
-            src: 'https://storage.googleapis.com/gpt-engineer-file-uploads/9zI1yCNlGfZymWSADZuYy9FGrtQ2/uploads/1768537236542-logo.png',
+            src: '/Animesavi+.png?v=4',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
           }
         ]
+
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],

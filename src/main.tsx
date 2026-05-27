@@ -48,7 +48,7 @@ if (!isInIframe && !isPreviewHost && 'serviceWorker' in navigator) {
       ).forEach((link) => {
         const href = link.getAttribute('href');
         if (!href) return;
-        const bust = `${href.split('?')[0]}?v=3&_=${Date.now()}`;
+        const bust = `${href.split('?')[0]}?v=4&_=${Date.now()}`;
         link.setAttribute('href', bust);
       });
     }

@@ -10,25 +10,25 @@
   "categories": ["entertainment", "video"],
   "icons": [
     {
-      "src": "/Animesavi+.png?v=3",
+      "src": "/Animesavi+.png?v=4",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/Animesavi+.png?v=3",
+      "src": "/Animesavi+.png?v=4",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/Animesavi+.png?v=3",
+      "src": "/Animesavi+.png?v=4",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/Animesavi+.png?v=3",
+      "src": "/Animesavi+.png?v=4",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
