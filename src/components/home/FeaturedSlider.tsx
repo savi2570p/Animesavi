@@ -198,8 +198,14 @@ export function FeaturedSlider() {
                 key={idx === currentIndex ? `img-${animKey}` : `img-${idx}`}
                 src={anime.banner || anime.thumbnail || '/placeholder.svg'}
                 alt={anime.title}
+                width={1920}
+                height={1080}
+                loading={idx === 0 ? 'eager' : 'lazy'}
+                decoding={idx === 0 ? 'sync' : 'async'}
+                {...(idx === 0 ? { fetchpriority: 'high' as any } : {})}
                 className={`w-full h-full object-cover ${idx === currentIndex ? (direction === 'next' ? 'hero-slide-in-right' : 'hero-slide-in-left') : ''}`}
               />
+
             </div>
           ))}
 
