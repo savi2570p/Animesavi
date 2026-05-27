@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ShareEmbedPopup } from '@/components/ShareEmbedPopup';
+import { SEO } from '@/components/SEO';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -1037,8 +1038,29 @@ export default function Watch() {
     return <TokenExpiredPopup />;
   }
 
+  const watchTitle = `${anime?.title ? anime.title + ' — ' : ''}${episode.title} | AnimeSavi`;
+  const watchDesc = `Watch ${anime?.title || ''} ${episode.title} in Hindi DUB on AnimeSavi.`.slice(0, 160);
+  const videoLd = {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name: `${anime?.title ? anime.title + ' — ' : ''}${episode.title}`,
+    description: watchDesc,
+    thumbnailUrl: (episode as any).thumbnail || anime?.cover_image || undefined,
+    uploadDate: (episode as any).created_at || undefined,
+    contentUrl: `https://animesavi.com/watch/${episodeId}`,
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={watchTitle}
+        description={watchDesc}
+        path={`/watch/${episodeId}`}
+        image={(episode as any).thumbnail || anime?.cover_image || undefined}
+        type="video.episode"
+        jsonLd={videoLd}
+      />
+
       {/* Telegram Mini Toast — non-blocking, sits at bottom corner so it never covers the player.
           SAFEGUARDS:
           - pointer-events-none on outer wrapper -> never blocks scroll/clicks/video playback.

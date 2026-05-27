@@ -15,6 +15,7 @@ import { BatchDownload } from '@/components/download/BatchDownload';
 import { AnimeReviews } from '@/components/anime/AnimeReviews';
 import { AnimeDetailLoader } from '@/components/anime/AnimeDetailLoader';
 import { ShareEmbedPopup } from '@/components/ShareEmbedPopup';
+import { SEO } from '@/components/SEO';
 import {
   Play,
   Heart,
@@ -453,9 +454,30 @@ export default function AnimeDetail() {
 
   const nextEpisode = getFirstUnwatchedEpisode();
 
+  const seoDesc = (anime.description || `Watch ${anime.title} in Hindi DUB on AnimeSavi.`).replace(/<[^>]+>/g, '').slice(0, 160);
+  const seoTitle = `${anime.title} — Watch in Hindi DUB | AnimeSavi`;
+  const seriesLd = {
+    '@context': 'https://schema.org',
+    '@type': 'TVSeries',
+    name: anime.title,
+    description: seoDesc,
+    image: anime.cover_image || anime.banner_image || undefined,
+    genre: (anime as any).genres || undefined,
+    url: `https://animesavi.com/anime/${anime.id}`,
+  };
+
   return (
     <div className="min-h-screen detail-fade-swap">
+      <SEO
+        title={seoTitle}
+        description={seoDesc}
+        path={`/anime/${anime.id}`}
+        image={anime.cover_image || anime.banner_image || undefined}
+        type="video.tv_show"
+        jsonLd={seriesLd}
+      />
       {/* Hero Banner — cinematic backdrop */}
+
       <div className="relative h-[42vh] md:h-[85vh] overflow-hidden">
         {/* Back button — top left */}
         <button

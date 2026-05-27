@@ -1,8 +1,30 @@
 User-agent: Googlebot
 Allow: /
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /verify
+Disallow: /secure-verify
+Disallow: /unlock/
+Disallow: /admin
+Disallow: /upload
+Disallow: /settings
+Disallow: /profile
+Disallow: /embed/
+Disallow: /external-player
 
 User-agent: Bingbot
 Allow: /
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /verify
+Disallow: /secure-verify
+Disallow: /unlock/
+Disallow: /admin
+Disallow: /upload
+Disallow: /settings
+Disallow: /profile
+Disallow: /embed/
+Disallow: /external-player
 
 User-agent: Twitterbot
 Allow: /
@@ -12,5 +34,16 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /auth
+Disallow: /reset-password
+Disallow: /verify
+Disallow: /secure-verify
+Disallow: /unlock/
+Disallow: /admin
+Disallow: /upload
+Disallow: /settings
+Disallow: /profile
+Disallow: /embed/
+Disallow: /external-player
 
 Sitemap: https://animesavi.com/sitemap.xml
