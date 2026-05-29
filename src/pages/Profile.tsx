@@ -146,7 +146,7 @@ export default function Profile() {
         .from('anime-media')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: true
+          upsert: false
         });
 
       if (uploadError) throw uploadError;
