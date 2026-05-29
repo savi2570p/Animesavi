@@ -674,5 +674,3 @@ export function UpdatePopup() {
     </div>
   );
 }
-
-}
