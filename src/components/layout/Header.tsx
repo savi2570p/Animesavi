@@ -310,9 +310,9 @@ export function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="w-72 bg-card/95 backdrop-blur-xl border-border/60 p-0 overflow-hidden shadow-2xl"
+                className="w-60 origin-top-right bg-card/95 backdrop-blur-xl border-border/60 p-0 overflow-hidden shadow-2xl rounded-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-top-2 duration-200 ease-out"
                 align="end"
-                sideOffset={8}
+                sideOffset={6}
               >
                 {/* Cinematic header */}
                 <div className="relative overflow-hidden">
