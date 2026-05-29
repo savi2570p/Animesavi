@@ -236,7 +236,7 @@ export default function Settings() {
               </CardTitle>
               <CardDescription>Video player preferences</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/40">
                 <div className="space-y-0.5">
                   <Label htmlFor="autoplay" className="text-sm font-medium">
@@ -248,8 +248,120 @@ export default function Settings() {
                 </div>
                 <Switch id="autoplay" checked={autoplay} onCheckedChange={setAutoplay} />
               </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/40">
+                <div className="space-y-0.5">
+                  <Label htmlFor="subs" className="text-sm font-medium flex items-center gap-2">
+                    <Subtitles className="h-3.5 w-3.5 text-primary" /> Subtitles on by default
+                  </Label>
+                  <p className="text-xs text-muted-foreground">Auto-enable captions on every video</p>
+                </div>
+                <Switch id="subs" checked={subsDefault} onCheckedChange={setSubsDefault} />
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl bg-muted/30 border border-border/40 space-y-2">
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <PlayCircle className="h-3 w-3" /> Default quality
+                  </Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['auto', '480p', '720p', '1080p', '4K'].map((q) => (
+                      <button
+                        key={q}
+                        type="button"
+                        onClick={() => setDefaultQuality(q)}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-colors ${
+                          defaultQuality === q
+                            ? 'border-primary bg-primary/15 text-primary'
+                            : 'border-border/50 text-muted-foreground hover:border-primary/30'
+                        }`}
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="p-3 rounded-xl bg-muted/30 border border-border/40 space-y-2">
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Languages className="h-3 w-3" /> Subtitle language
+                  </Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { v: 'en', l: 'EN' },
+                      { v: 'es', l: 'ES' },
+                      { v: 'fr', l: 'FR' },
+                      { v: 'hi', l: 'HI' },
+                      { v: 'ja', l: 'JA' },
+                    ].map((o) => (
+                      <button
+                        key={o.v}
+                        type="button"
+                        onClick={() => setSubLang(o.v)}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-colors ${
+                          subLang === o.v
+                            ? 'border-primary bg-primary/15 text-primary'
+                            : 'border-border/50 text-muted-foreground hover:border-primary/30'
+                        }`}
+                      >
+                        {o.l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
+
+          {/* PIN Lock */}
+          <PinLockSettings />
+
+          {/* Data & Performance */}
+          <Card className="relative overflow-hidden border-border/50 bg-card/60 backdrop-blur-sm">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Gauge className="h-4 w-4 text-primary" />
+                </div>
+                Data & Performance
+              </CardTitle>
+              <CardDescription>Bandwidth, motion and cache controls</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/40">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <Zap className="h-3.5 w-3.5 text-primary" /> Data Saver
+                  </Label>
+                  <p className="text-xs text-muted-foreground">Prefer lower quality and lighter images</p>
+                </div>
+                <Switch checked={dataSaver} onCheckedChange={setDataSaver} />
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/40">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium">Reduce Motion</Label>
+                  <p className="text-xs text-muted-foreground">Minimize animations across the app</p>
+                </div>
+                <Switch checked={reducedMotion} onCheckedChange={setReducedMotion} />
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/40">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium">Mature Content Filter</Label>
+                  <p className="text-xs text-muted-foreground">Hide 18+ titles from discovery</p>
+                </div>
+                <Switch checked={matureFilter} onCheckedChange={setMatureFilter} />
+              </div>
+              <Button
+                variant="outline"
+                onClick={clearCache}
+                className="w-full justify-start h-10 border-border/50 hover:border-destructive/40 hover:bg-destructive/5"
+              >
+                <Trash2 className="h-4 w-4 mr-2 text-destructive" />
+                Clear cached images & data
+              </Button>
+            </CardContent>
+          </Card>
+
 
           {/* Change Password */}
           <Card className="relative overflow-hidden border-border/50 bg-card/60 backdrop-blur-sm">
