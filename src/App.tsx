@@ -24,6 +24,7 @@ import { ReportButton } from "@/components/ReportButton";
 import { BanGuard } from "@/components/BanGuard";
 import { installRoutePrefetch } from "@/lib/routePrefetch";
 import { AntiPiracyShield } from "@/components/security/AntiPiracyShield";
+import { PinLockGate } from "@/components/security/PinLockGate";
 
 // Critical pages loaded eagerly for instant navigation
 import Index from "./pages/Index";
@@ -191,6 +192,7 @@ const App = () => (
           <BrowserRouter>
             <PopupQueueProvider>
               <AntiPiracyShield mode="soft" />
+              <PinLockGate />
               <BanGuard />
               <ScrollRecoveryInitializer />
               <ScrollToTop />
