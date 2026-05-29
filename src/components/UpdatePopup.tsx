@@ -586,8 +586,10 @@ export function UpdatePopup() {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-sm sm:max-w-md max-h-[calc(100dvh-1.5rem)] flex flex-col overflow-hidden rounded-2xl border border-purple-600/25 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-purple-900/30 animate-in zoom-in-95 duration-300"
+        className="relative flex flex-col overflow-hidden border border-purple-600/25 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-purple-900/30 animate-in zoom-in-95 duration-300"
+        style={{ width: 'min(92vw, 420px)', maxHeight: 'min(82dvh, 640px)', borderRadius: '26px' }}
       >
+
         {/* Decorative glows */}
         <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-purple-600/15 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-purple-500/10 blur-3xl" />
@@ -659,13 +661,13 @@ export function UpdatePopup() {
         </div>
 
         {/* CTA */}
-        <div className="relative shrink-0 border-t border-white/5 bg-black/40 px-4 py-3">
+        <div className="relative shrink-0 border-t border-white/5 bg-black/40 px-4 py-2.5">
           <button
             onClick={handleGo}
-            className="group flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-900/40 transition-all hover:from-purple-600 hover:to-purple-400 hover:shadow-purple-700/50"
+            className="group mx-auto flex w-auto min-w-[140px] max-w-[220px] items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 px-5 py-2 text-[13px] font-semibold text-white shadow-lg shadow-purple-900/40 transition-all hover:from-purple-600 hover:to-purple-400 hover:shadow-purple-700/50"
           >
             Explore Now
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </button>
         </div>
       </div>
