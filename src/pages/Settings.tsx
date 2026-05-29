@@ -35,7 +35,33 @@ import { toast } from 'sonner';
 export default function Settings() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [autoplay, setAutoplay] = useState(true);
+  const [autoplay, setAutoplay] = useState(() => localStorage.getItem('pref_autoplay') !== '0');
+  const [dataSaver, setDataSaver] = useState(() => localStorage.getItem('pref_data_saver') === '1');
+  const [reducedMotion, setReducedMotion] = useState(() => localStorage.getItem('pref_reduced_motion') === '1');
+  const [subsDefault, setSubsDefault] = useState(() => localStorage.getItem('pref_subs_default') !== '0');
+  const [matureFilter, setMatureFilter] = useState(() => localStorage.getItem('pref_mature_filter') === '1');
+  const [defaultQuality, setDefaultQuality] = useState<string>(() => localStorage.getItem('pref_default_quality') || 'auto');
+  const [subLang, setSubLang] = useState<string>(() => localStorage.getItem('pref_sub_lang') || 'en');
+
+  useEffect(() => { localStorage.setItem('pref_autoplay', autoplay ? '1' : '0'); }, [autoplay]);
+  useEffect(() => { localStorage.setItem('pref_data_saver', dataSaver ? '1' : '0'); }, [dataSaver]);
+  useEffect(() => { localStorage.setItem('pref_reduced_motion', reducedMotion ? '1' : '0'); }, [reducedMotion]);
+  useEffect(() => { localStorage.setItem('pref_subs_default', subsDefault ? '1' : '0'); }, [subsDefault]);
+  useEffect(() => { localStorage.setItem('pref_mature_filter', matureFilter ? '1' : '0'); }, [matureFilter]);
+  useEffect(() => { localStorage.setItem('pref_default_quality', defaultQuality); }, [defaultQuality]);
+  useEffect(() => { localStorage.setItem('pref_sub_lang', subLang); }, [subLang]);
+
+  const clearCache = async () => {
+    try {
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+      toast.success('Cache cleared');
+    } catch {
+      toast.error('Failed to clear cache');
+    }
+  };
 
   // Change password state
   const [currentPassword, setCurrentPassword] = useState('');
