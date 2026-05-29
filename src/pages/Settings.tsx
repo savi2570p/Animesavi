@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { ReleaseReminderSettings } from '@/components/ReleaseReminderSettings';
+import { PinLockSettings } from '@/components/settings/PinLockSettings';
 import {
   Settings as SettingsIcon,
   Moon,
@@ -22,6 +23,12 @@ import {
   User as UserIcon,
   Bell,
   Lock,
+  Languages,
+  Gauge,
+  Zap,
+  Trash2,
+  Subtitles,
+  PlayCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
