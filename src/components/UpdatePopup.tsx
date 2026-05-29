@@ -658,6 +658,8 @@ export function UpdatePopup() {
             </div>
           ))}
           <p className="pt-1 text-center text-[9px] text-white/25 sm:hidden">← Swipe to browse versions →</p>
+        </div>
+
         {/* CTA */}
         <div className="relative shrink-0 border-t border-white/5 bg-black/40 px-4 py-2.5">
           <button
@@ -668,10 +670,9 @@ export function UpdatePopup() {
             <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </button>
         </div>
-
-          </button>
-        </div>
       </div>
     </div>
   );
+}
+
 }
