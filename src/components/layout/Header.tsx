@@ -318,33 +318,33 @@ export function Header() {
                 <div className="relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent" />
                   <div className="absolute -top-10 -right-8 w-32 h-32 bg-primary/30 rounded-full blur-3xl" />
-                  <div className="relative flex items-center gap-3 p-4">
+                  <div className="relative flex items-center gap-2.5 p-3">
                     <div className="relative shrink-0">
                       <div className="absolute inset-0 bg-primary/40 blur-md rounded-full" />
-                      <Avatar className="relative h-12 w-12 ring-2 ring-primary/40">
+                      <Avatar className="relative h-9 w-9 ring-2 ring-primary/40">
                         <AvatarImage src={user.user_metadata?.avatar_url} alt="Avatar" />
-                        <AvatarFallback className="bg-primary text-primary-foreground font-bold">
+                        <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
                           {user.email?.charAt(0).toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       {(isAdmin || hasValidTokenAccess(user?.email)) && (
-                        <Crown className="absolute -top-1 -right-1 h-3.5 w-3.5 text-yellow-500 drop-shadow animate-crown-shimmer" />
+                        <Crown className="absolute -top-1 -right-1 h-3 w-3 text-yellow-500 drop-shadow animate-crown-shimmer" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold truncate">{user.user_metadata?.username || 'User'}</p>
-                      <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
-                      <div className="mt-1 flex flex-wrap gap-1">
+                      <p className="text-xs font-bold truncate">{user.user_metadata?.username || 'User'}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
+                      <div className="mt-0.5 flex flex-wrap gap-1">
                         {isAdmin ? (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-[9px] font-black text-yellow-400 uppercase tracking-wider">
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-[8px] font-black text-yellow-400 uppercase tracking-wider">
                             <Crown className="h-2 w-2" /> Admin
                           </span>
                         ) : isUploader ? (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-[9px] font-black text-primary uppercase tracking-wider">
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-[8px] font-black text-primary uppercase tracking-wider">
                             <Upload className="h-2 w-2" /> Uploader
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-muted text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-muted text-[8px] font-bold text-muted-foreground uppercase tracking-wider">
                             Viewer
                           </span>
                         )}
