@@ -586,8 +586,10 @@ export function UpdatePopup() {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-sm sm:max-w-md max-h-[calc(100dvh-1.5rem)] flex flex-col overflow-hidden rounded-2xl border border-purple-600/25 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-purple-900/30 animate-in zoom-in-95 duration-300"
+        className="relative flex flex-col overflow-hidden border border-purple-600/25 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-purple-900/30 animate-in zoom-in-95 duration-300"
+        style={{ width: 'min(92vw, 420px)', maxHeight: 'min(82dvh, 640px)', borderRadius: '26px' }}
       >
+
         {/* Decorative glows */}
         <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-purple-600/15 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-purple-500/10 blur-3xl" />
