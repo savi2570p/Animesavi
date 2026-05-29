@@ -406,32 +406,32 @@ export function Header() {
                 {(canUpload() || isAdmin) && (
                   <>
                     <DropdownMenuSeparator className="my-0" />
-                    <div className="p-2">
-                      <p className="px-2 pt-1 pb-1.5 text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                    <div className="p-1.5">
+                      <p className="px-2 pt-0.5 pb-1 text-[8px] font-black text-muted-foreground uppercase tracking-widest">
                         Creator Tools
                       </p>
                       {canUpload() && (
                         <DropdownMenuItem asChild className="rounded-lg">
-                          <Link to="/upload" className="flex items-center gap-2.5 py-2 px-2">
-                            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center shadow-md shadow-primary/30">
-                              <Upload className="h-3.5 w-3.5 text-white" />
+                          <Link to="/upload" className="flex items-center gap-2 py-1.5 px-2">
+                            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center shadow-sm shadow-primary/30">
+                              <Upload className="h-3 w-3 text-white" />
                             </div>
                             <div className="flex-1">
-                              <span className="text-[12px] font-semibold block leading-tight">Upload Anime</span>
-                              <span className="text-[9px] text-muted-foreground">Add new episodes</span>
+                              <span className="text-[11px] font-semibold block leading-tight">Upload Anime</span>
+                              <span className="text-[8px] text-muted-foreground">Add new episodes</span>
                             </div>
                           </Link>
                         </DropdownMenuItem>
                       )}
                       {isAdmin && (
                         <DropdownMenuItem asChild className="rounded-lg">
-                          <Link to="/admin" className="flex items-center gap-2.5 py-2 px-2">
-                            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-md shadow-yellow-500/30">
-                              <Shield className="h-3.5 w-3.5 text-white" />
+                          <Link to="/admin" className="flex items-center gap-2 py-1.5 px-2">
+                            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-sm shadow-yellow-500/30">
+                              <Shield className="h-3 w-3 text-white" />
                             </div>
                             <div className="flex-1">
-                              <span className="text-[12px] font-semibold block leading-tight">Admin Panel</span>
-                              <span className="text-[9px] text-muted-foreground">Manage platform</span>
+                              <span className="text-[11px] font-semibold block leading-tight">Admin Panel</span>
+                              <span className="text-[8px] text-muted-foreground">Manage platform</span>
                             </div>
                           </Link>
                         </DropdownMenuItem>
@@ -441,13 +441,13 @@ export function Header() {
                 )}
 
                 <DropdownMenuSeparator className="my-0" />
-                <div className="p-2">
+                <div className="p-1.5">
                   <DropdownMenuItem asChild className="rounded-lg">
-                    <Link to="/settings" className="flex items-center gap-2.5 py-2 px-2">
-                      <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
-                        <Settings className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Link to="/settings" className="flex items-center gap-2 py-1.5 px-2">
+                      <div className="w-6 h-6 rounded-md bg-muted flex items-center justify-center">
+                        <Settings className="h-3 w-3 text-muted-foreground" />
                       </div>
-                      <span className="text-[12px] font-medium">Settings</span>
+                      <span className="text-[11px] font-medium">Settings</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="p-0 rounded-lg">
@@ -455,12 +455,12 @@ export function Header() {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleSignOut}
-                    className="rounded-lg text-destructive focus:text-destructive focus:bg-destructive/10 mt-1"
+                    className="rounded-lg text-destructive focus:text-destructive focus:bg-destructive/10 mt-0.5"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-destructive/15 flex items-center justify-center mr-2.5">
-                      <LogOut className="h-3.5 w-3.5" />
+                    <div className="w-6 h-6 rounded-md bg-destructive/15 flex items-center justify-center mr-2">
+                      <LogOut className="h-3 w-3" />
                     </div>
-                    <span className="text-[12px] font-semibold">Sign Out</span>
+                    <span className="text-[11px] font-semibold">Sign Out</span>
                   </DropdownMenuItem>
                 </div>
               </DropdownMenuContent>
