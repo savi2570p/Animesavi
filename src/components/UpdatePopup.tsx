@@ -658,16 +658,17 @@ export function UpdatePopup() {
             </div>
           ))}
           <p className="pt-1 text-center text-[9px] text-white/25 sm:hidden">← Swipe to browse versions →</p>
-        </div>
-
         {/* CTA */}
-        <div className="relative shrink-0 border-t border-white/5 bg-black/40 px-4 py-3">
+        <div className="relative shrink-0 border-t border-white/5 bg-black/40 px-4 py-2.5">
           <button
             onClick={handleGo}
-            className="group flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 py-2.5 text-sm font-semibold text-white shadow-lg shadow-purple-900/40 transition-all hover:from-purple-600 hover:to-purple-400 hover:shadow-purple-700/50"
+            className="group mx-auto flex w-auto min-w-[140px] max-w-[220px] items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 px-5 py-2 text-[13px] font-semibold text-white shadow-lg shadow-purple-900/40 transition-all hover:from-purple-600 hover:to-purple-400 hover:shadow-purple-700/50"
           >
             Explore Now
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+          </button>
+        </div>
+
           </button>
         </div>
       </div>
