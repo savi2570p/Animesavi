@@ -34,6 +34,9 @@ const avatarUrlSchema = z.string()
   .optional()
   .or(z.literal(''));
 
+const MAX_PROFILE_PHOTO_SIZE_MB = 20;
+const MAX_PROFILE_PHOTO_SIZE_BYTES = MAX_PROFILE_PHOTO_SIZE_MB * 1024 * 1024;
+
 export default function Profile() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -124,9 +127,9 @@ export default function Profile() {
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be less than 5MB');
+    // Validate file size (max 20MB)
+    if (file.size > MAX_PROFILE_PHOTO_SIZE_BYTES) {
+      toast.error(`Image must be less than ${MAX_PROFILE_PHOTO_SIZE_MB}MB`);
       return;
     }
 
@@ -447,7 +450,7 @@ export default function Profile() {
                       {isUploadingAvatar ? 'Uploading…' : 'Upload Photo'}
                     </Button>
                     <p className="text-[11px] text-muted-foreground">
-                      JPG · PNG · GIF · WebP · HEIC — max 5MB
+                      JPG · PNG · GIF · WebP · HEIC — max {MAX_PROFILE_PHOTO_SIZE_MB}MB
                     </p>
                   </div>
                 </div>
