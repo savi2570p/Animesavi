@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* FHD crispness — sharper icons, text, images on retina/high-DPI displays */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+img, video, svg {
+  image-rendering: -webkit-optimize-contrast;
+}
+svg {
+  shape-rendering: geometricPrecision;
+}
+
+
 /* Prevent iOS pull-to-refresh but never block scroll */
 html {
   overscroll-behavior-y: none;
