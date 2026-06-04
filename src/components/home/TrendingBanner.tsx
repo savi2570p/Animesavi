@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { TrendingUp, Play, Eye, Flame } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface TrendingAnime {
   id: string;
@@ -33,7 +32,7 @@ const TRENDING_TITLES = [
 
 const TRENDING_LIMIT = 6;
 
-export function TrendingBanner() {
+export const TrendingBanner = memo(function TrendingBanner() {
   const [trending, setTrending] = useState<TrendingAnime[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -104,8 +103,6 @@ export function TrendingBanner() {
 
 
   if (loading || trending.length === 0) return null;
-
-  const current = trending[activeIndex];
 
   return (
     <section className="py-4">
