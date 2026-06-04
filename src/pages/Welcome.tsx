@@ -39,6 +39,10 @@ const TESTIMONIALS = [
   { name: 'Nikhil R.', rating: 5, text: 'Continue watching feature is brilliant. Server maintenance popup is clear when a server is down — no confusion!', time: '3 days ago' },
   { name: 'Kavya M.', rating: 4, text: 'The embed player is so clean. Episode selector grid like Netflix makes it easy to jump between episodes.', time: '1 week ago' },
   { name: 'Saurabh P.', rating: 5, text: 'AnimeSavi loads faster than any other anime site. Even on slow 3G, H.Savi server works smoothly. Impressive!', time: '1 day ago' },
+  { name: 'Tanvi A.', rating: 5, text: 'PIN Lock on my profile is such a thoughtful feature — my little brother can\'t mess with my watch history anymore!', time: '6 hours ago' },
+  { name: 'Harsh K.', rating: 5, text: 'The 12 player themes are awesome. Rose-Gold + 4K + Hindi DUB — feels truly premium without paying a single rupee.', time: '12 hours ago' },
+  { name: 'Ishaan B.', rating: 5, text: 'Up to 5 profiles per family account. My mom, dad and I each have our own continue-watching. Best UX I\'ve seen.', time: '2 days ago' },
+  { name: 'Ritika S.', rating: 4, text: 'Watch parties + chat are wild fun. The new compact Telegram popup doesn\'t cover the video anymore — perfect.', time: '4 days ago' },
 ];
 
 const FAQ_ITEMS = [
@@ -50,6 +54,12 @@ const FAQ_ITEMS = [
   { q: 'Can I install AnimeSavi as an app?', a: 'Yes. On Android Chrome use "Add to Home Screen" from the menu; on iPhone Safari tap Share → "Add to Home Screen". It runs like a native app with PWA support.' },
   { q: 'Why are there multiple servers?', a: 'We offer H.Savi, Multi.Savi and X-PLUS so you can pick whatever streams best on your device. Your last choice is remembered — no forced switching.' },
   { q: 'How do I report a broken episode?', a: 'Use the ⚠️ report button on the watch page or message us on Telegram @Lv_Savi. Reports are reviewed quickly and broken links are usually fixed within 24 hours.' },
+  { q: 'What is the PIN Lock feature?', a: 'From Profile → Settings, enable a 4 or 6 digit PIN. Every time you reopen the site, you\'ll need to enter the PIN before accessing your account. You can change or disable it anytime.' },
+  { q: 'How many profiles can a single account have?', a: 'Up to 5 profiles per regular account, and 9 for admins/uploaders. Each profile keeps its own watch history, watch list, favorites and recommendations.' },
+  { q: 'Does the player support 4K and multi-audio?', a: 'Yes — 4K UHD playback is enabled site-wide. The player exposes every available audio track and subtitle language reported by the source manifest, with a one-tap switcher.' },
+  { q: 'Can I customize the video player look?', a: 'Yes. The new player theme picker offers 12 color themes — Crimson, Midnight, Ocean, Emerald, Sunset, Gold, Rose, Fuchsia, Lime, Cyan, Royal Purple and Minimal Mono.' },
+  { q: 'Will my progress sync between devices?', a: 'Yes. When you\'re signed in, Continue Watching, favorites and watch list sync across phone, tablet and PC instantly.' },
+  { q: 'How fresh are new episodes?', a: 'New episodes appear in "Latest Episodes" the same day they release. Enable release reminders to get a push notification 1 hour before each new drop of your favorite show.' },
 ];
 
 export default function Welcome() {
@@ -369,7 +379,7 @@ export default function Welcome() {
             {/* Trending search hints */}
             <div className="flex flex-wrap items-center justify-center gap-1.5 mt-3">
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold mr-1">Trending:</span>
-              {['Solo Leveling', 'Demon Slayer', 'Jujutsu Kaisen', 'One Piece'].map((t) => (
+              {['Solo Leveling', 'Demon Slayer', 'That Time I Got Reincarnated as a Slime', 'One Piece'].map((t) => (
                 <button
                   key={t}
                   type="button"
