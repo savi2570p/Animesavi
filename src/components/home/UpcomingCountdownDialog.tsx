@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { CalendarClock, X, Tag, Film, Sparkles, Bell, BellRing, Building2, Hash, BookOpen, ShieldCheck, Clapperboard } from 'lucide-react';
+import { CalendarClock, X, Sparkles, Bell, BellRing } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
