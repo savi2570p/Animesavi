@@ -80,12 +80,11 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
 
         if (data && data.length > 0) {
           // Curated fixed hero lineup (stable order, not random) — sourced from "Most Popular".
-          // Swaps requested: removed "Your Name" -> added "The Angel next door spoils me rotten".
-          // Removed "Attack on Titan Muse India DUB" -> added "Witch Hat Atelier".
+          // Swap: removed "Jujutsu Kaisen" -> added "That Time I Got Reincarnated as a Slime".
           const HERO_LINEUP = [
             'The Angel Next Door Spoils me Rotten',
             'Witch Hat Atelier',
-            'Jujutsu Kaisen',
+            'That Time I Got Reincarnated as a Slime',
             'My Dress-Up Darling',
             'Solo Leveling',
             'Liar Game',
