@@ -130,10 +130,16 @@ body.scroll-locked {
   backface-visibility: hidden;
 }
 
+/* Images: lazy decode but do NOT use content-visibility — it caused
+   text/posters to blank out during fast scrolls on iOS. */
 img, video {
-  content-visibility: auto;
   max-width: 100%;
   height: auto;
+}
+
+/* Instant tap response — kills the 300ms click delay on mobile */
+button, [role="button"], a {
+  touch-action: manipulation;
 }
 
 /* Crunchyroll-Inspired Design System - Premium Dark Theme */
