@@ -1047,23 +1047,23 @@ img[loading="lazy"] {
 
 /* Hero slide enter animations — direction aware, cinematic & visible */
 @keyframes hero-slide-in-right {
-  0%   { opacity: 0; transform: scale(1.15) translate3d(12%, 0, 0); filter: blur(14px) brightness(0.55); }
-  100% { opacity: 1; transform: scale(1.04) translate3d(0, 0, 0); filter: blur(0) brightness(1); }
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
 }
 @keyframes hero-slide-in-left {
-  0%   { opacity: 0; transform: scale(1.15) translate3d(-12%, 0, 0); filter: blur(14px) brightness(0.55); }
-  100% { opacity: 1; transform: scale(1.04) translate3d(0, 0, 0); filter: blur(0) brightness(1); }
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
 }
-.hero-slide-in-right { animation: hero-slide-in-right 1100ms cubic-bezier(0.22, 1, 0.36, 1) both; }
-.hero-slide-in-left  { animation: hero-slide-in-left  1100ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.hero-slide-in-right { animation: hero-slide-in-right 180ms ease-out both; }
+.hero-slide-in-left  { animation: hero-slide-in-left 180ms ease-out both; }
 
 /* Hero content entry — single fast fade so nothing is hidden between slides */
 @keyframes hero-content-up {
-  0%   { opacity: 0; transform: translateY(12px); filter: blur(4px); }
-  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
 }
 .hero-content-in {
-  animation: hero-content-up 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: hero-content-up 160ms ease-out both;
 }
 
 /* ---------- Detail page section stagger (More Info) ---------- */
@@ -1262,7 +1262,6 @@ section:first-of-type .relative > div > img {
    so a single anime row repaints independently of the page. */
 .snap-row {
   -webkit-overflow-scrolling: touch;
-  contain: layout paint;
   overscroll-behavior-x: contain;
 }
 
