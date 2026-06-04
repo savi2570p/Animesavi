@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { memo, useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Flame, ChevronRight, Play, Eye, Filter, Crown, TrendingUp } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
-import { TrailerPreview } from '@/components/home/TrailerPreview';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 import {
   DropdownMenu,
@@ -45,22 +44,16 @@ const VIEW_COUNT_MAP: Record<string, number> = {
 
 const formatViews = (v: number) => v >= 1_000_000 ? `${(v/1_000_000).toFixed(1)}M` : `${(v/1000).toFixed(0)}K`;
 
-export function MostPopular() {
+export const MostPopular = memo(function MostPopular() {
   const [animeList, setAnimeList] = useState<PopularAnime[]>([]);
-  const [filteredList, setFilteredList] = useState<PopularAnime[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
-  const [hoveredAnimeId, setHoveredAnimeId] = useState<string | null>(null);
-  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => { fetchPopularAnime(); }, []);
 
-  useEffect(() => {
-    if (selectedGenre) {
-      setFilteredList(animeList.filter(a => a.genres?.some(g => g.toLowerCase() === selectedGenre.toLowerCase())));
-    } else {
-      setFilteredList(animeList);
-    }
+  const filteredList = useMemo(() => {
+    if (!selectedGenre) return animeList;
+    return animeList.filter(a => a.genres?.some(g => g.toLowerCase() === selectedGenre.toLowerCase()));
   }, [selectedGenre, animeList]);
 
   const fetchPopularAnime = async () => {
@@ -77,21 +70,11 @@ export function MostPopular() {
       }));
       animeWithViews.sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
       setAnimeList(animeWithViews);
-      setFilteredList(animeWithViews);
     } catch (e) {
       console.error('Error fetching popular anime:', e);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleMouseEnter = (animeId: string) => {
-    const t = setTimeout(() => setHoveredAnimeId(animeId), 800);
-    setHoverTimeout(t);
-  };
-  const handleMouseLeave = () => {
-    if (hoverTimeout) { clearTimeout(hoverTimeout); setHoverTimeout(null); }
-    setHoveredAnimeId(null);
   };
 
   if (loading) {
