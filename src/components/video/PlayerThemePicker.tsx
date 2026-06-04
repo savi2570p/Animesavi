@@ -159,7 +159,9 @@ export function ThemePickerButton({
         align="end"
         side="top"
         sideOffset={12}
-        className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] p-2"
+        collisionPadding={12}
+        avoidCollisions
+        className="bg-background/95 backdrop-blur-xl border-border/50 w-[240px] max-h-[60vh] overflow-y-auto p-2"
         style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
         onCloseAutoFocus={(e) => e.preventDefault()}
         onPointerDownOutside={() => setOpen(false)}
@@ -167,9 +169,9 @@ export function ThemePickerButton({
       >
         <DropdownMenuLabel className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground flex items-center gap-2 px-1 pb-2">
           <Palette className="w-3.5 h-3.5" />
-          Player Theme
+          Player Theme · {PLAYER_THEMES.length}
         </DropdownMenuLabel>
-        <div className="grid grid-cols-1 gap-1">
+        <div className="grid grid-cols-2 gap-1">
           {PLAYER_THEMES.map((t) => {
             const active = t.key === value;
             return (
@@ -182,17 +184,21 @@ export function ThemePickerButton({
                   onChange(t.key);
                   setOpen(false);
                 }}
-                className={`flex items-center gap-3 w-full rounded-md px-2 py-2 text-left hover:bg-accent transition-colors ${
-                  active ? 'bg-accent/60' : ''
+                className={`flex flex-col items-center gap-1.5 w-full rounded-md px-1.5 py-2 text-center hover:bg-accent transition-colors ${
+                  active ? 'bg-accent/60 ring-1 ring-primary/50' : ''
                 }`}
+                title={t.name}
               >
                 <span
                   aria-hidden
-                  className="h-6 w-6 shrink-0 rounded-md ring-1 ring-white/10"
+                  className="h-7 w-7 shrink-0 rounded-full ring-1 ring-white/15 relative"
                   style={{ background: t.swatch }}
-                />
-                <span className="flex-1 text-sm font-medium text-foreground">{t.name}</span>
-                {active && <Check className="w-4 h-4 text-primary" />}
+                >
+                  {active && (
+                    <Check className="absolute inset-0 m-auto w-3.5 h-3.5 text-white drop-shadow" />
+                  )}
+                </span>
+                <span className="text-[10px] font-medium text-foreground leading-tight line-clamp-1">{t.name}</span>
               </button>
             );
           })}
