@@ -1,28 +1,13 @@
-import { motion } from 'framer-motion';
 import { ReactNode } from 'react';
 
-const pageVariants = {
-  initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -8 },
-};
-
-const pageTransition = {
-  type: 'tween' as const,
-  ease: 'easeInOut' as const,
-  duration: 0.25,
-};
-
+/**
+ * Page transition wrapper.
+ *
+ * Previously used framer-motion to fade/slide each route. That fired on every
+ * navigation and caused noticeable jank on iOS/iPad (re-mount + transform
+ * on the entire page tree). For stable 60fps we render children directly.
+ * The previous opacity flash also caused content to briefly disappear.
+ */
 export function AnimatedPage({ children }: { children: ReactNode }) {
-  return (
-    <motion.div
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      variants={pageVariants}
-      transition={pageTransition}
-    >
-      {children}
-    </motion.div>
-  );
+  return <>{children}</>;
 }

@@ -64,9 +64,9 @@ body {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* Smooth scrolling & global performance */
+/* Native scrolling for max performance — `scroll-behavior: smooth`
+   was causing scroll jank on iOS Safari/iPad. Use native momentum. */
 html, body {
-  scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   max-width: 100%;
@@ -130,10 +130,16 @@ body.scroll-locked {
   backface-visibility: hidden;
 }
 
+/* Images: lazy decode but do NOT use content-visibility — it caused
+   text/posters to blank out during fast scrolls on iOS. */
 img, video {
-  content-visibility: auto;
   max-width: 100%;
   height: auto;
+}
+
+/* Instant tap response — kills the 300ms click delay on mobile */
+button, [role="button"], a {
+  touch-action: manipulation;
 }
 
 /* Crunchyroll-Inspired Design System - Premium Dark Theme */
@@ -1245,40 +1251,41 @@ section:first-of-type .relative > div > img {
 }
 
 
-/* ---------- Global performance hints (April 2026) ---------- */
+/* ---------- Global performance hints (June 2026) ---------- */
 
-/* Hint browser to skip layout/paint for offscreen homepage rows.
-   `contain-intrinsic-size` reserves space so scroll doesn't jump. */
-main > section,
-main > div > section {
-  content-visibility: auto;
-  contain-intrinsic-size: 1px 600px;
-}
+/* NOTE: previously used `content-visibility: auto` on every section,
+   which forced offscreen rows to un-render and caused text/posters
+   to disappear during scrolling. Removed for stable 60fps scroll. */
 
-/* All <img> tags default to lazy + async decode unless explicitly overridden.
-   Massively reduces main-thread blocking during scroll on Android/iOS. */
-img:not([loading]) { loading: lazy; }
-img:not([decoding]) { decoding: async; }
-
-/* Smoother momentum scrolling on iOS Safari + clip-paint isolation
-   so each anime card row paints independently — no full-page reflow. */
+/* Smoother momentum scrolling on iOS Safari + paint-isolate each row
+   so a single anime row repaints independently of the page. */
 .snap-row {
   -webkit-overflow-scrolling: touch;
-  contain: content;
+  contain: layout paint;
   overscroll-behavior-x: contain;
 }
 
-/* Reduce GPU work on low-end Android — drop blur/saturate on cheap devices */
-@media (max-width: 480px) and (max-resolution: 1.5dppx) {
+/* Reduce GPU work on mobile — drop expensive backdrop-blur intensity */
+@media (max-width: 768px) {
+  .backdrop-blur-2xl,
   .backdrop-blur-xl,
-  .backdrop-blur-lg,
-  .backdrop-blur-md {
-    backdrop-filter: blur(6px) !important;
-    -webkit-backdrop-filter: blur(6px) !important;
+  .backdrop-blur-lg {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
   }
 }
 
-/* Defer non-critical animations until idle on the slow user-data-saver mode */
+/* Honor user reduced-motion preference everywhere */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Defer non-critical animations on the slow user-data-saver mode */
 @media (prefers-reduced-data: reduce) {
   .nf-ken-burns,
   .skeleton-shimmer,
