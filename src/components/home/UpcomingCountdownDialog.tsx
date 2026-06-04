@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { CalendarClock, X, Tag, Film, Sparkles, Bell, BellRing, Building2, Hash, BookOpen, ShieldCheck, Clapperboard } from 'lucide-react';
+import { CalendarClock, X, Sparkles, Bell, BellRing } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -134,162 +134,90 @@ export function UpcomingCountdownDialog({ anime, onClose }: UpcomingCountdownDia
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-end justify-center overflow-y-auto bg-black/80 p-3 sm:items-center sm:p-4">
-      <div className="relative my-auto w-full max-w-3xl overflow-hidden rounded-2xl border border-border bg-card shadow-2xl animate-scale-in max-h-[90vh]">
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-sm p-3 sm:p-4 animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-[420px] max-h-[85vh] flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl animate-scale-in"
+      >
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 p-1.5 rounded-full bg-black/40 hover:bg-black/60 transition-colors z-10"
+          aria-label="Close"
+          className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
         >
-          <X className="h-4 w-4 text-white" />
+          <X className="h-3.5 w-3.5 text-white" />
         </button>
 
-        {/* Cinematic hero — banner preferred, fallback to cover */}
+        {/* Compact hero */}
         {(anime.banner_image || anime.cover_image) && (
-          <div className="relative w-full h-56 overflow-hidden">
+          <div className="relative w-full h-28 shrink-0 overflow-hidden">
             <img
               src={anime.banner_image || anime.cover_image!}
               alt={anime.title}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-card/80 via-transparent to-transparent" />
-
-            {/* Floating cover thumbnail */}
-            {anime.banner_image && anime.cover_image && (
-              <img
-                src={anime.cover_image}
-                alt=""
-                className="absolute bottom-3 left-3 w-16 h-24 rounded-md object-cover shadow-2xl border-2 border-card"
-              />
-            )}
-
-            <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+            <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
+            <div className="absolute top-2 left-2 flex flex-wrap gap-1">
               {seasonChip && (
-                <div className="px-2.5 py-1 rounded-full bg-orange-500/95 text-white text-xs font-bold shadow-lg flex items-center gap-1">
-                  <Sparkles className="h-3 w-3" />
+                <span className="px-2 py-0.5 rounded-full bg-orange-500/95 text-white text-[10px] font-bold shadow flex items-center gap-1">
+                  <Sparkles className="h-2.5 w-2.5" />
                   {seasonChip}
-                </div>
+                </span>
               )}
-              <div className="px-2.5 py-1 rounded-full bg-card/80 backdrop-blur text-foreground text-[10px] font-bold uppercase tracking-wider">
+              <span className="px-2 py-0.5 rounded-full bg-card/80 backdrop-blur text-foreground text-[9px] font-bold uppercase tracking-wider">
                 Upcoming
-              </div>
+              </span>
             </div>
-
-            {anime.content_rating && (
-              <div className="absolute top-3 right-12 px-2 py-0.5 rounded bg-red-600/90 text-white text-[10px] font-black tracking-wider">
-                {anime.content_rating}
-              </div>
-            )}
-
-            {anime.type && (
-              <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded bg-black/70 backdrop-blur text-white text-[10px] font-bold uppercase tracking-wider">
-                {anime.type}
-              </div>
-            )}
           </div>
         )}
 
-        <div className="p-6 pt-4">
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 scrollbar-thin scrollbar-thumb-orange-500/30 scrollbar-track-transparent">
           <div className="flex items-start gap-2 mb-2">
-            <CalendarClock className="h-5 w-5 text-orange-500 mt-0.5 shrink-0" />
-            <h3 className="text-xl font-bold text-foreground leading-tight">{anime.title}</h3>
+            <CalendarClock className="h-4 w-4 text-orange-500 mt-0.5 shrink-0" />
+            <h3 className="text-base font-bold text-foreground leading-tight">{anime.title}</h3>
           </div>
 
-          {/* Headline: which season + when */}
-          <div className="mb-3 rounded-lg border border-orange-500/20 bg-orange-500/10 p-3">
-            <p className="text-orange-400 text-sm font-bold leading-tight">
+          {/* Headline */}
+          <div className="mb-2.5 rounded-lg border border-orange-500/20 bg-orange-500/10 p-2.5">
+            <p className="text-orange-400 text-xs font-bold leading-tight">
               {headlineSeason ? `Season ${headlineSeason} releasing` : 'Releasing'}
               {target.source === 'season' ? ' on' : ''}
             </p>
-            <p className="text-foreground text-base font-bold mt-0.5">{releaseDateLabel}</p>
-            {seasons && seasons.length > 1 && (
-              <p className="text-muted-foreground text-xs mt-1">
-                Multiple new seasons confirmed: {seasonChip}
-              </p>
-            )}
+            <p className="text-foreground text-sm font-bold mt-0.5">{releaseDateLabel}</p>
           </div>
 
-          <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <div className="rounded-lg border border-border/60 bg-muted/40 p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Status</p>
-              <p className="mt-1 text-sm font-bold text-foreground">{anime.status || 'Upcoming'}</p>
+          {/* Compact meta row */}
+          <div className="grid grid-cols-2 gap-1.5 mb-2.5">
+            <div className="rounded-md bg-muted/40 p-2">
+              <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Status</p>
+              <p className="text-xs font-bold text-foreground truncate">{anime.status || 'Upcoming'}</p>
             </div>
-            <div className="rounded-lg border border-border/60 bg-muted/40 p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Episodes</p>
-              <p className="mt-1 text-sm font-bold text-foreground">{anime.total_episodes || 'TBA'}</p>
+            <div className="rounded-md bg-muted/40 p-2">
+              <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Episodes</p>
+              <p className="text-xs font-bold text-foreground truncate">{anime.total_episodes || 'TBA'}</p>
             </div>
-            <div className="rounded-lg border border-border/60 bg-muted/40 p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Studio</p>
-              <p className="mt-1 text-sm font-bold text-foreground truncate">{anime.studio || 'TBA'}</p>
-            </div>
-            <div className="rounded-lg border border-border/60 bg-muted/40 p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Source</p>
-              <p className="mt-1 text-sm font-bold text-foreground truncate">{anime.source_material || 'Original / TBA'}</p>
-            </div>
-          </div>
-
-          {/* Rich metadata grid */}
-          {(anime.studio || anime.total_episodes || anime.source_material || anime.content_rating) && (
-            <div className="grid grid-cols-2 gap-2 mb-3">
-              {anime.studio && (
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-                  <Building2 className="h-4 w-4 text-primary shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Studio</p>
-                    <p className="text-xs font-bold text-foreground truncate">{anime.studio}</p>
-                  </div>
-                </div>
-              )}
-              {anime.total_episodes && (
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-                  <Hash className="h-4 w-4 text-primary shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Episodes</p>
-                    <p className="text-xs font-bold text-foreground truncate">{anime.total_episodes}</p>
-                  </div>
-                </div>
-              )}
-              {anime.source_material && (
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-                  <BookOpen className="h-4 w-4 text-primary shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Source</p>
-                    <p className="text-xs font-bold text-foreground truncate">{anime.source_material}</p>
-                  </div>
-                </div>
-              )}
-              {anime.content_rating && (
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-                  <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Rating</p>
-                    <p className="text-xs font-bold text-foreground truncate">{anime.content_rating}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Quick meta row */}
-          <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">
-            {anime.release_year && (
-              <span className="px-2 py-0.5 rounded bg-orange-500/15 text-orange-400 font-semibold flex items-center gap-1">
-                <Clapperboard className="h-3 w-3" /> {anime.release_year}
-              </span>
+            {anime.studio && (
+              <div className="rounded-md bg-muted/40 p-2">
+                <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Studio</p>
+                <p className="text-xs font-bold text-foreground truncate">{anime.studio}</p>
+              </div>
             )}
-            {seasons && seasons.map((n) => (
-              <span key={n} className="px-2 py-0.5 rounded bg-primary/15 text-primary font-semibold flex items-center gap-1">
-                <Film className="h-3 w-3" /> Season {n}
-              </span>
-            ))}
+            {anime.source_material && (
+              <div className="rounded-md bg-muted/40 p-2">
+                <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Source</p>
+                <p className="text-xs font-bold text-foreground truncate">{anime.source_material}</p>
+              </div>
+            )}
           </div>
 
           {/* Genres */}
           {anime.genres && anime.genres.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {anime.genres.slice(0, 6).map((g) => (
-                <span key={g} className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-medium flex items-center gap-1">
-                  <Tag className="h-2.5 w-2.5" />
+            <div className="flex flex-wrap gap-1 mb-2.5">
+              {anime.genres.slice(0, 5).map((g) => (
+                <span key={g} className="px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-medium">
                   {g}
                 </span>
               ))}
@@ -297,43 +225,36 @@ export function UpcomingCountdownDialog({ anime, onClose }: UpcomingCountdownDia
           )}
 
           {/* Description */}
-          {anime.description ? (
-            <p className="text-muted-foreground text-sm mb-4 line-clamp-4 leading-relaxed">
+          {anime.description && (
+            <p className="text-muted-foreground text-xs mb-2.5 line-clamp-3 leading-relaxed">
               {anime.description}
-            </p>
-          ) : (
-            <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
-              {headlineSeason
-                ? `Get ready — Season ${headlineSeason} of ${anime.title} is on the way${target.source === 'season' ? ` and lands on ${releaseDateLabel}` : ''}. Add it to your watchlist so you don't miss the premiere drop.`
-                : `${anime.title} is officially confirmed${target.source === 'season' ? ` for ${releaseDateLabel}` : ` for ${anime.release_year || 'a future date'}`}. Stay tuned for trailers, episode counts and the official streaming announcement.`}
             </p>
           )}
 
-          {/* Countdown DD:HH:MM:SS */}
+          {/* Countdown */}
           {target.date && t.expired ? (
-            <div className="text-center py-3 mb-4 bg-primary/10 rounded-lg">
-              <p className="text-primary font-bold">It's release day! 🎉</p>
-              <p className="text-muted-foreground text-xs mt-1">Episodes should be available very soon.</p>
+            <div className="text-center py-2 bg-primary/10 rounded-lg">
+              <p className="text-primary text-sm font-bold">It's release day! 🎉</p>
             </div>
           ) : target.date ? (
-            <div className="mb-4">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2 text-center">
+            <div>
+              <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-semibold mb-1.5 text-center">
                 Live countdown
               </p>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-4 gap-1.5">
                 {[
                   { label: 'Days', value: t.days },
                   { label: 'Hours', value: t.hours },
-                  { label: 'Minutes', value: t.minutes },
-                  { label: 'Seconds', value: t.seconds },
+                  { label: 'Min', value: t.minutes },
+                  { label: 'Sec', value: t.seconds },
                 ].map((item) => (
                   <div key={item.label} className="text-center">
-                    <div className="bg-muted rounded-lg py-3 px-1">
-                      <span className="text-2xl font-mono font-bold text-foreground tabular-nums">
+                    <div className="bg-muted rounded-md py-2">
+                      <span className="text-lg font-mono font-bold text-foreground tabular-nums">
                         {String(item.value).padStart(2, '0')}
                       </span>
                     </div>
-                    <span className="text-[9px] text-muted-foreground font-medium mt-1 block uppercase tracking-wider">
+                    <span className="text-[9px] text-muted-foreground font-medium mt-0.5 block uppercase tracking-wider">
                       {item.label}
                     </span>
                   </div>
@@ -341,25 +262,30 @@ export function UpcomingCountdownDialog({ anime, onClose }: UpcomingCountdownDia
               </div>
             </div>
           ) : (
-            <div className="text-center py-3 mb-4 bg-muted rounded-lg">
-              <p className="text-foreground font-semibold">Release date announce soon</p>
-              <p className="text-muted-foreground text-xs mt-1">We will show the live countdown as soon as an exact date is added.</p>
+            <div className="text-center py-2 bg-muted rounded-lg">
+              <p className="text-foreground text-xs font-semibold">Release date announce soon</p>
             </div>
           )}
+        </div>
 
-          <div className="flex gap-2">
-            <Button
-              onClick={handleNotify}
-              variant={isSubscribed ? 'default' : 'outline'}
-              className="flex-1 gap-2"
-            >
-              {isSubscribed ? <BellRing className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
-              {isSubscribed ? 'Notifying' : 'Notify me'}
-            </Button>
-            <Button onClick={onClose} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
-              Got it
-            </Button>
-          </div>
+        {/* Sticky footer */}
+        <div className="shrink-0 flex gap-2 p-3 border-t border-border bg-card/95 backdrop-blur">
+          <Button
+            onClick={handleNotify}
+            variant={isSubscribed ? 'default' : 'outline'}
+            size="sm"
+            className="flex-1 gap-1.5 h-9"
+          >
+            {isSubscribed ? <BellRing className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
+            <span className="text-xs font-semibold">{isSubscribed ? 'Notifying' : 'Notify me'}</span>
+          </Button>
+          <Button
+            onClick={onClose}
+            size="sm"
+            className="flex-1 h-9 bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold"
+          >
+            Got it
+          </Button>
         </div>
       </div>
     </div>
