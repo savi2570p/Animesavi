@@ -7,11 +7,19 @@
  */
 
 const preloadedUrls = new Set<string>();
+const memoryImageCache = new Map<string, HTMLImageElement>();
 
 /** Preload a single image URL into browser cache */
 export function preloadImage(url: string): void {
   if (!url || preloadedUrls.has(url)) return;
   preloadedUrls.add(url);
+
+  if (!memoryImageCache.has(url)) {
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = url;
+    memoryImageCache.set(url, img);
+  }
   
   const link = document.createElement('link');
   link.rel = 'preload';

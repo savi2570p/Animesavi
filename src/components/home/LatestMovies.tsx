@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,7 +20,7 @@ interface Movie {
   firstEpisodeId?: string | null;
 }
 
-export function LatestMovies() {
+export const LatestMovies = memo(function LatestMovies() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -222,4 +222,4 @@ export function LatestMovies() {
       </div>
     </section>
   );
-}
+});

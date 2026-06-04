@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { TrendingUp, Play, Eye, Flame } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface TrendingAnime {
   id: string;
@@ -33,7 +32,7 @@ const TRENDING_TITLES = [
 
 const TRENDING_LIMIT = 6;
 
-export function TrendingBanner() {
+export const TrendingBanner = memo(function TrendingBanner() {
   const [trending, setTrending] = useState<TrendingAnime[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -136,22 +135,16 @@ export function TrendingBanner() {
           <div className="pointer-events-none absolute -top-16 -right-20 w-56 h-56 bg-primary/15 rounded-full blur-3xl" />
           <div className="pointer-events-none absolute -bottom-16 -left-20 w-56 h-56 bg-rose-500/10 rounded-full blur-3xl" />
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={current.id}
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -40 }}
-              transition={{ duration: 0.5, ease: 'easeInOut' }}
-              className="absolute inset-0"
-            >
+          <div className="absolute inset-0 transition-opacity duration-150">
               <Link to={`/anime/${current.id}`} className="block h-full group">
                 {/* BG image with parallax + ken-burns */}
                 <div className="absolute inset-0 overflow-hidden">
                   <img
                     src={current.banner_image || current.cover_image || '/placeholder.svg'}
                     alt=""
-                    className="w-full h-full object-cover transition-transform duration-[1500ms] group-hover:scale-110 scale-105"
+                    loading="eager"
+                    decoding="async"
+                    className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/70 to-background/30" />
                   <div className="absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-transparent" />
@@ -235,8 +228,7 @@ export function TrendingBanner() {
                   </div>
                 </div>
               </Link>
-            </motion.div>
-          </AnimatePresence>
+          </div>
 
           {/* Slim progress bar */}
           <div
@@ -277,4 +269,4 @@ export function TrendingBanner() {
       </div>
     </section>
   );
-}
+});

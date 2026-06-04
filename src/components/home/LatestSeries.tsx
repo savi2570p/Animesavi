@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,7 +18,7 @@ interface AnimeSeries {
   latest_episode_date: string | null;
 }
 
-export function LatestSeries() {
+export const LatestSeries = memo(function LatestSeries() {
   const [series, setSeries] = useState<AnimeSeries[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -261,4 +261,4 @@ export function LatestSeries() {
       </div>
     </section>
   );
-}
+});

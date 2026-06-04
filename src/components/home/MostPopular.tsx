@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { memo, useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Flame, ChevronRight, Play, Eye, Filter, Crown, TrendingUp } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
-import { TrailerPreview } from '@/components/home/TrailerPreview';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 import {
   DropdownMenu,
@@ -45,22 +44,16 @@ const VIEW_COUNT_MAP: Record<string, number> = {
 
 const formatViews = (v: number) => v >= 1_000_000 ? `${(v/1_000_000).toFixed(1)}M` : `${(v/1000).toFixed(0)}K`;
 
-export function MostPopular() {
+export const MostPopular = memo(function MostPopular() {
   const [animeList, setAnimeList] = useState<PopularAnime[]>([]);
-  const [filteredList, setFilteredList] = useState<PopularAnime[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
-  const [hoveredAnimeId, setHoveredAnimeId] = useState<string | null>(null);
-  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => { fetchPopularAnime(); }, []);
 
-  useEffect(() => {
-    if (selectedGenre) {
-      setFilteredList(animeList.filter(a => a.genres?.some(g => g.toLowerCase() === selectedGenre.toLowerCase())));
-    } else {
-      setFilteredList(animeList);
-    }
+  const filteredList = useMemo(() => {
+    if (!selectedGenre) return animeList;
+    return animeList.filter(a => a.genres?.some(g => g.toLowerCase() === selectedGenre.toLowerCase()));
   }, [selectedGenre, animeList]);
 
   const fetchPopularAnime = async () => {
@@ -77,21 +70,11 @@ export function MostPopular() {
       }));
       animeWithViews.sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
       setAnimeList(animeWithViews);
-      setFilteredList(animeWithViews);
     } catch (e) {
       console.error('Error fetching popular anime:', e);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleMouseEnter = (animeId: string) => {
-    const t = setTimeout(() => setHoveredAnimeId(animeId), 800);
-    setHoverTimeout(t);
-  };
-  const handleMouseLeave = () => {
-    if (hoverTimeout) { clearTimeout(hoverTimeout); setHoverTimeout(null); }
-    setHoveredAnimeId(null);
   };
 
   if (loading) {
@@ -192,8 +175,6 @@ export function MostPopular() {
                   <Link
                     to={`/anime/${anime.id}`}
                     className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in w-[170px] md:w-[210px] lg:w-[230px] shrink-0`}
-                    onMouseEnter={() => handleMouseEnter(anime.id)}
-                    onMouseLeave={handleMouseLeave}
                   >
                     {/* Giant rank numeral behind card */}
                     <span
@@ -211,15 +192,6 @@ export function MostPopular() {
                     </span>
 
                     <div className="relative ml-6 md:ml-8 aspect-[2/3] rounded-2xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl group-hover:-translate-y-1 transition-all duration-500 ring-1 ring-white/5 group-hover:ring-primary/40 z-[1]">
-                      {hoveredAnimeId === anime.id && (
-                        <TrailerPreview
-                          animeId={anime.id}
-                          coverImage={anime.cover_image}
-                          title={anime.title}
-                          onClose={() => setHoveredAnimeId(null)}
-                        />
-                      )}
-
                       {/* Blurred fill */}
                       {anime.cover_image && (
                         <img
@@ -263,13 +235,11 @@ export function MostPopular() {
                       </div>
 
                       {/* Center play */}
-                      {hoveredAnimeId !== anime.id && (
-                        <div className="absolute inset-0 z-[4] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
-                          <div className="p-3 rounded-full bg-primary/95 shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-300">
-                            <Play className="h-5 w-5 text-primary-foreground fill-current" />
-                          </div>
+                      <div className="absolute inset-0 z-[4] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-100 pointer-events-none">
+                        <div className="p-3 rounded-full bg-primary/95 shadow-lg">
+                          <Play className="h-5 w-5 text-primary-foreground fill-current" />
                         </div>
-                      )}
+                      </div>
 
                       {/* Bottom info */}
                       <div className="absolute bottom-0 left-0 right-0 z-[5] p-3 pointer-events-none">
@@ -296,4 +266,4 @@ export function MostPopular() {
       </div>
     </section>
   );
-}
+});

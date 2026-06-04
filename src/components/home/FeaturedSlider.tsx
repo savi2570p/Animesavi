@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { memo, useState, useEffect, useCallback } from 'react';
 import { preloadImages } from '@/lib/imageOptimization';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -58,7 +58,7 @@ const getViewCount = (title: string, dbViewCount: number | null): number => {
   return Math.floor(Math.random() * (9000000 - 1000000) + 1000000);
 };
 
-export function FeaturedSlider() {
+export const FeaturedSlider = memo(function FeaturedSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState<'next' | 'prev'>('next');
   const [animKey, setAnimKey] = useState(0);
@@ -195,12 +195,11 @@ export function FeaturedSlider() {
               }`}
             >
               <img
-                key={idx === currentIndex ? `img-${animKey}` : `img-${idx}`}
                 src={anime.banner || anime.thumbnail || '/placeholder.svg'}
                 alt={anime.title}
                 width={1920}
                 height={1080}
-                loading={idx === 0 ? 'eager' : 'lazy'}
+                loading={idx < 3 ? 'eager' : 'lazy'}
                 decoding={idx === 0 ? 'sync' : 'async'}
                 {...(idx === 0 ? { fetchpriority: 'high' as any } : {})}
                 className={`w-full h-full object-cover ${idx === currentIndex ? (direction === 'next' ? 'hero-slide-in-right' : 'hero-slide-in-left') : ''}`}
@@ -331,9 +330,10 @@ export function FeaturedSlider() {
             }`}
           >
             <img
-              key={idx === currentIndex ? `mimg-${animKey}` : `mimg-${idx}`}
               src={anime.banner || anime.thumbnail || '/placeholder.svg'}
               alt={anime.title}
+              loading={idx < 3 ? 'eager' : 'lazy'}
+              decoding={idx === 0 ? 'sync' : 'async'}
               className={`w-full h-full object-cover ${idx === currentIndex ? (direction === 'next' ? 'hero-slide-in-right' : 'hero-slide-in-left') : ''}`}
             />
           </div>
@@ -480,4 +480,4 @@ export function FeaturedSlider() {
       </div>
     </section>
   );
-}
+});
