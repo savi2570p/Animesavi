@@ -68,13 +68,13 @@ export function AnimeDetailLoader({ isReady, backdrop, title }: AnimeDetailLoade
         {backdrop ? (
           <>
             <div
-              className="absolute inset-0 bg-cover bg-center scale-110"
+              className="absolute inset-0 bg-cover bg-center"
               style={{
                 backgroundImage: `url(${backdrop})`,
-                filter: 'blur(28px) saturate(1.2) brightness(0.55)',
-                animation: 'kenburns 12s ease-in-out infinite alternate',
+                filter: 'blur(20px) brightness(0.55)',
               }}
             />
+
           </>
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-card via-background to-card animate-pulse" />
