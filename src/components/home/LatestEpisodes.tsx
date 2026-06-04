@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { memo, useState, useEffect, useMemo } from 'react';
 import { preloadFirstN } from '@/lib/imageOptimization';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,7 +41,7 @@ interface GroupedEpisode {
   status: string | null;
 }
 
-export function LatestEpisodes() {
+export const LatestEpisodes = memo(function LatestEpisodes() {
   const [episodes, setEpisodes] = useState<LatestEpisode[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -295,4 +295,4 @@ export function LatestEpisodes() {
       </div>
     </section>
   );
-}
+});
