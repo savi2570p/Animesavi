@@ -369,7 +369,7 @@ export default function Welcome() {
             {/* Trending search hints */}
             <div className="flex flex-wrap items-center justify-center gap-1.5 mt-3">
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold mr-1">Trending:</span>
-              {['Solo Leveling', 'Demon Slayer', 'Jujutsu Kaisen', 'One Piece'].map((t) => (
+              {['Solo Leveling', 'Demon Slayer', 'That Time I Got Reincarnated as a Slime', 'One Piece'].map((t) => (
                 <button
                   key={t}
                   type="button"
