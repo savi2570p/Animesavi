@@ -69,13 +69,13 @@ export function installRoutePrefetch() {
   installed = true;
 
   const handler = (e: Event) => {
-    const target = e.target as (Element | null);
-    if (!target || typeof (target as Element).closest !== 'function') return;
-    const anchor = (target as Element).closest('a[href]') as HTMLAnchorElement | null;
+    const target = e.target as unknown;
+    // Guard: target may be Document/Window/Text — only Elements have .closest
+    if (!target || !(target instanceof Element)) return;
+    const anchor = target.closest('a[href]') as HTMLAnchorElement | null;
     if (!anchor) return;
     const href = anchor.getAttribute('href');
     if (!href || !href.startsWith('/')) return;
-    // Strip query/hash for matching
     const path = href.split('?')[0].split('#')[0];
     prefetchRoute(path);
   };
