@@ -996,28 +996,10 @@ button, [role="button"], a {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Hardware-accelerated transforms for carousels and animations */
-.embla__container,
-[class*="carousel"],
-[class*="slider"] {
-  will-change: transform;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-
-/* Smooth scrolling for the whole page */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Optimized image rendering */
+/* Keep media mounted and visible during scroll — aggressive content-visibility
+   caused posters/titles to vanish and reload when scrolling back. */
 img, video {
-  content-visibility: auto;
-}
-
-/* Reduce layout shift on lazy-loaded content */
-img[loading="lazy"] {
-  aspect-ratio: attr(width) / attr(height);
+  content-visibility: visible;
 }
 
 /* Prefers reduced motion - respect user settings */
