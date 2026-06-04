@@ -168,13 +168,12 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full safe-area-top">
+    <header className="sticky top-0 z-[100] w-full safe-area-top">
       {/* Layered glass surface */}
-      <div className="relative bg-background/70 backdrop-blur-xl supports-[backdrop-filter]:bg-background/55 border-b border-border/40">
+      <div className="relative bg-background/95 border-b border-border/40">
         {/* Ambient gradient wash */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-24 left-1/4 w-[28rem] h-40 bg-primary/10 blur-3xl rounded-full" />
-          <div className="absolute -top-20 right-10 w-72 h-32 bg-pink-500/10 blur-3xl rounded-full" />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-60">
+          <div className="absolute inset-x-0 top-0 h-px bg-primary/20" />
         </div>
 
         <div className="container relative flex h-12 sm:h-14 items-center justify-between gap-1.5 sm:gap-4">
@@ -211,7 +210,7 @@ export function Header() {
           </div>
 
           {/* Navigation - Desktop pill bar */}
-          <nav className="hidden lg:flex items-center gap-0.5 p-1 rounded-full bg-card/40 border border-border/40 backdrop-blur-md">
+          <nav className="hidden lg:flex items-center gap-0.5 p-1 rounded-full bg-card/70 border border-border/40">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const active = isActivePath(link.to);
@@ -244,9 +243,9 @@ export function Header() {
 
           {/* Search - premium pill */}
           <form onSubmit={handleSearch} className="flex-1 max-w-md hidden md:flex">
-            <div className={`relative w-full transition-all duration-200 ${isSearchFocused ? 'scale-[1.015]' : ''}`}>
+            <div className="relative w-full transition-colors duration-100">
               {/* Glow on focus */}
-              <div className={`pointer-events-none absolute -inset-px rounded-full bg-gradient-to-r from-primary/40 via-pink-500/30 to-primary/40 opacity-0 blur-md transition-opacity duration-300 ${isSearchFocused ? 'opacity-100' : ''}`} />
+              <div className={`pointer-events-none absolute -inset-px rounded-full bg-primary/20 opacity-0 transition-opacity duration-100 ${isSearchFocused ? 'opacity-100' : ''}`} />
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none z-10" />
               <Input
                 type="search"
