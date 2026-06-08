@@ -349,13 +349,19 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
                       }`}
                       aria-label={`Resume ${item.anime.title} episode ${item.episode.episode_number}`}
                     >
-                      <img
-                        src={item.episode.thumbnail || item.anime.cover_image || '/placeholder.svg'}
-                        alt={item.anime.title}
-                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
-                        loading="lazy"
-                        draggable={false}
-                      />
+                      {(() => {
+                        const raw = item.episode.thumbnail || item.anime.cover_image || '/placeholder.svg';
+                        return (
+                          <img
+                            src={fhdImageUrl(raw, 'banner')}
+                            onError={fhdFallback(raw)}
+                            alt={item.anime.title}
+                            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+                            loading="lazy"
+                            draggable={false}
+                          />
+                        );
+                      })()}
 
                       {/* Bottom gradient for legibility */}
                       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
