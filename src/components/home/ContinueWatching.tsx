@@ -55,6 +55,8 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
   const [history, setHistory] = useState<WatchHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<{ username: string | null; avatar_url: string | null } | null>(null);
+  // Tiles currently animating out (pixelate + fade) before being swapped to the next episode.
+  const [fadingIds, setFadingIds] = useState<Set<string>>(new Set());
 
   // Only show on home page if specified
   const isHomePage = typeof window !== 'undefined' && window.location.pathname === '/';
