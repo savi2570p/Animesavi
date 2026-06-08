@@ -141,7 +141,14 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
     const item = history.find((h) => h.id === historyId);
     if (!item || !user) return;
 
-    // 1. Mark current episode as completed
+    // 1. Start the pixel-fade animation on JUST this tile (scoped to the thumbnail).
+    setFadingIds((prev) => new Set(prev).add(historyId));
+
+    // Run the DB update + next-episode resolution in parallel with the 480ms fade animation.
+    const minFadeMs = 480;
+    const fadeDelay = new Promise<void>((r) => setTimeout(r, minFadeMs));
+
+    // 2. Mark current episode as completed
     const { error: updateErr } = await supabase
       .from('watch_history')
       .update({ completed: true, progress: 100 })
@@ -149,6 +156,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
 
     if (updateErr) {
       toast.error('Failed to mark as completed');
+      setFadingIds((prev) => { const n = new Set(prev); n.delete(historyId); return n; });
       return;
     }
 
