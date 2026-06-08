@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Play, ChevronRight, Clock, Check, User } from 'lucide-react';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
+import { fhdImageUrl, fhdFallback } from '@/lib/imageOptimization';
 
 import { toast } from 'sonner';
 import {
