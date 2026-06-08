@@ -143,14 +143,39 @@ export default function Welcome() {
   };
 
   useEffect(() => {
+    const FEATURED_TITLES = [
+      'That Time I Got Reincarnated as a Slime',
+      'Solo Leveling',
+      'Demon Slayer',
+      'Frieren: Beyond Journey\u2019s End',
+      'Dandadan',
+    ];
     const fetchFeatured = async () => {
-      const { data } = await supabase
+      // Try the curated set first (matches against multiple title spellings).
+      const { data: curated } = await supabase
         .from('anime')
         .select('id, title, cover_image, genres, view_count')
-        .eq('is_featured', true)
-        .neq('title', 'My Hero Academia')
+        .or(
+          FEATURED_TITLES
+            .map((t) => `title.ilike.%${t.replace(/[%]/g, '').slice(0, 40)}%`)
+            .join(','),
+        )
         .limit(8);
-      if (data?.length) setFeaturedAnime(data);
+
+      let list = curated || [];
+      // Fallback: top up with is_featured if curated set is short, never include Jujutsu Kaisen.
+      if (list.length < 5) {
+        const { data: fallback } = await supabase
+          .from('anime')
+          .select('id, title, cover_image, genres, view_count')
+          .eq('is_featured', true)
+          .neq('title', 'Jujutsu Kaisen')
+          .neq('title', 'My Hero Academia')
+          .limit(8);
+        const existing = new Set(list.map((a) => a.id));
+        list = [...list, ...((fallback || []).filter((a) => !existing.has(a.id)))].slice(0, 8);
+      }
+      if (list.length) setFeaturedAnime(list);
     };
 
     const fetchGenreCovers = async () => {
