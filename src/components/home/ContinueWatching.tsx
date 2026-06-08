@@ -336,6 +336,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
             {history.map((item, index) => {
               const progressPct = Math.min(Math.max(item.progress || 0, 0), 100);
               const timeLeft = formatTimeLeft(item.progress, item.episode.duration);
+              const isFading = fadingIds.has(item.id);
               return (
                 <CarouselItem key={item.id} className="pl-2 md:pl-4 basis-[80%] sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
                   <div className="group relative opacity-0 animate-fade-in" style={{ animationDelay: `${index * 80}ms` }}>
@@ -343,7 +344,9 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
                         so the first tap on mobile navigates immediately (no hover-then-tap double click). */}
                     <Link
                       to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
-                      className="relative block aspect-video rounded-2xl overflow-hidden bg-muted/40 border border-border/40 group-hover:border-primary/50 transition-all duration-500 shadow-md hover:shadow-xl hover:shadow-primary/20"
+                      className={`relative block aspect-video rounded-2xl overflow-hidden bg-muted/40 border border-border/40 group-hover:border-primary/50 transition-all duration-500 shadow-md hover:shadow-xl hover:shadow-primary/20 ${
+                        isFading ? 'cw-tile-fading' : 'cw-tile-fresh'
+                      }`}
                       aria-label={`Resume ${item.anime.title} episode ${item.episode.episode_number}`}
                     >
                       <img
