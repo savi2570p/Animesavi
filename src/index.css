@@ -1369,3 +1369,25 @@ iframe.embed-frame {
   user-select: none !important;
   background: transparent;
 }
+
+/* ============================================================
+   Continue Watching tile pixel fade-out / fade-in.
+   Scoped to the thumbnail only — the rest of the page is never
+   affected when the user marks an episode as Done.
+   ============================================================ */
+@keyframes cw-pixelate-out {
+  0%   { opacity: 1; filter: blur(0) saturate(1); transform: scale(1); }
+  60%  { opacity: 0.55; filter: blur(8px) saturate(0.6); transform: scale(0.985); }
+  100% { opacity: 0;    filter: blur(14px) saturate(0.2); transform: scale(0.97); }
+}
+@keyframes cw-pixelate-in {
+  0%   { opacity: 0; filter: blur(10px) saturate(0.4); transform: scale(0.985); }
+  100% { opacity: 1; filter: blur(0)    saturate(1);   transform: scale(1); }
+}
+.cw-tile-fading {
+  animation: cw-pixelate-out 480ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+.cw-tile-fresh {
+  animation: cw-pixelate-in 360ms cubic-bezier(0.2, 0, 0.2, 1);
+}
