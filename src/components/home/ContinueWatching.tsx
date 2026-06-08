@@ -219,6 +219,8 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
         .single();
 
       if (!upsertErr && newRow) {
+        // Wait for fade-out to finish, then swap content in place + fade back in.
+        await fadeDelay;
         setHistory((prev) =>
           prev.map((h) =>
             h.id === historyId
@@ -233,6 +235,8 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
               : h,
           ),
         );
+        // Clear fade so the new tile fades back in.
+        setFadingIds((prev) => { const n = new Set(prev); n.delete(historyId); return n; });
         toast.success(
           nextSeasonNumber && nextSeasonNumber !== item.season?.season_number
             ? `${animeTitle} — starting Season ${nextSeasonNumber}`
@@ -242,8 +246,10 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       }
     }
 
-    // 4. No next episode found (series finished) — remove from list
+    // 4. No next episode found (series finished) — let fade complete then remove.
+    await fadeDelay;
     setHistory((prev) => prev.filter((h) => h.id !== historyId));
+    setFadingIds((prev) => { const n = new Set(prev); n.delete(historyId); return n; });
     toast.success(`${animeTitle} marked as completed`);
   };
 
