@@ -1072,7 +1072,7 @@ export default function Watch() {
         const tgCopy = resolveTelegramCopy(episode?.audio_language);
         return (
           <div
-            className="fixed z-[60] left-1/2 -translate-x-1/2 bottom-[max(0.75rem,calc(env(safe-area-inset-bottom)+0.5rem))] w-[min(calc(100vw-1rem),18rem)] sm:w-[min(calc(100vw-1.5rem),26rem)] pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-500"
+            className="fixed z-[60] left-1/2 -translate-x-1/2 bottom-[max(4.5rem,calc(env(safe-area-inset-bottom)+4rem))] sm:bottom-[max(1rem,calc(env(safe-area-inset-bottom)+0.5rem))] w-[min(calc(100vw-2rem),17rem)] sm:w-[min(calc(100vw-1.5rem),26rem)] pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-500"
             role="status"
             aria-live="polite"
             aria-label={tgCopy.aria}
