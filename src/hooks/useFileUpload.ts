@@ -26,7 +26,10 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/upload/resumable` : '';
 
 // 10MB chunks for maximum throughput with parallel upload
-const VIDEO_CHUNK_SIZE = 10 * 1024 * 1024;
+// 25MB chunks + 4 parallel uploads for max throughput on fast connections.
+// TUS server accepts up to 50MB per part; 25MB gives us 4x parallel safely.
+const VIDEO_CHUNK_SIZE = 25 * 1024 * 1024;
+const VIDEO_PARALLEL_UPLOADS = 4;
 
 // Map file extensions to MIME types for cases where the browser reports empty/generic types
 const VIDEO_MIME_MAP: Record<string, string> = {

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Play, ChevronRight, Clock, Check, User } from 'lucide-react';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
+import { fhdImageUrl, fhdFallback } from '@/lib/imageOptimization';
 
 import { toast } from 'sonner';
 import {
@@ -55,6 +56,8 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
   const [history, setHistory] = useState<WatchHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<{ username: string | null; avatar_url: string | null } | null>(null);
+  // Tiles currently animating out (pixelate + fade) before being swapped to the next episode.
+  const [fadingIds, setFadingIds] = useState<Set<string>>(new Set());
 
   // Only show on home page if specified
   const isHomePage = typeof window !== 'undefined' && window.location.pathname === '/';
@@ -139,7 +142,14 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
     const item = history.find((h) => h.id === historyId);
     if (!item || !user) return;
 
-    // 1. Mark current episode as completed
+    // 1. Start the pixel-fade animation on JUST this tile (scoped to the thumbnail).
+    setFadingIds((prev) => new Set(prev).add(historyId));
+
+    // Run the DB update + next-episode resolution in parallel with the 480ms fade animation.
+    const minFadeMs = 480;
+    const fadeDelay = new Promise<void>((r) => setTimeout(r, minFadeMs));
+
+    // 2. Mark current episode as completed
     const { error: updateErr } = await supabase
       .from('watch_history')
       .update({ completed: true, progress: 100 })
@@ -147,6 +157,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
 
     if (updateErr) {
       toast.error('Failed to mark as completed');
+      setFadingIds((prev) => { const n = new Set(prev); n.delete(historyId); return n; });
       return;
     }
 
@@ -209,6 +220,8 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
         .single();
 
       if (!upsertErr && newRow) {
+        // Wait for fade-out to finish, then swap content in place + fade back in.
+        await fadeDelay;
         setHistory((prev) =>
           prev.map((h) =>
             h.id === historyId
@@ -223,6 +236,8 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
               : h,
           ),
         );
+        // Clear fade so the new tile fades back in.
+        setFadingIds((prev) => { const n = new Set(prev); n.delete(historyId); return n; });
         toast.success(
           nextSeasonNumber && nextSeasonNumber !== item.season?.season_number
             ? `${animeTitle} — starting Season ${nextSeasonNumber}`
@@ -232,8 +247,10 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       }
     }
 
-    // 4. No next episode found (series finished) — remove from list
+    // 4. No next episode found (series finished) — let fade complete then remove.
+    await fadeDelay;
     setHistory((prev) => prev.filter((h) => h.id !== historyId));
+    setFadingIds((prev) => { const n = new Set(prev); n.delete(historyId); return n; });
     toast.success(`${animeTitle} marked as completed`);
   };
 
@@ -320,6 +337,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
             {history.map((item, index) => {
               const progressPct = Math.min(Math.max(item.progress || 0, 0), 100);
               const timeLeft = formatTimeLeft(item.progress, item.episode.duration);
+              const isFading = fadingIds.has(item.id);
               return (
                 <CarouselItem key={item.id} className="pl-2 md:pl-4 basis-[80%] sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
                   <div className="group relative opacity-0 animate-fade-in" style={{ animationDelay: `${index * 80}ms` }}>
@@ -327,16 +345,24 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
                         so the first tap on mobile navigates immediately (no hover-then-tap double click). */}
                     <Link
                       to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
-                      className="relative block aspect-video rounded-2xl overflow-hidden bg-muted/40 border border-border/40 group-hover:border-primary/50 transition-all duration-500 shadow-md hover:shadow-xl hover:shadow-primary/20"
+                      className={`relative block aspect-video rounded-2xl overflow-hidden bg-muted/40 border border-border/40 group-hover:border-primary/50 transition-all duration-500 shadow-md hover:shadow-xl hover:shadow-primary/20 ${
+                        isFading ? 'cw-tile-fading' : 'cw-tile-fresh'
+                      }`}
                       aria-label={`Resume ${item.anime.title} episode ${item.episode.episode_number}`}
                     >
-                      <img
-                        src={item.episode.thumbnail || item.anime.cover_image || '/placeholder.svg'}
-                        alt={item.anime.title}
-                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
-                        loading="lazy"
-                        draggable={false}
-                      />
+                      {(() => {
+                        const raw = item.episode.thumbnail || item.anime.cover_image || '/placeholder.svg';
+                        return (
+                          <img
+                            src={fhdImageUrl(raw, 'banner')}
+                            onError={fhdFallback(raw)}
+                            alt={item.anime.title}
+                            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+                            loading="lazy"
+                            draggable={false}
+                          />
+                        );
+                      })()}
 
                       {/* Bottom gradient for legibility */}
                       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />

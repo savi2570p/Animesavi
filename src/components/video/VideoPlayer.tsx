@@ -326,8 +326,20 @@ export function VideoPlayer({
   // Settings menu state
   const [settingsMenu, setSettingsMenu] = useState<SettingsMenu>('main');
   const [settingsOpen, setSettingsOpen] = useState(false);
-  // Player theme — session only (no persistence)
-  const [playerTheme, setPlayerTheme] = useState<PlayerThemeKey>('classic');
+  // Player theme — persisted per-browser in localStorage
+  const [playerTheme, _setPlayerTheme] = useState<PlayerThemeKey>(() => {
+    if (typeof window === 'undefined') return 'classic';
+    try {
+      const saved = window.localStorage.getItem('player_theme') as PlayerThemeKey | null;
+      return saved || 'classic';
+    } catch {
+      return 'classic';
+    }
+  });
+  const setPlayerTheme = (k: PlayerThemeKey) => {
+    _setPlayerTheme(k);
+    try { window.localStorage.setItem('player_theme', k); } catch {}
+  };
   
   // Keyboard shortcuts info state
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
