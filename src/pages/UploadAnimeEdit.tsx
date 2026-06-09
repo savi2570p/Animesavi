@@ -745,15 +745,33 @@ export default function UploadAnimeEdit() {
                         key={season.id}
                         className="flex flex-col gap-2 p-3 bg-muted/50 rounded-lg"
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">
-                            Season {season.season_number}
-                            {season.title && ` - ${season.title}`}
-                          </span>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className="font-medium text-sm shrink-0">Season</span>
+                            <Input
+                              type="number"
+                              min={1}
+                              defaultValue={season.season_number}
+                              key={season.season_number}
+                              onBlur={(e) => {
+                                const v = e.target.value;
+                                if (parseInt(v, 10) !== season.season_number) {
+                                  handleUpdateSeasonNumber(season.id, v);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                              }}
+                              className="h-8 w-20 bg-background"
+                            />
+                            {season.title && (
+                              <span className="text-sm text-muted-foreground truncate">— {season.title}</span>
+                            )}
+                          </div>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-destructive hover:text-destructive"
+                            className="text-destructive hover:text-destructive shrink-0"
                             onClick={() => handleDeleteSeason(season.id)}
                           >
                             <Trash2 className="h-4 w-4" />
