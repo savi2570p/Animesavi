@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -63,73 +63,111 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
   const isHomePage = typeof window !== 'undefined' && window.location.pathname === '/';
   const shouldRender = showOnHomeOnly ? isHomePage : true;
 
-  useEffect(() => {
-    if (user && shouldRender) {
-      fetchRecentHistory();
-      fetchUserProfile();
-    } else {
-      setIsLoading(false);
-    }
-  }, [user, shouldRender]);
-
-  const fetchUserProfile = async () => {
-    if (!user) return;
+  const fetchUserProfile = useCallback(async () => {
+    if (!user?.id) return;
     const { data } = await supabase
       .from('profiles')
       .select('username, avatar_url')
       .eq('id', user.id)
       .single();
     if (data) setUserProfile(data);
-  };
+  }, [user?.id]);
 
-  const fetchRecentHistory = async () => {
-    setIsLoading(true);
-    // Now we have ONE entry per anime per user (unique constraint enforced)
-    // No need for client-side deduplication
-    const { data } = await supabase
-      .from('watch_history')
-      .select('*, anime:anime_id(*), episode:episode_id(*)')
-      .eq('user_id', user!.id)
-      .eq('completed', false)
-      .order('watched_at', { ascending: false })
-      .limit(12);
-
-    if (data) {
-      // Fetch season info + check for new episodes on ongoing anime
-      const itemsWithSeason = await Promise.all(
-        (data as WatchHistoryItem[]).map(async (item) => {
-          let season: Season | undefined;
-          if (item.episode?.season_id) {
-            const { data: seasonData } = await supabase
-              .from('seasons')
-              .select('id, season_number')
-              .eq('id', item.episode.season_id)
-              .single();
-            season = seasonData || undefined;
-          }
-
-          // Check if this ongoing anime has episodes newer than user's last watch
-          let hasNewEpisode = false;
-          if (item.anime?.status === 'ongoing') {
-            const { data: newerEps } = await supabase
-              .from('episodes')
-              .select('id')
-              .in('season_id', 
-                (await supabase.from('seasons').select('id').eq('anime_id', item.anime.id)).data?.map(s => s.id) || []
-              )
-              .gt('created_at', item.watched_at)
-              .limit(1);
-            hasNewEpisode = !!newerEps && newerEps.length > 0;
-          }
-
-          return { ...item, season, hasNewEpisode };
-        })
-      );
-      
-      setHistory(itemsWithSeason);
+  const fetchRecentHistory = useCallback(async (showLoading = true) => {
+    if (!user?.id) {
+      setHistory([]);
+      setIsLoading(false);
+      return;
     }
-    setIsLoading(false);
-  };
+
+    if (showLoading) setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('watch_history')
+        .select('id, progress, watched_at, anime:anime_id(id,title,cover_image,status), episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
+        .eq('user_id', user.id)
+        // Older rows can have completed=null; treat them as still resumable.
+        .or('completed.is.null,completed.eq.false')
+        .order('watched_at', { ascending: false })
+        .limit(12);
+
+      if (error) {
+        console.error('Error loading Continue Watching:', error);
+        setHistory([]);
+        return;
+      }
+
+      const rows = ((data ?? []) as unknown as WatchHistoryItem[]).filter(
+        (item) => item.anime?.id && item.episode?.id,
+      );
+
+      const seasonIds = [...new Set(rows.map((item) => item.episode.season_id).filter(Boolean))] as string[];
+      const { data: seasonRows } = seasonIds.length
+        ? await supabase.from('seasons').select('id, season_number').in('id', seasonIds)
+        : { data: [] as Season[] };
+      const seasonMap = new Map((seasonRows ?? []).map((season) => [season.id, season as Season]));
+
+      const ongoingAnimeIds = [...new Set(
+        rows.filter((item) => item.anime.status === 'ongoing').map((item) => item.anime.id),
+      )];
+      const { data: ongoingSeasonRows } = ongoingAnimeIds.length
+        ? await supabase.from('seasons').select('id, anime_id').in('anime_id', ongoingAnimeIds)
+        : { data: [] as { id: string; anime_id: string }[] };
+
+      const newEpisodeAnimeIds = new Set<string>();
+      if (ongoingSeasonRows?.length && rows.length) {
+        const watchedByAnime = new Map(rows.map((item) => [item.anime.id, item.watched_at]));
+        const seasonToAnime = new Map(ongoingSeasonRows.map((season) => [season.id, season.anime_id]));
+        const oldestWatchedAt = rows[rows.length - 1]?.watched_at;
+
+        const { data: newerEpisodes } = await supabase
+          .from('episodes')
+          .select('season_id, created_at')
+          .in('season_id', ongoingSeasonRows.map((season) => season.id))
+          .gt('created_at', oldestWatchedAt);
+
+        (newerEpisodes ?? []).forEach((episode) => {
+          const animeId = seasonToAnime.get(episode.season_id);
+          const watchedAt = animeId ? watchedByAnime.get(animeId) : null;
+          if (animeId && watchedAt && new Date(episode.created_at).getTime() > new Date(watchedAt).getTime()) {
+            newEpisodeAnimeIds.add(animeId);
+          }
+        });
+      }
+
+      setHistory(rows.map((item) => ({
+        ...item,
+        season: seasonMap.get(item.episode.season_id),
+        hasNewEpisode: newEpisodeAnimeIds.has(item.anime.id),
+      })));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id || !shouldRender) {
+      setHistory([]);
+      setIsLoading(false);
+      return;
+    }
+
+    void fetchRecentHistory(true);
+    void fetchUserProfile();
+
+    const refreshLatest = () => {
+      if (document.visibilityState !== 'hidden') void fetchRecentHistory(false);
+    };
+
+    window.addEventListener('focus', refreshLatest);
+    document.addEventListener('visibilitychange', refreshLatest);
+
+    return () => {
+      window.removeEventListener('focus', refreshLatest);
+      document.removeEventListener('visibilitychange', refreshLatest);
+    };
+  }, [user?.id, shouldRender, fetchRecentHistory, fetchUserProfile]);
 
   const handleMarkCompleted = async (
     e: React.MouseEvent,
