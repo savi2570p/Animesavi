@@ -1290,6 +1290,34 @@ section:first-of-type .relative > div > img {
   -webkit-backdrop-filter: none !important;
 }
 
+/* Homepage smooth mode: keep content mounted, but remove expensive live blur,
+   decorative glow layers, and long compositor animations that made scrolling lag. */
+.home-smooth [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.home-smooth .blur-xl,
+.home-smooth .blur-2xl,
+.home-smooth .blur-3xl {
+  filter: none !important;
+}
+
+.home-smooth .nf-ken-burns,
+.home-smooth section:first-of-type .relative > div > img,
+.home-smooth .animate-shine,
+.home-smooth .animate-pulse,
+.home-smooth .animate-ping {
+  animation: none !important;
+}
+
+.home-smooth .snap-row img,
+.home-smooth .snap-row a,
+.home-smooth .snap-row button,
+.home-smooth .snap-row [role="button"] {
+  transition-duration: 100ms !important;
+}
+
 /* Reduce GPU work on mobile — drop expensive backdrop-blur intensity */
 @media (max-width: 768px) {
   .backdrop-blur-2xl,
