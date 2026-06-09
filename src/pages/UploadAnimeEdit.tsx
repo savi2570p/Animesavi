@@ -74,6 +74,7 @@ export default function UploadAnimeEdit() {
   // New season form
   const [newSeasonTitle, setNewSeasonTitle] = useState('');
   const [newSeasonReleaseDate, setNewSeasonReleaseDate] = useState<Date | undefined>();
+  const [newSeasonNumber, setNewSeasonNumber] = useState<string>('');
   
   // Anime status
   const [animeStatus, setAnimeStatus] = useState<string>('ongoing');
