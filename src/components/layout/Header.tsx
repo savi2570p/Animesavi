@@ -309,18 +309,16 @@ export function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="w-60 origin-top-right bg-card/95 backdrop-blur-xl border-border/60 p-0 overflow-hidden shadow-2xl rounded-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-top-2 duration-200 ease-out"
+                className="w-52 origin-top-right bg-card/95 border-border/60 p-0 overflow-hidden shadow-xl rounded-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 duration-100 ease-out"
                 align="end"
-                sideOffset={6}
+                sideOffset={4}
               >
                 {/* Cinematic header */}
                 <div className="relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent" />
-                  <div className="absolute -top-10 -right-8 w-32 h-32 bg-primary/30 rounded-full blur-3xl" />
-                  <div className="relative flex items-center gap-2.5 p-3">
+                  <div className="relative flex items-center gap-2 p-2.5">
                     <div className="relative shrink-0">
-                      <div className="absolute inset-0 bg-primary/40 blur-md rounded-full" />
-                      <Avatar className="relative h-9 w-9 ring-2 ring-primary/40">
+                      <Avatar className="relative h-8 w-8 ring-1 ring-primary/40">
                         <AvatarImage src={user.user_metadata?.avatar_url} alt="Avatar" />
                         <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
                           {user.email?.charAt(0).toUpperCase() || 'U'}
@@ -353,51 +351,51 @@ export function Header() {
                 </div>
 
                 {/* Library section */}
-                <div className="p-1.5">
-                  <p className="px-2 pt-0.5 pb-1 text-[8px] font-black text-muted-foreground uppercase tracking-widest">
+                <div className="p-1">
+                  <p className="px-1.5 pt-0.5 pb-1 text-[8px] font-black text-muted-foreground uppercase tracking-widest">
                     Library
                   </p>
                   <div className="grid grid-cols-4 gap-1">
                     <DropdownMenuItem asChild className="rounded-lg p-0">
-                      <Link to="/profile" className="flex flex-col items-center gap-0.5 py-1.5 hover:bg-primary/10 rounded-lg group">
-                        <div className="w-6 h-6 rounded-md bg-primary/15 flex items-center justify-center group-hover:bg-primary/25 transition-colors">
-                          <User className="h-3 w-3 text-primary" />
+                      <Link to="/profile" className="flex flex-col items-center gap-0.5 py-1 hover:bg-primary/10 rounded-md group">
+                        <div className="w-5 h-5 rounded-md bg-primary/15 flex items-center justify-center group-hover:bg-primary/25 transition-colors">
+                          <User className="h-2.5 w-2.5 text-primary" />
                         </div>
-                        <span className="text-[9px] font-semibold">Profile</span>
+                        <span className="text-[8px] font-semibold">Profile</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="rounded-lg p-0">
-                      <Link to="/favorites" className="flex flex-col items-center gap-0.5 py-1.5 hover:bg-rose-500/10 rounded-lg group">
-                        <div className="w-6 h-6 rounded-md bg-rose-500/15 flex items-center justify-center group-hover:bg-rose-500/25 transition-colors">
-                          <Heart className="h-3 w-3 text-rose-500" />
+                      <Link to="/favorites" className="flex flex-col items-center gap-0.5 py-1 hover:bg-rose-500/10 rounded-md group">
+                        <div className="w-5 h-5 rounded-md bg-rose-500/15 flex items-center justify-center group-hover:bg-rose-500/25 transition-colors">
+                          <Heart className="h-2.5 w-2.5 text-rose-500" />
                         </div>
-                        <span className="text-[9px] font-semibold">Favs</span>
+                        <span className="text-[8px] font-semibold">Favs</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="rounded-lg p-0">
-                      <Link to="/downloads" className="flex flex-col items-center gap-0.5 py-1.5 hover:bg-emerald-500/10 rounded-lg group">
-                        <div className="w-6 h-6 rounded-md bg-emerald-500/15 flex items-center justify-center group-hover:bg-emerald-500/25 transition-colors">
-                          <Download className="h-3 w-3 text-emerald-500" />
+                      <Link to="/downloads" className="flex flex-col items-center gap-0.5 py-1 hover:bg-emerald-500/10 rounded-md group">
+                        <div className="w-5 h-5 rounded-md bg-emerald-500/15 flex items-center justify-center group-hover:bg-emerald-500/25 transition-colors">
+                          <Download className="h-2.5 w-2.5 text-emerald-500" />
                         </div>
-                        <span className="text-[9px] font-semibold">Downloads</span>
+                        <span className="text-[8px] font-semibold">Downloads</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="rounded-lg p-0">
-                      <Link to="/watchlist" className="flex flex-col items-center gap-0.5 py-1.5 hover:bg-sky-500/10 rounded-lg group">
-                        <div className="w-6 h-6 rounded-md bg-sky-500/15 flex items-center justify-center group-hover:bg-sky-500/25 transition-colors">
-                          <ListVideo className="h-3 w-3 text-sky-500" />
+                      <Link to="/watchlist" className="flex flex-col items-center gap-0.5 py-1 hover:bg-sky-500/10 rounded-md group">
+                        <div className="w-5 h-5 rounded-md bg-sky-500/15 flex items-center justify-center group-hover:bg-sky-500/25 transition-colors">
+                          <ListVideo className="h-2.5 w-2.5 text-sky-500" />
                         </div>
-                        <span className="text-[9px] font-semibold">List</span>
+                        <span className="text-[8px] font-semibold">List</span>
                       </Link>
                     </DropdownMenuItem>
                   </div>
 
                   <DropdownMenuItem asChild className="rounded-lg mt-0.5">
-                    <Link to="/history" className="flex items-center gap-2 py-1.5 px-2">
-                      <div className="w-6 h-6 rounded-md bg-violet-500/15 flex items-center justify-center">
-                        <History className="h-3 w-3 text-violet-500" />
+                    <Link to="/history" className="flex items-center gap-1.5 py-1 px-1.5">
+                      <div className="w-5 h-5 rounded-md bg-violet-500/15 flex items-center justify-center">
+                        <History className="h-2.5 w-2.5 text-violet-500" />
                       </div>
-                      <span className="text-[11px] font-medium">Watch History</span>
+                      <span className="text-[10px] font-medium">Watch History</span>
                     </Link>
                   </DropdownMenuItem>
                 </div>
