@@ -403,31 +403,31 @@ export function Header() {
                 {(canUpload() || isAdmin) && (
                   <>
                     <DropdownMenuSeparator className="my-0" />
-                    <div className="p-1.5">
-                      <p className="px-2 pt-0.5 pb-1 text-[8px] font-black text-muted-foreground uppercase tracking-widest">
+                    <div className="p-1">
+                      <p className="px-1.5 pt-0.5 pb-1 text-[8px] font-black text-muted-foreground uppercase tracking-widest">
                         Creator Tools
                       </p>
                       {canUpload() && (
-                        <DropdownMenuItem asChild className="rounded-lg">
-                          <Link to="/upload" className="flex items-center gap-2 py-1.5 px-2">
-                            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center shadow-sm shadow-primary/30">
-                              <Upload className="h-3 w-3 text-white" />
+                        <DropdownMenuItem asChild className="rounded-md">
+                          <Link to="/upload" className="flex items-center gap-1.5 py-1 px-1.5">
+                            <div className="w-5 h-5 rounded-md bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center shadow-sm shadow-primary/30">
+                              <Upload className="h-2.5 w-2.5 text-white" />
                             </div>
                             <div className="flex-1">
-                              <span className="text-[11px] font-semibold block leading-tight">Upload Anime</span>
+                              <span className="text-[10px] font-semibold block leading-tight">Upload Anime</span>
                               <span className="text-[8px] text-muted-foreground">Add new episodes</span>
                             </div>
                           </Link>
                         </DropdownMenuItem>
                       )}
                       {isAdmin && (
-                        <DropdownMenuItem asChild className="rounded-lg">
-                          <Link to="/admin" className="flex items-center gap-2 py-1.5 px-2">
-                            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-sm shadow-yellow-500/30">
-                              <Shield className="h-3 w-3 text-white" />
+                        <DropdownMenuItem asChild className="rounded-md">
+                          <Link to="/admin" className="flex items-center gap-1.5 py-1 px-1.5">
+                            <div className="w-5 h-5 rounded-md bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-sm shadow-yellow-500/30">
+                              <Shield className="h-2.5 w-2.5 text-white" />
                             </div>
                             <div className="flex-1">
-                              <span className="text-[11px] font-semibold block leading-tight">Admin Panel</span>
+                              <span className="text-[10px] font-semibold block leading-tight">Admin Panel</span>
                               <span className="text-[8px] text-muted-foreground">Manage platform</span>
                             </div>
                           </Link>
@@ -438,26 +438,26 @@ export function Header() {
                 )}
 
                 <DropdownMenuSeparator className="my-0" />
-                <div className="p-1.5">
-                  <DropdownMenuItem asChild className="rounded-lg">
-                    <Link to="/settings" className="flex items-center gap-2 py-1.5 px-2">
-                      <div className="w-6 h-6 rounded-md bg-muted flex items-center justify-center">
-                        <Settings className="h-3 w-3 text-muted-foreground" />
+                <div className="p-1 [&_.account-switch-trigger]:h-7 [&_.account-switch-trigger]:gap-1.5 [&_.account-switch-trigger]:px-1.5 [&_.account-switch-trigger]:text-[10px] [&_.account-switch-trigger_svg]:h-3 [&_.account-switch-trigger_svg]:w-3">
+                  <DropdownMenuItem asChild className="rounded-md">
+                    <Link to="/settings" className="flex items-center gap-1.5 py-1 px-1.5">
+                      <div className="w-5 h-5 rounded-md bg-muted flex items-center justify-center">
+                        <Settings className="h-2.5 w-2.5 text-muted-foreground" />
                       </div>
-                      <span className="text-[11px] font-medium">Settings</span>
+                      <span className="text-[10px] font-medium">Settings</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="p-0 rounded-lg">
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="p-0 rounded-md">
                     <AccountSwitcher />
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleSignOut}
-                    className="rounded-lg text-destructive focus:text-destructive focus:bg-destructive/10 mt-0.5"
+                    className="rounded-md text-destructive focus:text-destructive focus:bg-destructive/10 mt-0.5 py-1 px-1.5"
                   >
-                    <div className="w-6 h-6 rounded-md bg-destructive/15 flex items-center justify-center mr-2">
-                      <LogOut className="h-3 w-3" />
+                    <div className="w-5 h-5 rounded-md bg-destructive/15 flex items-center justify-center mr-1.5">
+                      <LogOut className="h-2.5 w-2.5" />
                     </div>
-                    <span className="text-[11px] font-semibold">Sign Out</span>
+                    <span className="text-[10px] font-semibold">Sign Out</span>
                   </DropdownMenuItem>
                 </div>
               </DropdownMenuContent>
