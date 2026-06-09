@@ -833,6 +833,21 @@ export default function UploadAnimeEdit() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
+                  <Label htmlFor="seasonNumber">Season Number</Label>
+                  <Input
+                    id="seasonNumber"
+                    type="number"
+                    min={1}
+                    placeholder={`Defaults to ${seasons.length > 0 ? Math.max(...seasons.map((s) => s.season_number)) + 1 : 1}`}
+                    value={newSeasonNumber}
+                    onChange={(e) => setNewSeasonNumber(e.target.value)}
+                    className="bg-muted/50"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Choose any number — e.g. add Season 1 after Season 2, or skip to Season 5.
+                  </p>
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="seasonTitle">Season Title (Optional)</Label>
                   <Input
                     id="seasonTitle"
