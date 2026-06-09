@@ -36,7 +36,7 @@ export default function Index() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-background [&_section]:py-2 [&_section]:md:py-4 [&_.container]:px-3 [&_.container]:md:px-4">
+    <div className="home-smooth min-h-screen bg-background [&_section]:py-2 [&_section]:md:py-4 [&_.container]:px-3 [&_.container]:md:px-4">
       <SEO
         title="AnimeSavi - Watch Anime in Hindi DUB"
         description="Watch your favorite anime in official Hindi DUB. Stream the best anime series and movies for free. Episode update same day as release calendar."
