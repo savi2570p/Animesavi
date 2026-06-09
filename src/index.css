@@ -868,7 +868,9 @@ button, [role="button"], a {
   100% { opacity: 1; transform: scale(1); }
 }
 
-.animate-fade-in { animation: none; }
+/* Performance: skip the fade animation but ensure content is visible
+   (many components pair `opacity-0` with `animate-fade-in` for stagger). */
+.animate-fade-in { animation: none !important; opacity: 1 !important; }
 .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
 .animate-fade-in-left { animation: fadeInLeft 0.5s ease-out forwards; }
 .animate-fade-in-right { animation: fadeInRight 0.5s ease-out forwards; }
