@@ -213,13 +213,15 @@ export default function UploadAnimeEdit() {
   };
 
   const handleAddSeason = async () => {
-    const nextSeasonNumber = seasons.length > 0 ? Math.max(...seasons.map((s) => s.season_number)) + 1 : 1;
+    const parsed = parseInt(newSeasonNumber, 10);
+    const fallback = seasons.length > 0 ? Math.max(...seasons.map((s) => s.season_number)) + 1 : 1;
+    const seasonNum = Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 
     const { data, error } = await supabase
       .from('seasons')
       .insert({
         anime_id: animeId,
-        season_number: nextSeasonNumber,
+        season_number: seasonNum,
         title: newSeasonTitle.trim() || null,
         release_date: newSeasonReleaseDate ? format(newSeasonReleaseDate, 'yyyy-MM-dd') : null,
       })
@@ -227,13 +229,40 @@ export default function UploadAnimeEdit() {
       .single();
 
     if (error) {
-      toast.error('Failed to add season');
+      toast.error(error.message?.includes('duplicate') ? `Season ${seasonNum} already exists` : 'Failed to add season');
     } else {
-      toast.success('Season added');
+      toast.success(`Season ${seasonNum} added`);
       setNewSeasonTitle('');
       setNewSeasonReleaseDate(undefined);
-      setSeasons([...seasons, data]);
+      setNewSeasonNumber('');
+      setSeasons([...seasons, data].sort((a, b) => a.season_number - b.season_number));
       setSelectedSeason(data.id);
+    }
+  };
+
+  const handleUpdateSeasonNumber = async (seasonId: string, value: string) => {
+    const num = parseInt(value, 10);
+    if (!Number.isFinite(num) || num <= 0) {
+      toast.error('Season number must be a positive integer');
+      return;
+    }
+    if (seasons.some((s) => s.id !== seasonId && s.season_number === num)) {
+      toast.error(`Season ${num} already exists`);
+      return;
+    }
+    const { error } = await supabase
+      .from('seasons')
+      .update({ season_number: num })
+      .eq('id', seasonId);
+    if (error) {
+      toast.error('Failed to update season number');
+    } else {
+      toast.success(`Renumbered to Season ${num}`);
+      setSeasons(
+        seasons
+          .map((s) => (s.id === seasonId ? { ...s, season_number: num } : s))
+          .sort((a, b) => a.season_number - b.season_number),
+      );
     }
   };
 
