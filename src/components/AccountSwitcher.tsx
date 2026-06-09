@@ -137,7 +137,7 @@ export function AccountSwitcher({ trigger }: AccountSwitcherProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
+          <Button variant="ghost" size="sm" className="account-switch-trigger w-full justify-start gap-2">
             <Users className="h-4 w-4" />
             Switch Account
           </Button>
