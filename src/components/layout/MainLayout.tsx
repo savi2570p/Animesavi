@@ -17,8 +17,8 @@ export function MainLayout() {
     localStorage.setItem('home_animated_once', '1');
   }
 
-  // Hide the global navbar on immersive pages (anime detail, watch, embed players).
-  const hideHeader = /^\/(anime|watch|embed|flox\/watch)\//.test(location.pathname);
+  // Hide the global navbar on the immersive anime detail page.
+  const hideHeader = /^\/anime\//.test(location.pathname);
 
   return (
     <div className="min-h-screen flex flex-col">
