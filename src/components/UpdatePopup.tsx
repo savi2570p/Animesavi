@@ -29,31 +29,41 @@ const VERSION_GROUPS: VersionGroup[] = [
   {
     version: 'V 28',
     date: 'Latest',
-    highlight: 'Flox Anime India + launch, faster uploads, smarter share menu, persistent unmute, and embed playback fixes.',
+    highlight: 'Smoother PC animations, smarter token banner, redesigned Watch List, "/" keyboard search, slimmer Welcome page accents and a faster Update download.',
     items: [
-      { icon: '🇮🇳', badge: 'NEW', title: 'Flox Anime India + Tab', desc: 'Brand new Flox Anime India + section on the home page with official Hindi Dubbed streaming rights and a dedicated detail + watch experience.' },
-      { icon: '🎬', badge: 'NEW', title: 'Dedicated Flox Watch Page', desc: 'Episodes now open in a full-screen player page with poster, title, season & episode info, and the new "Flox +" server badge.' },
-      { icon: '⚡', badge: 'IMPROVED', title: '10-Second Flox Uploads', desc: 'Reworked Flox upload flow — create new anime or add episodes to existing ones in seconds, with poster only required on first creation.' },
-      { icon: '🛠️', badge: 'NEW', title: 'Edit, Delete & Add Episodes', desc: 'Manage uploaded Flox anime — edit poster & banner, delete entries, and add more episodes anytime from the top-right Upload menu.' },
-      { icon: '🔗', badge: 'IMPROVED', title: 'Cleaner Share Menu', desc: 'Removed "Copy Embed Link" and "Copy iFrame Code" from Share Episode. "Copy Shadow Link" is now restricted to authorized admin accounts only.' },
+      { icon: '⌨️', badge: 'NEW', title: '"/" Keyboard Search', desc: 'Press "/" anywhere on the site to instantly focus the search bar — works on every page, just like YouTube and GitHub.' },
+      { icon: '📋', badge: 'NEW', title: 'Redesigned Watch List', desc: 'A brand-new Watch List tab — cinematic hero, live counters, search & sort filters, and quick "Continue" buttons that jump straight back into the next episode.' },
+      { icon: '🌟', badge: 'NEW', title: 'More on /welcome', desc: 'Added new sections — "Built for binge nights", upcoming launches, top-watched this week, regional language map, and a dedicated keyboard shortcut card.' },
+      { icon: '🎬', badge: 'NEW', title: 'New Launch Loader', desc: 'Tapping "Start Watching" now plays a fully redesigned cinematic boot sequence with phased CDN/UI/profile/queue stages.' },
+      { icon: '🇮🇳', badge: 'NEW', title: 'Flox Anime India + Tab', desc: 'Brand new Flox Anime India + section with official Hindi-dubbed streaming rights and a dedicated detail + watch experience.' },
+      { icon: '⚡', badge: 'IMPROVED', title: 'Faster Update Download', desc: 'The What\'s New download now completes ~2× quicker on every network — fewer artificial stalls, snappier finalization.' },
+      { icon: '🖥️', badge: 'FIX', title: 'PC Animations Restored', desc: 'Hero banner Ken-Burns, "Mark Watched" fade-out, and decorative pulses now play on desktop again instead of being globally killed.' },
+      { icon: '🛡️', badge: 'FIX', title: 'Ghost Token Banner Gone', desc: 'Signed-out users no longer see a stale "3 months active token" bar — the banner now only renders when a real, server-confirmed token is attached to your account.' },
+      { icon: '🚪', badge: 'FIX', title: 'Logout Clears Token Cache', desc: 'Signing out now wipes the local unlock-token cache instantly so the next visitor on the same device starts with a clean slate.' },
+      { icon: '🙅', badge: 'FIX', title: 'No More Welcome Popup', desc: 'Removed the first-visit Welcome modal from the home page — straight into the library, no extra click.' },
+      { icon: '⭕', badge: 'FIX', title: 'Slim Welcome Bars on iOS', desc: 'Replaced the large pulsing circles on /welcome with slim progress-style bars for a cleaner iOS look.' },
       { icon: '🔊', badge: 'FIX', title: 'Unmute Stays Unmuted', desc: 'Tapping unmute now remembers your choice across every episode and anime for 24 hours before resetting.' },
-      { icon: '🖥️', badge: 'FIX', title: 'Full-Screen Player Fixed', desc: 'Android & PC now use the in-app player controls in full-screen, while iOS keeps its native full-screen experience.' },
       { icon: '▶️', badge: 'FIX', title: 'Embed Playback Restored', desc: 'Removed sandbox & blocking iframe attributes so the Flox embed player loads and plays anime instantly without the "sandbox not allowed" popup.' },
-      { icon: '🎉', badge: 'NEW', title: 'Streaming Rights Announcement', desc: 'A celebratory popup welcomes users on /flox announcing our official streaming rights from Flox Anime India.' },
     ],
   },
 ];
 
+const BADGE_LABELS: Record<BadgeKind, string> = {
+  NEW: 'NEW',
+  IMPROVED: 'IMPROVED',
+  FIX: 'FIXED',
+};
+
 const BADGE_STYLES: Record<BadgeKind, string> = {
   NEW: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
   IMPROVED: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
-  FIX: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+  FIX: 'bg-orange-500/20 text-orange-400 border-orange-500/40',
 };
 
 const BADGE_DOT: Record<BadgeKind, string> = {
   NEW: 'bg-emerald-400',
   IMPROVED: 'bg-sky-400',
-  FIX: 'bg-amber-400',
+  FIX: 'bg-orange-400',
 };
 
 const DOWNLOAD_COMPLETED_KEY = `update_downloaded_${APP_VERSION}`;
