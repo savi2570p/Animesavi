@@ -166,7 +166,7 @@ export function UpdatePopup() {
       // Mark this version as downloaded so future manual opens skip the flow.
       try { localStorage.setItem(DOWNLOAD_COMPLETED_KEY, 'true'); } catch { /* ignore */ }
       setStep('complete');
-    }, 5000);
+    }, 1800);
     return () => clearTimeout(timer);
   }, [step]);
 
