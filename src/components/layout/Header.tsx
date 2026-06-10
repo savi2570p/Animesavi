@@ -33,7 +33,7 @@ import {
   ListVideo,
   RefreshCw
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
@@ -57,6 +57,31 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { showWhatsNewManually } = usePopupQueue();
   const hasPremium = !!user && (isAdmin || hasValidTokenAccess(user?.email));
+  const desktopSearchRef = useRef<HTMLInputElement>(null);
+  const mobileSearchRef = useRef<HTMLInputElement>(null);
+
+  // Global "/" shortcut → focus the search bar (skip when already typing in an input/textarea)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      const tag = t?.tagName;
+      if (t?.isContentEditable || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      const target = desktopSearchRef.current && desktopSearchRef.current.offsetParent !== null
+        ? desktopSearchRef.current
+        : mobileSearchRef.current;
+      if (target) {
+        e.preventDefault();
+        target.focus();
+        target.select?.();
+      } else {
+        navigate('/browse');
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [navigate]);
+
 
   const closeMenuThen = (callback: () => void) => {
     setMobileMenuOpen(false);
