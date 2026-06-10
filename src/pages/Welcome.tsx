@@ -315,9 +315,10 @@ export default function Welcome() {
           {/* Logo + Title block */}
           <div className="flex flex-col items-center gap-4 animate-fade-in" style={{ animationDelay: '50ms' }}>
             <div className="relative">
-              {/* Animated pulse rings */}
-              <span className="absolute inset-0 rounded-3xl border-2 border-primary/30 animate-ping" style={{ animationDuration: '3s' }} />
-              <span className="absolute inset-1 rounded-2xl border border-primary/20 animate-pulse" />
+              {/* Slim ambient bars (replaces the big iOS ping circles) */}
+              <span className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 h-[3px] w-16 rounded-full bg-gradient-to-r from-transparent via-primary/70 to-transparent animate-pulse" />
+              <span className="pointer-events-none absolute -bottom-2 left-1/2 -translate-x-1/2 h-[3px] w-10 rounded-full bg-gradient-to-r from-transparent via-primary/50 to-transparent animate-pulse" style={{ animationDelay: '0.4s' }} />
+
               <div
                 className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl overflow-hidden flex items-center justify-center"
                 style={{
@@ -1129,7 +1130,7 @@ export default function Welcome() {
                 />
               </svg>
               {/* Pulse halos */}
-              <span className="absolute inset-4 rounded-3xl border border-primary/30 animate-ping" />
+              <span className="pointer-events-none absolute inset-x-6 -top-3 h-[3px] rounded-full bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse" />
               {/* Logo core */}
               <div
                 className="relative w-20 h-20 rounded-3xl flex items-center justify-center overflow-hidden"
