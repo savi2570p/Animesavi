@@ -205,6 +205,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error('Error signing out:', error);
       }
     } finally {
+      // Clear any stale unlock-token cache so the "PRO active" banner
+      // disappears immediately on logout instead of showing leftover time.
+      try {
+        localStorage.removeItem('unlock_token_expires');
+        localStorage.removeItem('unlock_token_id');
+        localStorage.removeItem('token_access_synced');
+      } catch { /* ignore */ }
       setSession(null);
       setUser(null);
       setRoles([]);
