@@ -405,64 +405,15 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
         </button>
       </div>
 
-      {/* Slim progress bar - iOS-hardened: kill default Safari button chrome
-          that turns 2px-tall <button>s into giant rounded pills/circles. */}
-      <div
-        className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 px-2"
-        style={{
-          width: 'min(200px, 70vw)',
-          maxWidth: '70vw',
-          WebkitTransform: 'translate3d(-50%, 0, 0)',
-          transform: 'translate3d(-50%, 0, 0)',
-          WebkitBackfaceVisibility: 'hidden',
-          backfaceVisibility: 'hidden',
-        }}
-      >
+      {/* Pagination — slim pill bars (locked size, never circles) */}
+      <div className="hero-pagination absolute bottom-4 left-1/2 z-40" style={{ transform: 'translateX(-50%)' }}>
         {featuredAnime.map((_, idx) => (
           <button
             key={idx}
             onClick={() => goTo(idx, idx > currentIndex ? 'next' : 'prev')}
-            className={`overflow-hidden relative transition-all duration-500 ${idx === currentIndex ? 'flex-[2]' : 'flex-1'}`}
-            style={{
-              // ── iOS Safari reset (no rounded mega-pills, no UA padding) ──
-              WebkitAppearance: 'none',
-              appearance: 'none',
-              padding: 0,
-              margin: 0,
-              border: 0,
-              outline: 'none',
-              boxSizing: 'border-box',
-              display: 'block',
-              height: '2px',
-              minHeight: '2px',
-              maxHeight: '2px',
-              borderRadius: '1px',
-              background: 'hsl(0 0% 100% / 0.2)',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
+            className={`hero-pagination-bullet${idx === currentIndex ? ' hero-pagination-bullet-active' : ''}`}
             aria-label={`Go to slide ${idx + 1}`}
-          >
-            <div
-              key={idx === currentIndex ? `mbar-${animKey}` : `mbar-${idx}`}
-              style={{
-                position: 'absolute',
-                top: 0,
-                bottom: 0,
-                left: 0,
-                borderRadius: '1px',
-                background:
-                  idx === currentIndex || idx < currentIndex
-                    ? 'hsl(var(--primary))'
-                    : 'transparent',
-                width:
-                  idx < currentIndex ? '100%' : idx === currentIndex ? undefined : '0%',
-                ...(idx === currentIndex
-                  ? { animation: 'slider-fill 3s linear forwards' }
-                  : {}),
-              }}
-            />
-          </button>
+          />
         ))}
       </div>
     </section>
