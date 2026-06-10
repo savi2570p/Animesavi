@@ -290,27 +290,15 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
           </button>
         </div>
 
-        {/* Slim progress bar */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 w-[280px] flex items-center gap-1">
+        {/* Pagination — slim pill bars (locked size, never circles) */}
+        <div className="hero-pagination absolute bottom-6 left-1/2 z-40" style={{ transform: 'translateX(-50%)' }}>
           {featuredAnime.map((_, idx) => (
             <button
               key={idx}
               onClick={() => goTo(idx, idx > currentIndex ? 'next' : 'prev')}
-              className={`h-[3px] rounded-full bg-foreground/20 overflow-hidden relative transition-all duration-500 ${idx === currentIndex ? 'flex-[2]' : 'flex-1'}`}
+              className={`hero-pagination-bullet${idx === currentIndex ? ' hero-pagination-bullet-active' : ''}`}
               aria-label={`Go to slide ${idx + 1}`}
-            >
-              <div
-                key={idx === currentIndex ? `bar-${animKey}` : `bar-${idx}`}
-                className={`absolute inset-y-0 left-0 rounded-full ${
-                  idx === currentIndex
-                    ? 'bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.6)]'
-                    : idx < currentIndex
-                    ? 'bg-primary w-full'
-                    : 'w-0'
-                }`}
-                style={idx === currentIndex ? { animation: 'slider-fill 3s linear forwards' } : idx < currentIndex ? { width: '100%' } : { width: '0%' }}
-              />
-            </button>
+            />
           ))}
         </div>
       </section>
