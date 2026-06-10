@@ -1451,7 +1451,7 @@ iframe.embed-frame {
 .swiper-pagination-bullet,
 .embla-dot {
   -webkit-appearance: none !important;
-  appearance: -webkit-appearance: none !important;
+  
   appearance: none !important;
   display: block !important;
   flex: 0 0 auto !important;
