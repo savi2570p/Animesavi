@@ -43,11 +43,14 @@ export async function fetchTokenAccessFromDB(): Promise<{ hasAccess: boolean; ex
     const { data: sessionData } = await supabase.auth.getSession();
     const userId = sessionData?.session?.user?.id;
     if (!userId) {
-      // Not logged in — fall back to localStorage
-      const expiresStr = localStorage.getItem('unlock_token_expires');
-      if (!expiresStr) return { hasAccess: false, expiresAt: null };
-      const exp = parseInt(expiresStr, 10);
-      return { hasAccess: Date.now() < exp, expiresAt: exp };
+      // Not logged in — never trust localStorage alone. Clear stale cache so
+      // the PRO/Premium banner doesn't show "3 months active" after sign-out.
+      try {
+        localStorage.removeItem('unlock_token_expires');
+        localStorage.removeItem('unlock_token_id');
+        localStorage.removeItem('token_access_synced');
+      } catch { /* ignore */ }
+      return { hasAccess: false, expiresAt: null };
     }
 
     // Fetch from DB — single source of truth
@@ -72,11 +75,7 @@ export async function fetchTokenAccessFromDB(): Promise<{ hasAccess: boolean; ex
     localStorage.removeItem('token_access_synced');
     return { hasAccess: false, expiresAt: null };
   } catch {
-    // On error, fall back to localStorage
-    const expiresStr = localStorage.getItem('unlock_token_expires');
-    if (!expiresStr) return { hasAccess: false, expiresAt: null };
-    const exp = parseInt(expiresStr, 10);
-    return { hasAccess: Date.now() < exp, expiresAt: exp };
+    return { hasAccess: false, expiresAt: null };
   }
 }
 
