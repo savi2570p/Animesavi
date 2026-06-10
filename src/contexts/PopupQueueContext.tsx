@@ -79,10 +79,13 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
         popups.push('whatsNew');
       }
 
-      // 3. Welcome (first visit)
+      // 3. Welcome popup permanently removed (per user request).
+      // Mark as seen so the legacy WhatsNew gating still works.
       if (!hasSeenWelcome) {
-        popups.push('welcome');
+        try { localStorage.setItem('has_seen_welcome', 'true'); } catch { /* ignore */ }
       }
+
+
 
       if (!cancelled) {
         setQueue(popups);
