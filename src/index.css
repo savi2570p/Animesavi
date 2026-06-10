@@ -1421,3 +1421,90 @@ iframe.embed-frame {
 .cw-tile-fresh {
   animation: cw-pixelate-in 360ms cubic-bezier(0.2, 0, 0.2, 1);
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Hero Pagination — slim pill bars, locked size across devices.
+   Prevents iOS Safari/Android UA chrome from turning short
+   buttons into oversized rounded dots. Same look in portrait,
+   landscape, mobile, tablet, desktop.
+   ───────────────────────────────────────────────────────────── */
+.hero-pagination,
+.pagination,
+.swiper-pagination,
+.embla-pagination {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  overflow: hidden !important;
+  width: fit-content !important;
+  max-width: 90% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  gap: 8px !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.hero-pagination-bullet,
+.pagination-bullet,
+.swiper-pagination-bullet,
+.embla-dot {
+  -webkit-appearance: none !important;
+  appearance: -webkit-appearance: none !important;
+  appearance: none !important;
+  display: block !important;
+  flex: 0 0 auto !important;
+  width: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  height: 4px !important;
+  min-height: 4px !important;
+  max-height: 4px !important;
+  border-radius: 999px !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  outline: none !important;
+  transform: none !important;
+  aspect-ratio: auto !important;
+  background: hsl(0 0% 100% / 0.25) !important;
+  cursor: pointer !important;
+  transition: width 300ms ease, background 300ms ease !important;
+  -webkit-tap-highlight-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.hero-pagination-bullet-active,
+.pagination-bullet-active,
+.swiper-pagination-bullet-active,
+.embla-dot-active {
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
+  height: 4px !important;
+  border-radius: 999px !important;
+  background: hsl(var(--primary)) !important;
+  box-shadow: 0 0 8px hsl(var(--primary) / 0.6) !important;
+}
+
+/* Landscape: keep slim pills, never convert to circles. */
+@media (orientation: landscape) {
+  .hero-pagination-bullet,
+  .pagination-bullet,
+  .swiper-pagination-bullet,
+  .embla-dot {
+    width: 40px !important;
+    height: 4px !important;
+    border-radius: 999px !important;
+    aspect-ratio: auto !important;
+  }
+  .hero-pagination-bullet-active,
+  .pagination-bullet-active,
+  .swiper-pagination-bullet-active,
+  .embla-dot-active {
+    width: 60px !important;
+    height: 4px !important;
+    border-radius: 999px !important;
+  }
+}
