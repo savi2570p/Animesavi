@@ -110,22 +110,19 @@ export function UpdatePopup() {
     setSpeedMbps(0);
     setSpeedHistory([]);
 
-    const tickMs = 200;
+    const tickMs = 90; // faster tick → quicker visible progress
     let current = 0;
-    // Variable-speed simulation: 3 phases (ramp-up, steady, slow-finish)
+    // Higher base speeds → download completes in ~1.5-2s instead of ~6s.
     intervalRef.current = setInterval(() => {
-      // Phase-based speed (Mbps): start slow, peak in middle, slow at end
       let baseSpeed: number;
-      if (current < 15) baseSpeed = 2 + current * 0.4;            // ramp up 2 → 8
-      else if (current < 75) baseSpeed = 8 + Math.sin(current / 10) * 2.5; // steady 5.5 – 10.5
-      else baseSpeed = Math.max(1.2, 9 - (current - 75) * 0.25);   // wind-down
+      if (current < 15) baseSpeed = 12 + current * 1.0;           // ramp 12 → 27 Mbps
+      else if (current < 75) baseSpeed = 28 + Math.sin(current / 10) * 4; // steady 24-32
+      else baseSpeed = Math.max(8, 26 - (current - 75) * 0.4);    // wind-down 26 → 16
 
-      // Network jitter
-      const jitter = (Math.random() - 0.5) * 1.8;
-      const liveSpeed = Math.max(0.4, baseSpeed + jitter);
+      const jitter = (Math.random() - 0.5) * 3.5;
+      const liveSpeed = Math.max(4, baseSpeed + jitter);
 
-      // % progress per tick: speed (MB/s) * dt / total
-      const mbThisTick = (liveSpeed / 8) * (tickMs / 1000); // Mbps→MB/s ÷8
+      const mbThisTick = (liveSpeed / 8) * (tickMs / 1000);
       const pctThisTick = (mbThisTick / TOTAL_MB) * 100;
       current = Math.min(100, current + pctThisTick);
 
@@ -138,7 +135,7 @@ export function UpdatePopup() {
 
       if (current >= 100) {
         if (intervalRef.current) clearInterval(intervalRef.current);
-        setTimeout(() => setStep('installing'), 600);
+        setTimeout(() => setStep('installing'), 350);
       }
     }, tickMs);
 
@@ -262,7 +259,7 @@ export function UpdatePopup() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <h4 className="text-[10px] sm:text-xs font-semibold text-white leading-tight truncate">{item.title}</h4>
-                    <span className={`shrink-0 rounded border px-1 py-px text-[7px] sm:text-[8px] font-bold uppercase tracking-wider ${BADGE_STYLES[item.badge]}`}>{item.badge}</span>
+                    <span className={`shrink-0 rounded border px-1 py-px text-[7px] sm:text-[8px] font-bold uppercase tracking-wider ${BADGE_STYLES[item.badge]}`}>{BADGE_LABELS[item.badge]}</span>
                   </div>
                   <p className="text-[9px] sm:text-[10px] text-zinc-500 leading-tight line-clamp-2">{item.desc}</p>
                 </div>
@@ -660,7 +657,7 @@ export function UpdatePopup() {
                     className={`inline-flex shrink-0 items-center gap-1 rounded border px-1 py-px text-[8px] font-bold uppercase tracking-wider ${BADGE_STYLES[item.badge]}`}
                   >
                     <span className={`h-1 w-1 rounded-full ${BADGE_DOT[item.badge]}`} />
-                    {item.badge}
+                    {BADGE_LABELS[item.badge]}
                   </span>
                 </div>
                 <p className="mt-0.5 text-[10px] leading-snug text-zinc-500">{item.desc}</p>
