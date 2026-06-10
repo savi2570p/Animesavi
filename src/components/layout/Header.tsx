@@ -507,6 +507,7 @@ export function Header() {
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
               <Input
+                ref={mobileSearchRef}
                 type="search"
                 placeholder="Search..."
                 value={searchQuery}
