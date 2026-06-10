@@ -20,14 +20,14 @@ interface VersionGroup {
   items: ChangelogItem[];
 }
 
-const APP_VERSION = 'V 27';
+const APP_VERSION = 'V 28';
 
-// Fixed download size for V 27
-const RANDOM_DOWNLOAD_MB = 24.0;
+// Fixed download size for V 28
+const RANDOM_DOWNLOAD_MB = 10.44;
 
 const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'V 27',
+    version: 'V 28',
     date: 'Latest',
     highlight: 'Flox Anime India + launch, faster uploads, smarter share menu, persistent unmute, and embed playback fixes.',
     items: [

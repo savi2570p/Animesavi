@@ -17,9 +17,12 @@ export function MainLayout() {
     localStorage.setItem('home_animated_once', '1');
   }
 
+  // Hide the global navbar on the immersive anime detail page.
+  const hideHeader = /^\/anime\//.test(location.pathname);
+
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      {!hideHeader && <Header />}
       <main className="flex-1">
         {shouldAnimate ? (
           <AnimatedPage key={location.pathname}>
