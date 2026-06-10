@@ -273,8 +273,9 @@ export function Header() {
               <div className={`pointer-events-none absolute -inset-px rounded-full bg-primary/20 opacity-0 transition-opacity duration-100 ${isSearchFocused ? 'opacity-100' : ''}`} />
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none z-10" />
               <Input
+                ref={desktopSearchRef}
                 type="search"
-                placeholder="Search anime, movies, episodes…"
+                placeholder="Search anime, movies, episodes…  (press / to focus)"
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -291,8 +292,8 @@ export function Header() {
                 className="relative pl-10 pr-24 bg-card/60 border-border/50 focus:border-primary/60 rounded-full h-9 text-[13px] placeholder:text-muted-foreground/70"
               />
               <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                <kbd className="hidden lg:inline-flex items-center px-1.5 h-5 rounded-md bg-muted/60 border border-border/40 text-[9px] font-bold text-muted-foreground tracking-wider">
-                  ⌘ K
+                <kbd className="hidden lg:inline-flex items-center px-2 h-5 rounded-md bg-muted/60 border border-border/40 text-[10px] font-bold text-muted-foreground tracking-wider">
+                  /
                 </kbd>
                 <Button
                   type="submit"
