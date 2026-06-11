@@ -1310,6 +1310,110 @@ export default function Welcome() {
         </div>
       )}
 
+      {/* === New: By the numbers === */}
+      <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-8 py-12">
+        <div className="text-center mb-8">
+          <p className="text-[11px] uppercase tracking-[0.25em] text-primary font-bold mb-2">By the Numbers</p>
+          <h2 className="text-2xl sm:text-3xl font-extrabold">AnimeSavi at a glance</h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          {[
+            { v: totalAnime ? `${totalAnime}+` : '500+', l: 'Anime titles', icon: Film },
+            { v: totalEpisodes ? `${totalEpisodes.toLocaleString()}+` : '15K+', l: 'Episodes', icon: Layers },
+            { v: '12', l: 'Player themes', icon: Palette },
+            { v: '4K', l: 'Max quality', icon: Monitor },
+            { v: '4', l: 'Streaming servers', icon: Radio },
+            { v: '5', l: 'Profiles / account', icon: Users },
+            { v: '0', l: 'Ads, ever', icon: Shield },
+            { v: '24/7', l: 'Support on TG', icon: Send },
+          ].map(({ v, l, icon: Icon }) => (
+            <div
+              key={l}
+              className="group relative overflow-hidden rounded-xl border border-border/40 bg-card/40 backdrop-blur p-4 hover:border-primary/40 hover:bg-card/70 transition-all"
+            >
+              <Icon className="absolute -bottom-2 -right-2 w-12 h-12 text-primary/10 group-hover:text-primary/25 transition-colors" />
+              <p className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-br from-primary to-fuchsia-400 bg-clip-text text-transparent">{v}</p>
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mt-1">{l}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* === New: How it works === */}
+      <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-8 pb-12">
+        <div className="text-center mb-8">
+          <p className="text-[11px] uppercase tracking-[0.25em] text-primary font-bold mb-2">How it works</p>
+          <h2 className="text-2xl sm:text-3xl font-extrabold">Four steps. Zero friction.</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4">
+          {[
+            { n: '01', t: 'Open', d: 'Tap Start Watching — no signup required to browse the catalog.', icon: Play },
+            { n: '02', t: 'Pick', d: 'Filter by genre, year, dub language or jump into Trending Now.', icon: Compass },
+            { n: '03', t: 'Play', d: 'Hit play and the best server is preselected for your network.', icon: Zap },
+            { n: '04', t: 'Sync', d: 'Sign in to sync watch history, list and favorites across devices.', icon: RefreshCw },
+          ].map((s) => (
+            <div key={s.n} className="relative rounded-xl border border-border/40 bg-card/40 backdrop-blur p-4 hover:border-primary/40 transition-colors">
+              <span className="absolute top-3 right-3 text-[10px] font-bold text-primary/60 tracking-widest">{s.n}</span>
+              <s.icon className="w-6 h-6 text-primary mb-2" />
+              <p className="text-sm font-bold mb-1">{s.t}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">{s.d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* === New: What's inside (deeper feature deck) === */}
+      <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-8 pb-12">
+        <div className="text-center mb-8">
+          <p className="text-[11px] uppercase tracking-[0.25em] text-primary font-bold mb-2">What's inside</p>
+          <h2 className="text-2xl sm:text-3xl font-extrabold">More than just a player</h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {[
+            { i: Bell, t: 'Push alerts', d: '1-hour pre-release pings' },
+            { i: Lock, t: 'PIN lock', d: '4 or 6-digit profile guard' },
+            { i: Cast, t: 'Cast & AirPlay', d: 'Simple Mode for TVs' },
+            { i: HardDrive, t: 'Offline downloads', d: '480p → 4K stored locally' },
+            { i: Subtitles, t: 'CC editor', d: 'VTT/SRT import + manual sync' },
+            { i: Keyboard, t: 'Keyboard shortcuts', d: 'Press / to search anywhere' },
+            { i: Calendar, t: 'Release calendar', d: 'See exact drop times' },
+            { i: BarChart3, t: 'Personal stats', d: 'Genre & watch insights' },
+            { i: MessageCircle, t: 'Watch parties', d: 'Sync + live chat' },
+            { i: Wifi, t: 'Auto-quality', d: 'Adapts to your network' },
+            { i: Eye, t: 'Continue watching', d: 'Per-profile resume row' },
+            { i: Crown, t: 'Premium feel, free', d: 'No paywalls anywhere' },
+          ].map(({ i: Icon, t, d }) => (
+            <div key={t} className="rounded-lg border border-border/30 bg-card/30 backdrop-blur p-3 hover:border-primary/40 hover:bg-card/60 transition-all">
+              <Icon className="w-4 h-4 text-primary mb-2" />
+              <p className="text-xs font-bold leading-tight">{t}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">{d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* === New: Device support matrix === */}
+      <section className="relative z-10 max-w-4xl mx-auto px-4 sm:px-8 pb-16">
+        <div className="text-center mb-8">
+          <p className="text-[11px] uppercase tracking-[0.25em] text-primary font-bold mb-2">Works everywhere</p>
+          <h2 className="text-2xl sm:text-3xl font-extrabold">Built for every screen</h2>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { i: Smartphone, t: 'iOS', d: 'Safari + PWA push' },
+            { i: Smartphone, t: 'Android', d: 'Chrome + install' },
+            { i: Monitor, t: 'Desktop', d: 'PiP + shortcuts' },
+            { i: Tv, t: 'TV / Cast', d: 'AirPlay + cast' },
+          ].map(({ i: Icon, t, d }) => (
+            <div key={t} className="text-center rounded-xl border border-border/40 bg-card/40 backdrop-blur p-4 hover:border-primary/40 transition-colors">
+              <Icon className="w-7 h-7 text-primary mx-auto mb-2" />
+              <p className="text-sm font-bold">{t}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Bottom branding */}
       <div className="relative z-10 pb-8 pt-12 text-center">
         <div className="flex items-center justify-center gap-2 mb-2">
