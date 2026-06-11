@@ -1547,10 +1547,9 @@ export function VideoPlayer({
       }
       
       // Show Watch Next overlay when video ends (within 5 seconds of end)
-      if (dur > 0 && secondsLeft <= 5 && hasNextEpisode && !isMovie && !showWatchNextOverlay) {
-        setShowWatchNextOverlay(true);
-        setWatchNextCountdown(10);
-      }
+      // Auto next-episode countdown overlay disabled per user request.
+      // Users now manually click "Next Episode" — no 10s timer trigger.
+      // (Keeping the showWatchNextOverlay state available for legacy code paths.)
     }
   };
   

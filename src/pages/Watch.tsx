@@ -1081,10 +1081,10 @@ export default function Watch() {
             <div className="pointer-events-auto relative flex items-center gap-2 sm:gap-3 rounded-xl sm:rounded-2xl border border-[#0088cc]/40 bg-card/95 backdrop-blur-xl shadow-[0_12px_30px_-10px_rgba(0,136,204,0.45)] pl-2.5 sm:pl-3.5 pr-1.5 sm:pr-2.5 py-2 sm:py-3">
               <button
                 onClick={handleTelegramDismiss}
-                className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 h-5 w-5 sm:h-6 sm:w-6 rounded-full flex items-center justify-center bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-md"
+                className="absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4 rounded-full flex items-center justify-center bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-sm"
                 aria-label="Dismiss"
               >
-                <X className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                <X className="h-2 w-2 sm:h-2.5 sm:w-2.5" strokeWidth={2.5} />
               </button>
               <div className="flex-shrink-0 h-7 w-7 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-[#29b6f6] to-[#0077b5] flex items-center justify-center shadow-md ring-1 ring-white/10">
                 <Send className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
