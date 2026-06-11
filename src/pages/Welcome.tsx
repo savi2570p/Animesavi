@@ -75,6 +75,18 @@ export default function Welcome() {
   const [isLaunching, setIsLaunching] = useState(false);
   const [launchProgress, setLaunchProgress] = useState(0);
   const [launchStage, setLaunchStage] = useState('Warming up servers');
+  const [launchError, setLaunchError] = useState<string | null>(null);
+  const [launchTarget, setLaunchTarget] = useState<string>('/');
+  // Progress-step checklist shown beneath the bar so the user has tangible
+  // feedback (instead of just a moving percentage). Steps tick to true as the
+  // simulated launcher passes each threshold.
+  const LAUNCH_STEPS = [
+    { at: 18, label: 'Connect CDN' },
+    { at: 38, label: 'Load library' },
+    { at: 58, label: 'Prepare 4K' },
+    { at: 78, label: 'Sync history' },
+    { at: 100, label: 'Ready' },
+  ];
   const [referOpen, setReferOpen] = useState(false);
   const [referCopied, setReferCopied] = useState(false);
   const [referBanUntil, setReferBanUntil] = useState<number>(() => {
@@ -114,6 +126,8 @@ export default function Welcome() {
 
   const startWatching = (target: string = '/') => {
     if (isLaunching) return;
+    setLaunchTarget(target);
+    setLaunchError(null);
     setIsLaunching(true);
     setLaunchProgress(0);
     setLaunchStage('Warming up servers');
@@ -127,19 +141,44 @@ export default function Welcome() {
     const start = performance.now();
     const duration = 1800; // ms — fast but feels real
     const tick = () => {
-      const elapsed = performance.now() - start;
-      const pct = Math.min(100, (elapsed / duration) * 100);
-      setLaunchProgress(pct);
-      const stage = [...stages].reverse().find(s => pct >= s.at);
-      if (stage) setLaunchStage(stage.label);
-      if (pct < 100) {
-        requestAnimationFrame(tick);
-      } else {
-        setLaunchStage('Ready');
-        setTimeout(() => navigate(target), 220);
+      try {
+        // If the user is offline, bail out early with a clear error so they
+        // don't sit staring at a spinner.
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+          setLaunchError('You appear to be offline. Reconnect and try again.');
+          return;
+        }
+        const elapsed = performance.now() - start;
+        const pct = Math.min(100, (elapsed / duration) * 100);
+        setLaunchProgress(pct);
+        const stage = [...stages].reverse().find((s) => pct >= s.at);
+        if (stage) setLaunchStage(stage.label);
+        if (pct < 100) {
+          requestAnimationFrame(tick);
+        } else {
+          setLaunchStage('Ready');
+          setTimeout(() => {
+            try {
+              navigate(target);
+            } catch (err) {
+              console.error('[welcome] navigate failed', err);
+              setLaunchError('Something blocked the redirect. Please try again.');
+            }
+          }, 220);
+        }
+      } catch (err) {
+        console.error('[welcome] launch tick failed', err);
+        setLaunchError('Playback setup failed. Please retry.');
       }
     };
     requestAnimationFrame(tick);
+  };
+
+  const retryLaunch = () => {
+    setIsLaunching(false);
+    setLaunchError(null);
+    // brief tick to let state flush before restarting
+    setTimeout(() => startWatching(launchTarget), 50);
   };
 
   useEffect(() => {
