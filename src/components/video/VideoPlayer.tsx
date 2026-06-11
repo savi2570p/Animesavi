@@ -27,6 +27,9 @@ import {
   Keyboard,
   Cast,
   RotateCcw,
+  X,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { 
   getAudioTrackLabel, 
