@@ -14,7 +14,16 @@ const corsHeaders = {
 
 const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY') || '';
 const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') || '';
-const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') || 'mailto:admin@animesavi.com';
+const RAW_SUBJECT = (Deno.env.get('VAPID_SUBJECT') || '').trim();
+// VAPID subject must be a valid mailto: or https:// URL. Coerce anything else
+// (including legacy admin-typed values like "AnimeSavi") to a safe default so
+// the worker never crashes at init.
+function normalizeSubject(s: string): string {
+  if (/^mailto:[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(s)) return s;
+  if (/^https:\/\/[^\s]+$/i.test(s)) return s;
+  return 'mailto:admin@animesavi.com';
+}
+const VAPID_SUBJECT = normalizeSubject(RAW_SUBJECT);
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || '';
@@ -24,6 +33,9 @@ try {
   if (VAPID_PUBLIC && VAPID_PRIVATE) {
     webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
     vapidReady = true;
+    console.log('[send-test-push] VAPID ready with subject', VAPID_SUBJECT);
+  } else {
+    console.error('[send-test-push] Missing VAPID keys');
   }
 } catch (e) {
   console.error('[send-test-push] VAPID init failed:', e);

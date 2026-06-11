@@ -16,9 +16,20 @@ const corsHeaders = {
 
 const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY')!;
 const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY')!;
-const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') || 'mailto:admin@animesavi.com';
+const RAW_SUBJECT = (Deno.env.get('VAPID_SUBJECT') || '').trim();
+function normalizeSubject(s: string): string {
+  if (/^mailto:[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(s)) return s;
+  if (/^https:\/\/[^\s]+$/i.test(s)) return s;
+  return 'mailto:admin@animesavi.com';
+}
+const VAPID_SUBJECT = normalizeSubject(RAW_SUBJECT);
 
-webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
+try {
+  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
+  console.log('[send-episode-push] VAPID ready with subject', VAPID_SUBJECT);
+} catch (e) {
+  console.error('[send-episode-push] VAPID init failed:', e);
+}
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
