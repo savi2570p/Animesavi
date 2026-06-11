@@ -61,6 +61,7 @@ const UpcomingPage = lazy(() => import("./pages/UpcomingPage"));
 const EmbedSlugPlayer = lazy(() => import("./pages/EmbedSlugPlayer"));
 const MinimalEmbedPage = lazy(() => import("./pages/MinimalEmbedPage"));
 const Welcome = lazy(() => import("./pages/Welcome"));
+const QaCheck = lazy(() => import("./pages/QaCheck"));
 const Downloads = lazy(() => import("./pages/Downloads"));
 const WatchList = lazy(() => import("./pages/WatchList"));
 const ShadowArise = lazy(() => import("./pages/ShadowArise"));
@@ -222,6 +223,7 @@ const App = () => (
                   <Route path="/embed/:animeSlug/:seasonSlug/:episodeSlug" element={<MinimalEmbedPage />} />
                   <Route path="/embed/:animeSlug/:episodeSlug" element={<EmbedSlugPlayer />} />
                   <Route path="/welcome" element={<Welcome />} />
+                  <Route path="/qa-check" element={<QaCheck />} />
                   <Route path="/Shadow-Arise" element={<ShadowArise />} />
                   <Route element={<MainLayout />}>
                     <Route path="/" element={<Index />} />

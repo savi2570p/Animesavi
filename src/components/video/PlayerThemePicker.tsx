@@ -124,17 +124,23 @@ interface ThemePickerButtonProps {
   onChange: (key: PlayerThemeKey) => void;
   iconClassName?: string;
   containerEl?: HTMLElement | null;
+  /** Optional wrapper class so the trigger matches sibling control button sizing. */
+  buttonClassName?: string;
 }
 
 /**
  * Compact palette button + popover. Drop next to the Settings button.
- * Flat / minimal — matches X-PLUS style: no circular background.
+ * The trigger now accepts a `buttonClassName` so it visually matches its
+ * neighbouring control buttons (same square footprint, hover, focus) — this
+ * fixes the gap that made the Palette icon look isolated/too far from
+ * Settings on desktop.
  */
 export function ThemePickerButton({
   value,
   onChange,
   iconClassName = 'w-5 h-5 md:w-6 md:h-6',
   containerEl,
+  buttonClassName,
 }: ThemePickerButtonProps) {
   const [open, setOpen] = useState(false);
 
@@ -143,7 +149,10 @@ export function ThemePickerButton({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="text-white hover:text-white/80 transition-colors"
+          className={
+            buttonClassName ||
+            'inline-flex items-center justify-center text-white hover:text-white/80 hover:bg-white/10 rounded-full transition-colors'
+          }
           onPointerDown={(e) => {
             e.stopPropagation();
             e.preventDefault();

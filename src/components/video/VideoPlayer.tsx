@@ -27,6 +27,9 @@ import {
   Keyboard,
   Cast,
   RotateCcw,
+  X,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { 
   getAudioTrackLabel, 
@@ -1547,10 +1550,9 @@ export function VideoPlayer({
       }
       
       // Show Watch Next overlay when video ends (within 5 seconds of end)
-      if (dur > 0 && secondsLeft <= 5 && hasNextEpisode && !isMovie && !showWatchNextOverlay) {
-        setShowWatchNextOverlay(true);
-        setWatchNextCountdown(10);
-      }
+      // Auto next-episode countdown overlay disabled per user request.
+      // Users now manually click "Next Episode" — no 10s timer trigger.
+      // (Keeping the showWatchNextOverlay state available for legacy code paths.)
     }
   };
   
@@ -2828,53 +2830,93 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Video Error Modal */}
-      {videoError && !isProcessing && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999]">
-          <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4 shadow-2xl animate-scale-in">
-            <h3 className="text-foreground font-semibold text-center text-lg mb-2">Video Playback Issue</h3>
-            <p className="text-muted-foreground text-sm text-center mb-2">
-              This video couldn't be played directly.
-            </p>
-            {effectiveVideoUrl && /\.(mkv|avi|flv|wmv)/i.test(effectiveVideoUrl) && (
-              <p className="text-destructive text-xs text-center mb-2 font-medium">
-                ⚠️ MKV/AVI files are not supported by browsers. Please re-upload as MP4 (H.264).
-              </p>
-            )}
-            <p className="text-muted-foreground text-sm text-center mb-4">
-              Try one of the options below:
-            </p>
-            <div className="flex flex-col gap-2">
-              <Button
-                onClick={() => {
-                  setVideoError(false);
-                  if (videoRef.current) {
-                    videoRef.current.load();
-                    videoRef.current.play().catch(() => {});
-                  }
-                }}
-                variant="default"
-                className="w-full"
-              >
-                Retry Playback
-              </Button>
-              <Button
-                onClick={() => setUseIframeFallback(true)}
-                variant="outline"
-                className="w-full"
-              >
-                Use Embed Player
-              </Button>
-            </div>
-            <button
-              onClick={() => setVideoError(false)}
-              className="mt-3 text-xs text-muted-foreground hover:text-foreground w-full text-center"
+      {/* Video Error Modal — redesigned: cinematic glass card, clear cause-aware
+          messaging, primary "Use Embed Player" CTA so users keep watching, and
+          a small diagnostic strip so power users can copy the URL/format. */}
+      {videoError && !isProcessing && (() => {
+        const isUnsupportedContainer = !!effectiveVideoUrl && /\.(mkv|avi|flv|wmv|ts|m2ts)(\?|#|$)/i.test(effectiveVideoUrl);
+        const isHls = !!effectiveVideoUrl && /\.m3u8(\?|#|$)/i.test(effectiveVideoUrl);
+        const fmtLabel = isUnsupportedContainer ? 'Unsupported container' : isHls ? 'HLS stream' : 'Direct file';
+        return (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+            <div
+              className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-zinc-900/95 to-zinc-950/95 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)] animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
+              onClick={(e) => e.stopPropagation()}
             >
-              Dismiss
-            </button>
+              {/* Top accent bar */}
+              <div className="h-1 w-full bg-gradient-to-r from-red-500 via-orange-500 to-red-500" />
+              {/* Close pill */}
+              <button
+                onClick={() => setVideoError(false)}
+                className="absolute top-3 right-3 h-7 w-7 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
+                aria-label="Dismiss"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+
+              <div className="px-6 pt-6 pb-5">
+                {/* Icon */}
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500/20 to-orange-500/10 ring-1 ring-red-500/30">
+                  <AlertCircle className="h-7 w-7 text-red-400" />
+                </div>
+
+                <h3 className="text-center text-white font-bold text-lg leading-tight">
+                  Playback hit a snag
+                </h3>
+                <p className="mt-1.5 text-center text-white/60 text-sm leading-relaxed">
+                  {isUnsupportedContainer
+                    ? 'This file uses a container your browser can\u2019t decode natively. Switch to the embed player to keep watching.'
+                    : 'The direct stream stalled. The embed player usually recovers instantly — give it a try.'}
+                </p>
+
+                {/* Diagnostic chip */}
+                <div className="mt-4 flex items-center justify-center gap-2 text-[10px] uppercase tracking-wider">
+                  <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/50 font-semibold">
+                    {fmtLabel}
+                  </span>
+                  {activeServer && (
+                    <span className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary font-semibold">
+                      {activeServer}
+                    </span>
+                  )}
+                </div>
+
+                {/* Actions */}
+                <div className="mt-5 flex flex-col gap-2">
+                  <Button
+                    onClick={() => setUseIframeFallback(true)}
+                    className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/30"
+                  >
+                    <Play className="h-4 w-4 mr-2 fill-current" />
+                    Use Embed Player
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setVideoError(false);
+                      if (videoRef.current) {
+                        videoRef.current.load();
+                        videoRef.current.play().catch(() => {});
+                      }
+                    }}
+                    variant="outline"
+                    className="w-full h-10 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Retry direct stream
+                  </Button>
+                </div>
+
+                <button
+                  onClick={() => setVideoError(false)}
+                  className="mt-3 w-full text-center text-[11px] text-white/40 hover:text-white/70 transition-colors"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* CUSTOM CONTROLS - FIXED for fullscreen - Render inside container for native fullscreen */}
       {isFullscreen ? (
@@ -3022,6 +3064,7 @@ export function VideoPlayer({
                       onChange={setPlayerTheme}
                       iconClassName={isIOS ? 'w-4 h-4' : 'w-5 h-5 md:w-6 md:h-6'}
                       containerEl={containerRef.current}
+                      buttonClassName={flatPlayerControlButtonClass}
                     />
                     <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
                       <DropdownMenuTrigger asChild>
@@ -3106,6 +3149,7 @@ export function VideoPlayer({
                   onChange={setPlayerTheme}
                   iconClassName={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"}
                   containerEl={containerRef.current}
+                  buttonClassName={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`}
                 />
                 <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
                   <DropdownMenuTrigger asChild>
@@ -3314,6 +3358,7 @@ export function VideoPlayer({
                     onChange={setPlayerTheme}
                     iconClassName={isIOS ? 'w-4 h-4' : 'w-4.5 h-4.5 md:w-5 md:h-5'}
                     containerEl={containerRef.current}
+                    buttonClassName={flatPlayerControlButtonClass}
                   />
                   <DropdownMenu 
                     modal={false} 
@@ -3434,6 +3479,7 @@ export function VideoPlayer({
                 onChange={setPlayerTheme}
                 iconClassName={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"}
                 containerEl={containerRef.current}
+                buttonClassName={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`}
               />
               <DropdownMenu 
                 modal={false} 
