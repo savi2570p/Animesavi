@@ -1237,6 +1237,29 @@ export default function Welcome() {
               </div>
             </div>
 
+            {/* Progress step checklist — clearly shows each phase ticking off */}
+            <ul className="w-full grid grid-cols-5 gap-1.5">
+              {LAUNCH_STEPS.map((step) => {
+                const done = launchProgress >= step.at;
+                const active = !done && launchProgress >= (step.at - 20);
+                return (
+                  <li
+                    key={step.label}
+                    className={`flex flex-col items-center gap-1 rounded-md py-1.5 px-0.5 text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider border transition-all duration-300 ${
+                      done
+                        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                        : active
+                        ? 'border-primary/40 bg-primary/10 text-primary animate-pulse'
+                        : 'border-border/30 bg-card/30 text-muted-foreground/60'
+                    }`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${done ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' : active ? 'bg-primary' : 'bg-muted-foreground/40'}`} />
+                    <span className="leading-none text-center line-clamp-1">{step.label}</span>
+                  </li>
+                );
+              })}
+            </ul>
+
             {/* Feature pills */}
             <div className="flex items-center gap-2 flex-wrap justify-center">
               {['Ad-free', 'Hindi DUB', 'Offline', 'No Login'].map((label, i) => (
@@ -1249,6 +1272,30 @@ export default function Welcome() {
                 </span>
               ))}
             </div>
+
+            {/* Error state — shown if the launcher fails or the user is offline */}
+            {launchError && (
+              <div className="w-full rounded-xl border border-destructive/40 bg-destructive/10 backdrop-blur p-4 animate-fade-in space-y-3">
+                <div className="flex items-start gap-2">
+                  <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-destructive/20 text-destructive text-xs font-bold">!</span>
+                  <p className="text-xs sm:text-sm text-foreground/90 leading-snug text-left">{launchError}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={retryLaunch}
+                    className="flex-1 h-9 rounded-md bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors"
+                  >
+                    Retry
+                  </button>
+                  <button
+                    onClick={() => { setIsLaunching(false); setLaunchError(null); }}
+                    className="flex-1 h-9 rounded-md border border-border bg-background/40 text-foreground text-xs font-semibold hover:bg-background/70 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Tip */}
             <p className="text-[11px] text-muted-foreground/70 max-w-xs leading-relaxed">
