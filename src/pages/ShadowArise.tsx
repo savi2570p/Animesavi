@@ -15,6 +15,7 @@ export default function ShadowArise() {
   const [downloadStarted, setDownloadStarted] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [downloadPct, setDownloadPct] = useState(0);
+  const [fileSizeBytes, setFileSizeBytes] = useState<number | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Mini player state
@@ -27,7 +28,34 @@ export default function ShadowArise() {
   const safeAnime = animeName.replace(/[^a-zA-Z0-9]+/g, '');
   const fileName = `[AnimeSavi]_${quality}_${safeAnime}_Ep-${episodeCount}.mp4`;
 
-  // Processing simulation (10s)
+  const fmtSize = (b: number | null) => {
+    if (!b || b <= 0) return '—';
+    if (b >= 1024 ** 3) return `${(b / 1024 ** 3).toFixed(2)} GB`;
+    if (b >= 1024 ** 2) return `${(b / 1024 ** 2).toFixed(1)} MB`;
+    return `${(b / 1024).toFixed(0)} KB`;
+  };
+
+  // Fetch real file size via HEAD (fallback to ranged GET)
+  useEffect(() => {
+    if (!videoUrl) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const head = await fetch(videoUrl, { method: 'HEAD', mode: 'cors' });
+        const len = Number(head.headers.get('content-length') || '0');
+        if (!cancelled && len > 0) { setFileSizeBytes(len); return; }
+      } catch {}
+      try {
+        const r = await fetch(videoUrl, { headers: { Range: 'bytes=0-0' }, mode: 'cors' });
+        const cr = r.headers.get('content-range'); // bytes 0-0/12345
+        const m = cr && cr.match(/\/(\d+)$/);
+        if (!cancelled && m) setFileSizeBytes(Number(m[1]));
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [videoUrl]);
+
+  // Processing simulation (10s) — completes when both timer done AND size resolved (best-effort)
   useEffect(() => {
     let elapsed = 0;
     timerRef.current = setInterval(() => {
@@ -41,6 +69,7 @@ export default function ShadowArise() {
     }, 100);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
+
 
   // NOTE: No auto-trigger of download. User must explicitly click.
 
