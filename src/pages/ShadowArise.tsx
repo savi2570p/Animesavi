@@ -90,14 +90,16 @@ export default function ShadowArise() {
     setDownloadStarted(true);
     setDownloading(true);
     setDownloadPct(0);
+    setSizeMismatch(null);
+    setDownloadedBytes(0);
 
     try {
       const res = await fetch(videoUrl, { mode: 'cors', credentials: 'omit' });
       if (!res.ok || !res.body) throw new Error('fetch failed');
 
-      const total = Number(res.headers.get('content-length') || '0');
+      const total = Number(res.headers.get('content-length') || '0') || fileSizeBytes || 0;
       const reader = res.body.getReader();
-      const chunks: Uint8Array[] = [];
+      const chunks: BlobPart[] = [];
       let received = 0;
 
       while (true) {
@@ -106,34 +108,42 @@ export default function ShadowArise() {
         if (value) {
           chunks.push(value);
           received += value.length;
+          setDownloadedBytes(received);
           if (total > 0) setDownloadPct(Math.min(99, (received / total) * 100));
         }
       }
 
-      const blob = new Blob(chunks as BlobPart[], { type: 'video/mp4' });
+      // Verify expected vs actual (tolerate 1KB diff)
+      const expected = fileSizeBytes || total;
+      if (expected && Math.abs(received - expected) > 1024) {
+        setSizeMismatch({ expected, got: received });
+        // Still allow saving — user can re-prepare
+      }
+
+      // Use a proper MIME based on URL extension for better mobile playback
+      const ext = (videoUrl.split('?')[0].split('.').pop() || 'mp4').toLowerCase();
+      const mime = ext === 'mkv' ? 'video/x-matroska' : ext === 'webm' ? 'video/webm' : 'video/mp4';
+
+      const blob = new Blob(chunks, { type: mime });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = fileName;
+      a.download = fileName.replace(/\.mp4$/i, `.${ext === 'mkv' || ext === 'webm' ? ext : 'mp4'}`);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
       setDownloadPct(100);
     } catch {
-      // Fallback when CORS blocks fetch: use a hidden iframe to trigger
-      // the download without navigating the current tab. This prevents
-      // the OS default video player (Windows Media / QuickTime) from opening.
+      // CORS blocked or stream interrupted — fall back to hidden iframe so
+      // the browser still triggers a native download.
       try {
         const iframe = document.createElement('iframe');
         iframe.style.display = 'none';
         iframe.src = videoUrl;
         document.body.appendChild(iframe);
-        setTimeout(() => {
-          try { document.body.removeChild(iframe); } catch {}
-        }, 60000);
+        setTimeout(() => { try { document.body.removeChild(iframe); } catch {} }, 60000);
       } catch {
-        // Last resort: anchor with download attribute (no new tab).
         const a = document.createElement('a');
         a.href = videoUrl;
         a.download = fileName;
