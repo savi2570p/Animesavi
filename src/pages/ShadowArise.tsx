@@ -29,7 +29,7 @@ export default function ShadowArise() {
   const [curTime, setCurTime] = useState(0);
   const [dur, setDur] = useState(0);
 
-  const statusText = quality === '720p' ? 'Converting to HD…' : 'Preparing Raw Video…';
+  const statusText = 'Preparing your video file…';
   const safeAnime = animeName.replace(/[^a-zA-Z0-9]+/g, '');
   const fileName = `[AnimeSavi]_${quality}_${safeAnime}_Ep-${episodeCount}.mp4`;
 
