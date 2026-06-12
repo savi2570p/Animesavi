@@ -17,6 +17,10 @@ export default function ShadowArise() {
   const [downloading, setDownloading] = useState(false);
   const [downloadPct, setDownloadPct] = useState(0);
   const [fileSizeBytes, setFileSizeBytes] = useState<number | null>(null);
+  const [sizeResolved, setSizeResolved] = useState(false);
+  const [prepStep, setPrepStep] = useState(0); // 0..4 stages
+  const [sizeMismatch, setSizeMismatch] = useState<{ expected: number; got: number } | null>(null);
+  const [downloadedBytes, setDownloadedBytes] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Mini player state
