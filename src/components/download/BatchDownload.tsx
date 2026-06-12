@@ -64,47 +64,80 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
     if (!videoUrl) return false;
 
     setDownloadQueue(prev => prev.map((item, idx) =>
-      idx === index ? { ...item, status: 'downloading' } : item
+      idx === index ? { ...item, status: 'downloading', progress: 0 } : item
     ));
 
+    // Determine correct extension/MIME from the source URL
+    const ext = (videoUrl.split('?')[0].split('.').pop() || 'mp4').toLowerCase();
+    const mime = ext === 'mkv' ? 'video/x-matroska' : ext === 'webm' ? 'video/webm' : 'video/mp4';
+    const safeExt = ['mp4', 'mkv', 'webm', 'm4v'].includes(ext) ? ext : 'mp4';
+    const fileName = `${animeTitle} - Episode ${episode.episode_number} [720p].${safeExt}`;
+
     try {
-      for (let progress = 0; progress <= 100; progress += 20) {
-        await new Promise(resolve => setTimeout(resolve, 150));
-        setDownloadQueue(prev => prev.map((item, idx) =>
-          idx === index ? { ...item, progress } : item
-        ));
+      // Try real streaming download with progress + size verification
+      const res = await fetch(videoUrl, { mode: 'cors', credentials: 'omit' });
+      if (!res.ok || !res.body) throw new Error('fetch failed');
+
+      const ctype = (res.headers.get('content-type') || '').toLowerCase();
+      // If server returned HTML (error page / redirect login), bail to fallback
+      if (ctype.includes('text/html')) throw new Error('html response');
+
+      const total = Number(res.headers.get('content-length') || '0');
+      const reader = res.body.getReader();
+      const chunks: BlobPart[] = [];
+      let received = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) {
+          chunks.push(value);
+          received += value.length;
+          if (total > 0) {
+            const pct = Math.min(99, (received / total) * 100);
+            setDownloadQueue(prev => prev.map((item, idx) =>
+              idx === index ? { ...item, progress: pct } : item
+            ));
+          }
+        }
       }
 
-      try {
-        const response = await fetch(videoUrl);
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${animeTitle}, Episode ${episode.episode_number}, 720p x264 WEB-DL [Multi Audio] ESub.mkv`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      } catch {
-        const link = document.createElement('a');
-        link.href = videoUrl;
-        link.download = `${animeTitle}, Episode ${episode.episode_number}, 720p x264 WEB-DL [Multi Audio] ESub.mkv`;
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+      // Sanity check: anything under 100KB is almost certainly an error page
+      if (received < 100 * 1024) throw new Error('payload too small');
+      if (total > 0 && Math.abs(received - total) > 1024) throw new Error('size mismatch');
+
+      const blob = new Blob(chunks, { type: mime });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => window.URL.revokeObjectURL(url), 2000);
 
       setDownloadQueue(prev => prev.map((item, idx) =>
         idx === index ? { ...item, status: 'completed', progress: 100 } : item
       ));
       return true;
     } catch {
-      setDownloadQueue(prev => prev.map((item, idx) =>
-        idx === index ? { ...item, status: 'failed' } : item
-      ));
-      return false;
+      // Fallback: hidden iframe download (avoids opening default player tab)
+      try {
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = videoUrl;
+        document.body.appendChild(iframe);
+        setTimeout(() => { try { document.body.removeChild(iframe); } catch {} }, 60000);
+        setDownloadQueue(prev => prev.map((item, idx) =>
+          idx === index ? { ...item, status: 'completed', progress: 100 } : item
+        ));
+        return true;
+      } catch {
+        setDownloadQueue(prev => prev.map((item, idx) =>
+          idx === index ? { ...item, status: 'failed' } : item
+        ));
+        return false;
+      }
     }
   };
 

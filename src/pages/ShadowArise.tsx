@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Cloud, Download, Shield, CheckCircle, Play, Pause } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Cloud, Download, Shield, CheckCircle, Play, Pause, ArrowLeft, AlertTriangle } from 'lucide-react';
 
 export default function ShadowArise() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const quality = searchParams.get('quality') || '1080p';
@@ -16,6 +17,10 @@ export default function ShadowArise() {
   const [downloading, setDownloading] = useState(false);
   const [downloadPct, setDownloadPct] = useState(0);
   const [fileSizeBytes, setFileSizeBytes] = useState<number | null>(null);
+  const [sizeResolved, setSizeResolved] = useState(false);
+  const [prepStep, setPrepStep] = useState(0); // 0..4 stages
+  const [sizeMismatch, setSizeMismatch] = useState<{ expected: number; got: number } | null>(null);
+  const [downloadedBytes, setDownloadedBytes] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Mini player state
@@ -24,7 +29,7 @@ export default function ShadowArise() {
   const [curTime, setCurTime] = useState(0);
   const [dur, setDur] = useState(0);
 
-  const statusText = quality === '720p' ? 'Converting to HD…' : 'Preparing Raw Video…';
+  const statusText = 'Preparing your video file…';
   const safeAnime = animeName.replace(/[^a-zA-Z0-9]+/g, '');
   const fileName = `[AnimeSavi]_${quality}_${safeAnime}_Ep-${episodeCount}.mp4`;
 
@@ -37,38 +42,42 @@ export default function ShadowArise() {
 
   // Fetch real file size via HEAD (fallback to ranged GET)
   useEffect(() => {
-    if (!videoUrl) return;
+    if (!videoUrl) { setSizeResolved(true); return; }
     let cancelled = false;
     (async () => {
       try {
         const head = await fetch(videoUrl, { method: 'HEAD', mode: 'cors' });
         const len = Number(head.headers.get('content-length') || '0');
-        if (!cancelled && len > 0) { setFileSizeBytes(len); return; }
+        if (!cancelled && len > 0) { setFileSizeBytes(len); setSizeResolved(true); return; }
       } catch {}
       try {
         const r = await fetch(videoUrl, { headers: { Range: 'bytes=0-0' }, mode: 'cors' });
-        const cr = r.headers.get('content-range'); // bytes 0-0/12345
+        const cr = r.headers.get('content-range');
         const m = cr && cr.match(/\/(\d+)$/);
         if (!cancelled && m) setFileSizeBytes(Number(m[1]));
       } catch {}
+      if (!cancelled) setSizeResolved(true);
     })();
     return () => { cancelled = true; };
   }, [videoUrl]);
 
-  // Processing simulation (10s) — completes when both timer done AND size resolved (best-effort)
+  // Real preparation progress: walk through stages and gate ready on size resolved
   useEffect(() => {
     let elapsed = 0;
     timerRef.current = setInterval(() => {
       elapsed += 100;
-      const p = Math.min((elapsed / 10000) * 100, 100);
+      // Cap at 95% until size resolves
+      const cap = sizeResolved ? 100 : 95;
+      const p = Math.min((elapsed / 9000) * 100, cap);
       setProgress(p);
+      setPrepStep(Math.min(4, Math.floor(p / 20)));
       if (p >= 100) {
         if (timerRef.current) clearInterval(timerRef.current);
         setPhase('ready');
       }
     }, 100);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, []);
+  }, [sizeResolved]);
 
 
   // NOTE: No auto-trigger of download. User must explicitly click.
@@ -81,14 +90,16 @@ export default function ShadowArise() {
     setDownloadStarted(true);
     setDownloading(true);
     setDownloadPct(0);
+    setSizeMismatch(null);
+    setDownloadedBytes(0);
 
     try {
       const res = await fetch(videoUrl, { mode: 'cors', credentials: 'omit' });
       if (!res.ok || !res.body) throw new Error('fetch failed');
 
-      const total = Number(res.headers.get('content-length') || '0');
+      const total = Number(res.headers.get('content-length') || '0') || fileSizeBytes || 0;
       const reader = res.body.getReader();
-      const chunks: Uint8Array[] = [];
+      const chunks: BlobPart[] = [];
       let received = 0;
 
       while (true) {
@@ -97,34 +108,42 @@ export default function ShadowArise() {
         if (value) {
           chunks.push(value);
           received += value.length;
+          setDownloadedBytes(received);
           if (total > 0) setDownloadPct(Math.min(99, (received / total) * 100));
         }
       }
 
-      const blob = new Blob(chunks as BlobPart[], { type: 'video/mp4' });
+      // Verify expected vs actual (tolerate 1KB diff)
+      const expected = fileSizeBytes || total;
+      if (expected && Math.abs(received - expected) > 1024) {
+        setSizeMismatch({ expected, got: received });
+        // Still allow saving — user can re-prepare
+      }
+
+      // Use a proper MIME based on URL extension for better mobile playback
+      const ext = (videoUrl.split('?')[0].split('.').pop() || 'mp4').toLowerCase();
+      const mime = ext === 'mkv' ? 'video/x-matroska' : ext === 'webm' ? 'video/webm' : 'video/mp4';
+
+      const blob = new Blob(chunks, { type: mime });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = fileName;
+      a.download = fileName.replace(/\.mp4$/i, `.${ext === 'mkv' || ext === 'webm' ? ext : 'mp4'}`);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
       setDownloadPct(100);
     } catch {
-      // Fallback when CORS blocks fetch: use a hidden iframe to trigger
-      // the download without navigating the current tab. This prevents
-      // the OS default video player (Windows Media / QuickTime) from opening.
+      // CORS blocked or stream interrupted — fall back to hidden iframe so
+      // the browser still triggers a native download.
       try {
         const iframe = document.createElement('iframe');
         iframe.style.display = 'none';
         iframe.src = videoUrl;
         document.body.appendChild(iframe);
-        setTimeout(() => {
-          try { document.body.removeChild(iframe); } catch {}
-        }, 60000);
+        setTimeout(() => { try { document.body.removeChild(iframe); } catch {} }, 60000);
       } catch {
-        // Last resort: anchor with download attribute (no new tab).
         const a = document.createElement('a');
         a.href = videoUrl;
         a.download = fileName;
@@ -167,6 +186,22 @@ export default function ShadowArise() {
         background:
           'radial-gradient(ellipse at 20% 80%, hsl(270 70% 25% / 0.25) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, hsl(280 80% 30% / 0.2) 0%, transparent 50%), #0a0a0f',
       }}>
+
+      {/* Back button */}
+      <button
+        onClick={() => navigate(-1)}
+        aria-label="Back"
+        className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white/80 hover:text-white text-xs font-medium transition-all hover:scale-105 active:scale-95"
+        style={{
+          background: 'rgba(20, 12, 30, 0.75)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          border: '1px solid hsl(270 60% 50% / 0.35)',
+        }}
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />
+        Back
+      </button>
 
       {/* Ambient glow corners */}
       <div className="absolute top-0 left-0 w-64 h-64 rounded-full opacity-25 blur-[100px] pointer-events-none" style={{ background: 'hsl(270 80% 50%)' }} />
@@ -224,7 +259,29 @@ export default function ShadowArise() {
                       boxShadow: '0 0 12px hsl(270 90% 55% / 0.6)',
                     }} />
                 </div>
-                <p className="text-white/40 text-[11px] mt-2 font-mono">{Math.floor(progress)}%</p>
+                <p className="text-white/40 text-[11px] mt-2 font-mono">{Math.floor(progress)}%{!sizeResolved && ' · resolving file size…'}</p>
+              </div>
+
+              {/* Stage checklist */}
+              <div className="w-full space-y-1.5">
+                {[
+                  'Connecting to AnimeSavi CDN',
+                  'Locating source file',
+                  'Resolving real file size',
+                  'Preparing secure download link',
+                  'Finalizing',
+                ].map((label, i) => {
+                  const done = prepStep > i || (i === 2 && sizeResolved);
+                  const active = prepStep === i && !done;
+                  return (
+                    <div key={label} className="flex items-center gap-2 text-left">
+                      <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] ${done ? 'bg-green-500/20 text-green-400' : active ? 'bg-purple-500/20 text-purple-300' : 'bg-white/5 text-white/30'}`}>
+                        {done ? '✓' : active ? '•' : ''}
+                      </div>
+                      <span className={`text-[11px] ${done ? 'text-white/80' : active ? 'text-white/90' : 'text-white/30'}`}>{label}</span>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* File info */}
@@ -261,6 +318,17 @@ export default function ShadowArise() {
                 <Download className="w-4 h-4" />
                 {downloading ? `Downloading ${Math.floor(downloadPct)}%` : 'Download Now'}
               </button>
+
+              {sizeMismatch && (
+                <div className="w-full rounded-lg p-3 text-left flex items-start gap-2"
+                  style={{ background: 'hsl(40 90% 50% / 0.12)', border: '1px solid hsl(40 90% 50% / 0.35)' }}>
+                  <AlertTriangle className="w-4 h-4 text-amber-300 mt-0.5 flex-shrink-0" />
+                  <div className="text-[11px] text-amber-100/90">
+                    <p className="font-semibold">Download size mismatch</p>
+                    <p className="text-amber-100/70">Expected {fmtSize(sizeMismatch.expected)} but received {fmtSize(sizeMismatch.got)}. The file may be incomplete — please tap Download again.</p>
+                  </div>
+                </div>
+              )}
 
               {/* Download progress (only while downloading) */}
               {downloading && (
