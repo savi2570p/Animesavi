@@ -231,11 +231,13 @@ export default function ShadowArise() {
               <div className="w-full rounded-lg p-3 text-left" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <p className="text-white/30 text-[10px] uppercase tracking-wider mb-1">File Name</p>
                 <p className="text-white/70 text-xs font-mono break-all">{fileName}</p>
-                <div className="flex gap-3 mt-2">
+                <div className="flex gap-3 mt-2 items-center flex-wrap">
                   <span className="text-[10px] px-2 py-0.5 rounded font-bold" style={{ background: 'hsl(270 80% 55% / 0.2)', color: 'hsl(270 90% 75%)' }}>{quality}</span>
                   <span className="text-[10px] text-white/40">x264 WEB-DL</span>
+                  <span className="text-[10px] text-white/60 ml-auto font-mono">{fmtSize(fileSizeBytes)}</span>
                 </div>
               </div>
+
             </>
           ) : (
             <>
