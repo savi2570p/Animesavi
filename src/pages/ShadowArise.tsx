@@ -42,38 +42,42 @@ export default function ShadowArise() {
 
   // Fetch real file size via HEAD (fallback to ranged GET)
   useEffect(() => {
-    if (!videoUrl) return;
+    if (!videoUrl) { setSizeResolved(true); return; }
     let cancelled = false;
     (async () => {
       try {
         const head = await fetch(videoUrl, { method: 'HEAD', mode: 'cors' });
         const len = Number(head.headers.get('content-length') || '0');
-        if (!cancelled && len > 0) { setFileSizeBytes(len); return; }
+        if (!cancelled && len > 0) { setFileSizeBytes(len); setSizeResolved(true); return; }
       } catch {}
       try {
         const r = await fetch(videoUrl, { headers: { Range: 'bytes=0-0' }, mode: 'cors' });
-        const cr = r.headers.get('content-range'); // bytes 0-0/12345
+        const cr = r.headers.get('content-range');
         const m = cr && cr.match(/\/(\d+)$/);
         if (!cancelled && m) setFileSizeBytes(Number(m[1]));
       } catch {}
+      if (!cancelled) setSizeResolved(true);
     })();
     return () => { cancelled = true; };
   }, [videoUrl]);
 
-  // Processing simulation (10s) — completes when both timer done AND size resolved (best-effort)
+  // Real preparation progress: walk through stages and gate ready on size resolved
   useEffect(() => {
     let elapsed = 0;
     timerRef.current = setInterval(() => {
       elapsed += 100;
-      const p = Math.min((elapsed / 10000) * 100, 100);
+      // Cap at 95% until size resolves
+      const cap = sizeResolved ? 100 : 95;
+      const p = Math.min((elapsed / 9000) * 100, cap);
       setProgress(p);
+      setPrepStep(Math.min(4, Math.floor(p / 20)));
       if (p >= 100) {
         if (timerRef.current) clearInterval(timerRef.current);
         setPhase('ready');
       }
     }, 100);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, []);
+  }, [sizeResolved]);
 
 
   // NOTE: No auto-trigger of download. User must explicitly click.
