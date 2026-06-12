@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Cloud, Download, Shield, CheckCircle, Play, Pause } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Cloud, Download, Shield, CheckCircle, Play, Pause, ArrowLeft, AlertTriangle } from 'lucide-react';
 
 export default function ShadowArise() {
   const [searchParams] = useSearchParams();
