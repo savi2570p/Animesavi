@@ -323,9 +323,13 @@ export default function ShadowArise() {
               )}
 
               <div className="w-full rounded-lg p-3 text-left" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <p className="text-white/30 text-[10px] uppercase tracking-wider mb-1">File</p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-white/30 text-[10px] uppercase tracking-wider">File</p>
+                  <p className="text-white/60 text-[10px] font-mono">{fmtSize(fileSizeBytes)}</p>
+                </div>
                 <p className="text-white/70 text-xs font-mono break-all">{fileName}</p>
               </div>
+
             </>
           )}
         </div>
