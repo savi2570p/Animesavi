@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -36,10 +37,11 @@ export function DownloadVerificationDialog({
   animeTitle,
   episodeLabel,
 }: DownloadVerificationDialogProps) {
-  const [isDownloading, setIsDownloading] = useState(false);
+  const navigate = useNavigate();
+  const [isPreparing, setIsPreparing] = useState(false);
   const [selectedQuality, setSelectedQuality] = useState<string | null>(null);
 
-  const handleDownload = async () => {
+  const handlePrepare = () => {
     if (!videoUrl) {
       toast.error('No video available for download');
       return;
@@ -49,49 +51,27 @@ export function DownloadVerificationDialog({
       return;
     }
 
-    setIsDownloading(true);
+    setIsPreparing(true);
 
-    // Build filename: {anime name}, {season and episode}, {quality} x264 WEB-DL [Multi Audio] ESub.mkv
-    const title = animeTitle || 'AnimeSavi';
-    const ep = episodeLabel || '';
-    const qualityFileName = `${title}, ${ep}, ${selectedQuality} x264 WEB-DL [Multi Audio] ESub.mkv`;
-
-    try {
-      toast.info('Preparing download...');
-
-      try {
-        const response = await fetch(videoUrl, { mode: 'cors' });
-        if (!response.ok) throw new Error('Fetch failed');
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = qualityFileName;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
-        toast.success('Download started! Check your downloads.');
-      } catch {
-        const link = document.createElement('a');
-        link.href = videoUrl;
-        link.download = qualityFileName;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success('Download started!');
-      }
-
-      onOpenChange(false);
-      setSelectedQuality(null);
-    } catch (error) {
-      console.error('Download error:', error);
-      toast.error('Failed to start download. Please try again.');
-    } finally {
-      setIsDownloading(false);
+    // Parse episode number from label, e.g. "Season 1 - Episode 5" → "05"
+    let epNum = '01';
+    if (episodeLabel) {
+      const m = episodeLabel.match(/Episode\s*(\d+)/i);
+      if (m) epNum = m[1].padStart(2, '0');
+      else if (/movie/i.test(episodeLabel)) epNum = 'Movie';
     }
+
+    const params = new URLSearchParams({
+      quality: selectedQuality,
+      anime: animeTitle || 'AnimeSavi',
+      ep: epNum,
+      url: videoUrl,
+    });
+
+    onOpenChange(false);
+    setSelectedQuality(null);
+    setIsPreparing(false);
+    navigate(`/Shadow-Arise?${params.toString()}`);
   };
 
   return (
@@ -148,16 +128,16 @@ export function DownloadVerificationDialog({
             Cancel
           </AlertDialogCancel>
           <Button
-            onClick={handleDownload}
-            disabled={isDownloading || !selectedQuality}
+            onClick={handlePrepare}
+            disabled={isPreparing || !selectedQuality}
             className="flex-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground gap-2"
           >
-            {isDownloading ? (
+            {isPreparing ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <Download className="w-4 h-4" />
             )}
-            {isDownloading ? 'Downloading...' : selectedQuality ? `Download ${selectedQuality}` : 'Select Quality'}
+            {isPreparing ? 'Preparing…' : selectedQuality ? `Prepare ${selectedQuality}` : 'Select Quality'}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
