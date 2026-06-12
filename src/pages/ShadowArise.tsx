@@ -259,7 +259,29 @@ export default function ShadowArise() {
                       boxShadow: '0 0 12px hsl(270 90% 55% / 0.6)',
                     }} />
                 </div>
-                <p className="text-white/40 text-[11px] mt-2 font-mono">{Math.floor(progress)}%</p>
+                <p className="text-white/40 text-[11px] mt-2 font-mono">{Math.floor(progress)}%{!sizeResolved && ' · resolving file size…'}</p>
+              </div>
+
+              {/* Stage checklist */}
+              <div className="w-full space-y-1.5">
+                {[
+                  'Connecting to AnimeSavi CDN',
+                  'Locating source file',
+                  'Resolving real file size',
+                  'Preparing secure download link',
+                  'Finalizing',
+                ].map((label, i) => {
+                  const done = prepStep > i || (i === 2 && sizeResolved);
+                  const active = prepStep === i && !done;
+                  return (
+                    <div key={label} className="flex items-center gap-2 text-left">
+                      <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] ${done ? 'bg-green-500/20 text-green-400' : active ? 'bg-purple-500/20 text-purple-300' : 'bg-white/5 text-white/30'}`}>
+                        {done ? '✓' : active ? '•' : ''}
+                      </div>
+                      <span className={`text-[11px] ${done ? 'text-white/80' : active ? 'text-white/90' : 'text-white/30'}`}>{label}</span>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* File info */}
