@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Cloud, Download, Shield, CheckCircle, Play, Pause, ArrowLeft, AlertTriangle } from 'lucide-react';
 
-export default function ShadowArise() {
+const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const quality = searchParams.get('quality') || '1080p';
