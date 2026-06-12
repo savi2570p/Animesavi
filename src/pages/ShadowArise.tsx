@@ -319,6 +319,17 @@ export default function ShadowArise() {
                 {downloading ? `Downloading ${Math.floor(downloadPct)}%` : 'Download Now'}
               </button>
 
+              {sizeMismatch && (
+                <div className="w-full rounded-lg p-3 text-left flex items-start gap-2"
+                  style={{ background: 'hsl(40 90% 50% / 0.12)', border: '1px solid hsl(40 90% 50% / 0.35)' }}>
+                  <AlertTriangle className="w-4 h-4 text-amber-300 mt-0.5 flex-shrink-0" />
+                  <div className="text-[11px] text-amber-100/90">
+                    <p className="font-semibold">Download size mismatch</p>
+                    <p className="text-amber-100/70">Expected {fmtSize(sizeMismatch.expected)} but received {fmtSize(sizeMismatch.got)}. The file may be incomplete — please tap Download again.</p>
+                  </div>
+                </div>
+              )}
+
               {/* Download progress (only while downloading) */}
               {downloading && (
                 <div className="w-full">
