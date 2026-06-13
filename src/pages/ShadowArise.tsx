@@ -168,7 +168,7 @@ export default function ShadowArise() {
     abortRef.current?.abort();
   };
 
-  };
+
 
   // Mini player handlers
   const togglePlay = () => {
