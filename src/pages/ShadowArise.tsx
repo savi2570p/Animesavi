@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Cloud, Download, Shield, CheckCircle, Play, Pause, ArrowLeft, AlertTriangle } from 'lucide-react';
+import { Cloud, Download, Shield, CheckCircle, Play, Pause, ArrowLeft, AlertTriangle, Ban, RotateCw } from 'lucide-react';
+import { streamDownload, saveBlob, fmtSpeed, fmtEta, fmtSize as fmtBytes } from '@/lib/downloadUtils';
+
 
 export default function ShadowArise() {
   const navigate = useNavigate();
@@ -21,6 +23,11 @@ export default function ShadowArise() {
   const [prepStep, setPrepStep] = useState(0); // 0..4 stages
   const [sizeMismatch, setSizeMismatch] = useState<{ expected: number; got: number } | null>(null);
   const [downloadedBytes, setDownloadedBytes] = useState(0);
+  const [speed, setSpeed] = useState(0);
+  const [etaSec, setEtaSec] = useState(0);
+  const [resumeOffset, setResumeOffset] = useState(0);
+  const [chunkBuffer, setChunkBuffer] = useState<BlobPart[]>([]);
+  const abortRef = useRef<AbortController | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Mini player state
@@ -33,12 +40,8 @@ export default function ShadowArise() {
   const safeAnime = animeName.replace(/[^a-zA-Z0-9]+/g, '');
   const fileName = `[AnimeSavi]_${quality}_${safeAnime}_Ep-${episodeCount}.mp4`;
 
-  const fmtSize = (b: number | null) => {
-    if (!b || b <= 0) return '—';
-    if (b >= 1024 ** 3) return `${(b / 1024 ** 3).toFixed(2)} GB`;
-    if (b >= 1024 ** 2) return `${(b / 1024 ** 2).toFixed(1)} MB`;
-    return `${(b / 1024).toFixed(0)} KB`;
-  };
+  const fmtSize = fmtBytes;
+
 
   // Fetch real file size via HEAD (fallback to ranged GET)
   useEffect(() => {
@@ -82,80 +85,90 @@ export default function ShadowArise() {
 
   // NOTE: No auto-trigger of download. User must explicitly click.
 
-  // Force a real file download via blob (so the OS treats it as a download,
-  // not a navigation to the default video player). Falls back to anchor for
-  // huge files / range-restricted CDNs.
-  const triggerDownload = async () => {
+  // Stream-download with progress, speed, ETA, Range-resume, cancel, and
+  // same-origin proxy fallback when CORS blocks the direct fetch.
+  const triggerDownload = async (resume = false) => {
     if (!videoUrl || downloading) return;
     setDownloadStarted(true);
     setDownloading(true);
-    setDownloadPct(0);
-    setSizeMismatch(null);
-    setDownloadedBytes(0);
+    if (!resume) {
+      setDownloadPct(0);
+      setSizeMismatch(null);
+      setDownloadedBytes(0);
+      setSpeed(0);
+      setEtaSec(0);
+      setResumeOffset(0);
+      setChunkBuffer([]);
+    }
 
-    try {
-      const res = await fetch(videoUrl, { mode: 'cors', credentials: 'omit' });
-      if (!res.ok || !res.body) throw new Error('fetch failed');
+    const startAt = resume ? resumeOffset : 0;
+    const existing = resume ? chunkBuffer : [];
 
-      const total = Number(res.headers.get('content-length') || '0') || fileSizeBytes || 0;
-      const reader = res.body.getReader();
-      const chunks: BlobPart[] = [];
-      let received = 0;
+    abortRef.current = new AbortController();
+    const ext = (videoUrl.split('?')[0].split('.').pop() || 'mp4').toLowerCase();
+    const safeExt = ['mp4', 'mkv', 'webm'].includes(ext) ? ext : 'mp4';
+    const finalName = fileName.replace(/\.mp4$/i, `.${safeExt}`);
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (value) {
-          chunks.push(value);
-          received += value.length;
-          setDownloadedBytes(received);
-          if (total > 0) setDownloadPct(Math.min(99, (received / total) * 100));
+    for (const useProxy of [false, true]) {
+      try {
+        const { chunks, total, received, mime } = await streamDownload({
+          url: videoUrl,
+          filename: finalName,
+          startAt,
+          signal: abortRef.current.signal,
+          useProxy,
+          onProgress: (p) => {
+            setDownloadedBytes(p.received);
+            setDownloadPct(p.pct);
+            setSpeed(p.speed);
+            setEtaSec(p.etaSec);
+            setResumeOffset(p.received);
+          },
+        });
+
+        const allChunks = [...existing, ...chunks];
+        setChunkBuffer(allChunks);
+
+        const expected = fileSizeBytes || total;
+        if (expected && Math.abs(received - expected) > 1024) {
+          setSizeMismatch({ expected, got: received });
+        }
+
+        saveBlob(allChunks, mime, finalName);
+        setDownloadPct(100);
+        setResumeOffset(0);
+        setChunkBuffer([]);
+        setDownloading(false);
+        return;
+      } catch (e: any) {
+        if (e?.name === 'AbortError') {
+          // User cancelled — keep buffer/offset so they can resume
+          setDownloading(false);
+          return;
+        }
+        if (useProxy) {
+          // Last-ditch native anchor fallback
+          try {
+            const a = document.createElement('a');
+            a.href = videoUrl;
+            a.download = finalName;
+            a.rel = 'noopener noreferrer';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          } catch {}
+          setDownloading(false);
+          return;
         }
       }
-
-      // Verify expected vs actual (tolerate 1KB diff)
-      const expected = fileSizeBytes || total;
-      if (expected && Math.abs(received - expected) > 1024) {
-        setSizeMismatch({ expected, got: received });
-        // Still allow saving — user can re-prepare
-      }
-
-      // Use a proper MIME based on URL extension for better mobile playback
-      const ext = (videoUrl.split('?')[0].split('.').pop() || 'mp4').toLowerCase();
-      const mime = ext === 'mkv' ? 'video/x-matroska' : ext === 'webm' ? 'video/webm' : 'video/mp4';
-
-      const blob = new Blob(chunks, { type: mime });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName.replace(/\.mp4$/i, `.${ext === 'mkv' || ext === 'webm' ? ext : 'mp4'}`);
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-      setDownloadPct(100);
-    } catch {
-      // CORS blocked or stream interrupted — fall back to hidden iframe so
-      // the browser still triggers a native download.
-      try {
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = videoUrl;
-        document.body.appendChild(iframe);
-        setTimeout(() => { try { document.body.removeChild(iframe); } catch {} }, 60000);
-      } catch {
-        const a = document.createElement('a');
-        a.href = videoUrl;
-        a.download = fileName;
-        a.rel = 'noopener noreferrer';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      }
-    } finally {
-      setDownloading(false);
     }
   };
+
+  const cancelDownload = () => {
+    abortRef.current?.abort();
+  };
+
+
 
   // Mini player handlers
   const togglePlay = () => {
@@ -309,15 +322,34 @@ export default function ShadowArise() {
                 </p>
               </div>
 
-              <button onClick={triggerDownload} disabled={downloading}
+              <button onClick={() => triggerDownload(false)} disabled={downloading}
                 className="w-full py-3 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-70"
                 style={{
                   background: 'linear-gradient(135deg, hsl(270 90% 55%), hsl(285 95% 65%))',
                   boxShadow: '0 4px 20px hsl(270 90% 55% / 0.45)',
                 }}>
                 <Download className="w-4 h-4" />
-                {downloading ? `Downloading ${Math.floor(downloadPct)}%` : 'Download Now'}
+                {downloading ? `Downloading ${Math.floor(downloadPct)}%` : resumeOffset > 0 ? 'Restart Download' : 'Download Now'}
               </button>
+
+              {/* Cancel / Resume controls */}
+              {(downloading || resumeOffset > 0) && (
+                <div className="w-full flex gap-2">
+                  {downloading ? (
+                    <button onClick={cancelDownload}
+                      className="flex-1 py-2 rounded-lg text-xs font-semibold text-white/90 flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                      style={{ background: 'hsl(0 70% 45% / 0.85)' }}>
+                      <Ban className="w-3.5 h-3.5" /> Cancel
+                    </button>
+                  ) : (
+                    <button onClick={() => triggerDownload(true)}
+                      className="flex-1 py-2 rounded-lg text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                      style={{ background: 'hsl(142 70% 40%)' }}>
+                      <RotateCw className="w-3.5 h-3.5" /> Resume from {fmtSize(resumeOffset)}
+                    </button>
+                  )}
+                </div>
+              )}
 
               {sizeMismatch && (
                 <div className="w-full rounded-lg p-3 text-left flex items-start gap-2"
@@ -330,7 +362,7 @@ export default function ShadowArise() {
                 </div>
               )}
 
-              {/* Download progress (only while downloading) */}
+              {/* Download progress with speed + ETA */}
               {downloading && (
                 <div className="w-full">
                   <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
@@ -340,8 +372,13 @@ export default function ShadowArise() {
                         background: 'linear-gradient(90deg, hsl(142 70% 50%), hsl(160 80% 60%))',
                       }} />
                   </div>
+                  <div className="flex items-center justify-between mt-1.5 text-[10px] text-white/60 font-mono tabular-nums">
+                    <span>{fmtSize(downloadedBytes)} / {fmtSize(fileSizeBytes)}</span>
+                    <span>{fmtSpeed(speed)} · ETA {fmtEta(etaSec)}</span>
+                  </div>
                 </div>
               )}
+
 
               {/* Custom mini video player — play/pause + timeline only (no fullscreen) */}
               {videoUrl && (
