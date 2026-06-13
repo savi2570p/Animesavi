@@ -85,79 +85,89 @@ export default function ShadowArise() {
 
   // NOTE: No auto-trigger of download. User must explicitly click.
 
-  // Force a real file download via blob (so the OS treats it as a download,
-  // not a navigation to the default video player). Falls back to anchor for
-  // huge files / range-restricted CDNs.
-  const triggerDownload = async () => {
+  // Stream-download with progress, speed, ETA, Range-resume, cancel, and
+  // same-origin proxy fallback when CORS blocks the direct fetch.
+  const triggerDownload = async (resume = false) => {
     if (!videoUrl || downloading) return;
     setDownloadStarted(true);
     setDownloading(true);
-    setDownloadPct(0);
-    setSizeMismatch(null);
-    setDownloadedBytes(0);
+    if (!resume) {
+      setDownloadPct(0);
+      setSizeMismatch(null);
+      setDownloadedBytes(0);
+      setSpeed(0);
+      setEtaSec(0);
+      setResumeOffset(0);
+      setChunkBuffer([]);
+    }
 
-    try {
-      const res = await fetch(videoUrl, { mode: 'cors', credentials: 'omit' });
-      if (!res.ok || !res.body) throw new Error('fetch failed');
+    const startAt = resume ? resumeOffset : 0;
+    const existing = resume ? chunkBuffer : [];
 
-      const total = Number(res.headers.get('content-length') || '0') || fileSizeBytes || 0;
-      const reader = res.body.getReader();
-      const chunks: BlobPart[] = [];
-      let received = 0;
+    abortRef.current = new AbortController();
+    const ext = (videoUrl.split('?')[0].split('.').pop() || 'mp4').toLowerCase();
+    const safeExt = ['mp4', 'mkv', 'webm'].includes(ext) ? ext : 'mp4';
+    const finalName = fileName.replace(/\.mp4$/i, `.${safeExt}`);
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (value) {
-          chunks.push(value);
-          received += value.length;
-          setDownloadedBytes(received);
-          if (total > 0) setDownloadPct(Math.min(99, (received / total) * 100));
+    for (const useProxy of [false, true]) {
+      try {
+        const { chunks, total, received, mime } = await streamDownload({
+          url: videoUrl,
+          filename: finalName,
+          startAt,
+          signal: abortRef.current.signal,
+          useProxy,
+          onProgress: (p) => {
+            setDownloadedBytes(p.received);
+            setDownloadPct(p.pct);
+            setSpeed(p.speed);
+            setEtaSec(p.etaSec);
+            setResumeOffset(p.received);
+          },
+        });
+
+        const allChunks = [...existing, ...chunks];
+        setChunkBuffer(allChunks);
+
+        const expected = fileSizeBytes || total;
+        if (expected && Math.abs(received - expected) > 1024) {
+          setSizeMismatch({ expected, got: received });
+        }
+
+        saveBlob(allChunks, mime, finalName);
+        setDownloadPct(100);
+        setResumeOffset(0);
+        setChunkBuffer([]);
+        setDownloading(false);
+        return;
+      } catch (e: any) {
+        if (e?.name === 'AbortError') {
+          // User cancelled — keep buffer/offset so they can resume
+          setDownloading(false);
+          return;
+        }
+        if (useProxy) {
+          // Last-ditch native anchor fallback
+          try {
+            const a = document.createElement('a');
+            a.href = videoUrl;
+            a.download = finalName;
+            a.rel = 'noopener noreferrer';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          } catch {}
+          setDownloading(false);
+          return;
         }
       }
-
-      // Verify expected vs actual (tolerate 1KB diff)
-      const expected = fileSizeBytes || total;
-      if (expected && Math.abs(received - expected) > 1024) {
-        setSizeMismatch({ expected, got: received });
-        // Still allow saving — user can re-prepare
-      }
-
-      // Use a proper MIME based on URL extension for better mobile playback
-      const ext = (videoUrl.split('?')[0].split('.').pop() || 'mp4').toLowerCase();
-      const mime = ext === 'mkv' ? 'video/x-matroska' : ext === 'webm' ? 'video/webm' : 'video/mp4';
-
-      const blob = new Blob(chunks, { type: mime });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName.replace(/\.mp4$/i, `.${ext === 'mkv' || ext === 'webm' ? ext : 'mp4'}`);
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-      setDownloadPct(100);
-    } catch {
-      // CORS blocked or stream interrupted — fall back to hidden iframe so
-      // the browser still triggers a native download.
-      try {
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = videoUrl;
-        document.body.appendChild(iframe);
-        setTimeout(() => { try { document.body.removeChild(iframe); } catch {} }, 60000);
-      } catch {
-        const a = document.createElement('a');
-        a.href = videoUrl;
-        a.download = fileName;
-        a.rel = 'noopener noreferrer';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      }
-    } finally {
-      setDownloading(false);
     }
+  };
+
+  const cancelDownload = () => {
+    abortRef.current?.abort();
+  };
+
   };
 
   // Mini player handlers
