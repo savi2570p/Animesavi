@@ -322,15 +322,34 @@ export default function ShadowArise() {
                 </p>
               </div>
 
-              <button onClick={triggerDownload} disabled={downloading}
+              <button onClick={() => triggerDownload(false)} disabled={downloading}
                 className="w-full py-3 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-70"
                 style={{
                   background: 'linear-gradient(135deg, hsl(270 90% 55%), hsl(285 95% 65%))',
                   boxShadow: '0 4px 20px hsl(270 90% 55% / 0.45)',
                 }}>
                 <Download className="w-4 h-4" />
-                {downloading ? `Downloading ${Math.floor(downloadPct)}%` : 'Download Now'}
+                {downloading ? `Downloading ${Math.floor(downloadPct)}%` : resumeOffset > 0 ? 'Restart Download' : 'Download Now'}
               </button>
+
+              {/* Cancel / Resume controls */}
+              {(downloading || resumeOffset > 0) && (
+                <div className="w-full flex gap-2">
+                  {downloading ? (
+                    <button onClick={cancelDownload}
+                      className="flex-1 py-2 rounded-lg text-xs font-semibold text-white/90 flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                      style={{ background: 'hsl(0 70% 45% / 0.85)' }}>
+                      <Ban className="w-3.5 h-3.5" /> Cancel
+                    </button>
+                  ) : (
+                    <button onClick={() => triggerDownload(true)}
+                      className="flex-1 py-2 rounded-lg text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                      style={{ background: 'hsl(142 70% 40%)' }}>
+                      <RotateCw className="w-3.5 h-3.5" /> Resume from {fmtSize(resumeOffset)}
+                    </button>
+                  )}
+                </div>
+              )}
 
               {sizeMismatch && (
                 <div className="w-full rounded-lg p-3 text-left flex items-start gap-2"
@@ -343,7 +362,7 @@ export default function ShadowArise() {
                 </div>
               )}
 
-              {/* Download progress (only while downloading) */}
+              {/* Download progress with speed + ETA */}
               {downloading && (
                 <div className="w-full">
                   <div className="h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
@@ -353,8 +372,13 @@ export default function ShadowArise() {
                         background: 'linear-gradient(90deg, hsl(142 70% 50%), hsl(160 80% 60%))',
                       }} />
                   </div>
+                  <div className="flex items-center justify-between mt-1.5 text-[10px] text-white/60 font-mono tabular-nums">
+                    <span>{fmtSize(downloadedBytes)} / {fmtSize(fileSizeBytes)}</span>
+                    <span>{fmtSpeed(speed)} · ETA {fmtEta(etaSec)}</span>
+                  </div>
                 </div>
               )}
+
 
               {/* Custom mini video player — play/pause + timeline only (no fullscreen) */}
               {videoUrl && (
