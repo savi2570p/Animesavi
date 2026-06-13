@@ -224,7 +224,7 @@ export default function ShadowArise() {
       <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full opacity-20 blur-[100px] pointer-events-none" style={{ background: 'hsl(280 90% 55%)' }} />
 
       {/* Main Card */}
-      <div className="relative w-[90vw] max-w-md mx-4 rounded-2xl overflow-hidden my-auto"
+      <div className="relative w-full max-w-md mx-auto rounded-2xl overflow-hidden"
         style={{
           background: 'rgba(15, 8, 25, 0.85)',
           backdropFilter: 'blur(24px)',
