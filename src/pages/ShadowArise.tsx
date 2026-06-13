@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Cloud, Download, Shield, CheckCircle, Play, Pause, ArrowLeft, AlertTriangle } from 'lucide-react';
+import { Cloud, Download, Shield, CheckCircle, Play, Pause, ArrowLeft, AlertTriangle, Ban, RotateCw } from 'lucide-react';
+import { streamDownload, saveBlob, fmtSpeed, fmtEta, fmtSize as fmtBytes } from '@/lib/downloadUtils';
+
 
 export default function ShadowArise() {
   const navigate = useNavigate();
