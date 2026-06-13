@@ -220,7 +220,7 @@ export function AccessBanner() {
 
   return (
     <div
-      className="sticky top-0 z-[60] text-white animate-fade-in relative"
+      className="sticky top-0 z-[60] text-white animate-fade-in relative safe-area-top"
       style={{
         background:
           'linear-gradient(90deg, hsl(0 0% 6%) 0%, hsl(0 60% 16%) 35%, hsl(0 75% 30%) 65%, hsl(0 0% 6%) 100%)',
