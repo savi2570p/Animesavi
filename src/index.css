@@ -408,6 +408,13 @@ button, [role="button"], a {
     padding-top: max(0px, env(safe-area-inset-top));
   }
 
+  /* When the AccessBanner already consumes the iOS safe-area at the top of
+     the viewport, the Header below it must NOT add another safe-area padding,
+     or it visually drops the nav far below the banner. */
+  body.has-access-banner header.safe-area-top {
+    padding-top: 0 !important;
+  }
+
   .safe-area-bottom {
     padding-bottom: max(0px, env(safe-area-inset-bottom));
   }
