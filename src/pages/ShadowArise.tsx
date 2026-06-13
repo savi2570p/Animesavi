@@ -23,6 +23,11 @@ export default function ShadowArise() {
   const [prepStep, setPrepStep] = useState(0); // 0..4 stages
   const [sizeMismatch, setSizeMismatch] = useState<{ expected: number; got: number } | null>(null);
   const [downloadedBytes, setDownloadedBytes] = useState(0);
+  const [speed, setSpeed] = useState(0);
+  const [etaSec, setEtaSec] = useState(0);
+  const [resumeOffset, setResumeOffset] = useState(0);
+  const [chunkBuffer, setChunkBuffer] = useState<BlobPart[]>([]);
+  const abortRef = useRef<AbortController | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Mini player state
@@ -35,12 +40,8 @@ export default function ShadowArise() {
   const safeAnime = animeName.replace(/[^a-zA-Z0-9]+/g, '');
   const fileName = `[AnimeSavi]_${quality}_${safeAnime}_Ep-${episodeCount}.mp4`;
 
-  const fmtSize = (b: number | null) => {
-    if (!b || b <= 0) return '—';
-    if (b >= 1024 ** 3) return `${(b / 1024 ** 3).toFixed(2)} GB`;
-    if (b >= 1024 ** 2) return `${(b / 1024 ** 2).toFixed(1)} MB`;
-    return `${(b / 1024).toFixed(0)} KB`;
-  };
+  const fmtSize = fmtBytes;
+
 
   // Fetch real file size via HEAD (fallback to ranged GET)
   useEffect(() => {
