@@ -194,34 +194,37 @@ export default function ShadowArise() {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center overflow-y-auto py-6"
+    <div
+      className="relative min-h-screen w-full flex flex-col items-center justify-start py-16 sm:py-10 px-4 safe-area-top safe-area-bottom"
       style={{
         background:
           'radial-gradient(ellipse at 20% 80%, hsl(270 70% 25% / 0.25) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, hsl(280 80% 30% / 0.2) 0%, transparent 50%), #0a0a0f',
-      }}>
-
+      }}
+    >
       {/* Back button */}
       <button
         onClick={() => navigate(-1)}
         aria-label="Back"
-        className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white/80 hover:text-white text-xs font-medium transition-all hover:scale-105 active:scale-95"
+        className="fixed top-3 left-3 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white/80 hover:text-white text-xs font-medium transition-all hover:scale-105 active:scale-95"
         style={{
           background: 'rgba(20, 12, 30, 0.75)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           border: '1px solid hsl(270 60% 50% / 0.35)',
+          marginTop: 'env(safe-area-inset-top)',
         }}
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         Back
       </button>
 
+
       {/* Ambient glow corners */}
       <div className="absolute top-0 left-0 w-64 h-64 rounded-full opacity-25 blur-[100px] pointer-events-none" style={{ background: 'hsl(270 80% 50%)' }} />
       <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full opacity-20 blur-[100px] pointer-events-none" style={{ background: 'hsl(280 90% 55%)' }} />
 
       {/* Main Card */}
-      <div className="relative w-[90vw] max-w-md mx-4 rounded-2xl overflow-hidden my-auto"
+      <div className="relative w-full max-w-md mx-auto rounded-2xl overflow-hidden"
         style={{
           background: 'rgba(15, 8, 25, 0.85)',
           backdropFilter: 'blur(24px)',

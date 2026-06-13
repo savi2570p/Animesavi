@@ -182,7 +182,19 @@ export function AccessBanner() {
     return () => clearInterval(interval);
   }, [tokenEnabled, expiresAt, dbChecked, isCasting]);
 
-  if (isEmbedRoute || superAdmin || !time || isCasting) return null;
+  const visible = !(isEmbedRoute || superAdmin || !time || isCasting);
+
+  // Toggle a body class so the Header can drop its own safe-area-top padding
+  // when the banner is already sitting in the safe area above it (prevents a
+  // visible gap between banner and nav on iOS/Android).
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (visible) document.body.classList.add('has-access-banner');
+    else document.body.classList.remove('has-access-banner');
+    return () => document.body.classList.remove('has-access-banner');
+  }, [visible]);
+
+  if (!visible) return null;
 
   // Compute friendly date/time of expiry + urgency tier
   const expDate = expiresAt ? new Date(expiresAt) : null;
@@ -208,7 +220,7 @@ export function AccessBanner() {
 
   return (
     <div
-      className="sticky top-0 z-[60] text-white animate-fade-in relative"
+      className="sticky top-0 z-[60] text-white animate-fade-in relative safe-area-top"
       style={{
         background:
           'linear-gradient(90deg, hsl(0 0% 6%) 0%, hsl(0 60% 16%) 35%, hsl(0 75% 30%) 65%, hsl(0 0% 6%) 100%)',
