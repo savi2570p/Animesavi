@@ -200,6 +200,31 @@ export default function Watch() {
   // Device-optimized video URL for iOS compatibility
   const deviceOptimizedVideo = useDeviceOptimizedVideo(episodeId, episode?.video_url || null);
 
+  // FAST CDN: preconnect + dns-prefetch to the streaming origin as soon as we know
+  // the video URL. Saves a full DNS+TLS round-trip on first segment request.
+  useEffect(() => {
+    const url = deviceOptimizedVideo.videoUrl || episode?.video_url;
+    if (!url) return;
+    let origin = '';
+    try { origin = new URL(url).origin; } catch { return; }
+    if (!origin) return;
+    const hints: HTMLLinkElement[] = [];
+    const add = (rel: string, crossOrigin?: boolean) => {
+      if (document.head.querySelector(`link[rel="${rel}"][href="${origin}"]`)) return;
+      const link = document.createElement('link');
+      link.rel = rel;
+      link.href = origin;
+      if (crossOrigin) link.crossOrigin = 'anonymous';
+      document.head.appendChild(link);
+      hints.push(link);
+    };
+    add('dns-prefetch');
+    add('preconnect', true);
+    return () => { hints.forEach(l => l.parentNode?.removeChild(l)); };
+  }, [deviceOptimizedVideo.videoUrl, episode?.video_url]);
+
+
+
   // Check if video is still encoding — only for episodes created within the last 24 hours
   useEffect(() => {
     if (!episodeId) return;
