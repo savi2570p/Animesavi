@@ -685,34 +685,34 @@ export function VideoPlayer({
           const hls = new Hls({
             enableWorker: true,
             lowLatencyMode: true,
-            // INSTANT START: tiny initial buffer for fast first frame, grows aggressively after
-            maxBufferLength: 3,
+            // INSTANT START: ship lowest level first for fast first frame, ABR ramps up in seconds
+            maxBufferLength: 2,
             maxMaxBufferLength: isMobile ? 60 : 180,
             maxBufferSize: isMobile ? 60 * 1000 * 1000 : 150 * 1000 * 1000,
             maxBufferHole: 0.2,
-            // Start at the lowest level for an instant first frame; ABR ramps to 4K within seconds
-            startLevel: isSlowNetwork ? 0 : -1,
+            // Always start at lowest level — fastest possible first frame, ABR ramps to 4K quickly
+            startLevel: 0,
             autoStartLoad: true,
             // ABR: prefer the highest sustainable bitrate quickly
-            abrEwmaDefaultEstimate: isSlowNetwork ? 500000 : (isCellular ? 4000000 : 10000000),
-            abrEwmaFastLive: 1.5,
-            abrEwmaSlowLive: 4,
-            abrEwmaFastVoD: 1.5,
-            abrEwmaSlowVoD: 4,
+            abrEwmaDefaultEstimate: isSlowNetwork ? 500000 : (isCellular ? 4000000 : 12000000),
+            abrEwmaFastLive: 1.2,
+            abrEwmaSlowLive: 3,
+            abrEwmaFastVoD: 1.2,
+            abrEwmaSlowVoD: 3,
             abrBandWidthFactor: 0.98,
             abrBandWidthUpFactor: 0.98,
             abrMaxWithRealBitrate: true,
             backBufferLength: isMobile ? 10 : 30,
-            // Aggressive fragment loading
-            fragLoadingTimeOut: 5000,
+            // Aggressive fragment loading — tighter timeouts, faster retries
+            fragLoadingTimeOut: 4000,
             fragLoadingMaxRetry: 6,
-            fragLoadingRetryDelay: 100,
-            levelLoadingTimeOut: 3000,
+            fragLoadingRetryDelay: 80,
+            levelLoadingTimeOut: 2500,
             levelLoadingMaxRetry: 4,
-            levelLoadingRetryDelay: 100,
-            manifestLoadingTimeOut: 3000,
+            levelLoadingRetryDelay: 80,
+            manifestLoadingTimeOut: 2500,
             manifestLoadingMaxRetry: 3,
-            manifestLoadingRetryDelay: 80,
+            manifestLoadingRetryDelay: 60,
             xhrSetup: (xhr, url) => {
               xhr.withCredentials = false;
             },
@@ -725,6 +725,7 @@ export function VideoPlayer({
             nudgeOffset: 0.1,
             nudgeMaxRetry: 5,
           });
+
           
           hlsRef.current = hls;
           hls.loadSource(effectiveVideoUrl);
