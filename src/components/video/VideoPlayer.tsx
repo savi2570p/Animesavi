@@ -2940,7 +2940,7 @@ export function VideoPlayer({
           }}
         >
           {/* Top gradient */}
-          <div className="h-24 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
+          <div className="h-28 bg-gradient-to-b from-black/75 via-black/25 to-transparent pointer-events-none" />
 
           {/* Center Play / Rewatch Button — show on initial state or when ended (not on simple pause) */}
           {(!hasUserInteracted || hasEnded) && showControls && !showPremiumLoader && !isLoading && (
@@ -2980,7 +2980,7 @@ export function VideoPlayer({
 
           {/* Bottom controls */}
           <div 
-            className="bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 pb-4 md:pb-6 px-3 md:px-6"
+            className="bg-gradient-to-t from-black/85 via-black/40 to-transparent backdrop-blur-[2px] pt-20 pb-4 md:pb-6 px-3 md:px-6"
             style={{ pointerEvents: 'auto', zIndex: 2147483647 }}
           >
             {/* Progress bar with buffer indicator */}
@@ -3080,7 +3080,7 @@ export function VideoPlayer({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent 
                         align="end" side="top"
-                        className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] md:min-w-[220px] max-h-[350px] overflow-y-auto"
+                        className="bg-black/70 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl min-w-[210px] md:min-w-[230px] max-h-[360px] overflow-y-auto text-white p-1.5"
                         sideOffset={12}
                         style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                         onCloseAutoFocus={(e) => e.preventDefault()}
@@ -3165,7 +3165,7 @@ export function VideoPlayer({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
                     align="end" side="top"
-                    className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] md:min-w-[220px] max-h-[350px] overflow-y-auto"
+                    className="bg-black/70 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl min-w-[210px] md:min-w-[230px] max-h-[360px] overflow-y-auto text-white p-1.5"
                     sideOffset={12}
                     style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                     onCloseAutoFocus={(e) => e.preventDefault()}
@@ -3214,7 +3214,7 @@ export function VideoPlayer({
           }}
         >
           {/* Top gradient */}
-          <div className="h-24 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
+          <div className="h-28 bg-gradient-to-b from-black/75 via-black/25 to-transparent pointer-events-none" />
 
           {/* Center Play / Rewatch Button — show on initial state or when ended (not on simple pause) */}
           {(!hasUserInteracted || hasEnded) && showControls && !showPremiumLoader && !isLoading && (
@@ -3254,7 +3254,7 @@ export function VideoPlayer({
 
           {/* Bottom controls */}
           <div 
-            className="bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 pb-4 px-4"
+            className="bg-gradient-to-t from-black/85 via-black/40 to-transparent backdrop-blur-[2px] pt-20 pb-4 px-4"
             style={{ pointerEvents: 'auto', zIndex: 60 }}
           >
           {/* Progress bar with buffer indicator */}
@@ -3386,7 +3386,7 @@ export function VideoPlayer({
                     <DropdownMenuContent 
                       align="end" 
                       side="top"
-                      className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] md:min-w-[220px] max-h-[350px] overflow-y-auto"
+                      className="bg-black/70 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl min-w-[210px] md:min-w-[230px] max-h-[360px] overflow-y-auto text-white p-1.5"
                       sideOffset={12}
                       style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                       onCloseAutoFocus={(e) => e.preventDefault()}
@@ -3507,7 +3507,7 @@ export function VideoPlayer({
                 <DropdownMenuContent 
                   align="end" 
                   side="top"
-                  className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] md:min-w-[220px] max-h-[350px] overflow-y-auto"
+                  className="bg-black/70 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl min-w-[210px] md:min-w-[230px] max-h-[360px] overflow-y-auto text-white p-1.5"
                   sideOffset={12}
                   style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                   onCloseAutoFocus={(e) => e.preventDefault()}
