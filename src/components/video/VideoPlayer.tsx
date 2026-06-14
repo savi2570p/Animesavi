@@ -2939,8 +2939,18 @@ export function VideoPlayer({
             }
           }}
         >
-          {/* Top gradient */}
-          <div className="h-16 bg-gradient-to-b from-black/80 via-black/30 to-transparent pointer-events-none" />
+          {/* Top header — glass title bar */}
+          <div className="relative pt-3 px-3 md:px-5 bg-gradient-to-b from-black/80 via-black/30 to-transparent">
+            <div className="flex items-center gap-2 max-w-[70%]">
+              <div className="px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-xl border border-white/15 shadow-lg flex items-center gap-2 min-w-0">
+                <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.18em] text-white/80 shrink-0">S{seasonNumber}·E{episodeNumber}</span>
+                <span className="w-px h-3 bg-white/20" />
+                <span className="text-[11px] md:text-sm font-semibold text-white truncate">{animeTitle}</span>
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-emerald-200 bg-emerald-500/15 border border-emerald-400/30 shrink-0">{activeServer === 'XPLUS' ? 'X-PLUS' : activeServer === 'PLAY' ? 'H.Savi' : activeServer === 'Zex' ? 'Multi.Savi' : activeServer}</span>
+            </div>
+          </div>
+
 
           {/* Center Play / Rewatch Button — show on initial state or when ended (not on simple pause) */}
           {(!hasUserInteracted || hasEnded) && showControls && !showPremiumLoader && !isLoading && (
