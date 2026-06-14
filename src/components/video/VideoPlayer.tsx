@@ -685,34 +685,34 @@ export function VideoPlayer({
           const hls = new Hls({
             enableWorker: true,
             lowLatencyMode: true,
-            // INSTANT START: tiny initial buffer for fast first frame, grows aggressively after
-            maxBufferLength: 3,
+            // INSTANT START: ship lowest level first for fast first frame, ABR ramps up in seconds
+            maxBufferLength: 2,
             maxMaxBufferLength: isMobile ? 60 : 180,
             maxBufferSize: isMobile ? 60 * 1000 * 1000 : 150 * 1000 * 1000,
             maxBufferHole: 0.2,
-            // Start at the lowest level for an instant first frame; ABR ramps to 4K within seconds
-            startLevel: isSlowNetwork ? 0 : -1,
+            // Always start at lowest level — fastest possible first frame, ABR ramps to 4K quickly
+            startLevel: 0,
             autoStartLoad: true,
             // ABR: prefer the highest sustainable bitrate quickly
-            abrEwmaDefaultEstimate: isSlowNetwork ? 500000 : (isCellular ? 4000000 : 10000000),
-            abrEwmaFastLive: 1.5,
-            abrEwmaSlowLive: 4,
-            abrEwmaFastVoD: 1.5,
-            abrEwmaSlowVoD: 4,
+            abrEwmaDefaultEstimate: isSlowNetwork ? 500000 : (isCellular ? 4000000 : 12000000),
+            abrEwmaFastLive: 1.2,
+            abrEwmaSlowLive: 3,
+            abrEwmaFastVoD: 1.2,
+            abrEwmaSlowVoD: 3,
             abrBandWidthFactor: 0.98,
             abrBandWidthUpFactor: 0.98,
             abrMaxWithRealBitrate: true,
             backBufferLength: isMobile ? 10 : 30,
-            // Aggressive fragment loading
-            fragLoadingTimeOut: 5000,
+            // Aggressive fragment loading — tighter timeouts, faster retries
+            fragLoadingTimeOut: 4000,
             fragLoadingMaxRetry: 6,
-            fragLoadingRetryDelay: 100,
-            levelLoadingTimeOut: 3000,
+            fragLoadingRetryDelay: 80,
+            levelLoadingTimeOut: 2500,
             levelLoadingMaxRetry: 4,
-            levelLoadingRetryDelay: 100,
-            manifestLoadingTimeOut: 3000,
+            levelLoadingRetryDelay: 80,
+            manifestLoadingTimeOut: 2500,
             manifestLoadingMaxRetry: 3,
-            manifestLoadingRetryDelay: 80,
+            manifestLoadingRetryDelay: 60,
             xhrSetup: (xhr, url) => {
               xhr.withCredentials = false;
             },
@@ -725,6 +725,7 @@ export function VideoPlayer({
             nudgeOffset: 0.1,
             nudgeMaxRetry: 5,
           });
+
           
           hlsRef.current = hls;
           hls.loadSource(effectiveVideoUrl);
@@ -2939,7 +2940,7 @@ export function VideoPlayer({
           }}
         >
           {/* Top gradient */}
-          <div className="h-24 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
+          <div className="h-28 bg-gradient-to-b from-black/75 via-black/25 to-transparent pointer-events-none" />
 
           {/* Center Play / Rewatch Button — show on initial state or when ended (not on simple pause) */}
           {(!hasUserInteracted || hasEnded) && showControls && !showPremiumLoader && !isLoading && (
@@ -2979,7 +2980,7 @@ export function VideoPlayer({
 
           {/* Bottom controls */}
           <div 
-            className="bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 pb-4 md:pb-6 px-3 md:px-6"
+            className="bg-gradient-to-t from-black/85 via-black/40 to-transparent backdrop-blur-[2px] pt-20 pb-4 md:pb-6 px-3 md:px-6"
             style={{ pointerEvents: 'auto', zIndex: 2147483647 }}
           >
             {/* Progress bar with buffer indicator */}
@@ -3079,7 +3080,7 @@ export function VideoPlayer({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent 
                         align="end" side="top"
-                        className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] md:min-w-[220px] max-h-[350px] overflow-y-auto"
+                        className="bg-black/70 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl min-w-[210px] md:min-w-[230px] max-h-[360px] overflow-y-auto text-white p-1.5"
                         sideOffset={12}
                         style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                         onCloseAutoFocus={(e) => e.preventDefault()}
@@ -3164,7 +3165,7 @@ export function VideoPlayer({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
                     align="end" side="top"
-                    className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] md:min-w-[220px] max-h-[350px] overflow-y-auto"
+                    className="bg-black/70 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl min-w-[210px] md:min-w-[230px] max-h-[360px] overflow-y-auto text-white p-1.5"
                     sideOffset={12}
                     style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                     onCloseAutoFocus={(e) => e.preventDefault()}
@@ -3213,7 +3214,7 @@ export function VideoPlayer({
           }}
         >
           {/* Top gradient */}
-          <div className="h-24 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
+          <div className="h-28 bg-gradient-to-b from-black/75 via-black/25 to-transparent pointer-events-none" />
 
           {/* Center Play / Rewatch Button — show on initial state or when ended (not on simple pause) */}
           {(!hasUserInteracted || hasEnded) && showControls && !showPremiumLoader && !isLoading && (
@@ -3253,7 +3254,7 @@ export function VideoPlayer({
 
           {/* Bottom controls */}
           <div 
-            className="bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 pb-4 px-4"
+            className="bg-gradient-to-t from-black/85 via-black/40 to-transparent backdrop-blur-[2px] pt-20 pb-4 px-4"
             style={{ pointerEvents: 'auto', zIndex: 60 }}
           >
           {/* Progress bar with buffer indicator */}
@@ -3385,7 +3386,7 @@ export function VideoPlayer({
                     <DropdownMenuContent 
                       align="end" 
                       side="top"
-                      className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] md:min-w-[220px] max-h-[350px] overflow-y-auto"
+                      className="bg-black/70 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl min-w-[210px] md:min-w-[230px] max-h-[360px] overflow-y-auto text-white p-1.5"
                       sideOffset={12}
                       style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                       onCloseAutoFocus={(e) => e.preventDefault()}
@@ -3506,7 +3507,7 @@ export function VideoPlayer({
                 <DropdownMenuContent 
                   align="end" 
                   side="top"
-                  className="bg-background/95 backdrop-blur-xl border-border/50 min-w-[200px] md:min-w-[220px] max-h-[350px] overflow-y-auto"
+                  className="bg-black/70 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl min-w-[210px] md:min-w-[230px] max-h-[360px] overflow-y-auto text-white p-1.5"
                   sideOffset={12}
                   style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                   onCloseAutoFocus={(e) => e.preventDefault()}
