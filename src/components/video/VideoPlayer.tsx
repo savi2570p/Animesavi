@@ -2940,7 +2940,7 @@ export function VideoPlayer({
           }}
         >
           {/* Top gradient */}
-          <div className="h-28 bg-gradient-to-b from-black/75 via-black/25 to-transparent pointer-events-none" />
+          <div className="h-16 bg-gradient-to-b from-black/80 via-black/30 to-transparent pointer-events-none" />
 
           {/* Center Play / Rewatch Button — show on initial state or when ended (not on simple pause) */}
           {(!hasUserInteracted || hasEnded) && showControls && !showPremiumLoader && !isLoading && (
@@ -2980,7 +2980,7 @@ export function VideoPlayer({
 
           {/* Bottom controls */}
           <div 
-            className="bg-gradient-to-t from-black/85 via-black/40 to-transparent backdrop-blur-[2px] pt-20 pb-4 md:pb-6 px-3 md:px-6"
+            className="bg-gradient-to-t from-black/90 via-black/55 to-transparent backdrop-blur-[2px] pt-10 pb-3 md:pb-4 px-3 md:px-6"
             style={{ pointerEvents: 'auto', zIndex: 2147483647 }}
           >
             {/* Progress bar with buffer indicator */}
@@ -3214,7 +3214,7 @@ export function VideoPlayer({
           }}
         >
           {/* Top gradient */}
-          <div className="h-28 bg-gradient-to-b from-black/75 via-black/25 to-transparent pointer-events-none" />
+          <div className="h-16 bg-gradient-to-b from-black/80 via-black/30 to-transparent pointer-events-none" />
 
           {/* Center Play / Rewatch Button — show on initial state or when ended (not on simple pause) */}
           {(!hasUserInteracted || hasEnded) && showControls && !showPremiumLoader && !isLoading && (
@@ -3254,7 +3254,7 @@ export function VideoPlayer({
 
           {/* Bottom controls */}
           <div 
-            className="bg-gradient-to-t from-black/85 via-black/40 to-transparent backdrop-blur-[2px] pt-20 pb-4 px-4"
+            className="bg-gradient-to-t from-black/90 via-black/55 to-transparent backdrop-blur-[2px] pt-10 pb-3 px-4"
             style={{ pointerEvents: 'auto', zIndex: 60 }}
           >
           {/* Progress bar with buffer indicator */}
