@@ -281,7 +281,7 @@ export default function Welcome() {
     { icon: Globe, title: 'Hindi Dubbed', desc: 'Official Hindi DUB available for all anime — completely free, anytime, anywhere in the world.' },
     { icon: Users, title: 'Watch Parties', desc: 'Invite friends to watch together with real-time sync. Chat, react, and enjoy anime as a group.' },
     { icon: Headphones, title: 'Multi-Audio', desc: 'Switch between Hindi, English, and Japanese audio tracks on the fly without reloading the video.' },
-    { icon: Subtitles, title: 'CC & Subtitles', desc: 'Built-in CC subtitle editor with manual timing controls. Import VTT/SRT or create custom captions.' },
+    { icon: Subtitles, title: 'Subtitles', desc: 'Built-in subtitle editor with manual timing controls. Import VTT/SRT or create custom captions.' },
     { icon: Monitor, title: 'MuseIN & Crunchy', desc: 'Dedicated tabs for Muse India and Crunchyroll content with smart auto-tagging and Watch List support.' },
   ];
 
