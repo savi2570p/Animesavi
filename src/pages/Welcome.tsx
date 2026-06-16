@@ -842,7 +842,7 @@ export default function Welcome() {
             {[
               { icon: Keyboard, title: 'Keyboard Shortcuts', desc: 'Space = play/pause, F = fullscreen, M = mute, ← → seek 10s, ↑ ↓ volume.' },
               { icon: Volume2, title: 'Switch Audio Live', desc: 'Tap the headphone icon mid-episode to swap Hindi / English / Japanese without reloading.' },
-              { icon: FileText, title: 'Custom Subtitles', desc: 'Drop in your own VTT/SRT file from the CC editor for any episode.' },
+              { icon: FileText, title: 'Custom Subtitles', desc: 'Drop in your own VTT/SRT file from the subtitle editor for any episode.' },
               { icon: Cast, title: 'Cast to TV', desc: 'Hit the cast icon in the player to mirror to Chromecast, AirPlay, or Smart TV.' },
               { icon: Bell, title: 'Release Reminders', desc: 'Tap the bell on any ongoing series to get pinged the moment a new episode drops.' },
               { icon: Wifi, title: 'Offline Mode', desc: 'Downloaded episodes keep working even without internet — perfect for flights & commutes.' },
