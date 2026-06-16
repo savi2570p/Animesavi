@@ -1374,7 +1374,7 @@ export default function Welcome() {
             { i: Lock, t: 'PIN lock', d: '4 or 6-digit profile guard' },
             { i: Cast, t: 'Cast & AirPlay', d: 'Simple Mode for TVs' },
             { i: HardDrive, t: 'Offline downloads', d: '480p → 4K stored locally' },
-            { i: Subtitles, t: 'CC editor', d: 'VTT/SRT import + manual sync' },
+            { i: Subtitles, t: 'Subtitle editor', d: 'VTT/SRT import + manual sync' },
             { i: Keyboard, t: 'Keyboard shortcuts', d: 'Press / to search anywhere' },
             { i: Calendar, t: 'Release calendar', d: 'See exact drop times' },
             { i: BarChart3, t: 'Personal stats', d: 'Genre & watch insights' },
