@@ -2839,56 +2839,56 @@ export function VideoPlayer({
         const isHls = !!effectiveVideoUrl && /\.m3u8(\?|#|$)/i.test(effectiveVideoUrl);
         const fmtLabel = isUnsupportedContainer ? 'Unsupported container' : isHls ? 'HLS stream' : 'Direct file';
         return (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
             <div
-              className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-zinc-900/95 to-zinc-950/95 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)] animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
+              className="relative w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-zinc-900/95 to-zinc-950/95 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9)] animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Top accent bar */}
-              <div className="h-1 w-full bg-gradient-to-r from-red-500 via-orange-500 to-red-500" />
+              <div className="h-0.5 w-full bg-gradient-to-r from-red-500 via-orange-500 to-red-500" />
               {/* Close pill */}
               <button
                 onClick={() => setVideoError(false)}
-                className="absolute top-3 right-3 h-7 w-7 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
+                className="absolute top-2 right-2 h-5 w-5 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
                 aria-label="Dismiss"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-2.5 w-2.5" />
               </button>
 
-              <div className="px-6 pt-6 pb-5">
+              <div className="px-4 pt-4 pb-3.5">
                 {/* Icon */}
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500/20 to-orange-500/10 ring-1 ring-red-500/30">
-                  <AlertCircle className="h-7 w-7 text-red-400" />
+                <div className="mx-auto mb-2.5 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/10 ring-1 ring-red-500/30">
+                  <AlertCircle className="h-5 w-5 text-red-400" />
                 </div>
 
-                <h3 className="text-center text-white font-bold text-lg leading-tight">
+                <h3 className="text-center text-white font-bold text-sm leading-tight">
                   Playback hit a snag
                 </h3>
-                <p className="mt-1.5 text-center text-white/60 text-sm leading-relaxed">
+                <p className="mt-1 text-center text-white/60 text-[11px] leading-snug">
                   {isUnsupportedContainer
-                    ? 'This file uses a container your browser can\u2019t decode natively. Switch to the embed player to keep watching.'
-                    : 'The direct stream stalled. The embed player usually recovers instantly — give it a try.'}
+                    ? 'Container not supported. Switch to embed player.'
+                    : 'Stream stalled. Try the embed player.'}
                 </p>
 
                 {/* Diagnostic chip */}
-                <div className="mt-4 flex items-center justify-center gap-2 text-[10px] uppercase tracking-wider">
-                  <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/50 font-semibold">
+                <div className="mt-2.5 flex items-center justify-center gap-1.5 text-[9px] uppercase tracking-wider">
+                  <span className="px-1.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/50 font-semibold">
                     {fmtLabel}
                   </span>
                   {activeServer && (
-                    <span className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary font-semibold">
+                    <span className="px-1.5 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary font-semibold">
                       {activeServer}
                     </span>
                   )}
                 </div>
 
                 {/* Actions */}
-                <div className="mt-5 flex flex-col gap-2">
+                <div className="mt-3 flex flex-col gap-1.5">
                   <Button
                     onClick={() => setUseIframeFallback(true)}
-                    className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg shadow-primary/30"
+                    className="w-full h-8 text-xs bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md shadow-primary/30"
                   >
-                    <Play className="h-4 w-4 mr-2 fill-current" />
+                    <Play className="h-3 w-3 mr-1.5 fill-current" />
                     Use Embed Player
                   </Button>
                   <Button
@@ -2900,19 +2900,12 @@ export function VideoPlayer({
                       }
                     }}
                     variant="outline"
-                    className="w-full h-10 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white"
+                    className="w-full h-7 text-xs bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white"
                   >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Retry direct stream
+                    <RefreshCw className="h-3 w-3 mr-1.5" />
+                    Retry
                   </Button>
                 </div>
-
-                <button
-                  onClick={() => setVideoError(false)}
-                  className="mt-3 w-full text-center text-[11px] text-white/40 hover:text-white/70 transition-colors"
-                >
-                  Dismiss
-                </button>
               </div>
             </div>
           </div>

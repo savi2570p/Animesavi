@@ -760,12 +760,12 @@ export function EmbedIframePlayer({
       <div className="embed-frame-shield" aria-hidden="true" onContextMenu={(e) => e.preventDefault()} />
 
       {handshakeState === 'ready' && (
-        <div className="absolute bottom-3 right-3 z-20 flex items-center gap-2 rounded-full border border-border/80 bg-background/80 p-1.5 backdrop-blur-sm">
+        <div className="absolute bottom-2 right-2 md:bottom-3 md:right-3 z-20 flex items-center gap-1 md:gap-2 rounded-full border border-border/80 bg-background/80 p-1 md:p-1.5 backdrop-blur-sm">
           <Button
             type="button"
             size="icon"
             variant="ghost"
-            className="h-8 w-8 rounded-full"
+            className="h-6 w-6 md:h-8 md:w-8 rounded-full"
             aria-label="Back 10 seconds"
             title="Back 10s"
             onClick={() => {
@@ -773,22 +773,22 @@ export function EmbedIframePlayer({
               sendCommand('seek', { time: next, offset: -10 }, 'Skip back 10s requested from parent controls.');
             }}
           >
-            <RotateCcw className="h-4 w-4" />
+            <RotateCcw className="h-3 w-3 md:h-4 md:w-4" />
           </Button>
           <Button
             type="button"
             size="icon"
             variant="ghost"
-            className="h-8 w-8 rounded-full"
+            className="h-6 w-6 md:h-8 md:w-8 rounded-full"
             onClick={() => sendCommand(remoteState.isPlaying ? 'pause' : 'play', {}, remoteState.isPlaying ? 'Pause requested from parent controls.' : 'Play requested from parent controls.')}
           >
-            {remoteState.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            {remoteState.isPlaying ? <Pause className="h-3 w-3 md:h-4 md:w-4" /> : <Play className="h-3 w-3 md:h-4 md:w-4" />}
           </Button>
           <Button
             type="button"
             size="icon"
             variant="ghost"
-            className="h-8 w-8 rounded-full"
+            className="h-6 w-6 md:h-8 md:w-8 rounded-full"
             aria-label="Forward 10 seconds"
             title="Forward 10s"
             onClick={() => {
@@ -798,13 +798,13 @@ export function EmbedIframePlayer({
               sendCommand('seek', { time: next, offset: 10 }, 'Skip forward 10s requested from parent controls.');
             }}
           >
-            <RotateCw className="h-4 w-4" />
+            <RotateCw className="h-3 w-3 md:h-4 md:w-4" />
           </Button>
           <Button
             type="button"
             size="icon"
             variant="ghost"
-            className="h-8 w-8 rounded-full"
+            className="h-6 w-6 md:h-8 md:w-8 rounded-full"
             onClick={() => {
               // iOS: try native fullscreen on the iframe so Safari hands off to
               // the system video player. Fall back to postMessage fullscreen.
@@ -823,7 +823,7 @@ export function EmbedIframePlayer({
               sendCommand('fullscreen', {}, 'Fullscreen requested from parent controls.');
             }}
           >
-            <ExternalLink className="h-4 w-4" />
+            <ExternalLink className="h-3 w-3 md:h-4 md:w-4" />
           </Button>
         </div>
       )}
