@@ -78,9 +78,9 @@ export function FloatingTelegramButton() {
                 <button
                   onClick={() => setOpen(false)}
                   aria-label="Close"
-                  className="h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition"
+                  className="h-4 w-4 md:h-6 md:w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-2.5 w-2.5 md:h-3.5 md:w-3.5" />
                 </button>
               </div>
             </div>
