@@ -223,8 +223,8 @@ export function AccessBanner() {
       className="sticky top-0 z-[60] text-white animate-fade-in relative safe-area-top"
       style={{
         background:
-          'linear-gradient(90deg, hsl(0 0% 6%) 0%, hsl(0 60% 16%) 35%, hsl(0 75% 30%) 65%, hsl(0 0% 6%) 100%)',
-        boxShadow: `0 6px 20px -8px ${tone.glow}, inset 0 -1px 0 hsla(0,0%,100%,0.06)`,
+          'linear-gradient(90deg, hsl(0 0% 6%) 0%, hsl(0 0% 6%) 30%, hsl(0 55% 22%) 45%, hsl(0 70% 32%) 50%, hsl(0 55% 22%) 55%, hsl(0 0% 6%) 70%, hsl(0 0% 6%) 100%)',
+        boxShadow: `0 4px 14px -10px ${tone.glow}, inset 0 -1px 0 hsla(0,0%,100%,0.05)`,
       }}
     >
       {/* animated shine */}
