@@ -785,7 +785,7 @@ export default function MinimalEmbedPage() {
                         });
                       }}
                       aria-label={ccEnabled ? 'Hide captions' : 'Show captions'}
-                      title={ccEnabled ? 'CC On' : 'CC Off'}
+                      title={ccEnabled ? 'Subtitles On' : 'Subtitles Off'}
                       className="embed-ctrl-btn"
                       style={{ opacity: ccEnabled ? 1 : 0.55 }}
                     >

@@ -37,7 +37,7 @@ export const SERVER_CONFIGS: Record<ServerType, ServerConfig> = {
     id: 'XPLUS',
     name: 'X-PLUS',
     description: 'Best Quality 🔥 (Recommended)',
-    features: ['Flat controls', 'Download support', 'CC support'],
+    features: ['Flat controls', 'Download support', 'Subtitle support'],
     supportedPlatforms: ['ios', 'android', 'desktop'],
   },
   EMBED: {
