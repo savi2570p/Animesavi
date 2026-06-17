@@ -30,7 +30,7 @@ const TESTIMONIALS = [
   { name: 'Vikram P.', rating: 5, text: 'Multi-audio switching is incredible. E-sub toggling works great and I can keep my favorite server selected.', time: '1 month ago' },
   { name: 'Ananya R.', rating: 5, text: 'Clean UI, fast streaming, and the MuseIN countdown is so exciting! Can\'t wait for new Hindi dub drops.', time: '5 days ago' },
   { name: 'Karan T.', rating: 5, text: 'I was paying for premium on other sites. AnimeSavi gives everything for free with ZERO ads. The slim scrollbar looks clean!', time: '2 days ago' },
-  { name: 'Meera J.', rating: 5, text: 'The release calendar and notification system is perfect. The subtitle editor is a game-changer for fans.', time: '1 week ago' },
+  { name: 'Meera J.', rating: 5, text: 'The release calendar and notification system is perfect. The reminders are a game-changer for fans.', time: '1 week ago' },
   { name: 'Rohit B.', rating: 4, text: 'Four server options and no forced switching means I can choose what works best. H.Savi on my iPhone is flawless.', time: '4 days ago' },
   { name: 'Deepak N.', rating: 5, text: 'The 4K quality is stunning on my big screen. Trending Now banner makes discovering new anime effortless.', time: '3 days ago' },
   { name: 'Simran L.', rating: 5, text: 'I love the PWA feature — installed it on my phone and it feels like a native app. Watch List is super handy!', time: '2 days ago' },
@@ -56,7 +56,7 @@ const FAQ_ITEMS = [
   { q: 'How do I report a broken episode?', a: 'Use the ⚠️ report button on the watch page or message us on Telegram @Lv_Savi. Reports are reviewed quickly and broken links are usually fixed within 24 hours.' },
   { q: 'What is the PIN Lock feature?', a: 'From Profile → Settings, enable a 4 or 6 digit PIN. Every time you reopen the site, you\'ll need to enter the PIN before accessing your account. You can change or disable it anytime.' },
   { q: 'How many profiles can a single account have?', a: 'Up to 5 profiles per regular account, and 9 for admins/uploaders. Each profile keeps its own watch history, watch list, favorites and recommendations.' },
-  { q: 'Does the player support 4K and multi-audio?', a: 'Yes — 4K UHD playback is enabled site-wide. The player exposes every available audio track and subtitle language reported by the source manifest, with a one-tap switcher.' },
+  { q: 'Does the player support 4K and multi-audio?', a: 'Yes — 4K UHD playback is enabled site-wide. The player exposes every available audio track reported by the source manifest, with a one-tap switcher.' },
   { q: 'Can I customize the video player look?', a: 'Yes. The new player theme picker offers 12 color themes — Crimson, Midnight, Ocean, Emerald, Sunset, Gold, Rose, Fuchsia, Lime, Cyan, Royal Purple and Minimal Mono.' },
   { q: 'Will my progress sync between devices?', a: 'Yes. When you\'re signed in, Continue Watching, favorites and watch list sync across phone, tablet and PC instantly.' },
   { q: 'How fresh are new episodes?', a: 'New episodes appear in "Latest Episodes" the same day they release. Enable release reminders to get a push notification 1 hour before each new drop of your favorite show.' },
@@ -281,7 +281,7 @@ export default function Welcome() {
     { icon: Globe, title: 'Hindi Dubbed', desc: 'Official Hindi DUB available for all anime — completely free, anytime, anywhere in the world.' },
     { icon: Users, title: 'Watch Parties', desc: 'Invite friends to watch together with real-time sync. Chat, react, and enjoy anime as a group.' },
     { icon: Headphones, title: 'Multi-Audio', desc: 'Switch between Hindi, English, and Japanese audio tracks on the fly without reloading the video.' },
-    { icon: Subtitles, title: 'Subtitles', desc: 'Built-in subtitle editor with manual timing controls. Import VTT/SRT or create custom captions.' },
+    
     { icon: Monitor, title: 'MuseIN & Crunchy', desc: 'Dedicated tabs for Muse India and Crunchyroll content with smart auto-tagging and Watch List support.' },
   ];
 
@@ -842,7 +842,7 @@ export default function Welcome() {
             {[
               { icon: Keyboard, title: 'Keyboard Shortcuts', desc: 'Space = play/pause, F = fullscreen, M = mute, ← → seek 10s, ↑ ↓ volume.' },
               { icon: Volume2, title: 'Switch Audio Live', desc: 'Tap the headphone icon mid-episode to swap Hindi / English / Japanese without reloading.' },
-              { icon: FileText, title: 'Custom Subtitles', desc: 'Drop in your own VTT/SRT file from the subtitle editor for any episode.' },
+              
               { icon: Cast, title: 'Cast to TV', desc: 'Hit the cast icon in the player to mirror to Chromecast, AirPlay, or Smart TV.' },
               { icon: Bell, title: 'Release Reminders', desc: 'Tap the bell on any ongoing series to get pinged the moment a new episode drops.' },
               { icon: Wifi, title: 'Offline Mode', desc: 'Downloaded episodes keep working even without internet — perfect for flights & commutes.' },
@@ -1374,7 +1374,7 @@ export default function Welcome() {
             { i: Lock, t: 'PIN lock', d: '4 or 6-digit profile guard' },
             { i: Cast, t: 'Cast & AirPlay', d: 'Simple Mode for TVs' },
             { i: HardDrive, t: 'Offline downloads', d: '480p → 4K stored locally' },
-            { i: Subtitles, t: 'Subtitle editor', d: 'VTT/SRT import + manual sync' },
+            
             { i: Keyboard, t: 'Keyboard shortcuts', d: 'Press / to search anywhere' },
             { i: Calendar, t: 'Release calendar', d: 'See exact drop times' },
             { i: BarChart3, t: 'Personal stats', d: 'Genre & watch insights' },
