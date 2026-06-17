@@ -279,7 +279,7 @@ export default function Welcome() {
     { icon: Download, title: 'Smart Downloads', desc: 'Download in 480p, 720p, 1080p or even 2160p (4K) with proper episode names, codec info & quality tags.' },
     { icon: Smartphone, title: 'Mobile First', desc: 'Designed for phones with compact controls, gesture navigation, PiP, and iOS-optimized H.Savi server.' },
     { icon: Globe, title: 'Hindi Dubbed', desc: 'Official Hindi DUB available for all anime — completely free, anytime, anywhere in the world.' },
-    { icon: Users, title: 'Watch Parties', desc: 'Invite friends to watch together with real-time sync. Chat, react, and enjoy anime as a group.' },
+    { icon: Users, title: 'Watch Parties', desc: 'Invite friends for synced playback, live chat, reactions, persistent rooms and a quick AI recap before you start.' },
     { icon: Headphones, title: 'Multi-Audio', desc: 'Switch between Hindi, English, and Japanese audio tracks on the fly without reloading the video.' },
     
     { icon: Monitor, title: 'MuseIN & Crunchy', desc: 'Dedicated tabs for Muse India and Crunchyroll content with smart auto-tagging and Watch List support.' },
@@ -685,7 +685,7 @@ export default function Welcome() {
           {/* Community Features */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             {[
-              { icon: Users, title: 'Watch Parties', desc: 'Host or join real-time watch sessions with friends. Sync playback, chat live, and react together.', gradient: 'from-primary/10 to-primary/5' },
+              { icon: Users, title: 'Watch Parties', desc: 'Host or join real-time watch rooms with friends. Synced playback, live chat, emoji reactions, persistent rooms and AI episode recaps before each session.', gradient: 'from-primary/10 to-primary/5' },
               { icon: MessageSquare, title: 'Reviews & Ratings', desc: 'Rate anime, write reviews, and read what others think before starting a new series.', gradient: 'from-yellow-500/10 to-yellow-500/5' },
               { icon: Bell, title: 'Release Alerts', desc: 'Get notified when new episodes drop. Set reminders for your favorite ongoing series.', gradient: 'from-blue-500/10 to-blue-500/5' },
             ].map((feature, i) => (
@@ -871,7 +871,7 @@ export default function Welcome() {
               { icon: Flame, title: 'Smart Recommendations 2.0', desc: 'Genre + mood-aware suggestions tuned by your real watch history and ratings.', tag: 'Live', href: '/' },
               { icon: Calendar, title: 'Seasonal Anime Tracker', desc: 'A single dashboard for every airing show this season with episode countdowns.', tag: 'Beta', href: '/schedule' },
               { icon: BarChart3, title: 'Personal Watch Stats', desc: 'Total hours watched, top genres, longest streaks and a year-in-review wrap.', tag: 'Live', href: '/stats' },
-              { icon: MapPin, title: 'AI Episode Recaps', desc: 'Auto-generated 30-second recaps so you never lose track of long-running shows.', tag: 'Planned' },
+              { icon: MapPin, title: 'AI Episode Recaps', desc: 'Auto-generated 30-second recaps so you never lose track of long-running shows.', tag: 'Beta' },
             ].map((r, i) => {
               const isLive = r.tag === 'Live';
               const isBeta = r.tag === 'Beta';
