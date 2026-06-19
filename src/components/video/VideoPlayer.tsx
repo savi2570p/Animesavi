@@ -3010,7 +3010,12 @@ export function VideoPlayer({
                     className="absolute top-0 left-0 h-full bg-white/40 rounded-full"
                     style={{ width: `${buffered}%` }}
                   />
-                  {/* Playback progress (foreground) */}
+                  {/* Played progress (foreground fill) */}
+                  <div
+                    className="absolute top-0 left-0 h-full bg-primary rounded-full pointer-events-none"
+                    style={{ width: `${progress}%`, transform: 'translate3d(0,0,0)', willChange: 'width' }}
+                  />
+                  {/* YouTube-style smooth seek slider */}
                   <input
                     type="range"
                     min="0"
@@ -3018,19 +3023,7 @@ export function VideoPlayer({
                     step="any"
                     value={isNaN(progress) ? 0 : progress}
                     onChange={handleSeek}
-                    className="absolute inset-0 w-full h-full bg-transparent rounded-full appearance-none cursor-pointer 
-                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 
-                      [&::-webkit-slider-thumb]:md:w-4 [&::-webkit-slider-thumb]:md:h-4
-                      [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg
-                      [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125
-                      [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:md:w-4 [&::-moz-range-thumb]:md:h-4
-                      [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0
-                      [&::-webkit-slider-runnable-track]:bg-transparent
-                      [&::-moz-range-track]:bg-transparent"
-                    style={{
-                      background: `linear-gradient(to right, hsl(var(--primary)) ${progress}%, transparent ${progress}%)`,
-                      touchAction: 'none',
-                    }}
+                    className="smooth-seekbar absolute -top-4 left-0 right-0"
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
@@ -3295,7 +3288,12 @@ export function VideoPlayer({
                   className="absolute top-0 left-0 h-full bg-white/40 rounded-full"
                   style={{ width: `${buffered}%` }}
                 />
-                {/* Playback progress (foreground) */}
+                {/* Played progress (foreground fill) */}
+                <div
+                  className="absolute top-0 left-0 h-full bg-primary rounded-full pointer-events-none"
+                  style={{ width: `${progress}%`, transform: 'translate3d(0,0,0)', willChange: 'width' }}
+                />
+                {/* YouTube-style smooth seek slider */}
                 <input
                   type="range"
                   min="0"
@@ -3303,19 +3301,7 @@ export function VideoPlayer({
                   step="any"
                   value={isNaN(progress) ? 0 : progress}
                   onChange={handleSeek}
-                  className="absolute inset-0 w-full h-full bg-transparent rounded-full appearance-none cursor-pointer 
-                    [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 
-                    [&::-webkit-slider-thumb]:md:w-4 [&::-webkit-slider-thumb]:md:h-4
-                    [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg
-                    [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125
-                    [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:md:w-4 [&::-moz-range-thumb]:md:h-4
-                    [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0
-                    [&::-webkit-slider-runnable-track]:bg-transparent
-                    [&::-moz-range-track]:bg-transparent"
-                  style={{
-                    background: `linear-gradient(to right, hsl(var(--primary)) ${progress}%, transparent ${progress}%)`,
-                    touchAction: 'none',
-                  }}
+                  className="smooth-seekbar absolute -top-4 left-0 right-0"
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
