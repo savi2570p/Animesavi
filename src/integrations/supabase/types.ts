@@ -378,6 +378,8 @@ export type Database = {
       }
       episodes: {
         Row: {
+          ai_recap: string | null
+          ai_recap_generated_at: string | null
           audio_language: string | null
           captions_url: string | null
           created_at: string
@@ -396,6 +398,8 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          ai_recap?: string | null
+          ai_recap_generated_at?: string | null
           audio_language?: string | null
           captions_url?: string | null
           created_at?: string
@@ -414,6 +418,8 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          ai_recap?: string | null
+          ai_recap_generated_at?: string | null
           audio_language?: string | null
           captions_url?: string | null
           created_at?: string
@@ -590,6 +596,57 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      recap_analytics: {
+        Row: {
+          completed: boolean
+          context: string
+          created_at: string
+          duration_seconds: number
+          episode_id: string
+          id: string
+          opened_at: string
+          user_id: string | null
+          watch_party_id: string | null
+        }
+        Insert: {
+          completed?: boolean
+          context?: string
+          created_at?: string
+          duration_seconds?: number
+          episode_id: string
+          id?: string
+          opened_at?: string
+          user_id?: string | null
+          watch_party_id?: string | null
+        }
+        Update: {
+          completed?: boolean
+          context?: string
+          created_at?: string
+          duration_seconds?: number
+          episode_id?: string
+          id?: string
+          opened_at?: string
+          user_id?: string | null
+          watch_party_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recap_analytics_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recap_analytics_watch_party_id_fkey"
+            columns: ["watch_party_id"]
+            isOneToOne: false
+            referencedRelation: "watch_parties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       seasons: {
         Row: {
@@ -1342,6 +1399,9 @@ export type Database = {
           is_active: boolean
           is_playing: boolean
           playback_time: number
+          recap_is_playing: boolean | null
+          recap_position_seconds: number | null
+          recap_started_at: string | null
           season_number: number
           updated_at: string
         }
@@ -1357,6 +1417,9 @@ export type Database = {
           is_active?: boolean
           is_playing?: boolean
           playback_time?: number
+          recap_is_playing?: boolean | null
+          recap_position_seconds?: number | null
+          recap_started_at?: string | null
           season_number?: number
           updated_at?: string
         }
@@ -1372,6 +1435,9 @@ export type Database = {
           is_active?: boolean
           is_playing?: boolean
           playback_time?: number
+          recap_is_playing?: boolean | null
+          recap_position_seconds?: number | null
+          recap_started_at?: string | null
           season_number?: number
           updated_at?: string
         }
