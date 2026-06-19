@@ -74,7 +74,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
   const [showJoinDialog, setShowJoinDialog] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [partyInfo, setPartyInfo] = useState<PartyInfo | null>(null);
-  const [activeTab, setActiveTab] = useState<'party' | 'chat'>('party');
+  const [activeTab, setActiveTab] = useState<'party' | 'chat' | 'recap'>('party');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const syncIntervalRef = useRef<NodeJS.Timeout>();
 
@@ -721,7 +721,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
         <div className="flex border-b">
           <button
             onClick={() => setActiveTab('party')}
-            className={`flex-1 py-2 text-sm font-medium text-center transition-colors ${
+            className={`flex-1 py-2 text-xs font-medium text-center transition-colors ${
               activeTab === 'party' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -729,8 +729,17 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
             Party
           </button>
           <button
+            onClick={() => setActiveTab('recap')}
+            className={`flex-1 py-2 text-xs font-medium text-center transition-colors ${
+              activeTab === 'recap' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Sparkles className="h-4 w-4 inline mr-1" />
+            Recap
+          </button>
+          <button
             onClick={() => setActiveTab('chat')}
-            className={`flex-1 py-2 text-sm font-medium text-center transition-colors ${
+            className={`flex-1 py-2 text-xs font-medium text-center transition-colors ${
               activeTab === 'chat' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -757,9 +766,11 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
               </div>
             </div>
             <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm p-4">
-              <p className="text-center">Switch to the <strong>Chat</strong> tab to send messages and react with your friends!</p>
+              <p className="text-center">Switch to <strong>Recap</strong> for a 30s AI catch-up, or <strong>Chat</strong> to talk with friends!</p>
             </div>
           </>
+        ) : activeTab === 'recap' ? (
+          <RecapSidebar episodeId={episodeId} partyId={partyId} isHost={isHost} />
         ) : (
           <>
             {/* Chat messages */}
