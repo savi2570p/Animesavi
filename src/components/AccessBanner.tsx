@@ -220,11 +220,18 @@ export function AccessBanner() {
 
   return (
     <div
-      className="sticky top-0 z-[60] text-white animate-fade-in relative safe-area-top backdrop-blur-xl backdrop-saturate-150"
+      className="access-banner sticky top-0 z-[60] text-white animate-fade-in relative backdrop-blur-xl backdrop-saturate-150"
       style={{
+        height: 52,
+        minHeight: 52,
+        maxHeight: 52,
+        // No safe-area-top here: PWA mode would otherwise inflate the banner
+        // beyond 52px on iPhones with a Dynamic Island / notch.
+        paddingTop: 0,
+        paddingBottom: 0,
         background:
-          'linear-gradient(90deg, hsla(0,0%,6%,0.55) 0%, hsla(0,0%,6%,0.5) 30%, hsla(0,65%,30%,0.45) 45%, hsla(0,75%,40%,0.5) 50%, hsla(0,65%,30%,0.45) 55%, hsla(0,0%,6%,0.5) 70%, hsla(0,0%,6%,0.55) 100%)',
-        boxShadow: `0 2px 10px -8px ${tone.glow}, inset 0 -1px 0 hsla(0,0%,100%,0.06), inset 0 1px 0 hsla(0,0%,100%,0.04)`,
+          'linear-gradient(90deg, hsla(0,0%,6%,0.6) 0%, hsla(0,0%,6%,0.55) 30%, hsla(0,70%,32%,0.55) 45%, hsla(0,80%,42%,0.6) 50%, hsla(0,70%,32%,0.55) 55%, hsla(0,0%,6%,0.55) 70%, hsla(0,0%,6%,0.6) 100%)',
+        boxShadow: `0 2px 14px -10px ${tone.glow}, inset 0 -1px 0 hsla(0,0%,100%,0.06), inset 0 1px 0 hsla(0,0%,100%,0.04)`,
         WebkitBackdropFilter: 'blur(18px) saturate(150%)',
       }}
     >
@@ -234,60 +241,57 @@ export function AccessBanner() {
           className="absolute inset-y-0 -inset-x-1/3"
           style={{
             background:
-              'linear-gradient(110deg, transparent 30%, hsla(0,0%,100%,0.07) 50%, transparent 70%)',
+              'linear-gradient(110deg, transparent 30%, hsla(0,0%,100%,0.08) 50%, transparent 70%)',
             animation: 'shimmer 5s linear infinite',
           }}
         />
       </div>
 
       <div
-        className="container relative flex items-center justify-between gap-1.5 px-2"
-        style={{ minHeight: 26, paddingTop: 3, paddingBottom: 3 }}
+        className="container relative flex items-center justify-between gap-2 px-3 h-full"
       >
-        <div className="flex items-center gap-1 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0">
           <span className="relative flex h-1.5 w-1.5 shrink-0">
             <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping ${tone.dot}`} />
             <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${tone.dot}`} />
           </span>
-          <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.14em] opacity-90 truncate leading-none">
+          <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.14em] opacity-90 truncate leading-none">
             {tone.label}
           </span>
-          {isCritical && <AlertTriangle className="h-2.5 w-2.5 text-amber-200 shrink-0" />}
+          {isCritical && <AlertTriangle className="h-3 w-3 text-amber-200 shrink-0" />}
         </div>
 
         <div
-          className="flex items-center gap-1 px-1.5 rounded-full backdrop-blur-md shrink-0"
+          className="flex items-center gap-1.5 px-2 py-1 rounded-full backdrop-blur-md shrink-0"
           style={{
             background: 'hsla(0, 0%, 0%, 0.35)',
             border: `1px solid ${tone.ring}`,
-            boxShadow: `0 0 6px -2px ${tone.glow}`,
-            paddingTop: 1,
-            paddingBottom: 1,
+            boxShadow: `0 0 8px -2px ${tone.glow}`,
           }}
         >
-          <Clock className="h-2.5 w-2.5 opacity-90" />
+          <Clock className="h-3 w-3 opacity-90" />
           <span
-            className="font-mono font-bold text-[9px] sm:text-[10px] tabular-nums tracking-wider leading-none"
+            className="font-mono font-bold text-[10px] sm:text-[11px] tabular-nums tracking-wider leading-none"
             style={{ textShadow: `0 0 8px ${tone.glow}` }}
           >
             {String(time.hours).padStart(2, '0')}h {String(time.minutes).padStart(2, '0')}m
           </span>
         </div>
 
-        <div className="flex items-center gap-1 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0">
           {dateLabel && (
-            <span className="hidden md:inline-flex text-[9px] font-medium opacity-75 truncate leading-none">
+            <span className="hidden md:inline-flex text-[10px] font-medium opacity-75 truncate leading-none">
               ends · {dateLabel}
             </span>
           )}
           <span
-            className="inline-flex items-center gap-0.5 px-1 rounded-full text-[8px] font-bold uppercase tracking-wider leading-none"
-            style={{ background: 'hsla(45, 95%, 55%, 0.18)', color: 'hsl(45, 95%, 75%)', paddingTop: 1, paddingBottom: 1 }}
+            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider leading-none"
+            style={{ background: 'hsla(45, 95%, 55%, 0.18)', color: 'hsl(45, 95%, 75%)' }}
           >
-            <Crown className="h-2 w-2" />
+            <Crown className="h-2.5 w-2.5" />
             <span className="hidden xs:inline">PRO</span>
           </span>
-          {isSynced && <Cloud className="h-2.5 w-2.5 opacity-70" aria-label="Synced from cloud" />}
+          {isSynced && <Cloud className="h-3 w-3 opacity-70" aria-label="Synced from cloud" />}
         </div>
       </div>
     </div>

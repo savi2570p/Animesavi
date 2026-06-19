@@ -344,7 +344,7 @@ export default function Upload() {
       ? existingEpisodes[0].episode_number + 1 
       : 1;
 
-    const { error } = await supabase
+    const { data: inserted, error } = await supabase
       .from('episodes')
       .insert({
         season_id: selectedSeasonId,
@@ -354,13 +354,22 @@ export default function Upload() {
         video_url: episodeVideoUrl.trim() || null,
         thumbnail: episodeThumbnail.trim() || null,
         duration: episodeDuration ? parseInt(episodeDuration) : null,
-      });
+      })
+      .select('id')
+      .single();
 
     if (error) {
       console.error('Error adding episode:', error);
       toast.error('Failed to add episode');
     } else {
       toast.success(`Episode ${nextEpisodeNumber} added successfully!`);
+      // Fire-and-forget AI recap generation so the recap is ready before
+      // the first viewer opens the episode.
+      if (inserted?.id) {
+        supabase.functions
+          .invoke('generate-episode-recap', { body: { episode_id: inserted.id } })
+          .catch((e) => console.warn('[recap] auto-generate failed', e));
+      }
       // Reset form
       setEpisodeTitle('');
       setEpisodeDescription('');

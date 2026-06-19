@@ -24,6 +24,7 @@ import {
   Bell,
    Activity,
   Key,
+  Sparkles,
 } from 'lucide-react';
 import { VideoEncodingDashboard } from '@/components/admin/VideoEncodingDashboard';
 import { CDNHealthDashboard } from '@/components/admin/CDNHealthDashboard';
@@ -35,6 +36,7 @@ import { TokenManager } from '@/components/admin/TokenManager';
 import { UserManagement } from '@/components/admin/UserManagement';
 import { EmbedAllowlistManager } from '@/components/admin/EmbedAllowlistManager';
 import { EmbedAudioDebugPanel } from '@/components/admin/EmbedAudioDebugPanel';
+import { RecapAnalyticsDashboard } from '@/components/admin/RecapAnalyticsDashboard';
 
 interface Application {
   id: string;
@@ -213,6 +215,7 @@ export default function Admin() {
     { value: 'tokens', icon: Key, label: 'Tokens', tone: 'from-fuchsia-500/20 to-purple-500/10', accent: 'text-fuchsia-400' },
     { value: 'embed', icon: Globe, label: 'Embed', tone: 'from-cyan-500/20 to-sky-500/10', accent: 'text-cyan-400' },
     { value: 'users', icon: Users, label: 'Users', tone: 'from-teal-500/20 to-emerald-500/10', accent: 'text-teal-400' },
+    { value: 'recaps', icon: Sparkles, label: 'AI Recaps', tone: 'from-primary/20 to-fuchsia-500/10', accent: 'text-primary' },
   ];
 
   return (
@@ -441,6 +444,10 @@ export default function Admin() {
 
         <TabsContent value="users">
           <UserManagement />
+        </TabsContent>
+
+        <TabsContent value="recaps">
+          <RecapAnalyticsDashboard />
         </TabsContent>
       </Tabs>
 
