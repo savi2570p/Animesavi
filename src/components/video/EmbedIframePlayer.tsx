@@ -760,12 +760,10 @@ export function EmbedIframePlayer({
       <div className="embed-frame-shield" aria-hidden="true" onContextMenu={(e) => e.preventDefault()} />
 
       {handshakeState === 'ready' && (
-        <div className="absolute bottom-2 right-2 md:bottom-3 md:right-3 z-20 flex items-center gap-1 md:gap-2 rounded-full border border-border/80 bg-background/80 p-1 md:p-1.5 backdrop-blur-sm">
-          <Button
+        <div className="absolute bottom-1.5 right-1.5 md:bottom-2.5 md:right-2.5 z-20 flex items-center gap-0.5 md:gap-1 bg-black/55 backdrop-blur-[2px] px-1 py-0.5 md:px-1.5 md:py-1">
+          <button
             type="button"
-            size="icon"
-            variant="ghost"
-            className="h-6 w-6 md:h-8 md:w-8 rounded-full"
+            className="h-6 w-6 md:h-7 md:w-7 inline-flex items-center justify-center text-white/90 hover:text-white transition-colors"
             aria-label="Back 10 seconds"
             title="Back 10s"
             onClick={() => {
@@ -773,22 +771,18 @@ export function EmbedIframePlayer({
               sendCommand('seek', { time: next, offset: -10 }, 'Skip back 10s requested from parent controls.');
             }}
           >
-            <RotateCcw className="h-3 w-3 md:h-4 md:w-4" />
-          </Button>
-          <Button
+            <RotateCcw className="h-3 w-3 md:h-3.5 md:w-3.5" />
+          </button>
+          <button
             type="button"
-            size="icon"
-            variant="ghost"
-            className="h-6 w-6 md:h-8 md:w-8 rounded-full"
+            className="h-6 w-6 md:h-7 md:w-7 inline-flex items-center justify-center text-white/90 hover:text-white transition-colors"
             onClick={() => sendCommand(remoteState.isPlaying ? 'pause' : 'play', {}, remoteState.isPlaying ? 'Pause requested from parent controls.' : 'Play requested from parent controls.')}
           >
-            {remoteState.isPlaying ? <Pause className="h-3 w-3 md:h-4 md:w-4" /> : <Play className="h-3 w-3 md:h-4 md:w-4" />}
-          </Button>
-          <Button
+            {remoteState.isPlaying ? <Pause className="h-3 w-3 md:h-3.5 md:w-3.5" /> : <Play className="h-3 w-3 md:h-3.5 md:w-3.5" />}
+          </button>
+          <button
             type="button"
-            size="icon"
-            variant="ghost"
-            className="h-6 w-6 md:h-8 md:w-8 rounded-full"
+            className="h-6 w-6 md:h-7 md:w-7 inline-flex items-center justify-center text-white/90 hover:text-white transition-colors"
             aria-label="Forward 10 seconds"
             title="Forward 10s"
             onClick={() => {
@@ -798,16 +792,12 @@ export function EmbedIframePlayer({
               sendCommand('seek', { time: next, offset: 10 }, 'Skip forward 10s requested from parent controls.');
             }}
           >
-            <RotateCw className="h-3 w-3 md:h-4 md:w-4" />
-          </Button>
-          <Button
+            <RotateCw className="h-3 w-3 md:h-3.5 md:w-3.5" />
+          </button>
+          <button
             type="button"
-            size="icon"
-            variant="ghost"
-            className="h-6 w-6 md:h-8 md:w-8 rounded-full"
+            className="h-6 w-6 md:h-7 md:w-7 inline-flex items-center justify-center text-white/90 hover:text-white transition-colors"
             onClick={() => {
-              // iOS: try native fullscreen on the iframe so Safari hands off to
-              // the system video player. Fall back to postMessage fullscreen.
               const ua = navigator.userAgent;
               const isIOS = /iPad|iPhone|iPod/.test(ua) || (ua.includes('Mac') && 'ontouchend' in document);
               const ifr = iframeRef.current as (HTMLIFrameElement & { webkitEnterFullscreen?: () => void }) | null;
@@ -823,8 +813,8 @@ export function EmbedIframePlayer({
               sendCommand('fullscreen', {}, 'Fullscreen requested from parent controls.');
             }}
           >
-            <ExternalLink className="h-3 w-3 md:h-4 md:w-4" />
-          </Button>
+            <ExternalLink className="h-3 w-3 md:h-3.5 md:w-3.5" />
+          </button>
         </div>
       )}
 
