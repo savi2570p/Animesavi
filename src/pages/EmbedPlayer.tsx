@@ -755,7 +755,7 @@ export default function EmbedPlayer() {
                     if (subtitleTracks.length > 1) { closeAllMenus(); setShowCcMenu(!showCcMenu); }
                     else { setCcEnabled(v => !v); }
                   }}
-                    className={`${btnSize} ${ccEnabled ? 'bg-primary/80 text-white' : 'bg-white/10 hover:bg-white/20 text-white'} flex items-center justify-center transition-colors`} title="Captions">
+                    className={`${btnSize} ${ccEnabled ? 'text-primary' : 'text-white/90 hover:text-white'} flex items-center justify-center transition-colors`} title="Captions">
                     {ccEnabled ? <Captions className={iconSize} /> : <CaptionsOff className={iconSize} />}
                   </button>
                   {showCcMenu && subtitleTracks.length > 1 && (
