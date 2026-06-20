@@ -641,10 +641,11 @@ export default function EmbedSlugPlayer() {
   };
 
   // Mobile compact sizes
-  const btnSize = deviceInfo.isMobile ? 'w-[28px] h-[28px]' : 'w-9 h-9';
-  const iconSize = deviceInfo.isMobile ? 'w-[14px] h-[14px]' : 'w-5 h-5';
-  const gapSize = deviceInfo.isMobile ? 'gap-[5px]' : 'gap-2';
-  const controlButtonClass = `${btnSize} rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-90 ${isShadowTheme ? 'bg-primary/20 border border-primary/30 text-white hover:bg-primary/80 shadow-lg shadow-primary/20' : 'text-white hover:text-primary'}`;
+  const btnSize = deviceInfo.isMobile ? 'w-6 h-6' : 'w-8 h-8';
+  const iconSize = deviceInfo.isMobile ? 'w-[13px] h-[13px]' : 'w-[18px] h-[18px]';
+  const gapSize = deviceInfo.isMobile ? 'gap-1' : 'gap-2';
+  // Flat icon-only buttons (no circles, no glassy chip), works for both themes.
+  const controlButtonClass = `${btnSize} flex items-center justify-center transition-colors text-white/90 hover:text-white`;
 
   // Blocked domain
   if (domainAllowed === false) {
@@ -822,16 +823,26 @@ export default function EmbedSlugPlayer() {
 
         <div className={`bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-16 ${deviceInfo.isMobile ? 'pb-2 px-3' : 'pb-3 px-4'}`}>
           {/* Progress bar */}
-          <div className={`relative w-full ${deviceInfo.isMobile ? 'h-[3px]' : 'h-1.5'} bg-white/20 rounded-full mb-2 cursor-pointer group`}
-            onClick={(e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              const pct = ((e.clientX - rect.left) / rect.width) * 100;
-              if (videoRef.current && duration) videoRef.current.currentTime = (pct / 100) * duration;
-            }}>
-            <div className="absolute inset-y-0 left-0 bg-white/30 rounded-full" style={{ width: `${bufferedProgress}%` }} />
-            <div className="absolute inset-y-0 left-0 bg-primary rounded-full" style={{ width: `${progress}%` }} />
-            <div className={`absolute top-1/2 -translate-y-1/2 ${deviceInfo.isMobile ? 'w-2.5 h-2.5' : 'w-3.5 h-3.5'} bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-opacity`}
-              style={{ left: `${progress}%`, marginLeft: deviceInfo.isMobile ? '-5px' : '-7px' }} />
+          <div className={`relative w-full ${deviceInfo.isMobile ? 'h-1' : 'h-1.5'} mb-2`}>
+            <div className="absolute inset-0 bg-white/20 rounded-full pointer-events-none" />
+            <div className="absolute top-0 left-0 h-full bg-white/40 rounded-full pointer-events-none" style={{ width: `${bufferedProgress}%` }} />
+            <div
+              className="absolute top-0 left-0 h-full bg-primary rounded-full pointer-events-none"
+              style={{ width: `${progress}%`, transform: 'translate3d(0,0,0)', willChange: 'width' }}
+            />
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="any"
+              value={isNaN(progress) ? 0 : progress}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                if (videoRef.current && duration) videoRef.current.currentTime = (val / 100) * duration;
+              }}
+              className="smooth-seekbar absolute left-0 right-0 top-1/2 -translate-y-1/2"
+              onClick={(e) => e.stopPropagation()}
+            />
           </div>
 
           {/* Time + Controls */}

@@ -154,9 +154,9 @@ export default function EmbedPlayer() {
   
 
   // Mobile compact sizes
-  const btnSize = deviceInfo.isMobile ? 'w-[30px] h-[30px]' : 'w-10 h-10';
-  const iconSize = deviceInfo.isMobile ? 'w-[15px] h-[15px]' : 'w-5 h-5';
-  const gapSize = deviceInfo.isMobile ? 'gap-[6px]' : 'gap-2';
+  const btnSize = deviceInfo.isMobile ? 'w-6 h-6' : 'w-8 h-8';
+  const iconSize = deviceInfo.isMobile ? 'w-[13px] h-[13px]' : 'w-[18px] h-[18px]';
+  const gapSize = deviceInfo.isMobile ? 'gap-1' : 'gap-2';
 
   // Fetch episode data (only if domain allowed)
   const [resolvedAnimeId, setResolvedAnimeId] = useState<string | null>(null);
@@ -698,35 +698,50 @@ export default function EmbedPlayer() {
         {/* Bottom controls */}
         <div className={`bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 ${deviceInfo.isMobile ? 'pb-2 px-3' : 'pb-4 px-4'}`}>
           {/* Progress bar */}
-          <div className="mb-3">
-            <div className="flex items-center gap-3">
-              <span className="text-white/90 text-xs font-mono min-w-[40px]">{formatTime(currentTime)}</span>
-              <div className="flex-1 relative">
-                <div className="absolute inset-0 h-1.5 bg-white/20 rounded-full pointer-events-none" style={{ width: `${bufferedProgress}%` }} />
-                <input type="range" min="0" max="100" step="any" value={progress} onChange={handleSeek}
-                  className="w-full h-1.5 bg-white/30 rounded-full appearance-none cursor-pointer relative z-10
-                    [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
-                    [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg"
-                  style={{ background: `linear-gradient(to right, hsl(var(--primary)) ${progress}%, rgba(255,255,255,0.3) ${progress}%)`, touchAction: 'none' }}
+          <div className="mb-2 md:mb-3">
+            <div className="flex items-center gap-2 md:gap-3">
+              <span className="text-white/90 text-[10px] md:text-xs font-mono min-w-[36px] md:min-w-[40px]">{formatTime(currentTime)}</span>
+              <div className="flex-1 relative h-1 md:h-1.5">
+                {/* Buffer track (background) */}
+                <div className="absolute inset-0 bg-white/20 rounded-full pointer-events-none" />
+                <div
+                  className="absolute top-0 left-0 h-full bg-white/40 rounded-full pointer-events-none"
+                  style={{ width: `${bufferedProgress}%` }}
+                />
+                {/* Played fill */}
+                <div
+                  className="absolute top-0 left-0 h-full bg-primary rounded-full pointer-events-none"
+                  style={{ width: `${progress}%`, transform: 'translate3d(0,0,0)', willChange: 'width' }}
+                />
+                {/* YouTube-style smooth seek slider */}
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="any"
+                  value={isNaN(progress) ? 0 : progress}
+                  onChange={handleSeek}
+                  className="smooth-seekbar absolute left-0 right-0 top-1/2 -translate-y-1/2"
+                  onClick={(e) => e.stopPropagation()}
                 />
               </div>
-              <span className="text-white/90 text-xs font-mono min-w-[40px]">{formatTime(duration)}</span>
+              <span className="text-white/90 text-[10px] md:text-xs font-mono min-w-[36px] md:min-w-[40px]">{formatTime(duration)}</span>
             </div>
           </div>
 
-          {/* Control buttons */}
+          {/* Control buttons - flat */}
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className={`flex items-center ${gapSize} shrink-0`}>
-              <button className={`${btnSize} rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors`} onClick={skipBackward}>
+              <button className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`} onClick={skipBackward}>
                 <SkipBack className={iconSize} />
               </button>
-              <button className={`${deviceInfo.isMobile ? 'w-[34px] h-[34px]' : 'w-12 h-12'} rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors`} onClick={togglePlay}>
-                {isPlaying ? <Pause className={deviceInfo.isMobile ? 'w-[17px] h-[17px]' : 'w-7 h-7'} /> : <Play className={`${deviceInfo.isMobile ? 'w-[17px] h-[17px]' : 'w-7 h-7'} fill-current ml-0.5`} />}
+              <button className={`${deviceInfo.isMobile ? 'w-7 h-7' : 'w-9 h-9'} flex items-center justify-center text-white hover:text-white transition-colors`} onClick={togglePlay}>
+                {isPlaying ? <Pause className={deviceInfo.isMobile ? 'w-4 h-4' : 'w-5 h-5'} /> : <Play className={`${deviceInfo.isMobile ? 'w-4 h-4' : 'w-5 h-5'} fill-current`} />}
               </button>
-              <button className={`${btnSize} rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors`} onClick={skipForward}>
+              <button className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`} onClick={skipForward}>
                 <SkipForward className={iconSize} />
               </button>
-              <button className={`${btnSize} rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors`} onClick={toggleMute}>
+              <button className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`} onClick={toggleMute}>
                 {isMuted ? <VolumeX className={iconSize} /> : <Volume2 className={iconSize} />}
               </button>
             </div>
@@ -740,7 +755,7 @@ export default function EmbedPlayer() {
                     if (subtitleTracks.length > 1) { closeAllMenus(); setShowCcMenu(!showCcMenu); }
                     else { setCcEnabled(v => !v); }
                   }}
-                    className={`${btnSize} rounded-full ${ccEnabled ? 'bg-primary/80 text-white' : 'bg-white/10 hover:bg-white/20 text-white'} flex items-center justify-center transition-colors`} title="Captions">
+                    className={`${btnSize} ${ccEnabled ? 'text-primary' : 'text-white/90 hover:text-white'} flex items-center justify-center transition-colors`} title="Captions">
                     {ccEnabled ? <Captions className={iconSize} /> : <CaptionsOff className={iconSize} />}
                   </button>
                   {showCcMenu && subtitleTracks.length > 1 && (
@@ -764,7 +779,7 @@ export default function EmbedPlayer() {
               {/* Audio switch — always visible so users can see/change track */}
               <div className="relative">
                 <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowAudioMenu(!showAudioMenu); }}
-                  className={`${btnSize} rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors`} title="Audio Track">
+                  className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`} title="Audio Track">
                   <Headphones className={iconSize} />
                 </button>
                 {showAudioMenu && (
@@ -788,7 +803,7 @@ export default function EmbedPlayer() {
               {/* Quality selector */}
               {isHlsActive && hlsLevels.length > 1 && (
                 <div className="relative">
-                  <button className={`${btnSize} rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors`}
+                  <button className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`}
                     onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowQualityMenu(!showQualityMenu); }}>
                     <Settings className={iconSize} />
                   </button>
@@ -812,7 +827,7 @@ export default function EmbedPlayer() {
 
               {/* Download 720p / 1080p → Shadow-Arise */}
               <div className="relative">
-                <button className={`${btnSize} rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors`}
+                <button className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`}
                   onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowDownloadMenu(!showDownloadMenu); }} title="Download">
                   <Download className={iconSize} />
                 </button>
@@ -834,7 +849,7 @@ export default function EmbedPlayer() {
                 )}
               </div>
 
-              <button className={`${btnSize} rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors`} onClick={toggleFullscreen}>
+              <button className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`} onClick={toggleFullscreen}>
                 <Maximize className={iconSize} />
               </button>
             </div>
