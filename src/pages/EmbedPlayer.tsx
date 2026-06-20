@@ -154,9 +154,9 @@ export default function EmbedPlayer() {
   
 
   // Mobile compact sizes
-  const btnSize = deviceInfo.isMobile ? 'w-[30px] h-[30px]' : 'w-10 h-10';
-  const iconSize = deviceInfo.isMobile ? 'w-[15px] h-[15px]' : 'w-5 h-5';
-  const gapSize = deviceInfo.isMobile ? 'gap-[6px]' : 'gap-2';
+  const btnSize = deviceInfo.isMobile ? 'w-6 h-6' : 'w-8 h-8';
+  const iconSize = deviceInfo.isMobile ? 'w-[13px] h-[13px]' : 'w-[18px] h-[18px]';
+  const gapSize = deviceInfo.isMobile ? 'gap-1' : 'gap-2';
 
   // Fetch episode data (only if domain allowed)
   const [resolvedAnimeId, setResolvedAnimeId] = useState<string | null>(null);
