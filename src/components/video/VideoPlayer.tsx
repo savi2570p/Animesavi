@@ -3301,7 +3301,7 @@ export function VideoPlayer({
                   step="any"
                   value={isNaN(progress) ? 0 : progress}
                   onChange={handleSeek}
-                  className="smooth-seekbar absolute -top-4 left-0 right-0"
+                  className="smooth-seekbar absolute left-0 right-0 top-1/2 -translate-y-1/2"
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
