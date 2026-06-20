@@ -755,7 +755,7 @@ export default function EmbedPlayer() {
                     if (subtitleTracks.length > 1) { closeAllMenus(); setShowCcMenu(!showCcMenu); }
                     else { setCcEnabled(v => !v); }
                   }}
-                    className={`${btnSize} rounded-full ${ccEnabled ? 'bg-primary/80 text-white' : 'bg-white/10 hover:bg-white/20 text-white'} flex items-center justify-center transition-colors`} title="Captions">
+                    className={`${btnSize} ${ccEnabled ? 'bg-primary/80 text-white' : 'bg-white/10 hover:bg-white/20 text-white'} flex items-center justify-center transition-colors`} title="Captions">
                     {ccEnabled ? <Captions className={iconSize} /> : <CaptionsOff className={iconSize} />}
                   </button>
                   {showCcMenu && subtitleTracks.length > 1 && (
@@ -779,7 +779,7 @@ export default function EmbedPlayer() {
               {/* Audio switch — always visible so users can see/change track */}
               <div className="relative">
                 <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowAudioMenu(!showAudioMenu); }}
-                  className={`${btnSize} rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors`} title="Audio Track">
+                  className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`} title="Audio Track">
                   <Headphones className={iconSize} />
                 </button>
                 {showAudioMenu && (
@@ -803,7 +803,7 @@ export default function EmbedPlayer() {
               {/* Quality selector */}
               {isHlsActive && hlsLevels.length > 1 && (
                 <div className="relative">
-                  <button className={`${btnSize} rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors`}
+                  <button className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`}
                     onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowQualityMenu(!showQualityMenu); }}>
                     <Settings className={iconSize} />
                   </button>
@@ -827,7 +827,7 @@ export default function EmbedPlayer() {
 
               {/* Download 720p / 1080p → Shadow-Arise */}
               <div className="relative">
-                <button className={`${btnSize} rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors`}
+                <button className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`}
                   onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowDownloadMenu(!showDownloadMenu); }} title="Download">
                   <Download className={iconSize} />
                 </button>
@@ -849,7 +849,7 @@ export default function EmbedPlayer() {
                 )}
               </div>
 
-              <button className={`${btnSize} rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors`} onClick={toggleFullscreen}>
+              <button className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`} onClick={toggleFullscreen}>
                 <Maximize className={iconSize} />
               </button>
             </div>
