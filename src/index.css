@@ -467,6 +467,11 @@ button, [role="button"], a {
     background: transparent;
     border: 0;
   }
+  /* Thumb centering relies on the runnable-track being the SAME height as
+     the input itself (36px). With matching track + input heights, every
+     browser auto-centers the thumb on the track's center axis. No
+     margin-top / translateY hacks — those caused the thumb to float
+     above the visible bar on iOS/Safari. */
   .smooth-seekbar::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
@@ -476,12 +481,10 @@ button, [role="button"], a {
     background: hsl(var(--primary));
     border: 0;
     box-shadow: 0 1px 4px hsla(0, 0%, 0%, 0.45);
-    /* Center thumb vertically on the 36px runnable track (Safari/iOS need explicit margin) */
-    margin-top: -11px; /* (36 - 14) / 2 ≈ centered above track baseline */
+    margin-top: 0;
     transform: translate3d(0, 0, 0);
     transition: width 120ms cubic-bezier(0.4, 0, 0.2, 1),
-                height 120ms cubic-bezier(0.4, 0, 0.2, 1),
-                margin-top 120ms cubic-bezier(0.4, 0, 0.2, 1);
+                height 120ms cubic-bezier(0.4, 0, 0.2, 1);
   }
   .smooth-seekbar::-moz-range-thumb {
     width: 14px;
@@ -498,7 +501,7 @@ button, [role="button"], a {
   .smooth-seekbar.is-dragging::-webkit-slider-thumb {
     width: 20px;
     height: 20px;
-    margin-top: -14px; /* keep centered while scaled up */
+    margin-top: 0;
   }
   .smooth-seekbar:active::-moz-range-thumb,
   .smooth-seekbar.is-dragging::-moz-range-thumb {
