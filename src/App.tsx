@@ -194,6 +194,7 @@ const App = () => (
           <BrowserRouter>
             <PopupQueueProvider>
               <AntiPiracyShield mode="soft" />
+              <TurnstileGate />
               <PinLockGate />
               <BanGuard />
               <ScrollRecoveryInitializer />
