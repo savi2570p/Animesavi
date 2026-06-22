@@ -21,14 +21,14 @@ const formatViews = (count: number) => {
 
 // Hardcoded trending titles in priority order (6 anime)
 const TRENDING_TITLES = [
-  'The Angel Next Door Spoils me Rotten',
-  'Grand Blue Dreaming',
+  "Tamon's B-side",
+  'Yowayowa Sensei',
+  'Marriage Toxin',
+  'The Rising of the Shield Hero',
+  'Eren the Southpaw',
   'Dr. Stone',
-  'Witch Hat Atelier',
-  'Wistoria: Wand and Sword',
-  'Liar Game',
-  'Snowball Earth',
 ];
+
 
 const TRENDING_LIMIT = 6;
 
