@@ -87,18 +87,17 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
 
         if (data && data.length > 0) {
           // Curated fixed hero lineup (stable order, not random) — sourced from "Most Popular".
-          // Swap: removed "Jujutsu Kaisen" -> added "That Time I Got Reincarnated as a Slime".
           const HERO_LINEUP = [
             'The Angel Next Door Spoils me Rotten',
             'Witch Hat Atelier',
             'That Time I Got Reincarnated as a Slime',
-            'My Dress-Up Darling',
-            'Solo Leveling',
-            'Liar Game',
+            'Yowayowa Sensei',
+            'The Rising of the Shield Hero',
+            'Eren the Southpaw',
             'Dorohedoro',
-            'Grand Blue Dreaming',
-            'Easygoing Territory Defense by the Optimistic Lord',
-            'Attack on Titan',
+            "Tamon's B-side",
+            'Marriage Toxin',
+            'Dr. Stone',
           ];
 
           const byTitle = (t: string) =>
