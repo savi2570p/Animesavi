@@ -47,6 +47,13 @@ const VIEW_COUNT_MAP: Record<string, number> = {
   'Liar Game': 7800000,
   'Dorohedoro': 6400000,
   'Easygoing Territory Defense by the Optimistic Lord': 5200000,
+  "Tamon's B-side": 5100000,
+  'Yowayowa Sensei': 4900000,
+  'Marriage Toxin': 4600000,
+  'The Rising of the Shield Hero': 7100000,
+  'Eren the Southpaw': 4300000,
+  'Dr. Stone': 6800000,
+  'Dr. stone': 6800000,
 };
 
 const getViewCount = (title: string, dbViewCount: number | null): number => {
