@@ -47,6 +47,13 @@ const VIEW_COUNT_MAP: Record<string, number> = {
   'Liar Game': 7800000,
   'Dorohedoro': 6400000,
   'Easygoing Territory Defense by the Optimistic Lord': 5200000,
+  "Tamon's B-side": 5100000,
+  'Yowayowa Sensei': 4900000,
+  'Marriage Toxin': 4600000,
+  'The Rising of the Shield Hero': 7100000,
+  'Eren the Southpaw': 4300000,
+  'Dr. Stone': 6800000,
+  'Dr. stone': 6800000,
 };
 
 const getViewCount = (title: string, dbViewCount: number | null): number => {
@@ -80,18 +87,17 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
 
         if (data && data.length > 0) {
           // Curated fixed hero lineup (stable order, not random) — sourced from "Most Popular".
-          // Swap: removed "Jujutsu Kaisen" -> added "That Time I Got Reincarnated as a Slime".
           const HERO_LINEUP = [
             'The Angel Next Door Spoils me Rotten',
             'Witch Hat Atelier',
             'That Time I Got Reincarnated as a Slime',
-            'My Dress-Up Darling',
-            'Solo Leveling',
-            'Liar Game',
+            'Yowayowa Sensei',
+            'The Rising of the Shield Hero',
+            'Eren the Southpaw',
             'Dorohedoro',
-            'Grand Blue Dreaming',
-            'Easygoing Territory Defense by the Optimistic Lord',
-            'Attack on Titan',
+            "Tamon's B-side",
+            'Marriage Toxin',
+            'Dr. Stone',
           ];
 
           const byTitle = (t: string) =>
