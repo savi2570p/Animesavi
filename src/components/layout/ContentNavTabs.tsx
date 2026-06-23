@@ -74,16 +74,17 @@ export function ContentNavTabs() {
                 key={tab.to}
                 to={tab.to}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-3 text-xs sm:text-sm font-medium whitespace-nowrap border-b-2 transition-all duration-200 shrink-0",
+                  "flex items-center gap-1 sm:gap-1.5 px-2 py-2 sm:px-3 sm:py-3 text-[10px] sm:text-xs md:text-sm font-medium whitespace-nowrap border-b-2 transition-all duration-200 shrink-0",
+                  tab.to === '/flox' && "sm:px-2.5 md:px-3",
                   isActive
                     ? "border-primary text-primary"
                     : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                 )}
               >
                 {tab.customIcon ? (
-                  <img src={tab.customIcon} alt={tab.label} className="h-4 w-4 sm:h-5 sm:w-5 rounded-full object-cover" />
+                  <img src={tab.customIcon} alt={tab.label} className="h-3 w-3 sm:h-4 sm:w-4 rounded-full object-cover" />
                 ) : Icon ? (
-                  <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
                 ) : null}
                 <span>{tab.label}</span>
               </Link>
