@@ -658,24 +658,40 @@ export default function Browse() {
             </div>
           )}
 
-          {/* Genres */}
-          <div className="flex flex-wrap items-start gap-2 pt-3 border-t border-border/40">
-            <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold w-16 shrink-0 flex items-center gap-1 pt-1.5">
-              <Sparkles className="h-3 w-3" />
-              Genres
-            </span>
-            <div className="flex flex-wrap gap-1.5 flex-1">
+          {/* Genres — horizontal scrollable rail */}
+          <div className="pt-3 border-t border-border/40">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3 text-primary" />
+                Genres
+              </span>
+              {selectedGenre && (
+                <button
+                  onClick={() => handleGenreFilter(selectedGenre)}
+                  className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-destructive font-semibold"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-none -mx-3 px-3 sm:mx-0 sm:px-0 pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
               {ALLOWED_GENRES.map((genre) => (
                 <button
                   key={genre}
                   onClick={() => handleGenreFilter(genre)}
-                  className={cn("filter-btn text-xs", selectedGenre === genre.toLowerCase() && "active")}
+                  className={cn(
+                    "shrink-0 px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold whitespace-nowrap border transition-all",
+                    selectedGenre === genre.toLowerCase()
+                      ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/30 scale-105"
+                      : "bg-card/60 text-muted-foreground border-border/50 hover:border-primary/40 hover:text-foreground"
+                  )}
                 >
                   {genre}
                 </button>
               ))}
             </div>
           </div>
+
         </div>
 
         {/* Top 10 Most Popular — Browse Mode only */}
@@ -825,17 +841,40 @@ export default function Browse() {
 
                   {/* Title overlay always visible at bottom */}
                   <div className="absolute inset-x-0 bottom-0 z-[4] p-2.5 sm:p-3 pt-8">
+
                     <h3 className="font-bold text-[12px] sm:text-sm text-white line-clamp-2 leading-tight drop-shadow-md group-hover:text-primary transition-colors">
                       {anime.title}
                     </h3>
-                    {anime.genres && anime.genres.length > 0 && (
-                      <div className="mt-1 flex items-center gap-1 flex-wrap">
-                        <span className="text-[9px] sm:text-[10px] font-medium text-white/70 uppercase tracking-wider truncate">
-                          {anime.genres.slice(0, 2).join(' · ')}
-                        </span>
-                      </div>
+                  </div>
+                </div>
+
+                {/* Meta footer — year · episodes · genre */}
+                <div className="mt-1.5 px-0.5 flex items-center justify-between gap-2 text-[10px] sm:text-[11px]">
+                  <div className="flex items-center gap-1.5 text-muted-foreground font-medium min-w-0">
+                    {anime.release_year && (
+                      <span className="text-foreground/90 font-semibold">{anime.release_year}</span>
+                    )}
+                    {anime.release_year && (anime.episode_count ?? 0) > 0 && anime.type !== 'movie' && (
+                      <span className="opacity-50">·</span>
+                    )}
+                    {(anime.episode_count ?? 0) > 0 && anime.type !== 'movie' && (
+                      <span className="flex items-center gap-0.5">
+                        <Tv className="h-2.5 w-2.5 text-primary" />
+                        {anime.episode_count} EP
+                      </span>
+                    )}
+                    {anime.type === 'movie' && (
+                      <span className="flex items-center gap-0.5">
+                        <Film className="h-2.5 w-2.5 text-accent" />
+                        Movie
+                      </span>
                     )}
                   </div>
+                  {anime.genres && anime.genres.length > 0 && (
+                    <span className="text-muted-foreground/70 uppercase tracking-wider truncate text-[9px] sm:text-[10px] font-medium shrink">
+                      {anime.genres[0]}
+                    </span>
+                  )}
                 </div>
               </Link>
             ))}
