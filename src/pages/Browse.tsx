@@ -841,17 +841,41 @@ export default function Browse() {
 
                   {/* Title overlay always visible at bottom */}
                   <div className="absolute inset-x-0 bottom-0 z-[4] p-2.5 sm:p-3 pt-8">
+                  {/* Title overlay always visible at bottom */}
+                  <div className="absolute inset-x-0 bottom-0 z-[4] p-2.5 sm:p-3 pt-8">
                     <h3 className="font-bold text-[12px] sm:text-sm text-white line-clamp-2 leading-tight drop-shadow-md group-hover:text-primary transition-colors">
                       {anime.title}
                     </h3>
-                    {anime.genres && anime.genres.length > 0 && (
-                      <div className="mt-1 flex items-center gap-1 flex-wrap">
-                        <span className="text-[9px] sm:text-[10px] font-medium text-white/70 uppercase tracking-wider truncate">
-                          {anime.genres.slice(0, 2).join(' · ')}
-                        </span>
-                      </div>
+                  </div>
+                </div>
+
+                {/* Meta footer — year · episodes · genre */}
+                <div className="mt-1.5 px-0.5 flex items-center justify-between gap-2 text-[10px] sm:text-[11px]">
+                  <div className="flex items-center gap-1.5 text-muted-foreground font-medium min-w-0">
+                    {anime.release_year && (
+                      <span className="text-foreground/90 font-semibold">{anime.release_year}</span>
+                    )}
+                    {anime.release_year && (anime.episode_count ?? 0) > 0 && anime.type !== 'movie' && (
+                      <span className="opacity-50">·</span>
+                    )}
+                    {(anime.episode_count ?? 0) > 0 && anime.type !== 'movie' && (
+                      <span className="flex items-center gap-0.5">
+                        <Tv className="h-2.5 w-2.5 text-primary" />
+                        {anime.episode_count} EP
+                      </span>
+                    )}
+                    {anime.type === 'movie' && (
+                      <span className="flex items-center gap-0.5">
+                        <Film className="h-2.5 w-2.5 text-accent" />
+                        Movie
+                      </span>
                     )}
                   </div>
+                  {anime.genres && anime.genres.length > 0 && (
+                    <span className="text-muted-foreground/70 uppercase tracking-wider truncate text-[9px] sm:text-[10px] font-medium shrink">
+                      {anime.genres[0]}
+                    </span>
+                  )}
                 </div>
               </Link>
             ))}
