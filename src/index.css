@@ -414,20 +414,20 @@ button, [role="button"], a {
     padding-top: 0 !important;
   }
 
-  /* Access banner: locked 52px height in EVERY mode (Safari, Chrome,
+  /* Access banner: locked 25px height in EVERY mode (Safari, Chrome,
      iPhone/iPad Home Screen PWA). Safe-area insets must never inflate it. */
   .access-banner {
-    height: 52px !important;
-    min-height: 52px !important;
-    max-height: 52px !important;
+    height: 25px !important;
+    min-height: 25px !important;
+    max-height: 25px !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
   }
   @media all and (display-mode: standalone) {
     .access-banner {
-      height: 52px !important;
-      min-height: 52px !important;
-      max-height: 52px !important;
+      height: 25px !important;
+      min-height: 25px !important;
+      max-height: 25px !important;
       padding-top: 0 !important;
       padding-bottom: 0 !important;
     }

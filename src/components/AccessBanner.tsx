@@ -222,11 +222,11 @@ export function AccessBanner() {
     <div
       className="access-banner sticky top-0 z-[60] text-white animate-fade-in relative backdrop-blur-xl backdrop-saturate-150"
       style={{
-        height: 52,
-        minHeight: 52,
-        maxHeight: 52,
+        height: 25,
+        minHeight: 25,
+        maxHeight: 25,
         // No safe-area-top here: PWA mode would otherwise inflate the banner
-        // beyond 52px on iPhones with a Dynamic Island / notch.
+        // beyond 25px on iPhones with a Dynamic Island / notch.
         paddingTop: 0,
         paddingBottom: 0,
         background:
