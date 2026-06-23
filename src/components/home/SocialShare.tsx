@@ -1,5 +1,15 @@
 import { Button } from '@/components/ui/button';
-import { Share2, Copy, Check, Send, Twitter, Facebook, Instagram, Camera, Sparkles, Heart, MessageSquareText, ChevronDown } from 'lucide-react';
+import {
+  Copy,
+  Check,
+  Send,
+  Twitter,
+  Facebook,
+  Instagram,
+  Camera,
+  Sparkles,
+  MessageSquareText,
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -7,26 +17,48 @@ interface SocialShareProps {
   className?: string;
 }
 
-const MESSAGE_TEMPLATES = [
+type Template = {
+  id: string;
+  label: string;
+  text: string;
+  // Visual swatch for the picker + the gradient applied to the poster preview
+  swatch: string;
+  poster: string;
+  tagline: string;
+};
+
+const MESSAGE_TEMPLATES: Template[] = [
   {
-    id: 'casual',
-    label: '😎 Casual',
+    id: 'crimson',
+    label: 'Crimson',
     text: "Hey! I've been watching anime on AnimeSavi — free HD streaming, no ads, even 4K. You should check it out 👇",
+    swatch: 'from-primary to-rose-800',
+    poster: 'from-primary via-rose-700 to-rose-950',
+    tagline: 'Join the evolution of anime',
   },
   {
-    id: 'hype',
-    label: '🔥 Hype',
-    text: "🔥 Found the cleanest anime site ever — AnimeSavi. Free 4K, Hindi dubs, watch parties, the works. Drop everything and try it:",
+    id: 'midnight',
+    label: 'Midnight',
+    text: '🔥 Found the cleanest anime site ever — AnimeSavi. Free 4K, Hindi dubs, watch parties, the works. Drop everything and try it:',
+    swatch: 'from-zinc-700 to-zinc-950',
+    poster: 'from-zinc-700 via-zinc-900 to-black',
+    tagline: 'Late-night, lossless, legendary',
   },
   {
-    id: 'short',
-    label: '⚡ Short',
+    id: 'azure',
+    label: 'Azure',
     text: 'Free HD anime, zero ads. AnimeSavi 👉',
+    swatch: 'from-blue-600 to-indigo-900',
+    poster: 'from-blue-600 via-indigo-800 to-indigo-950',
+    tagline: 'Stream sharper than ever',
   },
   {
-    id: 'invite',
-    label: '💌 Invite',
+    id: 'emerald',
+    label: 'Emerald',
     text: "I'm watching anime on AnimeSavi and want you to join me. We can do watch parties together! Sign up here:",
+    swatch: 'from-emerald-600 to-teal-900',
+    poster: 'from-emerald-600 via-teal-800 to-teal-950',
+    tagline: 'Better with your crew',
   },
 ];
 
@@ -34,7 +66,6 @@ export function SocialShare({ className = '' }: SocialShareProps) {
   const [copied, setCopied] = useState(false);
   const [msgCopied, setMsgCopied] = useState(false);
   const [templateId, setTemplateId] = useState(MESSAGE_TEMPLATES[0].id);
-  const [showTemplates, setShowTemplates] = useState(false);
 
   const websiteUrl = 'https://animesavi.com';
   const template = MESSAGE_TEMPLATES.find(t => t.id === templateId) || MESSAGE_TEMPLATES[0];
@@ -63,12 +94,11 @@ export function SocialShare({ className = '' }: SocialShareProps) {
   };
 
   const handleShareOption = async (url: string, name: string) => {
-    // Copy the templated message first so the user can paste it
     try {
       await navigator.clipboard.writeText(fullMessage);
       toast.success(`Message copied — paste it on ${name}!`, { duration: 2500 });
     } catch {
-      // ignore clipboard failure, still open share dialog
+      // ignore clipboard failure
     }
     window.open(url, '_blank');
   };
@@ -78,159 +108,170 @@ export function SocialShare({ className = '' }: SocialShareProps) {
       name: 'Telegram',
       icon: Send,
       url: `https://t.me/share/url?url=${encodeURIComponent(websiteUrl)}&text=${encodeURIComponent(template.text)}`,
-      gradient: 'from-sky-400 to-blue-500',
-      ring: 'hover:ring-sky-400/50',
     },
     {
-      name: 'X / Twitter',
+      name: 'X',
       icon: Twitter,
       url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(websiteUrl)}&text=${encodeURIComponent(template.text)}`,
-      gradient: 'from-zinc-700 to-black',
-      ring: 'hover:ring-foreground/50',
     },
     {
       name: 'Facebook',
       icon: Facebook,
       url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(websiteUrl)}&quote=${encodeURIComponent(template.text)}`,
-      gradient: 'from-blue-500 to-blue-700',
-      ring: 'hover:ring-blue-500/50',
     },
     {
       name: 'Instagram',
       icon: Instagram,
-      url: `https://www.instagram.com/`,
-      gradient: 'from-fuchsia-500 via-rose-500 to-amber-500',
-      ring: 'hover:ring-rose-500/50',
+      url: 'https://www.instagram.com/',
     },
     {
       name: 'Snapchat',
       icon: Camera,
-      url: `https://www.snapchat.com/`,
-      gradient: 'from-yellow-300 to-yellow-500',
-      ring: 'hover:ring-yellow-400/50',
+      url: 'https://www.snapchat.com/',
     },
   ];
 
   return (
-    <div
-      className={`relative overflow-hidden bg-gradient-to-br from-card/80 via-card/50 to-card/30 backdrop-blur-sm border border-border/50 rounded-3xl p-5 md:p-6 ${className}`}
-    >
-      {/* Decorative blobs */}
-      <div aria-hidden className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-      <div aria-hidden className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
+    <div className={`relative group ${className}`}>
+      {/* Animated background aura */}
+      <div
+        aria-hidden
+        className="absolute -inset-4 bg-primary/5 rounded-[2.5rem] blur-3xl pointer-events-none"
+      />
 
-      <div className="relative">
-        {/* Header */}
-        <div className="flex items-start gap-3 mb-5">
-          <div className="relative shrink-0">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-primary via-rose-500 to-purple-500 shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.7)]">
-              <Share2 className="h-5 w-5 text-white" />
-            </div>
-            <Sparkles className="absolute -top-1 -right-1 h-3.5 w-3.5 text-primary animate-pulse" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-heading font-bold text-lg md:text-xl leading-tight">
-                Share with <span className="anime-gradient-text">Friends</span>
-              </h3>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-primary/15 text-primary border border-primary/30">
-                <Heart className="h-2.5 w-2.5 fill-current" />
-                Spread love
-              </span>
-            </div>
-            <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-              Pick a vibe, copy & share in one tap
+      <div className="relative bg-card/40 border border-border/40 rounded-[2rem] overflow-hidden backdrop-blur-2xl shadow-2xl">
+        <div className="flex flex-col lg:flex-row">
+          {/* Left: Configuration */}
+          <div className="flex-1 p-6 md:p-8 lg:p-10 border-b lg:border-b-0 lg:border-r border-border/40">
+            <h3 className="font-heading text-2xl font-bold text-foreground mb-2">
+              Share with <span className="anime-gradient-text">friends</span>
+            </h3>
+            <p className="text-muted-foreground text-sm mb-6 md:mb-8">
+              Choose a theme and spread the word about AnimeSavi.
             </p>
-          </div>
-        </div>
 
-        {/* Template picker */}
-        <div className="mb-3">
-          <button
-            onClick={() => setShowTemplates(s => !s)}
-            className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-background/40 border border-border/50 hover:border-primary/40 transition-colors text-left"
-          >
-            <span className="flex items-center gap-2 min-w-0">
-              <MessageSquareText className="h-4 w-4 text-primary shrink-0" />
-              <span className="text-xs md:text-sm font-semibold truncate">
-                {template.label}
-              </span>
-              <span className="text-[10px] md:text-xs text-muted-foreground truncate hidden sm:inline">
-                — {template.text.slice(0, 38)}…
-              </span>
-            </span>
-            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${showTemplates ? 'rotate-180' : ''}`} />
-          </button>
-
-          {showTemplates && (
-            <div className="mt-2 grid grid-cols-2 gap-2 animate-fade-in">
-              {MESSAGE_TEMPLATES.map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => { setTemplateId(t.id); setShowTemplates(false); }}
-                  className={`text-left px-3 py-2 rounded-xl border transition-all text-[11px] md:text-xs ${
-                    t.id === templateId
-                      ? 'bg-primary/15 border-primary/50 text-foreground shadow shadow-primary/10'
-                      : 'bg-card/40 border-border/40 hover:border-primary/30 text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <div className="font-bold mb-0.5">{t.label}</div>
-                  <div className="line-clamp-2 opacity-80">{t.text}</div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Message preview */}
-        <div className="mb-3 p-3 rounded-xl bg-background/40 border border-dashed border-border/60 text-[11px] md:text-xs text-foreground/85 leading-relaxed">
-          <span className="block">{template.text}</span>
-          <span className="block mt-1 font-mono text-primary truncate">{websiteUrl}</span>
-        </div>
-
-        {/* Action row: Copy message (primary) + Copy link */}
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          <Button
-            size="sm"
-            onClick={handleCopyMessage}
-            className="h-11 rounded-xl gap-2 bg-gradient-to-r from-primary to-rose-500 hover:opacity-95 text-primary-foreground font-semibold shadow-md shadow-primary/30"
-          >
-            {msgCopied ? <Check className="h-4 w-4" /> : <MessageSquareText className="h-4 w-4" />}
-            {msgCopied ? 'Copied!' : 'Copy message'}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCopyLink}
-            className="h-11 rounded-xl gap-2 bg-background/50 hover:bg-primary/10 hover:border-primary/40"
-          >
-            {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
-            {copied ? 'Link copied' : 'Copy link only'}
-          </Button>
-        </div>
-
-        {/* Share grid — taps copy template + open dialog */}
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold mb-2">
-          Tap to copy & share
-        </p>
-        <div className="grid grid-cols-5 gap-2 md:gap-3">
-          {shareOptions.map((option) => (
-            <button
-              key={option.name}
-              onClick={() => handleShareOption(option.url, option.name)}
-              aria-label={`Share on ${option.name}`}
-              className={`group relative flex flex-col items-center gap-1.5 p-2.5 rounded-2xl bg-card/40 border border-border/40 backdrop-blur-sm transition-all hover:-translate-y-1 hover:shadow-lg ring-1 ring-transparent ${option.ring}`}
-            >
-              <div
-                className={`p-2.5 rounded-xl bg-gradient-to-br ${option.gradient} shadow-md group-hover:shadow-xl transition-shadow`}
-              >
-                <option.icon className="h-4 w-4 md:h-5 md:w-5 text-white" />
+            <div className="space-y-6 md:space-y-8">
+              {/* Template Picker */}
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-3">
+                  Select Template
+                </label>
+                <div className="flex gap-3 flex-wrap">
+                  {MESSAGE_TEMPLATES.map(t => {
+                    const active = t.id === templateId;
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => setTemplateId(t.id)}
+                        title={t.label}
+                        aria-label={`Template: ${t.label}`}
+                        aria-pressed={active}
+                        className={`relative w-12 h-12 rounded-xl bg-gradient-to-br ${t.swatch} transition-all shadow-lg ${
+                          active
+                            ? 'border-2 border-foreground ring-2 ring-primary/30 scale-105'
+                            : 'border border-border/40 hover:border-border/80'
+                        }`}
+                      >
+                        {active && (
+                          <Check className="absolute inset-0 m-auto h-4 w-4 text-white drop-shadow" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <span className="text-[10px] md:text-[11px] font-medium text-foreground/80 group-hover:text-foreground truncate max-w-full">
-                {option.name}
-              </span>
-            </button>
-          ))}
+
+              {/* Social Grid */}
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-3">
+                  Quick Share
+                </label>
+                <div className="grid grid-cols-5 gap-2 md:gap-3">
+                  {shareOptions.map(option => (
+                    <button
+                      key={option.name}
+                      onClick={() => handleShareOption(option.url, option.name)}
+                      aria-label={`Share on ${option.name}`}
+                      className="group/icon aspect-square flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-background/40 border border-border/40 hover:bg-background/60 hover:border-primary/50 transition-all"
+                    >
+                      <option.icon className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground group-hover/icon:text-primary transition-colors" />
+                      <span className="text-[9px] md:text-[10px] font-semibold text-muted-foreground group-hover/icon:text-foreground transition-colors">
+                        {option.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Poster Preview */}
+          <div className="w-full lg:w-[380px] p-6 md:p-8 lg:p-10 bg-background/40">
+            <div className="relative aspect-[4/5] w-full rounded-2xl overflow-hidden shadow-2xl">
+              <div
+                className={`absolute inset-0 bg-gradient-to-t ${template.poster} flex flex-col justify-end p-6 transition-all duration-500`}
+              >
+                <div className="absolute top-6 left-6 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+                    <Sparkles className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="text-[10px] font-bold text-white uppercase tracking-wider">
+                    Must Watch
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-heading text-3xl font-black text-white leading-tight">
+                    AnimeSavi
+                    <br />
+                    Experience
+                  </h4>
+                  <p className="text-white/80 text-[10px] font-medium uppercase tracking-widest">
+                    {template.tagline}
+                  </p>
+                </div>
+              </div>
+              <div className="absolute inset-0 border border-white/10 rounded-2xl pointer-events-none" />
+            </div>
+
+            {/* Copy Actions */}
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center gap-2 bg-card/80 border border-border/40 rounded-xl p-2 pl-3">
+                <code className="flex-1 text-xs text-muted-foreground truncate font-mono">
+                  {websiteUrl.replace(/^https?:\/\//, '')}
+                </code>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleCopyLink}
+                  className="h-7 px-3 rounded-lg bg-background/60 hover:bg-background text-foreground text-[10px] font-bold uppercase tracking-wider gap-1.5"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-3 w-3 text-emerald-500" /> Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3 w-3" /> Copy
+                    </>
+                  )}
+                </Button>
+              </div>
+              <Button
+                onClick={handleCopyMessage}
+                className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-rose-700 hover:opacity-95 text-primary-foreground text-xs font-bold uppercase tracking-widest shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.7)] gap-2"
+              >
+                {msgCopied ? (
+                  <>
+                    <Check className="h-4 w-4" /> Copied to clipboard
+                  </>
+                ) : (
+                  <>
+                    <MessageSquareText className="h-4 w-4" /> Copy message + link
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

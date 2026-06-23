@@ -265,7 +265,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-              Where every frame tells a story. Hand-curated anime in crisp 4K, dubbed in your language — built by fans, made for the late-night binge.
+              Anime, the way it was meant to be seen — pristine 4K, official Hindi dubs, and same-day episode drops. Built by fans, tuned for marathon nights.
             </p>
             <div className="flex items-center gap-2">
               <a

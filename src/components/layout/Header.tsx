@@ -266,43 +266,49 @@ export function Header() {
             )}
           </nav>
 
-          {/* Search - premium pill */}
+          {/* Search — Crimson obsidian glass */}
           <form onSubmit={handleSearch} className="flex-1 max-w-md hidden md:flex">
-            <div className="relative w-full transition-colors duration-100">
-              {/* Glow on focus */}
-              <div className={`pointer-events-none absolute -inset-px rounded-full bg-primary/20 opacity-0 transition-opacity duration-100 ${isSearchFocused ? 'opacity-100' : ''}`} />
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none z-10" />
-              <Input
-                ref={desktopSearchRef}
-                type="search"
-                placeholder="Search anime, movies, episodes…  (press / to focus)"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setShowSuggestions(true);
-                }}
-                onFocus={() => {
-                  setIsSearchFocused(true);
-                  if (searchQuery.trim().length >= 2) setShowSuggestions(true);
-                }}
-                onBlur={() => {
-                  setIsSearchFocused(false);
-                  setTimeout(() => setShowSuggestions(false), 200);
-                }}
-                className="relative pl-10 pr-24 bg-card/60 border-border/50 focus:border-primary/60 rounded-full h-9 text-[13px] placeholder:text-muted-foreground/70"
-              />
-              <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                <kbd className="hidden lg:inline-flex items-center px-2 h-5 rounded-md bg-muted/60 border border-border/40 text-[10px] font-bold text-muted-foreground tracking-wider">
-                  /
-                </kbd>
-                <Button
-                  type="submit"
-                  size="icon"
-                  className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-pink-500 hover:opacity-90 shadow-md shadow-primary/30"
-                >
-                  <Search className="h-3.5 w-3.5" />
-                </Button>
+            <div className="group relative w-full">
+              {/* Outer crimson glow on focus */}
+              <div className={`pointer-events-none absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary to-rose-900 blur opacity-0 transition-opacity duration-500 ${isSearchFocused ? 'opacity-40' : 'group-hover:opacity-20'}`} />
+
+              <div className={`relative w-full flex items-center bg-card/80 backdrop-blur-xl border rounded-2xl p-1 shadow-2xl transition-colors ${isSearchFocused ? 'border-primary/40' : 'border-border/40'}`}>
+                <div className="pl-3 pr-2 flex items-center">
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <input
+                  ref={desktopSearchRef}
+                  type="search"
+                  placeholder="Search anime, characters, or studios…"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => {
+                    setIsSearchFocused(true);
+                    if (searchQuery.trim().length >= 2) setShowSuggestions(true);
+                  }}
+                  onBlur={() => {
+                    setIsSearchFocused(false);
+                    setTimeout(() => setShowSuggestions(false), 200);
+                  }}
+                  className="flex-1 min-w-0 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground/70 text-[13px] font-medium py-2"
+                />
+                <div className="flex items-center gap-2 pr-1">
+                  <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 bg-muted/60 border border-border/50 rounded-md text-[10px] font-bold text-muted-foreground tracking-wider">
+                    /
+                  </kbd>
+                  <Button
+                    type="submit"
+                    className="h-7 px-3 rounded-lg bg-gradient-to-br from-primary to-rose-700 hover:from-primary/90 hover:to-rose-600 text-primary-foreground text-[11px] font-bold shadow-[0_4px_20px_-5px_hsl(var(--primary)/0.5)] transition-all active:scale-95"
+                  >
+                    <Search className="h-3.5 w-3.5 lg:hidden" />
+                    <span className="hidden lg:inline">Search</span>
+                  </Button>
+                </div>
               </div>
+
               <SearchSuggestions
                 query={searchQuery}
                 isVisible={showSuggestions}
