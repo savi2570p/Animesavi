@@ -841,8 +841,7 @@ export default function Browse() {
 
                   {/* Title overlay always visible at bottom */}
                   <div className="absolute inset-x-0 bottom-0 z-[4] p-2.5 sm:p-3 pt-8">
-                  {/* Title overlay always visible at bottom */}
-                  <div className="absolute inset-x-0 bottom-0 z-[4] p-2.5 sm:p-3 pt-8">
+
                     <h3 className="font-bold text-[12px] sm:text-sm text-white line-clamp-2 leading-tight drop-shadow-md group-hover:text-primary transition-colors">
                       {anime.title}
                     </h3>
