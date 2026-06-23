@@ -704,11 +704,27 @@ export default function AnimeDetail() {
         {/* Episodes Section */}
         <div className="mt-16">
           <Tabs value={selectedSeason || undefined} onValueChange={setSelectedSeason}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
-              <h2 className="text-xl md:text-3xl font-heading font-bold flex items-center gap-3">
-                <span className="w-1.5 h-6 md:h-8 bg-primary rounded-full" />
-                Episodes
-              </h2>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 md:mb-8">
+              <div className="flex items-stretch gap-3.5">
+                <span className="w-[3px] rounded-full bg-gradient-to-b from-primary via-primary/80 to-transparent shadow-[0_0_12px_hsl(var(--primary))]" />
+                <div>
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+                      <ListVideo className="h-3 w-3" />
+                      Watch
+                    </span>
+                    {episodes.length > 0 && (
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/80">
+                        / {episodes.length} episodes
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="text-xl md:text-3xl font-heading font-bold leading-tight tracking-tight">
+                    Episode <span className="anime-gradient-text">Library</span>
+                  </h2>
+                </div>
+              </div>
+
               {seasons.length > 0 && (
                 <Select value={selectedSeason || undefined} onValueChange={setSelectedSeason}>
                   <SelectTrigger className="w-[240px] bg-secondary/50">
