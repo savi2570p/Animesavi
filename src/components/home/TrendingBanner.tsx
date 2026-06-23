@@ -163,10 +163,8 @@ export const TrendingBanner = memo(function TrendingBanner() {
           </div>
         </div>
 
-        {/* Main banner — split into featured card + next-up side panel on desktop */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
-          {/* Featured card */}
-          <div className="relative overflow-hidden rounded-3xl border border-border/40 bg-card/40 backdrop-blur-xl shadow-2xl shadow-black/40 h-[220px] sm:h-[260px] md:h-[300px] lg:h-[340px]">
+        {/* Main banner card */}
+        <div className="relative overflow-hidden rounded-3xl border border-border/40 bg-card/40 backdrop-blur-xl shadow-2xl shadow-black/40 h-[220px] sm:h-[260px] md:h-[300px] lg:h-[340px]">
             {/* Animated ambient glow */}
             <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 bg-primary/15 rounded-full blur-3xl animate-pulse" />
             <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 bg-rose-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
@@ -284,111 +282,7 @@ export const TrendingBanner = memo(function TrendingBanner() {
               </div>
             </Link>
           </div>
-
-          {/* Next up panel */}
-          <div className="hidden lg:flex flex-col gap-3 rounded-3xl border border-border/40 bg-card/40 backdrop-blur-xl p-4 shadow-2xl shadow-black/30">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Next Up</span>
-              <Link to="/browse?sort=popular" className="text-[10px] font-semibold text-primary hover:underline">
-                See all
-              </Link>
-            </div>
-
-            <Link
-              to={`/anime/${next.id}`}
-              className="group relative flex-1 min-h-0 overflow-hidden rounded-2xl border border-border/30"
-            >
-              <img
-                src={next.banner_image || next.cover_image || '/placeholder.svg'}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-4">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="inline-flex items-center justify-center h-6 w-6 rounded-md bg-primary text-[10px] font-black text-primary-foreground">
-                    {String(nextIndex + 1).padStart(2, '0')}
-                  </span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Up Next</span>
-                </div>
-                <h4 className="text-base font-heading font-bold text-foreground line-clamp-2 leading-snug">
-                  {next.title}
-                </h4>
-              </div>
-            </Link>
-
-            {/* Mini list */}
-            <div className="space-y-2">
-              {trending.slice(0, 4).map((item, idx) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => handleSelect(idx)}
-                  className={`w-full flex items-center gap-3 rounded-xl p-2 transition-all text-left ${
-                    idx === activeIndex
-                      ? 'bg-primary/15 ring-1 ring-primary/40'
-                      : 'hover:bg-card/60'
-                  }`}
-                >
-                  <span
-                    className={`text-sm font-black w-6 text-center ${
-                      idx === activeIndex ? 'text-primary' : 'text-muted-foreground'
-                    }`}
-                  >
-                    {String(idx + 1).padStart(2, '0')}
-                  </span>
-                  <img
-                    src={item.cover_image || '/placeholder.svg'}
-                    alt=""
-                    className="w-8 h-11 rounded-md object-cover ring-1 ring-white/10"
-                  />
-                  <span className={`text-xs font-semibold line-clamp-1 ${idx === activeIndex ? 'text-foreground' : 'text-muted-foreground'}`}>
-                    {item.title}
-                  </span>
-                  {idx === activeIndex && (
-                    <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_6px_hsl(var(--primary))]" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom thumbnail strip */}
-        <div className="mt-4 grid grid-cols-6 gap-2 md:gap-3">
-          {trending.map((item, idx) => {
-            const isActive = idx === activeIndex;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => handleSelect(idx)}
-                className={`group relative overflow-hidden rounded-xl md:rounded-2xl transition-all duration-300 ${
-                  isActive
-                    ? 'ring-2 ring-primary shadow-lg shadow-primary/30 scale-[1.02]'
-                    : 'ring-1 ring-white/5 opacity-70 hover:opacity-100 hover:ring-primary/40'
-                }`}
-              >
-                <div className="aspect-[16/10] overflow-hidden">
-                  <img
-                    src={item.cover_image || '/placeholder.svg'}
-                    alt=""
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                </div>
-                <div className={`absolute inset-0 transition-opacity ${isActive ? 'bg-gradient-to-t from-primary/60 to-transparent' : 'bg-gradient-to-t from-background/80 to-transparent'}`} />
-                <div className="absolute bottom-0 left-0 right-0 p-1.5 md:p-2 flex items-end justify-between">
-                  <span className={`text-xs md:text-sm font-black ${isActive ? 'text-white' : 'text-foreground/80'}`}>
-                    {String(idx + 1).padStart(2, '0')}
-                  </span>
-                  {isActive && (
-                    <div className="h-1 w-1 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]" />
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+        </Link>
       </div>
     </section>
   );
