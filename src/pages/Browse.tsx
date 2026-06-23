@@ -658,24 +658,40 @@ export default function Browse() {
             </div>
           )}
 
-          {/* Genres */}
-          <div className="flex flex-wrap items-start gap-2 pt-3 border-t border-border/40">
-            <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold w-16 shrink-0 flex items-center gap-1 pt-1.5">
-              <Sparkles className="h-3 w-3" />
-              Genres
-            </span>
-            <div className="flex flex-wrap gap-1.5 flex-1">
+          {/* Genres — horizontal scrollable rail */}
+          <div className="pt-3 border-t border-border/40">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3 text-primary" />
+                Genres
+              </span>
+              {selectedGenre && (
+                <button
+                  onClick={() => handleGenreFilter(selectedGenre)}
+                  className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-destructive font-semibold"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-none -mx-3 px-3 sm:mx-0 sm:px-0 pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
               {ALLOWED_GENRES.map((genre) => (
                 <button
                   key={genre}
                   onClick={() => handleGenreFilter(genre)}
-                  className={cn("filter-btn text-xs", selectedGenre === genre.toLowerCase() && "active")}
+                  className={cn(
+                    "shrink-0 px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold whitespace-nowrap border transition-all",
+                    selectedGenre === genre.toLowerCase()
+                      ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/30 scale-105"
+                      : "bg-card/60 text-muted-foreground border-border/50 hover:border-primary/40 hover:text-foreground"
+                  )}
                 >
                   {genre}
                 </button>
               ))}
             </div>
           </div>
+
         </div>
 
         {/* Top 10 Most Popular — Browse Mode only */}
