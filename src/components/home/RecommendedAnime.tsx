@@ -195,38 +195,38 @@ export function RecommendedAnime() {
     <section className="py-12 relative overflow-hidden">
       {/* Layered backdrop accents */}
       <div aria-hidden className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -top-24 -left-16 w-80 h-80 rounded-full bg-primary/12 blur-3xl" />
         <div className="absolute top-10 right-0 w-80 h-80 rounded-full bg-purple-500/10 blur-3xl" />
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       </div>
 
       <div className="container relative">
-        {/* Header */}
-        <div className="flex items-end justify-between mb-5 gap-4">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-rose-500 via-primary to-pink-500 shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.7)]">
-                <Brain className="h-5 w-5 text-white" />
-              </div>
-              <Sparkles className="absolute -top-1 -right-1 h-3.5 w-3.5 text-primary animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-2xl md:text-3xl font-heading font-bold leading-tight">
-                  Smart <span className="anime-gradient-text">Recommendations</span>
-                </h2>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-primary/15 text-primary border border-primary/30">
+        {/* Editorial header */}
+        <div className="flex items-end justify-between mb-6 gap-4 flex-wrap">
+          <div className="flex items-stretch gap-3.5 min-w-0">
+            <div className="w-[3px] rounded-full bg-gradient-to-b from-purple-400 via-primary to-transparent shadow-[0_0_14px_hsl(var(--primary))]" />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+                  <Brain className="h-3 w-3" />
+                  AI Curated
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">
                   <Flame className="h-2.5 w-2.5" />
                   v2.0
                 </span>
               </div>
-              <p className="text-xs md:text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5">
+              <h2 className="text-2xl md:text-3xl lg:text-[2rem] font-heading font-bold leading-tight tracking-tight">
+                Smart <span className="anime-gradient-text">Recommendations</span>
+              </h2>
+              <p className="text-xs md:text-sm text-muted-foreground/90 mt-1 flex items-center gap-1.5">
                 <ActiveMoodIcon className="h-3 w-3 text-primary" />
                 <span>{activeMood.description}</span>
               </p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" asChild className="group shrink-0">
+          <Button variant="ghost" size="sm" asChild className="group shrink-0 rounded-full border border-white/5 hover:border-primary/30 hover:bg-primary/10">
             <Link to="/browse" className="flex items-center gap-1">
               Explore all
               <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -234,51 +234,55 @@ export function RecommendedAnime() {
           </Button>
         </div>
 
-        {/* Mood selector */}
-        <div className="flex items-center gap-2 mb-4 overflow-x-auto scrollbar-none -mx-4 px-4 pb-1">
-          {MOODS.map((m) => {
-            const Icon = m.icon;
-            const active = mood === m.id;
-            return (
-              <button
-                key={m.id}
-                onClick={() => setMood(m.id)}
-                className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] font-semibold border transition-all ${
-                  active
-                    ? 'bg-primary text-primary-foreground border-primary shadow-[0_4px_18px_-6px_hsl(var(--primary)/0.7)]'
-                    : 'bg-card/60 text-foreground border-border/60 hover:border-primary/50 hover:bg-card backdrop-blur-sm'
-                }`}
-                aria-pressed={active}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {m.label}
-              </button>
-            );
-          })}
+        {/* Mood selector — segmented glass control */}
+        <div className="relative mb-4 -mx-4 px-4">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none p-1 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 inline-flex w-full md:w-auto">
+            {MOODS.map((m) => {
+              const Icon = m.icon;
+              const active = mood === m.id;
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => setMood(m.id)}
+                  className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11.5px] font-semibold transition-all ${
+                    active
+                      ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_6px_20px_-6px_hsl(var(--primary)/0.8)] scale-[1.02]'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                  }`}
+                  aria-pressed={active}
+                >
+                  <Icon className={`h-3.5 w-3.5 ${active ? '' : 'opacity-70'}`} />
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Driver signal chips */}
         {driverChips.length > 0 && (
           <div className="flex items-center gap-2 mb-5 overflow-x-auto scrollbar-none -mx-4 px-4">
-            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
-              {mood === 'auto' ? 'Tuned by' : 'Mood genres'}
+            <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80">
+              {mood === 'auto' ? 'Tuned by' : 'Mood'}
             </span>
+            <span className="shrink-0 text-muted-foreground/40">›</span>
             {driverChips.map((g) => (
               <span
                 key={g}
-                className="shrink-0 px-2.5 py-0.5 text-[11px] font-medium rounded-full bg-card/60 text-foreground border border-border/60 backdrop-blur-sm"
+                className="shrink-0 px-2.5 py-0.5 text-[11px] font-medium rounded-full bg-primary/8 text-foreground/90 border border-primary/20 backdrop-blur-sm hover:border-primary/40 transition-colors"
               >
                 #{g}
               </span>
             ))}
             {mood === 'auto' && ratedTopGenres.length > 0 && (
-              <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+              <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
                 <Compass className="h-2.5 w-2.5" />
                 Ratings boost
               </span>
             )}
           </div>
         )}
+
 
         {/* Poster row */}
         <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-row scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
