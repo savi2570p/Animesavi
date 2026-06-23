@@ -55,15 +55,15 @@ export function ContentNavTabs() {
   return (
     <div className="sticky top-14 z-40 bg-background/95 backdrop-blur-md border-b border-border/50 safe-area-top">
       <div className="container">
-        <nav className="flex items-center gap-0.5 overflow-x-auto pb-px -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <nav className="flex items-center gap-0.5 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+            className="h-7 w-7 sm:h-8 sm:w-8 shrink-0 text-muted-foreground hover:text-foreground"
             onClick={() => navigate(-1)}
             title="Go back"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -74,7 +74,7 @@ export function ContentNavTabs() {
                 key={tab.to}
                 to={tab.to}
                 className={cn(
-                  "flex items-center gap-1 sm:gap-1.5 px-2 py-2 sm:px-3 sm:py-3 text-[10px] sm:text-xs md:text-sm font-medium whitespace-nowrap border-b-2 transition-all duration-200 shrink-0",
+                  "flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-3 sm:py-2.5 text-[10px] sm:text-xs md:text-sm font-medium whitespace-nowrap border-b-2 leading-none transition-all duration-200 shrink-0",
                   tab.to === '/flox' && "sm:px-2.5 md:px-3",
                   isActive
                     ? "border-primary text-primary"
@@ -86,7 +86,7 @@ export function ContentNavTabs() {
                 ) : Icon ? (
                   <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
                 ) : null}
-                <span>{tab.label}</span>
+                <span className="leading-none">{tab.label}</span>
               </Link>
             );
           })}
