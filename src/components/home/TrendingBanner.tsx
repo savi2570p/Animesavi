@@ -282,7 +282,7 @@ export const TrendingBanner = memo(function TrendingBanner() {
               </div>
             </Link>
           </div>
-        </Link>
+        </div>
       </div>
     </section>
   );
