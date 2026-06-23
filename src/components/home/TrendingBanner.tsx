@@ -244,13 +244,13 @@ export const TrendingBanner = memo(function TrendingBanner() {
                   </span>
                 </div>
 
-                <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-heading font-extrabold text-foreground line-clamp-2 leading-tight drop-shadow-lg">
+                <h3 className="text-base sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-heading font-extrabold text-foreground line-clamp-2 leading-tight drop-shadow-lg">
                   {current.title}
                 </h3>
 
-                <div className="flex items-center gap-3 md:gap-5 text-xs md:text-sm">
+                <div className="flex flex-wrap items-center gap-2 md:gap-5 text-[10px] sm:text-xs md:text-sm">
                   <span className="flex items-center gap-1.5 text-foreground/90 font-semibold">
-                    <Eye className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                    <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4" />
                     {formatViews(current.view_count || 0)} views
                   </span>
                   {current.genres && current.genres[0] && (
@@ -261,9 +261,9 @@ export const TrendingBanner = memo(function TrendingBanner() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-3 pt-1">
-                  <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-primary to-primary/85 text-primary-foreground shadow-lg shadow-primary/30 group-hover:shadow-primary/50 group-hover:scale-105 transition-all">
-                    <Play className="h-3.5 w-3.5 fill-current" /> Watch Now
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-1">
+                  <span className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-gradient-to-r from-primary to-primary/85 text-primary-foreground shadow-lg shadow-primary/30 group-hover:shadow-primary/50 group-hover:scale-105 transition-all">
+                    <Play className="h-3 w-3 fill-current" /> Watch Now
                   </span>
                   <span className="hidden sm:inline-flex items-center gap-1 text-xs text-muted-foreground font-medium group-hover:text-foreground transition-colors">
                     View details <ChevronRight className="h-3 w-3" />
