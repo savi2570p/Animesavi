@@ -549,24 +549,41 @@ export default function AnimeDetail() {
           <div className="flex-1 space-y-4 md:space-y-5 detail-stagger">
             {/* Status pill row */}
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 backdrop-blur-md px-2.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-[0.18em] text-primary shadow-lg shadow-primary/10">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-gradient-to-r from-primary/20 via-primary/15 to-primary/5 backdrop-blur-md px-2.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-primary shadow-[0_4px_20px_-6px_hsl(var(--primary)/0.6)]">
                 <Sparkles className="h-3 w-3" />
                 Featured Anime
               </div>
               {anime.status === 'ongoing' && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/15 backdrop-blur-md px-2.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider text-emerald-300">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/15 backdrop-blur-md px-2.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider text-emerald-300">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  </span>
                   Airing Now
+                </span>
+              )}
+              {typeof anime.view_count === 'number' && anime.view_count > 0 && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 backdrop-blur-md px-2.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider text-white/85">
+                  <Eye className="h-3 w-3 text-primary" />
+                  {anime.view_count >= 1_000_000 ? `${(anime.view_count/1_000_000).toFixed(1)}M` : anime.view_count >= 1000 ? `${(anime.view_count/1000).toFixed(0)}K` : anime.view_count} views
+                </span>
+              )}
+              {typeof anime.like_count === 'number' && anime.like_count > 0 && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-pink-400/30 bg-pink-500/10 backdrop-blur-md px-2.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider text-pink-300">
+                  <Heart className="h-3 w-3 fill-current" />
+                  {anime.like_count}
                 </span>
               )}
             </div>
 
-            {/* Title — gradient */}
+            {/* Title — crimson highlight */}
             <h1 className="text-2xl md:text-6xl font-heading font-extrabold leading-[1.05] tracking-tight">
-              <span className="bg-gradient-to-br from-foreground via-foreground to-foreground/60 bg-clip-text text-transparent drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+              <span className="bg-gradient-to-br from-white via-foreground to-foreground/60 bg-clip-text text-transparent drop-shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
                 {anime.title}
               </span>
             </h1>
+            <div className="h-[3px] w-16 md:w-24 rounded-full bg-gradient-to-r from-primary via-primary/70 to-transparent shadow-[0_0_14px_hsl(var(--primary))]" />
+
 
             {/* Genres — chips */}
             <div className="flex flex-wrap gap-1.5">
@@ -687,11 +704,27 @@ export default function AnimeDetail() {
         {/* Episodes Section */}
         <div className="mt-16">
           <Tabs value={selectedSeason || undefined} onValueChange={setSelectedSeason}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
-              <h2 className="text-xl md:text-3xl font-heading font-bold flex items-center gap-3">
-                <span className="w-1.5 h-6 md:h-8 bg-primary rounded-full" />
-                Episodes
-              </h2>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 md:mb-8">
+              <div className="flex items-stretch gap-3.5">
+                <span className="w-[3px] rounded-full bg-gradient-to-b from-primary via-primary/80 to-transparent shadow-[0_0_12px_hsl(var(--primary))]" />
+                <div>
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+                      <ListVideo className="h-3 w-3" />
+                      Watch
+                    </span>
+                    {episodes.length > 0 && (
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/80">
+                        / {episodes.length} episodes
+                      </span>
+                    )}
+                  </div>
+                  <h2 className="text-xl md:text-3xl font-heading font-bold leading-tight tracking-tight">
+                    Episode <span className="anime-gradient-text">Library</span>
+                  </h2>
+                </div>
+              </div>
+
               {seasons.length > 0 && (
                 <Select value={selectedSeason || undefined} onValueChange={setSelectedSeason}>
                   <SelectTrigger className="w-[240px] bg-secondary/50">

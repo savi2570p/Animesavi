@@ -200,70 +200,89 @@ export function AnimeCalendar() {
 
   return (
     <section className="py-10 md:py-14 relative overflow-hidden">
-      {/* Backdrop accents */}
+      {/* Crimson obsidian backdrop */}
       <div aria-hidden className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-24 left-1/3 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-cyan-500/5 blur-3xl" />
+        <div className="absolute -top-24 left-1/3 w-96 h-96 rounded-full bg-primary/12 blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-primary/8 blur-3xl" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
       </div>
 
       <div className="container relative">
-        {/* Header */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/15 via-card/50 to-cyan-500/5 border border-primary/20 p-5 md:p-7 mb-6 backdrop-blur-sm">
-          <div className="absolute -top-16 -right-10 w-56 h-56 bg-primary/25 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-20 -left-10 w-56 h-56 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
+        {/* Editorial header card */}
+        <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-black/80 via-card/60 to-black/80 backdrop-blur-xl p-5 md:p-7 mb-6">
+          <div className="absolute -top-20 -right-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-20 -left-10 w-56 h-56 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
 
-          <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-primary via-primary/80 to-cyan-500 shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.7)]">
-                  <CalendarRange className="h-5 w-5 text-white" />
-                </div>
-                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse ring-2 ring-background" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-2xl md:text-3xl font-heading font-bold leading-tight">
-                    Release <span className="anime-gradient-text">Calendar</span>
-                  </h2>
-                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">
-                    <Radio className="h-2.5 w-2.5" />
+          <div className="relative flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+            <div className="flex items-stretch gap-3.5 min-w-0">
+              <div className="w-[3px] rounded-full bg-gradient-to-b from-primary via-primary/80 to-transparent shadow-[0_0_14px_hsl(var(--primary))]" />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+                    <CalendarRange className="h-3 w-3" />
+                    Weekly Schedule
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                    </span>
                     Live
                   </span>
                 </div>
-                <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                <h2 className="text-2xl md:text-3xl lg:text-[2rem] font-heading font-bold leading-tight tracking-tight">
+                  Release <span className="anime-gradient-text">Calendar</span>
+                </h2>
+                <p className="text-xs md:text-sm text-muted-foreground/90 mt-1 flex items-center gap-1.5 flex-wrap">
+                  <CalendarDays className="h-3 w-3 text-primary" />
                   {format(weekStart, 'MMM d')} – {format(addDays(weekStart, 6), 'MMM d, yyyy')}
-                  <span className="mx-1.5 opacity-50">•</span>
+                  <span className="opacity-50">·</span>
                   <span className="text-primary font-semibold">{totalThisWeek}</span> releases this week
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-card/40 backdrop-blur-sm rounded-full border border-border/40 p-1">
-              <Button variant="ghost" size="icon" onClick={() => navigateWeek('prev')} className="h-8 w-8 rounded-full hover:bg-primary/15">
+            <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-sm rounded-full border border-white/10 p-1 self-start md:self-end shrink-0">
+              <Button variant="ghost" size="icon" onClick={() => navigateWeek('prev')} className="h-8 w-8 rounded-full hover:bg-primary/20">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <Button variant="default" size="sm" onClick={goToToday} className="h-7 px-3 rounded-full text-xs font-semibold">Today</Button>
-              <Button variant="ghost" size="icon" onClick={() => navigateWeek('next')} className="h-8 w-8 rounded-full hover:bg-primary/15">
+              <Button variant="default" size="sm" onClick={goToToday} className="h-7 px-3 rounded-full text-xs font-semibold bg-gradient-to-br from-primary to-primary/80 shadow-[0_4px_14px_-4px_hsl(var(--primary)/0.7)]">Today</Button>
+              <Button variant="ghost" size="icon" onClick={() => navigateWeek('next')} className="h-8 w-8 rounded-full hover:bg-primary/20">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
 
-          {/* Filter chips */}
-          <div className="relative flex items-center gap-2 mt-5 overflow-x-auto scrollbar-thin scrollbar-thumb-primary/20">
-            <button onClick={() => setActiveFilter('all')} className={`shrink-0 text-[11px] md:text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all ${activeFilter === 'all' ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/30 scale-105' : 'bg-card/40 text-muted-foreground border-border/40 hover:border-primary/40 hover:text-foreground'}`}>
-              All <span className="opacity-70 ml-1">{animeList.length}</span>
-            </button>
-            <button onClick={() => setActiveFilter('favorites')} className={`shrink-0 text-[11px] md:text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all flex items-center gap-1.5 ${activeFilter === 'favorites' ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/30 scale-105' : 'bg-card/40 text-muted-foreground border-border/40 hover:border-primary/40 hover:text-foreground'}`}>
-              <Heart className={`h-3 w-3 ${activeFilter === 'favorites' ? 'fill-current' : ''}`} />
-              Favorites <span className="opacity-70">{favCount}</span>
-            </button>
-            <button onClick={() => setActiveFilter('new')} className={`shrink-0 text-[11px] md:text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all flex items-center gap-1.5 ${activeFilter === 'new' ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/30 scale-105' : 'bg-card/40 text-muted-foreground border-border/40 hover:border-primary/40 hover:text-foreground'}`}>
-              <Flame className="h-3 w-3" />
-              New this week <span className="opacity-70">{newCount}</span>
-            </button>
+          {/* Segmented filter control */}
+          <div className="relative mt-5 inline-flex items-center gap-1 p-1 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 max-w-full overflow-x-auto scrollbar-none">
+            {[
+              { id: 'all' as const, label: 'All', count: animeList.length, icon: Tv },
+              { id: 'favorites' as const, label: 'Favorites', count: favCount, icon: Heart },
+              { id: 'new' as const, label: 'New this week', count: newCount, icon: Flame },
+            ].map((f) => {
+              const Icon = f.icon;
+              const active = activeFilter === f.id;
+              return (
+                <button
+                  key={f.id}
+                  onClick={() => setActiveFilter(f.id)}
+                  className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11.5px] font-semibold transition-all ${
+                    active
+                      ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_6px_20px_-6px_hsl(var(--primary)/0.8)] scale-[1.02]'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                  }`}
+                  aria-pressed={active}
+                >
+                  <Icon className={`h-3.5 w-3.5 ${active && f.id === 'favorites' ? 'fill-current' : ''} ${active ? '' : 'opacity-70'}`} />
+                  {f.label}
+                  <span className={`text-[10px] px-1.5 py-0 rounded-full ${active ? 'bg-black/25' : 'bg-white/5'}`}>{f.count}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
+
 
         {/* Row-based layout */}
         <div className="space-y-2">
@@ -400,36 +419,49 @@ export function AnimeCalendar() {
         const target = getNextReleaseDate(selectedCountdown);
         const c = formatCountdown(target);
         return (
-          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-background/80 backdrop-blur-md p-4" onClick={() => setSelectedCountdown(null)}>
-            <div className="w-full max-w-sm rounded-2xl border border-border/60 bg-card shadow-2xl p-5" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-primary">Next Episode Countdown</p>
-                  <h3 className="text-lg font-bold text-foreground leading-tight mt-1">{selectedCountdown.title}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Resets weekly after release day • {DAYS_FULL[selectedCountdown.release_day === 7 ? new Date().getDay() : selectedCountdown.release_day]}</p>
-                </div>
-                <button type="button" onClick={() => setSelectedCountdown(null)} className="h-9 w-9 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground" aria-label="Close">×</button>
-              </div>
+          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-background/85 backdrop-blur-md p-4 animate-fade-in" onClick={() => setSelectedCountdown(null)}>
+            <div className="relative w-full max-w-sm rounded-3xl border border-primary/25 bg-gradient-to-br from-black/95 via-card to-black/95 shadow-[0_30px_80px_-20px_hsl(var(--primary)/0.5)] overflow-hidden animate-scale-in" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+              <div aria-hidden className="absolute -top-16 -right-10 w-48 h-48 bg-primary/25 rounded-full blur-3xl pointer-events-none" />
+              <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
 
-              <div className="grid grid-cols-4 gap-2 my-5">
-                {[
-                  { v: c.days, l: 'Days' },
-                  { v: c.hours, l: 'Hrs' },
-                  { v: c.minutes, l: 'Min' },
-                  { v: c.seconds, l: 'Sec' },
-                ].map((item) => (
-                  <div key={item.l} className="rounded-xl bg-primary/10 border border-primary/20 py-3 text-center">
-                    <div className="text-xl font-black tabular-nums text-primary">{String(item.v).padStart(2, '0')}</div>
-                    <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{item.l}</div>
+              <div className="relative p-5">
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="min-w-0">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+                      <Radio className="h-2.5 w-2.5" />
+                      Next Drop
+                    </span>
+                    <h3 className="text-lg font-bold text-foreground leading-tight mt-2 truncate">{selectedCountdown.title}</h3>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Releases weekly · <span className="text-foreground/80">{DAYS_FULL[selectedCountdown.release_day === 7 ? new Date().getDay() : selectedCountdown.release_day]}</span> · 3:00 PM
+                    </p>
                   </div>
-                ))}
-              </div>
+                  <button type="button" onClick={() => setSelectedCountdown(null)} className="h-9 w-9 shrink-0 rounded-full bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground border border-white/10 transition-colors" aria-label="Close">×</button>
+                </div>
 
-              <Link to={`/anime/${selectedCountdown.id}`} className="block w-full rounded-xl bg-primary text-primary-foreground text-center text-sm font-bold py-3 hover:opacity-90 transition">
-                Open Series
-              </Link>
+                <div className="grid grid-cols-4 gap-2 my-5">
+                  {[
+                    { v: c.days, l: 'Days' },
+                    { v: c.hours, l: 'Hrs' },
+                    { v: c.minutes, l: 'Min' },
+                    { v: c.seconds, l: 'Sec' },
+                  ].map((item) => (
+                    <div key={item.l} className="relative rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/25 py-3 text-center overflow-hidden">
+                      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+                      <div className="text-2xl font-black tabular-nums bg-gradient-to-b from-primary to-primary/70 bg-clip-text text-transparent">{String(item.v).padStart(2, '0')}</div>
+                      <div className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground mt-0.5">{item.l}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <Link to={`/anime/${selectedCountdown.id}`} className="group relative block w-full rounded-xl bg-gradient-to-r from-primary via-primary to-primary/85 text-primary-foreground text-center text-sm font-bold py-3 shadow-[0_10px_30px_-10px_hsl(var(--primary)/0.8)] hover:shadow-[0_15px_40px_-10px_hsl(var(--primary))] transition-all">
+                  Open Series
+                  <ChevronRight className="inline h-4 w-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              </div>
             </div>
           </div>
+
         );
       })()}
     </section>
