@@ -1,16 +1,17 @@
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Copy,
   Check,
   Send,
   Twitter,
   Facebook,
-  Instagram,
-  Camera,
+  MessageCircle,
+  Download,
   Sparkles,
   MessageSquareText,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 interface SocialShareProps {
@@ -21,19 +22,21 @@ type Template = {
   id: string;
   label: string;
   text: string;
-  // Visual swatch for the picker + the gradient applied to the poster preview
   swatch: string;
-  poster: string;
+  // Hex stops used for the poster preview and the downloadable invite image
+  posterStops: [string, string, string];
   tagline: string;
 };
+
+const TAGLINE = 'Anime in 4K — official Hindi dubs, same-day drops, zero ads.';
 
 const MESSAGE_TEMPLATES: Template[] = [
   {
     id: 'crimson',
     label: 'Crimson',
-    text: "Hey! I've been watching anime on AnimeSavi — free HD streaming, no ads, even 4K. You should check it out 👇",
+    text: "Hey! I've been watching anime on AnimeSavi — free 4K HD, official Hindi dubs, zero ads. You should check it out 👇",
     swatch: 'from-primary to-rose-800',
-    poster: 'from-primary via-rose-700 to-rose-950',
+    posterStops: ['#e11d48', '#9f1239', '#1a0408'],
     tagline: 'Join the evolution of anime',
   },
   {
@@ -41,7 +44,7 @@ const MESSAGE_TEMPLATES: Template[] = [
     label: 'Midnight',
     text: '🔥 Found the cleanest anime site ever — AnimeSavi. Free 4K, Hindi dubs, watch parties, the works. Drop everything and try it:',
     swatch: 'from-zinc-700 to-zinc-950',
-    poster: 'from-zinc-700 via-zinc-900 to-black',
+    posterStops: ['#3f3f46', '#18181b', '#000000'],
     tagline: 'Late-night, lossless, legendary',
   },
   {
@@ -49,7 +52,7 @@ const MESSAGE_TEMPLATES: Template[] = [
     label: 'Azure',
     text: 'Free HD anime, zero ads. AnimeSavi 👉',
     swatch: 'from-blue-600 to-indigo-900',
-    poster: 'from-blue-600 via-indigo-800 to-indigo-950',
+    posterStops: ['#2563eb', '#3730a3', '#0b0a30'],
     tagline: 'Stream sharper than ever',
   },
   {
@@ -57,7 +60,7 @@ const MESSAGE_TEMPLATES: Template[] = [
     label: 'Emerald',
     text: "I'm watching anime on AnimeSavi and want you to join me. We can do watch parties together! Sign up here:",
     swatch: 'from-emerald-600 to-teal-900',
-    poster: 'from-emerald-600 via-teal-800 to-teal-950',
+    posterStops: ['#059669', '#115e59', '#04201d'],
     tagline: 'Better with your crew',
   },
 ];
@@ -66,6 +69,10 @@ export function SocialShare({ className = '' }: SocialShareProps) {
   const [copied, setCopied] = useState(false);
   const [msgCopied, setMsgCopied] = useState(false);
   const [templateId, setTemplateId] = useState(MESSAGE_TEMPLATES[0].id);
+  const [animeTitle, setAnimeTitle] = useState('AnimeSavi');
+  const [seasonLabel, setSeasonLabel] = useState('Experience');
+  const [downloading, setDownloading] = useState(false);
+  const posterRef = useRef<HTMLDivElement>(null);
 
   const websiteUrl = 'https://animesavi.com';
   const template = MESSAGE_TEMPLATES.find(t => t.id === templateId) || MESSAGE_TEMPLATES[0];
@@ -103,7 +110,103 @@ export function SocialShare({ className = '' }: SocialShareProps) {
     window.open(url, '_blank');
   };
 
+  /**
+   * Render the poster preview to a PNG via canvas (no external libs).
+   * Keeps text crisp at 1080×1350 (4:5) and matches the live preview.
+   */
+  const handleDownloadInvite = async () => {
+    setDownloading(true);
+    try {
+      const W = 1080;
+      const H = 1350;
+      const canvas = document.createElement('canvas');
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas not supported');
+
+      // Gradient background (top → bottom mirrors `bg-gradient-to-t`)
+      const grad = ctx.createLinearGradient(0, H, 0, 0);
+      grad.addColorStop(0, template.posterStops[0]);
+      grad.addColorStop(0.55, template.posterStops[1]);
+      grad.addColorStop(1, template.posterStops[2]);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Subtle vignette
+      const vignette = ctx.createRadialGradient(W / 2, H / 2, W / 3, W / 2, H / 2, W);
+      vignette.addColorStop(0, 'rgba(0,0,0,0)');
+      vignette.addColorStop(1, 'rgba(0,0,0,0.45)');
+      ctx.fillStyle = vignette;
+      ctx.fillRect(0, 0, W, H);
+
+      // "MUST WATCH" badge
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.font = '700 28px Inter, system-ui, sans-serif';
+      ctx.textBaseline = 'top';
+      ctx.fillText('★  MUST WATCH', 72, 72);
+
+      // Anime title (wraps if too long)
+      const title = (animeTitle || 'AnimeSavi').toUpperCase();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 130px Inter, system-ui, sans-serif';
+      const maxWidth = W - 144;
+      const words = title.split(' ');
+      const lines: string[] = [];
+      let current = '';
+      for (const w of words) {
+        const test = current ? `${current} ${w}` : w;
+        if (ctx.measureText(test).width > maxWidth && current) {
+          lines.push(current);
+          current = w;
+        } else {
+          current = test;
+        }
+      }
+      if (current) lines.push(current);
+      const baseY = H - 320 - (lines.length - 1) * 130;
+      lines.forEach((line, i) => ctx.fillText(line, 72, baseY + i * 130));
+
+      // Season / subtitle label
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.font = '600 32px Inter, system-ui, sans-serif';
+      ctx.fillText((seasonLabel || '').toUpperCase(), 72, H - 180);
+
+      // Tagline
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.font = '500 26px Inter, system-ui, sans-serif';
+      ctx.fillText(TAGLINE, 72, H - 130);
+
+      // URL footer
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.font = '700 28px Inter, system-ui, sans-serif';
+      ctx.fillText('animesavi.com', 72, H - 80);
+
+      const blob = await new Promise<Blob | null>(res => canvas.toBlob(res, 'image/png'));
+      if (!blob) throw new Error('Failed to render image');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `animesavi-invite-${template.id}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast.success('Invite image downloaded!');
+    } catch (e) {
+      console.error(e);
+      toast.error('Could not generate the invite image');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const shareOptions = [
+    {
+      name: 'WhatsApp',
+      icon: MessageCircle,
+      url: `https://wa.me/?text=${encodeURIComponent(fullMessage)}`,
+    },
     {
       name: 'Telegram',
       icon: Send,
@@ -119,21 +222,10 @@ export function SocialShare({ className = '' }: SocialShareProps) {
       icon: Facebook,
       url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(websiteUrl)}&quote=${encodeURIComponent(template.text)}`,
     },
-    {
-      name: 'Instagram',
-      icon: Instagram,
-      url: 'https://www.instagram.com/',
-    },
-    {
-      name: 'Snapchat',
-      icon: Camera,
-      url: 'https://www.snapchat.com/',
-    },
   ];
 
   return (
     <div className={`relative group ${className}`}>
-      {/* Animated background aura */}
       <div
         aria-hidden
         className="absolute -inset-4 bg-primary/5 rounded-[2.5rem] blur-3xl pointer-events-none"
@@ -146,15 +238,34 @@ export function SocialShare({ className = '' }: SocialShareProps) {
             <h3 className="font-heading text-2xl font-bold text-foreground mb-2">
               Share with <span className="anime-gradient-text">friends</span>
             </h3>
-            <p className="text-muted-foreground text-sm mb-6 md:mb-8">
-              Choose a theme and spread the word about AnimeSavi.
-            </p>
+            <p className="text-muted-foreground text-sm mb-6 md:mb-8">{TAGLINE}</p>
 
-            <div className="space-y-6 md:space-y-8">
+            <div className="space-y-6">
+              {/* Poster Editor */}
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-3">
+                  Poster Editor
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Input
+                    value={animeTitle}
+                    onChange={e => setAnimeTitle(e.target.value.slice(0, 30))}
+                    placeholder="Anime title"
+                    className="bg-background/40 border-border/40 rounded-xl h-10 text-sm"
+                  />
+                  <Input
+                    value={seasonLabel}
+                    onChange={e => setSeasonLabel(e.target.value.slice(0, 24))}
+                    placeholder="Season / tagline"
+                    className="bg-background/40 border-border/40 rounded-xl h-10 text-sm"
+                  />
+                </div>
+              </div>
+
               {/* Template Picker */}
               <div>
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-3">
-                  Select Template
+                  Select Theme
                 </label>
                 <div className="flex gap-3 flex-wrap">
                   {MESSAGE_TEMPLATES.map(t => {
@@ -164,7 +275,7 @@ export function SocialShare({ className = '' }: SocialShareProps) {
                         key={t.id}
                         onClick={() => setTemplateId(t.id)}
                         title={t.label}
-                        aria-label={`Template: ${t.label}`}
+                        aria-label={`Theme: ${t.label}`}
                         aria-pressed={active}
                         className={`relative w-12 h-12 rounded-xl bg-gradient-to-br ${t.swatch} transition-all shadow-lg ${
                           active
@@ -181,12 +292,12 @@ export function SocialShare({ className = '' }: SocialShareProps) {
                 </div>
               </div>
 
-              {/* Social Grid */}
+              {/* One-tap Share Grid */}
               <div>
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-3">
-                  Quick Share
+                  One-tap Share
                 </label>
-                <div className="grid grid-cols-5 gap-2 md:gap-3">
+                <div className="grid grid-cols-4 gap-2 md:gap-3">
                   {shareOptions.map(option => (
                     <button
                       key={option.name}
@@ -194,8 +305,8 @@ export function SocialShare({ className = '' }: SocialShareProps) {
                       aria-label={`Share on ${option.name}`}
                       className="group/icon aspect-square flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-background/40 border border-border/40 hover:bg-background/60 hover:border-primary/50 transition-all"
                     >
-                      <option.icon className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground group-hover/icon:text-primary transition-colors" />
-                      <span className="text-[9px] md:text-[10px] font-semibold text-muted-foreground group-hover/icon:text-foreground transition-colors">
+                      <option.icon className="h-5 w-5 text-muted-foreground group-hover/icon:text-primary transition-colors" />
+                      <span className="text-[10px] font-semibold text-muted-foreground group-hover/icon:text-foreground transition-colors">
                         {option.name}
                       </span>
                     </button>
@@ -205,11 +316,17 @@ export function SocialShare({ className = '' }: SocialShareProps) {
             </div>
           </div>
 
-          {/* Right: Poster Preview */}
+          {/* Right: Live Poster Preview */}
           <div className="w-full lg:w-[380px] p-6 md:p-8 lg:p-10 bg-background/40">
-            <div className="relative aspect-[4/5] w-full rounded-2xl overflow-hidden shadow-2xl">
+            <div
+              ref={posterRef}
+              className="relative aspect-[4/5] w-full rounded-2xl overflow-hidden shadow-2xl"
+            >
               <div
-                className={`absolute inset-0 bg-gradient-to-t ${template.poster} flex flex-col justify-end p-6 transition-all duration-500`}
+                className="absolute inset-0 flex flex-col justify-end p-6 transition-all duration-500"
+                style={{
+                  backgroundImage: `linear-gradient(to top, ${template.posterStops[0]}, ${template.posterStops[1]} 55%, ${template.posterStops[2]})`,
+                }}
               >
                 <div className="absolute top-6 left-6 flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
@@ -220,14 +337,18 @@ export function SocialShare({ className = '' }: SocialShareProps) {
                   </span>
                 </div>
                 <div className="space-y-2">
-                  <h4 className="font-heading text-3xl font-black text-white leading-tight">
-                    AnimeSavi
-                    <br />
-                    Experience
+                  <h4 className="font-heading text-3xl font-black text-white leading-tight uppercase break-words">
+                    {animeTitle || 'AnimeSavi'}
                   </h4>
-                  <p className="text-white/80 text-[10px] font-medium uppercase tracking-widest">
-                    {template.tagline}
+                  {seasonLabel && (
+                    <p className="text-white/85 text-xs font-semibold uppercase tracking-widest">
+                      {seasonLabel}
+                    </p>
+                  )}
+                  <p className="text-white/70 text-[10px] font-medium leading-relaxed pt-1">
+                    {TAGLINE}
                   </p>
+                  <p className="text-white text-[11px] font-bold pt-1">animesavi.com</p>
                 </div>
               </div>
               <div className="absolute inset-0 border border-white/10 rounded-2xl pointer-events-none" />
@@ -258,7 +379,7 @@ export function SocialShare({ className = '' }: SocialShareProps) {
               </div>
               <Button
                 onClick={handleCopyMessage}
-                className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-rose-700 hover:opacity-95 text-primary-foreground text-xs font-bold uppercase tracking-widest shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.7)] gap-2"
+                className="w-full h-11 rounded-xl bg-gradient-to-r from-primary to-rose-700 hover:opacity-95 text-primary-foreground text-xs font-bold uppercase tracking-widest shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.7)] gap-2"
               >
                 {msgCopied ? (
                   <>
@@ -269,6 +390,15 @@ export function SocialShare({ className = '' }: SocialShareProps) {
                     <MessageSquareText className="h-4 w-4" /> Copy message + link
                   </>
                 )}
+              </Button>
+              <Button
+                onClick={handleDownloadInvite}
+                disabled={downloading}
+                variant="outline"
+                className="w-full h-11 rounded-xl border-border/60 bg-background/40 hover:bg-background text-foreground text-xs font-bold uppercase tracking-widest gap-2"
+              >
+                <Download className="h-4 w-4" />
+                {downloading ? 'Rendering…' : 'Download invite image'}
               </Button>
             </div>
           </div>
