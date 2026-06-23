@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Tv, ChevronRight, Play, CalendarClock, Sparkles } from 'lucide-react';
+import { Tv, ChevronRight, Play, CalendarClock, Flame } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 
