@@ -164,41 +164,45 @@ export const LatestEpisodes = memo(function LatestEpisodes() {
   const hasFreshDrop = groupedEpisodes.some(g => isNew(g.latestCreatedAt));
 
   return (
-    <section className="py-10 md:py-14 relative">
-      {/* Backdrop accent */}
-      <div aria-hidden className="absolute inset-x-0 top-10 h-44 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
+    <section className="py-10 md:py-14 relative overflow-hidden">
+      {/* Crimson obsidian backdrop */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-20 right-10 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute bottom-0 left-0 h-56 w-56 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+      </div>
 
       <div className="container relative">
-        {/* Redesigned header */}
-        <div className="flex items-end justify-between mb-6 gap-4">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 shadow-inner">
-                <Zap className="h-5 w-5 text-primary" />
-              </div>
-              {hasFreshDrop && (
-                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-primary opacity-75 animate-ping" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
+        {/* Editorial header */}
+        <div className="flex items-end justify-between mb-7 gap-4">
+          <div className="flex items-stretch gap-3.5 min-w-0">
+            <div className="w-[3px] rounded-full bg-gradient-to-b from-primary via-primary/80 to-transparent shadow-[0_0_12px_hsl(var(--primary))]" />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/25 text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+                  <Zap className="h-3 w-3" />
+                  Just In
                 </span>
-              )}
-            </div>
-            <div>
-              <h2 className="text-2xl md:text-3xl font-heading font-bold leading-tight flex items-center gap-2">
-                Latest <span className="anime-gradient-text">Episodes</span>
                 {hasFreshDrop && (
-                  <span className="hidden sm:inline-flex px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-primary/15 text-primary border border-primary/30">
-                    Fresh
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                    </span>
+                    Live
                   </span>
                 )}
+              </div>
+              <h2 className="text-2xl md:text-3xl lg:text-[2rem] font-heading font-bold leading-tight tracking-tight">
+                Latest <span className="anime-gradient-text">Episodes</span>
               </h2>
-              <p className="text-xs md:text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5">
+              <p className="text-xs md:text-sm text-muted-foreground/90 mt-1 flex items-center gap-1.5">
                 <Clock className="h-3 w-3" />
-                Just-uploaded episodes from your library
+                Freshly uploaded — straight from the encoder.
               </p>
             </div>
           </div>
-          <Button asChild variant="ghost" size="sm" className="group shrink-0">
+          <Button asChild variant="ghost" size="sm" className="group shrink-0 rounded-full border border-white/5 hover:border-primary/30 hover:bg-primary/10">
             <Link to="/latest-episodes" className="flex items-center gap-1">
               See all
               <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -226,7 +230,7 @@ export const LatestEpisodes = memo(function LatestEpisodes() {
                   className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in w-[210px] md:w-[270px] lg:w-[310px] shrink-0`}
                 >
                   {/* Thumbnail card */}
-                  <div className="relative aspect-video rounded-2xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl group-hover:-translate-y-1 transition-all duration-500 ring-1 ring-white/5 group-hover:ring-primary/40">
+                  <div className="relative aspect-video rounded-2xl overflow-hidden bg-muted shadow-lg group-hover:shadow-[0_25px_60px_-15px_hsl(var(--primary)/0.55)] group-hover:-translate-y-1.5 transition-all duration-500 ring-1 ring-white/5 group-hover:ring-primary/50">
                     <img
                       src={displayImage}
                       alt={group.animeTitle}
@@ -235,12 +239,12 @@ export const LatestEpisodes = memo(function LatestEpisodes() {
                     />
 
                     {/* Persistent legibility gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent pointer-events-none" />
 
-                    {/* Hover red wash */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-primary/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                    {/* Hover crimson wash */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-primary/35 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-                    {/* Top-left: Season + count */}
+                    {/* Top-left chips */}
                     <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 pointer-events-none">
                       <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-black/70 backdrop-blur-md text-white border border-white/10">
                         S{group.seasonNumber}
@@ -252,7 +256,7 @@ export const LatestEpisodes = memo(function LatestEpisodes() {
                       )}
                     </div>
 
-                    {/* Top-right: NEW + 4K + H-DUB */}
+                    {/* Top-right badges */}
                     <div className="absolute top-2.5 right-2.5 flex flex-col gap-1 items-end pointer-events-none">
                       {fresh && (
                         <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-primary text-primary-foreground shadow-lg animate-pulse">
@@ -274,17 +278,28 @@ export const LatestEpisodes = memo(function LatestEpisodes() {
 
                     {/* Center hover play */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
-                      <div className="p-4 rounded-full bg-primary/95 shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-300">
+                      <div className="p-4 rounded-full bg-primary/95 shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-300 ring-2 ring-white/30">
                         <Play className="h-6 w-6 text-primary-foreground fill-current" />
                       </div>
                     </div>
 
+                    {/* Time-ago pill */}
+                    <div className="absolute bottom-2.5 right-2.5 pointer-events-none">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/65 backdrop-blur-md text-[10px] font-semibold text-white/90 border border-white/10">
+                        <Clock className="h-2.5 w-2.5" />
+                        {timeAgo(group.latestCreatedAt)}
+                      </span>
+                    </div>
+
                     {/* Bottom info */}
-                    <div className="absolute bottom-0 left-0 right-0 p-3 pointer-events-none">
+                    <div className="absolute bottom-0 left-0 right-0 p-3 pr-24 pointer-events-none">
                       <h3 className="text-sm md:text-base font-semibold text-white line-clamp-1 drop-shadow-lg">
                         {group.animeTitle}
                       </h3>
-                      <p className="text-xs text-white/85 font-medium mt-1">{episodeRangeText}</p>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="h-1 w-1 rounded-full bg-primary shadow-[0_0_6px_hsl(var(--primary))]" />
+                        <p className="text-xs text-white/85 font-medium">{episodeRangeText}</p>
+                      </div>
                     </div>
                   </div>
                 </Link>

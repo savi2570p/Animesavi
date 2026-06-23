@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Tv, ChevronRight, Play, CalendarClock, Sparkles } from 'lucide-react';
+import { Tv, ChevronRight, Play, CalendarClock, Flame } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 
@@ -154,31 +154,38 @@ export const LatestSeries = memo(function LatestSeries() {
   if (series.length === 0) return null;
 
   return (
-    <section className="py-10 md:py-14 relative">
-      {/* Soft accent backdrop */}
-      <div aria-hidden className="absolute inset-x-0 top-12 h-40 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
+    <section className="py-10 md:py-14 relative overflow-hidden">
+      {/* Crimson obsidian backdrop */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute top-1/3 right-0 h-56 w-56 rounded-full bg-primary/5 blur-3xl" />
+      </div>
 
       <div className="container relative">
-        {/* Redesigned header */}
-        <div className="flex items-end justify-between mb-6 gap-4">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 shadow-inner">
-                <Tv className="h-5 w-5 text-primary" />
+        {/* Editorial header */}
+        <div className="flex items-end justify-between mb-7 gap-4">
+          <div className="flex items-stretch gap-3.5 min-w-0">
+            {/* Vertical crimson bar */}
+            <div className="w-[3px] rounded-full bg-gradient-to-b from-primary via-primary/80 to-transparent shadow-[0_0_12px_hsl(var(--primary))]" />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/25 text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+                  <Tv className="h-3 w-3" />
+                  Library
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/80">
+                  / {series.length} titles
+                </span>
               </div>
-              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_hsl(var(--primary))]" />
-            </div>
-            <div>
-              <h2 className="text-2xl md:text-3xl font-heading font-bold leading-tight">
+              <h2 className="text-2xl md:text-3xl lg:text-[2rem] font-heading font-bold leading-tight tracking-tight">
                 Latest <span className="anime-gradient-text">Series</span>
               </h2>
-              <p className="text-xs md:text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                <Sparkles className="h-3 w-3 text-primary" />
-                Fresh drops & ongoing favorites
+              <p className="text-xs md:text-sm text-muted-foreground/90 mt-1 hidden sm:block">
+                Hand-picked drops, ongoing arcs and freshly added seasons.
               </p>
             </div>
           </div>
-          <Button asChild variant="ghost" size="sm" className="group shrink-0">
+          <Button asChild variant="ghost" size="sm" className="group shrink-0 rounded-full border border-white/5 hover:border-primary/30 hover:bg-primary/10">
             <Link to="/latest-series" className="flex items-center gap-1">
               See all
               <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -199,8 +206,13 @@ export const LatestSeries = memo(function LatestSeries() {
                 to={`/anime/${anime.id}`}
                 className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in w-[150px] md:w-[170px] lg:w-[190px] shrink-0`}
               >
+                {/* Rank ribbon */}
+                <span className="absolute -top-1 -left-1 z-20 h-6 w-6 rounded-md bg-black/80 backdrop-blur border border-primary/40 text-[10px] font-black text-primary flex items-center justify-center shadow-[0_0_10px_rgba(0,0,0,0.6)]">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+
                 {/* Poster */}
-                <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl group-hover:-translate-y-1 transition-all duration-500 ring-1 ring-white/5 group-hover:ring-primary/40">
+                <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted shadow-lg group-hover:shadow-[0_20px_50px_-15px_hsl(var(--primary)/0.5)] group-hover:-translate-y-1.5 transition-all duration-500 ring-1 ring-white/5 group-hover:ring-primary/50">
                   <img
                     src={anime.cover_image || '/placeholder.svg'}
                     alt={anime.title}
@@ -208,17 +220,17 @@ export const LatestSeries = memo(function LatestSeries() {
                     loading="lazy"
                   />
 
-                  {/* Bottom legibility gradient (always on) */}
-                  <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none" />
+                  {/* Bottom legibility gradient */}
+                  <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black via-black/65 to-transparent pointer-events-none" />
 
-                  {/* Hover overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  {/* Hover crimson wash */}
+                  <div className="absolute inset-0 bg-gradient-to-tr from-primary/45 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-                  {/* Top-right: NEW + 4K + H-DUB stack */}
+                  {/* Top-right badges */}
                   <div className="absolute top-2 right-2 flex flex-col gap-1 items-end pointer-events-none">
                     {isNew(anime) && (
-                      <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded bg-primary text-primary-foreground shadow-md animate-pulse">
-                        New
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded bg-primary text-primary-foreground shadow-md animate-pulse">
+                        <Flame className="h-2.5 w-2.5" />New
                       </span>
                     )}
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
@@ -227,8 +239,8 @@ export const LatestSeries = memo(function LatestSeries() {
                     <span className="badge-glass-hdub">H-DUB</span>
                   </div>
 
-                  {/* Top-left: status */}
-                  <div className="absolute top-2 left-2 pointer-events-none">
+                  {/* Top-left status */}
+                  <div className="absolute top-2 left-2 pointer-events-none ml-6">
                     {statusPill(anime)}
                   </div>
 
@@ -237,21 +249,24 @@ export const LatestSeries = memo(function LatestSeries() {
                     <TokenCrownBadge />
                   </div>
 
-                  {/* Center play on hover */}
+                  {/* Center play */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
-                    <div className="p-3 rounded-full bg-primary/95 shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-300">
+                    <div className="p-3 rounded-full bg-primary/95 shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-300 ring-2 ring-white/30">
                       <Play className="h-5 w-5 text-primary-foreground fill-current" />
                     </div>
                   </div>
 
-                  {/* Title block over poster */}
+                  {/* Title block */}
                   <div className="absolute bottom-0 left-0 right-0 p-2.5 pointer-events-none">
                     <h3 className="text-[13px] md:text-sm font-semibold text-white line-clamp-2 leading-tight drop-shadow-lg">
                       {anime.title}
                     </h3>
-                    <p className="text-[10px] font-medium text-white/80 mt-1.5">
-                      {anime.episode_count} EP{anime.episode_count !== 1 ? 's' : ''}
-                    </p>
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <span className="h-1 w-1 rounded-full bg-primary shadow-[0_0_6px_hsl(var(--primary))]" />
+                      <p className="text-[10px] font-medium text-white/85 uppercase tracking-wider">
+                        {anime.episode_count} EP{anime.episode_count !== 1 ? 's' : ''}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </Link>
