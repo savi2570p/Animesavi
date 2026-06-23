@@ -265,7 +265,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-              Anime, the way it was meant to be seen — pristine 4K, official Hindi dubs, and same-day episode drops. Built by fans, tuned for marathon nights.
+              Anime in 4K — official Hindi dubs, same-day drops, zero ads.
             </p>
             <div className="flex items-center gap-2">
               <a
