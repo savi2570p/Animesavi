@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, TrendingUp } from 'lucide-react';
+
 
 interface SuggestionAnime {
   id: string;
@@ -22,6 +23,15 @@ export function SearchSuggestions({ query, isVisible, onSelect, className }: Sea
   const [results, setResults] = useState<SuggestionAnime[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const navigate = useNavigate();
+
+  const handlePick = (e: React.SyntheticEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onSelect();
+    navigate(`/anime/${id}`);
+  };
+
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -68,11 +78,13 @@ export function SearchSuggestions({ query, isVisible, onSelect, className }: Sea
             Results
           </div>
           {results.map((anime) => (
-            <Link
+            <a
               key={anime.id}
-              to={`/anime/${anime.id}`}
-              onClick={onSelect}
-              className="flex items-center gap-3 px-3 py-2.5 hover:bg-accent/50 transition-colors"
+              href={`/anime/${anime.id}`}
+              onMouseDown={(e) => handlePick(e, anime.id)}
+              onTouchStart={(e) => handlePick(e, anime.id)}
+              onClick={(e) => handlePick(e, anime.id)}
+              className="flex items-center gap-3 px-3 py-2.5 hover:bg-accent/50 transition-colors cursor-pointer"
             >
               <div className="w-10 h-14 rounded-md overflow-hidden bg-muted flex-shrink-0">
                 {anime.cover_image ? (
@@ -102,7 +114,8 @@ export function SearchSuggestions({ query, isVisible, onSelect, className }: Sea
                   ))}
                 </div>
               </div>
-            </Link>
+            </a>
+
           ))}
         </div>
       )}
