@@ -23,6 +23,15 @@ export function SearchSuggestions({ query, isVisible, onSelect, className }: Sea
   const [results, setResults] = useState<SuggestionAnime[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const navigate = useNavigate();
+
+  const handlePick = (e: React.SyntheticEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onSelect();
+    navigate(`/anime/${id}`);
+  };
+
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
