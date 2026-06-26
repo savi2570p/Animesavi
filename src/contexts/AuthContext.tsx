@@ -96,7 +96,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // us we're signed out but its own storage still holds a refresh token,
       // try to refresh the session before clearing local state. This stops
       // the "auto logout at midnight" symptom users were reporting.
-      if (event === 'SIGNED_OUT' && !nextSession) {
+      // Apply guard for any event that delivers a null session while a
+      // refresh token is still stored locally (covers SIGNED_OUT and also
+      // TOKEN_REFRESHED/USER_UPDATED firing with null around midnight when
+      // the JWT rolls over). Attempt a silent refresh before clobbering state.
+      if (!nextSession && event !== 'INITIAL_SESSION') {
         const hasStoredSession = (() => {
           try {
             for (let i = 0; i < localStorage.length; i++) {
@@ -113,16 +117,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (hasStoredSession) {
           // Attempt recovery without blocking this callback.
           setTimeout(() => {
-            supabase.auth.refreshSession().then(({ data }) => {
+            supabase.auth.refreshSession().then(({ data, error }) => {
               if (data?.session) {
                 setSession(data.session);
                 setUser(data.session.user);
+                setRolesLoaded(false);
+                void fetchUserRoles(data.session.user.id);
+              } else if (error) {
+                // Refresh truly failed — keep prior state; do not force logout.
+                console.warn('[auth] silent refresh failed, retaining session', error.message);
               }
-            }).catch(() => { /* truly signed out */ });
+            }).catch(() => { /* keep state; user can retry on next request */ });
           }, 0);
           return; // don't clobber user state yet
         }
       }
+
 
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
