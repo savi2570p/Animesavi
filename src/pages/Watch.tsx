@@ -573,7 +573,9 @@ export default function Watch() {
     } catch {}
 
     const progressPercent = Math.floor((currentTime / duration) * 100);
-    const completed = progressPercent >= 90;
+    // Crunchyroll/Netflix-style: count as completed at >=95% OR when <=60s remain.
+    const remainingSeconds = Math.max(0, duration - currentTime);
+    const completed = progressPercent >= 95 || remainingSeconds <= 60;
 
     // Clear checkpoint when finished so we don't resume completed episodes
     if (completed) {

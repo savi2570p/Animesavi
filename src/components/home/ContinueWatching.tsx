@@ -83,11 +83,11 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
     if (showLoading) setIsLoading(true);
 
     try {
+      // 1. Resumable rows (in-progress) — keep the existing behaviour.
       const { data, error } = await supabase
         .from('watch_history')
         .select('id, progress, watched_at, anime:anime_id(id,title,cover_image,status), episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
         .eq('user_id', user.id)
-        // Older rows can have completed=null; treat them as still resumable.
         .or('completed.is.null,completed.eq.false')
         .order('watched_at', { ascending: false })
         .limit(12);
@@ -101,8 +101,100 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       const rows = ((data ?? []) as unknown as WatchHistoryItem[]).filter(
         (item) => item.anime?.id && item.episode?.id,
       );
+      const resumableAnimeIds = new Set(rows.map((r) => r.anime.id));
 
-      const seasonIds = [...new Set(rows.map((item) => item.episode.season_id).filter(Boolean))] as string[];
+      // 2. Completed-series re-injection — Crunchyroll/Netflix behaviour:
+      //    if the user finished every released episode of an anime and a NEW
+      //    episode has dropped since their last watch, surface that anime in
+      //    Continue Watching pointing directly at the newest episode.
+      const { data: completedRows } = await supabase
+        .from('watch_history')
+        .select('anime_id, watched_at, episode:episode_id(season_id, episode_number)')
+        .eq('user_id', user.id)
+        .eq('completed', true)
+        .order('watched_at', { ascending: false })
+        .limit(80);
+
+      const lastCompletedByAnime = new Map<string, { watched_at: string; season_id: string | null; episode_number: number }>();
+      for (const row of (completedRows ?? []) as any[]) {
+        if (!row.anime_id || resumableAnimeIds.has(row.anime_id)) continue;
+        if (lastCompletedByAnime.has(row.anime_id)) continue;
+        lastCompletedByAnime.set(row.anime_id, {
+          watched_at: row.watched_at,
+          season_id: row.episode?.season_id ?? null,
+          episode_number: row.episode?.episode_number ?? 0,
+        });
+      }
+
+      const newerEpisodeRows: WatchHistoryItem[] = [];
+      if (lastCompletedByAnime.size > 0) {
+        const completedAnimeIds = [...lastCompletedByAnime.keys()];
+        const { data: animeSeasons } = await supabase
+          .from('seasons')
+          .select('id, anime_id, season_number')
+          .in('anime_id', completedAnimeIds);
+        const seasonsByAnime = new Map<string, { id: string; season_number: number }[]>();
+        (animeSeasons ?? []).forEach((s: any) => {
+          const arr = seasonsByAnime.get(s.anime_id) ?? [];
+          arr.push({ id: s.id, season_number: s.season_number });
+          seasonsByAnime.set(s.anime_id, arr);
+        });
+
+        const allSeasonIds = (animeSeasons ?? []).map((s: any) => s.id);
+        if (allSeasonIds.length > 0) {
+          const { data: laterEpisodes } = await supabase
+            .from('episodes')
+            .select('id, title, episode_number, duration, season_id, thumbnail, created_at')
+            .in('season_id', allSeasonIds)
+            .order('created_at', { ascending: false });
+
+          // Pick the single newest episode per anime that is strictly newer than
+          // the user's last-completed timestamp.
+          const newestPerAnime = new Map<string, any>();
+          const seasonToAnime = new Map<string, string>();
+          (animeSeasons ?? []).forEach((s: any) => seasonToAnime.set(s.id, s.anime_id));
+
+          for (const ep of (laterEpisodes ?? []) as any[]) {
+            const animeId = seasonToAnime.get(ep.season_id);
+            if (!animeId) continue;
+            const last = lastCompletedByAnime.get(animeId);
+            if (!last) continue;
+            if (new Date(ep.created_at).getTime() <= new Date(last.watched_at).getTime()) continue;
+            if (newestPerAnime.has(animeId)) continue;
+            newestPerAnime.set(animeId, ep);
+          }
+
+          const animeMeta = await supabase
+            .from('anime')
+            .select('id, title, cover_image, status')
+            .in('id', [...newestPerAnime.keys()]);
+          const animeMap = new Map((animeMeta.data ?? []).map((a: any) => [a.id, a]));
+
+          newestPerAnime.forEach((ep, animeId) => {
+            const animeInfo = animeMap.get(animeId);
+            if (!animeInfo) return;
+            newerEpisodeRows.push({
+              id: `new-${animeId}-${ep.id}`,
+              anime: animeInfo as any,
+              episode: {
+                id: ep.id,
+                title: ep.title,
+                episode_number: ep.episode_number,
+                duration: ep.duration,
+                season_id: ep.season_id,
+                thumbnail: ep.thumbnail,
+              },
+              progress: 0,
+              watched_at: ep.created_at,
+              hasNewEpisode: true,
+            });
+          });
+        }
+      }
+
+      const allRows = [...rows, ...newerEpisodeRows];
+
+      const seasonIds = [...new Set(allRows.map((item) => item.episode.season_id).filter(Boolean))] as string[];
       const { data: seasonRows } = seasonIds.length
         ? await supabase.from('seasons').select('id, season_number').in('id', seasonIds)
         : { data: [] as Season[] };
@@ -136,10 +228,10 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
         });
       }
 
-      setHistory(rows.map((item) => ({
+      setHistory(allRows.map((item) => ({
         ...item,
         season: seasonMap.get(item.episode.season_id),
-        hasNewEpisode: newEpisodeAnimeIds.has(item.anime.id),
+        hasNewEpisode: item.hasNewEpisode || newEpisodeAnimeIds.has(item.anime.id),
       })));
     } finally {
       setIsLoading(false);
@@ -163,9 +255,27 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
     window.addEventListener('focus', refreshLatest);
     document.addEventListener('visibilitychange', refreshLatest);
 
+    // Realtime: refresh the row instantly when watch_history changes for this
+    // user, OR when ANY new episode is uploaded (could affect a completed
+    // series the user finished).
+    const channel = supabase
+      .channel(`continue-watching-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'watch_history', filter: `user_id=eq.${user.id}` },
+        () => { void fetchRecentHistory(false); },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'episodes' },
+        () => { void fetchRecentHistory(false); },
+      )
+      .subscribe();
+
     return () => {
       window.removeEventListener('focus', refreshLatest);
       document.removeEventListener('visibilitychange', refreshLatest);
+      void supabase.removeChannel(channel);
     };
   }, [user?.id, shouldRender, fetchRecentHistory, fetchUserProfile]);
 
