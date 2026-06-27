@@ -229,7 +229,10 @@ export function UpdatePopup() {
     { onClick, className = '' }: { onClick?: (e: React.MouseEvent) => void; className?: string } = {}
   ) => (
     <div
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.(e);
+      }}
       className={`relative w-full max-w-[280px] sm:max-w-[300px] mx-auto overflow-hidden bg-purple-950/25 backdrop-blur-3xl border border-violet-300/15 rounded-[32px] shadow-[0_28px_80px_-14px_rgba(76,29,149,0.7),inset_0_1px_1px_rgba(216,180,254,0.18)] font-popup ${className}`}
     >
       {/* Purple ambient glow */}
@@ -367,7 +370,7 @@ export function UpdatePopup() {
             </div>
 
             <GlassButton onClick={handleDownload}>
-              Download {RANDOM_DOWNLOAD_MB} MB
+              Download
             </GlassButton>
           </div>
         )}
