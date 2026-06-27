@@ -263,7 +263,6 @@ export function UpdatePopup() {
                 {item.title}
               </h4>
               <span
-                className="inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0 text-[7px] font-bold uppercase tracking-wider"
                 className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-1 py-[1px] text-[7px] font-bold uppercase tracking-wider ${BADGE_STYLES[item.badge]}`}
               >
                 <span className={`h-1 w-1 rounded-full ${BADGE_DOT[item.badge]}`} />
