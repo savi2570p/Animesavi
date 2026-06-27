@@ -406,16 +406,16 @@ export function UpdatePopup() {
     return (
       <div className={OVERLAY}>
         {glassCard(
-          <div className="px-6 py-7 sm:px-7 sm:py-8 text-center">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-violet-300/30 bg-violet-500/15 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.2em] text-violet-200 mb-5">
+          <div className="px-5 py-5 sm:px-6 sm:py-6 text-center">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-violet-300/30 bg-violet-500/15 px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.18em] text-violet-200 mb-4">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-300 opacity-75" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-violet-300" />
               </span>
-              Downloading {APP_VERSION}
+              Download {APP_VERSION}
             </div>
 
-            <div className="relative h-28 w-28 sm:h-32 sm:w-32 mx-auto mb-5">
+            <div className="relative h-24 w-24 sm:h-28 sm:w-28 mx-auto mb-4">
               <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-500/35 to-purple-600/20 blur-2xl animate-pulse" />
               <svg className="relative h-full w-full -rotate-90" viewBox="0 0 128 128">
                 <circle cx="64" cy="64" r={radius} stroke="rgba(216,180,254,0.08)" strokeWidth="5" fill="none" />
@@ -438,23 +438,23 @@ export function UpdatePopup() {
                 </defs>
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl sm:text-[26px] font-bold font-mono bg-gradient-to-br from-white via-violet-100 to-violet-300 bg-clip-text text-transparent tabular-nums leading-none">
-                  {displayProgress.toFixed(0)}<span className="text-sm text-violet-300">%</span>
+                <span className="text-xl sm:text-2xl font-bold font-mono bg-gradient-to-br from-white via-violet-100 to-violet-300 bg-clip-text text-transparent tabular-nums leading-none">
+                  {displayProgress.toFixed(0)}<span className="text-xs text-violet-300">%</span>
                 </span>
-                <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.25em] text-violet-300/60 mt-1">{phaseLabel}</span>
+                <span className="text-[7px] sm:text-[8px] uppercase tracking-[0.25em] text-violet-300/60 mt-0.5">{phaseLabel}</span>
               </div>
             </div>
 
-            <h2 className="bg-gradient-to-r from-white via-violet-100 to-white bg-clip-text text-base font-bold text-transparent tracking-tight">
+            <h2 className="bg-gradient-to-r from-white via-violet-100 to-white bg-clip-text text-sm font-bold text-transparent tracking-tight">
               Downloading update
             </h2>
-            <p className="text-[11px] text-violet-200/60 mt-1 leading-relaxed px-2">
-              Securing the latest fixes and improvements…
+            <p className="text-[10px] text-violet-200/60 mt-0.5 leading-relaxed px-2">
+              Securing the latest fixes…
             </p>
 
-            <div className="relative mt-4 h-1.5 w-full overflow-hidden rounded-full bg-violet-300/[0.08]">
+            <div className="relative mt-3 h-1 w-full overflow-hidden rounded-full bg-violet-300/[0.08]">
               <div
-                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-violet-500 via-purple-400 to-indigo-500 shadow-[0_0_12px_rgba(139,92,246,0.7)] transition-all duration-200"
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-violet-500 via-purple-400 to-indigo-500 shadow-[0_0_10px_rgba(139,92,246,0.7)] transition-all duration-200"
                 style={{ width: `${displayProgress}%` }}
               />
               <div
@@ -463,22 +463,22 @@ export function UpdatePopup() {
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-2 w-full mt-4 text-left">
+            <div className="grid grid-cols-3 gap-1.5 w-full mt-3 text-left">
               {[
                 { label: 'Speed', value: speedMbps.toFixed(1), unit: 'Mbps', accent: 'text-white' },
                 { label: 'Size', value: downloadedMb.toFixed(1), unit: `/${TOTAL_MB}MB`, accent: 'text-white' },
                 { label: 'ETA', value: etaLabel, unit: '', accent: 'text-violet-200' },
               ].map((s) => (
-                <div key={s.label} className="rounded-2xl border border-violet-300/15 bg-violet-500/[0.06] backdrop-blur-md px-2 py-2">
-                  <div className="text-[8px] uppercase tracking-[0.18em] text-violet-300/60 font-semibold">{s.label}</div>
-                  <div className={`text-[12px] font-bold font-mono tabular-nums leading-tight mt-0.5 ${s.accent}`}>
-                    {s.value}{s.unit && <span className="text-[8px] text-violet-300/60 ml-0.5 font-normal">{s.unit}</span>}
+                <div key={s.label} className="rounded-xl border border-violet-300/15 bg-violet-500/[0.06] backdrop-blur-md px-1.5 py-1.5">
+                  <div className="text-[7px] uppercase tracking-[0.16em] text-violet-300/60 font-semibold">{s.label}</div>
+                  <div className={`text-[11px] font-bold font-mono tabular-nums leading-tight mt-0.5 ${s.accent}`}>
+                    {s.value}{s.unit && <span className="text-[7px] text-violet-300/60 ml-0.5 font-normal">{s.unit}</span>}
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="relative mt-3 h-8 w-full rounded-2xl border border-violet-300/15 bg-purple-950/40 overflow-hidden px-1.5">
+            <div className="relative mt-2.5 h-7 w-full rounded-xl border border-violet-300/15 bg-purple-950/40 overflow-hidden px-1">
               {sparkPoints ? (
                 <svg viewBox={`0 0 ${sparkW} ${sparkH}`} preserveAspectRatio="none" className="h-full w-full">
                   <defs>
@@ -499,8 +499,8 @@ export function UpdatePopup() {
                   />
                 </svg>
               ) : (
-                <div className="flex items-center justify-center h-full text-[9px] uppercase tracking-[0.2em] text-violet-300/40">
-                  Measuring network…
+                <div className="flex items-center justify-center h-full text-[8px] uppercase tracking-[0.18em] text-violet-300/40">
+                  Measuring…
                 </div>
               )}
             </div>
