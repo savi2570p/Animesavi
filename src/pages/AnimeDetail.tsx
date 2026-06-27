@@ -379,6 +379,8 @@ export default function AnimeDetail() {
     }
 
     const isCompleted = isEpisodeCompleted(episodeId);
+    const episodeDuration = episodes.find((episode) => episode.id === episodeId)?.duration || 0;
+    const now = new Date().toISOString();
     
     // Check if entry exists
     const { data: existing } = await supabase
@@ -395,6 +397,10 @@ export default function AnimeDetail() {
         .update({ 
           completed: !isCompleted,
           progress: !isCompleted ? 100 : 0,
+          completed_at: !isCompleted ? now : null,
+          last_position: !isCompleted ? episodeDuration : 0,
+          duration: episodeDuration,
+          watched_at: now,
         })
         .eq('id', existing.id);
     } else {
@@ -407,6 +413,10 @@ export default function AnimeDetail() {
           anime_id: id!,
           completed: true,
           progress: 100,
+          completed_at: now,
+          last_position: episodeDuration,
+          duration: episodeDuration,
+          watched_at: now,
         });
     }
 
