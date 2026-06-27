@@ -413,110 +413,109 @@ export function UpdatePopup() {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-300 p-3 sm:p-4">
         {glassCard(
-          <div className="p-6 sm:p-8 text-center">
-            <div className="flex flex-col items-center space-y-4 sm:space-y-5">
-              <div className="relative inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-rose-300">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-400" />
-                </span>
-                Downloading {APP_VERSION}
-              </div>
+          <div className="px-6 py-7 sm:px-7 sm:py-8 text-center">
+            {/* Pill label */}
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.2em] text-rose-200 mb-5">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-400" />
+              </span>
+              Downloading {APP_VERSION}
+            </div>
 
-              <div className="relative h-32 w-32 sm:h-36 sm:w-36">
-                <svg className="h-full w-full -rotate-90" viewBox="0 0 128 128">
-                  <circle cx="64" cy="64" r={radius} stroke="rgba(255,255,255,0.08)" strokeWidth="6" fill="none" />
-                  <circle
-                    cx="64" cy="64" r={radius}
-                    stroke="url(#dlGrad)"
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                    fill="none"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={dashOffset}
-                    style={{ filter: 'drop-shadow(0 0 8px rgba(225,29,72,0.6))' }}
-                  />
+            {/* Circular progress orb */}
+            <div className="relative h-28 w-28 sm:h-32 sm:w-32 mx-auto mb-5">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-rose-500/25 to-fuchsia-500/15 blur-2xl animate-pulse" />
+              <svg className="relative h-full w-full -rotate-90" viewBox="0 0 128 128">
+                <circle cx="64" cy="64" r={radius} stroke="rgba(255,255,255,0.06)" strokeWidth="5" fill="none" />
+                <circle
+                  cx="64" cy="64" r={radius}
+                  stroke="url(#dlGrad)"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  fill="none"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={dashOffset}
+                  style={{ filter: 'drop-shadow(0 0 10px rgba(225,29,72,0.6))', transition: 'stroke-dashoffset 200ms linear' }}
+                />
+                <defs>
+                  <linearGradient id="dlGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#fb7185" />
+                    <stop offset="60%" stopColor="#e11d48" />
+                    <stop offset="100%" stopColor="#a21caf" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-2xl sm:text-[26px] font-bold font-mono bg-gradient-to-br from-white via-rose-100 to-rose-300 bg-clip-text text-transparent tabular-nums leading-none">
+                  {displayProgress.toFixed(0)}<span className="text-sm text-rose-400">%</span>
+                </span>
+                <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.25em] text-zinc-500 mt-1">{phaseLabel}</span>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 className="bg-gradient-to-r from-white via-rose-100 to-white bg-clip-text text-base font-bold text-transparent tracking-tight">
+              Downloading update
+            </h2>
+            <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed px-2">
+              Securing the latest fixes and improvements…
+            </p>
+
+            {/* Shimmer bar */}
+            <div className="relative mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-rose-500 via-rose-400 to-fuchsia-500 shadow-[0_0_12px_rgba(225,29,72,0.7)] transition-all duration-200"
+                style={{ width: `${displayProgress}%` }}
+              />
+              <div
+                className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"
+                style={{ left: `${Math.max(0, displayProgress - 33)}%` }}
+              />
+            </div>
+
+            {/* Stats — pill chips */}
+            <div className="grid grid-cols-3 gap-2 w-full mt-4 text-left">
+              {[
+                { label: 'Speed', value: speedMbps.toFixed(1), unit: 'Mbps', accent: 'text-white' },
+                { label: 'Size', value: downloadedMb.toFixed(1), unit: `/${TOTAL_MB}MB`, accent: 'text-white' },
+                { label: 'ETA', value: etaLabel, unit: '', accent: 'text-rose-300' },
+              ].map((s) => (
+                <div key={s.label} className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-md px-2 py-2">
+                  <div className="text-[8px] uppercase tracking-[0.18em] text-zinc-500 font-semibold">{s.label}</div>
+                  <div className={`text-[12px] font-bold font-mono tabular-nums leading-tight mt-0.5 ${s.accent}`}>
+                    {s.value}{s.unit && <span className="text-[8px] text-zinc-500 ml-0.5 font-normal">{s.unit}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Sparkline */}
+            <div className="relative mt-3 h-8 w-full rounded-2xl border border-white/10 bg-black/30 overflow-hidden px-1.5">
+              {sparkPoints ? (
+                <svg viewBox={`0 0 ${sparkW} ${sparkH}`} preserveAspectRatio="none" className="h-full w-full">
                   <defs>
-                    <linearGradient id="dlGrad" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="#e11d48" />
-                      <stop offset="100%" stopColor="#a21caf" />
+                    <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#e11d48" stopOpacity="0.45" />
+                      <stop offset="100%" stopColor="#e11d48" stopOpacity="0" />
                     </linearGradient>
                   </defs>
+                  <polygon points={`0,${sparkH} ${sparkPoints} ${sparkW},${sparkH}`} fill="url(#sparkFill)" />
+                  <polyline
+                    points={sparkPoints}
+                    fill="none"
+                    stroke="#f43f5e"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ filter: 'drop-shadow(0 0 3px rgba(244,63,94,0.7))' }}
+                  />
                 </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl sm:text-3xl font-bold font-mono bg-gradient-to-br from-white to-rose-300 bg-clip-text text-transparent tabular-nums">
-                    {displayProgress.toFixed(1)}<span className="text-base sm:text-lg text-rose-400">%</span>
-                  </span>
-                  <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-zinc-500 mt-0.5">{phaseLabel}</span>
+              ) : (
+                <div className="flex items-center justify-center h-full text-[9px] uppercase tracking-[0.2em] text-zinc-600">
+                  Measuring network…
                 </div>
-              </div>
-
-              <div className="space-y-1">
-                <h2 className="text-base sm:text-lg font-bold text-white">Downloading Update</h2>
-                <p className="text-[11px] sm:text-xs text-zinc-500">Securing the latest fixes and improvements…</p>
-              </div>
-
-              <div className="relative h-1.5 w-full rounded-full bg-zinc-800/80 overflow-hidden">
-                <div
-                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-rose-600 via-rose-500 to-fuchsia-500 shadow-[0_0_12px_rgba(225,29,72,0.6)]"
-                  style={{ width: `${displayProgress}%` }}
-                />
-                <div
-                  className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"
-                  style={{ left: `${Math.max(0, displayProgress - 33)}%` }}
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 w-full text-left">
-                <div className="rounded-xl border border-white/5 bg-white/[0.03] px-2.5 py-2">
-                  <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Speed</div>
-                  <div className="text-[12px] sm:text-[13px] font-bold font-mono text-white tabular-nums leading-tight">
-                    {speedMbps.toFixed(1)}<span className="text-[9px] text-zinc-500 ml-0.5">Mbps</span>
-                  </div>
-                </div>
-                <div className="rounded-xl border border-white/5 bg-white/[0.03] px-2.5 py-2">
-                  <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Size</div>
-                  <div className="text-[12px] sm:text-[13px] font-bold font-mono text-white tabular-nums leading-tight">
-                    {downloadedMb.toFixed(1)}<span className="text-[9px] text-zinc-500 ml-0.5">/{TOTAL_MB.toFixed(0)}MB</span>
-                  </div>
-                </div>
-                <div className="rounded-xl border border-white/5 bg-white/[0.03] px-2.5 py-2">
-                  <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">ETA</div>
-                  <div className="text-[12px] sm:text-[13px] font-bold font-mono text-rose-300 tabular-nums leading-tight">
-                    {etaLabel}
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative h-7 w-full rounded-xl border border-white/5 bg-black/40 overflow-hidden px-1.5">
-                {sparkPoints ? (
-                  <svg viewBox={`0 0 ${sparkW} ${sparkH}`} preserveAspectRatio="none" className="h-full w-full">
-                    <defs>
-                      <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#e11d48" stopOpacity="0.5" />
-                        <stop offset="100%" stopColor="#e11d48" stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-                    <polygon
-                      points={`0,${sparkH} ${sparkPoints} ${sparkW},${sparkH}`}
-                      fill="url(#sparkFill)"
-                    />
-                    <polyline
-                      points={sparkPoints}
-                      fill="none"
-                      stroke="#f43f5e"
-                      strokeWidth="1.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      style={{ filter: 'drop-shadow(0 0 3px rgba(244,63,94,0.6))' }}
-                    />
-                  </svg>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-[9px] uppercase tracking-wider text-zinc-600">
-                    Measuring network…
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
         )}
@@ -582,77 +581,90 @@ export function UpdatePopup() {
 
   /* ── STEP 3.5: Entering — first-time post-update transition ── */
   if (step === 'entering') {
+    const totalStages = 3;
+    const barProgress = ((enterStage + 1) / totalStages) * 100;
+    const stages = [
+      { label: 'Synced', desc: 'Your library is up to date.' },
+      { label: 'Booting UI', desc: 'Preparing the new experience.' },
+      { label: 'Routing Home', desc: 'Taking you to the latest.' },
+    ];
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl p-3 sm:p-4 animate-in fade-in duration-300">
         {glassCard(
-          <div className="p-6 sm:p-8 text-center">
-            <div className="relative z-10 flex flex-col items-center gap-4 text-center">
-              <div className="relative h-16 w-16 sm:h-20 sm:w-20">
-                <div className="absolute inset-0 rounded-full border-2 border-rose-500/20" />
-                <div
-                  className="absolute inset-0 rounded-full border-2 border-transparent border-t-rose-400 border-r-rose-500"
-                  style={{ animation: 'spin 1.4s linear infinite' }}
-                />
-                <div
-                  className="absolute inset-2 rounded-full border-2 border-transparent border-b-fuchsia-300 border-l-fuchsia-400"
-                  style={{ animation: 'spin 2s linear infinite reverse' }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-gradient-to-br from-rose-500 via-fuchsia-500 to-purple-600 shadow-[0_0_24px_rgba(225,29,72,0.7)] flex items-center justify-center">
-                    <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white drop-shadow" />
+          <div className="px-6 py-7 sm:px-7 sm:py-8 text-center">
+            {/* Pill */}
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.2em] text-rose-200 mb-5">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-400" />
+              </span>
+              {APP_VERSION} • Ready
+            </div>
+
+            {/* Pulsing core orb */}
+            <div className="relative h-20 w-20 sm:h-24 sm:w-24 mx-auto mb-5">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-rose-500/35 to-fuchsia-500/25 blur-2xl animate-pulse" />
+              <div
+                className="absolute inset-0 rounded-full border-2 border-transparent border-t-rose-400 border-r-rose-500"
+                style={{ animation: 'spin 1.4s linear infinite' }}
+              />
+              <div
+                className="absolute inset-2 rounded-full border-2 border-transparent border-b-fuchsia-300 border-l-fuchsia-400"
+                style={{ animation: 'spin 2s linear infinite reverse' }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-rose-500 via-fuchsia-500 to-purple-600 shadow-[0_0_28px_rgba(225,29,72,0.75)] flex items-center justify-center">
+                  <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-white drop-shadow" />
+                </div>
+              </div>
+            </div>
+
+            <h2 className="bg-gradient-to-r from-white via-rose-100 to-white bg-clip-text text-base sm:text-lg font-bold text-transparent tracking-tight">
+              Entering the latest version
+            </h2>
+            <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed transition-all duration-300 min-h-[1.25rem]">
+              {stages[enterStage]?.desc}
+            </p>
+
+            {/* Progress bar — fills with stage */}
+            <div className="relative mt-5 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-rose-500 via-rose-400 to-fuchsia-500 shadow-[0_0_12px_rgba(225,29,72,0.7)] transition-all duration-700 ease-out"
+                style={{ width: `${barProgress}%` }}
+              />
+              <div
+                className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"
+                style={{ left: `${Math.max(0, barProgress - 33)}%` }}
+              />
+            </div>
+
+            {/* Stage chips */}
+            <div className="mt-4 grid grid-cols-3 gap-1.5">
+              {stages.map((s, i) => {
+                const done = enterStage > i;
+                const active = enterStage === i;
+                return (
+                  <div
+                    key={s.label}
+                    className={`flex items-center justify-center gap-1 rounded-2xl border px-1.5 py-1.5 text-[8.5px] font-bold uppercase tracking-wider transition-all duration-300 ${
+                      done
+                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                        : active
+                        ? 'border-rose-500/40 bg-rose-500/15 text-rose-200 shadow-[0_0_10px_rgba(225,29,72,0.4)]'
+                        : 'border-white/10 bg-white/[0.04] text-zinc-500'
+                    }`}
+                  >
+                    {done ? (
+                      <Check className="h-2.5 w-2.5" />
+                    ) : active ? (
+                      <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                    ) : (
+                      <span className="h-1 w-1 rounded-full bg-current opacity-60" />
+                    )}
+                    <span className="truncate">{s.label}</span>
                   </div>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2 py-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.2em] text-rose-200">
-                  <span className="relative flex h-1 w-1">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
-                    <span className="relative inline-flex h-1 w-1 rounded-full bg-rose-400" />
-                  </span>
-                  {APP_VERSION} • Ready
-                </div>
-                <h2 className="bg-gradient-to-r from-white via-rose-200 to-white bg-clip-text text-base sm:text-lg font-bold text-transparent">
-                  Entering the latest version
-                </h2>
-                <p className="text-[10px] sm:text-[11px] text-zinc-400 transition-all duration-300 min-h-[1.25rem]">
-                  {enterStage === 0 && 'Synced — your library is up to date.'}
-                  {enterStage === 1 && 'Booting UI — preparing the new experience.'}
-                  {enterStage === 2 && 'Routing Home — taking you to the latest.'}
-                </p>
-              </div>
-
-              <div className="relative h-1 w-full overflow-hidden rounded-full bg-white/5">
-                <div className="absolute inset-y-0 left-0 w-1/3 rounded-full bg-gradient-to-r from-transparent via-rose-400 to-transparent shadow-[0_0_12px_rgba(225,29,72,0.8)] animate-[shimmer_1.4s_ease-in-out_infinite]" />
-              </div>
-
-              <div className="flex flex-wrap items-center justify-center gap-1.5 text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider">
-                {(['Synced', 'Booting UI', 'Routing Home'] as const).map((label, i) => {
-                  const done = enterStage > i;
-                  const active = enterStage === i;
-                  return (
-                    <span
-                      key={label}
-                      className={`flex items-center gap-1 rounded-md border px-1.5 py-0.5 transition-all duration-300 ${
-                        done
-                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-                          : active
-                          ? 'border-rose-500/40 bg-rose-500/15 text-rose-200 shadow-[0_0_10px_rgba(225,29,72,0.4)]'
-                          : 'border-white/10 bg-white/5 text-zinc-500'
-                      }`}
-                    >
-                      {done ? (
-                        <Check className="h-2 w-2" />
-                      ) : active ? (
-                        <Loader2 className="h-2 w-2 animate-spin" />
-                      ) : (
-                        <span className="h-1 w-1 rounded-full bg-current opacity-60" />
-                      )}
-                      {label}
-                    </span>
-                  );
-                })}
-              </div>
+                );
+              })}
             </div>
           </div>
         )}
