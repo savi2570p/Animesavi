@@ -254,9 +254,10 @@ export default function History() {
     return 0;
   };
 
-  const formatWatchedTime = (progress: number | null, duration: number | null) => {
-    if (!progress || !duration || duration <= 0) return null;
-    const totalMin = Math.max(1, Math.round((progress / 100) * duration));
+  const formatWatchedTime = (item: WatchHistoryItem) => {
+    const watchedSeconds = getWatchedSeconds(item);
+    if (watchedSeconds <= 0) return null;
+    const totalMin = Math.max(1, Math.floor(watchedSeconds / 60));
     const hours = Math.floor(totalMin / 60);
     const minutes = totalMin % 60;
     if (hours > 0) return `${hours}h ${minutes}m watched`;
@@ -494,9 +495,9 @@ export default function History() {
                                 {item.completed ? 'Completed' : `${item.progress}% watched`}
                               </span>
                             )}
-                            {formatWatchedTime(item.progress, item.episode.duration) && (
+                            {formatWatchedTime(item) && (
                               <span className="text-muted-foreground">
-                                {formatWatchedTime(item.progress, item.episode.duration)}
+                                {formatWatchedTime(item)}
                               </span>
                             )}
                           </div>
