@@ -90,12 +90,18 @@ export function UpdatePopup() {
 
   const isActive = activePopup === 'whatsNew';
 
+  // Tracks whether the user went through the download flow in this session.
+  // The "Entering the latest version" loader only plays after a fresh download.
+  const justDownloadedRef = useRef(false);
+
   useEffect(() => {
     if (isActive) {
       const alreadyDownloaded = localStorage.getItem(DOWNLOAD_COMPLETED_KEY) === 'true';
       setStep(alreadyDownloaded ? 'complete' : 'alert');
       setProgress(0);
       setVersionIndex(0);
+      // Reset on every fresh open so manual What's New views skip the loader.
+      justDownloadedRef.current = false;
     }
   }, [isActive, isManualWhatsNew]);
 
