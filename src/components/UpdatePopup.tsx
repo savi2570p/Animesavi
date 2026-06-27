@@ -513,51 +513,51 @@ export function UpdatePopup() {
   /* ── STEP 3: Installing ── */
   if (step === 'installing') {
     const stages = [
-      { icon: '🔓', label: 'Unpacking files' },
-      { icon: '⚙️', label: 'Configuring system' },
-      { icon: '✨', label: 'Optimizing assets' },
-      { icon: '🚀', label: 'Finalizing install' },
+      { icon: '🔓', label: 'Unpacking' },
+      { icon: '⚙️', label: 'Configuring' },
+      { icon: '✨', label: 'Optimizing' },
+      { icon: '🚀', label: 'Finalizing' },
     ];
     return (
       <div className={OVERLAY}>
         {glassCard(
-          <div className="p-6 sm:p-8 text-center">
-            <div className="relative inline-flex items-center gap-1.5 rounded-full border border-violet-300/30 bg-violet-500/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-violet-200 mb-5 sm:mb-6">
-              <Loader2 className="h-2.5 w-2.5 animate-spin" />
-              Installing {APP_VERSION}
+          <div className="p-4 sm:p-5 text-center">
+            <div className="relative inline-flex items-center gap-1.5 rounded-full border border-violet-300/30 bg-violet-500/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-violet-200 mb-4">
+              <Loader2 className="h-2 w-2 animate-spin" />
+              Install {APP_VERSION}
             </div>
 
-            <div className="relative mx-auto h-20 w-20 sm:h-24 sm:w-24 mb-5 sm:mb-6">
+            <div className="relative mx-auto h-16 w-16 sm:h-20 sm:w-20 mb-4">
               <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-500/40 to-purple-600/25 blur-xl animate-pulse" />
               <div className="absolute inset-2 rounded-full border-2 border-violet-500/40 border-t-violet-300 animate-spin" style={{ animationDuration: '1.4s' }} />
-              <div className="absolute inset-5 rounded-full border-2 border-purple-500/30 border-b-purple-300 animate-spin" style={{ animationDuration: '1.8s', animationDirection: 'reverse' }} />
+              <div className="absolute inset-4 rounded-full border-2 border-purple-500/30 border-b-purple-300 animate-spin" style={{ animationDuration: '1.8s', animationDirection: 'reverse' }} />
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-2xl sm:text-3xl">⚙️</span>
+                <span className="text-xl sm:text-2xl">⚙️</span>
               </div>
             </div>
 
-            <div className="space-y-1 mb-5 sm:mb-6">
-              <h2 className="text-base sm:text-lg font-bold text-white">Installing Updates</h2>
-              <p className="text-[11px] sm:text-xs text-violet-200/60">Setting up fixes and polishing the experience…</p>
+            <div className="space-y-0.5 mb-4">
+              <h2 className="text-sm sm:text-base font-bold text-white">Installing Updates</h2>
+              <p className="text-[10px] text-violet-200/60">Setting up fixes and polish…</p>
             </div>
 
-            <div className="space-y-1.5 text-left">
+            <div className="space-y-1 text-left">
               {stages.map((stage, i) => (
                 <div
                   key={stage.label}
-                  className="flex items-center gap-2.5 rounded-xl border border-violet-300/10 bg-violet-500/[0.05] px-3 py-2 animate-in fade-in slide-in-from-bottom-2"
+                  className="flex items-center gap-2 rounded-lg border border-violet-300/10 bg-violet-500/[0.05] px-2.5 py-1.5 animate-in fade-in slide-in-from-bottom-2"
                   style={{ animationDelay: `${i * 350}ms`, animationDuration: '500ms', animationFillMode: 'both' }}
                 >
-                  <span className="text-base shrink-0">{stage.icon}</span>
-                  <span className="flex-1 text-[11px] font-semibold text-white/90">{stage.label}</span>
-                  <Loader2 className="h-3 w-3 text-violet-300 animate-spin shrink-0" />
+                  <span className="text-sm shrink-0">{stage.icon}</span>
+                  <span className="flex-1 text-[10px] font-semibold text-white/90">{stage.label}</span>
+                  <Loader2 className="h-2.5 w-2.5 text-violet-300 animate-spin shrink-0" />
                 </div>
               ))}
             </div>
 
-            <div className="flex justify-center gap-1.5 pt-5">
+            <div className="flex justify-center gap-1 pt-4">
               {[0, 1, 2].map(i => (
-                <div key={i} className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                <div key={i} className="w-1 h-1 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
               ))}
             </div>
           </div>
