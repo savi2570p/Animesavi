@@ -20,30 +20,22 @@ interface VersionGroup {
   items: ChangelogItem[];
 }
 
-const APP_VERSION = 'V 28';
+const APP_VERSION = 'V 28.1';
 
-// Fixed download size for V 28
-const RANDOM_DOWNLOAD_MB = 10.44;
+// Fixed download size for V 28.1 patch
+const RANDOM_DOWNLOAD_MB = 4.18;
 
 const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'V 28',
-    date: 'Latest',
-    highlight: 'Smoother PC animations, smarter token banner, redesigned Watch List, "/" keyboard search, slimmer Welcome page accents and a faster Update download.',
+    version: 'V 28.1',
+    date: 'June 27, 2026',
+    highlight: 'This patch fixes the Continue Watching "Done" action, uses real watch-time data for stats, and keeps the Continue Watching list accurate when episodes finish or new ones drop.',
     items: [
-      { icon: '⌨️', badge: 'NEW', title: '"/" Keyboard Search', desc: 'Press "/" anywhere on the site to instantly focus the search bar — works on every page, just like YouTube and GitHub.' },
-      { icon: '📋', badge: 'NEW', title: 'Redesigned Watch List', desc: 'A brand-new Watch List tab — cinematic hero, live counters, search & sort filters, and quick "Continue" buttons that jump straight back into the next episode.' },
-      { icon: '🌟', badge: 'NEW', title: 'More on /welcome', desc: 'Added new sections — "Built for binge nights", upcoming launches, top-watched this week, regional language map, and a dedicated keyboard shortcut card.' },
-      { icon: '🎬', badge: 'NEW', title: 'New Launch Loader', desc: 'Tapping "Start Watching" now plays a fully redesigned cinematic boot sequence with phased CDN/UI/profile/queue stages.' },
-      { icon: '🇮🇳', badge: 'NEW', title: 'Flox Anime India + Tab', desc: 'Brand new Flox Anime India + section with official Hindi-dubbed streaming rights and a dedicated detail + watch experience.' },
-      { icon: '⚡', badge: 'IMPROVED', title: 'Faster Update Download', desc: 'The What\'s New download now completes ~2× quicker on every network — fewer artificial stalls, snappier finalization.' },
-      { icon: '🖥️', badge: 'FIX', title: 'PC Animations Restored', desc: 'Hero banner Ken-Burns, "Mark Watched" fade-out, and decorative pulses now play on desktop again instead of being globally killed.' },
-      { icon: '🛡️', badge: 'FIX', title: 'Ghost Token Banner Gone', desc: 'Signed-out users no longer see a stale "3 months active token" bar — the banner now only renders when a real, server-confirmed token is attached to your account.' },
-      { icon: '🚪', badge: 'FIX', title: 'Logout Clears Token Cache', desc: 'Signing out now wipes the local unlock-token cache instantly so the next visitor on the same device starts with a clean slate.' },
-      { icon: '🙅', badge: 'FIX', title: 'No More Welcome Popup', desc: 'Removed the first-visit Welcome modal from the home page — straight into the library, no extra click.' },
-      { icon: '⭕', badge: 'FIX', title: 'Slim Welcome Bars on iOS', desc: 'Replaced the large pulsing circles on /welcome with slim progress-style bars for a cleaner iOS look.' },
-      { icon: '🔊', badge: 'FIX', title: 'Unmute Stays Unmuted', desc: 'Tapping unmute now remembers your choice across every episode and anime for 24 hours before resetting.' },
-      { icon: '▶️', badge: 'FIX', title: 'Embed Playback Restored', desc: 'Removed sandbox & blocking iframe attributes so the Flox embed player loads and plays anime instantly without the "sandbox not allowed" popup.' },
+      { icon: '✅', badge: 'FIX', title: '"Done" Button Works Again', desc: 'Tapping Done in Continue Watching now instantly marks the episode complete and refreshes the row instead of showing "Failed to mark as complete".' },
+      { icon: '📺', badge: 'FIX', title: 'Continue Watching Auto-Updates', desc: 'When the last released episode is marked complete, the anime is removed from Continue Watching. When a new episode drops, it reappears on the newest episode.' },
+      { icon: '⏱️', badge: 'FIX', title: 'Real Watch Hours in History', desc: 'Watch history and user stats now use the actual saved playback position and duration instead of fake 24-minute estimates.' },
+      { icon: '📈', badge: 'FIX', title: 'Stats No Longer Show 0 Hours', desc: 'The "hours watched" counter now reads the real saved progress from every episode, so the total is accurate.' },
+      { icon: '🔄', badge: 'FIX', title: 'Smarter Continue Watching Engine', desc: 'Progress, completion, and new-episode detection now flow through a single backend routine so the list stays in sync across the site.' },
     ],
   },
 ];
@@ -250,7 +242,11 @@ export function UpdatePopup() {
           </div>
           <h2 className="text-sm sm:text-xl font-bold text-white">New Version Ready to Install</h2>
           <p className="text-[11px] sm:text-sm text-zinc-400 leading-snug px-1">Tap Download to install the latest features and improvements.</p>
-          <span className="inline-block text-[9px] sm:text-[10px] font-mono px-2 py-0.5 rounded bg-purple-600/20 text-purple-400">{APP_VERSION}</span>
+          <span className="inline-flex items-center gap-1.5 text-[9px] sm:text-[10px] font-mono px-2 py-0.5 rounded bg-purple-600/20 text-purple-400">
+            {APP_VERSION}
+            <span className="h-2 w-px bg-white/20" />
+            {VERSION_GROUPS[0].date}
+          </span>
 
           <div className="space-y-1 sm:space-y-1.5 text-left max-h-[22vh] sm:max-h-[30vh] overflow-y-auto pr-1">
             {VERSION_GROUPS[0].items.map((item) => (
@@ -628,8 +624,10 @@ export function UpdatePopup() {
           <p className="mx-auto mt-1 max-w-xs text-[11px] leading-snug text-zinc-400">
             {currentGroup.highlight}
           </p>
-          <span className="mt-2 inline-block rounded-md border border-purple-500/30 bg-purple-600/15 px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-wider text-purple-300">
+          <span className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-purple-500/30 bg-purple-600/15 px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-wider text-purple-300">
             {APP_VERSION}
+            <span className="h-2.5 w-px bg-white/20" />
+            {currentGroup.date}
           </span>
         </div>
 
