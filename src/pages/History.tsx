@@ -217,14 +217,26 @@ export default function History() {
     return 'Just now';
   };
 
+  // Episode duration is stored in MINUTES. Use a 24-min fallback for legacy rows
+  // where duration was never populated, so stats and the "watched" label aren't 0.
+  const FALLBACK_EP_MINUTES = 24;
+
   const formatWatchedTime = (progress: number | null, duration: number | null) => {
-    if (!progress || !duration) return null;
-    const watchedSeconds = (progress / 100) * duration;
-    const minutes = Math.floor(watchedSeconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    if (hours > 0) return `${hours}h ${remainingMinutes}m watched`;
-    return `${minutes}m watched`;
+    if (!progress) return null;
+    const durMin = duration && duration > 0 ? duration : FALLBACK_EP_MINUTES;
+    const totalMin = Math.max(1, Math.round((progress / 100) * durMin));
+    const hours = Math.floor(totalMin / 60);
+    const minutes = totalMin % 60;
+    if (hours > 0) return `${hours}h ${minutes}m watched`;
+    return `${totalMin}m watched`;
+  };
+
+  const formatTotalTime = (totalMinutes: number) => {
+    const totalMin = Math.round(totalMinutes);
+    const hours = Math.floor(totalMin / 60);
+    const minutes = totalMin % 60;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${totalMin}m`;
   };
 
   // Stats
@@ -234,15 +246,18 @@ export default function History() {
     const inProgress = totalEpisodes - completed;
     const uniqueAnime = new Set(history.map((h) => h.anime.id)).size;
     const totalMinutes = history.reduce((acc, h) => {
-      if (!h.progress || !h.episode.duration) return acc;
-      return acc + (h.progress / 100) * (h.episode.duration / 60);
+      if (!h.progress && !h.completed) return acc;
+      const durMin = h.episode.duration && h.episode.duration > 0 ? h.episode.duration : FALLBACK_EP_MINUTES;
+      // Completed episodes count as full runtime even if progress saved as 90-95%.
+      const effective = h.completed ? 100 : (h.progress || 0);
+      return acc + (effective / 100) * durMin;
     }, 0);
     return {
       totalEpisodes,
       completed,
       inProgress,
       uniqueAnime,
-      totalHours: Math.floor(totalMinutes / 60),
+      totalWatched: formatTotalTime(totalMinutes),
     };
   }, [history]);
 
