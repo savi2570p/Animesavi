@@ -255,9 +255,27 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
     window.addEventListener('focus', refreshLatest);
     document.addEventListener('visibilitychange', refreshLatest);
 
+    // Realtime: refresh the row instantly when watch_history changes for this
+    // user, OR when ANY new episode is uploaded (could affect a completed
+    // series the user finished).
+    const channel = supabase
+      .channel(`continue-watching-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'watch_history', filter: `user_id=eq.${user.id}` },
+        () => { void fetchRecentHistory(false); },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'episodes' },
+        () => { void fetchRecentHistory(false); },
+      )
+      .subscribe();
+
     return () => {
       window.removeEventListener('focus', refreshLatest);
       document.removeEventListener('visibilitychange', refreshLatest);
+      void supabase.removeChannel(channel);
     };
   }, [user?.id, shouldRender, fetchRecentHistory, fetchUserProfile]);
 
