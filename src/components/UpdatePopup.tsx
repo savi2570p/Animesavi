@@ -237,7 +237,7 @@ export function UpdatePopup() {
   ) => (
     <div
       onClick={onClick}
-      className={`relative w-full max-w-[360px] mx-auto overflow-hidden bg-white/[0.04] backdrop-blur-2xl border border-white/15 rounded-[42px] shadow-[0_48px_100px_-20px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.15)] ${className}`}
+      className={`relative w-full max-w-[360px] mx-auto overflow-hidden bg-white/[0.04] backdrop-blur-2xl border border-white/15 rounded-[42px] shadow-[0_48px_100px_-20px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.15)] font-popup ${className}`}
     >
       {/* Outer ambient glow */}
       <div className="absolute -inset-1 bg-gradient-to-b from-white/10 to-transparent rounded-[44px] blur-xl opacity-20 pointer-events-none" />
