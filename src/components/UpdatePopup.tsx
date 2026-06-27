@@ -620,8 +620,10 @@ export function UpdatePopup() {
           <p className="mx-auto mt-1 max-w-xs text-[11px] leading-snug text-zinc-400">
             {currentGroup.highlight}
           </p>
-          <span className="mt-2 inline-block rounded-md border border-purple-500/30 bg-purple-600/15 px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-wider text-purple-300">
+          <span className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-purple-500/30 bg-purple-600/15 px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-wider text-purple-300">
             {APP_VERSION}
+            <span className="h-2.5 w-px bg-white/20" />
+            {currentGroup.date}
           </span>
         </div>
 
