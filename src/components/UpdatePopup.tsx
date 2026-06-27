@@ -343,8 +343,8 @@ export function UpdatePopup() {
       )}
       <VersionPill label={pillLabel} />
       <div className="space-y-0">
-        <h2 className="text-base sm:text-lg font-bold text-white tracking-tight font-popup">{title}</h2>
-        <p className="text-violet-200/60 text-[9px] sm:text-[10px] leading-relaxed px-1 sm:px-2">{subtitle}</p>
+        <h2 className="text-sm sm:text-base font-bold text-white tracking-tight font-popup">{title}</h2>
+        <p className="text-violet-200/60 text-[9px] sm:text-[10px] leading-relaxed px-1 sm:px-2 line-clamp-2">{subtitle}</p>
       </div>
     </div>
   );
