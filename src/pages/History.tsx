@@ -55,6 +55,9 @@ interface WatchHistoryItem {
   watched_at: string;
   progress: number | null;
   completed: boolean | null;
+  completed_at: string | null;
+  last_position: number | null;
+  duration: number | null;
   anime: Anime;
   episode: Episode;
 }
@@ -89,7 +92,7 @@ export default function History() {
     try {
       const { data, error } = await supabase
         .from('watch_history')
-        .select(`id, watched_at, progress, completed, anime_id, episode_id`)
+        .select(`id, watched_at, progress, completed, completed_at, last_position, duration, anime_id, episode_id`)
         .eq('user_id', user!.id)
         .order('watched_at', { ascending: false });
 
@@ -116,6 +119,9 @@ export default function History() {
           watched_at: h.watched_at,
           progress: h.progress,
           completed: h.completed,
+          completed_at: h.completed_at,
+          last_position: h.last_position,
+          duration: h.duration,
           anime: animeMap.get(h.anime_id) || { id: h.anime_id, title: 'Unknown', cover_image: null },
           episode:
             episodeMap.get(h.episode_id) || {
@@ -155,15 +161,35 @@ export default function History() {
   };
 
   const markAsWatched = async (historyId: string, animeTitle: string) => {
+    const item = history.find((entry) => entry.id === historyId);
+    const knownDuration = item?.duration || (item?.episode.duration ? item.episode.duration * 60 : 0);
+    const now = new Date().toISOString();
     const { error } = await supabase
       .from('watch_history')
-      .update({ completed: true, progress: 100 })
+      .update({
+        completed: true,
+        progress: 100,
+        completed_at: now,
+        last_position: knownDuration || item?.last_position || 0,
+        duration: knownDuration || item?.duration || 0,
+        watched_at: now,
+      })
       .eq('id', historyId);
 
     if (!error) {
       setHistory((prev) =>
         prev.map((item) =>
-          item.id === historyId ? { ...item, completed: true, progress: 100 } : item,
+          item.id === historyId
+            ? {
+                ...item,
+                completed: true,
+                progress: 100,
+                completed_at: now,
+                last_position: knownDuration || item.last_position || 0,
+                duration: knownDuration || item.duration || 0,
+                watched_at: now,
+              }
+            : item,
         ),
       );
       toast.success(`Marked "${animeTitle}" as watched`);
@@ -217,22 +243,28 @@ export default function History() {
     return 'Just now';
   };
 
-  // Episode duration is stored in MINUTES. Use a 24-min fallback for legacy rows
-  // where duration was never populated, so stats and the "watched" label aren't 0.
-  const FALLBACK_EP_MINUTES = 24;
+  const getWatchedSeconds = (item: WatchHistoryItem) => {
+    if (item.last_position && item.last_position > 0) return item.last_position;
+    if (item.duration && item.duration > 0 && item.progress && item.progress > 0) {
+      return item.completed ? item.duration : (item.progress / 100) * item.duration;
+    }
+    if (item.episode.duration && item.episode.duration > 0 && item.progress && item.progress > 0) {
+      return (item.progress / 100) * item.episode.duration * 60;
+    }
+    return 0;
+  };
 
   const formatWatchedTime = (progress: number | null, duration: number | null) => {
-    if (!progress) return null;
-    const durMin = duration && duration > 0 ? duration : FALLBACK_EP_MINUTES;
-    const totalMin = Math.max(1, Math.round((progress / 100) * durMin));
+    if (!progress || !duration || duration <= 0) return null;
+    const totalMin = Math.max(1, Math.round((progress / 100) * duration));
     const hours = Math.floor(totalMin / 60);
     const minutes = totalMin % 60;
     if (hours > 0) return `${hours}h ${minutes}m watched`;
     return `${totalMin}m watched`;
   };
 
-  const formatTotalTime = (totalMinutes: number) => {
-    const totalMin = Math.round(totalMinutes);
+  const formatSeconds = (totalSeconds: number) => {
+    const totalMin = Math.floor(totalSeconds / 60);
     const hours = Math.floor(totalMin / 60);
     const minutes = totalMin % 60;
     if (hours > 0) return `${hours}h ${minutes}m`;
@@ -245,19 +277,13 @@ export default function History() {
     const completed = history.filter((h) => h.completed).length;
     const inProgress = totalEpisodes - completed;
     const uniqueAnime = new Set(history.map((h) => h.anime.id)).size;
-    const totalMinutes = history.reduce((acc, h) => {
-      if (!h.progress && !h.completed) return acc;
-      const durMin = h.episode.duration && h.episode.duration > 0 ? h.episode.duration : FALLBACK_EP_MINUTES;
-      // Completed episodes count as full runtime even if progress saved as 90-95%.
-      const effective = h.completed ? 100 : (h.progress || 0);
-      return acc + (effective / 100) * durMin;
-    }, 0);
+    const totalSeconds = history.reduce((acc, h) => acc + getWatchedSeconds(h), 0);
     return {
       totalEpisodes,
       completed,
       inProgress,
       uniqueAnime,
-      totalWatched: formatTotalTime(totalMinutes),
+      totalWatched: formatSeconds(totalSeconds),
     };
   }, [history]);
 
