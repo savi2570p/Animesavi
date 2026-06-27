@@ -90,12 +90,18 @@ export function UpdatePopup() {
 
   const isActive = activePopup === 'whatsNew';
 
+  // Tracks whether the user went through the download flow in this session.
+  // The "Entering the latest version" loader only plays after a fresh download.
+  const justDownloadedRef = useRef(false);
+
   useEffect(() => {
     if (isActive) {
       const alreadyDownloaded = localStorage.getItem(DOWNLOAD_COMPLETED_KEY) === 'true';
       setStep(alreadyDownloaded ? 'complete' : 'alert');
       setProgress(0);
       setVersionIndex(0);
+      // Reset on every fresh open so manual What's New views skip the loader.
+      justDownloadedRef.current = false;
     }
   }, [isActive, isManualWhatsNew]);
 
@@ -163,13 +169,22 @@ export function UpdatePopup() {
     return () => clearTimeout(timer);
   }, [step]);
 
-  const handleDownload = useCallback(() => setStep('downloading'), []);
+  const handleDownload = useCallback(() => {
+    justDownloadedRef.current = true;
+    setStep('downloading');
+  }, []);
   const handleGo = useCallback(() => {
-    // Always show the cinematic "Entering the latest version" transition.
+    // Only play the cinematic "Entering the latest version" loader when the
+    // user actually downloaded this session. Manual What's New views just close.
+    if (!justDownloadedRef.current) {
+      dismissPopup();
+      return;
+    }
+    justDownloadedRef.current = false;
     enteringFromPathRef.current = location.pathname;
     setEnterStage(0);
     setStep('entering');
-  }, [location.pathname]);
+  }, [dismissPopup, location.pathname]);
 
   useEffect(() => {
     if (step !== 'entering') return;
