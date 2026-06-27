@@ -343,14 +343,16 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
     } | null = null;
 
     try {
-      const doneResult = await retry<any>(() =>
-        (supabase as any).rpc('mark_continue_watching_done', {
+      const doneResult = await retry<any>(async () => {
+        const result = await (supabase as any).rpc('mark_continue_watching_done', {
           _anime_id: item.anime.id,
           _episode_id: item.episode.id,
           _duration: durationSeconds,
           _last_position: durationSeconds,
-        }),
-      );
+        });
+        if (result.error) throw result.error;
+        return result;
+      });
       const { data: doneRows, error: doneErr } = doneResult;
 
       console.log('[ContinueWatching:Done] database response', { data: doneRows, error: doneErr });
@@ -382,12 +384,16 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
 
     // 3. Swap to the backend-selected next episode if one exists.
     if (rpcRow?.next_episode_id) {
-      const { data: newRow, error: upsertErr } = await supabase
-        .from('watch_history')
-        .select('id, progress, completed, completed_at, last_position, duration, watched_at, anime:anime_id(id,title,cover_image,status), episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
-        .eq('user_id', user.id)
-        .eq('episode_id', rpcRow.next_episode_id)
-        .maybeSingle();
+      const { data: newRow, error: upsertErr } = await retry(async () => {
+        const result = await supabase
+          .from('watch_history')
+          .select('id, progress, completed, completed_at, last_position, duration, watched_at, anime:anime_id(id,title,cover_image,status), episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
+          .eq('user_id', user.id)
+          .eq('episode_id', rpcRow.next_episode_id)
+          .maybeSingle();
+        if (result.error) throw result.error;
+        return result;
+      });
 
       if (!upsertErr && newRow) {
         // Wait for fade-out to finish, then swap content in place + fade back in.
@@ -417,6 +423,11 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       }
 
       console.error('Continue Watching next-row refresh failed:', { upsertErr, nextEpisodeId: rpcRow.next_episode_id });
+      await fadeDelay;
+      await fetchRecentHistory(false);
+      setFadingIds((prev) => { const n = new Set(prev); n.delete(historyId); return n; });
+      toast.success(`${animeTitle} updated`);
+      return;
     }
 
     // 4. No next episode found (series finished) — let fade complete then remove.
