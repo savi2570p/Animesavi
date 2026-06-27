@@ -230,7 +230,7 @@ export function UpdatePopup() {
   ) => (
     <div
       onClick={onClick}
-      className={`relative w-full max-w-[300px] sm:max-w-[320px] mx-auto overflow-hidden bg-purple-950/25 backdrop-blur-3xl border border-violet-300/15 rounded-[36px] shadow-[0_36px_90px_-16px_rgba(76,29,149,0.7),inset_0_1px_1px_rgba(216,180,254,0.18)] font-popup ${className}`}
+      className={`relative w-full max-w-[280px] sm:max-w-[300px] mx-auto overflow-hidden bg-purple-950/25 backdrop-blur-3xl border border-violet-300/15 rounded-[32px] shadow-[0_28px_80px_-14px_rgba(76,29,149,0.7),inset_0_1px_1px_rgba(216,180,254,0.18)] font-popup ${className}`}
     >
       {/* Purple ambient glow */}
       <div className="absolute -inset-1 bg-gradient-to-b from-violet-400/15 via-purple-500/5 to-transparent rounded-[44px] blur-xl opacity-40 pointer-events-none" />
