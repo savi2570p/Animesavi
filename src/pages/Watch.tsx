@@ -489,14 +489,14 @@ export default function Watch() {
 
         const { data: insertedHistory, error: insertError } = await supabase
           .from('watch_history')
-          .insert({
+          .upsert({
             user_id: user.id,
             anime_id: anime.id,
             episode_id: episodeId,
             progress: 0,
             completed: false,
             watched_at: new Date().toISOString(),
-          })
+          }, { onConflict: 'user_id,episode_id', ignoreDuplicates: false })
           .select('id')
           .maybeSingle();
 
@@ -719,14 +719,14 @@ export default function Watch() {
               .maybeSingle()
           : supabase
               .from('watch_history')
-              .insert({
+              .upsert({
                 user_id: user.id,
                 anime_id: animeId,
                 episode_id: episodeId,
                 progress: 0,
                 completed: false,
                 watched_at: new Date().toISOString(),
-              })
+              }, { onConflict: 'user_id,episode_id', ignoreDuplicates: false })
               .select('id')
               .maybeSingle();
 
