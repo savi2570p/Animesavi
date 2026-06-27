@@ -413,110 +413,109 @@ export function UpdatePopup() {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-300 p-3 sm:p-4">
         {glassCard(
-          <div className="p-6 sm:p-8 text-center">
-            <div className="flex flex-col items-center space-y-4 sm:space-y-5">
-              <div className="relative inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-rose-300">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-400" />
-                </span>
-                Downloading {APP_VERSION}
-              </div>
+          <div className="px-6 py-7 sm:px-7 sm:py-8 text-center">
+            {/* Pill label */}
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.2em] text-rose-200 mb-5">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-400" />
+              </span>
+              Downloading {APP_VERSION}
+            </div>
 
-              <div className="relative h-32 w-32 sm:h-36 sm:w-36">
-                <svg className="h-full w-full -rotate-90" viewBox="0 0 128 128">
-                  <circle cx="64" cy="64" r={radius} stroke="rgba(255,255,255,0.08)" strokeWidth="6" fill="none" />
-                  <circle
-                    cx="64" cy="64" r={radius}
-                    stroke="url(#dlGrad)"
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                    fill="none"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={dashOffset}
-                    style={{ filter: 'drop-shadow(0 0 8px rgba(225,29,72,0.6))' }}
-                  />
+            {/* Circular progress orb */}
+            <div className="relative h-28 w-28 sm:h-32 sm:w-32 mx-auto mb-5">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-rose-500/25 to-fuchsia-500/15 blur-2xl animate-pulse" />
+              <svg className="relative h-full w-full -rotate-90" viewBox="0 0 128 128">
+                <circle cx="64" cy="64" r={radius} stroke="rgba(255,255,255,0.06)" strokeWidth="5" fill="none" />
+                <circle
+                  cx="64" cy="64" r={radius}
+                  stroke="url(#dlGrad)"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  fill="none"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={dashOffset}
+                  style={{ filter: 'drop-shadow(0 0 10px rgba(225,29,72,0.6))', transition: 'stroke-dashoffset 200ms linear' }}
+                />
+                <defs>
+                  <linearGradient id="dlGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#fb7185" />
+                    <stop offset="60%" stopColor="#e11d48" />
+                    <stop offset="100%" stopColor="#a21caf" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-2xl sm:text-[26px] font-bold font-mono bg-gradient-to-br from-white via-rose-100 to-rose-300 bg-clip-text text-transparent tabular-nums leading-none">
+                  {displayProgress.toFixed(0)}<span className="text-sm text-rose-400">%</span>
+                </span>
+                <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.25em] text-zinc-500 mt-1">{phaseLabel}</span>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 className="bg-gradient-to-r from-white via-rose-100 to-white bg-clip-text text-base font-bold text-transparent tracking-tight">
+              Downloading update
+            </h2>
+            <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed px-2">
+              Securing the latest fixes and improvements…
+            </p>
+
+            {/* Shimmer bar */}
+            <div className="relative mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-rose-500 via-rose-400 to-fuchsia-500 shadow-[0_0_12px_rgba(225,29,72,0.7)] transition-all duration-200"
+                style={{ width: `${displayProgress}%` }}
+              />
+              <div
+                className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"
+                style={{ left: `${Math.max(0, displayProgress - 33)}%` }}
+              />
+            </div>
+
+            {/* Stats — pill chips */}
+            <div className="grid grid-cols-3 gap-2 w-full mt-4 text-left">
+              {[
+                { label: 'Speed', value: speedMbps.toFixed(1), unit: 'Mbps', accent: 'text-white' },
+                { label: 'Size', value: downloadedMb.toFixed(1), unit: `/${TOTAL_MB}MB`, accent: 'text-white' },
+                { label: 'ETA', value: etaLabel, unit: '', accent: 'text-rose-300' },
+              ].map((s) => (
+                <div key={s.label} className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-md px-2 py-2">
+                  <div className="text-[8px] uppercase tracking-[0.18em] text-zinc-500 font-semibold">{s.label}</div>
+                  <div className={`text-[12px] font-bold font-mono tabular-nums leading-tight mt-0.5 ${s.accent}`}>
+                    {s.value}{s.unit && <span className="text-[8px] text-zinc-500 ml-0.5 font-normal">{s.unit}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Sparkline */}
+            <div className="relative mt-3 h-8 w-full rounded-2xl border border-white/10 bg-black/30 overflow-hidden px-1.5">
+              {sparkPoints ? (
+                <svg viewBox={`0 0 ${sparkW} ${sparkH}`} preserveAspectRatio="none" className="h-full w-full">
                   <defs>
-                    <linearGradient id="dlGrad" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="#e11d48" />
-                      <stop offset="100%" stopColor="#a21caf" />
+                    <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#e11d48" stopOpacity="0.45" />
+                      <stop offset="100%" stopColor="#e11d48" stopOpacity="0" />
                     </linearGradient>
                   </defs>
+                  <polygon points={`0,${sparkH} ${sparkPoints} ${sparkW},${sparkH}`} fill="url(#sparkFill)" />
+                  <polyline
+                    points={sparkPoints}
+                    fill="none"
+                    stroke="#f43f5e"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ filter: 'drop-shadow(0 0 3px rgba(244,63,94,0.7))' }}
+                  />
                 </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl sm:text-3xl font-bold font-mono bg-gradient-to-br from-white to-rose-300 bg-clip-text text-transparent tabular-nums">
-                    {displayProgress.toFixed(1)}<span className="text-base sm:text-lg text-rose-400">%</span>
-                  </span>
-                  <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-zinc-500 mt-0.5">{phaseLabel}</span>
+              ) : (
+                <div className="flex items-center justify-center h-full text-[9px] uppercase tracking-[0.2em] text-zinc-600">
+                  Measuring network…
                 </div>
-              </div>
-
-              <div className="space-y-1">
-                <h2 className="text-base sm:text-lg font-bold text-white">Downloading Update</h2>
-                <p className="text-[11px] sm:text-xs text-zinc-500">Securing the latest fixes and improvements…</p>
-              </div>
-
-              <div className="relative h-1.5 w-full rounded-full bg-zinc-800/80 overflow-hidden">
-                <div
-                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-rose-600 via-rose-500 to-fuchsia-500 shadow-[0_0_12px_rgba(225,29,72,0.6)]"
-                  style={{ width: `${displayProgress}%` }}
-                />
-                <div
-                  className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"
-                  style={{ left: `${Math.max(0, displayProgress - 33)}%` }}
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 w-full text-left">
-                <div className="rounded-xl border border-white/5 bg-white/[0.03] px-2.5 py-2">
-                  <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Speed</div>
-                  <div className="text-[12px] sm:text-[13px] font-bold font-mono text-white tabular-nums leading-tight">
-                    {speedMbps.toFixed(1)}<span className="text-[9px] text-zinc-500 ml-0.5">Mbps</span>
-                  </div>
-                </div>
-                <div className="rounded-xl border border-white/5 bg-white/[0.03] px-2.5 py-2">
-                  <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Size</div>
-                  <div className="text-[12px] sm:text-[13px] font-bold font-mono text-white tabular-nums leading-tight">
-                    {downloadedMb.toFixed(1)}<span className="text-[9px] text-zinc-500 ml-0.5">/{TOTAL_MB.toFixed(0)}MB</span>
-                  </div>
-                </div>
-                <div className="rounded-xl border border-white/5 bg-white/[0.03] px-2.5 py-2">
-                  <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">ETA</div>
-                  <div className="text-[12px] sm:text-[13px] font-bold font-mono text-rose-300 tabular-nums leading-tight">
-                    {etaLabel}
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative h-7 w-full rounded-xl border border-white/5 bg-black/40 overflow-hidden px-1.5">
-                {sparkPoints ? (
-                  <svg viewBox={`0 0 ${sparkW} ${sparkH}`} preserveAspectRatio="none" className="h-full w-full">
-                    <defs>
-                      <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#e11d48" stopOpacity="0.5" />
-                        <stop offset="100%" stopColor="#e11d48" stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-                    <polygon
-                      points={`0,${sparkH} ${sparkPoints} ${sparkW},${sparkH}`}
-                      fill="url(#sparkFill)"
-                    />
-                    <polyline
-                      points={sparkPoints}
-                      fill="none"
-                      stroke="#f43f5e"
-                      strokeWidth="1.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      style={{ filter: 'drop-shadow(0 0 3px rgba(244,63,94,0.6))' }}
-                    />
-                  </svg>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-[9px] uppercase tracking-wider text-zinc-600">
-                    Measuring network…
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
         )}
