@@ -666,13 +666,13 @@ export function UpdatePopup() {
       onClick={dismissPopup}
     >
       {glassCard(
-        <div className="p-4 sm:p-5 text-center">
+        <div className="p-3.5 sm:p-4 text-center">
           <button
             onClick={dismissPopup}
             aria-label="Close"
-            className="absolute right-3 top-3 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-violet-300/20 bg-purple-950/40 text-violet-200/70 backdrop-blur-md transition hover:bg-violet-500/20 hover:text-white"
+            className="absolute right-2.5 top-2.5 z-20 flex h-5 w-5 items-center justify-center rounded-full border border-violet-300/20 bg-purple-950/40 text-violet-200/70 backdrop-blur-md transition hover:bg-violet-500/20 hover:text-white"
           >
-            <X className="h-3 w-3" />
+            <X className="h-2.5 w-2.5" />
           </button>
 
           <Header
@@ -682,7 +682,7 @@ export function UpdatePopup() {
             showSparkles
           />
 
-          <div className="text-left mb-4 sm:mb-5">
+          <div className="text-left mb-3 sm:mb-4">
             <ChangelogList items={currentGroup.items} />
           </div>
 
