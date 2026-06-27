@@ -335,16 +335,16 @@ export function UpdatePopup() {
     pillLabel?: string;
     showSparkles?: boolean;
   }) => (
-    <div className="flex flex-col items-center text-center space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+    <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3 mb-4 sm:mb-5">
       {showSparkles && (
-        <div className="mx-auto mb-1 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/30 to-purple-600/20 border border-violet-300/20 shadow-lg shadow-purple-900/40">
-          <Sparkles className="h-5 w-5 text-violet-200" />
+        <div className="mx-auto mb-0.5 flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/30 to-purple-600/20 border border-violet-300/20 shadow-lg shadow-purple-900/40">
+          <Sparkles className="h-4 w-4 text-violet-200" />
         </div>
       )}
       <VersionPill label={pillLabel} />
-      <div className="space-y-1">
-        <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight font-popup">{title}</h2>
-        <p className="text-violet-200/60 text-xs sm:text-sm leading-relaxed px-2 sm:px-4">{subtitle}</p>
+      <div className="space-y-0.5">
+        <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight font-popup">{title}</h2>
+        <p className="text-violet-200/60 text-[10px] sm:text-[11px] leading-relaxed px-1 sm:px-2">{subtitle}</p>
       </div>
     </div>
   );
