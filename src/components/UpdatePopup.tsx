@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { usePopupQueue } from '@/contexts/PopupQueueContext';
-import { Loader2, ChevronLeft, ChevronRight, Sparkles, X, ArrowRight, Check } from 'lucide-react';
+import { Loader2, Sparkles, X, ArrowRight, Check } from 'lucide-react';
 
 type UpdateStep = 'alert' | 'downloading' | 'installing' | 'complete' | 'entering';
 type BadgeKind = 'NEW' | 'IMPROVED' | 'FIX';
@@ -50,6 +50,12 @@ const BADGE_STYLES: Record<BadgeKind, string> = {
   NEW: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
   IMPROVED: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
   FIX: 'bg-orange-500/20 text-orange-400 border-orange-500/40',
+};
+
+const BADGE_ICON_RINGS: Record<BadgeKind, string> = {
+  NEW: 'from-emerald-500/25 to-emerald-600/15 border-emerald-500/20 shadow-emerald-900/20',
+  IMPROVED: 'from-sky-500/25 to-sky-600/15 border-sky-500/20 shadow-sky-900/20',
+  FIX: 'from-orange-500/25 to-rose-600/15 border-orange-500/20 shadow-orange-900/20',
 };
 
 const BADGE_DOT: Record<BadgeKind, string> = {
@@ -225,68 +231,168 @@ export function UpdatePopup() {
 
   const currentGroup = VERSION_GROUPS[versionIndex];
 
+  const glassCard = (
+    children: React.ReactNode,
+    { onClick, className = '' }: { onClick?: (e: React.MouseEvent) => void; className?: string } = {}
+  ) => (
+    <div
+      onClick={onClick}
+      className={`relative w-full max-w-[360px] mx-auto overflow-hidden bg-white/[0.04] backdrop-blur-2xl border border-white/15 rounded-[42px] shadow-[0_48px_100px_-20px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.15)] ${className}`}
+    >
+      {/* Outer ambient glow */}
+      <div className="absolute -inset-1 bg-gradient-to-b from-white/10 to-transparent rounded-[44px] blur-xl opacity-20 pointer-events-none" />
+      {/* Glass reflection sheen */}
+      <div className="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-gradient-to-br from-white/[0.05] via-transparent to-transparent rotate-12 pointer-events-none" />
+      {/* Top hairline highlight */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+      <div className="relative z-10">{children}</div>
+    </div>
+  );
+
+  const ChangelogList = ({ items, compact = false }: { items: ChangelogItem[]; compact?: boolean }) => (
+    <div className={compact ? 'space-y-3' : 'space-y-4'}>
+      {items.map((item, idx) => (
+        <div
+          key={item.title}
+          className="flex items-start gap-3 sm:gap-4 animate-in fade-in slide-in-from-right-3 duration-300"
+          style={{ animationDelay: `${idx * 40}ms` }}
+        >
+          <div
+            className={`flex-shrink-0 flex items-center justify-center rounded-2xl bg-gradient-to-br ${BADGE_ICON_RINGS[item.badge]} border shadow-lg text-base ${
+              compact ? 'w-9 h-9' : 'w-10 h-10 sm:w-11 sm:h-11'
+            }`}
+          >
+            {item.icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <h4 className={`font-semibold leading-tight text-white ${compact ? 'text-[12px]' : 'text-[13px]'}`}>
+                {item.title}
+              </h4>
+              <span
+                className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider ${BADGE_STYLES[item.badge]}`}
+              >
+                <span className={`h-1 w-1 rounded-full ${BADGE_DOT[item.badge]}`} />
+                {BADGE_LABELS[item.badge]}
+              </span>
+            </div>
+            <p className={`leading-snug text-zinc-500 ${compact ? 'text-[10px] mt-0.5' : 'text-[11px] sm:text-[12px] mt-1'}`}>
+              {item.desc}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const GlassButton = ({
+    onClick,
+    children,
+    variant = 'primary',
+  }: {
+    onClick: () => void;
+    children: React.ReactNode;
+    variant?: 'primary' | 'secondary';
+  }) => {
+    if (variant === 'secondary') {
+      return (
+        <button
+          onClick={onClick}
+          className="group relative w-full active:scale-[0.97] transition-all"
+        >
+          <div className="absolute -inset-px bg-gradient-to-r from-white/20 to-white/5 rounded-2xl blur-md opacity-0 group-hover:opacity-100 transition duration-500" />
+          <div className="relative flex items-center justify-center w-full h-12 bg-white/[0.06] group-hover:bg-white/[0.10] border border-white/15 rounded-2xl text-white font-semibold text-sm transition-all">
+            {children}
+          </div>
+        </button>
+      );
+    }
+    return (
+      <button
+        onClick={onClick}
+        className="group relative w-full active:scale-[0.97] transition-all"
+      >
+        <div className="absolute -inset-px bg-gradient-to-r from-rose-600 to-fuchsia-600 rounded-2xl blur-md opacity-25 group-hover:opacity-60 transition duration-500" />
+        <div className="relative flex items-center justify-center w-full h-12 bg-white/[0.08] group-hover:bg-white/[0.12] border border-white/20 backdrop-blur-md rounded-2xl text-white font-bold text-sm tracking-wide transition-all">
+          {children}
+          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+        </div>
+      </button>
+    );
+  };
+
+  const VersionPill = ({ label = APP_VERSION }: { label?: string }) => (
+    <div className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/20 text-emerald-400 text-[10px] font-bold tracking-widest uppercase">
+      <span className="relative flex h-2 w-2 mr-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-40" />
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+      </span>
+      {label}
+    </div>
+  );
+
+  const Header = ({
+    title,
+    subtitle,
+    pillLabel = APP_VERSION,
+    showSparkles = false,
+  }: {
+    title: string;
+    subtitle: string;
+    pillLabel?: string;
+    showSparkles?: boolean;
+  }) => (
+    <div className="flex flex-col items-center text-center space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+      {showSparkles && (
+        <div className="mx-auto mb-1 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500/20 to-fuchsia-600/20 border border-white/10 shadow-lg shadow-rose-900/20">
+          <Sparkles className="h-5 w-5 text-rose-300" />
+        </div>
+      )}
+      <VersionPill label={pillLabel} />
+      <div className="space-y-1">
+        <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight font-popup">{title}</h2>
+        <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed px-2 sm:px-4">{subtitle}</p>
+      </div>
+    </div>
+  );
+
   /* ── STEP 1: Update Alert ── */
   if (step === 'alert') {
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-lg animate-in fade-in duration-300 p-2 sm:p-4">
-        <div className="relative w-full max-w-[88vw] xs:max-w-[82vw] sm:max-w-sm rounded-2xl border border-purple-600/30 bg-gradient-to-b from-zinc-900/95 to-black/95 shadow-2xl shadow-purple-900/20 p-3 sm:p-8 text-center space-y-2.5 sm:space-y-5 animate-in zoom-in-95 duration-300 max-h-[82dvh] sm:max-h-[88dvh] overflow-y-auto">
-          <div className="mx-auto w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-purple-600/15 flex items-center justify-center">
-            <span className="text-xl sm:text-3xl">🔥</span>
-          </div>
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            </span>
-            Update Available
-          </div>
-          <h2 className="text-sm sm:text-xl font-bold text-white">New Version Ready to Install</h2>
-          <p className="text-[11px] sm:text-sm text-zinc-400 leading-snug px-1">Tap Download to install the latest features and improvements.</p>
-          <span className="inline-flex items-center gap-1.5 text-[9px] sm:text-[10px] font-mono px-2 py-0.5 rounded bg-purple-600/20 text-purple-400">
-            {APP_VERSION}
-            <span className="h-2 w-px bg-white/20" />
-            {VERSION_GROUPS[0].date}
-          </span>
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-300 p-3 sm:p-4">
+        {glassCard(
+          <div className="p-6 sm:p-8 text-center">
+            <Header
+              title="New Version Ready"
+              subtitle="Tap Download to install the latest fixes and improvements."
+              pillLabel={`Update Available • ${APP_VERSION}`}
+              showSparkles
+            />
 
-          <div className="space-y-1 sm:space-y-1.5 text-left max-h-[22vh] sm:max-h-[30vh] overflow-y-auto pr-1">
-            {VERSION_GROUPS[0].items.map((item) => (
-              <div key={item.title} className="flex items-center gap-2 p-1.5 sm:p-2 bg-white/5 rounded-md">
-                <span className="text-xs shrink-0">{item.icon}</span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <h4 className="text-[10px] sm:text-xs font-semibold text-white leading-tight truncate">{item.title}</h4>
-                    <span className={`shrink-0 rounded border px-1 py-px text-[7px] sm:text-[8px] font-bold uppercase tracking-wider ${BADGE_STYLES[item.badge]}`}>{BADGE_LABELS[item.badge]}</span>
-                  </div>
-                  <p className="text-[9px] sm:text-[10px] text-zinc-500 leading-tight line-clamp-2">{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+            <div className="text-left mb-6 sm:mb-8">
+              <ChangelogList items={VERSION_GROUPS[0].items} compact />
+            </div>
 
-          <button
-            onClick={handleDownload}
-            className="w-full py-2 sm:py-3 rounded-xl text-xs sm:text-base font-semibold text-white bg-gradient-to-r from-purple-700 to-purple-500 hover:from-purple-600 hover:to-purple-400 transition-all shadow-lg shadow-purple-900/30"
-          >
-            Download
-          </button>
-        </div>
+            <GlassButton onClick={handleDownload}>
+              Download {RANDOM_DOWNLOAD_MB} MB
+            </GlassButton>
+          </div>
+        )}
       </div>
     );
   }
 
   /* ── STEP 2: Downloading — cinematic progress ── */
   if (step === 'downloading') {
-    const radius = 56;
+    const radius = 52;
     const circumference = 2 * Math.PI * radius;
     const dashOffset = circumference - (displayProgress / 100) * circumference;
     const downloadedMb = (displayProgress / 100) * TOTAL_MB;
     const remainingMb = Math.max(0, TOTAL_MB - downloadedMb);
-    // ETA in seconds based on current speed (Mbps → MB/s ÷8)
     const mbPerSec = Math.max(0.1, speedMbps / 8);
     const etaSec = displayProgress >= 100 ? 0 : Math.ceil(remainingMb / mbPerSec);
     const etaLabel = etaSec >= 60 ? `${Math.floor(etaSec / 60)}m ${etaSec % 60}s` : `${etaSec}s`;
 
-    // Sparkline points for speed history (24 samples)
     const maxSpeed = Math.max(12, ...speedHistory);
     const sparkW = 100;
     const sparkH = 24;
@@ -298,7 +404,6 @@ export function UpdatePopup() {
         }).join(' ')
       : '';
 
-    // Phase label
     const phaseLabel = displayProgress >= 100
       ? 'Verifying'
       : displayProgress < 15 ? 'Connecting'
@@ -306,124 +411,116 @@ export function UpdatePopup() {
       : 'Finalizing';
 
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-300">
-        <div className="relative w-full max-w-sm mx-4 overflow-hidden rounded-2xl border border-purple-600/30 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-purple-900/40 p-8 text-center space-y-6 animate-in zoom-in-95 duration-300">
-          {/* Decorative glows */}
-          <div className="pointer-events-none absolute -top-20 -right-20 h-48 w-48 rounded-full bg-purple-600/20 blur-3xl animate-pulse" />
-          <div className="pointer-events-none absolute -bottom-24 -left-20 h-52 w-52 rounded-full bg-purple-500/15 blur-3xl" />
-
-          {/* Header pill */}
-          <div className="relative inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-purple-300">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-400 opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-purple-400" />
-            </span>
-            Downloading {APP_VERSION}
-          </div>
-
-          {/* Circular progress */}
-          <div className="relative mx-auto h-36 w-36">
-            <svg className="h-full w-full -rotate-90" viewBox="0 0 128 128">
-              <circle cx="64" cy="64" r={radius} stroke="rgba(255,255,255,0.08)" strokeWidth="6" fill="none" />
-              <circle
-                cx="64" cy="64" r={radius}
-                stroke="url(#dlGrad)"
-                strokeWidth="6"
-                strokeLinecap="round"
-                fill="none"
-                strokeDasharray={circumference}
-                strokeDashoffset={dashOffset}
-                style={{ filter: 'drop-shadow(0 0 8px rgba(168,85,247,0.6))' }}
-              />
-              <defs>
-                <linearGradient id="dlGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#a855f7" />
-                  <stop offset="100%" stopColor="#7c3aed" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-bold font-mono bg-gradient-to-br from-white to-purple-300 bg-clip-text text-transparent tabular-nums">
-                {displayProgress.toFixed(1)}<span className="text-lg text-purple-400">%</span>
-              </span>
-              <span className="text-[10px] uppercase tracking-wider text-zinc-500 mt-0.5">{phaseLabel}</span>
-            </div>
-          </div>
-
-          <div className="space-y-1">
-            <h2 className="text-lg font-bold text-white">Downloading Update</h2>
-            <p className="text-xs text-zinc-500">Securing the latest features and improvements…</p>
-          </div>
-
-          {/* Linear progress bar with shine */}
-          <div className="relative h-1.5 rounded-full bg-zinc-800/80 overflow-hidden">
-            <div
-              className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-purple-600 via-purple-500 to-orange-400 shadow-[0_0_12px_rgba(168,85,247,0.6)]"
-              style={{ width: `${displayProgress}%` }}
-            />
-            <div
-              className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine"
-              style={{ left: `${Math.max(0, displayProgress - 33)}%` }}
-            />
-          </div>
-
-          {/* Live metrics: speed + sparkline + ETA */}
-          <div className="grid grid-cols-3 gap-2 text-left">
-            <div className="rounded-lg border border-white/5 bg-white/[0.03] px-2.5 py-2">
-              <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Speed</div>
-              <div className="text-[13px] font-bold font-mono text-white tabular-nums leading-tight">
-                {speedMbps.toFixed(1)}
-                <span className="text-[9px] text-zinc-500 ml-0.5">Mbps</span>
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-300 p-3 sm:p-4">
+        {glassCard(
+          <div className="p-6 sm:p-8 text-center">
+            <div className="flex flex-col items-center space-y-4 sm:space-y-5">
+              <div className="relative inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-rose-300">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-400" />
+                </span>
+                Downloading {APP_VERSION}
               </div>
-            </div>
-            <div className="rounded-lg border border-white/5 bg-white/[0.03] px-2.5 py-2">
-              <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Size</div>
-              <div className="text-[13px] font-bold font-mono text-white tabular-nums leading-tight">
-                {downloadedMb.toFixed(2)}
-                <span className="text-[9px] text-zinc-500 ml-0.5">/{TOTAL_MB.toFixed(2)}MB</span>
-              </div>
-            </div>
-            <div className="rounded-lg border border-white/5 bg-white/[0.03] px-2.5 py-2">
-              <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">ETA</div>
-              <div className="text-[13px] font-bold font-mono text-purple-300 tabular-nums leading-tight">
-                {etaLabel}
-              </div>
-            </div>
-          </div>
 
-          {/* Speed sparkline */}
-          <div className="relative h-7 rounded-md border border-white/5 bg-black/40 overflow-hidden px-1.5">
-            {sparkPoints ? (
-              <svg viewBox={`0 0 ${sparkW} ${sparkH}`} preserveAspectRatio="none" className="h-full w-full">
-                <defs>
-                  <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#a855f7" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <polygon
-                  points={`0,${sparkH} ${sparkPoints} ${sparkW},${sparkH}`}
-                  fill="url(#sparkFill)"
+              <div className="relative h-32 w-32 sm:h-36 sm:w-36">
+                <svg className="h-full w-full -rotate-90" viewBox="0 0 128 128">
+                  <circle cx="64" cy="64" r={radius} stroke="rgba(255,255,255,0.08)" strokeWidth="6" fill="none" />
+                  <circle
+                    cx="64" cy="64" r={radius}
+                    stroke="url(#dlGrad)"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    fill="none"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={dashOffset}
+                    style={{ filter: 'drop-shadow(0 0 8px rgba(225,29,72,0.6))' }}
+                  />
+                  <defs>
+                    <linearGradient id="dlGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#e11d48" />
+                      <stop offset="100%" stopColor="#a21caf" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-2xl sm:text-3xl font-bold font-mono bg-gradient-to-br from-white to-rose-300 bg-clip-text text-transparent tabular-nums">
+                    {displayProgress.toFixed(1)}<span className="text-base sm:text-lg text-rose-400">%</span>
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-zinc-500 mt-0.5">{phaseLabel}</span>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <h2 className="text-base sm:text-lg font-bold text-white">Downloading Update</h2>
+                <p className="text-[11px] sm:text-xs text-zinc-500">Securing the latest fixes and improvements…</p>
+              </div>
+
+              <div className="relative h-1.5 w-full rounded-full bg-zinc-800/80 overflow-hidden">
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-rose-600 via-rose-500 to-fuchsia-500 shadow-[0_0_12px_rgba(225,29,72,0.6)]"
+                  style={{ width: `${displayProgress}%` }}
                 />
-                <polyline
-                  points={sparkPoints}
-                  fill="none"
-                  stroke="#f87171"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  style={{ filter: 'drop-shadow(0 0 3px rgba(192,132,252,0.6))' }}
+                <div
+                  className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"
+                  style={{ left: `${Math.max(0, displayProgress - 33)}%` }}
                 />
-              </svg>
-            ) : (
-              <div className="flex items-center justify-center h-full text-[9px] uppercase tracking-wider text-zinc-600">
-                Measuring network…
               </div>
-            )}
+
+              <div className="grid grid-cols-3 gap-2 w-full text-left">
+                <div className="rounded-xl border border-white/5 bg-white/[0.03] px-2.5 py-2">
+                  <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Speed</div>
+                  <div className="text-[12px] sm:text-[13px] font-bold font-mono text-white tabular-nums leading-tight">
+                    {speedMbps.toFixed(1)}<span className="text-[9px] text-zinc-500 ml-0.5">Mbps</span>
+                  </div>
+                </div>
+                <div className="rounded-xl border border-white/5 bg-white/[0.03] px-2.5 py-2">
+                  <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">Size</div>
+                  <div className="text-[12px] sm:text-[13px] font-bold font-mono text-white tabular-nums leading-tight">
+                    {downloadedMb.toFixed(1)}<span className="text-[9px] text-zinc-500 ml-0.5">/{TOTAL_MB.toFixed(0)}MB</span>
+                  </div>
+                </div>
+                <div className="rounded-xl border border-white/5 bg-white/[0.03] px-2.5 py-2">
+                  <div className="text-[8px] uppercase tracking-[0.15em] text-zinc-500 font-semibold">ETA</div>
+                  <div className="text-[12px] sm:text-[13px] font-bold font-mono text-rose-300 tabular-nums leading-tight">
+                    {etaLabel}
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative h-7 w-full rounded-xl border border-white/5 bg-black/40 overflow-hidden px-1.5">
+                {sparkPoints ? (
+                  <svg viewBox={`0 0 ${sparkW} ${sparkH}`} preserveAspectRatio="none" className="h-full w-full">
+                    <defs>
+                      <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#e11d48" stopOpacity="0.5" />
+                        <stop offset="100%" stopColor="#e11d48" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <polygon
+                      points={`0,${sparkH} ${sparkPoints} ${sparkW},${sparkH}`}
+                      fill="url(#sparkFill)"
+                    />
+                    <polyline
+                      points={sparkPoints}
+                      fill="none"
+                      stroke="#f43f5e"
+                      strokeWidth="1.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ filter: 'drop-shadow(0 0 3px rgba(244,63,94,0.6))' }}
+                    />
+                  </svg>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-[9px] uppercase tracking-wider text-zinc-600">
+                    Measuring network…
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
-
     );
   }
 
@@ -436,52 +533,49 @@ export function UpdatePopup() {
       { icon: '🚀', label: 'Finalizing install' },
     ];
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-300">
-        <div className="relative w-full max-w-sm mx-4 overflow-hidden rounded-2xl border border-purple-600/30 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-purple-900/40 p-8 text-center space-y-6 animate-in zoom-in-95 duration-300">
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl animate-in fade-in duration-300 p-3 sm:p-4">
+        {glassCard(
+          <div className="p-6 sm:p-8 text-center">
+            <div className="relative inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300 mb-5 sm:mb-6">
+              <Loader2 className="h-2.5 w-2.5 animate-spin" />
+              Installing {APP_VERSION}
+            </div>
 
-          {/* Header pill */}
-          <div className="relative inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">
-            <Loader2 className="h-2.5 w-2.5 animate-spin" />
-            Installing {APP_VERSION}
-          </div>
+            <div className="relative mx-auto h-20 w-20 sm:h-24 sm:w-24 mb-5 sm:mb-6">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-rose-500/30 to-fuchsia-500/20 blur-xl animate-pulse" />
+              <div className="absolute inset-2 rounded-full border-2 border-rose-500/40 border-t-rose-500 animate-spin" style={{ animationDuration: '1.4s' }} />
+              <div className="absolute inset-5 rounded-full border-2 border-amber-500/30 border-b-amber-400 animate-spin" style={{ animationDuration: '1.8s', animationDirection: 'reverse' }} />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-2xl sm:text-3xl">⚙️</span>
+              </div>
+            </div>
 
-          {/* Animated install icon */}
-          <div className="relative mx-auto h-24 w-24">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500/30 to-orange-500/20 blur-xl animate-pulse" />
-            <div className="absolute inset-2 rounded-full border-2 border-purple-500/40 border-t-purple-500 animate-spin" style={{ animationDuration: '1.4s' }} />
-            <div className="absolute inset-5 rounded-full border-2 border-amber-500/30 border-b-amber-400 animate-spin" style={{ animationDuration: '1.8s', animationDirection: 'reverse' }} />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-3xl">⚙️</span>
+            <div className="space-y-1 mb-5 sm:mb-6">
+              <h2 className="text-base sm:text-lg font-bold text-white">Installing Updates</h2>
+              <p className="text-[11px] sm:text-xs text-zinc-500">Setting up fixes and polishing the experience…</p>
+            </div>
+
+            <div className="space-y-1.5 text-left">
+              {stages.map((stage, i) => (
+                <div
+                  key={stage.label}
+                  className="flex items-center gap-2.5 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 animate-in fade-in slide-in-from-bottom-2"
+                  style={{ animationDelay: `${i * 350}ms`, animationDuration: '500ms', animationFillMode: 'both' }}
+                >
+                  <span className="text-base shrink-0">{stage.icon}</span>
+                  <span className="flex-1 text-[11px] font-semibold text-white/90">{stage.label}</span>
+                  <Loader2 className="h-3 w-3 text-rose-400 animate-spin shrink-0" />
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-center gap-1.5 pt-5">
+              {[0, 1, 2].map(i => (
+                <div key={i} className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+              ))}
             </div>
           </div>
-
-          <div className="space-y-2">
-            <h2 className="text-lg font-bold text-white">Installing Updates</h2>
-            <p className="text-xs text-zinc-500">Setting up new features and polishing the experience…</p>
-          </div>
-
-          {/* Stage list — staggered */}
-          <div className="space-y-1.5 text-left">
-            {stages.map((stage, i) => (
-              <div
-                key={stage.label}
-                className="flex items-center gap-2.5 rounded-lg border border-white/5 bg-white/[0.03] px-3 py-2 animate-in fade-in slide-in-from-bottom-2"
-                style={{ animationDelay: `${i * 350}ms`, animationDuration: '500ms', animationFillMode: 'both' }}
-              >
-                <span className="text-base shrink-0">{stage.icon}</span>
-                <span className="flex-1 text-[11px] font-semibold text-white/90">{stage.label}</span>
-                <Loader2 className="h-3 w-3 text-purple-400 animate-spin shrink-0" />
-              </div>
-            ))}
-          </div>
-
-          {/* Bouncing dots */}
-          <div className="flex justify-center gap-1.5 pt-1">
-            {[0, 1, 2].map(i => (
-              <div key={i} className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-            ))}
-          </div>
-        </div>
+        )}
       </div>
     );
   }
@@ -489,193 +583,120 @@ export function UpdatePopup() {
   /* ── STEP 3.5: Entering — first-time post-update transition ── */
   if (step === 'entering') {
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 animate-in fade-in duration-300"
-        style={{
-          paddingTop: 'max(1rem, env(safe-area-inset-top))',
-          paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
-        }}
-      >
-        <div className="relative w-full max-w-[19rem] rounded-2xl border border-purple-600/30 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-purple-900/40 px-5 py-6 animate-in zoom-in-95 duration-300 overflow-hidden">
-          {/* Subtle glows inside card */}
-          <div className="pointer-events-none absolute -top-16 -right-12 h-40 w-40 rounded-full bg-purple-600/20 blur-3xl animate-pulse" />
-          <div className="pointer-events-none absolute -bottom-20 -left-12 h-44 w-44 rounded-full bg-violet-500/15 blur-3xl" />
-
-          <div className="relative z-10 flex flex-col items-center gap-4 text-center">
-            {/* Concentric rings — compact */}
-            <div className="relative h-20 w-20">
-              <div className="absolute inset-0 rounded-full border-2 border-purple-500/20" />
-              <div
-                className="absolute inset-0 rounded-full border-2 border-transparent border-t-purple-400 border-r-purple-500"
-                style={{ animation: 'spin 1.4s linear infinite' }}
-              />
-              <div
-                className="absolute inset-2 rounded-full border-2 border-transparent border-b-violet-300 border-l-violet-400"
-                style={{ animation: 'spin 2s linear infinite reverse' }}
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-500 via-violet-500 to-indigo-600 shadow-[0_0_24px_rgba(168,85,247,0.7)] flex items-center justify-center">
-                  <Sparkles className="h-4 w-4 text-white drop-shadow" />
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl p-3 sm:p-4 animate-in fade-in duration-300">
+        {glassCard(
+          <div className="p-6 sm:p-8 text-center">
+            <div className="relative z-10 flex flex-col items-center gap-4 text-center">
+              <div className="relative h-16 w-16 sm:h-20 sm:w-20">
+                <div className="absolute inset-0 rounded-full border-2 border-rose-500/20" />
+                <div
+                  className="absolute inset-0 rounded-full border-2 border-transparent border-t-rose-400 border-r-rose-500"
+                  style={{ animation: 'spin 1.4s linear infinite' }}
+                />
+                <div
+                  className="absolute inset-2 rounded-full border-2 border-transparent border-b-fuchsia-300 border-l-fuchsia-400"
+                  style={{ animation: 'spin 2s linear infinite reverse' }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-gradient-to-br from-rose-500 via-fuchsia-500 to-purple-600 shadow-[0_0_24px_rgba(225,29,72,0.7)] flex items-center justify-center">
+                    <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white drop-shadow" />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Headline */}
-            <div className="space-y-1.5">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.2em] text-purple-200">
-                <span className="relative flex h-1 w-1">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-400 opacity-75" />
-                  <span className="relative inline-flex h-1 w-1 rounded-full bg-purple-400" />
-                </span>
-                {APP_VERSION} • Ready
-              </div>
-              <h2 className="bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-base font-bold text-transparent">
-                Entering the latest version
-              </h2>
-              <p className="text-[10px] text-zinc-400 transition-all duration-300 min-h-[1.25rem]">
-                {enterStage === 0 && 'Synced — your library is up to date.'}
-                {enterStage === 1 && 'Booting UI — preparing the new experience.'}
-                {enterStage === 2 && 'Routing Home — taking you to the latest.'}
-              </p>
-            </div>
-
-            {/* Indeterminate progress bar */}
-            <div className="relative h-1 w-full overflow-hidden rounded-full bg-white/5">
-              <div className="absolute inset-y-0 left-0 w-1/3 rounded-full bg-gradient-to-r from-transparent via-purple-400 to-transparent shadow-[0_0_12px_rgba(168,85,247,0.8)] animate-[shine_1.4s_ease-in-out_infinite]" />
-            </div>
-
-            {/* Stage chips */}
-            <div className="flex flex-wrap items-center justify-center gap-1 text-[8px] font-semibold uppercase tracking-wider">
-              {(['Synced', 'Booting UI', 'Routing Home'] as const).map((label, i) => {
-                const done = enterStage > i;
-                const active = enterStage === i;
-                return (
-                  <span
-                    key={label}
-                    className={`flex items-center gap-1 rounded-md border px-1.5 py-0.5 transition-all duration-300 ${
-                      done
-                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-                        : active
-                        ? 'border-purple-500/40 bg-purple-500/15 text-purple-200 shadow-[0_0_10px_rgba(168,85,247,0.4)]'
-                        : 'border-white/10 bg-white/5 text-zinc-500'
-                    }`}
-                  >
-                    {done ? (
-                      <Check className="h-2 w-2" />
-                    ) : active ? (
-                      <Loader2 className="h-2 w-2 animate-spin" />
-                    ) : (
-                      <span className="h-1 w-1 rounded-full bg-current opacity-60" />
-                    )}
-                    {label}
+              <div className="space-y-1.5">
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2 py-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.2em] text-rose-200">
+                  <span className="relative flex h-1 w-1">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
+                    <span className="relative inline-flex h-1 w-1 rounded-full bg-rose-400" />
                   </span>
-                );
-              })}
+                  {APP_VERSION} • Ready
+                </div>
+                <h2 className="bg-gradient-to-r from-white via-rose-200 to-white bg-clip-text text-base sm:text-lg font-bold text-transparent">
+                  Entering the latest version
+                </h2>
+                <p className="text-[10px] sm:text-[11px] text-zinc-400 transition-all duration-300 min-h-[1.25rem]">
+                  {enterStage === 0 && 'Synced — your library is up to date.'}
+                  {enterStage === 1 && 'Booting UI — preparing the new experience.'}
+                  {enterStage === 2 && 'Routing Home — taking you to the latest.'}
+                </p>
+              </div>
+
+              <div className="relative h-1 w-full overflow-hidden rounded-full bg-white/5">
+                <div className="absolute inset-y-0 left-0 w-1/3 rounded-full bg-gradient-to-r from-transparent via-rose-400 to-transparent shadow-[0_0_12px_rgba(225,29,72,0.8)] animate-[shimmer_1.4s_ease-in-out_infinite]" />
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-1.5 text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider">
+                {(['Synced', 'Booting UI', 'Routing Home'] as const).map((label, i) => {
+                  const done = enterStage > i;
+                  const active = enterStage === i;
+                  return (
+                    <span
+                      key={label}
+                      className={`flex items-center gap-1 rounded-md border px-1.5 py-0.5 transition-all duration-300 ${
+                        done
+                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                          : active
+                          ? 'border-rose-500/40 bg-rose-500/15 text-rose-200 shadow-[0_0_10px_rgba(225,29,72,0.4)]'
+                          : 'border-white/10 bg-white/5 text-zinc-500'
+                      }`}
+                    >
+                      {done ? (
+                        <Check className="h-2 w-2" />
+                      ) : active ? (
+                        <Loader2 className="h-2 w-2 animate-spin" />
+                      ) : (
+                        <span className="h-1 w-1 rounded-full bg-current opacity-60" />
+                      )}
+                      {label}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     );
   }
 
-  /* ── STEP 4: Complete / What's New — compact cinematic redesign ── */
+  /* ── STEP 4: Complete / What's New — soft glass pill redesign ── */
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 p-3 backdrop-blur-xl animate-in fade-in duration-300 sm:p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-xl p-3 sm:p-4 animate-in fade-in duration-300"
       style={{
         paddingTop: 'max(0.75rem, env(safe-area-inset-top))',
         paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))',
       }}
       onClick={dismissPopup}
     >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative flex flex-col overflow-hidden border border-purple-600/25 bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black/98 shadow-2xl shadow-purple-900/30 animate-in zoom-in-95 duration-300"
-        style={{ width: 'min(92vw, 420px)', maxHeight: 'min(82dvh, 640px)', borderRadius: '26px' }}
-      >
-
-        {/* Decorative glows */}
-        <div className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-purple-600/15 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-purple-500/10 blur-3xl" />
-
-        {/* Close */}
-        <button
-          onClick={dismissPopup}
-          aria-label="Close"
-          className="absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white/60 backdrop-blur-md transition hover:bg-white/10 hover:text-white"
-        >
-          <X className="h-3.5 w-3.5" />
-        </button>
-
-        {/* Header — compact */}
-        <div className="relative px-5 pt-5 pb-3 text-center">
-          <div className="mx-auto mb-2.5 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-600/30 to-purple-500/10 ring-1 ring-purple-500/30">
-            <Sparkles className="h-5 w-5 text-purple-400" />
-          </div>
-          <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-300">
-            <span className="relative flex h-1 w-1">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-1 w-1 rounded-full bg-emerald-400" />
-            </span>
-            {isManualWhatsNew ? "What's New" : 'You are up to date'}
-          </div>
-          <h2 className="text-base font-bold text-white sm:text-lg">
-            {isManualWhatsNew ? 'Latest Drops & Polish' : 'Updated to latest version'}
-          </h2>
-          <p className="mx-auto mt-1 max-w-xs text-[11px] leading-snug text-zinc-400">
-            {currentGroup.highlight}
-          </p>
-          <span className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-purple-500/30 bg-purple-600/15 px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-wider text-purple-300">
-            {APP_VERSION}
-            <span className="h-2.5 w-px bg-white/20" />
-            {currentGroup.date}
-          </span>
-        </div>
-
-        {/* Single-version mode — pager hidden */}
-
-        {/* Items — compact rows, scroll-locked height */}
-        <div
-          className="relative flex-1 min-h-0 space-y-1.5 overflow-y-auto px-4 py-3"
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
-        >
-          {currentGroup.items.map((item, idx) => (
-            <div
-              key={item.title}
-              className="group flex items-start gap-2.5 rounded-lg border border-white/5 bg-gradient-to-br from-white/[0.04] to-white/[0.01] p-2.5 transition-all hover:border-purple-500/20 hover:from-purple-500/5 animate-in fade-in slide-in-from-right-2 duration-300"
-              style={{ animationDelay: `${idx * 30}ms` }}
-            >
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/5 text-sm">
-                {item.icon}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <h4 className="text-[12px] font-semibold leading-tight text-white">{item.title}</h4>
-                  <span
-                    className={`inline-flex shrink-0 items-center gap-1 rounded border px-1 py-px text-[8px] font-bold uppercase tracking-wider ${BADGE_STYLES[item.badge]}`}
-                  >
-                    <span className={`h-1 w-1 rounded-full ${BADGE_DOT[item.badge]}`} />
-                    {BADGE_LABELS[item.badge]}
-                  </span>
-                </div>
-                <p className="mt-0.5 text-[10px] leading-snug text-zinc-500">{item.desc}</p>
-              </div>
-            </div>
-          ))}
-          <p className="pt-1 text-center text-[9px] text-white/25 sm:hidden">← Swipe to browse versions →</p>
-        </div>
-
-        {/* CTA */}
-        <div className="relative shrink-0 border-t border-white/5 bg-black/40 px-4 py-2.5">
+      {glassCard(
+        <div className="p-6 sm:p-8 text-center">
+          {/* Close */}
           <button
-            onClick={handleGo}
-            className="group mx-auto flex w-auto min-w-[140px] max-w-[220px] items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 px-5 py-2 text-[13px] font-semibold text-white shadow-lg shadow-purple-900/40 transition-all hover:from-purple-600 hover:to-purple-400 hover:shadow-purple-700/50"
+            onClick={dismissPopup}
+            aria-label="Close"
+            className="absolute right-4 top-4 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/60 backdrop-blur-md transition hover:bg-white/10 hover:text-white"
           >
-            Explore Now
-            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+            <X className="h-3.5 w-3.5" />
           </button>
+
+          <Header
+            title={isManualWhatsNew ? "What's New" : 'You are up to date'}
+            subtitle={isManualWhatsNew ? 'Latest fixes and polish for your experience.' : currentGroup.highlight}
+            pillLabel={isManualWhatsNew ? APP_VERSION : `${APP_VERSION} • ${currentGroup.date}`}
+            showSparkles
+          />
+
+          <div className="text-left mb-6 sm:mb-8">
+            <ChangelogList items={currentGroup.items} />
+          </div>
+
+          <GlassButton onClick={handleGo}>
+            Explore Now
+          </GlassButton>
         </div>
-      </div>
+      )}
     </div>
   );
 }
