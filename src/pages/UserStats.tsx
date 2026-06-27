@@ -85,7 +85,7 @@ export default function UserStats() {
       // Fetch watch history for stats
       const { data: historyData } = await supabase
         .from('watch_history')
-        .select('id, progress, completed, anime_id, episode_id')
+        .select('id, progress, completed, anime_id, episode_id, last_position, duration')
         .eq('user_id', user.id);
 
       if (historyData) {
@@ -96,12 +96,21 @@ export default function UserStats() {
           .select('id, duration')
           .in('id', episodeIds);
 
-        const episodeDurations = new Map(episodesData?.map(e => [e.id, e.duration || 24]) || []);
+        const episodeDurations = new Map(episodesData?.map(e => [e.id, e.duration || 0]) || []);
         
         let totalMinutes = 0;
         historyData.forEach(h => {
-          const duration = episodeDurations.get(h.episode_id) || 24;
-          const watchedMinutes = ((h.progress || 0) / 100) * duration;
+          const savedSeconds = h.last_position && h.last_position > 0 ? h.last_position : 0;
+          const savedDurationSeconds = h.duration && h.duration > 0 ? h.duration : 0;
+          const episodeDurationMinutes = episodeDurations.get(h.episode_id) || 0;
+          const watchedSeconds = savedSeconds || (
+            savedDurationSeconds > 0 && h.progress
+              ? (h.completed ? savedDurationSeconds : ((h.progress || 0) / 100) * savedDurationSeconds)
+              : episodeDurationMinutes > 0 && h.progress
+                ? ((h.progress || 0) / 100) * episodeDurationMinutes * 60
+                : 0
+          );
+          const watchedMinutes = watchedSeconds / 60;
           totalMinutes += watchedMinutes;
         });
 
