@@ -572,12 +572,6 @@ export default function AnimeDetail() {
                   Airing Now
                 </span>
               )}
-              {typeof anime.view_count === 'number' && anime.view_count > 0 && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 backdrop-blur-md px-2.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider text-white/85">
-                  <Eye className="h-3 w-3 text-primary" />
-                  {anime.view_count >= 1_000_000 ? `${(anime.view_count/1_000_000).toFixed(1)}M` : anime.view_count >= 1000 ? `${(anime.view_count/1000).toFixed(0)}K` : anime.view_count} views
-                </span>
-              )}
               {typeof anime.like_count === 'number' && anime.like_count > 0 && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-pink-400/30 bg-pink-500/10 backdrop-blur-md px-2.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider text-pink-300">
                   <Heart className="h-3 w-3 fill-current" />
