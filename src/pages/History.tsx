@@ -378,7 +378,7 @@ export default function History() {
                 { icon: Film, label: 'Episodes', value: stats.totalEpisodes },
                 { icon: Tv, label: 'Anime', value: stats.uniqueAnime },
                 { icon: Check, label: 'Completed', value: stats.completed },
-                { icon: Clock, label: 'Hours Watched', value: stats.totalHours },
+                { icon: Clock, label: 'Time Watched', value: stats.totalWatched },
               ].map((stat) => (
                 <div
                   key={stat.label}
