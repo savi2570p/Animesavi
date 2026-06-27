@@ -343,7 +343,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
     } | null = null;
 
     try {
-      const { data: doneRows, error: doneErr } = await retry(() =>
+      const doneResult = await retry<any>(() =>
         (supabase as any).rpc('mark_continue_watching_done', {
           _anime_id: item.anime.id,
           _episode_id: item.episode.id,
@@ -351,6 +351,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
           _last_position: durationSeconds,
         }),
       );
+      const { data: doneRows, error: doneErr } = doneResult;
 
       console.log('[ContinueWatching:Done] database response', { data: doneRows, error: doneErr });
 
@@ -386,7 +387,6 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
         .select('id, progress, completed, completed_at, last_position, duration, watched_at, anime:anime_id(id,title,cover_image,status), episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
         .eq('user_id', user.id)
         .eq('episode_id', rpcRow.next_episode_id)
-        .select('*, anime:anime_id(*), episode:episode_id(*)')
         .maybeSingle();
 
       if (!upsertErr && newRow) {
@@ -409,8 +409,8 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
         // Clear fade so the new tile fades back in.
         setFadingIds((prev) => { const n = new Set(prev); n.delete(historyId); return n; });
         toast.success(
-          nextSeasonNumber && nextSeasonNumber !== item.season?.season_number
-            ? `${animeTitle} — starting Season ${nextSeasonNumber}`
+          rpcRow.next_season_number && rpcRow.next_season_number !== item.season?.season_number
+            ? `${animeTitle} — starting Season ${rpcRow.next_season_number}`
             : `${animeTitle} — next episode ready`,
         );
         return;
