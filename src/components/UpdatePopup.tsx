@@ -660,19 +660,19 @@ export function UpdatePopup() {
     <div
       className={OVERLAY}
       style={{
-        paddingTop: 'max(0.75rem, env(safe-area-inset-top))',
-        paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))',
+        paddingTop: 'max(0.5rem, env(safe-area-inset-top))',
+        paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))',
       }}
       onClick={dismissPopup}
     >
       {glassCard(
-        <div className="p-6 sm:p-8 text-center">
+        <div className="p-4 sm:p-5 text-center">
           <button
             onClick={dismissPopup}
             aria-label="Close"
-            className="absolute right-4 top-4 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-violet-300/20 bg-purple-950/40 text-violet-200/70 backdrop-blur-md transition hover:bg-violet-500/20 hover:text-white"
+            className="absolute right-3 top-3 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-violet-300/20 bg-purple-950/40 text-violet-200/70 backdrop-blur-md transition hover:bg-violet-500/20 hover:text-white"
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="h-3 w-3" />
           </button>
 
           <Header
@@ -682,7 +682,7 @@ export function UpdatePopup() {
             showSparkles
           />
 
-          <div className="text-left mb-6 sm:mb-8">
+          <div className="text-left mb-4 sm:mb-5">
             <ChangelogList items={currentGroup.items} />
           </div>
 
