@@ -294,7 +294,7 @@ export function UpdatePopup() {
           className="group relative w-full active:scale-[0.97] transition-all"
         >
           <div className="absolute -inset-px bg-gradient-to-r from-white/20 to-white/5 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition duration-500" />
-          <div className="relative flex items-center justify-center w-full h-10 bg-white/[0.06] group-hover:bg-white/[0.10] border border-white/15 rounded-xl text-white font-semibold text-xs transition-all">
+          <div className="relative flex items-center justify-center w-full h-9 bg-white/[0.06] group-hover:bg-white/[0.10] border border-white/15 rounded-xl text-white font-semibold text-xs transition-all">
             {children}
           </div>
         </button>
@@ -306,7 +306,7 @@ export function UpdatePopup() {
         className="group relative w-full active:scale-[0.97] transition-all"
       >
         <div className="absolute -inset-px bg-gradient-to-r from-violet-500 via-purple-600 to-indigo-600 rounded-xl blur-md opacity-40 group-hover:opacity-80 transition duration-500" />
-        <div className="relative flex items-center justify-center w-full h-10 bg-gradient-to-r from-violet-600/40 via-purple-600/35 to-indigo-600/40 group-hover:from-violet-600/55 group-hover:to-indigo-600/55 border border-violet-300/30 backdrop-blur-md rounded-xl text-white font-bold text-xs tracking-wide transition-all">
+        <div className="relative flex items-center justify-center w-full h-9 bg-gradient-to-r from-violet-600/40 via-purple-600/35 to-indigo-600/40 group-hover:from-violet-600/55 group-hover:to-indigo-600/55 border border-violet-300/30 backdrop-blur-md rounded-xl text-white font-bold text-xs tracking-wide transition-all">
           {children}
           <ArrowRight className="w-3.5 h-3.5 ml-1.5 group-hover:translate-x-1 transition-transform" />
         </div>
