@@ -242,7 +242,11 @@ export function UpdatePopup() {
           </div>
           <h2 className="text-sm sm:text-xl font-bold text-white">New Version Ready to Install</h2>
           <p className="text-[11px] sm:text-sm text-zinc-400 leading-snug px-1">Tap Download to install the latest features and improvements.</p>
-          <span className="inline-block text-[9px] sm:text-[10px] font-mono px-2 py-0.5 rounded bg-purple-600/20 text-purple-400">{APP_VERSION}</span>
+          <span className="inline-flex items-center gap-1.5 text-[9px] sm:text-[10px] font-mono px-2 py-0.5 rounded bg-purple-600/20 text-purple-400">
+            {APP_VERSION}
+            <span className="h-2 w-px bg-white/20" />
+            {VERSION_GROUPS[0].date}
+          </span>
 
           <div className="space-y-1 sm:space-y-1.5 text-left max-h-[22vh] sm:max-h-[30vh] overflow-y-auto pr-1">
             {VERSION_GROUPS[0].items.map((item) => (
