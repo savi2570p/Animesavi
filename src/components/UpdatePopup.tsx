@@ -354,7 +354,7 @@ export function UpdatePopup() {
     return (
       <div className={OVERLAY}>
         {glassCard(
-          <div className="p-4 sm:p-5 text-center">
+          <div className="p-3.5 sm:p-4 text-center">
             <Header
               title="New Version Ready"
               subtitle="Tap Download to install the latest fixes."
@@ -362,7 +362,7 @@ export function UpdatePopup() {
               showSparkles
             />
 
-            <div className="text-left mb-4 sm:mb-5">
+            <div className="text-left mb-3 sm:mb-4">
               <ChangelogList items={VERSION_GROUPS[0].items} />
             </div>
 
