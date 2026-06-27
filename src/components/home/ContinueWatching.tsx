@@ -297,13 +297,32 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
     const minFadeMs = 480;
     const fadeDelay = new Promise<void>((r) => setTimeout(r, minFadeMs));
 
-    // 2. Mark current episode as completed
-    const { error: updateErr } = await supabase
-      .from('watch_history')
-      .update({ completed: true, progress: 100 })
-      .eq('id', historyId);
+    // 2. Mark current episode as completed.
+    //    Virtual "new-episode" rows (ids prefixed with `new-`) have no
+    //    watch_history row yet — upsert one as completed instead of UPDATE
+    //    by id (which would throw "invalid input syntax for uuid").
+    const isVirtualRow = historyId.startsWith('new-');
+    const { error: updateErr } = isVirtualRow
+      ? await supabase
+          .from('watch_history')
+          .upsert(
+            {
+              user_id: user.id,
+              anime_id: item.anime.id,
+              episode_id: item.episode.id,
+              progress: 100,
+              completed: true,
+              watched_at: new Date().toISOString(),
+            },
+            { onConflict: 'user_id,episode_id' },
+          )
+      : await supabase
+          .from('watch_history')
+          .update({ completed: true, progress: 100 })
+          .eq('id', historyId);
 
     if (updateErr) {
+      console.error('Mark completed failed:', updateErr);
       toast.error('Failed to mark as completed');
       setFadingIds((prev) => { const n = new Set(prev); n.delete(historyId); return n; });
       return;
