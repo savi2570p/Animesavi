@@ -244,34 +244,33 @@ export function UpdatePopup() {
     </div>
   );
 
-  const ChangelogList = ({ items, compact = false }: { items: ChangelogItem[]; compact?: boolean }) => (
-    <div className={compact ? 'space-y-3' : 'space-y-4'}>
+  const ChangelogList = ({ items, compact = true }: { items: ChangelogItem[]; compact?: boolean }) => (
+    <div className="space-y-2.5">
       {items.map((item, idx) => (
         <div
           key={item.title}
-          className="flex items-start gap-3 sm:gap-4 animate-in fade-in slide-in-from-right-3 duration-300"
-          style={{ animationDelay: `${idx * 40}ms` }}
+          className="flex items-start gap-2.5 sm:gap-3 animate-in fade-in slide-in-from-right-2 duration-300"
+          style={{ animationDelay: `${idx * 35}ms` }}
         >
           <div
-            className={`flex-shrink-0 flex items-center justify-center rounded-2xl bg-gradient-to-br ${BADGE_ICON_RINGS[item.badge]} border shadow-lg text-base ${
-              compact ? 'w-9 h-9' : 'w-10 h-10 sm:w-11 sm:h-11'
-            }`}
+            className={`flex-shrink-0 flex items-center justify-center rounded-xl bg-gradient-to-br ${BADGE_ICON_RINGS[item.badge]} border shadow-md text-sm w-8 h-8 sm:w-9 sm:h-9`}
           >
             {item.icon}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <h4 className={`font-semibold leading-tight text-white ${compact ? 'text-[12px]' : 'text-[13px]'}`}>
+            <div className="flex flex-wrap items-center gap-1">
+              <h4 className="font-semibold leading-tight text-white text-[11px] sm:text-[12px]">
                 {item.title}
               </h4>
               <span
-                className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider ${BADGE_STYLES[item.badge]}`}
+                className="inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0 text-[7px] font-bold uppercase tracking-wider"
+                className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-1 py-[1px] text-[7px] font-bold uppercase tracking-wider ${BADGE_STYLES[item.badge]}`}
               >
                 <span className={`h-1 w-1 rounded-full ${BADGE_DOT[item.badge]}`} />
                 {BADGE_LABELS[item.badge]}
               </span>
             </div>
-            <p className={`leading-snug text-violet-200/55 ${compact ? 'text-[10px] mt-0.5' : 'text-[11px] sm:text-[12px] mt-1'}`}>
+            <p className="text-[10px] leading-snug text-violet-200/55 mt-0.5">
               {item.desc}
             </p>
           </div>
