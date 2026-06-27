@@ -175,8 +175,11 @@ export function UpdatePopup() {
   }, []);
   const handleGo = useCallback(() => {
     // Only play the cinematic "Entering the latest version" loader when the
-    // user actually downloaded this session. Manual What's New views just close.
-    if (!justDownloadedRef.current) {
+    // user has downloaded this version. Manual What's New views just close.
+    const hasDownloadedLatestVersion = localStorage.getItem(DOWNLOAD_COMPLETED_KEY) === 'true';
+    const shouldPlayEnteringLoader = justDownloadedRef.current || (!isManualWhatsNew && hasDownloadedLatestVersion);
+
+    if (!shouldPlayEnteringLoader) {
       dismissPopup();
       return;
     }
@@ -184,7 +187,7 @@ export function UpdatePopup() {
     enteringFromPathRef.current = location.pathname;
     setEnterStage(0);
     setStep('entering');
-  }, [dismissPopup, location.pathname]);
+  }, [dismissPopup, isManualWhatsNew, location.pathname]);
 
   useEffect(() => {
     if (step !== 'entering') return;
@@ -573,6 +576,7 @@ export function UpdatePopup() {
   if (step === 'entering') {
     const totalStages = 3;
     const barProgress = ((enterStage + 1) / totalStages) * 100;
+    const progressLabel = Math.round(barProgress);
     const stages = [
       { label: 'Synced', desc: 'Your library is up to date.' },
       { label: 'Booting UI', desc: 'Preparing the new experience.' },
@@ -614,7 +618,12 @@ export function UpdatePopup() {
               {stages[enterStage]?.desc}
             </p>
 
-            <div className="relative mt-4 h-1 w-full overflow-hidden rounded-full bg-violet-300/[0.08]">
+            <div className="mt-4 flex items-center justify-between text-[8px] font-bold uppercase tracking-[0.18em] text-violet-200/70">
+              <span>{stages[enterStage]?.label}</span>
+              <span className="font-mono tabular-nums text-violet-100">{progressLabel}%</span>
+            </div>
+
+            <div className="relative mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-violet-300/[0.08]">
               <div
                 className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-violet-500 via-purple-400 to-indigo-500 shadow-[0_0_10px_rgba(139,92,246,0.7)] transition-all duration-700 ease-out"
                 style={{ width: `${barProgress}%` }}
