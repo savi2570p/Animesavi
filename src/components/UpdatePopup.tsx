@@ -315,10 +315,10 @@ export function UpdatePopup() {
   };
 
   const VersionPill = ({ label = APP_VERSION }: { label?: string }) => (
-    <div className="inline-flex items-center px-3 py-1 rounded-full bg-violet-500/15 border border-violet-300/30 text-violet-200 text-[10px] font-bold tracking-widest uppercase backdrop-blur">
-      <span className="relative flex h-2 w-2 mr-2">
+    <div className="inline-flex items-center px-2 py-0.5 rounded-full bg-violet-500/15 border border-violet-300/30 text-violet-200 text-[9px] font-bold tracking-widest uppercase backdrop-blur">
+      <span className="relative flex h-1.5 w-1.5 mr-1.5">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-300 opacity-50" />
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-400" />
+        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-violet-400" />
       </span>
       {label}
     </div>
