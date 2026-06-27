@@ -578,8 +578,8 @@ export function UpdatePopup() {
     return (
       <div className={OVERLAY}>
         {glassCard(
-          <div className="px-6 py-7 sm:px-7 sm:py-8 text-center">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-violet-300/30 bg-violet-500/15 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.2em] text-violet-200 mb-5">
+          <div className="px-5 py-5 sm:px-6 sm:py-6 text-center">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-violet-300/30 bg-violet-500/15 px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.18em] text-violet-200 mb-4">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-300 opacity-75" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-violet-300" />
@@ -587,7 +587,7 @@ export function UpdatePopup() {
               {APP_VERSION} • Ready
             </div>
 
-            <div className="relative h-20 w-20 sm:h-24 sm:w-24 mx-auto mb-5">
+            <div className="relative h-16 w-16 sm:h-20 sm:w-20 mx-auto mb-4">
               <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-500/40 to-purple-600/30 blur-2xl animate-pulse" />
               <div
                 className="absolute inset-0 rounded-full border-2 border-transparent border-t-violet-300 border-r-violet-400"
@@ -598,22 +598,22 @@ export function UpdatePopup() {
                 style={{ animation: 'spin 2s linear infinite reverse' }}
               />
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-600 shadow-[0_0_28px_rgba(139,92,246,0.8)] flex items-center justify-center">
-                  <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-white drop-shadow" />
+                <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-600 shadow-[0_0_20px_rgba(139,92,246,0.8)] flex items-center justify-center">
+                  <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-white drop-shadow" />
                 </div>
               </div>
             </div>
 
-            <h2 className="bg-gradient-to-r from-white via-violet-100 to-white bg-clip-text text-base sm:text-lg font-bold text-transparent tracking-tight">
-              Entering the latest version
+            <h2 className="bg-gradient-to-r from-white via-violet-100 to-white bg-clip-text text-sm sm:text-base font-bold text-transparent tracking-tight">
+              Entering latest version
             </h2>
-            <p className="text-[11px] text-violet-200/65 mt-1 leading-relaxed transition-all duration-300 min-h-[1.25rem]">
+            <p className="text-[10px] text-violet-200/65 mt-0.5 leading-relaxed transition-all duration-300 min-h-[1.1rem]">
               {stages[enterStage]?.desc}
             </p>
 
-            <div className="relative mt-5 h-1.5 w-full overflow-hidden rounded-full bg-violet-300/[0.08]">
+            <div className="relative mt-4 h-1 w-full overflow-hidden rounded-full bg-violet-300/[0.08]">
               <div
-                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-violet-500 via-purple-400 to-indigo-500 shadow-[0_0_12px_rgba(139,92,246,0.7)] transition-all duration-700 ease-out"
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-violet-500 via-purple-400 to-indigo-500 shadow-[0_0_10px_rgba(139,92,246,0.7)] transition-all duration-700 ease-out"
                 style={{ width: `${barProgress}%` }}
               />
               <div
@@ -622,25 +622,25 @@ export function UpdatePopup() {
               />
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-1.5">
+            <div className="mt-3 grid grid-cols-3 gap-1.5">
               {stages.map((s, i) => {
                 const done = enterStage > i;
                 const active = enterStage === i;
                 return (
                   <div
                     key={s.label}
-                    className={`flex items-center justify-center gap-1 rounded-2xl border px-1.5 py-1.5 text-[8.5px] font-bold uppercase tracking-wider transition-all duration-300 ${
+                    className={`flex items-center justify-center gap-1 rounded-xl border px-1 py-1 text-[7.5px] font-bold uppercase tracking-wider transition-all duration-300 ${
                       done
                         ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
                         : active
-                        ? 'border-violet-300/40 bg-violet-500/20 text-violet-100 shadow-[0_0_10px_rgba(139,92,246,0.5)]'
+                        ? 'border-violet-300/40 bg-violet-500/20 text-violet-100 shadow-[0_0_8px_rgba(139,92,246,0.5)]'
                         : 'border-violet-300/10 bg-violet-500/[0.04] text-violet-300/50'
                     }`}
                   >
                     {done ? (
-                      <Check className="h-2.5 w-2.5" />
+                      <Check className="h-2 w-2" />
                     ) : active ? (
-                      <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                      <Loader2 className="h-2 w-2 animate-spin" />
                     ) : (
                       <span className="h-1 w-1 rounded-full bg-current opacity-60" />
                     )}
