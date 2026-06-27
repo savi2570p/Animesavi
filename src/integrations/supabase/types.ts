@@ -1309,8 +1309,11 @@ export type Database = {
         Row: {
           anime_id: string
           completed: boolean | null
+          completed_at: string | null
+          duration: number | null
           episode_id: string
           id: string
+          last_position: number | null
           progress: number | null
           user_id: string
           watched_at: string
@@ -1318,8 +1321,11 @@ export type Database = {
         Insert: {
           anime_id: string
           completed?: boolean | null
+          completed_at?: string | null
+          duration?: number | null
           episode_id: string
           id?: string
+          last_position?: number | null
           progress?: number | null
           user_id: string
           watched_at?: string
@@ -1327,8 +1333,11 @@ export type Database = {
         Update: {
           anime_id?: string
           completed?: boolean | null
+          completed_at?: string | null
+          duration?: number | null
           episode_id?: string
           id?: string
+          last_position?: number | null
           progress?: number | null
           user_id?: string
           watched_at?: string
@@ -1605,6 +1614,23 @@ export type Database = {
         Returns: boolean
       }
       is_flox_admin: { Args: { _user_id: string }; Returns: boolean }
+      mark_continue_watching_done: {
+        Args: {
+          _anime_id: string
+          _duration?: number
+          _episode_id: string
+          _last_position?: number
+        }
+        Returns: {
+          action: string
+          completed_history_id: string
+          next_episode_id: string
+          next_episode_number: number
+          next_history_id: string
+          next_season_id: string
+          next_season_number: number
+        }[]
+      }
       redeem_unlock_token: {
         Args: { _token: string; _user_agent?: string; _user_id?: string }
         Returns: {
