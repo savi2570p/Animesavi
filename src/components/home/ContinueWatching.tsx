@@ -42,6 +42,10 @@ interface WatchHistoryItem {
   anime: Anime & { status?: string | null };
   episode: Episode;
   progress: number | null;
+  completed?: boolean | null;
+  completed_at?: string | null;
+  last_position?: number | null;
+  duration?: number | null;
   watched_at: string;
   season?: Season;
   hasNewEpisode?: boolean;
@@ -86,11 +90,11 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       // 1. Resumable rows (in-progress) — keep the existing behaviour.
       const { data, error } = await supabase
         .from('watch_history')
-        .select('id, progress, watched_at, anime:anime_id(id,title,cover_image,status), episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
+        .select('id, progress, completed, completed_at, last_position, duration, watched_at, anime:anime_id(id,title,cover_image,status), episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
         .eq('user_id', user.id)
         .or('completed.is.null,completed.eq.false')
         .order('watched_at', { ascending: false })
-        .limit(12);
+        .limit(60);
 
       if (error) {
         console.error('Error loading Continue Watching:', error);
@@ -98,9 +102,15 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
         return;
       }
 
-      const rows = ((data ?? []) as unknown as WatchHistoryItem[]).filter(
+      const dedupedByAnime = new Map<string, WatchHistoryItem>();
+      ((data ?? []) as unknown as WatchHistoryItem[])
+        .filter((item) => item.anime?.id && item.episode?.id)
+        .forEach((item) => {
+          if (!dedupedByAnime.has(item.anime.id)) dedupedByAnime.set(item.anime.id, item);
+        });
+      const rows = [...dedupedByAnime.values()].filter(
         (item) => item.anime?.id && item.episode?.id,
-      );
+      ).slice(0, 12);
       const resumableAnimeIds = new Set(rows.map((r) => r.anime.id));
 
       // 2. Completed-series re-injection — Crunchyroll/Netflix behaviour:
@@ -290,6 +300,31 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
     const item = history.find((h) => h.id === historyId);
     if (!item || !user) return;
 
+    const durationSeconds = Math.max(0, Number(item.duration ?? item.episode.duration ?? 0));
+    const previousProgress = Math.min(Math.max(item.progress || 0, 0), 100);
+    const retry = async <T,>(operation: () => Promise<T>, attempts = 2): Promise<T> => {
+      let lastError: unknown;
+      for (let attempt = 1; attempt <= attempts; attempt += 1) {
+        try {
+          return await operation();
+        } catch (error) {
+          lastError = error;
+          console.error(`Continue Watching Done retry ${attempt}/${attempts} failed:`, error);
+          if (attempt < attempts) await new Promise((resolve) => setTimeout(resolve, 350));
+        }
+      }
+      throw lastError;
+    };
+
+    console.log('[ContinueWatching:Done] before update', {
+      episodeId: item.episode.id,
+      animeId: item.anime.id,
+      userId: user.id,
+      progressBefore: previousProgress,
+      duration: durationSeconds,
+      historyId,
+    });
+
     // 1. Start the pixel-fade animation on JUST this tile (scoped to the thumbnail).
     setFadingIds((prev) => new Set(prev).add(historyId));
 
@@ -297,94 +332,68 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
     const minFadeMs = 480;
     const fadeDelay = new Promise<void>((r) => setTimeout(r, minFadeMs));
 
-    // 2. Mark current episode as completed.
-    //    Virtual "new-episode" rows (ids prefixed with `new-`) have no
-    //    watch_history row yet — upsert one as completed instead of UPDATE
-    //    by id (which would throw "invalid input syntax for uuid").
-    const isVirtualRow = historyId.startsWith('new-');
-    const { error: updateErr } = isVirtualRow
-      ? await supabase
-          .from('watch_history')
-          .upsert(
-            {
-              user_id: user.id,
-              anime_id: item.anime.id,
-              episode_id: item.episode.id,
-              progress: 100,
-              completed: true,
-              watched_at: new Date().toISOString(),
-            },
-            { onConflict: 'user_id,episode_id' },
-          )
-      : await supabase
-          .from('watch_history')
-          .update({ completed: true, progress: 100 })
-          .eq('id', historyId);
+    let rpcRow: {
+      completed_history_id: string;
+      next_history_id: string | null;
+      next_episode_id: string | null;
+      next_season_id: string | null;
+      next_episode_number: number | null;
+      next_season_number: number | null;
+      action: 'next_episode' | 'completed_series';
+    } | null = null;
 
-    if (updateErr) {
-      console.error('Mark completed failed:', updateErr);
+    try {
+      const doneResult = await retry<any>(async () => {
+        const result = await (supabase as any).rpc('mark_continue_watching_done', {
+          _anime_id: item.anime.id,
+          _episode_id: item.episode.id,
+          _duration: durationSeconds,
+          _last_position: durationSeconds,
+        });
+        if (result.error) throw result.error;
+        return result;
+      });
+      const { data: doneRows, error: doneErr } = doneResult;
+
+      console.log('[ContinueWatching:Done] database response', { data: doneRows, error: doneErr });
+
+      if (doneErr) throw doneErr;
+      rpcRow = Array.isArray(doneRows) ? doneRows[0] : doneRows;
+    } catch (error) {
+      console.error('Mark completed failed:', {
+        episodeId: item.episode.id,
+        animeId: item.anime.id,
+        userId: user.id,
+        progressBefore: previousProgress,
+        error,
+      });
       toast.error('Failed to mark as completed');
       setFadingIds((prev) => { const n = new Set(prev); n.delete(historyId); return n; });
       return;
     }
 
-    // 2. Find next episode — same season first, then first ep of next season
-    let nextEpisode: { id: string; episode_number: number; season_id: string } | null = null;
-    let nextSeasonNumber: number | undefined = item.season?.season_number;
+    console.log('[ContinueWatching:Done] after update', {
+      episodeId: item.episode.id,
+      animeId: item.anime.id,
+      userId: user.id,
+      progressAfter: 100,
+      completedHistoryId: rpcRow?.completed_history_id,
+      nextEpisodeId: rpcRow?.next_episode_id,
+      action: rpcRow?.action,
+    });
 
-    const { data: sameSeasonNext } = await supabase
-      .from('episodes')
-      .select('id, episode_number, season_id')
-      .eq('season_id', item.episode.season_id)
-      .gt('episode_number', item.episode.episode_number)
-      .order('episode_number', { ascending: true })
-      .limit(1)
-      .maybeSingle();
-
-    if (sameSeasonNext) {
-      nextEpisode = sameSeasonNext;
-    } else {
-      const { data: nextSeason } = await supabase
-        .from('seasons')
-        .select('id, season_number')
-        .eq('anime_id', item.anime.id)
-        .gt('season_number', item.season?.season_number || 1)
-        .order('season_number', { ascending: true })
-        .limit(1)
-        .maybeSingle();
-
-      if (nextSeason) {
-        const { data: firstEp } = await supabase
-          .from('episodes')
-          .select('id, episode_number, season_id')
-          .eq('season_id', nextSeason.id)
-          .order('episode_number', { ascending: true })
-          .limit(1)
+    // 3. Swap to the backend-selected next episode if one exists.
+    if (rpcRow?.next_episode_id) {
+      const { data: newRow, error: upsertErr } = await retry(async () => {
+        const result = await supabase
+          .from('watch_history')
+          .select('id, progress, completed, completed_at, last_position, duration, watched_at, anime:anime_id(id,title,cover_image,status), episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
+          .eq('user_id', user.id)
+          .eq('episode_id', rpcRow.next_episode_id)
           .maybeSingle();
-        if (firstEp) {
-          nextEpisode = firstEp;
-          nextSeasonNumber = nextSeason.season_number;
-        }
-      }
-    }
-
-    // 3. Upsert a fresh continue-watching row pointing to the next episode
-    if (nextEpisode) {
-      const { data: newRow, error: upsertErr } = await supabase
-        .from('watch_history')
-        .upsert(
-          {
-            user_id: user.id,
-            anime_id: item.anime.id,
-            episode_id: nextEpisode.id,
-            progress: 0,
-            completed: false,
-            watched_at: new Date().toISOString(),
-          },
-          { onConflict: 'user_id,anime_id' },
-        )
-        .select('*, anime:anime_id(*), episode:episode_id(*)')
-        .single();
+        if (result.error) throw result.error;
+        return result;
+      });
 
       if (!upsertErr && newRow) {
         // Wait for fade-out to finish, then swap content in place + fade back in.
@@ -395,8 +404,8 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
               ? {
                   ...(newRow as WatchHistoryItem),
                   season: {
-                    id: nextEpisode!.season_id,
-                    season_number: nextSeasonNumber || 1,
+                    id: rpcRow!.next_season_id || (newRow as any).episode?.season_id,
+                    season_number: rpcRow!.next_season_number || 1,
                   },
                   hasNewEpisode: false,
                 }
@@ -406,12 +415,19 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
         // Clear fade so the new tile fades back in.
         setFadingIds((prev) => { const n = new Set(prev); n.delete(historyId); return n; });
         toast.success(
-          nextSeasonNumber && nextSeasonNumber !== item.season?.season_number
-            ? `${animeTitle} — starting Season ${nextSeasonNumber}`
+          rpcRow.next_season_number && rpcRow.next_season_number !== item.season?.season_number
+            ? `${animeTitle} — starting Season ${rpcRow.next_season_number}`
             : `${animeTitle} — next episode ready`,
         );
         return;
       }
+
+      console.error('Continue Watching next-row refresh failed:', { upsertErr, nextEpisodeId: rpcRow.next_episode_id });
+      await fadeDelay;
+      await fetchRecentHistory(false);
+      setFadingIds((prev) => { const n = new Set(prev); n.delete(historyId); return n; });
+      toast.success(`${animeTitle} updated`);
+      return;
     }
 
     // 4. No next episode found (series finished) — let fade complete then remove.

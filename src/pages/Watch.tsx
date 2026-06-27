@@ -460,7 +460,7 @@ export default function Watch() {
     toast.success('All notifications marked as read');
   };
 
-  // Ensure watch history gets created/updated - ONE entry per anime per user
+  // Ensure watch history gets created/updated - one row per episode per user.
   useEffect(() => {
     if (!user || !episodeId || !anime?.id || !currentSeason) return;
     if (watchHistoryId || ensureHistoryInFlightRef.current) return;
@@ -469,8 +469,25 @@ export default function Watch() {
 
     (async () => {
       try {
-        // Use UPSERT to ensure one entry per user+anime - update episode if watching different one
-        const { data: upsertedHistory, error: upsertError } = await supabase
+        const { data: existingHistory, error: existingError } = await supabase
+          .from('watch_history')
+          .select('id, progress')
+          .eq('user_id', user.id)
+          .eq('episode_id', episodeId)
+          .maybeSingle();
+
+        if (existingError) {
+          console.error('Error loading watch history:', existingError);
+          toast.error('Could not save watch history');
+          return;
+        }
+
+        if (existingHistory?.id) {
+          setWatchHistoryId(existingHistory.id);
+          return;
+        }
+
+        const { data: insertedHistory, error: insertError } = await supabase
           .from('watch_history')
           .upsert({
             user_id: user.id,
@@ -479,21 +496,18 @@ export default function Watch() {
             progress: 0,
             completed: false,
             watched_at: new Date().toISOString(),
-          }, {
-            onConflict: 'user_id,anime_id',
-            ignoreDuplicates: false,
-          })
+          }, { onConflict: 'user_id,episode_id', ignoreDuplicates: false })
           .select('id')
           .maybeSingle();
 
-        if (upsertError) {
-          console.error('Error upserting watch history:', upsertError);
+        if (insertError) {
+          console.error('Error creating watch history:', insertError);
           toast.error('Could not save watch history');
           return;
         }
 
-        if (upsertedHistory?.id) {
-          setWatchHistoryId(upsertedHistory.id);
+        if (insertedHistory?.id) {
+          setWatchHistoryId(insertedHistory.id);
         }
       } finally {
         ensureHistoryInFlightRef.current = false;
@@ -587,9 +601,12 @@ export default function Watch() {
         await supabase
           .from('watch_history')
           .update({ 
-            progress: progressPercent,
+            progress: completed ? 100 : progressPercent,
             completed,
-            watched_at: new Date().toISOString()
+            watched_at: new Date().toISOString(),
+            completed_at: completed ? new Date().toISOString() : null,
+            last_position: Math.floor(completed ? duration : currentTime),
+            duration: Math.floor(duration),
           })
           .eq('id', watchHistoryId);
       }
@@ -681,37 +698,39 @@ export default function Watch() {
       if (user && seasonData.anime) {
         const animeId = (seasonData.anime as Anime).id;
 
-        // First check for existing entry to get saved progress for resume
+        // First check for existing episode entry to get saved progress for resume.
         const { data: existingHistory } = await supabase
           .from('watch_history')
           .select('id, progress, episode_id')
           .eq('user_id', user.id)
-          .eq('anime_id', animeId)
+          .eq('episode_id', episodeId)
           .maybeSingle();
 
-        // Set saved progress for resume overlay if same episode
-        if (existingHistory && existingHistory.episode_id === episodeId) {
-          if (!resumeProgress && existingHistory.progress && existingHistory.progress > 5 && existingHistory.progress < 95) {
-            setSavedPlaybackProgress(existingHistory.progress);
-          }
+        if (existingHistory && !resumeProgress && existingHistory.progress && existingHistory.progress > 5 && existingHistory.progress < 95) {
+          setSavedPlaybackProgress(existingHistory.progress);
         }
 
-        // UPSERT - creates new or updates existing entry for this anime
-        const { data: upsertedHistory, error: upsertError } = await supabase
-          .from('watch_history')
-          .upsert({
-            user_id: user.id,
-            anime_id: animeId,
-            episode_id: episodeId,
-            progress: existingHistory?.episode_id === episodeId ? (existingHistory.progress || 0) : 0,
-            completed: false,
-            watched_at: new Date().toISOString(),
-          }, {
-            onConflict: 'user_id,anime_id',
-            ignoreDuplicates: false,
-          })
-          .select('id')
-          .maybeSingle();
+        const historyMutation = existingHistory?.id
+          ? supabase
+              .from('watch_history')
+              .update({ watched_at: new Date().toISOString() })
+              .eq('id', existingHistory.id)
+              .select('id')
+              .maybeSingle()
+          : supabase
+              .from('watch_history')
+              .upsert({
+                user_id: user.id,
+                anime_id: animeId,
+                episode_id: episodeId,
+                progress: 0,
+                completed: false,
+                watched_at: new Date().toISOString(),
+              }, { onConflict: 'user_id,episode_id', ignoreDuplicates: false })
+              .select('id')
+              .maybeSingle();
+
+        const { data: upsertedHistory, error: upsertError } = await historyMutation;
 
         if (upsertError) {
           console.error('Error upserting watch history:', upsertError);

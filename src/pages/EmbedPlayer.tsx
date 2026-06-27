@@ -207,7 +207,7 @@ export default function EmbedPlayer() {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || cancelled) return;
-      // Initial upsert (one row per user+anime)
+      // Initial upsert (one row per user+episode)
       await supabase.from('watch_history').upsert({
         user_id: user.id,
         anime_id: resolvedAnimeId,
@@ -215,20 +215,24 @@ export default function EmbedPlayer() {
         progress: 0,
         completed: false,
         watched_at: new Date().toISOString(),
-      }, { onConflict: 'user_id,anime_id', ignoreDuplicates: false });
+      }, { onConflict: 'user_id,episode_id', ignoreDuplicates: false });
       // Periodic progress sync (every 10s)
       intervalId = setInterval(async () => {
         const v = videoRef.current;
         if (!v || !v.duration) return;
         const pct = (v.currentTime / v.duration) * 100;
+        const completed = pct >= 90;
         await supabase.from('watch_history').upsert({
           user_id: user.id,
           anime_id: resolvedAnimeId,
           episode_id: episodeId,
           progress: Math.floor(pct),
-          completed: pct >= 90,
+          completed,
+          completed_at: completed ? new Date().toISOString() : null,
+          last_position: Math.floor(completed ? v.duration : v.currentTime),
+          duration: Math.floor(v.duration),
           watched_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,anime_id', ignoreDuplicates: false });
+        }, { onConflict: 'user_id,episode_id', ignoreDuplicates: false });
       }, 10000);
     })();
     return () => { cancelled = true; if (intervalId) clearInterval(intervalId); };
