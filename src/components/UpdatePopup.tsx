@@ -68,7 +68,7 @@ const DOWNLOAD_COMPLETED_KEY = `update_downloaded_${APP_VERSION}`;
 
 // Shared dark-purple glass overlay backdrop
 const OVERLAY =
-  'fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-300 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(91,33,182,0.45),rgba(20,5,40,0.65)_55%,rgba(8,2,20,0.85))] backdrop-blur-2xl';
+  'fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-3 animate-in fade-in duration-300 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(91,33,182,0.45),rgba(20,5,40,0.65)_55%,rgba(8,2,20,0.85))] backdrop-blur-2xl';
 
 export function UpdatePopup() {
   const { activePopup, dismissPopup, isManualWhatsNew } = usePopupQueue();
