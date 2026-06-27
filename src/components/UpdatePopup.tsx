@@ -23,7 +23,7 @@ interface VersionGroup {
 const APP_VERSION = 'V 28.1';
 
 // Fixed download size for V 28.1 patch
-const RANDOM_DOWNLOAD_MB = 4.18;
+const RANDOM_DOWNLOAD_MB = 50;
 
 const VERSION_GROUPS: VersionGroup[] = [
   {
