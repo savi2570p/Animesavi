@@ -1609,3 +1609,253 @@ iframe.embed-frame {
     border-radius: 999px !important;
   }
 }
+
+/* =====================================================================
+   iOS 26 LIQUID GLASS LAYER (pronounced, dark purple)
+   Visual-only. Does not alter layout structure or behavior.
+   Scoped via :where() so component-level classes always win on specifics.
+   Player surfaces are explicitly excluded to preserve playback chrome.
+   ===================================================================== */
+:root {
+  --lg-bg-1: 12 8 26;          /* #0a0612 */
+  --lg-bg-2: 36 22 56;         /* #241638 */
+  --lg-bg-3: 61 37 102;        /* #3d2566 */
+  --lg-accent: 196 181 253;    /* #c4b5fd */
+  --lg-tint: 167 139 250;      /* #a78bfa */
+
+  --lg-stroke: rgba(255,255,255,0.14);
+  --lg-stroke-strong: rgba(255,255,255,0.22);
+  --lg-stroke-soft: rgba(255,255,255,0.08);
+  --lg-fill: rgba(28, 16, 54, 0.55);
+  --lg-fill-strong: rgba(28, 16, 54, 0.72);
+  --lg-fill-soft: rgba(28, 16, 54, 0.38);
+  --lg-highlight: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 38%, rgba(255,255,255,0) 60%);
+  --lg-shadow: 0 10px 40px -12px rgba(10, 6, 24, 0.7), 0 2px 6px -2px rgba(10, 6, 24, 0.4);
+  --lg-shadow-lg: 0 24px 70px -20px rgba(10, 6, 24, 0.85), 0 6px 18px -6px rgba(10, 6, 24, 0.55);
+  --lg-radius: 22px;
+  --lg-radius-sm: 14px;
+  --lg-blur: 22px;
+  --lg-blur-strong: 32px;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --lg-fill: rgba(28, 16, 54, 0.92);
+    --lg-fill-strong: rgba(28, 16, 54, 0.96);
+    --lg-fill-soft: rgba(28, 16, 54, 0.8);
+  }
+}
+
+/* Reusable utilities */
+.glass-surface {
+  background: var(--lg-fill);
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(160%);
+  backdrop-filter: blur(var(--lg-blur)) saturate(160%);
+  border: 1px solid var(--lg-stroke);
+  box-shadow: var(--lg-shadow), inset 0 1px 0 rgba(255,255,255,0.08);
+  border-radius: var(--lg-radius);
+}
+.glass-surface-strong {
+  background: var(--lg-fill-strong);
+  -webkit-backdrop-filter: blur(var(--lg-blur-strong)) saturate(170%);
+  backdrop-filter: blur(var(--lg-blur-strong)) saturate(170%);
+  border: 1px solid var(--lg-stroke-strong);
+  box-shadow: var(--lg-shadow-lg), inset 0 1px 0 rgba(255,255,255,0.12);
+  border-radius: var(--lg-radius);
+}
+.glass-pill {
+  background: var(--lg-fill);
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(160%);
+  backdrop-filter: blur(var(--lg-blur)) saturate(160%);
+  border: 1px solid var(--lg-stroke);
+  border-radius: 999px;
+  box-shadow: var(--lg-shadow), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+.glass-highlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--lg-highlight);
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ------- Global painting: ambient purple page tint ------- */
+body {
+  background:
+    radial-gradient(1200px 700px at 12% -10%, rgba(167,139,250,0.18), transparent 60%),
+    radial-gradient(900px 600px at 95% 8%, rgba(196,181,253,0.12), transparent 65%),
+    radial-gradient(1100px 800px at 50% 110%, rgba(61,37,102,0.35), transparent 60%),
+    hsl(var(--background));
+  background-attachment: fixed;
+}
+
+/* ------- Header / Navbar -> floating glass ------- */
+:where(header.sticky, header.fixed, header[class*="bg-background"]) {
+  background: transparent !important;
+  border-bottom: 0 !important;
+}
+:where(header.sticky, header.fixed, header[class*="bg-background"]) > * {
+  position: relative;
+}
+:where(header.sticky, header.fixed, header[class*="bg-background"])::before {
+  content: "";
+  position: absolute;
+  inset: 6px 10px;
+  border-radius: 22px;
+  background: var(--lg-fill);
+  -webkit-backdrop-filter: blur(var(--lg-blur-strong)) saturate(170%);
+  backdrop-filter: blur(var(--lg-blur-strong)) saturate(170%);
+  border: 1px solid var(--lg-stroke);
+  box-shadow: var(--lg-shadow), inset 0 1px 0 rgba(255,255,255,0.1);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ------- Cards: cinema poster cards & generic cards become glass ------- */
+:where(.bg-card, [class*="bg-card/"]):not(.video-player *):not([data-no-glass]) {
+  background: var(--lg-fill) !important;
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(160%);
+  backdrop-filter: blur(var(--lg-blur)) saturate(160%);
+  border-color: var(--lg-stroke) !important;
+  box-shadow: var(--lg-shadow), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* Popovers, dropdowns, dialogs, sheets, tooltips, command, menubar */
+:where(
+  [data-radix-popper-content-wrapper] > *,
+  [role="dialog"][data-state],
+  [role="menu"][data-state],
+  [role="listbox"][data-state],
+  [data-radix-popover-content],
+  [data-radix-dropdown-menu-content],
+  [data-radix-select-content],
+  [data-radix-hover-card-content],
+  [data-radix-tooltip-content],
+  [data-radix-context-menu-content],
+  [data-radix-menubar-content]
+):not(.video-player *) {
+  background: var(--lg-fill-strong) !important;
+  -webkit-backdrop-filter: blur(var(--lg-blur-strong)) saturate(180%) !important;
+  backdrop-filter: blur(var(--lg-blur-strong)) saturate(180%) !important;
+  border: 1px solid var(--lg-stroke-strong) !important;
+  box-shadow: var(--lg-shadow-lg), inset 0 1px 0 rgba(255,255,255,0.12) !important;
+  border-radius: var(--lg-radius) !important;
+}
+
+/* Dialog overlays softer & more violet */
+:where([data-radix-dialog-overlay], [data-state][class*="bg-black/80"]):not(.video-player *) {
+  background: radial-gradient(120% 80% at 50% 0%, rgba(61,37,102,0.55), rgba(10,6,24,0.78)) !important;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* Inputs / textareas become glass fields */
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), textarea, select):not(.video-player *):not([data-no-glass]) {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid var(--lg-stroke) !important;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-radius: 14px !important;
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+:where(input:focus, textarea:focus, select:focus):not(.video-player *):not([data-no-glass]) {
+  border-color: rgba(196,181,253,0.55) !important;
+  box-shadow: 0 0 0 4px rgba(167,139,250,0.18), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+  outline: none !important;
+}
+
+/* Buttons: secondary/outline/ghost become glass; primary keeps brand */
+:where(button[class*="bg-secondary"], button[class*="bg-muted"], a[class*="bg-secondary"]):not(.video-player *):not([data-no-glass]) {
+  background: var(--lg-fill) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid var(--lg-stroke) !important;
+  border-radius: 14px !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+:where(button[class*="variant-outline"], button[class*="border-input"]):not(.video-player *):not([data-no-glass]) {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid var(--lg-stroke-strong) !important;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-radius: 14px !important;
+}
+
+/* Tables (admin) — light touch */
+:where(table):not(.video-player *) {
+  border-radius: var(--lg-radius-sm);
+  overflow: hidden;
+}
+:where(thead):not(.video-player *) {
+  background: rgba(255,255,255,0.03);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+:where(tbody tr):not(.video-player *):hover {
+  background: rgba(196,181,253,0.06);
+}
+
+/* Tabs triggers as glass pills */
+:where([role="tablist"]):not(.video-player *) {
+  background: var(--lg-fill-soft) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid var(--lg-stroke) !important;
+  border-radius: 999px !important;
+  padding: 4px;
+}
+:where([role="tab"][data-state="active"]):not(.video-player *) {
+  background: rgba(255,255,255,0.1) !important;
+  border-radius: 999px !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+}
+
+/* Episode rows / list items — subtle glass on hover */
+:where(li, [role="row"], [data-episode-row]):not(.video-player *):hover {
+  background: rgba(196,181,253,0.05);
+}
+
+/* Floating bottom nav (mobile) if present */
+nav[class*="fixed"][class*="bottom-"] {
+  background: var(--lg-fill-strong);
+  -webkit-backdrop-filter: blur(var(--lg-blur-strong)) saturate(180%);
+  backdrop-filter: blur(var(--lg-blur-strong)) saturate(180%);
+  border: 1px solid var(--lg-stroke);
+  border-radius: 28px;
+  box-shadow: var(--lg-shadow-lg);
+}
+
+/* Video player: keep flat/dark for playback contrast */
+.video-player,
+.video-player * {
+  backdrop-filter: none !important;
+}
+/* …but make the floating control bars glassier */
+.video-player :where([class*="controls"], [class*="control-bar"], [class*="bottom-bar"], [class*="top-bar"]) {
+  background: linear-gradient(180deg, rgba(10,6,24,0) 0%, rgba(10,6,24,0.55) 60%, rgba(10,6,24,0.85) 100%) !important;
+}
+.video-player button:where([class*="rounded-full"], [aria-label]) {
+  background: rgba(20, 12, 36, 0.55) !important;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.14);
+}
+
+/* Reduced motion: kill heavy blur transitions */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}
+
+/* Performance: cap blur on low-end / small viewports */
+@media (max-width: 480px) {
+  :root {
+    --lg-blur: 16px;
+    --lg-blur-strong: 22px;
+  }
+}
+
