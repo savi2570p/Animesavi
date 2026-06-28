@@ -574,14 +574,14 @@ export default function PendingUploadPage() {
           <div className="ml-auto flex items-center gap-1 rounded-lg border border-border/50 bg-muted/30 p-0.5">
             <button
               onClick={() => setView('grid')}
-              className={cn('p-1.5 rounded-md transition-colors', view === 'grid' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}
+              className={cn('p-1.5 rounded-lg transition-colors', view === 'grid' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}
               aria-label="Grid view"
             >
               <LayoutGrid className="h-3.5 w-3.5" />
             </button>
             <button
               onClick={() => setView('list')}
-              className={cn('p-1.5 rounded-md transition-colors', view === 'list' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}
+              className={cn('p-1.5 rounded-lg transition-colors', view === 'list' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}
               aria-label="List view"
             >
               <Rows3 className="h-3.5 w-3.5" />
