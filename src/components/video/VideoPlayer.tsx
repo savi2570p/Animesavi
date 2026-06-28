@@ -2983,7 +2983,7 @@ export function VideoPlayer({
 
           {/* Bottom controls */}
           <div 
-            className="bg-gradient-to-t from-black/90 via-black/55 to-transparent backdrop-blur-[2px] pt-10 pb-3 md:pb-4 px-3 md:px-6"
+            className="lg-player-controls bg-gradient-to-t from-black/90 via-black/55 to-transparent backdrop-blur-[2px] pt-10 pb-3 md:pb-4 px-3 md:px-6"
             style={{ pointerEvents: 'auto', zIndex: 2147483647 }}
           >
             {/* Progress bar with buffer indicator */}
@@ -3261,7 +3261,7 @@ export function VideoPlayer({
 
           {/* Bottom controls */}
           <div 
-            className="bg-gradient-to-t from-black/90 via-black/55 to-transparent backdrop-blur-[2px] pt-10 pb-3 px-4"
+            className="lg-player-controls bg-gradient-to-t from-black/90 via-black/55 to-transparent backdrop-blur-[2px] pt-10 pb-3 px-4"
             style={{ pointerEvents: 'auto', zIndex: 60 }}
           >
           {/* Progress bar with buffer indicator */}
