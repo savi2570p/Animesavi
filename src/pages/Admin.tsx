@@ -465,7 +465,7 @@ export default function Admin() {
         </div>
         <button
           onClick={() => navigate('/admin/site-health')}
-          className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors self-start sm:self-auto"
+          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors self-start sm:self-auto"
         >
           Open Site Health →
         </button>
