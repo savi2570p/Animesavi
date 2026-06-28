@@ -31,7 +31,8 @@ import {
   Home,
   Download,
   ListVideo,
-  RefreshCw
+  RefreshCw,
+  Clock
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -58,7 +59,6 @@ export function Header() {
   const hasPremium = !!user && (isAdmin || hasValidTokenAccess(user?.email));
   const desktopSearchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
-  const isHomePage = location.pathname === '/';
   const [isMobileOS, setIsMobileOS] = useState(false);
 
   useEffect(() => {
@@ -364,7 +364,7 @@ export function Header() {
           <div className="flex items-center gap-1 sm:gap-1.5">
           {user && <div className="[&_button]:h-7 [&_button]:w-7 sm:[&_button]:h-9 sm:[&_button]:w-9 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4"><NotificationBell /></div>}
           
-          {user && !(isHomePage && isMobileOS) ? (
+          {user && !isMobileOS ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-7 w-7 sm:h-9 sm:w-9 rounded-full p-0">
@@ -583,14 +583,14 @@ export function Header() {
             </SheetTrigger>
             <SheetContent
               side="right"
-              className="w-[19rem] sm:w-80 bg-background border-border p-0 overflow-y-auto"
+              className={`bg-background border-border p-0 overflow-y-auto ${isMobileOS ? 'w-[17rem] sm:w-72' : 'w-[19rem] sm:w-80'}`}
             >
               {/* Cinematic header */}
               <div className="relative overflow-hidden border-b border-border/40">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-primary/5 to-transparent" />
                 <div className="absolute -top-12 -right-10 w-48 h-48 bg-primary/30 rounded-full blur-3xl" />
                 <div className="absolute -bottom-10 left-1/3 w-32 h-32 bg-pink-500/20 rounded-full blur-3xl" />
-                <div className="relative p-5 pt-7">
+                <div className={`relative ${isMobileOS ? 'p-4 pt-6' : 'p-5 pt-7'}`}>
                   <div className="flex items-center gap-3">
                     <div className="relative shrink-0">
                       <div className="absolute inset-0 bg-primary/40 blur-md rounded-xl" />
@@ -644,7 +644,7 @@ export function Header() {
                 </div>
               </div>
 
-              <div className="p-3 space-y-4">
+              <div className={`space-y-4 ${isMobileOS ? 'p-2.5' : 'p-3'}`}>
                 {/* Premium CTA — adaptive */}
                 {user && (
                   hasPremium ? (
@@ -768,7 +768,7 @@ export function Header() {
                         { to: '/favorites', icon: Heart, label: 'Likes', tone: 'text-rose-500 bg-rose-500/10' },
                         { to: '/history', icon: History, label: 'History', tone: 'text-violet-500 bg-violet-500/10' },
                         { to: '/downloads', icon: Download, label: 'Saved', tone: 'text-emerald-500 bg-emerald-500/10' },
-                        { to: '/watchlist', icon: ListVideo, label: 'List', tone: 'text-sky-500 bg-sky-500/10' },
+                        { to: '/watchlist', icon: Clock, label: 'Watch Later', tone: 'text-sky-500 bg-sky-500/10' },
                       ].map((it) => {
                         const active = location.pathname === it.to;
                         return (
