@@ -31,7 +31,8 @@ import {
   Home,
   Download,
   ListVideo,
-  RefreshCw
+  RefreshCw,
+  Clock
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
