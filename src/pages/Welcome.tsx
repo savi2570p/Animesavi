@@ -150,27 +150,22 @@ export default function Welcome() {
     return () => clearInterval(id);
   }, []);
 
-  /* ---------- Launch sequence: countdown → film-reel loader → navigate ---------- */
+  /* ---------- Launch sequence: liquid-glass loader → navigate ---------- */
   const startWatching = (target: string = '/') => {
     if (isLaunching) return;
     setLaunchTarget(target);
     setLaunchError(null);
     setLaunchProgress(0);
     setLaunchBeat(LOADER_BEATS[0].label);
-    setCountdown(3);
+    setCountdown(null);
     setIsLaunching(true);
   };
 
-  // Countdown 3 → 2 → 1 → start loader
+  // Run the progress directly — no countdown
   useEffect(() => {
-    if (!isLaunching || countdown === null) return;
-    if (countdown > 0) {
-      const t = setTimeout(() => setCountdown(c => (c === null ? null : c - 1)), 700);
-      return () => clearTimeout(t);
-    }
-    // countdown finished — kick off progress
+    if (!isLaunching) return;
     const start = performance.now();
-    const duration = 1900;
+    const duration = 2200;
     let raf = 0;
     const tick = () => {
       if (typeof navigator !== 'undefined' && navigator.onLine === false) {
@@ -188,12 +183,12 @@ export default function Welcome() {
         setTimeout(() => {
           try { navigate(launchTarget); }
           catch { setLaunchError('Something blocked the redirect. Please try again.'); }
-        }, 240);
+        }, 260);
       }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [countdown, isLaunching, launchTarget, navigate]);
+  }, [isLaunching, launchTarget, navigate]);
 
   const retryLaunch = () => {
     setIsLaunching(false);
@@ -264,9 +259,9 @@ export default function Welcome() {
         </header>
 
         {/* Editorial gutter — vertical brand stripe + content */}
-        <div className="relative z-10 grid grid-cols-[36px_1fr] sm:grid-cols-[72px_1fr] gap-4 sm:gap-8 px-4 sm:px-10 pt-10 sm:pt-16 pb-20">
+        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-[72px_1fr] gap-4 sm:gap-8 px-4 sm:px-10 pt-6 sm:pt-16 pb-16 sm:pb-20">
           {/* left vertical gutter */}
-          <aside className="flex flex-col items-center gap-4 pt-2">
+          <aside className="hidden sm:flex flex-col items-center gap-4 pt-2">
             <div className="w-px h-12 bg-gradient-to-b from-transparent to-primary/70" />
             <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] sm:text-xs font-bold tracking-[0.4em] uppercase text-muted-foreground">
               Issue · 26 / Vol · IV
@@ -287,7 +282,7 @@ export default function Welcome() {
               </span>
             </div>
 
-            <h1 className="font-black leading-[0.88] tracking-tight text-[clamp(2.6rem,8vw,6.5rem)] animate-fade-in">
+            <h1 className="font-black leading-[0.9] tracking-tight text-[clamp(2.1rem,8vw,6.5rem)] animate-fade-in break-words">
               <span className="block text-foreground">Anime, the way</span>
               <span className="block">
                 <span className="bg-gradient-to-r from-primary via-rose-400 to-fuchsia-500 bg-clip-text text-transparent"
@@ -612,7 +607,7 @@ export default function Welcome() {
               </p>
               <button onClick={() => startWatching('/')}
                       className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-primary text-primary-foreground hover:scale-[1.03] transition-transform">
-                Open the broadcast <ArrowRight className="w-4 h-4" />
+                Start Watching <ArrowRight className="w-4 h-4" />
               </button>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4">
@@ -648,178 +643,129 @@ export default function Welcome() {
       </footer>
 
       {/* =====================================================
-           NEW LAUNCH SCREEN — broadcast "tuning in" loader
+           LIQUID-GLASS LAUNCH LOADER
          ===================================================== */}
       {isLaunching && (
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center overflow-hidden animate-fade-in"
+          className="fixed inset-0 z-[200] flex items-center justify-center overflow-hidden animate-fade-in px-5"
           role="dialog"
           aria-modal="true"
-          aria-label="Tuning in to AnimeSavi"
+          aria-label="Loading AnimeSavi"
           style={{
             background:
-              'radial-gradient(ellipse at top, hsl(var(--primary)/0.18), transparent 55%), radial-gradient(ellipse at bottom, hsl(330 80% 50% / 0.12), transparent 55%), hsl(var(--background))',
+              'radial-gradient(ellipse at 20% 10%, hsl(var(--primary)/0.28), transparent 55%), radial-gradient(ellipse at 80% 90%, hsl(330 85% 55% / 0.22), transparent 55%), radial-gradient(ellipse at 60% 40%, hsl(220 80% 55% / 0.18), transparent 60%), hsl(var(--background)/0.85)',
+            backdropFilter: 'blur(28px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(28px) saturate(160%)',
           }}
         >
-          {/* TV static layer */}
-          <div className="absolute inset-0 opacity-[0.08] pointer-events-none"
-               style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'1.4\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")' }} />
-          {/* horizontal sweep scanline */}
-          <div className="absolute inset-x-0 h-24 pointer-events-none opacity-30"
-               style={{ background: 'linear-gradient(180deg, transparent, hsl(var(--primary)/0.7), transparent)', animation: 'as-scan 2.6s ease-in-out infinite' }} />
-          {/* color bars rail (broadcast feel) */}
-          <div className="absolute top-0 left-0 right-0 h-1 flex">
-            {['#ffffff', '#f1c40f', '#1abc9c', '#2ecc71', '#9b59b6', '#e74c3c', '#3498db', '#000000'].map(c => (
-              <div key={c} className="flex-1" style={{ background: c, opacity: 0.85 }} />
-            ))}
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 flex">
-            {['#000000', '#3498db', '#e74c3c', '#9b59b6', '#2ecc71', '#1abc9c', '#f1c40f', '#ffffff'].map(c => (
-              <div key={c} className="flex-1" style={{ background: c, opacity: 0.85 }} />
-            ))}
+          {/* Drifting glass orbs for liquid feel */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -top-24 -left-24 w-[60vw] h-[60vw] max-w-[520px] max-h-[520px] rounded-full opacity-60"
+                 style={{ background: 'radial-gradient(circle, hsl(var(--primary)/0.45), transparent 65%)', filter: 'blur(60px)', animation: 'as-orb 14s ease-in-out infinite' }} />
+            <div className="absolute -bottom-32 -right-20 w-[55vw] h-[55vw] max-w-[480px] max-h-[480px] rounded-full opacity-55"
+                 style={{ background: 'radial-gradient(circle, hsl(330 85% 55% / 0.5), transparent 65%)', filter: 'blur(70px)', animation: 'as-orb 18s ease-in-out -4s infinite reverse' }} />
+            <div className="absolute top-1/3 right-1/4 w-[36vw] h-[36vw] max-w-[320px] max-h-[320px] rounded-full opacity-45"
+                 style={{ background: 'radial-gradient(circle, hsl(220 90% 60% / 0.45), transparent 65%)', filter: 'blur(55px)', animation: 'as-orb 12s ease-in-out -8s infinite' }} />
           </div>
 
-          {/* Stage: countdown (3 → 2 → 1 → loader) */}
-          {countdown !== null && countdown > 0 ? (
-            <div className="relative flex flex-col items-center gap-6 animate-fade-in">
-              <p className="text-[10px] sm:text-xs uppercase tracking-[0.45em] font-black text-primary">
-                Stand by · the show begins in
+          {/* Glass card */}
+          <div
+            className="relative w-full max-w-md rounded-[28px] overflow-hidden p-6 sm:p-8 flex flex-col items-center gap-6 animate-scale-in"
+            style={{
+              background: 'linear-gradient(135deg, hsl(0 0% 100% / 0.10), hsl(0 0% 100% / 0.04))',
+              border: '1px solid hsl(0 0% 100% / 0.14)',
+              backdropFilter: 'blur(40px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+              boxShadow: '0 30px 80px hsl(0 0% 0% / 0.55), inset 0 1px 0 hsl(0 0% 100% / 0.25), inset 0 -1px 0 hsl(0 0% 0% / 0.3)',
+            }}
+          >
+            {/* highlight sheen */}
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+            <div className="pointer-events-none absolute inset-0 rounded-[28px]"
+                 style={{ background: 'linear-gradient(180deg, hsl(0 0% 100% / 0.08), transparent 40%)' }} />
+
+            {/* Logo with glass ring */}
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full blur-2xl opacity-70"
+                   style={{ background: 'conic-gradient(from 0deg, hsl(var(--primary)), hsl(330 85% 60%), hsl(220 90% 60%), hsl(var(--primary)))', animation: 'spin 4s linear infinite' }} />
+              <div className="relative h-20 w-20 rounded-full flex items-center justify-center"
+                   style={{
+                     background: 'linear-gradient(135deg, hsl(0 0% 100% / 0.15), hsl(0 0% 100% / 0.04))',
+                     border: '1px solid hsl(0 0% 100% / 0.25)',
+                     backdropFilter: 'blur(20px)',
+                     WebkitBackdropFilter: 'blur(20px)',
+                     boxShadow: 'inset 0 1px 0 hsl(0 0% 100% / 0.3), 0 10px 30px hsl(var(--primary)/0.35)',
+                   }}>
+                <img src={logo} alt="" className="h-12 w-12 rounded-xl object-contain" />
+              </div>
+            </div>
+
+            <div className="text-center space-y-1.5">
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight">
+                <span className="text-primary">ANIME</span>SAVI
+              </h2>
+              <p className="text-[11px] uppercase tracking-[0.35em] font-bold text-foreground/70 flex items-center justify-center gap-2">
+                <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+                {launchBeat}
               </p>
-              <div className="relative w-48 h-48 flex items-center justify-center">
-                <svg viewBox="0 0 120 120" className="absolute inset-0 w-full h-full" style={{ animation: 'spin 8s linear infinite' }}>
-                  <circle cx="60" cy="60" r="56" fill="none" stroke="hsl(var(--primary))" strokeWidth="1" strokeDasharray="2 8" opacity="0.45" />
-                </svg>
-                <svg viewBox="0 0 120 120" className="absolute inset-3 w-[calc(100%-1.5rem)] h-[calc(100%-1.5rem)]">
-                  <circle cx="60" cy="60" r="54" fill="none" stroke="hsl(var(--primary)/0.5)" strokeWidth="1" />
-                  <circle cx="60" cy="6" r="2.5" fill="hsl(var(--primary))" />
-                </svg>
-                <span key={countdown} className="text-[8rem] font-black tabular-nums leading-none bg-gradient-to-br from-primary via-rose-400 to-fuchsia-500 bg-clip-text text-transparent animate-scale-in"
-                      style={{ filter: 'drop-shadow(0 8px 30px hsl(var(--primary)/0.5))' }}>
-                  {countdown}
+            </div>
+
+            {/* Glass progress track */}
+            <div className="w-full space-y-2">
+              <div
+                className="relative h-2 w-full rounded-full overflow-hidden"
+                style={{
+                  background: 'hsl(0 0% 100% / 0.08)',
+                  border: '1px solid hsl(0 0% 100% / 0.12)',
+                  boxShadow: 'inset 0 1px 2px hsl(0 0% 0% / 0.4)',
+                }}
+              >
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full"
+                  style={{
+                    width: `${launchProgress}%`,
+                    background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(330 85% 65%), hsl(220 90% 65%), hsl(var(--primary)))',
+                    backgroundSize: '300% 100%',
+                    animation: 'as-shimmer 2.4s linear infinite',
+                    boxShadow: '0 0 16px hsl(var(--primary)/0.7), inset 0 1px 0 hsl(0 0% 100% / 0.4)',
+                    transition: 'width 220ms ease-out',
+                  }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[10px] font-bold tabular-nums uppercase tracking-wider text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_hsl(142_72%_45%)]" />
+                  Connected
                 </span>
+                <span className="text-foreground/80">{Math.floor(launchProgress)}%</span>
               </div>
-              <p className="text-[11px] uppercase tracking-[0.35em] font-bold text-muted-foreground">
-                CH·04 · AnimeSavi · 4K UHD
-              </p>
             </div>
-          ) : (
-            /* Film-reel loader */
-            <div className="relative w-full max-w-lg mx-auto px-6 flex flex-col items-center gap-7 text-center">
-              {/* dual film reels */}
-              <div className="flex items-center gap-10">
-                {[0, 1].map(idx => (
-                  <div key={idx} className="relative w-24 h-24">
-                    <div className="absolute inset-0 rounded-full border-2 border-primary/40"
-                         style={{ animation: `spin ${idx === 0 ? 2.4 : 1.8}s linear infinite${idx === 1 ? ' reverse' : ''}` }}>
-                      {[...Array(8)].map((_, k) => {
-                        const a = (k / 8) * Math.PI * 2;
-                        return (
-                          <span key={k} className="absolute w-3 h-3 rounded-full bg-primary/70"
-                                style={{
-                                  left: '50%', top: '50%',
-                                  transform: `translate(-50%,-50%) rotate(${(k / 8) * 360}deg) translateY(-38px)`,
-                                }} />
-                        );
-                      })}
-                    </div>
-                    <div className="absolute inset-3 rounded-full border border-border/60 bg-card/60 backdrop-blur" />
-                    <div className="absolute inset-9 rounded-full bg-primary shadow-[0_0_24px_hsl(var(--primary))]" />
-                  </div>
-                ))}
-              </div>
 
-              {/* film strip with sprocket holes */}
-              <div className="relative w-full h-12 rounded-md overflow-hidden border-y-[6px] border-foreground/80 bg-foreground/95">
-                <div className="absolute inset-y-0 left-0 right-0 flex gap-2 items-center px-2"
-                     style={{ animation: 'as-film 1.4s linear infinite' }}>
-                  {[...Array(24)].map((_, k) => (
-                    <div key={k} className="h-7 w-12 rounded-sm bg-gradient-to-br from-primary/60 to-fuchsia-500/40 border border-background/40 shrink-0" />
-                  ))}
-                </div>
-                {/* sprocket dots */}
-                <div className="absolute top-0 left-0 right-0 flex justify-between px-1.5 -translate-y-1/2">
-                  {[...Array(12)].map((_, k) => <span key={k} className="w-2 h-2 rounded-sm bg-background" />)}
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 flex justify-between px-1.5 translate-y-1/2">
-                  {[...Array(12)].map((_, k) => <span key={k} className="w-2 h-2 rounded-sm bg-background" />)}
+            {/* Error */}
+            {launchError && (
+              <div className="w-full rounded-2xl p-4 space-y-3 animate-fade-in"
+                   style={{
+                     background: 'hsl(0 70% 50% / 0.12)',
+                     border: '1px solid hsl(0 70% 50% / 0.35)',
+                     backdropFilter: 'blur(20px)',
+                     WebkitBackdropFilter: 'blur(20px)',
+                   }}>
+                <p className="text-xs sm:text-sm text-foreground/90 leading-snug text-left">{launchError}</p>
+                <div className="flex gap-2">
+                  <button onClick={retryLaunch} className="flex-1 h-9 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90">Retry</button>
+                  <button onClick={() => { setIsLaunching(false); setLaunchError(null); }}
+                          className="flex-1 h-9 rounded-xl border border-white/20 bg-white/5 text-xs font-semibold hover:bg-white/10">Cancel</button>
                 </div>
               </div>
-
-              {/* Title / channel card */}
-              <div className="text-center">
-                <p className="text-[10px] uppercase tracking-[0.45em] font-black text-primary">/ Now broadcasting</p>
-                <h2 className="text-2xl sm:text-3xl font-black tracking-tight mt-1.5">
-                  <span className="text-primary">ANIME</span>SAVI · CH·04
-                </h2>
-                <p className="text-[11px] mt-1 uppercase tracking-[0.3em] font-bold text-muted-foreground flex items-center justify-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-                  {launchBeat}
-                </p>
-              </div>
-
-              {/* Progress bar with timecode */}
-              <div className="w-full space-y-2">
-                <div className="flex items-center justify-between text-[10px] font-bold tabular-nums text-muted-foreground uppercase tracking-wider">
-                  <span className="text-foreground">TC 00:00:0{Math.min(9, Math.floor(launchProgress / 11))}</span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_hsl(142_72%_45%)]" />
-                    Signal: strong
-                  </span>
-                  <span>{Math.floor(launchProgress)}%</span>
-                </div>
-                <div className="relative h-1.5 w-full rounded-full overflow-hidden bg-card/70 border border-border/40">
-                  <div className="absolute inset-y-0 left-0 rounded-full"
-                       style={{
-                         width: `${launchProgress}%`,
-                         background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(330 85% 60%), hsl(var(--primary)))',
-                         backgroundSize: '200% 100%',
-                         animation: 'as-shimmer 2s linear infinite',
-                         boxShadow: '0 0 14px hsl(var(--primary)/0.7)',
-                         transition: 'width 200ms ease-out',
-                       }} />
-                </div>
-              </div>
-
-              {/* Beat ticks */}
-              <ol className="grid grid-cols-6 gap-1.5 w-full">
-                {LOADER_BEATS.map(b => {
-                  const done = launchProgress >= b.at;
-                  return (
-                    <li key={b.label} className={`rounded-md py-1.5 px-1 text-[8px] font-black uppercase tracking-wider border text-center transition-colors ${
-                      done ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-                           : 'border-border/30 bg-card/40 text-muted-foreground/60'
-                    }`}>
-                      {b.label.replace('· ', '·\u00a0')}
-                    </li>
-                  );
-                })}
-              </ol>
-
-              {/* Error */}
-              {launchError && (
-                <div className="w-full rounded-xl border border-destructive/40 bg-destructive/10 backdrop-blur p-4 space-y-3 animate-fade-in">
-                  <p className="text-xs sm:text-sm text-foreground/90 leading-snug text-left">{launchError}</p>
-                  <div className="flex gap-2">
-                    <button onClick={retryLaunch} className="flex-1 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90">Retry</button>
-                    <button onClick={() => { setIsLaunching(false); setLaunchError(null); }}
-                            className="flex-1 h-9 rounded-lg border border-border bg-background/40 text-xs font-semibold hover:bg-background/70">Cancel</button>
-                  </div>
-                </div>
-              )}
-
-              <p className="text-[11px] text-muted-foreground/70">
-                CH·04 · AnimeSavi · 4K UHD · Hindi · No ads · No paywall
-              </p>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
       <style>{`
         @keyframes as-marquee { 0% { transform: translateX(0) } 100% { transform: translateX(-33.333%) } }
-        @keyframes as-shimmer { 0% { background-position: 0% 50% } 100% { background-position: 200% 50% } }
-        @keyframes as-film    { 0% { transform: translateX(0) } 100% { transform: translateX(-56px) } }
-        @keyframes as-scan    { 0% { top: -10% } 100% { top: 110% } }
+        @keyframes as-shimmer { 0% { background-position: 0% 50% } 100% { background-position: 300% 50% } }
+        @keyframes as-orb     { 0%,100% { transform: translate(0,0) scale(1) } 50% { transform: translate(4%, -3%) scale(1.08) } }
       `}</style>
     </div>
   );
