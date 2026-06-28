@@ -270,7 +270,7 @@ export default function Settings() {
                         key={q}
                         type="button"
                         onClick={() => setDefaultQuality(q)}
-                        className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-colors ${
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors ${
                           defaultQuality === q
                             ? 'border-primary bg-primary/15 text-primary'
                             : 'border-border/50 text-muted-foreground hover:border-primary/30'
@@ -297,7 +297,7 @@ export default function Settings() {
                         key={o.v}
                         type="button"
                         onClick={() => setSubLang(o.v)}
-                        className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-colors ${
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors ${
                           subLang === o.v
                             ? 'border-primary bg-primary/15 text-primary'
                             : 'border-border/50 text-muted-foreground hover:border-primary/30'
@@ -396,7 +396,7 @@ export default function Settings() {
                     <button
                       type="button"
                       onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors rounded-lg"
                     >
                       {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -421,7 +421,7 @@ export default function Settings() {
                       <button
                         type="button"
                         onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors rounded-lg"
                       >
                         {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
