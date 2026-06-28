@@ -282,7 +282,7 @@ export default function Welcome() {
               </span>
             </div>
 
-            <h1 className="font-black leading-[0.88] tracking-tight text-[clamp(2.6rem,8vw,6.5rem)] animate-fade-in">
+            <h1 className="font-black leading-[0.9] tracking-tight text-[clamp(2.1rem,8vw,6.5rem)] animate-fade-in break-words">
               <span className="block text-foreground">Anime, the way</span>
               <span className="block">
                 <span className="bg-gradient-to-r from-primary via-rose-400 to-fuchsia-500 bg-clip-text text-transparent"
