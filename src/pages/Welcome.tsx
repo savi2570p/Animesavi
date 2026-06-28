@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Home, Play, Star, TrendingUp, Sparkles, Shield, Zap, Download, Smartphone, Globe, Users, Swords, Heart, Wand2, Ghost, Laugh, Brain, ChevronRight, Clock, Monitor, Headphones, Film, Tv, MessageSquare, Quote, Trophy, BookOpen, Bell, Wifi, Share2, ThumbsUp, MessageCircle, Crown, Flame, Send, ExternalLink, Eye, Lock, HardDrive, Layers, Palette, RefreshCw, Settings, Volume2, Award, Radio, Gamepad2, Compass, MapPin, Calendar, BarChart3, Keyboard, Cast } from 'lucide-react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import {
+  Search, Home, Play, ChevronRight, Radio, Tv, Film, Sparkles, Flame,
+  Globe, Headphones, Download, Shield, Zap, Calendar, Bell, Wifi,
+  Monitor, Smartphone, Cast, Users, Crown, Lock, Eye, Compass, HardDrive,
+  Volume2, Star, ArrowRight, Signal, Clock, PlayCircle, Layers, MessageCircle,
+} from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -13,1419 +17,810 @@ interface AnimePreview {
   view_count: number | null;
 }
 
-const GENRES = [
-  { name: 'Action', icon: Swords, gradient: 'from-red-600/80 to-orange-600/60' },
-  { name: 'Romance', icon: Heart, gradient: 'from-pink-600/80 to-rose-500/60' },
-  { name: 'Fantasy', icon: Wand2, gradient: 'from-purple-600/80 to-violet-500/60' },
-  { name: 'Horror', icon: Ghost, gradient: 'from-gray-800/90 to-gray-600/60' },
-  { name: 'Comedy', icon: Laugh, gradient: 'from-yellow-600/80 to-amber-500/60' },
-  { name: 'Sci-Fi', icon: Brain, gradient: 'from-cyan-600/80 to-blue-500/60' },
+/* ---------- Static editorial content ---------- */
+
+const CHANNELS = [
+  { code: 'CH·01', label: 'Hindi Dub Premiere',  hint: 'Fresh drops · daily' },
+  { code: 'CH·02', label: 'Subbed Simulcast',    hint: '< 1h after Japan' },
+  { code: 'CH·03', label: 'Movie Theatre',       hint: '4K HDR feature reel' },
+  { code: 'CH·04', label: 'Late Night Binge',    hint: 'Shounen marathons' },
 ];
 
-const TESTIMONIALS = [
-  { name: 'Arjun K.', rating: 5, text: 'Best anime site in India! Hindi dubs are amazing and no ads at all. The Watch List feature keeps me organized.', time: '1 week ago' },
-  { name: 'Priya S.', rating: 5, text: 'The download feature is a lifesaver. I download episodes on WiFi and watch during my commute. Love the 4K quality!', time: '2 weeks ago' },
-  { name: 'Rahul M.', rating: 4, text: 'Watch parties with friends are so fun! The Trending Now banner helps us pick what to watch together.', time: '1 week ago' },
-  { name: 'Sneha D.', rating: 5, text: 'Finally an anime site that works perfectly on my phone. The glassy OG/COM badges look so premium!', time: '3 days ago' },
-  { name: 'Vikram P.', rating: 5, text: 'Multi-audio switching is incredible. E-sub toggling works great and I can keep my favorite server selected.', time: '1 month ago' },
-  { name: 'Ananya R.', rating: 5, text: 'Clean UI, fast streaming, and the MuseIN countdown is so exciting! Can\'t wait for new Hindi dub drops.', time: '5 days ago' },
-  { name: 'Karan T.', rating: 5, text: 'I was paying for premium on other sites. AnimeSavi gives everything for free with ZERO ads. The slim scrollbar looks clean!', time: '2 days ago' },
-  { name: 'Meera J.', rating: 5, text: 'The release calendar and notification system is perfect. The reminders are a game-changer for fans.', time: '1 week ago' },
-  { name: 'Rohit B.', rating: 4, text: 'Four server options and no forced switching means I can choose what works best. H.Savi on my iPhone is flawless.', time: '4 days ago' },
-  { name: 'Deepak N.', rating: 5, text: 'The 4K quality is stunning on my big screen. Trending Now banner makes discovering new anime effortless.', time: '3 days ago' },
-  { name: 'Simran L.', rating: 5, text: 'I love the PWA feature — installed it on my phone and it feels like a native app. Watch List is super handy!', time: '2 days ago' },
-  { name: 'Aditya G.', rating: 4, text: 'The search works great. Genre filters + Crunchy & MuseIN tabs make browsing so organized.', time: '1 week ago' },
-  { name: 'Pooja V.', rating: 5, text: 'My entire friend group uses AnimeSavi now. The embed player with episode grid is perfect for sharing.', time: '2 months ago' },
-  { name: 'Nikhil R.', rating: 5, text: 'Continue watching feature is brilliant. Server maintenance popup is clear when a server is down — no confusion!', time: '3 days ago' },
-  { name: 'Kavya M.', rating: 4, text: 'The embed player is so clean. Episode selector grid like Netflix makes it easy to jump between episodes.', time: '1 week ago' },
-  { name: 'Saurabh P.', rating: 5, text: 'AnimeSavi loads faster than any other anime site. Even on slow 3G, H.Savi server works smoothly. Impressive!', time: '1 day ago' },
-  { name: 'Tanvi A.', rating: 5, text: 'PIN Lock on my profile is such a thoughtful feature — my little brother can\'t mess with my watch history anymore!', time: '6 hours ago' },
-  { name: 'Harsh K.', rating: 5, text: 'The 12 player themes are awesome. Rose-Gold + 4K + Hindi DUB — feels truly premium without paying a single rupee.', time: '12 hours ago' },
-  { name: 'Ishaan B.', rating: 5, text: 'Up to 5 profiles per family account. My mom, dad and I each have our own continue-watching. Best UX I\'ve seen.', time: '2 days ago' },
-  { name: 'Ritika S.', rating: 4, text: 'Watch parties + chat are wild fun. The new compact Telegram popup doesn\'t cover the video anymore — perfect.', time: '4 days ago' },
+const TICKER = [
+  '4 active CDN servers',
+  'Hindi · English · Japanese audio',
+  '4K UHD playback site-wide',
+  'No ads. No popups. No paywalls.',
+  '1-hour pre-release push alerts',
+  '5 profiles per family account',
+  'Offline downloads up to 4K',
+  'Watch parties with live chat',
 ];
 
-const FAQ_ITEMS = [
-  { q: 'Is AnimeSavi free and ad-free?', a: 'Yes — AnimeSavi is 100% free with zero ads, no popups, and no premium plans. Every episode and feature is unlocked for everyone.' },
-  { q: 'Do you have Hindi dubbed anime?', a: 'Yes. Most titles ship with official Hindi dubs, and you can switch to English or Japanese audio mid-episode using the multi-audio button in the player.' },
-  { q: 'Can I download episodes for offline viewing?', a: 'Yes. Tap the download button on any episode to save it in 480p, 720p, 1080p or 4K. Downloads play offline from the Downloads page — no internet required.' },
-  { q: 'How do Watch Parties work?', a: 'Open any episode, start a Watch Party, and share the code with friends. Playback stays in sync and you can chat together in real time.' },
-  { q: 'Do I need an account to watch?', a: 'No, browsing and watching are open to everyone. Creating a free account unlocks Watch List, Continue Watching, favorites, and release reminders.' },
-  { q: 'Can I install AnimeSavi as an app?', a: 'Yes. On Android Chrome use "Add to Home Screen" from the menu; on iPhone Safari tap Share → "Add to Home Screen". It runs like a native app with PWA support.' },
-  { q: 'Why are there multiple servers?', a: 'We offer H.Savi, Multi.Savi and X-PLUS so you can pick whatever streams best on your device. Your last choice is remembered — no forced switching.' },
-  { q: 'How do I report a broken episode?', a: 'Use the ⚠️ report button on the watch page or message us on Telegram @Lv_Savi. Reports are reviewed quickly and broken links are usually fixed within 24 hours.' },
-  { q: 'What is the PIN Lock feature?', a: 'From Profile → Settings, enable a 4 or 6 digit PIN. Every time you reopen the site, you\'ll need to enter the PIN before accessing your account. You can change or disable it anytime.' },
-  { q: 'How many profiles can a single account have?', a: 'Up to 5 profiles per regular account, and 9 for admins/uploaders. Each profile keeps its own watch history, watch list, favorites and recommendations.' },
-  { q: 'Does the player support 4K and multi-audio?', a: 'Yes — 4K UHD playback is enabled site-wide. The player exposes every available audio track reported by the source manifest, with a one-tap switcher.' },
-  { q: 'Can I customize the video player look?', a: 'Yes. The new player theme picker offers 12 color themes — Crimson, Midnight, Ocean, Emerald, Sunset, Gold, Rose, Fuchsia, Lime, Cyan, Royal Purple and Minimal Mono.' },
-  { q: 'Will my progress sync between devices?', a: 'Yes. When you\'re signed in, Continue Watching, favorites and watch list sync across phone, tablet and PC instantly.' },
-  { q: 'How fresh are new episodes?', a: 'New episodes appear in "Latest Episodes" the same day they release. Enable release reminders to get a push notification 1 hour before each new drop of your favorite show.' },
+const MOOD_TILES = [
+  { tag: 'Slice of Life',  hue: 'from-amber-500/60 to-rose-400/40',     line: 'sundown rooftops, soft jazz' },
+  { tag: 'Mecha & Sci-Fi', hue: 'from-cyan-500/60 to-indigo-500/40',    line: 'neon plating, cockpit haze' },
+  { tag: 'Dark Fantasy',   hue: 'from-violet-700/70 to-slate-900/40',   line: 'cathedral dust, blood moons' },
+  { tag: 'Sports',         hue: 'from-emerald-500/60 to-sky-400/40',    line: 'court squeak, last seconds' },
+  { tag: 'Romance',        hue: 'from-pink-500/60 to-rose-400/40',      line: 'soft hands, train rides' },
+  { tag: 'Isekai',         hue: 'from-orange-500/60 to-yellow-400/40',  line: 'guild halls, level-ups' },
+];
+
+const PILLARS = [
+  { icon: Shield,    title: 'Zero Ads, Zero Walls',   body: 'No banners, no preroll, no premium tier hiding episodes. Every feature, free, forever.' },
+  { icon: Globe,     title: 'Official Hindi Dub',     body: 'Hindi alongside English & Japanese — switch tracks mid-episode without reloading the player.' },
+  { icon: Zap,       title: 'Sub-second Start',       body: 'H.Savi, Multi.Savi and X-PLUS pre-warm. Tap play and the first frame is on screen in under a second.' },
+  { icon: Download,  title: 'Real 4K Downloads',      body: 'Save in 480p → 2160p with proper episode names, codec tag & audio language baked into the filename.' },
+  { icon: Users,     title: 'Watch Parties + Chat',   body: 'Sync playback with friends, react in a live chat sidebar, and pick up where the party left off.' },
+  { icon: Bell,      title: 'Heads-up Notifications', body: 'Get a push exactly 1 hour before your favorite show airs — perfectly timed, never spammy.' },
+];
+
+const TIMELINE = [
+  { t: '00:00', label: 'Tap Start Watching', body: 'No signup. Browse the full catalog instantly.' },
+  { t: '00:08', label: 'Pick a channel',     body: 'Trending now, simulcast, Hindi premieres or a curated genre row.' },
+  { t: '00:14', label: 'Hit play',           body: 'Best server auto-picked for your network — change anytime.' },
+  { t: '00:20', label: 'Sync your shelf',    body: 'Sign in once and watch history, list & favorites follow every device.' },
+];
+
+const SPECS = [
+  { k: 'Codec',          v: 'H.264 · H.265 · AV1' },
+  { k: 'Max bitrate',    v: '24 Mbps (4K HDR)' },
+  { k: 'Audio',          v: 'AAC · E-AC3 5.1' },
+  { k: 'Subtitles',      v: 'VTT · ASS · SRT' },
+  { k: 'Servers',        v: 'H.Savi · Multi · X-PLUS · Embed' },
+  { k: 'Profiles',       v: 'Up to 5 (admin: 9)' },
+  { k: 'Player themes',  v: '12 named palettes' },
+  { k: 'PWA install',    v: 'iOS Safari · Android Chrome' },
+];
+
+const VOICES = [
+  { who: 'Arjun · Mumbai',   line: 'Best Hindi dub library on the open web. Period.' },
+  { who: 'Priya · Bengaluru', line: 'Downloads keep my commute alive. 4K, named files, no fuss.' },
+  { who: 'Rahul · Delhi',    line: 'Watch parties with the squad on Sunday — sync is instant.' },
+  { who: 'Sneha · Pune',     line: 'Feels like a paid app. It is not. That is the wild part.' },
+];
+
+const LOADER_BEATS = [
+  { at: 0,   label: 'Tuning signal' },
+  { at: 22,  label: 'Reel · 01 loaded' },
+  { at: 44,  label: 'Reel · 02 loaded' },
+  { at: 66,  label: 'Color graded' },
+  { at: 86,  label: 'Audio synced' },
+  { at: 100, label: 'On air' },
 ];
 
 export default function Welcome() {
   const navigate = useNavigate();
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [isFocused, setIsFocused] = useState(false);
   const [featuredAnime, setFeaturedAnime] = useState<AnimePreview[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [genreCovers, setGenreCovers] = useState<Record<string, string>>({});
   const [totalAnime, setTotalAnime] = useState(0);
   const [totalEpisodes, setTotalEpisodes] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [clock, setClock] = useState(() => new Date());
+
+  // Loader state
   const [isLaunching, setIsLaunching] = useState(false);
   const [launchProgress, setLaunchProgress] = useState(0);
-  const [launchStage, setLaunchStage] = useState('Warming up servers');
+  const [launchBeat, setLaunchBeat] = useState(LOADER_BEATS[0].label);
   const [launchError, setLaunchError] = useState<string | null>(null);
   const [launchTarget, setLaunchTarget] = useState<string>('/');
-  // Progress-step checklist shown beneath the bar so the user has tangible
-  // feedback (instead of just a moving percentage). Steps tick to true as the
-  // simulated launcher passes each threshold.
-  const LAUNCH_STEPS = [
-    { at: 18, label: 'Connect CDN' },
-    { at: 38, label: 'Load library' },
-    { at: 58, label: 'Prepare 4K' },
-    { at: 78, label: 'Sync history' },
-    { at: 100, label: 'Ready' },
-  ];
-  const [referOpen, setReferOpen] = useState(false);
-  const [referCopied, setReferCopied] = useState(false);
-  const [referBanUntil, setReferBanUntil] = useState<number>(() => {
-    const v = Number(localStorage.getItem('refer_ban_until') || 0);
-    return Number.isFinite(v) ? v : 0;
-  });
-  const [referNow, setReferNow] = useState<number>(Date.now());
-  const REFER_LINK = 'https://animesavi.com';
-  const referBanLeft = Math.max(0, referBanUntil - referNow);
-  const handleCopyReferral = async () => {
-    if (referBanLeft > 0) return;
-    try {
-      await navigator.clipboard.writeText(REFER_LINK);
-    } catch {
-      const el = document.createElement('textarea');
-      el.value = REFER_LINK;
-      el.setAttribute('readonly', '');
-      el.style.position = 'fixed';
-      el.style.top = '0';
-      el.style.opacity = '0';
-      document.body.appendChild(el);
-      el.focus();
-      el.select();
-      document.execCommand('copy');
-      document.body.removeChild(el);
-    }
-    const used = Number(localStorage.getItem('refer_used_count') || 0) + 1;
-    localStorage.setItem('refer_used_count', String(used));
-    if (used >= 2) {
-      const until = Date.now() + 10 * 60 * 1000;
-      localStorage.setItem('refer_ban_until', String(until));
-      setReferBanUntil(until);
-    }
-    setReferCopied(true);
-    setTimeout(() => setReferCopied(false), 2200);
-  };
+  const [countdown, setCountdown] = useState<number | null>(null);
 
-  const startWatching = (target: string = '/') => {
-    if (isLaunching) return;
-    setLaunchTarget(target);
-    setLaunchError(null);
-    setIsLaunching(true);
-    setLaunchProgress(0);
-    setLaunchStage('Warming up servers');
-    const stages: Array<{ at: number; label: string }> = [
-      { at: 18, label: 'Connecting to H.Savi CDN' },
-      { at: 38, label: 'Loading your library' },
-      { at: 58, label: 'Preparing 4K stream' },
-      { at: 78, label: 'Syncing watch history' },
-      { at: 92, label: 'Almost there' },
-    ];
-    const start = performance.now();
-    const duration = 1800; // ms — fast but feels real
-    const tick = () => {
-      try {
-        // If the user is offline, bail out early with a clear error so they
-        // don't sit staring at a spinner.
-        if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-          setLaunchError('You appear to be offline. Reconnect and try again.');
-          return;
-        }
-        const elapsed = performance.now() - start;
-        const pct = Math.min(100, (elapsed / duration) * 100);
-        setLaunchProgress(pct);
-        const stage = [...stages].reverse().find((s) => pct >= s.at);
-        if (stage) setLaunchStage(stage.label);
-        if (pct < 100) {
-          requestAnimationFrame(tick);
-        } else {
-          setLaunchStage('Ready');
-          setTimeout(() => {
-            try {
-              navigate(target);
-            } catch (err) {
-              console.error('[welcome] navigate failed', err);
-              setLaunchError('Something blocked the redirect. Please try again.');
-            }
-          }, 220);
-        }
-      } catch (err) {
-        console.error('[welcome] launch tick failed', err);
-        setLaunchError('Playback setup failed. Please retry.');
-      }
-    };
-    requestAnimationFrame(tick);
-  };
-
-  const retryLaunch = () => {
-    setIsLaunching(false);
-    setLaunchError(null);
-    // brief tick to let state flush before restarting
-    setTimeout(() => startWatching(launchTarget), 50);
-  };
-
+  /* ---------- Data ---------- */
   useEffect(() => {
-    const FEATURED_TITLES = [
-      'That Time I Got Reincarnated as a Slime',
-      'Solo Leveling',
-      'Demon Slayer',
-      'Frieren: Beyond Journey\u2019s End',
-      'Dandadan',
-    ];
-    const fetchFeatured = async () => {
-      // Try the curated set first (matches against multiple title spellings).
+    (async () => {
+      const FEATURED_TITLES = [
+        'Solo Leveling', 'Demon Slayer', 'Frieren', 'Dandadan',
+        'That Time I Got Reincarnated as a Slime',
+      ];
       const { data: curated } = await supabase
         .from('anime')
         .select('id, title, cover_image, genres, view_count')
-        .or(
-          FEATURED_TITLES
-            .map((t) => `title.ilike.%${t.replace(/[%]/g, '').slice(0, 40)}%`)
-            .join(','),
-        )
+        .or(FEATURED_TITLES.map(t => `title.ilike.%${t.slice(0, 40)}%`).join(','))
         .limit(8);
-
       let list = curated || [];
-      // Fallback: top up with is_featured if curated set is short, never include Jujutsu Kaisen.
       if (list.length < 5) {
-        const { data: fallback } = await supabase
-          .from('anime')
-          .select('id, title, cover_image, genres, view_count')
-          .eq('is_featured', true)
-          .neq('title', 'Jujutsu Kaisen')
-          .neq('title', 'My Hero Academia')
-          .limit(8);
-        const existing = new Set(list.map((a) => a.id));
-        list = [...list, ...((fallback || []).filter((a) => !existing.has(a.id)))].slice(0, 8);
+        const { data: fb } = await supabase
+          .from('anime').select('id, title, cover_image, genres, view_count')
+          .eq('is_featured', true).neq('title', 'Jujutsu Kaisen').limit(8);
+        const seen = new Set(list.map(a => a.id));
+        list = [...list, ...((fb || []).filter(a => !seen.has(a.id)))].slice(0, 8);
       }
       if (list.length) setFeaturedAnime(list);
-    };
 
-    const fetchGenreCovers = async () => {
-      const { data } = await supabase
-        .from('anime')
-        .select('cover_image, genres')
-        .not('cover_image', 'is', null)
-        .limit(100);
-      if (data) {
-        const covers: Record<string, string> = {};
-        for (const genre of GENRES) {
-          const match = data.find(a => a.genres?.includes(genre.name) && a.cover_image);
-          if (match?.cover_image) covers[genre.name] = match.cover_image;
-        }
-        setGenreCovers(covers);
-      }
-    };
-
-    const fetchStats = async () => {
-      const { count: animeCount } = await supabase.from('anime').select('id', { count: 'exact', head: true });
-      const { count: episodeCount } = await supabase.from('episodes').select('id', { count: 'exact', head: true });
-      if (animeCount) setTotalAnime(animeCount);
-      if (episodeCount) setTotalEpisodes(episodeCount);
-    };
-
-    fetchFeatured();
-    fetchGenreCovers();
-    fetchStats();
+      const [{ count: ac }, { count: ec }] = await Promise.all([
+        supabase.from('anime').select('id', { count: 'exact', head: true }),
+        supabase.from('episodes').select('id', { count: 'exact', head: true }),
+      ]);
+      if (ac) setTotalAnime(ac);
+      if (ec) setTotalEpisodes(ec);
+    })();
   }, []);
 
   useEffect(() => {
     if (featuredAnime.length <= 1) return;
-    const interval = setInterval(() => {
-      setActiveIndex(prev => (prev + 1) % featuredAnime.length);
-    }, 4000);
-    return () => clearInterval(interval);
+    const id = setInterval(() => setActiveIndex(p => (p + 1) % featuredAnime.length), 4200);
+    return () => clearInterval(id);
   }, [featuredAnime.length]);
 
   useEffect(() => {
-    if (!referOpen || referBanUntil <= Date.now()) return;
-    const id = setInterval(() => setReferNow(Date.now()), 1000);
+    const id = setInterval(() => setClock(new Date()), 1000);
     return () => clearInterval(id);
-  }, [referOpen, referBanUntil]);
+  }, []);
+
+  /* ---------- Launch sequence: countdown → film-reel loader → navigate ---------- */
+  const startWatching = (target: string = '/') => {
+    if (isLaunching) return;
+    setLaunchTarget(target);
+    setLaunchError(null);
+    setLaunchProgress(0);
+    setLaunchBeat(LOADER_BEATS[0].label);
+    setCountdown(3);
+    setIsLaunching(true);
+  };
+
+  // Countdown 3 → 2 → 1 → start loader
+  useEffect(() => {
+    if (!isLaunching || countdown === null) return;
+    if (countdown > 0) {
+      const t = setTimeout(() => setCountdown(c => (c === null ? null : c - 1)), 700);
+      return () => clearTimeout(t);
+    }
+    // countdown finished — kick off progress
+    const start = performance.now();
+    const duration = 1900;
+    let raf = 0;
+    const tick = () => {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        setLaunchError('You appear to be offline. Reconnect and try again.');
+        return;
+      }
+      const elapsed = performance.now() - start;
+      const pct = Math.min(100, (elapsed / duration) * 100);
+      setLaunchProgress(pct);
+      const beat = [...LOADER_BEATS].reverse().find(b => pct >= b.at);
+      if (beat) setLaunchBeat(beat.label);
+      if (pct < 100) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        setTimeout(() => {
+          try { navigate(launchTarget); }
+          catch { setLaunchError('Something blocked the redirect. Please try again.'); }
+        }, 240);
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [countdown, isLaunching, launchTarget, navigate]);
+
+  const retryLaunch = () => {
+    setIsLaunching(false);
+    setLaunchError(null);
+    setTimeout(() => startWatching(launchTarget), 60);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/browse?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
+    if (searchQuery.trim()) navigate(`/browse?q=${encodeURIComponent(searchQuery.trim())}`);
   };
 
-  const quickLinks = [
-    { label: 'Movies', icon: Film, path: '/browse?type=movie' },
-    { label: 'TV Series', icon: Tv, path: '/browse?type=series' },
-    { label: 'Popular', icon: TrendingUp, path: '/browse?sort=popular' },
-    { label: 'New Releases', icon: Sparkles, path: '/latest-episodes' },
-  ];
-
-  const features = [
-    { icon: Zap, title: 'Lightning Fast', desc: 'Stream instantly with H.Savi, Multi.Savi, and X-PLUS. Pick your favorite server anytime with no forced switching.', highlight: true },
-    { icon: Shield, title: '100% Ad-Free', desc: 'No ads, no popups, no interruptions. Just pure, uninterrupted anime watching experience from start to finish.', highlight: true },
-    { icon: Download, title: 'Smart Downloads', desc: 'Download in 480p, 720p, 1080p or even 2160p (4K) with proper episode names, codec info & quality tags.' },
-    { icon: Smartphone, title: 'Mobile First', desc: 'Designed for phones with compact controls, gesture navigation, PiP, and iOS-optimized H.Savi server.' },
-    { icon: Globe, title: 'Hindi Dubbed', desc: 'Official Hindi DUB available for all anime — completely free, anytime, anywhere in the world.' },
-    { icon: Users, title: 'Watch Parties', desc: 'Invite friends for synced playback, live chat, reactions, persistent rooms and a quick AI recap before you start.' },
-    { icon: Headphones, title: 'Multi-Audio', desc: 'Switch between Hindi, English, and Japanese audio tracks on the fly without reloading the video.' },
-    
-    { icon: Monitor, title: 'MuseIN & Crunchy', desc: 'Dedicated tabs for Muse India and Crunchyroll content with smart auto-tagging and Watch List support.' },
-  ];
-
-  const heroAnime = featuredAnime[activeIndex];
+  const hero = featuredAnime[activeIndex];
+  const timeStr = clock.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden overflow-y-visible bg-background">
-      {/* Cinematic Hero Background — full bleed with parallax-like layering */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {heroAnime?.cover_image ? (
-          <div className="absolute inset-0 transition-opacity duration-[1200ms]">
+    <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
+      {/* ===================== HERO ===================== */}
+      <section className="relative isolate">
+        {/* backdrop cover */}
+        <div className="absolute inset-0 -z-10 overflow-hidden">
+          {hero?.cover_image ? (
             <img
-              src={heroAnime.cover_image}
+              key={hero.id}
+              src={hero.cover_image}
               alt=""
-              className="w-full h-[85vh] object-cover object-top scale-110 transition-transform duration-[8000ms] ease-out"
-              loading="eager"
+              className="w-full h-[92vh] object-cover object-top opacity-60 animate-fade-in"
+              style={{ filter: 'saturate(1.05) contrast(1.05)' }}
             />
-            {/* Triple-layer cinematic gradient */}
-            <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/75 to-background" />
-            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/50 to-background/20" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,hsl(var(--background)/0.85)_85%)]" />
-            {/* Film grain overlay */}
-            <div
-              className="absolute inset-0 opacity-[0.04] mix-blend-overlay"
-              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")' }}
-            />
-          </div>
-        ) : (
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full" style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.08) 0%, transparent 70%)' }} />
-        )}
-        {/* Decorative floating glow blobs */}
-        <div className="absolute top-1/3 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl animate-pulse" style={{ animationDuration: '6s' }} />
-        <div className="absolute top-1/4 -right-32 w-[28rem] h-[28rem] rounded-full bg-fuchsia-500/8 blur-3xl animate-pulse" style={{ animationDuration: '8s', animationDelay: '1s' }} />
-      </div>
-
-      {/* Top bar — glass nav strip */}
-      <div className="relative z-10 flex items-center justify-between px-4 sm:px-8 py-4 backdrop-blur-md bg-background/30 border-b border-border/20">
-        <div className="flex items-center gap-2.5">
-          <div className="relative">
-            <div className="absolute inset-0 rounded-xl bg-primary/40 blur-lg" />
-            <img src={logo} alt="AnimeSavi" className="relative h-9 w-9 rounded-xl object-contain" />
-          </div>
-          <div className="flex flex-col leading-none">
-            <span className="text-base sm:text-lg font-bold">
-              <span className="text-primary">Anime</span>
-              <span className="text-foreground">Savi</span>
-            </span>
-            <span className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70 font-semibold mt-0.5">Hindi · Free · 4K</span>
-          </div>
+          ) : <div className="w-full h-[92vh] bg-accent/40" />}
+          <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/85 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
+          {/* scanlines */}
+          <div className="absolute inset-0 opacity-[0.06] mix-blend-overlay pointer-events-none"
+               style={{ backgroundImage: 'repeating-linear-gradient(0deg, rgba(255,255,255,0.6) 0px, rgba(255,255,255,0.6) 1px, transparent 1px, transparent 3px)' }} />
         </div>
-        <button onClick={() => navigate('/')} className="group flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-foreground/80 hover:text-foreground transition-all duration-200 hover:scale-105 bg-card/60 backdrop-blur-sm border border-border/40 hover:border-primary/40">
-          <Home className="w-4 h-4 transition-transform group-hover:-rotate-12" />
-          <span className="hidden sm:inline">Home</span>
-        </button>
-      </div>
 
-      {/* Main content */}
-      <div className="relative z-10 flex flex-col items-center px-4 sm:px-8 pb-16">
-        {/* HERO SECTION — Cinematic identity */}
-        <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-7 mt-8 sm:mt-16">
-          {/* Live Status Pill */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/50 backdrop-blur-md border border-emerald-500/30 animate-fade-in">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-75" />
-              <span className="relative rounded-full h-2 w-2 bg-emerald-400" />
-            </span>
-            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-emerald-300">Streaming Live · 4 Servers Active</span>
-          </div>
-
-          {/* Logo + Title block */}
-          <div className="flex flex-col items-center gap-4 animate-fade-in" style={{ animationDelay: '50ms' }}>
+        {/* Broadcast top bar */}
+        <header className="relative z-10 flex items-center justify-between gap-3 px-4 sm:px-10 pt-5">
+          <div className="flex items-center gap-3">
             <div className="relative">
-              {/* Slim ambient bars (replaces the big iOS ping circles) */}
-              <span className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 h-[3px] w-16 rounded-full bg-gradient-to-r from-transparent via-primary/70 to-transparent animate-pulse" />
-              <span className="pointer-events-none absolute -bottom-2 left-1/2 -translate-x-1/2 h-[3px] w-10 rounded-full bg-gradient-to-r from-transparent via-primary/50 to-transparent animate-pulse" style={{ animationDelay: '0.4s' }} />
-
-              <div
-                className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl overflow-hidden flex items-center justify-center"
-                style={{
-                  background: 'linear-gradient(135deg, hsl(var(--primary) / 0.3), hsl(var(--accent)))',
-                  boxShadow: '0 0 60px hsl(var(--primary) / 0.35), inset 0 1px 0 hsl(0 0% 100% / 0.1)',
-                }}
-              >
-                <img src={logo} alt="AnimeSavi" className="w-12 h-12 sm:w-14 sm:h-14 object-contain drop-shadow-2xl" />
-              </div>
+              <span className="absolute -inset-1 rounded-2xl bg-primary/40 blur-md" />
+              <img src={logo} alt="AnimeSavi" className="relative h-9 w-9 rounded-xl object-contain" />
             </div>
-
-            <div className="text-center space-y-3">
-              <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight leading-[0.95]">
-                <span className="bg-gradient-to-r from-primary via-rose-400 to-primary bg-clip-text text-transparent" style={{ filter: 'drop-shadow(0 4px 20px hsl(var(--primary) / 0.3))' }}>Anime</span>
-                <span className="text-foreground">Savi</span>
-              </h1>
-              <p className="text-base sm:text-xl text-foreground/80 max-w-xl mx-auto leading-relaxed font-medium">
-                One home for every anime you love.
-                <span className="block text-sm sm:text-base text-muted-foreground mt-1.5 font-normal">
-                  Stream in crisp 4K with official Hindi dubs, instant downloads, and zero ads — built by fans, tuned for binge nights.
-                </span>
+            <div className="leading-none">
+              <p className="text-base sm:text-lg font-black tracking-tight">
+                <span className="text-primary">ANIME</span><span className="text-foreground">SAVI</span>
+                <span className="ml-2 text-[10px] font-bold tracking-[0.3em] text-muted-foreground/80">/ BROADCAST</span>
+              </p>
+              <p className="text-[10px] mt-1 uppercase tracking-[0.3em] text-muted-foreground/70 font-semibold">
+                Channel 04 · Live from India · 2026
               </p>
             </div>
-
-            {/* Trust badges row */}
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
-              {[
-                { icon: Shield, label: 'Zero Ads' },
-                { icon: Globe, label: 'Hindi Dub' },
-                { icon: Zap, label: '< 1.2s Start' },
-                { icon: Lock, label: 'Private' },
-              ].map((b) => (
-                <span key={b.label} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-card/40 backdrop-blur-sm border border-border/30 text-[10px] sm:text-xs font-semibold text-foreground/70">
-                  <b.icon className="w-3 h-3 text-primary" />
-                  {b.label}
-                </span>
-              ))}
-            </div>
           </div>
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] font-bold text-foreground/70 px-3 py-1.5 rounded-full bg-card/60 backdrop-blur border border-border/40">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-70" />
+                <span className="relative h-2 w-2 rounded-full bg-rose-500" />
+              </span>
+              On Air · {timeStr} IST
+            </span>
+            <button onClick={() => navigate('/')} className="group flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-card/70 backdrop-blur border border-border/40 hover:border-primary/50 transition-all">
+              <Home className="w-4 h-4 group-hover:-rotate-12 transition-transform" />
+              <span className="hidden sm:inline">Home</span>
+            </button>
+          </div>
+        </header>
 
-          {/* Premium Search bar */}
-          <form onSubmit={handleSearch} className="w-full max-w-2xl animate-fade-in" style={{ animationDelay: '150ms' }}>
-            <div
-              className="relative group transition-all duration-300"
-              style={{
-                boxShadow: isFocused
-                  ? '0 12px 50px hsl(var(--primary) / 0.3), 0 0 0 2px hsl(var(--primary) / 0.5)'
-                  : '0 8px 40px hsl(0 0% 0% / 0.4)',
-                borderRadius: '1.25rem',
-              }}
-            >
-              {/* Animated gradient ring on focus */}
-              <div
-                className="absolute -inset-px rounded-[1.25rem] opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"
-                style={{
-                  background: 'linear-gradient(120deg, hsl(var(--primary) / 0.6), transparent, hsl(var(--primary) / 0.6))',
-                  padding: '1px',
-                }}
-              />
-              <div className="relative flex items-center bg-card/95 backdrop-blur-xl rounded-[1.2rem] border border-border/40">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors duration-200" style={{ color: isFocused ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }} />
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => setIsFocused(true)}
-                  onBlur={() => setIsFocused(false)}
-                  placeholder="Search anime, movies, characters…"
-                  className="w-full pl-14 pr-4 py-4 sm:py-5 rounded-[1.2rem] text-base sm:text-lg bg-transparent text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
-                />
-                {searchQuery ? (
-                  <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 sm:py-2.5 rounded-xl text-sm font-semibold text-primary-foreground bg-primary transition-all duration-200 hover:scale-105 shadow-lg shadow-primary/30">
+        {/* Editorial gutter — vertical brand stripe + content */}
+        <div className="relative z-10 grid grid-cols-[36px_1fr] sm:grid-cols-[72px_1fr] gap-4 sm:gap-8 px-4 sm:px-10 pt-10 sm:pt-16 pb-20">
+          {/* left vertical gutter */}
+          <aside className="flex flex-col items-center gap-4 pt-2">
+            <div className="w-px h-12 bg-gradient-to-b from-transparent to-primary/70" />
+            <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] sm:text-xs font-bold tracking-[0.4em] uppercase text-muted-foreground">
+              Issue · 26 / Vol · IV
+            </span>
+            <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_20px_hsl(var(--primary))]" />
+            <span className="[writing-mode:vertical-rl] rotate-180 text-[10px] sm:text-xs font-bold tracking-[0.4em] uppercase text-primary">
+              アニメ サヴィ
+            </span>
+            <div className="w-px flex-1 bg-gradient-to-b from-primary/40 via-border/30 to-transparent" />
+          </aside>
+
+          {/* main hero column */}
+          <div className="max-w-5xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/60 backdrop-blur border border-primary/30 mb-6 animate-fade-in">
+              <Signal className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[10px] sm:text-xs font-bold tracking-[0.25em] uppercase text-foreground/80">
+                The free-forever anime broadcast
+              </span>
+            </div>
+
+            <h1 className="font-black leading-[0.88] tracking-tight text-[clamp(2.6rem,8vw,6.5rem)] animate-fade-in">
+              <span className="block text-foreground">Anime, the way</span>
+              <span className="block">
+                <span className="bg-gradient-to-r from-primary via-rose-400 to-fuchsia-500 bg-clip-text text-transparent"
+                      style={{ filter: 'drop-shadow(0 6px 30px hsl(var(--primary)/0.35))' }}>
+                  it should air.
+                </span>
+              </span>
+            </h1>
+
+            <p className="mt-6 max-w-2xl text-base sm:text-lg text-foreground/75 leading-relaxed animate-fade-in" style={{ animationDelay: '80ms' }}>
+              A free, ad-free streaming channel built for India. Official Hindi dubs,
+              4K UHD playback, real downloads, multi-server pick-your-own playback —
+              and a viewer-first interface that treats every episode like a premiere.
+            </p>
+
+            {/* Search */}
+            <form onSubmit={handleSearch} className="mt-8 max-w-2xl animate-fade-in" style={{ animationDelay: '160ms' }}>
+              <div className="relative group">
+                <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-primary/40 via-fuchsia-500/30 to-primary/40 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
+                <div className="relative flex items-center bg-card/90 backdrop-blur-xl rounded-2xl border border-border/50 shadow-[0_12px_40px_hsl(0_0%_0%/0.45)]">
+                  <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <input
+                    ref={inputRef}
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Search a title, a director, a vibe…"
+                    className="w-full pl-14 pr-32 py-4 sm:py-5 bg-transparent text-base sm:text-lg placeholder:text-muted-foreground/70 focus:outline-none"
+                  />
+                  <button type="submit"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:scale-[1.03] transition-transform shadow-lg shadow-primary/30">
                     Search
                   </button>
-                ) : (
-                  <kbd className="absolute right-4 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold text-muted-foreground bg-card border border-border/50">
-                    <span>⌘</span>K
-                  </kbd>
-                )}
-              </div>
-            </div>
-
-            {/* Trending search hints */}
-            <div className="flex flex-wrap items-center justify-center gap-1.5 mt-3">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold mr-1">Trending:</span>
-              {['Solo Leveling', 'Demon Slayer', 'That Time I Got Reincarnated as a Slime', 'Witch hat atelier'].map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => navigate(`/browse?q=${encodeURIComponent(t)}`)}
-                  className="text-[10px] sm:text-xs font-medium text-muted-foreground hover:text-primary transition-colors px-2 py-0.5 rounded-md hover:bg-card/50"
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </form>
-
-          {/* Quick links — pill-style nav */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 animate-fade-in" style={{ animationDelay: '250ms' }}>
-            {quickLinks.map((link) => (
-              <button
-                key={link.label}
-                onClick={() => navigate(link.path)}
-                className="group flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 hover:scale-105 bg-card/60 backdrop-blur-md text-foreground/80 border border-border/40 hover:border-primary/50 hover:bg-card hover:text-foreground"
-              >
-                <link.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary transition-transform group-hover:scale-110" />
-                {link.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Featured anime carousel — refined cinematic shelf */}
-          {featuredAnime.length > 0 && (
-            <div className="w-full max-w-3xl mt-4 animate-fade-in" style={{ animationDelay: '350ms' }}>
-              <div className="flex items-center justify-between mb-3 px-1">
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-1 rounded-full bg-primary" />
-                  <span className="text-[10px] sm:text-xs uppercase tracking-widest font-bold text-foreground">Featured Right Now</span>
                 </div>
-                <button onClick={() => navigate('/browse?sort=popular')} className="text-[10px] sm:text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
-                  View all <ChevronRight className="w-3 h-3" />
-                </button>
               </div>
-              <div className="flex items-end justify-center gap-2 sm:gap-3">
-                {featuredAnime.slice(0, 7).map((anime, i) => {
-                  const isActive = i === activeIndex;
-                  return (
-                    <button
-                      key={anime.id}
-                      onClick={() => navigate(`/anime/${anime.id}`)}
-                      className="relative flex-shrink-0 rounded-xl overflow-hidden transition-all duration-500 cursor-pointer group/card"
-                      style={{
-                        width: isActive ? '130px' : '60px',
-                        height: isActive ? '185px' : '88px',
-                        opacity: isActive ? 1 : 0.45,
-                        transform: isActive ? 'scale(1) translateY(-4px)' : 'scale(0.95)',
-                        boxShadow: isActive ? '0 12px 40px hsl(var(--primary) / 0.35), 0 0 0 2px hsl(var(--primary) / 0.6)' : '0 2px 10px hsl(0 0% 0% / 0.3)',
-                      }}
-                    >
-                      {anime.cover_image ? (
-                        <img src={anime.cover_image} alt={anime.title} className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110" loading="lazy" />
-                      ) : (
-                        <div className="w-full h-full bg-accent" />
-                      )}
-                      {isActive && (
-                        <>
-                          <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-primary/90 backdrop-blur-sm">
-                            <span className="text-[8px] font-bold uppercase tracking-wider text-primary-foreground">#{i + 1}</span>
-                          </div>
-                          <div className="absolute inset-x-0 bottom-0 p-2" style={{ background: 'linear-gradient(to top, hsl(0 0% 0% / 0.95), transparent)' }}>
-                            <p className="text-[10px] sm:text-xs text-foreground font-bold truncate text-center">{anime.title}</p>
-                          </div>
-                        </>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              {/* Slim progress-bar style pagination */}
-              <div className="flex items-center justify-center gap-1 mt-4">
-                {featuredAnime.slice(0, 7).map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveIndex(i)}
-                    className="transition-all duration-500 rounded-full overflow-hidden"
-                    style={{
-                      width: i === activeIndex ? '28px' : '8px',
-                      height: '3px',
-                      background: i === activeIndex ? 'transparent' : 'hsl(var(--muted-foreground) / 0.25)',
-                    }}
-                  >
-                    {i === activeIndex && (
-                      <div className="h-full w-full bg-primary" style={{ animation: 'shrink 4s linear' }} />
-                    )}
+              <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground/70 font-bold mr-1">Tonight:</span>
+                {['Solo Leveling', 'Demon Slayer', 'Dandadan', 'Frieren'].map(t => (
+                  <button key={t} type="button" onClick={() => navigate(`/browse?q=${encodeURIComponent(t)}`)}
+                          className="text-[11px] font-semibold text-muted-foreground hover:text-primary px-2.5 py-1 rounded-md bg-card/40 hover:bg-card/80 border border-border/30 transition-colors">
+                    {t}
                   </button>
                 ))}
               </div>
-            </div>
-          )}
+            </form>
 
-          {/* CTA Buttons — premium */}
-          <div className="flex items-center gap-3 animate-fade-in mt-2" style={{ animationDelay: '450ms' }}>
-            <button
-              onClick={() => startWatching('/')}
-              className="group relative flex items-center gap-2.5 px-7 sm:px-9 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-bold transition-all duration-300 hover:scale-105 bg-primary text-primary-foreground overflow-hidden"
-              style={{ boxShadow: '0 8px 32px hsl(var(--primary) / 0.45), inset 0 1px 0 hsl(0 0% 100% / 0.2)' }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-              <Play className="relative w-4 h-4 sm:w-5 sm:h-5 fill-current" />
-              <span className="relative">Start Watching</span>
-            </button>
-            <button onClick={() => navigate('/browse')} className="group flex items-center gap-2 px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl text-sm sm:text-base font-semibold transition-all duration-200 hover:scale-105 bg-card/60 backdrop-blur-md text-foreground border border-border/40 hover:border-primary/40">
-              Browse All
-              <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </button>
-          </div>
-        </div>
-
-        {/* Live Stats Bar — cinematic upgrade */}
-        <div className="w-full max-w-4xl mx-auto mt-16 animate-fade-in" style={{ animationDelay: '550ms' }}>
-          <div className="relative overflow-hidden rounded-2xl bg-card/50 backdrop-blur-xl border border-border/40">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-fuchsia-500/5 pointer-events-none" />
-            <div className="relative grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/20">
-              {[
-                { value: totalAnime || 100, suffix: '+', label: 'Anime Titles', icon: Film, accent: 'text-primary' },
-                { value: totalEpisodes || 500, suffix: '+', label: 'Episodes', icon: Play, accent: 'text-sky-400' },
-                { value: '24/7', suffix: '', label: 'Free Streaming', icon: Zap, accent: 'text-emerald-400' },
-                { value: '0', suffix: '', label: 'Ads. Ever.', icon: Shield, accent: 'text-rose-400' },
-              ].map((stat) => (
-                <div key={stat.label} className="group flex flex-col items-center justify-center text-center py-5 px-3 transition-all hover:bg-card/40">
-                  <stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.accent} mb-2 transition-transform group-hover:scale-110`} />
-                  <p className={`text-2xl sm:text-4xl font-extrabold ${stat.accent} tabular-nums leading-none`}>
-                    {stat.value}{stat.suffix}
-                  </p>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5 font-semibold uppercase tracking-wider">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Genre Explorer */}
-        <div className="w-full max-w-4xl mx-auto mt-20 animate-fade-in" style={{ animationDelay: '600ms' }}>
-          <div className="text-center mb-8">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Discover</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Explore by Genre</h2>
-            <p className="text-muted-foreground text-sm mt-2">Find your next favorite anime by genre</p>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-            {GENRES.map((genre) => (
-              <button key={genre.name} onClick={() => navigate(`/browse?genre=${encodeURIComponent(genre.name)}`)} className="relative group h-28 sm:h-36 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.04] hover:shadow-xl">
-                {genreCovers[genre.name] ? <img src={genreCovers[genre.name]} alt={genre.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" /> : <div className="absolute inset-0 bg-card" />}
-                <div className={`absolute inset-0 bg-gradient-to-t ${genre.gradient} to-transparent`} />
-                <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors duration-300" />
-                <div className="relative z-10 h-full flex flex-col items-center justify-center gap-2">
-                  <genre.icon className="w-7 h-7 sm:w-8 sm:h-8 text-white drop-shadow-lg" />
-                  <span className="text-white font-bold text-sm sm:text-base drop-shadow-lg">{genre.name}</span>
-                </div>
+            {/* CTAs */}
+            <div className="mt-8 flex flex-wrap items-center gap-3 animate-fade-in" style={{ animationDelay: '240ms' }}>
+              <button onClick={() => startWatching('/')}
+                      className="group relative inline-flex items-center gap-2.5 px-7 sm:px-9 py-4 rounded-2xl text-sm sm:text-base font-black uppercase tracking-wider overflow-hidden bg-primary text-primary-foreground hover:scale-[1.03] transition-transform"
+                      style={{ boxShadow: '0 14px 40px hsl(var(--primary)/0.45), inset 0 1px 0 hsl(0 0% 100%/0.25)' }}>
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+                <PlayCircle className="relative w-5 h-5 fill-current" />
+                <span className="relative">Start Watching</span>
               </button>
-            ))}
-          </div>
-        </div>
+              <button onClick={() => navigate('/browse')}
+                      className="group inline-flex items-center gap-2 px-6 py-4 rounded-2xl text-sm sm:text-base font-bold bg-card/60 backdrop-blur border border-border/40 hover:border-primary/50 transition-colors">
+                Browse Catalog
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <span className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground/70 font-bold">
+                No signup · No card · No ads
+              </span>
+            </div>
 
-        {/* Why AnimeSavi */}
-        <div className="w-full max-w-5xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '700ms' }}>
-          <div className="text-center mb-10">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Why Choose Us</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Why AnimeSavi?</h2>
-            <p className="text-muted-foreground text-sm sm:text-base mt-2 max-w-lg mx-auto">Built by anime fans, for anime fans. Here's what makes us different.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-            {features.filter(f => f.highlight).map((f) => (
-              <div key={f.title} className="relative overflow-hidden rounded-2xl p-6 sm:p-8 border border-primary/20 transition-all duration-300 hover:scale-[1.02]" style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--card)))' }}>
-                <div className="absolute top-4 right-4 w-20 h-20 rounded-full opacity-10" style={{ background: 'hsl(var(--primary))' }} />
-                <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center mb-4"><f.icon className="w-6 h-6 text-primary" /></div>
-                <h3 className="text-lg sm:text-xl font-bold text-foreground mb-2">{f.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {features.filter(f => !f.highlight).map((f) => (
-              <div key={f.title} className="flex gap-4 p-4 sm:p-5 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/20 transition-all duration-300 hover:bg-card/60">
-                <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center"><f.icon className="w-5 h-5 text-primary" /></div>
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground mb-1">{f.title}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
+            {/* Featured strip */}
+            {featuredAnime.length > 0 && (
+              <div className="mt-12 animate-fade-in" style={{ animationDelay: '320ms' }}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-1 rounded-full bg-primary" />
+                    <span className="text-[10px] sm:text-xs uppercase tracking-[0.25em] font-bold">Now Programming</span>
+                  </div>
+                  <button onClick={() => navigate('/browse?sort=popular')}
+                          className="text-[11px] text-muted-foreground hover:text-primary flex items-center gap-1 font-semibold">
+                    Full schedule <ChevronRight className="w-3 h-3" />
+                  </button>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* How It Works */}
-        <div className="w-full max-w-3xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '800ms' }}>
-          <div className="text-center mb-10">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Simple Steps</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">How It Works</h2>
-            <p className="text-muted-foreground text-sm mt-2">Start watching anime in seconds</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              { step: '01', title: 'Search or Browse', desc: 'Find your favorite anime using search or browse by genre, popularity, or latest releases.', icon: Search },
-              { step: '02', title: 'Pick an Episode', desc: 'Choose your episode, season, and preferred audio language — Hindi, English, or Japanese.', icon: Play },
-              { step: '03', title: 'Watch or Download', desc: 'Stream instantly in HD or download in your preferred quality for offline viewing.', icon: Download },
-            ].map((item) => (
-              <div key={item.step} className="flex flex-col items-center text-center">
-                <div className="relative mb-4">
-                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center"><item.icon className="w-7 h-7 text-primary" /></div>
-                  <span className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">{item.step}</span>
+                <div className="flex items-end gap-2 sm:gap-3 overflow-x-auto pb-3 -mx-1 px-1 snap-x">
+                  {featuredAnime.slice(0, 7).map((a, i) => {
+                    const active = i === activeIndex;
+                    return (
+                      <button key={a.id} onClick={() => navigate(`/anime/${a.id}`)}
+                              className="relative shrink-0 rounded-xl overflow-hidden snap-start transition-all duration-500 group/card"
+                              style={{
+                                width: active ? 140 : 70,
+                                height: active ? 200 : 100,
+                                opacity: active ? 1 : 0.5,
+                                transform: active ? 'translateY(-6px)' : 'none',
+                                boxShadow: active
+                                  ? '0 14px 40px hsl(var(--primary)/0.4), 0 0 0 2px hsl(var(--primary)/0.6)'
+                                  : '0 4px 14px hsl(0 0% 0%/0.35)',
+                              }}>
+                        {a.cover_image
+                          ? <img src={a.cover_image} alt={a.title} className="w-full h-full object-cover group-hover/card:scale-110 transition-transform duration-700" loading="lazy" />
+                          : <div className="w-full h-full bg-accent" />}
+                        {active && (
+                          <>
+                            <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-primary/95 text-[8px] font-black uppercase tracking-wider text-primary-foreground">
+                              #{i + 1}
+                            </div>
+                            <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/95 to-transparent">
+                              <p className="text-[11px] font-bold text-white truncate text-center">{a.title}</p>
+                            </div>
+                          </>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
-                <h3 className="text-base font-bold text-foreground mb-2">{item.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Community Section */}
-        <div className="w-full max-w-5xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '850ms' }}>
-          <div className="text-center mb-10">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Community</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Join the AnimeSavi Community</h2>
-            <p className="text-muted-foreground text-sm mt-2 max-w-lg mx-auto">Be part of India's fastest growing anime community. Connect, discuss, and watch together.</p>
-          </div>
-
-          {/* Community Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
-            {[
-              { icon: Users, label: 'Active Users', value: '50K+', color: 'text-blue-400' },
-              { icon: MessageCircle, label: 'Discussions', value: '12K+', color: 'text-green-400' },
-              { icon: ThumbsUp, label: 'Reviews', value: '8K+', color: 'text-yellow-400' },
-              { icon: Share2, label: 'Watch Parties', value: '3K+', color: 'text-pink-400' },
-            ].map((stat, i) => (
-              <div key={i} className="flex flex-col items-center gap-2 p-4 sm:p-5 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/20 transition-all duration-300">
-                <stat.icon className={`w-6 h-6 sm:w-7 sm:h-7 ${stat.color}`} />
-                <span className="text-xl sm:text-2xl font-extrabold text-foreground">{stat.value}</span>
-                <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">{stat.label}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Community Features */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            {[
-              { icon: Users, title: 'Watch Parties', desc: 'Host or join real-time watch rooms with friends. Synced playback, live chat, emoji reactions, persistent rooms and AI episode recaps before each session.', gradient: 'from-primary/10 to-primary/5' },
-              { icon: MessageSquare, title: 'Reviews & Ratings', desc: 'Rate anime, write reviews, and read what others think before starting a new series.', gradient: 'from-yellow-500/10 to-yellow-500/5' },
-              { icon: Bell, title: 'Release Alerts', desc: 'Get notified when new episodes drop. Set reminders for your favorite ongoing series.', gradient: 'from-blue-500/10 to-blue-500/5' },
-            ].map((feature, i) => (
-              <div key={i} className={`p-5 sm:p-6 rounded-2xl border border-border/30 hover:border-primary/20 transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br ${feature.gradient}`}>
-                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mb-4"><feature.icon className="w-5 h-5 text-primary" /></div>
-                <h3 className="text-base font-bold text-foreground mb-2">{feature.title}</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Telegram CTA */}
-          <div className="flex items-center justify-center gap-3 mt-6">
-            <a
-              href="https://t.me/AnimeSaviInhindiDUB"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-200 hover:scale-105 bg-[#229ED9]/15 border border-[#229ED9]/30 text-[#229ED9] hover:bg-[#229ED9]/25"
-            >
-              <Send className="w-4 h-4" />
-              Join Telegram Channel
-              <ExternalLink className="w-3 h-3 opacity-60" />
-            </a>
-          </div>
-        </div>
-
-        {/* Testimonials Section - 16 reviews */}
-        <div className="w-full max-w-5xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '900ms' }}>
-          <div className="text-center mb-10">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Testimonials</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">What Our Users Say</h2>
-            <p className="text-muted-foreground text-sm mt-2">Trusted by thousands of anime fans across India</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-            {TESTIMONIALS.map((review, i) => (
-              <div key={i} className="relative p-4 sm:p-5 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/20 transition-all duration-300">
-                <Quote className="absolute top-3 right-3 w-4 h-4 text-primary/15" />
-                <div className="flex items-center gap-1 mb-2">
-                  {Array.from({ length: 5 }).map((_, si) => (
-                    <Star key={si} className={`w-3 h-3 ${si < review.rating ? 'text-yellow-500 fill-yellow-500' : 'text-muted-foreground/30'}`} />
+                <div className="flex items-center gap-1.5 mt-2">
+                  {featuredAnime.slice(0, 7).map((_, i) => (
+                    <button key={i} onClick={() => setActiveIndex(i)}
+                            className="rounded-full overflow-hidden transition-all duration-500"
+                            style={{
+                              width: i === activeIndex ? 32 : 8,
+                              height: 3,
+                              background: i === activeIndex ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground)/0.25)',
+                            }} />
                   ))}
                 </div>
-                <p className="text-xs sm:text-sm text-foreground/80 leading-relaxed mb-3">"{review.text}"</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-foreground">{review.name}</span>
-                  <span className="text-[10px] text-muted-foreground">{review.time}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Marquee ticker */}
+        <div className="relative z-10 border-y border-border/40 bg-card/40 backdrop-blur-md overflow-hidden">
+          <div className="flex gap-10 py-3 whitespace-nowrap" style={{ animation: 'as-marquee 38s linear infinite' }}>
+            {[...TICKER, ...TICKER, ...TICKER].map((t, i) => (
+              <span key={i} className="text-[11px] sm:text-xs uppercase tracking-[0.25em] font-bold text-foreground/70 flex items-center gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===================== CHANNELS ===================== */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-10 py-20">
+        <div className="flex items-end justify-between flex-wrap gap-3 mb-8">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-black mb-2">/ Channel guide</p>
+            <h2 className="text-3xl sm:text-5xl font-black tracking-tight">Four channels. One remote.</h2>
+          </div>
+          <p className="text-sm text-muted-foreground max-w-md">
+            Each channel is a different mood. Tap one, land directly on a curated row
+            tuned for that watch state.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          {CHANNELS.map((ch, i) => (
+            <button
+              key={ch.code}
+              onClick={() => navigate('/browse')}
+              className="group relative text-left overflow-hidden rounded-2xl border border-border/40 bg-card/40 backdrop-blur hover:border-primary/50 transition-colors p-5 h-44 flex flex-col justify-between"
+            >
+              <div className="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors" />
+              <div className="relative flex items-center justify-between">
+                <span className="text-[10px] font-black tracking-[0.3em] text-primary uppercase">{ch.code}</span>
+                <Tv className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+              </div>
+              <div className="relative">
+                <p className="text-xl font-extrabold leading-tight">{ch.label}</p>
+                <p className="text-xs text-muted-foreground mt-1">{ch.hint}</p>
+              </div>
+              <div className="relative flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-foreground/70 group-hover:text-primary transition-colors">
+                Tune in <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* ===================== MOOD BOARD ===================== */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-10 pb-20">
+        <div className="mb-8">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-black mb-2">/ Mood index</p>
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight">Pick a feeling.</h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+          {MOOD_TILES.map(m => (
+            <button key={m.tag}
+                    onClick={() => navigate(`/browse?genre=${encodeURIComponent(m.tag)}`)}
+                    className={`relative aspect-[16/10] rounded-2xl overflow-hidden bg-gradient-to-br ${m.hue} group transition-transform hover:scale-[1.02]`}>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.18),transparent_60%)]" />
+              <div className="absolute inset-0 mix-blend-overlay opacity-30"
+                   style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")' }} />
+              <div className="absolute inset-0 p-4 flex flex-col justify-end">
+                <p className="text-xs font-bold tracking-[0.2em] uppercase text-white/80">{m.line}</p>
+                <p className="text-xl sm:text-2xl font-black text-white drop-shadow-lg">{m.tag}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* ===================== PILLARS ===================== */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-10 pb-20">
+        <div className="mb-8">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-black mb-2">/ House rules</p>
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight">Six promises we keep.</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {PILLARS.map((p, i) => (
+            <div key={p.title} className="group relative overflow-hidden rounded-2xl border border-border/40 bg-card/40 backdrop-blur p-6 hover:border-primary/40 transition-colors">
+              <span className="absolute top-4 right-5 text-[10px] font-black tracking-[0.3em] text-primary/40">0{i + 1}</span>
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 bg-primary/15 border border-primary/20">
+                <p.icon className="w-5 h-5 text-primary" />
+              </div>
+              <h3 className="text-lg font-extrabold mb-1.5">{p.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{p.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ===================== TIMELINE ===================== */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-10 pb-20">
+        <div className="mb-8">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-black mb-2">/ First 20 seconds</p>
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight">From tap to first frame.</h2>
+        </div>
+        <div className="relative">
+          <div className="absolute left-0 right-0 top-7 h-px bg-gradient-to-r from-primary/50 via-border to-transparent hidden md:block" />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {TIMELINE.map((s, i) => (
+              <div key={s.t} className="relative">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="relative z-10 inline-flex items-center justify-center w-14 h-14 rounded-full border-2 border-primary/60 bg-background font-black text-sm tabular-nums">
+                    {s.t}
+                  </span>
                 </div>
+                <p className="text-base font-extrabold">{s.label}</p>
+                <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{s.body}</p>
               </div>
             ))}
           </div>
         </div>
+      </section>
 
-        {/* FAQ Section - 38 items */}
-        <div className="w-full max-w-3xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '950ms' }}>
-          <div className="text-center mb-10">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">FAQ</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Frequently Asked Questions</h2>
-            <p className="text-muted-foreground text-sm mt-2">Got questions? We've got answers. ({FAQ_ITEMS.length} FAQs)</p>
-          </div>
-          <Accordion type="single" collapsible className="space-y-2">
-            {FAQ_ITEMS.map((faq, i) => (
-              <AccordionItem key={i} value={`faq-${i}`} className="border border-border/30 rounded-xl px-4 overflow-hidden bg-card/20">
-                <AccordionTrigger className="text-sm sm:text-base font-medium text-foreground hover:no-underline py-3">
-                  {faq.q}
-                </AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground leading-relaxed pb-3">
-                  {faq.a}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
-
-        {/* Platform Highlights — at-a-glance numbers */}
-        <div className="w-full max-w-5xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '955ms' }}>
-          <div className="text-center mb-10">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">By the Numbers</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Platform Highlights</h2>
-            <p className="text-muted-foreground text-sm mt-2">A quick look at what AnimeSavi delivers every day</p>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-            {[
-              { icon: Award, label: 'Avg. Start Time', value: '< 1.2s', color: 'text-emerald-400' },
-              { icon: Layers, label: 'Quality Tiers', value: '144p–4K', color: 'text-primary' },
-              { icon: HardDrive, label: 'Storage Used', value: '48TB+', color: 'text-blue-400' },
-              { icon: Radio, label: 'CDN Servers', value: '4 Active', color: 'text-pink-400' },
-              { icon: Eye, label: 'Episodes Watched', value: '2.4M+', color: 'text-yellow-400' },
-              { icon: Lock, label: 'DRM-Free', value: '100%', color: 'text-emerald-400' },
-              { icon: RefreshCw, label: 'Auto Updates', value: 'Daily', color: 'text-cyan-400' },
-              { icon: Compass, label: 'Genres', value: '30+', color: 'text-purple-400' },
-            ].map((s, i) => (
-              <div key={i} className="flex flex-col items-center text-center gap-2 p-4 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/20 transition-all duration-300">
-                <s.icon className={`w-6 h-6 ${s.color}`} />
-                <span className="text-xl sm:text-2xl font-extrabold text-foreground">{s.value}</span>
-                <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">{s.label}</span>
+      {/* ===================== SPECS + STATS ===================== */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-10 pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
+          {/* Spec sheet */}
+          <div className="rounded-2xl border border-border/40 bg-card/40 backdrop-blur overflow-hidden">
+            <div className="px-6 py-4 border-b border-border/30 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-black">/ Spec sheet</p>
+                <h3 className="text-xl font-extrabold mt-0.5">Under the hood</h3>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Watch Instantly — how fast streaming works */}
-        <div className="w-full max-w-4xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '958ms' }}>
-          <div className="text-center mb-10">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Watch Instantly</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Press Play. Skip the Wait.</h2>
-            <p className="text-muted-foreground text-sm mt-2 max-w-lg mx-auto">Our streaming stack is tuned so the first frame appears in under a second on most networks.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            {[
-              { icon: Zap, title: 'Sub-second start', desc: 'Tiny initial buffer + first-fragment prefetch deliver an instant first frame, then the buffer grows in the background.' },
-              { icon: Layers, title: 'Adaptive 144p → 4K', desc: 'HLS dynamically picks the best quality your connection can sustain — upgrades to 4K within seconds when bandwidth allows.' },
-              { icon: Wifi, title: 'Network-aware', desc: 'Detects 2G / 3G / cellular vs Wi-Fi and tunes buffer size, retries and start level so playback never stalls.' },
-            ].map((b, i) => (
-              <div key={i} className="flex flex-col items-center text-center gap-3 p-5 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/30 transition-all duration-300">
-                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center"><b.icon className="w-5 h-5 text-primary" /></div>
-                <h3 className="text-sm font-bold text-foreground">{b.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{b.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Supported Devices */}
-        <div className="w-full max-w-5xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '960ms' }}>
-          <div className="text-center mb-10">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Watch Anywhere</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Works on Every Device</h2>
-            <p className="text-muted-foreground text-sm mt-2 max-w-lg mx-auto">One account, every screen. AnimeSavi adapts to whatever you're watching on.</p>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-            {[
-              { icon: Smartphone, title: 'Mobile', desc: 'iOS & Android with PWA install support' },
-              { icon: Monitor, title: 'Desktop', desc: 'Chrome, Safari, Firefox & Edge' },
-              { icon: Tv, title: 'Smart TV', desc: 'Cast via Chromecast or open in TV browser' },
-              { icon: Gamepad2, title: 'Console', desc: 'PS5 / Xbox built-in browsers supported' },
-            ].map((d, i) => (
-              <div key={i} className="flex flex-col items-center text-center gap-3 p-5 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/30 hover:bg-card/60 transition-all duration-300">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center"><d.icon className="w-6 h-6 text-primary" /></div>
-                <h3 className="text-sm font-bold text-foreground">{d.title}</h3>
-                <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{d.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Pro Tips */}
-        <div className="w-full max-w-4xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '965ms' }}>
-          <div className="text-center mb-10">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Pro Tips</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Get the Most Out of AnimeSavi</h2>
-            <p className="text-muted-foreground text-sm mt-2">Hidden features power-users love</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            {[
-              { icon: Keyboard, title: 'Keyboard Shortcuts', desc: 'Space = play/pause, F = fullscreen, M = mute, ← → seek 10s, ↑ ↓ volume.' },
-              { icon: Volume2, title: 'Switch Audio Live', desc: 'Tap the headphone icon mid-episode to swap Hindi / English / Japanese without reloading.' },
-              
-              { icon: Cast, title: 'Cast to TV', desc: 'Hit the cast icon in the player to mirror to Chromecast, AirPlay, or Smart TV.' },
-              { icon: Bell, title: 'Release Reminders', desc: 'Tap the bell on any ongoing series to get pinged the moment a new episode drops.' },
-              { icon: Wifi, title: 'Offline Mode', desc: 'Downloaded episodes keep working even without internet — perfect for flights & commutes.' },
-            ].map((tip, i) => (
-              <div key={i} className="flex gap-3 p-4 sm:p-5 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/20 transition-all duration-300">
-                <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center"><tip.icon className="w-5 h-5 text-primary" /></div>
-                <div>
-                  <h3 className="text-sm font-bold text-foreground mb-1">{tip.title}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{tip.desc}</p>
+              <Layers className="w-5 h-5 text-primary" />
+            </div>
+            <dl className="divide-y divide-border/30">
+              {SPECS.map(s => (
+                <div key={s.k} className="flex items-center justify-between px-6 py-3.5 text-sm hover:bg-card/40 transition-colors">
+                  <dt className="text-muted-foreground font-semibold uppercase text-[11px] tracking-[0.15em]">{s.k}</dt>
+                  <dd className="font-bold tabular-nums">{s.v}</dd>
                 </div>
-              </div>
-            ))}
+              ))}
+            </dl>
           </div>
-        </div>
 
-        {/* What's Coming Next — roadmap */}
-        <div className="w-full max-w-4xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '970ms' }}>
-          <div className="text-center mb-10">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Roadmap</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">What's Coming Next</h2>
-            <p className="text-muted-foreground text-sm mt-2">A peek at features we're building right now</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            {[
-              { icon: Crown, title: 'Persistent Watch Rooms', desc: 'Resume group sessions days later — chat history, queue and playback position all saved.', tag: 'Live', href: '/' },
-              { icon: Flame, title: 'Smart Recommendations 2.0', desc: 'Genre + mood-aware suggestions tuned by your real watch history and ratings.', tag: 'Live', href: '/' },
-              { icon: Calendar, title: 'Seasonal Anime Tracker', desc: 'A single dashboard for every airing show this season with episode countdowns.', tag: 'Beta', href: '/schedule' },
-              { icon: BarChart3, title: 'Personal Watch Stats', desc: 'Total hours watched, top genres, longest streaks and a year-in-review wrap.', tag: 'Live', href: '/stats' },
-              { icon: MapPin, title: 'AI Episode Recaps', desc: 'Auto-generated 30-second recaps so you never lose track of long-running shows.', tag: 'Beta' },
-            ].map((r, i) => {
-              const isLive = r.tag === 'Live';
-              const isBeta = r.tag === 'Beta';
-              const isClickable = (isLive || isBeta) && !!r.href;
-              const Wrapper: any = isClickable ? 'a' : 'div';
-              const wrapperProps = isClickable ? { href: r.href } : {};
-              const badgeClass = isLive
-                ? 'bg-emerald-500/20 text-emerald-400'
-                : isBeta
-                  ? 'bg-amber-500/20 text-amber-400'
-                  : 'bg-primary/15 text-primary';
-              return (
-                <Wrapper key={i} {...wrapperProps} className={`relative p-5 rounded-2xl bg-card/40 border border-border/30 transition-all duration-300 block ${isClickable ? 'hover:border-primary/60 hover:bg-card/60 cursor-pointer' : 'hover:border-primary/30'}`}>
-                  <span className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${badgeClass}`}>{r.tag}</span>
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3"><r.icon className="w-5 h-5 text-primary" /></div>
-                  <h3 className="text-sm font-bold text-foreground mb-1">{r.title}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{r.desc}</p>
-                </Wrapper>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Trust & Privacy */}
-        <div className="w-full max-w-3xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '975ms' }}>
-          <div className="text-center mb-8">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Trust & Privacy</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Your Privacy, Respected</h2>
-            <p className="text-muted-foreground text-sm mt-2">No trackers, no third-party ads, no data sales — ever.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            {[
-              { icon: Shield, title: 'No Tracking', desc: 'We don\'t use Google Analytics, Facebook Pixel, or third-party trackers.' },
-              { icon: Lock, title: 'Encrypted Sessions', desc: 'All traffic is HTTPS. Auth uses industry-standard JWT with rotation.' },
-              { icon: Settings, title: 'You Own Your Data', desc: 'Delete your account anytime — every record is wiped within 24 hours.' },
-            ].map((t, i) => (
-              <div key={i} className="flex flex-col items-center text-center gap-3 p-5 rounded-2xl bg-card/40 border border-border/30">
-                <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center"><t.icon className="w-5 h-5 text-primary" /></div>
-                <h3 className="text-sm font-bold text-foreground">{t.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{t.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Compare AnimeSavi vs Others */}
-        <div className="w-full max-w-4xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '978ms' }}>
-          <div className="text-center mb-10">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Why Switch</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">AnimeSavi vs Other Sites</h2>
-            <p className="text-muted-foreground text-sm mt-2">No premium walls. No ads. Just anime.</p>
-          </div>
-          <div className="overflow-hidden rounded-2xl border border-border/30 bg-card/40">
-            <div className="grid grid-cols-3 text-xs sm:text-sm">
-              <div className="px-3 sm:px-5 py-3 font-semibold text-foreground/70 border-b border-border/30">Feature</div>
-              <div className="px-3 sm:px-5 py-3 font-bold text-primary border-b border-l border-border/30 text-center">AnimeSavi</div>
-              <div className="px-3 sm:px-5 py-3 font-semibold text-muted-foreground border-b border-l border-border/30 text-center">Others</div>
+          {/* Live counters */}
+          <div className="rounded-2xl border border-border/40 bg-card/40 backdrop-blur p-6 flex flex-col justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-black">/ Right now</p>
+              <h3 className="text-xl font-extrabold mt-0.5">The signal is hot.</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mt-6">
               {[
-                ['4K streaming', '✓ Free', 'Premium only'],
-                ['Hindi dubs', '✓ Native multi-audio', 'Limited / dubbed sites'],
-                ['Ads & popups', 'Zero', 'Heavy'],
-                ['Offline downloads', '✓ All qualities', '✗ or paid'],
-                ['Watch parties', '✓ Built-in', 'Extension required'],
-                ['Account required', 'Only for token', 'Required + paid'],
-                ['Payments', 'Never', '₹499–999/mo'],
-              ].map((row, i) => (
-                <div key={i} className="contents">
-                  <div className={`px-3 sm:px-5 py-3 text-foreground/80 ${i % 2 ? 'bg-card/30' : ''}`}>{row[0]}</div>
-                  <div className={`px-3 sm:px-5 py-3 border-l border-border/30 text-center font-semibold text-emerald-400 ${i % 2 ? 'bg-card/30' : ''}`}>{row[1]}</div>
-                  <div className={`px-3 sm:px-5 py-3 border-l border-border/30 text-center text-muted-foreground ${i % 2 ? 'bg-card/30' : ''}`}>{row[2]}</div>
+                { v: totalAnime || 500,                 s: '+', l: 'Titles aired',  i: Film },
+                { v: totalEpisodes || 15000,            s: '+', l: 'Episodes ready', i: Play },
+                { v: '24/7',                            s: '',  l: 'Free streaming', i: Radio },
+                { v: 0,                                 s: '',  l: 'Ads. Ever.',     i: Shield },
+              ].map(({ v, s, l, i: I }) => (
+                <div key={l} className="rounded-xl bg-background/40 border border-border/30 p-4">
+                  <I className="w-4 h-4 text-primary mb-2" />
+                  <p className="text-3xl font-black tabular-nums leading-none">
+                    {typeof v === 'number' ? v.toLocaleString() : v}{s}
+                  </p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mt-2">{l}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Community */}
-        <div className="w-full max-w-5xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '982ms' }}>
-          <div className="text-center mb-10">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-primary/10 text-primary mb-3">Community</span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Join 50,000+ Anime Fans</h2>
-            <p className="text-muted-foreground text-sm mt-2">Get notified about new drops, share recommendations, talk theories.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-3xl mx-auto">
-            {[
-              { icon: Send, title: 'Telegram Channel', desc: 'Daily upload alerts + early Hindi dub announcements.', cta: 'Join Channel', href: 'https://t.me/Lv_Savi', kind: 'link' as const },
-              { icon: Share2, title: 'Refer a Friend', desc: 'Invite a friend and you both unlock 2 days of free premium access.', cta: 'Get Referral Link', kind: 'refer' as const },
-            ].map((c, i) =>
-              c.kind === 'refer' ? (
-                <button key={i} type="button" onClick={() => setReferOpen(true)} className="group flex flex-col items-center text-center gap-3 p-6 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/40 hover:bg-card/60 transition-all duration-300">
-                  <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center group-hover:scale-110 transition-transform"><c.icon className="w-6 h-6 text-primary" /></div>
-                  <h3 className="text-base font-bold text-foreground">{c.title}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{c.desc}</p>
-                  <span className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-primary">
-                    {c.cta}
-                    <ChevronRight className="w-3 h-3" />
-                  </span>
-                </button>
-              ) : (
-                <a key={i} href={c.href} target="_blank" rel="noopener noreferrer" className="group flex flex-col items-center text-center gap-3 p-6 rounded-2xl bg-card/40 border border-border/30 hover:border-primary/40 hover:bg-card/60 transition-all duration-300">
-                  <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center group-hover:scale-110 transition-transform"><c.icon className="w-6 h-6 text-primary" /></div>
-                  <h3 className="text-base font-bold text-foreground">{c.title}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{c.desc}</p>
-                  <span className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-primary">
-                    {c.cta}
-                    <ChevronRight className="w-3 h-3" />
-                  </span>
-                </a>
-              )
-            )}
-          </div>
-
-          {/* More info: Quick Facts grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
-            {[
-              { icon: Zap, title: '< 2s', sub: 'Avg load time' },
-              { icon: Globe, title: '180+', sub: 'Countries served' },
-              { icon: Layers, title: '4K HDR', sub: 'Top quality tier' },
-              { icon: Wifi, title: 'Offline', sub: 'Watch anywhere' },
-              { icon: Headphones, title: 'Multi-Audio', sub: 'Hindi / EN / JP' },
-              { icon: Bell, title: 'Live Alerts', sub: 'Pre-release pings' },
-              { icon: Cast, title: 'Cast & PiP', sub: 'TV + mini player' },
-              { icon: Lock, title: 'Privacy First', sub: 'No trackers' },
-            ].map((f, i) => (
-              <div key={i} className="flex items-center gap-2 p-3 rounded-xl bg-card/30 border border-border/20">
-                <f.icon className="w-4 h-4 text-primary shrink-0" />
-                <div className="min-w-0">
-                  <div className="text-xs font-bold text-foreground truncate">{f.title}</div>
-                  <div className="text-[10px] text-muted-foreground truncate">{f.sub}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* ===================== VOICES ===================== */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-10 pb-20">
+        <div className="mb-8">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-black mb-2">/ From the audience</p>
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tight">What watchers say.</h2>
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {VOICES.map(v => (
+            <figure key={v.who} className="relative rounded-2xl border border-border/40 bg-card/40 backdrop-blur p-6">
+              <span className="absolute top-3 right-4 text-5xl leading-none font-black text-primary/20">"</span>
+              <blockquote className="text-base sm:text-lg font-semibold leading-snug text-foreground/90">
+                {v.line}
+              </blockquote>
+              <figcaption className="mt-4 text-[11px] uppercase tracking-[0.25em] font-bold text-muted-foreground">
+                — {v.who}
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
 
-        {/* Final CTA */}
-        <div className="w-full max-w-2xl mx-auto mt-24 animate-fade-in" style={{ animationDelay: '950ms' }}>
-          <div className="text-center p-8 sm:p-12 rounded-3xl border border-border/30" style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.05), hsl(var(--card) / 0.5))' }}>
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">Ready to Watch?</h2>
-            <p className="text-muted-foreground text-sm sm:text-base mb-6 max-w-md mx-auto">Join thousands of anime fans streaming their favorites on AnimeSavi — completely free and ad-free.</p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button onClick={() => startWatching('/')} className="flex items-center gap-2 px-8 py-3.5 rounded-2xl text-base font-bold transition-all duration-200 hover:scale-105 bg-primary text-primary-foreground" style={{ boxShadow: '0 4px 24px hsl(var(--primary) / 0.4)' }}>
-                <Play className="w-5 h-5 fill-current" />
-                Start Watching Now
+      {/* ===================== DEVICES ===================== */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-10 pb-24">
+        <div className="rounded-3xl border border-border/40 bg-card/40 backdrop-blur overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr]">
+            <div className="p-8 sm:p-10 border-b md:border-b-0 md:border-r border-border/30">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-black">/ Everywhere</p>
+              <h3 className="text-3xl font-black tracking-tight mt-2">Same channel, every screen.</h3>
+              <p className="text-sm text-muted-foreground mt-3 leading-relaxed max-w-md">
+                Pin AnimeSavi to your home screen and it behaves like a native app —
+                push alerts, offline downloads, lock-screen controls, and AirPlay
+                straight to the TV.
+              </p>
+              <button onClick={() => startWatching('/')}
+                      className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-primary text-primary-foreground hover:scale-[1.03] transition-transform">
+                Open the broadcast <ArrowRight className="w-4 h-4" />
               </button>
-              <button onClick={() => navigate('/browse')} className="flex items-center gap-2 px-6 py-3.5 rounded-2xl text-sm font-semibold transition-all duration-200 hover:scale-105 text-foreground/80 hover:text-foreground">
-                Browse Library
-                <ChevronRight className="w-4 h-4" />
-              </button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4">
+              {[
+                { i: Smartphone, t: 'iOS',     d: 'Safari + PWA' },
+                { i: Smartphone, t: 'Android', d: 'Chrome install' },
+                { i: Monitor,    t: 'Desktop', d: 'PiP + shortcuts' },
+                { i: Tv,         t: 'TV',      d: 'AirPlay + cast' },
+              ].map(({ i: I, t, d }) => (
+                <div key={t} className="p-6 text-center border-t border-l border-border/20 first:border-l-0 md:first:border-l md:border-t-0 hover:bg-card/40 transition-colors">
+                  <I className="w-7 h-7 text-primary mx-auto mb-2" />
+                  <p className="text-sm font-extrabold">{t}</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mt-1">{d}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Refer a Friend dialog */}
-      {referOpen && (
-        <div
-          className="fixed inset-0 z-[180] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-fade-in"
-          role="dialog"
-          aria-modal="true"
-          onPointerDown={(e) => {
-            if (e.target === e.currentTarget) setReferOpen(false);
-          }}
-        >
-          <div
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md rounded-2xl border border-border/40 bg-card p-6 shadow-2xl pointer-events-auto"
-            style={{ background: 'linear-gradient(135deg, hsl(var(--card)), hsl(var(--card) / 0.9))' }}
-          >
-            <button
-              type="button"
-              onPointerDown={(e) => { e.stopPropagation(); setReferOpen(false); }}
-              onClick={(e) => { e.stopPropagation(); setReferOpen(false); }}
-              aria-label="Close"
-              className="absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition touch-manipulation"
-            >
-              ✕
-            </button>
-            <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center mb-3">
-                <Share2 className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="text-lg font-bold text-foreground">Refer a Friend</h3>
-              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                Share our website link to your friend to get 2 Day free subscription.
-              </p>
-
-              <div className="w-full mt-4 flex items-stretch gap-2 rounded-xl border border-border/50 bg-muted/30 p-1.5">
-                <input
-                  readOnly
-                  value={REFER_LINK}
-                  className="flex-1 bg-transparent px-3 text-sm text-foreground/90 outline-none truncate"
-                  onFocus={(e) => e.currentTarget.select()}
-                />
-                <button
-                  type="button"
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={(e) => { e.stopPropagation(); handleCopyReferral(); }}
-                  disabled={referBanLeft > 0}
-                  className="px-4 py-2.5 rounded-lg text-xs font-bold bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition touch-manipulation shrink-0"
-                >
-                  {referCopied ? 'Copied!' : 'Copy Link'}
-                </button>
-              </div>
-
-              <p className="text-xs text-muted-foreground mt-4 leading-relaxed">
-                When your friend opens our website and logs in or signs up, you and your friend will automatically get 2 Day free subscription access. You must be logged in first.
-              </p>
-
-              <div className="mt-4 w-full flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
-                <Shield className="w-3 h-3 text-primary" />
-                <span>One referral per user. Repeated copies trigger a 10-minute cooldown.</span>
-              </div>
-
-              {referBanLeft > 0 && (
-                <div className="mt-3 w-full px-3 py-2 rounded-lg bg-destructive/10 border border-destructive/30 text-xs text-destructive font-semibold">
-                  Cooldown active — try again in {Math.floor(referBanLeft / 60000)}m {Math.floor((referBanLeft % 60000) / 1000)}s.
-                </div>
-              )}
-            </div>
-          </div>
+      {/* ===================== FOOTER ===================== */}
+      <footer className="border-t border-border/30 py-10 px-4 sm:px-10 text-center">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <img src={logo} alt="" className="w-6 h-6 rounded-md" />
+          <span className="font-black tracking-tight">
+            <span className="text-primary">ANIME</span><span className="text-foreground">SAVI</span>
+          </span>
+          <span className="ml-2 text-[10px] uppercase tracking-[0.3em] text-muted-foreground/70 font-bold">/ EST. 2024</span>
         </div>
-      )}
+        <p className="text-xs text-muted-foreground/60">
+          © 2026 AnimeSavi — India's ad-free anime broadcast.
+        </p>
+      </footer>
 
-      {/* Cinematic launch loader — shown when user clicks "Start Watching" */}
+      {/* =====================================================
+           NEW LAUNCH SCREEN — broadcast "tuning in" loader
+         ===================================================== */}
       {isLaunching && (
         <div
           className="fixed inset-0 z-[200] flex items-center justify-center overflow-hidden animate-fade-in"
           role="dialog"
           aria-modal="true"
-          aria-label="Loading AnimeSavi"
+          aria-label="Tuning in to AnimeSavi"
           style={{
             background:
-              'radial-gradient(ellipse at top, hsl(var(--primary) / 0.18), transparent 55%), radial-gradient(ellipse at bottom, hsl(330 80% 50% / 0.12), transparent 55%), hsl(var(--background))',
+              'radial-gradient(ellipse at top, hsl(var(--primary)/0.18), transparent 55%), radial-gradient(ellipse at bottom, hsl(330 80% 50% / 0.12), transparent 55%), hsl(var(--background))',
           }}
         >
-          {/* Animated grid backdrop */}
-          <div
-            className="absolute inset-0 opacity-[0.07] pointer-events-none"
-            style={{
-              backgroundImage:
-                'linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)',
-              backgroundSize: '48px 48px',
-              maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 75%)',
-            }}
-          />
-
-          {/* Floating orbs */}
-          <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full blur-3xl bg-primary/25 animate-pulse pointer-events-none" />
-          <div
-            className="absolute bottom-1/4 right-1/4 w-72 h-72 rounded-full blur-3xl bg-fuchsia-500/20 animate-pulse pointer-events-none"
-            style={{ animationDelay: '0.8s' }}
-          />
-
-          {/* Top scan line */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent opacity-60" />
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent opacity-60" />
-
-          <div className="relative w-full max-w-md mx-auto px-6 flex flex-col items-center gap-8 text-center">
-            {/* Orbital logo */}
-            <div className="relative w-32 h-32 flex items-center justify-center">
-              {/* Outer rotating ring */}
-              <svg
-                className="absolute inset-0 w-full h-full"
-                viewBox="0 0 120 120"
-                style={{ animation: 'spin 6s linear infinite' }}
-              >
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="56"
-                  fill="none"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth="1.5"
-                  strokeDasharray="6 10"
-                  opacity="0.55"
-                />
-              </svg>
-              {/* Inner counter-rotating ring */}
-              <svg
-                className="absolute inset-2 w-[calc(100%-1rem)] h-[calc(100%-1rem)]"
-                viewBox="0 0 120 120"
-                style={{ animation: 'spin 4s linear infinite reverse' }}
-              >
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="50"
-                  fill="none"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth="2"
-                  strokeDasharray="80 220"
-                  strokeLinecap="round"
-                />
-              </svg>
-              {/* Pulse halos */}
-              <span className="pointer-events-none absolute inset-x-6 -top-3 h-[3px] rounded-full bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse" />
-              {/* Logo core */}
-              <div
-                className="relative w-20 h-20 rounded-3xl flex items-center justify-center overflow-hidden"
-                style={{
-                  background:
-                    'linear-gradient(135deg, hsl(var(--primary) / 0.35), hsl(330 80% 55% / 0.4))',
-                  boxShadow:
-                    '0 0 80px hsl(var(--primary) / 0.55), inset 0 1px 0 hsl(0 0% 100% / 0.25)',
-                }}
-              >
-                <img src={logo} alt="AnimeSavi" className="w-12 h-12 object-contain drop-shadow-lg" />
-              </div>
-            </div>
-
-            {/* Title */}
-            <div className="space-y-2">
-              <h2 className="text-3xl font-extrabold tracking-tight">
-                <span
-                  className="bg-gradient-to-r from-primary via-rose-400 to-fuchsia-500 bg-clip-text text-transparent"
-                  style={{ backgroundSize: '200% 100%', animation: 'shimmer-text 3s linear infinite' }}
-                >
-                  AnimeSavi
-                </span>
-              </h2>
-              <p className="text-[11px] text-muted-foreground font-semibold tracking-[0.25em] uppercase flex items-center justify-center gap-2">
-                <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-                {launchStage}
-                <span className="w-1 h-1 rounded-full bg-primary animate-pulse" style={{ animationDelay: '0.3s' }} />
-              </p>
-            </div>
-
-            {/* Progress bar — premium */}
-            <div className="w-full space-y-2.5">
-              <div
-                className="relative h-2 w-full rounded-full overflow-hidden border border-border/40"
-                style={{ background: 'hsl(var(--card) / 0.6)' }}
-              >
-                <div
-                  className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-200 ease-out"
-                  style={{
-                    width: `${launchProgress}%`,
-                    background:
-                      'linear-gradient(90deg, hsl(var(--primary)), hsl(330 85% 60%), hsl(var(--primary)))',
-                    backgroundSize: '200% 100%',
-                    animation: 'shimmer-text 2s linear infinite',
-                    boxShadow: '0 0 16px hsl(var(--primary) / 0.7)',
-                  }}
-                />
-                {/* Sweep highlight */}
-                <div
-                  className="absolute inset-y-0 w-1/3 pointer-events-none"
-                  style={{
-                    background:
-                      'linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.35), transparent)',
-                    animation: 'sweep 1.6s ease-in-out infinite',
-                  }}
-                />
-              </div>
-              <div className="flex items-center justify-between text-[10px] text-muted-foreground font-semibold tabular-nums">
-                <span className="text-foreground/90">{Math.floor(launchProgress)}%</span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_hsl(142_72%_45%)]" />
-                  H.Savi · 4K Ready
-                </span>
-              </div>
-            </div>
-
-            {/* Progress step checklist — clearly shows each phase ticking off */}
-            <ul className="w-full grid grid-cols-5 gap-1.5">
-              {LAUNCH_STEPS.map((step) => {
-                const done = launchProgress >= step.at;
-                const active = !done && launchProgress >= (step.at - 20);
-                return (
-                  <li
-                    key={step.label}
-                    className={`flex flex-col items-center gap-1 rounded-md py-1.5 px-0.5 text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider border transition-all duration-300 ${
-                      done
-                        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-                        : active
-                        ? 'border-primary/40 bg-primary/10 text-primary animate-pulse'
-                        : 'border-border/30 bg-card/30 text-muted-foreground/60'
-                    }`}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${done ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' : active ? 'bg-primary' : 'bg-muted-foreground/40'}`} />
-                    <span className="leading-none text-center line-clamp-1">{step.label}</span>
-                  </li>
-                );
-              })}
-            </ul>
-
-            {/* Feature pills */}
-            <div className="flex items-center gap-2 flex-wrap justify-center">
-              {['Ad-free', 'Hindi DUB', 'Offline', 'No Login'].map((label, i) => (
-                <span
-                  key={label}
-                  className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-border/40 bg-card/50 backdrop-blur animate-fade-in"
-                  style={{ animationDelay: `${i * 120}ms` }}
-                >
-                  {label}
-                </span>
-              ))}
-            </div>
-
-            {/* Error state — shown if the launcher fails or the user is offline */}
-            {launchError && (
-              <div className="w-full rounded-xl border border-destructive/40 bg-destructive/10 backdrop-blur p-4 animate-fade-in space-y-3">
-                <div className="flex items-start gap-2">
-                  <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-destructive/20 text-destructive text-xs font-bold">!</span>
-                  <p className="text-xs sm:text-sm text-foreground/90 leading-snug text-left">{launchError}</p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={retryLaunch}
-                    className="flex-1 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors"
-                  >
-                    Retry
-                  </button>
-                  <button
-                    onClick={() => { setIsLaunching(false); setLaunchError(null); }}
-                    className="flex-1 h-9 rounded-lg border border-border bg-background/40 text-foreground text-xs font-semibold hover:bg-background/70 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Tip */}
-            <p className="text-[11px] text-muted-foreground/70 max-w-xs leading-relaxed">
-              Pin AnimeSavi to your home screen for an instant native-app experience.
-            </p>
+          {/* TV static layer */}
+          <div className="absolute inset-0 opacity-[0.08] pointer-events-none"
+               style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'1.4\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")' }} />
+          {/* horizontal sweep scanline */}
+          <div className="absolute inset-x-0 h-24 pointer-events-none opacity-30"
+               style={{ background: 'linear-gradient(180deg, transparent, hsl(var(--primary)/0.7), transparent)', animation: 'as-scan 2.6s ease-in-out infinite' }} />
+          {/* color bars rail (broadcast feel) */}
+          <div className="absolute top-0 left-0 right-0 h-1 flex">
+            {['#ffffff', '#f1c40f', '#1abc9c', '#2ecc71', '#9b59b6', '#e74c3c', '#3498db', '#000000'].map(c => (
+              <div key={c} className="flex-1" style={{ background: c, opacity: 0.85 }} />
+            ))}
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 flex">
+            {['#000000', '#3498db', '#e74c3c', '#9b59b6', '#2ecc71', '#1abc9c', '#f1c40f', '#ffffff'].map(c => (
+              <div key={c} className="flex-1" style={{ background: c, opacity: 0.85 }} />
+            ))}
           </div>
 
-          <style>{`
-            @keyframes shimmer-text { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
-            @keyframes sweep { 0%{transform:translateX(-100%)} 100%{transform:translateX(400%)} }
-          `}</style>
+          {/* Stage: countdown (3 → 2 → 1 → loader) */}
+          {countdown !== null && countdown > 0 ? (
+            <div className="relative flex flex-col items-center gap-6 animate-fade-in">
+              <p className="text-[10px] sm:text-xs uppercase tracking-[0.45em] font-black text-primary">
+                Stand by · the show begins in
+              </p>
+              <div className="relative w-48 h-48 flex items-center justify-center">
+                <svg viewBox="0 0 120 120" className="absolute inset-0 w-full h-full" style={{ animation: 'spin 8s linear infinite' }}>
+                  <circle cx="60" cy="60" r="56" fill="none" stroke="hsl(var(--primary))" strokeWidth="1" strokeDasharray="2 8" opacity="0.45" />
+                </svg>
+                <svg viewBox="0 0 120 120" className="absolute inset-3 w-[calc(100%-1.5rem)] h-[calc(100%-1.5rem)]">
+                  <circle cx="60" cy="60" r="54" fill="none" stroke="hsl(var(--primary)/0.5)" strokeWidth="1" />
+                  <circle cx="60" cy="6" r="2.5" fill="hsl(var(--primary))" />
+                </svg>
+                <span key={countdown} className="text-[8rem] font-black tabular-nums leading-none bg-gradient-to-br from-primary via-rose-400 to-fuchsia-500 bg-clip-text text-transparent animate-scale-in"
+                      style={{ filter: 'drop-shadow(0 8px 30px hsl(var(--primary)/0.5))' }}>
+                  {countdown}
+                </span>
+              </div>
+              <p className="text-[11px] uppercase tracking-[0.35em] font-bold text-muted-foreground">
+                CH·04 · AnimeSavi · 4K UHD
+              </p>
+            </div>
+          ) : (
+            /* Film-reel loader */
+            <div className="relative w-full max-w-lg mx-auto px-6 flex flex-col items-center gap-7 text-center">
+              {/* dual film reels */}
+              <div className="flex items-center gap-10">
+                {[0, 1].map(idx => (
+                  <div key={idx} className="relative w-24 h-24">
+                    <div className="absolute inset-0 rounded-full border-2 border-primary/40"
+                         style={{ animation: `spin ${idx === 0 ? 2.4 : 1.8}s linear infinite${idx === 1 ? ' reverse' : ''}` }}>
+                      {[...Array(8)].map((_, k) => {
+                        const a = (k / 8) * Math.PI * 2;
+                        return (
+                          <span key={k} className="absolute w-3 h-3 rounded-full bg-primary/70"
+                                style={{
+                                  left: '50%', top: '50%',
+                                  transform: `translate(-50%,-50%) rotate(${(k / 8) * 360}deg) translateY(-38px)`,
+                                }} />
+                        );
+                      })}
+                    </div>
+                    <div className="absolute inset-3 rounded-full border border-border/60 bg-card/60 backdrop-blur" />
+                    <div className="absolute inset-9 rounded-full bg-primary shadow-[0_0_24px_hsl(var(--primary))]" />
+                  </div>
+                ))}
+              </div>
+
+              {/* film strip with sprocket holes */}
+              <div className="relative w-full h-12 rounded-md overflow-hidden border-y-[6px] border-foreground/80 bg-foreground/95">
+                <div className="absolute inset-y-0 left-0 right-0 flex gap-2 items-center px-2"
+                     style={{ animation: 'as-film 1.4s linear infinite' }}>
+                  {[...Array(24)].map((_, k) => (
+                    <div key={k} className="h-7 w-12 rounded-sm bg-gradient-to-br from-primary/60 to-fuchsia-500/40 border border-background/40 shrink-0" />
+                  ))}
+                </div>
+                {/* sprocket dots */}
+                <div className="absolute top-0 left-0 right-0 flex justify-between px-1.5 -translate-y-1/2">
+                  {[...Array(12)].map((_, k) => <span key={k} className="w-2 h-2 rounded-sm bg-background" />)}
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 flex justify-between px-1.5 translate-y-1/2">
+                  {[...Array(12)].map((_, k) => <span key={k} className="w-2 h-2 rounded-sm bg-background" />)}
+                </div>
+              </div>
+
+              {/* Title / channel card */}
+              <div className="text-center">
+                <p className="text-[10px] uppercase tracking-[0.45em] font-black text-primary">/ Now broadcasting</p>
+                <h2 className="text-2xl sm:text-3xl font-black tracking-tight mt-1.5">
+                  <span className="text-primary">ANIME</span>SAVI · CH·04
+                </h2>
+                <p className="text-[11px] mt-1 uppercase tracking-[0.3em] font-bold text-muted-foreground flex items-center justify-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+                  {launchBeat}
+                </p>
+              </div>
+
+              {/* Progress bar with timecode */}
+              <div className="w-full space-y-2">
+                <div className="flex items-center justify-between text-[10px] font-bold tabular-nums text-muted-foreground uppercase tracking-wider">
+                  <span className="text-foreground">TC 00:00:0{Math.min(9, Math.floor(launchProgress / 11))}</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_hsl(142_72%_45%)]" />
+                    Signal: strong
+                  </span>
+                  <span>{Math.floor(launchProgress)}%</span>
+                </div>
+                <div className="relative h-1.5 w-full rounded-full overflow-hidden bg-card/70 border border-border/40">
+                  <div className="absolute inset-y-0 left-0 rounded-full"
+                       style={{
+                         width: `${launchProgress}%`,
+                         background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(330 85% 60%), hsl(var(--primary)))',
+                         backgroundSize: '200% 100%',
+                         animation: 'as-shimmer 2s linear infinite',
+                         boxShadow: '0 0 14px hsl(var(--primary)/0.7)',
+                         transition: 'width 200ms ease-out',
+                       }} />
+                </div>
+              </div>
+
+              {/* Beat ticks */}
+              <ol className="grid grid-cols-6 gap-1.5 w-full">
+                {LOADER_BEATS.map(b => {
+                  const done = launchProgress >= b.at;
+                  return (
+                    <li key={b.label} className={`rounded-md py-1.5 px-1 text-[8px] font-black uppercase tracking-wider border text-center transition-colors ${
+                      done ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                           : 'border-border/30 bg-card/40 text-muted-foreground/60'
+                    }`}>
+                      {b.label.replace('· ', '·\u00a0')}
+                    </li>
+                  );
+                })}
+              </ol>
+
+              {/* Error */}
+              {launchError && (
+                <div className="w-full rounded-xl border border-destructive/40 bg-destructive/10 backdrop-blur p-4 space-y-3 animate-fade-in">
+                  <p className="text-xs sm:text-sm text-foreground/90 leading-snug text-left">{launchError}</p>
+                  <div className="flex gap-2">
+                    <button onClick={retryLaunch} className="flex-1 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90">Retry</button>
+                    <button onClick={() => { setIsLaunching(false); setLaunchError(null); }}
+                            className="flex-1 h-9 rounded-lg border border-border bg-background/40 text-xs font-semibold hover:bg-background/70">Cancel</button>
+                  </div>
+                </div>
+              )}
+
+              <p className="text-[11px] text-muted-foreground/70">
+                CH·04 · AnimeSavi · 4K UHD · Hindi · No ads · No paywall
+              </p>
+            </div>
+          )}
         </div>
       )}
 
-      {/* === New: By the numbers === */}
-      <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-8 py-12">
-        <div className="text-center mb-8">
-          <p className="text-[11px] uppercase tracking-[0.25em] text-primary font-bold mb-2">By the Numbers</p>
-          <h2 className="text-2xl sm:text-3xl font-extrabold">AnimeSavi at a glance</h2>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-          {[
-            { v: totalAnime ? `${totalAnime}+` : '500+', l: 'Anime titles', icon: Film },
-            { v: totalEpisodes ? `${totalEpisodes.toLocaleString()}+` : '15K+', l: 'Episodes', icon: Layers },
-            { v: '12', l: 'Player themes', icon: Palette },
-            { v: '4K', l: 'Max quality', icon: Monitor },
-            { v: '4', l: 'Streaming servers', icon: Radio },
-            { v: '5', l: 'Profiles / account', icon: Users },
-            { v: '0', l: 'Ads, ever', icon: Shield },
-            { v: '24/7', l: 'Support on TG', icon: Send },
-          ].map(({ v, l, icon: Icon }) => (
-            <div
-              key={l}
-              className="group relative overflow-hidden rounded-xl border border-border/40 bg-card/40 backdrop-blur p-4 hover:border-primary/40 hover:bg-card/70 transition-all"
-            >
-              <Icon className="absolute -bottom-2 -right-2 w-12 h-12 text-primary/10 group-hover:text-primary/25 transition-colors" />
-              <p className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-br from-primary to-fuchsia-400 bg-clip-text text-transparent">{v}</p>
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mt-1">{l}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* === New: How it works === */}
-      <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-8 pb-12">
-        <div className="text-center mb-8">
-          <p className="text-[11px] uppercase tracking-[0.25em] text-primary font-bold mb-2">How it works</p>
-          <h2 className="text-2xl sm:text-3xl font-extrabold">Four steps. Zero friction.</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4">
-          {[
-            { n: '01', t: 'Open', d: 'Tap Start Watching — no signup required to browse the catalog.', icon: Play },
-            { n: '02', t: 'Pick', d: 'Filter by genre, year, dub language or jump into Trending Now.', icon: Compass },
-            { n: '03', t: 'Play', d: 'Hit play and the best server is preselected for your network.', icon: Zap },
-            { n: '04', t: 'Sync', d: 'Sign in to sync watch history, list and favorites across devices.', icon: RefreshCw },
-          ].map((s) => (
-            <div key={s.n} className="relative rounded-xl border border-border/40 bg-card/40 backdrop-blur p-4 hover:border-primary/40 transition-colors">
-              <span className="absolute top-3 right-3 text-[10px] font-bold text-primary/60 tracking-widest">{s.n}</span>
-              <s.icon className="w-6 h-6 text-primary mb-2" />
-              <p className="text-sm font-bold mb-1">{s.t}</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">{s.d}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* === New: What's inside (deeper feature deck) === */}
-      <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-8 pb-12">
-        <div className="text-center mb-8">
-          <p className="text-[11px] uppercase tracking-[0.25em] text-primary font-bold mb-2">What's inside</p>
-          <h2 className="text-2xl sm:text-3xl font-extrabold">More than just a player</h2>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {[
-            { i: Bell, t: 'Push alerts', d: '1-hour pre-release pings' },
-            { i: Lock, t: 'PIN lock', d: '4 or 6-digit profile guard' },
-            { i: Cast, t: 'Cast & AirPlay', d: 'Simple Mode for TVs' },
-            { i: HardDrive, t: 'Offline downloads', d: '480p → 4K stored locally' },
-            
-            { i: Keyboard, t: 'Keyboard shortcuts', d: 'Press / to search anywhere' },
-            { i: Calendar, t: 'Release calendar', d: 'See exact drop times' },
-            { i: BarChart3, t: 'Personal stats', d: 'Genre & watch insights' },
-            { i: MessageCircle, t: 'Watch parties', d: 'Sync + live chat' },
-            { i: Wifi, t: 'Auto-quality', d: 'Adapts to your network' },
-            { i: Eye, t: 'Continue watching', d: 'Per-profile resume row' },
-            { i: Crown, t: 'Premium feel, free', d: 'No paywalls anywhere' },
-          ].map(({ i: Icon, t, d }) => (
-            <div key={t} className="rounded-lg border border-border/30 bg-card/30 backdrop-blur p-3 hover:border-primary/40 hover:bg-card/60 transition-all">
-              <Icon className="w-4 h-4 text-primary mb-2" />
-              <p className="text-xs font-bold leading-tight">{t}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">{d}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* === New: Device support matrix === */}
-      <section className="relative z-10 max-w-4xl mx-auto px-4 sm:px-8 pb-16">
-        <div className="text-center mb-8">
-          <p className="text-[11px] uppercase tracking-[0.25em] text-primary font-bold mb-2">Works everywhere</p>
-          <h2 className="text-2xl sm:text-3xl font-extrabold">Built for every screen</h2>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { i: Smartphone, t: 'iOS', d: 'Safari + PWA push' },
-            { i: Smartphone, t: 'Android', d: 'Chrome + install' },
-            { i: Monitor, t: 'Desktop', d: 'PiP + shortcuts' },
-            { i: Tv, t: 'TV / Cast', d: 'AirPlay + cast' },
-          ].map(({ i: Icon, t, d }) => (
-            <div key={t} className="text-center rounded-xl border border-border/40 bg-card/40 backdrop-blur p-4 hover:border-primary/40 transition-colors">
-              <Icon className="w-7 h-7 text-primary mx-auto mb-2" />
-              <p className="text-sm font-bold">{t}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{d}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Bottom branding */}
-      <div className="relative z-10 pb-8 pt-12 text-center">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <img src={logo} alt="" className="w-5 h-5 rounded" />
-          <span className="text-sm font-semibold">
-            <span className="text-primary">Anime</span><span className="text-foreground/60">Savi</span>
-          </span>
-        </div>
-        <p className="text-muted-foreground/40 text-xs">
-          © 2026 AnimeSavi — India's ad-free anime streaming platform
-        </p>
-      </div>
+      <style>{`
+        @keyframes as-marquee { 0% { transform: translateX(0) } 100% { transform: translateX(-33.333%) } }
+        @keyframes as-shimmer { 0% { background-position: 0% 50% } 100% { background-position: 200% 50% } }
+        @keyframes as-film    { 0% { transform: translateX(0) } 100% { transform: translateX(-56px) } }
+        @keyframes as-scan    { 0% { top: -10% } 100% { top: 110% } }
+      `}</style>
     </div>
   );
 }
