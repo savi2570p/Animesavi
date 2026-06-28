@@ -259,7 +259,7 @@ export default function Welcome() {
         </header>
 
         {/* Editorial gutter — vertical brand stripe + content */}
-        <div className="relative z-10 grid grid-cols-[36px_1fr] sm:grid-cols-[72px_1fr] gap-4 sm:gap-8 px-4 sm:px-10 pt-10 sm:pt-16 pb-20">
+        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-[72px_1fr] gap-4 sm:gap-8 px-4 sm:px-10 pt-6 sm:pt-16 pb-16 sm:pb-20">
           {/* left vertical gutter */}
           <aside className="flex flex-col items-center gap-4 pt-2">
             <div className="w-px h-12 bg-gradient-to-b from-transparent to-primary/70" />
