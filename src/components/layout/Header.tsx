@@ -377,7 +377,7 @@ export function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="w-52 origin-top-right bg-card/95 border-border/60 p-0 overflow-hidden shadow-xl rounded-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 duration-100 ease-out"
+                className="w-52 md:w-60 origin-top-right bg-card/95 border-border/60 p-0 overflow-hidden shadow-xl rounded-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 duration-100 ease-out"
                 align="end"
                 sideOffset={4}
               >
