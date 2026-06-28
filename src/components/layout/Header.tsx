@@ -563,7 +563,7 @@ export function Header() {
                 }}
                 onFocus={() => { if (searchQuery.trim().length >= 2) setShowSuggestions(true); }}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="w-16 sm:w-20 pl-6 pr-1 h-7 sm:h-8 bg-card border-border focus:w-24 sm:focus:w-28 transition-all duration-200 rounded-lg text-xs"
+                className={`pl-6 pr-1 h-7 sm:h-8 bg-card border-border transition-all duration-200 rounded-lg text-xs ${isMobileOS ? 'w-20 sm:w-24 focus:w-28 sm:focus:w-32' : 'w-16 sm:w-20 focus:w-24 sm:focus:w-28'}`}
               />
               <SearchSuggestions
                 query={searchQuery}
