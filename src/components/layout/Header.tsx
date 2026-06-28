@@ -59,6 +59,13 @@ export function Header() {
   const hasPremium = !!user && (isAdmin || hasValidTokenAccess(user?.email));
   const desktopSearchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
+  const isHomePage = location.pathname === '/';
+  const [isMobileOS, setIsMobileOS] = useState(false);
+
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    setIsMobileOS(/iPad|iPhone|iPod|Android/.test(ua));
+  }, []);
 
   // Smooth hide-on-scroll-down / show-on-scroll-up for the floating glass navbar.
   const [navHidden, setNavHidden] = useState(false);
@@ -81,6 +88,7 @@ export function Header() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
 
 
   // Global "/" shortcut → focus the search bar (skip when already typing in an input/textarea)
@@ -353,7 +361,7 @@ export function Header() {
           {user && <div className="[&_button]:h-7 [&_button]:w-7 sm:[&_button]:h-9 sm:[&_button]:w-9 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4"><WatchLaterButton /></div>}
           {user && <div className="[&_button]:h-7 [&_button]:w-7 sm:[&_button]:h-9 sm:[&_button]:w-9 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4"><NotificationBell /></div>}
           
-          {user ? (
+          {user && !(isHomePage && isMobileOS) ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-7 w-7 sm:h-9 sm:w-9 rounded-full p-0">
@@ -369,7 +377,7 @@ export function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="w-52 origin-top-right bg-card/95 border-border/60 p-0 overflow-hidden shadow-xl rounded-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 duration-100 ease-out"
+                className="w-52 md:w-60 origin-top-right bg-card/95 border-border/60 p-0 overflow-hidden shadow-xl rounded-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 duration-100 ease-out"
                 align="end"
                 sideOffset={4}
               >
@@ -378,7 +386,7 @@ export function Header() {
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent" />
                   <div className="relative flex items-center gap-2 p-2.5">
                     <div className="relative shrink-0">
-                      <Avatar className="relative h-8 w-8 ring-1 ring-primary/40">
+                      <Avatar className="relative h-8 w-8 md:h-9 md:w-9 ring-1 ring-primary/40">
                         <AvatarImage src={user.user_metadata?.avatar_url} alt="Avatar" />
                         <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
                           {user.email?.charAt(0).toUpperCase() || 'U'}
@@ -389,19 +397,19 @@ export function Header() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold truncate">{user.user_metadata?.username || 'User'}</p>
-                      <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
+                      <p className="text-xs md:text-sm font-bold truncate">{user.user_metadata?.username || 'User'}</p>
+                      <p className="text-[10px] md:text-xs text-muted-foreground truncate">{user.email}</p>
                       <div className="mt-0.5 flex flex-wrap gap-1">
                         {isAdmin ? (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-[8px] font-black text-yellow-400 uppercase tracking-wider">
-                            <Crown className="h-2 w-2" /> Admin
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-[8px] md:text-[10px] font-black text-yellow-400 uppercase tracking-wider">
+                            <Crown className="h-2 w-2 md:h-2.5 md:w-2.5" /> Admin
                           </span>
                         ) : isUploader ? (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-[8px] font-black text-primary uppercase tracking-wider">
-                            <Upload className="h-2 w-2" /> Uploader
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-[8px] md:text-[10px] font-black text-primary uppercase tracking-wider">
+                            <Upload className="h-2 w-2 md:h-2.5 md:w-2.5" /> Uploader
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-muted text-[8px] font-bold text-muted-foreground uppercase tracking-wider">
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-muted text-[8px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                             Viewer
                           </span>
                         )}
@@ -412,50 +420,50 @@ export function Header() {
 
                 {/* Library section */}
                 <div className="p-1">
-                  <p className="px-1.5 pt-0.5 pb-1 text-[8px] font-black text-muted-foreground uppercase tracking-widest">
+                  <p className="px-1.5 pt-0.5 pb-1 text-[8px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                     Library
                   </p>
                   <div className="grid grid-cols-4 gap-1">
                     <DropdownMenuItem asChild className="rounded-lg p-0">
                       <Link to="/profile" className="flex flex-col items-center gap-0.5 py-1 hover:bg-primary/10 rounded-md group">
-                        <div className="w-5 h-5 rounded-md bg-primary/15 flex items-center justify-center group-hover:bg-primary/25 transition-colors">
-                          <User className="h-2.5 w-2.5 text-primary" />
+                        <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-primary/15 flex items-center justify-center group-hover:bg-primary/25 transition-colors">
+                          <User className="h-2.5 w-2.5 md:h-3 md:w-3 text-primary" />
                         </div>
-                        <span className="text-[8px] font-semibold">Profile</span>
+                        <span className="text-[8px] md:text-[10px] font-semibold">Profile</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="rounded-lg p-0">
                       <Link to="/favorites" className="flex flex-col items-center gap-0.5 py-1 hover:bg-rose-500/10 rounded-md group">
-                        <div className="w-5 h-5 rounded-md bg-rose-500/15 flex items-center justify-center group-hover:bg-rose-500/25 transition-colors">
-                          <Heart className="h-2.5 w-2.5 text-rose-500" />
+                        <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-rose-500/15 flex items-center justify-center group-hover:bg-rose-500/25 transition-colors">
+                          <Heart className="h-2.5 w-2.5 md:h-3 md:w-3 text-rose-500" />
                         </div>
-                        <span className="text-[8px] font-semibold">Favs</span>
+                        <span className="text-[8px] md:text-[10px] font-semibold">Favs</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="rounded-lg p-0">
                       <Link to="/downloads" className="flex flex-col items-center gap-0.5 py-1 hover:bg-emerald-500/10 rounded-md group">
-                        <div className="w-5 h-5 rounded-md bg-emerald-500/15 flex items-center justify-center group-hover:bg-emerald-500/25 transition-colors">
-                          <Download className="h-2.5 w-2.5 text-emerald-500" />
+                        <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-emerald-500/15 flex items-center justify-center group-hover:bg-emerald-500/25 transition-colors">
+                          <Download className="h-2.5 w-2.5 md:h-3 md:w-3 text-emerald-500" />
                         </div>
-                        <span className="text-[8px] font-semibold">Downloads</span>
+                        <span className="text-[8px] md:text-[10px] font-semibold">Downloads</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="rounded-lg p-0">
                       <Link to="/watchlist" className="flex flex-col items-center gap-0.5 py-1 hover:bg-sky-500/10 rounded-md group">
-                        <div className="w-5 h-5 rounded-md bg-sky-500/15 flex items-center justify-center group-hover:bg-sky-500/25 transition-colors">
-                          <ListVideo className="h-2.5 w-2.5 text-sky-500" />
+                        <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-sky-500/15 flex items-center justify-center group-hover:bg-sky-500/25 transition-colors">
+                          <ListVideo className="h-2.5 w-2.5 md:h-3 md:w-3 text-sky-500" />
                         </div>
-                        <span className="text-[8px] font-semibold">List</span>
+                        <span className="text-[8px] md:text-[10px] font-semibold">List</span>
                       </Link>
                     </DropdownMenuItem>
                   </div>
 
                   <DropdownMenuItem asChild className="rounded-lg mt-0.5">
                     <Link to="/history" className="flex items-center gap-1.5 py-1 px-1.5">
-                      <div className="w-5 h-5 rounded-md bg-violet-500/15 flex items-center justify-center">
-                        <History className="h-2.5 w-2.5 text-violet-500" />
+                      <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-violet-500/15 flex items-center justify-center">
+                        <History className="h-2.5 w-2.5 md:h-3 md:w-3 text-violet-500" />
                       </div>
-                      <span className="text-[10px] font-medium">Watch History</span>
+                      <span className="text-[10px] md:text-xs font-medium">Watch History</span>
                     </Link>
                   </DropdownMenuItem>
                 </div>
@@ -464,18 +472,18 @@ export function Header() {
                   <>
                     <DropdownMenuSeparator className="my-0" />
                     <div className="p-1">
-                      <p className="px-1.5 pt-0.5 pb-1 text-[8px] font-black text-muted-foreground uppercase tracking-widest">
+                      <p className="px-1.5 pt-0.5 pb-1 text-[8px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                         Creator Tools
                       </p>
                       {canUpload() && (
                         <DropdownMenuItem asChild className="rounded-md">
                           <Link to="/upload" className="flex items-center gap-1.5 py-1 px-1.5">
-                            <div className="w-5 h-5 rounded-md bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center shadow-sm shadow-primary/30">
-                              <Upload className="h-2.5 w-2.5 text-white" />
+                            <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center shadow-sm shadow-primary/30">
+                              <Upload className="h-2.5 w-2.5 md:h-3 md:w-3 text-white" />
                             </div>
                             <div className="flex-1">
-                              <span className="text-[10px] font-semibold block leading-tight">Upload Anime</span>
-                              <span className="text-[8px] text-muted-foreground">Add new episodes</span>
+                              <span className="text-[10px] md:text-xs font-semibold block leading-tight">Upload Anime</span>
+                              <span className="text-[8px] md:text-[10px] text-muted-foreground">Add new episodes</span>
                             </div>
                           </Link>
                         </DropdownMenuItem>
@@ -483,12 +491,12 @@ export function Header() {
                       {isAdmin && (
                         <DropdownMenuItem asChild className="rounded-md">
                           <Link to="/admin" className="flex items-center gap-1.5 py-1 px-1.5">
-                            <div className="w-5 h-5 rounded-md bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-sm shadow-yellow-500/30">
-                              <Shield className="h-2.5 w-2.5 text-white" />
+                            <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-sm shadow-yellow-500/30">
+                              <Shield className="h-2.5 w-2.5 md:h-3 md:w-3 text-white" />
                             </div>
                             <div className="flex-1">
-                              <span className="text-[10px] font-semibold block leading-tight">Admin Panel</span>
-                              <span className="text-[8px] text-muted-foreground">Manage platform</span>
+                              <span className="text-[10px] md:text-xs font-semibold block leading-tight">Admin Panel</span>
+                              <span className="text-[8px] md:text-[10px] text-muted-foreground">Manage platform</span>
                             </div>
                           </Link>
                         </DropdownMenuItem>
@@ -498,13 +506,13 @@ export function Header() {
                 )}
 
                 <DropdownMenuSeparator className="my-0" />
-                <div className="p-1 [&_.account-switch-trigger]:h-7 [&_.account-switch-trigger]:gap-1.5 [&_.account-switch-trigger]:px-1.5 [&_.account-switch-trigger]:text-[10px] [&_.account-switch-trigger_svg]:h-3 [&_.account-switch-trigger_svg]:w-3">
+                <div className="p-1 [&_.account-switch-trigger]:h-7 md:[&_.account-switch-trigger]:h-8 [&_.account-switch-trigger]:gap-1.5 [&_.account-switch-trigger]:px-1.5 [&_.account-switch-trigger]:text-[10px] md:[&_.account-switch-trigger]:text-xs [&_.account-switch-trigger_svg]:h-3 [&_.account-switch-trigger_svg]:w-3">
                   <DropdownMenuItem asChild className="rounded-md">
                     <Link to="/settings" className="flex items-center gap-1.5 py-1 px-1.5">
-                      <div className="w-5 h-5 rounded-md bg-muted flex items-center justify-center">
-                        <Settings className="h-2.5 w-2.5 text-muted-foreground" />
+                      <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-muted flex items-center justify-center">
+                        <Settings className="h-2.5 w-2.5 md:h-3 md:w-3 text-muted-foreground" />
                       </div>
-                      <span className="text-[10px] font-medium">Settings</span>
+                      <span className="text-[10px] md:text-xs font-medium">Settings</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="p-0 rounded-md">
@@ -514,15 +522,16 @@ export function Header() {
                     onClick={handleSignOut}
                     className="rounded-md text-destructive focus:text-destructive focus:bg-destructive/10 mt-0.5 py-1 px-1.5"
                   >
-                    <div className="w-5 h-5 rounded-md bg-destructive/15 flex items-center justify-center mr-1.5">
-                      <LogOut className="h-2.5 w-2.5" />
+                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-destructive/15 flex items-center justify-center mr-1.5">
+                      <LogOut className="h-2.5 w-2.5 md:h-3 md:w-3" />
                     </div>
-                    <span className="text-[10px] font-semibold">Sign Out</span>
+                    <span className="text-[10px] md:text-xs font-semibold">Sign Out</span>
                   </DropdownMenuItem>
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : (
+          ) : null}
+          {!user && (
             <div className="flex items-center gap-1 sm:gap-2">
               <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex text-sm px-3">
                 <Link to="/auth">Sign In</Link>
@@ -614,6 +623,13 @@ export function Header() {
                       {(isAdmin || hasValidTokenAccess(user?.email)) && (
                         <Crown className="h-3.5 w-3.5 text-yellow-500 shrink-0" />
                       )}
+                      <Link
+                        to="/settings"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="ml-1 inline-flex items-center justify-center h-7 px-2.5 rounded-lg bg-primary text-primary-foreground text-[10px] font-bold hover:bg-primary/90 transition-colors"
+                      >
+                        GO
+                      </Link>
                     </div>
                   ) : (
                     <Button asChild size="sm" className="mt-4 w-full bg-gradient-to-r from-primary to-pink-500 hover:opacity-90 text-white font-bold shadow-lg shadow-primary/30">
