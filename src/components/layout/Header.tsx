@@ -59,6 +59,13 @@ export function Header() {
   const hasPremium = !!user && (isAdmin || hasValidTokenAccess(user?.email));
   const desktopSearchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
+  const isHomePage = location.pathname === '/';
+  const [isMobileOS, setIsMobileOS] = useState(false);
+
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    setIsMobileOS(/iPad|iPhone|iPod|Android/.test(ua));
+  }, []);
 
   // Smooth hide-on-scroll-down / show-on-scroll-up for the floating glass navbar.
   const [navHidden, setNavHidden] = useState(false);
@@ -81,6 +88,7 @@ export function Header() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
 
 
   // Global "/" shortcut → focus the search bar (skip when already typing in an input/textarea)
