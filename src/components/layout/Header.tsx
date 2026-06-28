@@ -39,7 +39,6 @@ import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
 import { JoinPartyDialog, ViewPartyDialog } from '@/components/WatchParty';
 import { NotificationBell } from '@/components/NotificationBell';
-import { WatchLaterButton } from '@/components/WatchLater';
 import { AccountSwitcher, rememberAccount } from '@/components/AccountSwitcher';
 import { hasValidTokenAccess } from '@/components/AccessBanner';
 import { VerifyTokenDialog } from '@/components/VerifyTokenDialog';
@@ -363,7 +362,6 @@ export function Header() {
 
           {/* User Menu */}
           <div className="flex items-center gap-1 sm:gap-1.5">
-          {user && <div className="[&_button]:h-7 [&_button]:w-7 sm:[&_button]:h-9 sm:[&_button]:w-9 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4"><WatchLaterButton /></div>}
           {user && <div className="[&_button]:h-7 [&_button]:w-7 sm:[&_button]:h-9 sm:[&_button]:w-9 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4"><NotificationBell /></div>}
           
           {user && !(isHomePage && isMobileOS) ? (
@@ -565,7 +563,7 @@ export function Header() {
                 }}
                 onFocus={() => { if (searchQuery.trim().length >= 2) setShowSuggestions(true); }}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="w-16 sm:w-20 pl-6 pr-1 h-7 sm:h-8 bg-card border-border focus:w-24 sm:focus:w-28 transition-all duration-200 rounded-lg text-xs"
+                className={`pl-6 pr-1 h-7 sm:h-8 bg-card border-border transition-all duration-200 rounded-lg text-xs ${isMobileOS ? 'w-20 sm:w-24 focus:w-28 sm:focus:w-32' : 'w-16 sm:w-20 focus:w-24 sm:focus:w-28'}`}
               />
               <SearchSuggestions
                 query={searchQuery}
