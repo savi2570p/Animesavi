@@ -607,7 +607,7 @@ export default function Welcome() {
               </p>
               <button onClick={() => startWatching('/')}
                       className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-primary text-primary-foreground hover:scale-[1.03] transition-transform">
-                Open the broadcast <ArrowRight className="w-4 h-4" />
+                Start Watching <ArrowRight className="w-4 h-4" />
               </button>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4">
