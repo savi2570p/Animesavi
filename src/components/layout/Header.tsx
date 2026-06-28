@@ -623,6 +623,13 @@ export function Header() {
                       {(isAdmin || hasValidTokenAccess(user?.email)) && (
                         <Crown className="h-3.5 w-3.5 text-yellow-500 shrink-0" />
                       )}
+                      <Link
+                        to="/settings"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="ml-1 inline-flex items-center justify-center h-7 px-2.5 rounded-lg bg-primary text-primary-foreground text-[10px] font-bold hover:bg-primary/90 transition-colors"
+                      >
+                        GO
+                      </Link>
                     </div>
                   ) : (
                     <Button asChild size="sm" className="mt-4 w-full bg-gradient-to-r from-primary to-pink-500 hover:opacity-90 text-white font-bold shadow-lg shadow-primary/30">
