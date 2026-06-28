@@ -64,7 +64,12 @@ export function Header() {
 
   useEffect(() => {
     const ua = navigator.userAgent;
-    setIsMobileOS(/iPad|iPhone|iPod|Android/.test(ua));
+    const isTouchOS = /iPad|iPhone|iPod|Android/.test(ua);
+    const mq = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobileOS(isTouchOS || mq.matches);
+    update();
+    mq.addEventListener?.('change', update);
+    return () => mq.removeEventListener?.('change', update);
   }, []);
 
   // Smooth hide-on-scroll-down / show-on-scroll-up for the floating glass navbar.
