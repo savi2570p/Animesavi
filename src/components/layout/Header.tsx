@@ -59,7 +59,6 @@ export function Header() {
   const hasPremium = !!user && (isAdmin || hasValidTokenAccess(user?.email));
   const desktopSearchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
-  const isHomePage = location.pathname === '/';
   const [isMobileOS, setIsMobileOS] = useState(false);
 
   useEffect(() => {
