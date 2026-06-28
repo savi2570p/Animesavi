@@ -386,7 +386,7 @@ export function Header() {
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent" />
                   <div className="relative flex items-center gap-2 p-2.5">
                     <div className="relative shrink-0">
-                      <Avatar className="relative h-8 w-8 ring-1 ring-primary/40">
+                      <Avatar className="relative h-8 w-8 md:h-9 md:w-9 ring-1 ring-primary/40">
                         <AvatarImage src={user.user_metadata?.avatar_url} alt="Avatar" />
                         <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
                           {user.email?.charAt(0).toUpperCase() || 'U'}
@@ -397,19 +397,19 @@ export function Header() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold truncate">{user.user_metadata?.username || 'User'}</p>
-                      <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
+                      <p className="text-xs md:text-sm font-bold truncate">{user.user_metadata?.username || 'User'}</p>
+                      <p className="text-[10px] md:text-xs text-muted-foreground truncate">{user.email}</p>
                       <div className="mt-0.5 flex flex-wrap gap-1">
                         {isAdmin ? (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-[8px] font-black text-yellow-400 uppercase tracking-wider">
-                            <Crown className="h-2 w-2" /> Admin
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-[8px] md:text-[10px] font-black text-yellow-400 uppercase tracking-wider">
+                            <Crown className="h-2 w-2 md:h-2.5 md:w-2.5" /> Admin
                           </span>
                         ) : isUploader ? (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-[8px] font-black text-primary uppercase tracking-wider">
-                            <Upload className="h-2 w-2" /> Uploader
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-[8px] md:text-[10px] font-black text-primary uppercase tracking-wider">
+                            <Upload className="h-2 w-2 md:h-2.5 md:w-2.5" /> Uploader
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-muted text-[8px] font-bold text-muted-foreground uppercase tracking-wider">
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-muted text-[8px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                             Viewer
                           </span>
                         )}
