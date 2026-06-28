@@ -584,14 +584,14 @@ export function Header() {
             </SheetTrigger>
             <SheetContent
               side="right"
-              className="w-[19rem] sm:w-80 bg-background border-border p-0 overflow-y-auto"
+              className={`bg-background border-border p-0 overflow-y-auto ${isMobileOS ? 'w-[17rem] sm:w-72' : 'w-[19rem] sm:w-80'}`}
             >
               {/* Cinematic header */}
               <div className="relative overflow-hidden border-b border-border/40">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-primary/5 to-transparent" />
                 <div className="absolute -top-12 -right-10 w-48 h-48 bg-primary/30 rounded-full blur-3xl" />
                 <div className="absolute -bottom-10 left-1/3 w-32 h-32 bg-pink-500/20 rounded-full blur-3xl" />
-                <div className="relative p-5 pt-7">
+                <div className={`relative ${isMobileOS ? 'p-4 pt-6' : 'p-5 pt-7'}`}>
                   <div className="flex items-center gap-3">
                     <div className="relative shrink-0">
                       <div className="absolute inset-0 bg-primary/40 blur-md rounded-xl" />
@@ -645,7 +645,7 @@ export function Header() {
                 </div>
               </div>
 
-              <div className="p-3 space-y-4">
+              <div className={`space-y-4 ${isMobileOS ? 'p-2.5' : 'p-3'}`}>
                 {/* Premium CTA — adaptive */}
                 {user && (
                   hasPremium ? (
