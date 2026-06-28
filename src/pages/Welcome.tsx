@@ -764,9 +764,8 @@ export default function Welcome() {
 
       <style>{`
         @keyframes as-marquee { 0% { transform: translateX(0) } 100% { transform: translateX(-33.333%) } }
-        @keyframes as-shimmer { 0% { background-position: 0% 50% } 100% { background-position: 200% 50% } }
-        @keyframes as-film    { 0% { transform: translateX(0) } 100% { transform: translateX(-56px) } }
-        @keyframes as-scan    { 0% { top: -10% } 100% { top: 110% } }
+        @keyframes as-shimmer { 0% { background-position: 0% 50% } 100% { background-position: 300% 50% } }
+        @keyframes as-orb     { 0%,100% { transform: translate(0,0) scale(1) } 50% { transform: translate(4%, -3%) scale(1.08) } }
       `}</style>
     </div>
   );
