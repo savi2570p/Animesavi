@@ -769,7 +769,7 @@ export function Header() {
                         { to: '/favorites', icon: Heart, label: 'Likes', tone: 'text-rose-500 bg-rose-500/10' },
                         { to: '/history', icon: History, label: 'History', tone: 'text-violet-500 bg-violet-500/10' },
                         { to: '/downloads', icon: Download, label: 'Saved', tone: 'text-emerald-500 bg-emerald-500/10' },
-                        { to: '/watchlist', icon: ListVideo, label: 'List', tone: 'text-sky-500 bg-sky-500/10' },
+                        { to: '/watchlist', icon: Clock, label: 'Watch Later', tone: 'text-sky-500 bg-sky-500/10' },
                       ].map((it) => {
                         const active = location.pathname === it.to;
                         return (
