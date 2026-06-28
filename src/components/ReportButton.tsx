@@ -354,7 +354,7 @@ export function ReportButton() {
                     <button
                       type="button"
                       onClick={removeScreenshot}
-                      className="text-[10.5px] font-medium text-destructive-foreground bg-destructive/80 hover:bg-destructive px-2 py-0.5 rounded-md inline-flex items-center gap-1"
+                      className="text-[10.5px] font-medium text-destructive-foreground bg-destructive/80 hover:bg-destructive px-2 py-0.5 rounded-lg inline-flex items-center gap-1"
                     >
                       <Trash2 className="h-3 w-3" />
                       Remove

@@ -1283,13 +1283,13 @@ export default function Welcome() {
                 <div className="flex gap-2">
                   <button
                     onClick={retryLaunch}
-                    className="flex-1 h-9 rounded-md bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors"
+                    className="flex-1 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors"
                   >
                     Retry
                   </button>
                   <button
                     onClick={() => { setIsLaunching(false); setLaunchError(null); }}
-                    className="flex-1 h-9 rounded-md border border-border bg-background/40 text-foreground text-xs font-semibold hover:bg-background/70 transition-colors"
+                    className="flex-1 h-9 rounded-lg border border-border bg-background/40 text-foreground text-xs font-semibold hover:bg-background/70 transition-colors"
                   >
                     Cancel
                   </button>

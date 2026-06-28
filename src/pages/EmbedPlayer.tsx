@@ -636,7 +636,7 @@ export default function EmbedPlayer() {
           {allEpisodes.length > 1 && (
             <button
               onClick={(e) => { e.stopPropagation(); setShowEpisodePanel(!showEpisodePanel); }}
-              className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white text-[10px] font-medium transition-colors ml-2 shrink-0"
+              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-medium transition-colors ml-2 shrink-0"
             >
               <List className="w-3 h-3" /> Episodes
             </button>
