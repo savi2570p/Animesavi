@@ -155,7 +155,7 @@ export default function QaCheck() {
               <h2 className="font-bold">Continue Watching · "Done" fade-out</h2>
               <p className="text-xs text-muted-foreground">Expect: tile only fades — not the whole page.</p>
             </div>
-            <button onClick={triggerDoneDemo} className="text-xs font-semibold px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-1">
+            <button onClick={triggerDoneDemo} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-1">
               <RefreshCw className="w-3 h-3" /> Replay
             </button>
           </header>
@@ -189,7 +189,7 @@ export default function QaCheck() {
               <h2 className="font-bold">/welcome Start Watching loader</h2>
               <p className="text-xs text-muted-foreground">Expect: progress bar fills smoothly with shimmer, 5 step chips tick to green.</p>
             </div>
-            <button onClick={triggerLoaderDemo} className="text-xs font-semibold px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-1">
+            <button onClick={triggerLoaderDemo} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-1">
               <RefreshCw className="w-3 h-3" /> Run
             </button>
           </header>
