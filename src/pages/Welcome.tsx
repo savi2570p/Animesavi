@@ -150,27 +150,22 @@ export default function Welcome() {
     return () => clearInterval(id);
   }, []);
 
-  /* ---------- Launch sequence: countdown → film-reel loader → navigate ---------- */
+  /* ---------- Launch sequence: liquid-glass loader → navigate ---------- */
   const startWatching = (target: string = '/') => {
     if (isLaunching) return;
     setLaunchTarget(target);
     setLaunchError(null);
     setLaunchProgress(0);
     setLaunchBeat(LOADER_BEATS[0].label);
-    setCountdown(3);
+    setCountdown(null);
     setIsLaunching(true);
   };
 
-  // Countdown 3 → 2 → 1 → start loader
+  // Run the progress directly — no countdown
   useEffect(() => {
-    if (!isLaunching || countdown === null) return;
-    if (countdown > 0) {
-      const t = setTimeout(() => setCountdown(c => (c === null ? null : c - 1)), 700);
-      return () => clearTimeout(t);
-    }
-    // countdown finished — kick off progress
+    if (!isLaunching) return;
     const start = performance.now();
-    const duration = 1900;
+    const duration = 2200;
     let raf = 0;
     const tick = () => {
       if (typeof navigator !== 'undefined' && navigator.onLine === false) {
@@ -188,12 +183,12 @@ export default function Welcome() {
         setTimeout(() => {
           try { navigate(launchTarget); }
           catch { setLaunchError('Something blocked the redirect. Please try again.'); }
-        }, 240);
+        }, 260);
       }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [countdown, isLaunching, launchTarget, navigate]);
+  }, [isLaunching, launchTarget, navigate]);
 
   const retryLaunch = () => {
     setIsLaunching(false);
