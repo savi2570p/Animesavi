@@ -39,7 +39,6 @@ import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
 import { JoinPartyDialog, ViewPartyDialog } from '@/components/WatchParty';
 import { NotificationBell } from '@/components/NotificationBell';
-import { WatchLaterButton } from '@/components/WatchLater';
 import { AccountSwitcher, rememberAccount } from '@/components/AccountSwitcher';
 import { hasValidTokenAccess } from '@/components/AccessBanner';
 import { VerifyTokenDialog } from '@/components/VerifyTokenDialog';
