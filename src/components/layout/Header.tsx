@@ -60,6 +60,29 @@ export function Header() {
   const desktopSearchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
 
+  // Smooth hide-on-scroll-down / show-on-scroll-up for the floating glass navbar.
+  const [navHidden, setNavHidden] = useState(false);
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const delta = y - lastY;
+        if (y < 80) setNavHidden(false);
+        else if (delta > 6) setNavHidden(true);
+        else if (delta < -6) setNavHidden(false);
+        lastY = y;
+        ticking = false;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+
   // Global "/" shortcut → focus the search bar (skip when already typing in an input/textarea)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -193,9 +216,14 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-[100] w-full safe-area-top">
+    <header
+      className={`sticky top-0 z-[100] w-full safe-area-top lg-nav-floating transition-transform duration-300 will-change-transform ${
+        navHidden ? '-translate-y-[120%]' : 'translate-y-0'
+      }`}
+    >
       {/* Layered glass surface */}
-      <div className="relative bg-background/95 border-b border-border/40">
+      <div className="relative">
+
         {/* Ambient gradient wash */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-60">
           <div className="absolute inset-x-0 top-0 h-px bg-primary/20" />
