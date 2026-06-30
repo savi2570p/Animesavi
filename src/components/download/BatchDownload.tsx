@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
+import JSZip from 'jszip';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,7 +12,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Download, CheckCircle2, Loader2, X, FileVideo, Ban } from 'lucide-react';
+import { Download, CheckCircle2, Loader2, X, FileVideo, Ban, Package } from 'lucide-react';
 import { toast } from 'sonner';
 import { streamDownload, saveBlob, fmtSpeed, fmtEta, fmtSize } from '@/lib/downloadUtils';
 
@@ -47,6 +48,7 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [completedCount, setCompletedCount] = useState(0);
   const [quality, setQuality] = useState<typeof QUALITY_OPTIONS[number]>('2160p');
+  const [zipProgress, setZipProgress] = useState<number | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const cancelledRef = useRef(false);
 
@@ -70,13 +72,38 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
     setDownloadQueue(prev => prev.map((item, idx) => idx === index ? { ...item, ...patch } : item));
   };
 
-  const downloadSingleEpisode = async (episode: Episode, index: number): Promise<boolean> => {
+  // Pre-quality estimated bitrate (bits/sec) used as fallback when the upstream
+  // server omits Content-Length. Keeps the "combined size" number stable.
+  const qualityBitrate = useMemo(() => {
+    switch (quality) {
+      case '480p':  return 1_500_000;
+      case '720p':  return 3_000_000;
+      case '1080p': return 6_000_000;
+      case '2160p': return 16_000_000;
+      default:      return 5_000_000;
+    }
+  }, [quality]);
+
+  const estimatedTotalBytes = useMemo(() => {
+    // Average episode ~24 min. Used only to show users a real combined ZIP size
+    // estimate up-front so the "single file size" is visible before download.
+    const ESTIMATED_EP_SECONDS = 24 * 60;
+    return Math.round((qualityBitrate / 8) * ESTIMATED_EP_SECONDS * selectedEpisodes.size);
+  }, [qualityBitrate, selectedEpisodes.size]);
+
+  // Stream a single episode into memory and return its chunks + metadata.
+  // The actual save-to-disk happens ONCE at the end as a combined ZIP — that
+  // sidesteps the mobile-browser block on multiple sequential <a download> clicks
+  // which was preventing files from being saved on iOS and Android.
+  const fetchEpisodeChunks = async (
+    episode: Episode,
+    index: number,
+  ): Promise<{ chunks: BlobPart[]; mime: string; ext: string } | null> => {
     const videoUrl = episode.video_url || episode.external_url;
-    if (!videoUrl) return false;
+    if (!videoUrl) return null;
 
     const ext = (videoUrl.split('?')[0].split('.').pop() || 'mp4').toLowerCase();
     const safeExt = ['mp4', 'mkv', 'webm', 'm4v'].includes(ext) ? ext : 'mp4';
-    const fileName = `${animeTitle} - Episode ${episode.episode_number} [${quality}].${safeExt}`;
 
     updateItem(index, { status: 'downloading', progress: 0, speed: 0, etaSec: 0, received: 0, total: 0 });
 
@@ -85,35 +112,32 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
       updateItem(index, { progress: p.pct, speed: p.speed, etaSec: p.etaSec, received: p.received, total: p.total });
     };
 
-    // Try direct stream first, then same-origin proxy fallback on CORS failure
     for (const useProxy of [false, true]) {
       try {
         const { chunks, total, received, mime } = await streamDownload({
           url: videoUrl,
-          filename: fileName,
+          filename: `${animeTitle} - Episode ${episode.episode_number} [${quality}].${safeExt}`,
           signal: abortRef.current.signal,
           onProgress,
           useProxy,
         });
-        if (cancelledRef.current) { updateItem(index, { status: 'cancelled' }); return false; }
+        if (cancelledRef.current) { updateItem(index, { status: 'cancelled' }); return null; }
         if (received < 100 * 1024) throw new Error('payload too small');
         if (total > 0 && Math.abs(received - total) > 1024) throw new Error('size mismatch');
-        saveBlob(chunks, mime, fileName);
         updateItem(index, { status: 'completed', progress: 100 });
-        return true;
+        return { chunks, mime, ext: safeExt };
       } catch (e: any) {
         if (e?.name === 'AbortError' || cancelledRef.current) {
           updateItem(index, { status: 'cancelled' });
-          return false;
+          return null;
         }
         if (useProxy) {
           updateItem(index, { status: 'failed' });
-          return false;
+          return null;
         }
-        // else loop and retry via proxy
       }
     }
-    return false;
+    return null;
   };
 
   const startDownload = useCallback(async () => {
@@ -124,20 +148,57 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
     })));
     setIsDownloading(true);
     setCompletedCount(0);
+    setZipProgress(null);
     cancelledRef.current = false;
+
+    const zip = new JSZip();
+    const folder = zip.folder(`${animeTitle} [${quality === '2160p' ? '4K' : quality}]`) || zip;
 
     let successCount = 0;
     for (let i = 0; i < episodesToDownload.length; i++) {
       if (cancelledRef.current) break;
-      const ok = await downloadSingleEpisode(episodesToDownload[i], i);
-      if (ok) { successCount++; setCompletedCount(successCount); }
+      const ep = episodesToDownload[i];
+      const result = await fetchEpisodeChunks(ep, i);
+      if (result) {
+        const safeTitle = (ep.title || '').replace(/[\\/:*?"<>|]/g, '-').slice(0, 80);
+        const fileName = `Episode ${String(ep.episode_number).padStart(2, '0')}${safeTitle ? ' - ' + safeTitle : ''} [${quality}].${result.ext}`;
+        const blob = new Blob(result.chunks, { type: result.mime });
+        folder.file(fileName, blob, { binary: true, compression: 'STORE' });
+        successCount++;
+        setCompletedCount(successCount);
+      }
     }
 
-    setIsDownloading(false);
-    if (cancelledRef.current) toast.message('Downloads cancelled');
-    else if (successCount === episodesToDownload.length) toast.success(`All ${successCount} episodes downloaded!`);
-    else if (successCount > 0) toast.success(`Downloaded ${successCount} of ${episodesToDownload.length} episodes`);
-    else toast.error('Download failed. Please try again.');
+    if (cancelledRef.current) {
+      setIsDownloading(false);
+      toast.message('Downloads cancelled');
+      return;
+    }
+
+    if (successCount === 0) {
+      setIsDownloading(false);
+      toast.error('Download failed. Please try again.');
+      return;
+    }
+
+    // Bundle everything into ONE file. STORE (no compression) keeps it fast and
+    // lossless — extracting on phone yields playable individual video files.
+    try {
+      setZipProgress(0);
+      const zipBlob = await zip.generateAsync(
+        { type: 'blob', compression: 'STORE', mimeType: 'application/zip' },
+        (meta) => setZipProgress(meta.percent),
+      );
+      const zipName = `${animeTitle} [${quality === '2160p' ? '4K' : quality}] - ${successCount} Episode${successCount !== 1 ? 's' : ''}.zip`;
+      saveBlob([zipBlob], 'application/zip', zipName);
+      toast.success(`Saved ${successCount} episode${successCount !== 1 ? 's' : ''} as a single .zip (${fmtSize(zipBlob.size)})`);
+    } catch (err) {
+      console.error('Zip packaging failed:', err);
+      toast.error('Could not package the .zip file');
+    } finally {
+      setZipProgress(null);
+      setIsDownloading(false);
+    }
   }, [selectedEpisodes, downloadableEpisodes, animeTitle, quality]);
 
   const cancelDownload = useCallback(() => {
@@ -234,9 +295,24 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
               </div>
             </ScrollArea>
 
+            {/* Combined size — all selected episodes packaged into ONE zip file */}
+            {selectedEpisodes.size > 0 && (
+              <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+                <Package className="h-5 w-5 text-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-foreground">
+                    One .zip file · {selectedEpisodes.size} episode{selectedEpisodes.size !== 1 ? 's' : ''}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Combined size ≈ <span className="font-mono tabular-nums text-foreground/90">{fmtSize(estimatedTotalBytes)}</span> · Saves reliably on iOS & Android
+                  </p>
+                </div>
+              </div>
+            )}
+
             <Button onClick={startDownload} disabled={selectedEpisodes.size === 0} className="w-full gap-2">
               <Download className="h-4 w-4" />
-              Download {selectedEpisodes.size} {quality === '2160p' ? '4K' : quality} Episode{selectedEpisodes.size !== 1 ? 's' : ''}
+              Download {selectedEpisodes.size} {quality === '2160p' ? '4K' : quality} Episode{selectedEpisodes.size !== 1 ? 's' : ''} (.zip)
             </Button>
           </>
         ) : (
@@ -275,6 +351,15 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
                 ))}
               </div>
             </ScrollArea>
+            {zipProgress !== null && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-1.5 font-medium text-foreground"><Package className="h-3.5 w-3.5 text-primary" /> Packaging .zip…</span>
+                  <span className="font-mono tabular-nums text-foreground/80">{Math.floor(zipProgress)}%</span>
+                </div>
+                <Progress value={zipProgress} className="h-1.5" />
+              </div>
+            )}
             <div className="flex gap-2">
               <Button variant="outline" onClick={resetDownload} disabled={isDownloading} className="flex-1">
                 {isDownloading ? 'Downloading…' : 'Download More'}

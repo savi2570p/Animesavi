@@ -382,55 +382,21 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       action: rpcRow?.action,
     });
 
-    // 3. Swap to the backend-selected next episode if one exists.
-    if (rpcRow?.next_episode_id) {
-      const { data: newRow, error: upsertErr } = await retry(async () => {
-        const result = await supabase
+    // The RPC auto-creates a "next episode" watch_history row so the series stays
+    // in Continue Watching. When the user explicitly taps "Done" they want the
+    // tile GONE — so delete that auto-created next row and remove the tile.
+    if (rpcRow?.next_history_id) {
+      try {
+        await supabase
           .from('watch_history')
-          .select('id, progress, completed, completed_at, last_position, duration, watched_at, anime:anime_id(id,title,cover_image,status), episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
-          .eq('user_id', user.id)
-          .eq('episode_id', rpcRow.next_episode_id)
-          .maybeSingle();
-        if (result.error) throw result.error;
-        return result;
-      });
-
-      if (!upsertErr && newRow) {
-        // Wait for fade-out to finish, then swap content in place + fade back in.
-        await fadeDelay;
-        setHistory((prev) =>
-          prev.map((h) =>
-            h.id === historyId
-              ? {
-                  ...(newRow as WatchHistoryItem),
-                  season: {
-                    id: rpcRow!.next_season_id || (newRow as any).episode?.season_id,
-                    season_number: rpcRow!.next_season_number || 1,
-                  },
-                  hasNewEpisode: false,
-                }
-              : h,
-          ),
-        );
-        // Clear fade so the new tile fades back in.
-        setFadingIds((prev) => { const n = new Set(prev); n.delete(historyId); return n; });
-        toast.success(
-          rpcRow.next_season_number && rpcRow.next_season_number !== item.season?.season_number
-            ? `${animeTitle} — starting Season ${rpcRow.next_season_number}`
-            : `${animeTitle} — next episode ready`,
-        );
-        return;
+          .delete()
+          .eq('id', rpcRow.next_history_id)
+          .eq('user_id', user.id);
+      } catch (err) {
+        console.error('[ContinueWatching:Done] failed to clear auto next row', err);
       }
-
-      console.error('Continue Watching next-row refresh failed:', { upsertErr, nextEpisodeId: rpcRow.next_episode_id });
-      await fadeDelay;
-      await fetchRecentHistory(false);
-      setFadingIds((prev) => { const n = new Set(prev); n.delete(historyId); return n; });
-      toast.success(`${animeTitle} updated`);
-      return;
     }
 
-    // 4. No next episode found (series finished) — let fade complete then remove.
     await fadeDelay;
     setHistory((prev) => prev.filter((h) => h.id !== historyId));
     setFadingIds((prev) => { const n = new Set(prev); n.delete(historyId); return n; });
