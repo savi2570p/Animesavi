@@ -708,12 +708,16 @@ export default function Welcome() {
             </div>
 
             <div className="text-center space-y-1.5">
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight">
+              <h2 id="as-launch-title" className="text-xl sm:text-2xl font-black tracking-tight">
                 <span className="text-primary">ANIME</span>SAVI
               </h2>
               <p className="text-[11px] uppercase tracking-[0.35em] font-bold text-foreground/70 flex items-center justify-center gap-2">
-                <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-                {launchBeat}
+                <span className="w-1 h-1 rounded-full bg-primary animate-pulse" aria-hidden="true" />
+                <span aria-hidden="true">{launchBeat}</span>
+              </p>
+              {/* Polite live region announces progress to screen readers */}
+              <p id="as-launch-status" role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+                {launchError ? launchError : `${launchBeat}. ${Math.floor(launchProgress)} percent complete.`}
               </p>
             </div>
 
@@ -773,6 +777,33 @@ export default function Welcome() {
         @keyframes as-marquee { 0% { transform: translateX(0) } 100% { transform: translateX(-33.333%) } }
         @keyframes as-shimmer { 0% { background-position: 0% 50% } 100% { background-position: 300% 50% } }
         @keyframes as-orb     { 0%,100% { transform: translate(0,0) scale(1) } 50% { transform: translate(4%, -3%) scale(1.08) } }
+
+        /* Liquid-glass loader background — desktop uses heavy backdrop blur,
+           mobile (iOS/Android) drops to a lighter blur + opaque-ish base for
+           smooth 60fps on weaker GPUs. */
+        .as-loader-bg {
+          background:
+            radial-gradient(ellipse at 20% 10%, hsl(var(--primary)/0.28), transparent 55%),
+            radial-gradient(ellipse at 80% 90%, hsl(330 85% 55% / 0.22), transparent 55%),
+            radial-gradient(ellipse at 60% 40%, hsl(220 80% 55% / 0.18), transparent 60%),
+            hsl(var(--background)/0.92);
+          backdrop-filter: blur(28px) saturate(160%);
+          -webkit-backdrop-filter: blur(28px) saturate(160%);
+        }
+        @media (max-width: 768px) {
+          .as-loader-bg {
+            background:
+              radial-gradient(ellipse at 20% 10%, hsl(var(--primary)/0.32), transparent 55%),
+              radial-gradient(ellipse at 80% 90%, hsl(330 85% 55% / 0.25), transparent 55%),
+              hsl(var(--background));
+            backdrop-filter: blur(14px) saturate(140%);
+            -webkit-backdrop-filter: blur(14px) saturate(140%);
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .as-loader-bg [style*="as-orb"],
+          .as-loader-bg [style*="as-shimmer"] { animation: none !important; }
+        }
       `}</style>
     </div>
   );
