@@ -205,7 +205,15 @@ export default function Welcome() {
   const timeStr = clock.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
+    <div
+      className="relative min-h-[100dvh] overflow-x-hidden bg-background text-foreground"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        paddingLeft: 'env(safe-area-inset-left)',
+        paddingRight: 'env(safe-area-inset-right)',
+      }}
+    >
       {/* ===================== HERO ===================== */}
       <section className="relative isolate">
         {/* backdrop cover */}
@@ -647,15 +655,14 @@ export default function Welcome() {
          ===================================================== */}
       {isLaunching && (
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center overflow-hidden animate-fade-in px-5"
+          className="fixed inset-0 z-[200] flex items-center justify-center overflow-hidden animate-fade-in px-5 as-loader-bg"
           role="dialog"
           aria-modal="true"
-          aria-label="Loading AnimeSavi"
+          aria-labelledby="as-launch-title"
+          aria-describedby="as-launch-status"
           style={{
-            background:
-              'radial-gradient(ellipse at 20% 10%, hsl(var(--primary)/0.28), transparent 55%), radial-gradient(ellipse at 80% 90%, hsl(330 85% 55% / 0.22), transparent 55%), radial-gradient(ellipse at 60% 40%, hsl(220 80% 55% / 0.18), transparent 60%), hsl(var(--background)/0.85)',
-            backdropFilter: 'blur(28px) saturate(160%)',
-            WebkitBackdropFilter: 'blur(28px) saturate(160%)',
+            paddingTop: 'env(safe-area-inset-top)',
+            paddingBottom: 'env(safe-area-inset-bottom)',
           }}
         >
           {/* Drifting glass orbs for liquid feel */}
