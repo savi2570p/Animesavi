@@ -295,9 +295,24 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
               </div>
             </ScrollArea>
 
+            {/* Combined size — all selected episodes packaged into ONE zip file */}
+            {selectedEpisodes.size > 0 && (
+              <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
+                <Package className="h-5 w-5 text-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-foreground">
+                    One .zip file · {selectedEpisodes.size} episode{selectedEpisodes.size !== 1 ? 's' : ''}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Combined size ≈ <span className="font-mono tabular-nums text-foreground/90">{fmtSize(estimatedTotalBytes)}</span> · Saves reliably on iOS & Android
+                  </p>
+                </div>
+              </div>
+            )}
+
             <Button onClick={startDownload} disabled={selectedEpisodes.size === 0} className="w-full gap-2">
               <Download className="h-4 w-4" />
-              Download {selectedEpisodes.size} {quality === '2160p' ? '4K' : quality} Episode{selectedEpisodes.size !== 1 ? 's' : ''}
+              Download {selectedEpisodes.size} {quality === '2160p' ? '4K' : quality} Episode{selectedEpisodes.size !== 1 ? 's' : ''} (.zip)
             </Button>
           </>
         ) : (
@@ -336,6 +351,15 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
                 ))}
               </div>
             </ScrollArea>
+            {zipProgress !== null && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-1.5 font-medium text-foreground"><Package className="h-3.5 w-3.5 text-primary" /> Packaging .zip…</span>
+                  <span className="font-mono tabular-nums text-foreground/80">{Math.floor(zipProgress)}%</span>
+                </div>
+                <Progress value={zipProgress} className="h-1.5" />
+              </div>
+            )}
             <div className="flex gap-2">
               <Button variant="outline" onClick={resetDownload} disabled={isDownloading} className="flex-1">
                 {isDownloading ? 'Downloading…' : 'Download More'}
