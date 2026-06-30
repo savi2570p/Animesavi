@@ -73,8 +73,8 @@ export default function Index() {
             to="/flox"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border bg-card/50 text-muted-foreground border-border/50 hover:bg-primary/10 hover:border-primary/50 hover:text-primary"
           >
-            <img src={floxLogo} alt="Flox Anime India +" className="h-5 w-5 rounded-full object-cover" />
-            Flox Anime India +
+            <img src={floxLogo} alt="Flox +" className="h-5 w-5 rounded-full object-cover" />
+            Flox +
           </Link>
         </div>
       </section>
