@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
+import JSZip from 'jszip';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,7 +12,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Download, CheckCircle2, Loader2, X, FileVideo, Ban } from 'lucide-react';
+import { Download, CheckCircle2, Loader2, X, FileVideo, Ban, Package } from 'lucide-react';
 import { toast } from 'sonner';
 import { streamDownload, saveBlob, fmtSpeed, fmtEta, fmtSize } from '@/lib/downloadUtils';
 
