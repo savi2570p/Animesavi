@@ -453,33 +453,51 @@ export default function EpisodeEdit() {
           <SubtitleEditor
             compact={true}
             onSave={async (vttContent) => {
-              // Upload VTT to storage
-              const fileName = `anime/${animeId}/subtitles/ep_${episodeId}.vtt`;
-              const blob = new Blob([vttContent], { type: 'text/vtt' });
-              const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('anime-subtitles')
-                .upload(fileName, blob, { upsert: true });
-              
-              if (uploadError) {
-                toast.error('Failed to upload subtitles');
-                return;
-              }
-              
-              const { data: urlData } = supabase.storage
-                .from('anime-subtitles')
-                .getPublicUrl(fileName);
-              
-              // Save URL to episode
-              const { error } = await supabase
-                .from('episodes')
-                .update({ captions_url: urlData.publicUrl })
-                .eq('id', episodeId);
-              
-              if (error) {
-                toast.error('Failed to save subtitle URL');
-              } else {
-                setEpisode(prev => prev ? { ...prev, captions_url: urlData.publicUrl } : null);
-                toast.success('Subtitles saved successfully!');
+              try {
+                // Ensure content starts with WEBVTT header, otherwise players
+                // will reject the file and Supabase Storage may return an
+                // "invalid MIME" error on save.
+                const normalized = vttContent.trim().startsWith('WEBVTT')
+                  ? vttContent
+                  : `WEBVTT\n\n${vttContent}`;
+                const fileName = `anime/${animeId}/subtitles/ep_${episodeId}.vtt`;
+                const blob = new Blob([normalized], { type: 'text/vtt' });
+                const { error: uploadError } = await supabase.storage
+                  .from('anime-subtitles')
+                  .upload(fileName, blob, {
+                    upsert: true,
+                    contentType: 'text/vtt',
+                    cacheControl: '3600',
+                  });
+
+                if (uploadError) {
+                  console.error('Subtitle upload error:', uploadError);
+                  toast.error('Failed to upload subtitles', { description: uploadError.message });
+                  return;
+                }
+
+                const { data: urlData } = supabase.storage
+                  .from('anime-subtitles')
+                  .getPublicUrl(fileName);
+
+                // Cache-bust so players immediately pick up the new file
+                const publicUrl = `${urlData.publicUrl}?v=${Date.now()}`;
+
+                const { error } = await supabase
+                  .from('episodes')
+                  .update({ captions_url: publicUrl })
+                  .eq('id', episodeId);
+
+                if (error) {
+                  console.error('Episode captions_url update error:', error);
+                  toast.error('Failed to save subtitle URL', { description: error.message });
+                } else {
+                  setEpisode(prev => prev ? { ...prev, captions_url: publicUrl } : null);
+                  toast.success('Subtitles saved');
+                }
+              } catch (e: any) {
+                console.error('Subtitle save failed:', e);
+                toast.error('Could not save subtitles', { description: e?.message });
               }
             }}
           />

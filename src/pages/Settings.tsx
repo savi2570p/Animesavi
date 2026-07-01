@@ -10,6 +10,8 @@ import { Switch } from '@/components/ui/switch';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { ReleaseReminderSettings } from '@/components/ReleaseReminderSettings';
 import { PinLockSettings } from '@/components/settings/PinLockSettings';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { rememberAccount } from '@/components/AccountSwitcher';
 import {
   Settings as SettingsIcon,
   Moon,
@@ -29,11 +31,13 @@ import {
   Trash2,
   Subtitles,
   PlayCircle,
+  LogOut,
+  Crown,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Settings() {
-  const { user } = useAuth();
+  const { user, signOut, isAdmin, isUploader } = useAuth();
   const navigate = useNavigate();
   const [autoplay, setAutoplay] = useState(() => localStorage.getItem('pref_autoplay') !== '0');
   const [dataSaver, setDataSaver] = useState(() => localStorage.getItem('pref_data_saver') === '1');
@@ -485,27 +489,71 @@ export default function Settings() {
             </CardContent>
           </Card>
 
-          {/* Privacy & Security */}
+          {/* Account & Session — Profile summary + Sign Out */}
           <Card className="relative overflow-hidden border-border/50 bg-card/60 backdrop-blur-sm">
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+            <div className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 rounded-full bg-primary/15 blur-3xl" />
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Shield className="h-4 w-4 text-primary" />
                 </div>
-                Privacy & Security
+                Account & Session
               </CardTitle>
-              <CardDescription>Manage your account & profile</CardDescription>
+              <CardDescription>Your profile, security and session controls</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Button
-                variant="outline"
-                className="w-full justify-start h-11 border-border/50 hover:border-primary/40 hover:bg-primary/5"
-                onClick={() => navigate('/profile')}
-              >
-                <UserIcon className="h-4 w-4 mr-2" />
-                Manage Profile Settings
-              </Button>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-primary/10 via-transparent to-rose-500/5 border border-border/50">
+                <Avatar className="h-11 w-11 ring-2 ring-primary/40 shrink-0">
+                  <AvatarImage src={user.user_metadata?.avatar_url} alt="Avatar" />
+                  <AvatarFallback className="bg-primary text-primary-foreground font-bold">
+                    {user.email?.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold truncate flex items-center gap-1.5">
+                    {user.user_metadata?.username || 'User'}
+                    {isAdmin && <Crown className="h-3.5 w-3.5 text-yellow-500" />}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[9px] font-black text-emerald-400 uppercase tracking-wider">
+                      Signed in
+                    </span>
+                    {isAdmin ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-[9px] font-black text-yellow-400 uppercase tracking-wider">Admin</span>
+                    ) : isUploader ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-[9px] font-black text-primary uppercase tracking-wider">Uploader</span>
+                    ) : (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-muted text-[9px] font-black text-muted-foreground uppercase tracking-wider">Viewer</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <Button
+                  variant="outline"
+                  className="justify-start h-11 border-border/50 hover:border-primary/40 hover:bg-primary/5"
+                  onClick={() => navigate('/profile')}
+                >
+                  <UserIcon className="h-4 w-4 mr-2" />
+                  Manage Profile
+                </Button>
+                <Button
+                  variant="outline"
+                  className="justify-start h-11 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  onClick={async () => {
+                    if (user?.email) rememberAccount(user.email, user.user_metadata?.username || user.email.split('@')[0]);
+                    await signOut();
+                    toast.success('Signed out');
+                    navigate('/');
+                  }}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Log Out
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

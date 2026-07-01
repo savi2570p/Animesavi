@@ -220,29 +220,43 @@ export function AccessBanner() {
 
   return (
     <div
-      className="access-banner sticky top-0 z-[60] text-white animate-fade-in relative backdrop-blur-xl backdrop-saturate-150"
+      className="access-banner sticky top-0 z-[60] text-white animate-fade-in relative overflow-hidden"
       style={{
         height: 25,
         minHeight: 25,
         maxHeight: 25,
-        // No safe-area-top here: PWA mode would otherwise inflate the banner
-        // beyond 25px on iPhones with a Dynamic Island / notch.
         paddingTop: 0,
         paddingBottom: 0,
-        background:
-          'linear-gradient(90deg, hsla(0,0%,6%,0.6) 0%, hsla(0,0%,6%,0.55) 30%, hsla(0,70%,32%,0.55) 45%, hsla(0,80%,42%,0.6) 50%, hsla(0,70%,32%,0.55) 55%, hsla(0,0%,6%,0.55) 70%, hsla(0,0%,6%,0.6) 100%)',
-        boxShadow: `0 2px 14px -10px ${tone.glow}, inset 0 -1px 0 hsla(0,0%,100%,0.06), inset 0 1px 0 hsla(0,0%,100%,0.04)`,
-        WebkitBackdropFilter: 'blur(18px) saturate(150%)',
+        // Liquid-glass tinted surface — tone-adaptive
+        background: `linear-gradient(90deg, hsla(0,0%,8%,0.55) 0%, hsla(0,0%,10%,0.35) 50%, hsla(0,0%,8%,0.55) 100%)`,
+        WebkitBackdropFilter: 'blur(22px) saturate(180%)',
+        backdropFilter: 'blur(22px) saturate(180%)',
+        boxShadow: `0 6px 24px -14px ${tone.glow}, inset 0 -1px 0 hsla(0,0%,100%,0.08), inset 0 1px 0 hsla(0,0%,100%,0.10)`,
       }}
     >
-      {/* animated shine */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-50">
+      {/* Frosted glass tint layer that adapts to urgency */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-70"
+        style={{
+          background: `radial-gradient(120% 200% at 50% 0%, ${tone.glow} 0%, transparent 55%)`,
+        }}
+      />
+      {/* Refraction highlight along the top edge */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px"
+        style={{
+          background: 'linear-gradient(90deg, transparent, hsla(0,0%,100%,0.55), transparent)',
+        }}
+      />
+      {/* Slow travelling specular sheen */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-70">
         <div
           className="absolute inset-y-0 -inset-x-1/3"
           style={{
             background:
-              'linear-gradient(110deg, transparent 30%, hsla(0,0%,100%,0.08) 50%, transparent 70%)',
-            animation: 'shimmer 5s linear infinite',
+              'linear-gradient(110deg, transparent 30%, hsla(0,0%,100%,0.14) 50%, transparent 70%)',
+            animation: 'shimmer 6s linear infinite',
+            mixBlendMode: 'overlay',
           }}
         />
       </div>
@@ -250,24 +264,32 @@ export function AccessBanner() {
       <div className="container relative flex items-center justify-between gap-2 px-3 h-full">
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="relative flex h-1.5 w-1.5 shrink-0">
-            <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping ${tone.dot}`} />
-            <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${tone.dot}`} />
+            <span
+              className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping"
+              style={{ background: tone.ring }}
+            />
+            <span
+              className="relative inline-flex h-1.5 w-1.5 rounded-full"
+              style={{ background: tone.ring, boxShadow: `0 0 6px ${tone.glow}` }}
+            />
           </span>
-          <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.14em] opacity-90 truncate leading-none">
+          <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] opacity-95 truncate leading-none">
             {tone.label}
           </span>
-          {isCritical && <AlertTriangle className="h-2.5 w-2.5 text-amber-200 shrink-0" />}
+          {isCritical && <AlertTriangle className="h-2.5 w-2.5 text-amber-200 shrink-0 animate-pulse" />}
         </div>
 
         <div
-          className="flex items-center gap-1 px-1.5 rounded-full backdrop-blur-md shrink-0"
+          className="flex items-center gap-1 px-2 py-[3px] rounded-full shrink-0"
           style={{
-            background: 'hsla(0, 0%, 0%, 0.35)',
-            border: `1px solid ${tone.ring}`,
-            boxShadow: `0 0 8px -2px ${tone.glow}`,
+            background: 'hsla(0, 0%, 100%, 0.06)',
+            border: `1px solid hsla(0,0%,100%,0.18)`,
+            boxShadow: `0 0 10px -3px ${tone.glow}, inset 0 1px 0 hsla(0,0%,100%,0.18)`,
+            WebkitBackdropFilter: 'blur(12px) saturate(160%)',
+            backdropFilter: 'blur(12px) saturate(160%)',
           }}
         >
-          <Clock className="h-2.5 w-2.5 opacity-90" />
+          <Clock className="h-2.5 w-2.5" style={{ color: tone.ring }} />
           <span
             className="font-mono font-bold text-[9px] sm:text-[10px] tabular-nums tracking-wider leading-none"
             style={{ textShadow: `0 0 8px ${tone.glow}` }}
@@ -278,13 +300,18 @@ export function AccessBanner() {
 
         <div className="flex items-center gap-1.5 min-w-0">
           {dateLabel && (
-            <span className="hidden md:inline-flex text-[9px] font-medium opacity-75 truncate leading-none">
+            <span className="hidden md:inline-flex text-[9px] font-medium opacity-80 truncate leading-none">
               ends · {dateLabel}
             </span>
           )}
           <span
-            className="inline-flex items-center gap-1 px-1 py-[1px] rounded-full text-[8px] font-bold uppercase tracking-wider leading-none"
-            style={{ background: 'hsla(45, 95%, 55%, 0.18)', color: 'hsl(45, 95%, 75%)' }}
+            className="inline-flex items-center gap-1 px-1.5 py-[2px] rounded-full text-[8px] font-black uppercase tracking-wider leading-none"
+            style={{
+              background: 'linear-gradient(135deg, hsla(45,95%,60%,0.28), hsla(30,90%,55%,0.20))',
+              color: 'hsl(45, 95%, 78%)',
+              border: '1px solid hsla(45,95%,60%,0.35)',
+              boxShadow: 'inset 0 1px 0 hsla(0,0%,100%,0.2)',
+            }}
           >
             <Crown className="h-2 w-2" />
             <span className="hidden xs:inline">PRO</span>
