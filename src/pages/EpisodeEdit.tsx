@@ -501,10 +501,6 @@ export default function EpisodeEdit() {
               }
             }}
           />
-                toast.success('Subtitles saved successfully!');
-              }
-            }}
-          />
 
           <div className="flex gap-4 pt-4">
             <Button
