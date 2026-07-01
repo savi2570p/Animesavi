@@ -339,7 +339,7 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
             {zipProgress !== null && (
               <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="flex items-center gap-1.5 font-medium text-foreground"><Package className="h-3.5 w-3.5 text-primary" /> Packaging .zip…</span>
+                  <span className="flex items-center gap-1.5 font-medium text-foreground"><FolderDown className="h-3.5 w-3.5 text-primary" /> Saving…</span>
                   <span className="font-mono tabular-nums text-foreground/80">{Math.floor(zipProgress)}%</span>
                 </div>
                 <Progress value={zipProgress} className="h-1.5" />
