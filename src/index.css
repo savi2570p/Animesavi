@@ -1726,6 +1726,20 @@ body {
   border-radius: 999px;
 }
 
+/* On mobile pull the container in so the logo/home button sit clearly
+   inside the floating pill (was appearing to overlap/escape the pill edge
+   on iOS/Android because container padding was larger than pill inset). */
+@media (max-width: 767px) {
+  .lg-nav-floating .container {
+    padding-left: max(18px, calc(env(safe-area-inset-left) + 14px)) !important;
+    padding-right: max(18px, calc(env(safe-area-inset-right) + 14px)) !important;
+  }
+  .lg-nav-floating::before {
+    inset: 6px max(8px, env(safe-area-inset-left)) auto max(8px, env(safe-area-inset-right));
+    border-radius: 20px;
+  }
+}
+
 /* ------- Search field inside navbar -> floating liquid pill ------- */
 .lg-nav-floating form input[type="search"],
 .lg-nav-floating form input[type="text"] {
