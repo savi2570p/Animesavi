@@ -150,9 +150,6 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
     setZipProgress(null);
     cancelledRef.current = false;
 
-    const zip = new JSZip();
-    const folder = zip.folder(`${animeTitle} [${quality === '2160p' ? '4K' : quality}]`) || zip;
-
     let successCount = 0;
     for (let i = 0; i < episodesToDownload.length; i++) {
       if (cancelledRef.current) break;
@@ -160,11 +157,16 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
       const result = await fetchEpisodeChunks(ep, i);
       if (result) {
         const safeTitle = (ep.title || '').replace(/[\\/:*?"<>|]/g, '-').slice(0, 80);
-        const fileName = `Episode ${String(ep.episode_number).padStart(2, '0')}${safeTitle ? ' - ' + safeTitle : ''} [${quality}].${result.ext}`;
-        const blob = new Blob(result.chunks, { type: result.mime });
-        folder.file(fileName, blob, { binary: true, compression: 'STORE' });
+        const fileName = `${animeTitle} - Episode ${String(ep.episode_number).padStart(2, '0')}${safeTitle ? ' - ' + safeTitle : ''} [${quality}].${result.ext}`;
+        // Save each episode straight to the device's Downloads folder as a
+        // real .mp4/.mkv (no zip). Small delay between saves prevents mobile
+        // browsers from silently dropping rapid sequential downloads.
+        saveBlob(result.chunks, result.mime, fileName);
         successCount++;
         setCompletedCount(successCount);
+        if (i < episodesToDownload.length - 1) {
+          await new Promise((r) => setTimeout(r, 900));
+        }
       }
     }
 
@@ -180,24 +182,8 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
       return;
     }
 
-    // Bundle everything into ONE file. STORE (no compression) keeps it fast and
-    // lossless — extracting on phone yields playable individual video files.
-    try {
-      setZipProgress(0);
-      const zipBlob = await zip.generateAsync(
-        { type: 'blob', compression: 'STORE', mimeType: 'application/zip' },
-        (meta) => setZipProgress(meta.percent),
-      );
-      const zipName = `${animeTitle} [${quality === '2160p' ? '4K' : quality}] - ${successCount} Episode${successCount !== 1 ? 's' : ''}.zip`;
-      saveBlob([zipBlob], 'application/zip', zipName);
-      toast.success(`Saved ${successCount} episode${successCount !== 1 ? 's' : ''} as a single .zip (${fmtSize(zipBlob.size)})`);
-    } catch (err) {
-      console.error('Zip packaging failed:', err);
-      toast.error('Could not package the .zip file');
-    } finally {
-      setZipProgress(null);
-      setIsDownloading(false);
-    }
+    setIsDownloading(false);
+    toast.success(`Saved ${successCount} episode${successCount !== 1 ? 's' : ''} to your Downloads folder`);
   }, [selectedEpisodes, downloadableEpisodes, animeTitle, quality]);
 
   const cancelDownload = useCallback(() => {
@@ -294,16 +280,16 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
               </div>
             </ScrollArea>
 
-            {/* Combined size — all selected episodes packaged into ONE zip file */}
+            {/* Combined size — each selected episode saved individually as .mp4 */}
             {selectedEpisodes.size > 0 && (
               <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
-                <Package className="h-5 w-5 text-primary shrink-0" />
+                <FolderDown className="h-5 w-5 text-primary shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-foreground">
-                    One .zip file · {selectedEpisodes.size} episode{selectedEpisodes.size !== 1 ? 's' : ''}
+                    {selectedEpisodes.size} .mp4 file{selectedEpisodes.size !== 1 ? 's' : ''} → Downloads folder
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    Combined size ≈ <span className="font-mono tabular-nums text-foreground/90">{fmtSize(estimatedTotalBytes)}</span> · Saves reliably on iOS & Android
+                    Combined size ≈ <span className="font-mono tabular-nums text-foreground/90">{fmtSize(estimatedTotalBytes)}</span> · Auto-saved directly to device
                   </p>
                 </div>
               </div>
@@ -311,7 +297,7 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
 
             <Button onClick={startDownload} disabled={selectedEpisodes.size === 0} className="w-full gap-2">
               <Download className="h-4 w-4" />
-              Download {selectedEpisodes.size} {quality === '2160p' ? '4K' : quality} Episode{selectedEpisodes.size !== 1 ? 's' : ''} (.zip)
+              Download {selectedEpisodes.size} {quality === '2160p' ? '4K' : quality} Episode{selectedEpisodes.size !== 1 ? 's' : ''}
             </Button>
           </>
         ) : (
