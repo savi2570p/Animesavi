@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { Tv, Play, Film, Clock, LayoutGrid, Cherry, ArrowLeft } from 'lucide-react';
+import { Tv, Play, Film, Clock, LayoutGrid, Cherry, ArrowLeft, Mic } from 'lucide-react';
 import museinLogo from '@/assets/musein-logo.jpg';
 import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
 import floxLogo from '@/assets/flox-anime-india-logo.jpg';
@@ -38,6 +38,7 @@ export function ContentNavTabs() {
         { to: '/latest-series', label: 'Latest Series', icon: Tv },
         { to: '/latest-episodes', label: 'Latest Episodes', icon: Play },
         { to: '/latest-movies', label: 'Latest Movies', icon: Film },
+        { to: '/eng-dub', label: 'ENG DUB', icon: Mic },
         { to: '/upcoming', label: 'Upcoming', icon: Cherry },
         { to: '/flox', label: 'Flox +', customIcon: floxLogo },
         ...(isRolesLoaded && canAccessPending

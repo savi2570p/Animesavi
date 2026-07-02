@@ -41,6 +41,7 @@ import {
   CheckCircle2,
   Youtube,
   Info,
+  Mic,
 } from 'lucide-react';
 import { UpcomingCountdownDialog } from '@/components/home/UpcomingCountdownDialog';
 
@@ -88,6 +89,7 @@ export default function Upload() {
   const [status, setStatus] = useState('ongoing');
   const [isCrunchyroll, setIsCrunchyroll] = useState(false);
   const [isMuse, setIsMuse] = useState(false);
+  const [isEngDub, setIsEngDub] = useState(false);
   const [studio, setStudio] = useState('');
   const [totalEpisodes, setTotalEpisodes] = useState('');
   const [sourceMaterial, setSourceMaterial] = useState('');
@@ -285,6 +287,7 @@ export default function Upload() {
         uploader_id: user.id,
         is_crunchyroll: isCrunchyroll,
         is_muse: isMuse,
+        is_eng_dub: isEngDub,
         studio: studio.trim() || null,
         total_episodes: totalEpisodes ? parseInt(totalEpisodes) : null,
         source_material: sourceMaterial || null,
@@ -1116,7 +1119,7 @@ export default function Upload() {
                     <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-3">
+                  <div className="grid md:grid-cols-3 gap-3">
                     <label
                       htmlFor="is_crunchyroll"
                       className={`group flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
@@ -1169,6 +1172,33 @@ export default function Upload() {
                         className="sr-only"
                       />
                       {isMuse && <CheckCircle2 className="h-5 w-5 text-cyan-400 shrink-0" />}
+                    </label>
+
+                    <label
+                      htmlFor="is_eng_dub"
+                      className={`group flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
+                        isEngDub
+                          ? 'border-indigo-400/60 bg-indigo-500/10 shadow-md shadow-indigo-500/10'
+                          : 'border-border/40 bg-muted/20 hover:border-indigo-400/40'
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-all ${
+                        isEngDub ? 'bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow' : 'bg-muted/60 text-muted-foreground'
+                      }`}>
+                        <Mic className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold">Add to ENG DUB</p>
+                        <p className="text-[10px] text-muted-foreground">Show on the English Dub tab</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        id="is_eng_dub"
+                        checked={isEngDub}
+                        onChange={(e) => setIsEngDub(e.target.checked)}
+                        className="sr-only"
+                      />
+                      {isEngDub && <CheckCircle2 className="h-5 w-5 text-indigo-400 shrink-0" />}
                     </label>
                   </div>
                 </section>
