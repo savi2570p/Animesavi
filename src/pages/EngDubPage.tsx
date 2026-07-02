@@ -33,10 +33,10 @@ export default function EngDubPage() {
 
   useEffect(() => {
     const fetchEngDub = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('anime')
         .select('id, title, cover_image, type, status, view_count')
-        .eq('is_eng_dub' as any, true as any)
+        .eq('is_eng_dub', true)
         .order('title');
 
       if (!error && data) {
