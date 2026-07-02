@@ -83,6 +83,8 @@ export default function UploadAnimeEdit() {
   const [isSavingCrunchy, setIsSavingCrunchy] = useState(false);
   const [isMuse, setIsMuse] = useState(false);
   const [isSavingMuse, setIsSavingMuse] = useState(false);
+  const [isEngDub, setIsEngDub] = useState(false);
+  const [isSavingEngDub, setIsSavingEngDub] = useState(false);
   const [scheduleDay, setScheduleDay] = useState<string>('auto');
   const [isSavingSchedule, setIsSavingSchedule] = useState(false);
 
@@ -157,6 +159,7 @@ export default function UploadAnimeEdit() {
     setAnimeStatus(animeData.status || 'ongoing');
     setIsCrunchyroll((animeData as any).is_crunchyroll || false);
     setIsMuse((animeData as any).is_muse || false);
+    setIsEngDub((animeData as any).is_eng_dub || false);
     setScheduleDay((animeData as any).schedule_day !== null && (animeData as any).schedule_day !== undefined ? String((animeData as any).schedule_day) : 'auto');
     setEditTitle(animeData.title || '');
     setEditCoverImage(animeData.cover_image || '');
@@ -395,7 +398,7 @@ export default function UploadAnimeEdit() {
               <h3 className="text-sm font-bold text-foreground">Series Settings</h3>
               <p className="text-xs text-muted-foreground mt-0.5">Status, tab visibility and release calendar</p>
             </div>
-            {(isSavingStatus || isSavingCrunchy || isSavingMuse || isSavingSchedule) && (
+            {(isSavingStatus || isSavingCrunchy || isSavingMuse || isSavingEngDub || isSavingSchedule) && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
                 Saving…
@@ -511,6 +514,31 @@ export default function UploadAnimeEdit() {
                 <div className="flex-1">
                   <span className="text-sm font-medium block">Add to MUSE Tab</span>
                   <span className="text-[10px] text-muted-foreground">Show under the MuseIN collection</span>
+                </div>
+              </label>
+
+              <label htmlFor="edit_is_eng_dub" className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-muted/30 border border-border/40 hover:border-indigo-400/50 transition-colors">
+                <input
+                  type="checkbox"
+                  id="edit_is_eng_dub"
+                  checked={isEngDub}
+                  onChange={async (e) => {
+                    const val = e.target.checked;
+                    setIsEngDub(val);
+                    setIsSavingEngDub(true);
+                    const { error } = await (supabase as any)
+                      .from('anime')
+                      .update({ is_eng_dub: val })
+                      .eq('id', animeId);
+                    if (error) { toast.error('Failed to update ENG DUB status'); setIsEngDub(!val); }
+                    else { toast.success(val ? 'Added to ENG DUB tab' : 'Removed from ENG DUB tab'); }
+                    setIsSavingEngDub(false);
+                  }}
+                  className="w-5 h-5 rounded border-border accent-primary"
+                />
+                <div className="flex-1">
+                  <span className="text-sm font-medium block">Add to ENG DUB Tab</span>
+                  <span className="text-[10px] text-muted-foreground">Show under the English Dub collection</span>
                 </div>
               </label>
             </div>

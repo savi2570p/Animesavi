@@ -41,6 +41,7 @@ import {
   CheckCircle2,
   Youtube,
   Info,
+  Mic,
 } from 'lucide-react';
 import { UpcomingCountdownDialog } from '@/components/home/UpcomingCountdownDialog';
 
