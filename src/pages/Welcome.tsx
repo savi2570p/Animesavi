@@ -21,10 +21,10 @@ interface AnimePreview {
 
 const CHANNELS = [
   { code: 'CH·01', label: 'Hindi Dub Premiere',  hint: 'Fresh drops · daily' },
-  { code: 'CH·02', label: 'Subbed Simulcast',    hint: '< 1h after Japan' },
-  { code: 'CH·03', label: 'Movie Theatre',       hint: '4K HDR feature reel' },
-  { code: 'CH·04', label: 'Late Night Binge',    hint: 'Shounen marathons' },
+  { code: 'CH·02', label: 'Movie Theatre',       hint: '4K HDR feature reel' },
+  { code: 'CH·03', label: 'Late Night Binge',    hint: 'Shounen marathons' },
 ];
+
 
 const TICKER = [
   '4 active CDN servers',
