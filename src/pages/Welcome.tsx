@@ -21,10 +21,10 @@ interface AnimePreview {
 
 const CHANNELS = [
   { code: 'CH·01', label: 'Hindi Dub Premiere',  hint: 'Fresh drops · daily' },
-  { code: 'CH·02', label: 'Subbed Simulcast',    hint: '< 1h after Japan' },
-  { code: 'CH·03', label: 'Movie Theatre',       hint: '4K HDR feature reel' },
-  { code: 'CH·04', label: 'Late Night Binge',    hint: 'Shounen marathons' },
+  { code: 'CH·02', label: 'Movie Theatre',       hint: '4K HDR feature reel' },
+  { code: 'CH·03', label: 'Late Night Binge',    hint: 'Shounen marathons' },
 ];
+
 
 const TICKER = [
   '4 active CDN servers',
@@ -355,7 +355,7 @@ export default function Welcome() {
               </span>
             </div>
 
-            {/* Featured strip */}
+            {/* Featured strip — Now Programming carousel (fixed height, no CLS) */}
             {featuredAnime.length > 0 && (
               <div className="mt-12 animate-fade-in" style={{ animationDelay: '320ms' }}>
                 <div className="flex items-center justify-between mb-3">
@@ -363,56 +363,102 @@ export default function Welcome() {
                     <div className="h-3 w-1 rounded-full bg-primary" />
                     <span className="text-[10px] sm:text-xs uppercase tracking-[0.25em] font-bold">Now Programming</span>
                   </div>
-                  <button onClick={() => navigate('/browse?sort=popular')}
+                  <button onClick={() => navigate('/schedule')}
                           className="text-[11px] text-muted-foreground hover:text-primary flex items-center gap-1 font-semibold">
                     Full schedule <ChevronRight className="w-3 h-3" />
                   </button>
                 </div>
-                <div className="flex items-end gap-2 sm:gap-3 overflow-x-auto pb-3 -mx-1 px-1 snap-x">
+
+                {/* Fixed-height reserved container — poster ratio 2:3 */}
+                <div
+                  className="relative w-full mx-auto"
+                  style={{
+                    maxWidth: 220,
+                    aspectRatio: '2 / 3',
+                    contain: 'layout paint',
+                  }}
+                >
                   {featuredAnime.slice(0, 7).map((a, i) => {
                     const active = i === activeIndex;
                     return (
-                      <button key={a.id} onClick={() => navigate(`/anime/${a.id}`)}
-                              className="relative shrink-0 rounded-xl overflow-hidden snap-start transition-all duration-500 group/card"
-                              style={{
-                                width: active ? 140 : 70,
-                                height: active ? 200 : 100,
-                                opacity: active ? 1 : 0.5,
-                                transform: active ? 'translateY(-6px)' : 'none',
-                                boxShadow: active
-                                  ? '0 14px 40px hsl(var(--primary)/0.4), 0 0 0 2px hsl(var(--primary)/0.6)'
-                                  : '0 4px 14px hsl(0 0% 0%/0.35)',
-                              }}>
-                        {a.cover_image
-                          ? <img src={a.cover_image} alt={a.title} className="w-full h-full object-cover group-hover/card:scale-110 transition-transform duration-700" loading="lazy" />
-                          : <div className="w-full h-full bg-accent" />}
-                        {active && (
-                          <>
-                            <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-primary/95 text-[8px] font-black uppercase tracking-wider text-primary-foreground">
-                              #{i + 1}
-                            </div>
-                            <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/95 to-transparent">
-                              <p className="text-[11px] font-bold text-white truncate text-center">{a.title}</p>
-                            </div>
-                          </>
+                      <button
+                        key={a.id}
+                        onClick={() => active ? navigate(`/anime/${a.id}`) : setActiveIndex(i)}
+                        aria-label={a.title}
+                        aria-hidden={!active}
+                        tabIndex={active ? 0 : -1}
+                        className="absolute inset-0 rounded-2xl overflow-hidden bg-accent/40"
+                        style={{
+                          opacity: active ? 1 : 0,
+                          transform: active ? 'translateZ(0) scale(1)' : 'translateZ(0) scale(0.96)',
+                          transition: 'opacity 320ms cubic-bezier(0.22,1,0.36,1), transform 320ms cubic-bezier(0.22,1,0.36,1)',
+                          willChange: 'transform, opacity',
+                          backfaceVisibility: 'hidden',
+                          pointerEvents: active ? 'auto' : 'none',
+                          boxShadow: active
+                            ? '0 20px 50px hsl(var(--primary)/0.35), 0 0 0 1px hsl(var(--primary)/0.4)'
+                            : 'none',
+                        }}
+                      >
+                        {a.cover_image ? (
+                          <img
+                            src={a.cover_image}
+                            alt={a.title}
+                            className="absolute inset-0 w-full h-full object-cover"
+                            loading="lazy"
+                            decoding="async"
+                            style={{ backfaceVisibility: 'hidden' }}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 bg-gradient-to-br from-accent/60 to-accent/20 animate-pulse" />
                         )}
+                        <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-primary/95 text-[9px] font-black uppercase tracking-wider text-primary-foreground">
+                          #{i + 1}
+                        </div>
+                        <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/95 via-black/60 to-transparent">
+                          <p className="text-xs sm:text-sm font-bold text-white truncate text-center">{a.title}</p>
+                        </div>
                       </button>
                     );
                   })}
                 </div>
-                <div className="flex items-center gap-1.5 mt-2">
-                  {featuredAnime.slice(0, 7).map((_, i) => (
-                    <button key={i} onClick={() => setActiveIndex(i)}
-                            className="rounded-full overflow-hidden transition-all duration-500"
-                            style={{
-                              width: i === activeIndex ? 32 : 8,
-                              height: 3,
-                              background: i === activeIndex ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground)/0.25)',
-                            }} />
-                  ))}
+
+                {/* Netflix / Apple TV style slim bar pagination */}
+                <div
+                  className="flex items-center justify-center mt-4"
+                  style={{ gap: 6, height: 4 }}
+                  role="tablist"
+                  aria-label="Now programming pagination"
+                >
+                  {featuredAnime.slice(0, 7).map((_, i) => {
+                    const active = i === activeIndex;
+                    return (
+                      <button
+                        key={i}
+                        role="tab"
+                        aria-selected={active}
+                        aria-label={`Go to slide ${i + 1}`}
+                        onClick={() => setActiveIndex(i)}
+                        style={{
+                          height: 4,
+                          width: active ? 40 : 24,
+                          borderRadius: 999,
+                          background: active
+                            ? 'linear-gradient(90deg, hsl(270 90% 65%), hsl(280 85% 55%))'
+                            : 'rgba(255,255,255,0.18)',
+                          transition: 'width 320ms cubic-bezier(0.22,1,0.36,1), background 320ms ease',
+                          willChange: 'width',
+                          padding: 0,
+                          border: 0,
+                          cursor: 'pointer',
+                        }}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             )}
+
           </div>
         </div>
 

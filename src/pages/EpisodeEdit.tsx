@@ -454,16 +454,30 @@ export default function EpisodeEdit() {
             compact={true}
             onSave={async (vttContent) => {
               try {
-                // Ensure content starts with WEBVTT header, otherwise players
-                // will reject the file and Supabase Storage may return an
-                // "invalid MIME" error on save.
+                // Ensure user session is attached
+                const { data: sessionData } = await supabase.auth.getSession();
+                const uid = sessionData.session?.user?.id;
+                if (!uid) {
+                  toast.error('Please sign in to upload subtitles');
+                  return;
+                }
+
+                // Normalize + validate size (max 20MB)
                 const normalized = vttContent.trim().startsWith('WEBVTT')
                   ? vttContent
                   : `WEBVTT\n\n${vttContent}`;
-                const fileName = `anime/${animeId}/subtitles/ep_${episodeId}.vtt`;
                 const blob = new Blob([normalized], { type: 'text/vtt' });
-                const { error: uploadError } = await supabase.storage
-                  .from('anime-subtitles')
+                if (blob.size > 20 * 1024 * 1024) {
+                  toast.error('Subtitle file too large (max 20MB)');
+                  return;
+                }
+
+                const bucket = 'anime-subtitles';
+                const fileName = `anime/${animeId}/subtitles/ep_${episodeId}.vtt`;
+                console.log('[Subtitles] Uploading', { uid, bucket, fileName, size: blob.size });
+
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                  .from(bucket)
                   .upload(fileName, blob, {
                     upsert: true,
                     contentType: 'text/vtt',
@@ -471,35 +485,47 @@ export default function EpisodeEdit() {
                   });
 
                 if (uploadError) {
-                  console.error('Subtitle upload error:', uploadError);
-                  toast.error('Failed to upload subtitles', { description: uploadError.message });
+                  console.error('[Subtitles] Storage upload failed', {
+                    error: uploadError,
+                    message: uploadError.message,
+                    uid,
+                    bucket,
+                    fileName,
+                  });
+                  const hint = /row-level security/i.test(uploadError.message)
+                    ? ' — your account may not have upload permission. Ask an admin to grant the uploader role.'
+                    : '';
+                  toast.error('Failed to upload subtitles', {
+                    description: `${uploadError.message}${hint}`,
+                  });
                   return;
                 }
+                console.log('[Subtitles] Storage upload OK', uploadData);
 
-                const { data: urlData } = supabase.storage
-                  .from('anime-subtitles')
-                  .getPublicUrl(fileName);
-
-                // Cache-bust so players immediately pick up the new file
+                const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(fileName);
                 const publicUrl = `${urlData.publicUrl}?v=${Date.now()}`;
 
-                const { error } = await supabase
+                const { data: updateData, error } = await supabase
                   .from('episodes')
                   .update({ captions_url: publicUrl })
-                  .eq('id', episodeId);
+                  .eq('id', episodeId)
+                  .select()
+                  .maybeSingle();
 
                 if (error) {
-                  console.error('Episode captions_url update error:', error);
+                  console.error('[Subtitles] Episode update failed', { error, episodeId });
                   toast.error('Failed to save subtitle URL', { description: error.message });
-                } else {
-                  setEpisode(prev => prev ? { ...prev, captions_url: publicUrl } : null);
-                  toast.success('Subtitles saved');
+                  return;
                 }
+                console.log('[Subtitles] Episode updated', updateData);
+                setEpisode(prev => prev ? { ...prev, captions_url: publicUrl } : null);
+                toast.success('Subtitles saved');
               } catch (e: any) {
-                console.error('Subtitle save failed:', e);
+                console.error('[Subtitles] Unexpected save failure', e);
                 toast.error('Could not save subtitles', { description: e?.message });
               }
             }}
+
           />
 
           <div className="flex gap-4 pt-4">
