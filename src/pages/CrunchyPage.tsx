@@ -150,51 +150,83 @@ export default function CrunchyPage() {
       {isLoading && <PageLoader label="Loading Crunchy" accent="orange-500" logo={crunchyrollLogo} done={!isLoading} />}
       <ContentNavTabs />
 
-      {/* Cinematic Header */}
+      {/* Editorial magazine hero — bold, orange, asymmetric */}
       <div className="relative overflow-hidden">
-        {/* Background gradient layers */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 via-amber-500/10 to-transparent" />
-        <div className="absolute -top-20 right-1/4 w-[28rem] h-[28rem] bg-orange-500/20 rounded-full blur-[120px]" />
-        <div className="absolute -top-10 left-1/3 w-[20rem] h-[20rem] bg-amber-400/15 rounded-full blur-[100px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--background)),transparent_70%)]" />
+        {/* Warm noise + diagonal band */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a0e00] via-background to-background" />
+        <div className="absolute -top-32 -right-20 w-[38rem] h-[38rem] bg-orange-500/25 rounded-full blur-[140px]" />
+        <div className="absolute bottom-0 left-1/4 w-[22rem] h-[22rem] bg-amber-400/12 rounded-full blur-[110px]" />
+        <div
+          className="absolute inset-0 opacity-[0.06] mix-blend-overlay pointer-events-none"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(45deg, hsl(30 90% 55%) 0 2px, transparent 2px 22px)",
+          }}
+        />
+        {/* Diagonal orange strip */}
+        <div className="absolute -left-10 top-6 w-[120%] h-8 md:h-10 bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500 rotate-[-3deg] opacity-90 shadow-2xl shadow-orange-500/40 flex items-center overflow-hidden">
+          <div className="whitespace-nowrap animate-[cr-marquee_28s_linear_infinite] flex gap-8 text-black font-black text-[11px] uppercase tracking-[0.35em]">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <span key={i} className="flex items-center gap-8">
+                Crunchy Exclusive · 4K H-DUB · Premium Anime · Weekly Drops ·
+              </span>
+            ))}
+          </div>
+        </div>
 
-        <div className="container relative px-4 py-10 md:py-14">
-          <div className="flex flex-col md:flex-row md:items-end gap-6 md:gap-8">
-            {/* Logo block */}
+        <div className="container relative px-4 pt-24 md:pt-28 pb-10">
+          <div className="grid md:grid-cols-[auto_1fr] gap-6 md:gap-10 items-end">
+            {/* Massive editorial numeric mark */}
             <div className="relative shrink-0">
-              <div className="absolute inset-0 bg-orange-500/30 blur-2xl rounded-full" />
-              <div className="relative flex items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-orange-500/20 to-amber-500/10 border border-orange-500/30 backdrop-blur-sm">
-                <img src={crunchyrollLogo} alt="Crunchy" className="h-12 md:h-14 w-auto object-contain" />
+              <div className="absolute -inset-6 bg-orange-500/25 blur-3xl rounded-full" />
+              <div className="relative">
+                <div
+                  className="text-[7rem] md:text-[10rem] font-heading font-black leading-none tracking-tighter"
+                  style={{
+                    background: 'linear-gradient(180deg, #ffd7a8 0%, #ff8a1e 45%, #b34a00 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    filter: 'drop-shadow(0 12px 40px rgba(255,140,0,0.35))',
+                  }}
+                >
+                  Cr.
+                </div>
+                <img
+                  src={crunchyrollLogo}
+                  alt="Crunchy"
+                  className="absolute -bottom-2 -right-4 h-14 md:h-16 w-auto object-contain rotate-[-6deg] drop-shadow-2xl"
+                />
               </div>
             </div>
 
-            {/* Title block */}
-            <div className="flex-1 min-w-0">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/15 border border-orange-500/30 mb-3">
-                <Sparkles className="h-3 w-3 text-orange-400" />
-                <span className="text-[10px] font-bold text-orange-300 uppercase tracking-wider">Curated Collection</span>
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/15 border border-orange-500/40 mb-3">
+                <Sparkles className="h-3 w-3 text-orange-300" />
+                <span className="text-[10px] font-black text-orange-200 uppercase tracking-[0.25em]">Issue · Vol. 1</span>
               </div>
-              <h1 className="text-4xl md:text-6xl font-heading font-black tracking-tight leading-none">
-                Crunchy
-                <span className="text-orange-400">.</span>
+              <h1 className="text-3xl md:text-5xl font-heading font-black tracking-tight leading-[1.05] uppercase">
+                The Crunchy <span className="text-orange-400">Collection</span>
               </h1>
-              <p className="text-muted-foreground mt-2 max-w-xl text-sm md:text-base">
-                A hand-picked library of premium licensed anime — streamed in stunning quality with H-DUB support.
-              </p>
+              <div className="mt-3 flex items-start gap-3">
+                <div className="w-1 self-stretch rounded-full bg-gradient-to-b from-orange-400 to-amber-500" />
+                <p className="text-muted-foreground text-sm md:text-base max-w-xl">
+                  A curated, licensed, hand-picked shelf of premium anime — streamed in stunning quality with H-DUB.
+                </p>
+              </div>
 
-              {/* Stats row */}
-              <div className="flex flex-wrap gap-2 mt-4">
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card/60 border border-border/40 backdrop-blur-sm">
+              {/* Stats — inline pills */}
+              <div className="flex flex-wrap gap-2 mt-5">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 border border-orange-500/25 backdrop-blur-sm">
                   <Play className="h-3.5 w-3.5 text-orange-400" />
-                  <span className="text-xs font-semibold">{readyCount} Series</span>
+                  <span className="text-xs font-bold">{readyCount} Series</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card/60 border border-border/40 backdrop-blur-sm">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 border border-orange-500/25 backdrop-blur-sm">
                   <Star className="h-3.5 w-3.5 text-amber-400" />
-                  <span className="text-xs font-semibold">{totalEpisodes} Episodes</span>
+                  <span className="text-xs font-bold">{totalEpisodes} Episodes</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card/60 border border-border/40 backdrop-blur-sm">
-                  <Crown className="h-3.5 w-3.5 text-yellow-400" />
-                  <span className="text-xs font-semibold">Premium 4K</span>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 border border-orange-500/25 backdrop-blur-sm">
+                  <Crown className="h-3.5 w-3.5 text-yellow-300" />
+                  <span className="text-xs font-bold">Premium 4K</span>
                 </div>
               </div>
             </div>
@@ -213,10 +245,10 @@ export default function CrunchyPage() {
                 <button
                   key={f.key}
                   onClick={() => setFilter(f.key)}
-                  className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+                  className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
                     active
-                      ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30 scale-[1.02]'
-                      : 'bg-card/60 text-muted-foreground border border-border/40 hover:bg-card hover:text-foreground'
+                      ? 'bg-orange-500 text-black shadow-lg shadow-orange-500/40 scale-[1.02]'
+                      : 'bg-black/50 text-muted-foreground border border-orange-500/20 hover:border-orange-400/50 hover:text-orange-200'
                   }`}
                 >
                   {Icon && <Icon className="h-3.5 w-3.5" />}
@@ -226,6 +258,13 @@ export default function CrunchyPage() {
             })}
           </div>
         </div>
+
+        <style>{`
+          @keyframes cr-marquee {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+          }
+        `}</style>
       </div>
 
       <div className="container px-4 pb-12">

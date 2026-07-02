@@ -304,50 +304,75 @@ function LiveListingView() {
   return (
     <>
       {isLoading && <PageLoader label="Loading MuseIN" accent="rose-500" logo={museinLogo} done={!isLoading} />}
-      {/* Cinematic Header */}
+      {/* Elegant vinyl/cinematic hero — rose blooming rings */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-rose-500/15 via-pink-500/8 to-transparent" />
-        <div className="absolute -top-20 right-1/4 w-[24rem] h-[24rem] bg-rose-500/20 rounded-full blur-[120px]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#180510] via-background to-background" />
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[42rem] h-[42rem] rounded-full opacity-40 pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, hsl(340 90% 65% / 0.35), transparent 60%)',
+          }}
+        />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--background)),transparent_70%)]" />
 
-        <div className="container relative px-4 py-8 md:py-12">
-          <div className="flex flex-col md:flex-row md:items-end gap-5 md:gap-7">
-            <div className="relative shrink-0">
-              <div className="absolute inset-0 bg-rose-500/30 blur-2xl rounded-full" />
-              <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl p-0.5 bg-gradient-to-br from-rose-400 via-pink-500 to-rose-600">
-                <img src={museinLogo} alt="MuseIN" className="w-full h-full rounded-2xl object-cover" />
+        <div className="container relative px-4 py-12 md:py-16">
+          <div className="flex flex-col items-center text-center gap-5">
+            {/* Vinyl logo */}
+            <div className="relative">
+              {/* Concentric rings */}
+              <div className="absolute inset-0 -m-6 rounded-full border border-rose-500/20 animate-[muse-spin_30s_linear_infinite]" />
+              <div className="absolute inset-0 -m-12 rounded-full border border-rose-500/10 animate-[muse-spin-rev_45s_linear_infinite]" />
+              <div className="absolute inset-0 -m-20 rounded-full border border-dashed border-rose-500/8" />
+              <div className="absolute inset-0 blur-3xl bg-rose-500/40 rounded-full scale-125" />
+              <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-full p-[3px] bg-gradient-to-br from-rose-300 via-pink-500 to-rose-700 shadow-2xl shadow-rose-500/40">
+                <img src={museinLogo} alt="MuseIN" className="w-full h-full rounded-full object-cover border-2 border-background" />
+                {/* Center vinyl hole */}
+                <div className="absolute inset-1/2 w-3 h-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-background border border-rose-500/50" />
               </div>
             </div>
 
-            <div className="flex-1 min-w-0">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 mb-3">
-                <Languages className="h-3 w-3 text-rose-400" />
-                <span className="text-[10px] font-bold text-rose-300 uppercase tracking-wider">Hindi Dub Library</span>
-              </div>
-              <h1 className="text-4xl md:text-6xl font-heading font-black tracking-tight leading-none">
-                Muse<span className="bg-gradient-to-r from-rose-400 via-pink-500 to-rose-500 bg-clip-text text-transparent">IN</span>
-              </h1>
-              <p className="text-muted-foreground mt-2 max-w-xl text-sm md:text-base">
-                Hindi dubbed anime by Muse India — official, premium, and ready to stream.
-              </p>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/12 border border-rose-500/30 backdrop-blur-sm mt-2">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-500" />
+              </span>
+              <span className="text-[10px] font-bold text-rose-200 uppercase tracking-[0.25em]">Hindi Dub · Muse India</span>
+            </div>
 
-              <div className="flex flex-wrap gap-2 mt-4">
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card/60 border border-border/40 backdrop-blur-sm">
-                  <Play className="h-3.5 w-3.5 text-rose-400" />
-                  <span className="text-xs font-semibold">{readyCount} Series</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card/60 border border-border/40 backdrop-blur-sm">
-                  <Star className="h-3.5 w-3.5 text-amber-400" />
-                  <span className="text-xs font-semibold">{totalEpisodes} Episodes</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card/60 border border-border/40 backdrop-blur-sm">
-                  <Globe className="h-3.5 w-3.5 text-rose-400" />
-                  <span className="text-xs font-semibold">4K Quality</span>
-                </div>
+            <h1 className="text-5xl md:text-7xl font-heading font-black tracking-tight leading-[0.95]">
+              Muse<span className="italic bg-gradient-to-r from-rose-300 via-pink-400 to-rose-500 bg-clip-text text-transparent">IN</span>
+            </h1>
+            <p className="text-muted-foreground text-sm md:text-base max-w-lg -mt-1">
+              A cinematic Hindi-dub collection by Muse India — licensed, premium, ready to play.
+            </p>
+
+            {/* Elegant divider */}
+            <div className="flex items-center gap-2 my-1">
+              <div className="h-px w-8 bg-gradient-to-r from-transparent to-rose-400/60" />
+              <div className="w-1.5 h-1.5 rotate-45 bg-rose-400/60" />
+              <div className="h-px w-8 bg-gradient-to-l from-transparent to-rose-400/60" />
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-2 mt-1">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 border border-rose-500/25 backdrop-blur-sm">
+                <Play className="h-3.5 w-3.5 text-rose-400" />
+                <span className="text-xs font-bold">{readyCount} Series</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 border border-rose-500/25 backdrop-blur-sm">
+                <Star className="h-3.5 w-3.5 text-amber-400" />
+                <span className="text-xs font-bold">{totalEpisodes} Episodes</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 border border-rose-500/25 backdrop-blur-sm">
+                <Globe className="h-3.5 w-3.5 text-rose-300" />
+                <span className="text-xs font-bold">4K Quality</span>
               </div>
             </div>
           </div>
         </div>
+
+        <style>{`
+          @keyframes muse-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          @keyframes muse-spin-rev { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+        `}</style>
       </div>
 
       <div className="container px-4 pb-12">
