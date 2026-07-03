@@ -293,6 +293,28 @@ function FloxDetailView({
   onDeleteEpisode: (id: string) => void;
 }) {
   const firstEpisode = anime.episodes[0];
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/flox?anime=${encodeURIComponent(anime.title)}`;
+    const shareData = {
+      title: `${anime.title} — Flox +`,
+      text: `Watch ${anime.title} in Hindi Dub on Flox +`,
+      url: shareUrl,
+    };
+    try {
+      if (typeof navigator !== 'undefined' && (navigator as any).share) {
+        await (navigator as any).share(shareData);
+        return;
+      }
+    } catch (err) {
+      // user cancelled — fall through to clipboard
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success('Link copied to clipboard');
+    } catch {
+      toast.error('Unable to share link');
+    }
+  };
   return (
     <div className="space-y-5">
       {/* Banner hero with poster overlay */}
