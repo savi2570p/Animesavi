@@ -83,6 +83,7 @@ export default function Index() {
             <Mic className="h-4 w-4" />
             ENG DUB
           </Link>
+        </div>
       </section>
 
       {/* Recommended / Popular */}
