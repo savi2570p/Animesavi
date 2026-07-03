@@ -52,13 +52,22 @@ export default function FloxAnimePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL;
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [rows, setRows] = useState<FloxRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
+  const [selectedTitle, setSelectedTitleState] = useState<string | null>(searchParams.get('anime'));
   const [showWelcome, setShowWelcome] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [editAnime, setEditAnime] = useState<FloxAnime | null>(null);
+
+  const setSelectedTitle = (title: string | null) => {
+    setSelectedTitleState(title);
+    const next = new URLSearchParams(searchParams);
+    if (title) next.set('anime', title);
+    else next.delete('anime');
+    setSearchParams(next, { replace: true });
+  };
 
   useEffect(() => {
     if (!localStorage.getItem('flox_welcome_seen')) {
