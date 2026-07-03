@@ -104,6 +104,9 @@ export default function Index() {
       {/* Latest Movies */}
       <LatestMovies />
 
+      {/* ENG DUB */}
+      <LatestEngDub />
+
       {/* Recently Completed */}
       <RecentlyCompleted />
 
