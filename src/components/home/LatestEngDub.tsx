@@ -26,10 +26,10 @@ export const LatestEngDub = memo(function LatestEngDub() {
 
   const fetchEngDub = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('anime')
         .select('*')
-        .eq('is_eng_dub' as any, true)
+        .eq('is_eng_dub', true)
         .order('created_at', { ascending: false })
         .limit(8);
 
