@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, Mic } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import crunchyrollLogo from "@/assets/crunchyroll-logo.png";
 import museinLogo from "@/assets/musein-logo.jpg";
 import floxLogo from "@/assets/flox-anime-india-logo.jpg";
@@ -11,6 +11,7 @@ import { ContinueWatching } from "@/components/home/ContinueWatching";
 import { RecommendedAnime } from "@/components/home/RecommendedAnime";
 import { LatestEpisodes } from "@/components/home/LatestEpisodes";
 import { LatestMovies } from "@/components/home/LatestMovies";
+import { LatestEngDub } from "@/components/home/LatestEngDub";
 import { LatestSeries } from "@/components/home/LatestSeries";
 import { RecentlyCompleted } from "@/components/home/RecentlyCompleted";
 import { EpisodeProgress } from "@/components/home/EpisodeProgress";
@@ -76,13 +77,6 @@ export default function Index() {
             <img src={floxLogo} alt="Flox +" className="h-5 w-5 rounded-full object-cover" />
             Flox +
           </Link>
-          <Link
-            to="/eng-dub"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border bg-sky-500/10 text-sky-300 border-sky-500/30 hover:bg-sky-500/20 hover:border-sky-400 hover:text-sky-200"
-          >
-            <Mic className="h-4 w-4" />
-            ENG DUB
-          </Link>
         </div>
       </section>
 
@@ -109,6 +103,9 @@ export default function Index() {
 
       {/* Latest Movies */}
       <LatestMovies />
+
+      {/* ENG DUB */}
+      <LatestEngDub />
 
       {/* Recently Completed */}
       <RecentlyCompleted />
