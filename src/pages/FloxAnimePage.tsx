@@ -359,6 +359,9 @@ function FloxDetailView({
                   <Play className="h-4 w-4 mr-1 fill-current" /> Watch Now
                 </Button>
               )}
+              <Button size="sm" variant="outline" onClick={handleShare}>
+                <Share2 className="h-4 w-4 mr-1" /> Share
+              </Button>
               {isAdmin && (
                 <>
                   <Button size="sm" variant="outline" onClick={onAddEpisode}>
