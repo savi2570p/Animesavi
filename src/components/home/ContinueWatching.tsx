@@ -382,25 +382,25 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       action: rpcRow?.action,
     });
 
-    // The RPC auto-creates a "next episode" watch_history row so the series stays
-    // in Continue Watching. When the user explicitly taps "Done" they want the
-    // tile GONE — so delete that auto-created next row and remove the tile.
-    if (rpcRow?.next_history_id) {
-      try {
-        await supabase
-          .from('watch_history')
-          .delete()
-          .eq('id', rpcRow.next_history_id)
-          .eq('user_id', user.id);
-      } catch (err) {
-        console.error('[ContinueWatching:Done] failed to clear auto next row', err);
-      }
-    }
-
+    // The RPC auto-creates a "next episode" watch_history row so the series
+    // stays in Continue Watching pointing at the NEXT episode. We keep that row
+    // and just refetch — the tile smoothly transitions from the completed
+    // episode to the next one. If this was the final episode, the RPC returns
+    // action === 'completed_series' and no next row exists, so the tile is
+    // removed and the series is treated as fully finished.
     await fadeDelay;
-    setHistory((prev) => prev.filter((h) => h.id !== historyId));
     setFadingIds((prev) => { const n = new Set(prev); n.delete(historyId); return n; });
-    toast.success(`${animeTitle} marked as completed`);
+
+    if (rpcRow?.action === 'completed_series') {
+      setHistory((prev) => prev.filter((h) => h.id !== historyId));
+      toast.success(`${animeTitle} — series completed`);
+    } else {
+      // Remove the completed tile immediately; realtime + refetch will surface
+      // the freshly-created next-episode tile.
+      setHistory((prev) => prev.filter((h) => h.id !== historyId));
+      void fetchRecentHistory(false);
+      toast.success(`Episode marked as watched · Next episode ready`);
+    }
   };
 
   const formatTimeLeft = (progress: number | null, duration: number | null) => {
