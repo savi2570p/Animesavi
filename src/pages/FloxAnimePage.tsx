@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 
 import { toast } from 'sonner';
-import { Loader2, Trash2, Upload as UploadIcon, PartyPopper, ArrowLeft, Plus, Pencil, Play } from 'lucide-react';
+import { Loader2, Trash2, Upload as UploadIcon, PartyPopper, ArrowLeft, Plus, Pencil, Play, Share2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -52,13 +52,22 @@ export default function FloxAnimePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL;
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [rows, setRows] = useState<FloxRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
+  const [selectedTitle, setSelectedTitleState] = useState<string | null>(searchParams.get('anime'));
   const [showWelcome, setShowWelcome] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [editAnime, setEditAnime] = useState<FloxAnime | null>(null);
+
+  const setSelectedTitle = (title: string | null) => {
+    setSelectedTitleState(title);
+    const next = new URLSearchParams(searchParams);
+    if (title) next.set('anime', title);
+    else next.delete('anime');
+    setSearchParams(next, { replace: true });
+  };
 
   useEffect(() => {
     if (!localStorage.getItem('flox_welcome_seen')) {
@@ -284,6 +293,28 @@ function FloxDetailView({
   onDeleteEpisode: (id: string) => void;
 }) {
   const firstEpisode = anime.episodes[0];
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/flox?anime=${encodeURIComponent(anime.title)}`;
+    const shareData = {
+      title: `${anime.title} — Flox +`,
+      text: `Watch ${anime.title} in Hindi Dub on Flox +`,
+      url: shareUrl,
+    };
+    try {
+      if (typeof navigator !== 'undefined' && (navigator as any).share) {
+        await (navigator as any).share(shareData);
+        return;
+      }
+    } catch (err) {
+      // user cancelled — fall through to clipboard
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success('Link copied to clipboard');
+    } catch {
+      toast.error('Unable to share link');
+    }
+  };
   return (
     <div className="space-y-5">
       {/* Banner hero with poster overlay */}
@@ -328,6 +359,9 @@ function FloxDetailView({
                   <Play className="h-4 w-4 mr-1 fill-current" /> Watch Now
                 </Button>
               )}
+              <Button size="sm" variant="outline" onClick={handleShare}>
+                <Share2 className="h-4 w-4 mr-1" /> Share
+              </Button>
               {isAdmin && (
                 <>
                   <Button size="sm" variant="outline" onClick={onAddEpisode}>
