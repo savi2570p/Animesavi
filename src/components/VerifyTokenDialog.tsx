@@ -179,7 +179,17 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm p-0 overflow-hidden border-border/50 bg-card">
+      <DialogContent
+        className="max-w-sm p-0 overflow-hidden border-white/15 text-foreground shadow-2xl"
+        style={{
+          background:
+            'linear-gradient(160deg, hsla(0,0%,100%,0.08) 0%, hsla(0,0%,100%,0.02) 45%, hsla(0,0%,0%,0.35) 100%)',
+          backdropFilter: 'blur(28px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+          boxShadow:
+            '0 30px 70px hsla(0,0%,0%,0.55), inset 0 1px 0 hsla(0,0%,100%,0.18), inset 0 -1px 0 hsla(0,0%,0%,0.35)',
+        }}
+      >
         <DialogTitle className="sr-only">Verify Token</DialogTitle>
 
         {status === 'loading' ? (

@@ -186,14 +186,20 @@ export function TokenExpiredPopup() {
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300"
       style={{
         background:
-          'radial-gradient(ellipse at center, hsla(0, 65%, 12%, 0.6) 0%, hsla(0, 0%, 0%, 0.94) 70%)',
-        backdropFilter: 'blur(10px)',
+          'radial-gradient(ellipse at center, hsla(0, 65%, 10%, 0.45) 0%, hsla(0, 0%, 0%, 0.72) 70%)',
+        backdropFilter: 'blur(18px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(18px) saturate(160%)',
       }}
     >
       <div
-        className="relative w-full max-w-md rounded-3xl overflow-hidden border border-primary/30 bg-card shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
+        className="relative w-full max-w-md rounded-3xl overflow-hidden border border-white/15 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
         style={{
-          boxShadow: '0 0 80px hsla(0, 70%, 40%, 0.25), 0 30px 60px hsla(0, 0%, 0%, 0.6)',
+          background:
+            'linear-gradient(160deg, hsla(0,0%,100%,0.10) 0%, hsla(0,0%,100%,0.03) 45%, hsla(0,0%,0%,0.35) 100%)',
+          backdropFilter: 'blur(32px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+          boxShadow:
+            '0 30px 80px hsla(0,0%,0%,0.6), 0 0 60px hsla(0,72%,45%,0.18), inset 0 1px 0 hsla(0,0%,100%,0.22), inset 0 -1px 0 hsla(0,0%,0%,0.4)',
         }}
       >
         {/* Cinematic header */}
