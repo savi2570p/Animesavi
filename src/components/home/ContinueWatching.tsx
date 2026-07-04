@@ -90,7 +90,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       // 1. Resumable rows (in-progress) — keep the existing behaviour.
       const { data, error } = await supabase
         .from('watch_history')
-        .select('id, progress, completed, completed_at, last_position, duration, watched_at, anime:anime_id(id,title,cover_image,status), episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
+        .select('id, progress, completed, completed_at, last_position, duration, watched_at, anime:anime_id(id,title,cover_image,status,is_eng_dub), episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
         .eq('user_id', user.id)
         .or('completed.is.null,completed.eq.false')
         .order('watched_at', { ascending: false })
