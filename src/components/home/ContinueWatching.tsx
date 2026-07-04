@@ -176,7 +176,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
 
           const animeMeta = await supabase
             .from('anime')
-            .select('id, title, cover_image, status')
+            .select('id, title, cover_image, status, is_eng_dub')
             .in('id', [...newestPerAnime.keys()]);
           const animeMap = new Map((animeMeta.data ?? []).map((a: any) => [a.id, a]));
 
