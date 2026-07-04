@@ -116,11 +116,11 @@ export const LatestEngDub = memo(function LatestEngDub() {
             <AnimeCardContextMenu
               key={item.id}
               animeTitle={item.title}
-              animeUrl={item.firstEpisodeId ? `/watch/${item.firstEpisodeId}` : `/anime/${item.id}`}
+              animeUrl={`/anime/${item.id}`}
               coverImage={item.cover_image}
             >
               <Link
-                to={item.firstEpisodeId ? `/watch/${item.firstEpisodeId}` : `/anime/${item.id}`}
+                to={`/anime/${item.id}`}
                 className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in gpu-accelerate w-[160px] md:w-[200px] lg:w-[220px] shrink-0`}
               >
                 <div className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl group-hover:-translate-y-1 transition-all duration-500 ring-1 ring-white/5 group-hover:ring-sky-400/50">

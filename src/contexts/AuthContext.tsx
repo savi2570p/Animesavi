@@ -90,16 +90,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
       // IMPORTANT: keep this callback synchronous to avoid auth deadlocks.
+      console.log('[auth] event:', event, 'hasSession:', !!nextSession);
 
-      // Guard against spurious SIGNED_OUT events (e.g. transient refresh
-      // failures around midnight when the JWT rolls over). If Supabase tells
-      // us we're signed out but its own storage still holds a refresh token,
-      // try to refresh the session before clearing local state. This stops
-      // the "auto logout at midnight" symptom users were reporting.
-      // Apply guard for any event that delivers a null session while a
-      // refresh token is still stored locally (covers SIGNED_OUT and also
-      // TOKEN_REFRESHED/USER_UPDATED firing with null around midnight when
-      // the JWT rolls over). Attempt a silent refresh before clobbering state.
+      // Guard against spurious null-session events (SIGNED_OUT / TOKEN_REFRESHED
+      // firing with null while Supabase storage still holds a refresh token,
+      // e.g. transient network blips, tab-visibility resume, midnight JWT roll).
+      // Attempt a silent refresh before clobbering user state. NEVER force logout.
       if (!nextSession && event !== 'INITIAL_SESSION') {
         const hasStoredSession = (() => {
           try {
@@ -115,38 +111,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })();
 
         if (hasStoredSession) {
-          // Attempt recovery without blocking this callback.
+          console.log('[auth] null session with stored refresh token — attempting silent refresh');
           setTimeout(() => {
             supabase.auth.refreshSession().then(({ data, error }) => {
               if (data?.session) {
+                console.log('[auth] token refreshed silently');
                 setSession(data.session);
                 setUser(data.session.user);
                 setRolesLoaded(false);
                 void fetchUserRoles(data.session.user.id);
               } else if (error) {
-                // Refresh truly failed — keep prior state; do not force logout.
-                console.warn('[auth] silent refresh failed, retaining session', error.message);
+                console.warn('[auth] silent refresh failed, retaining session:', error.message);
               }
-            }).catch(() => { /* keep state; user can retry on next request */ });
+            }).catch((e) => console.warn('[auth] refresh threw, retaining session:', e));
           }, 0);
           return; // don't clobber user state yet
         }
-      }
 
+        // No stored refresh token at all — this is a genuine sign-out.
+        console.log('[auth] genuine sign-out (no stored refresh token). Reason:', event);
+      }
 
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
 
       if (nextSession?.user) {
+        if (event === 'INITIAL_SESSION') console.log('[auth] session restored for', nextSession.user.email);
+        if (event === 'TOKEN_REFRESHED') console.log('[auth] token refreshed for', nextSession.user.email);
         setRolesLoaded(false);
         if (event === 'SIGNED_IN') {
           const email = nextSession.user.email || '';
           const username = nextSession.user.user_metadata?.username || email.split('@')[0];
           rememberAccount(email, username, 5);
-          // Sync any localStorage token to DB for this user
           setTimeout(() => void syncLocalTokenToUser(nextSession.user.id), 0);
         }
-        // Defer any extra backend calls.
         setTimeout(() => {
           void fetchUserRoles(nextSession.user.id);
         }, 0);
@@ -165,9 +163,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(initialSession?.user ?? null);
 
         if (initialSession?.user) {
+          console.log('[auth] initial session found for', initialSession.user.email);
           setRolesLoaded(false);
           void fetchUserRoles(initialSession.user.id);
         } else {
+          console.log('[auth] no initial session');
           setRoles([]);
           setRolesLoaded(true);
         }
@@ -176,7 +176,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       });
 
-    return () => subscription.unsubscribe();
+    // Recover session when tab becomes visible or network reconnects.
+    // Handles iOS Safari / PWA suspending the tab and Android Chrome backgrounding.
+    const tryRecover = (reason: string) => {
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session) return; // still good
+        // Try refresh only if a stored refresh token exists.
+        let hasStored = false;
+        try {
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+              const raw = localStorage.getItem(k);
+              if (raw && raw.includes('refresh_token')) { hasStored = true; break; }
+            }
+          }
+        } catch {}
+        if (!hasStored) return;
+        console.log('[auth] recovery attempt (', reason, ')');
+        supabase.auth.refreshSession().then(({ data: d, error }) => {
+          if (d?.session) {
+            console.log('[auth] session recovered after', reason);
+            setSession(d.session);
+            setUser(d.session.user);
+            setRolesLoaded(false);
+            void fetchUserRoles(d.session.user.id);
+          } else if (error) {
+            console.warn('[auth] recovery failed (', reason, '):', error.message);
+          }
+        }).catch(() => {});
+      }).catch(() => {});
+    };
+    const onVisible = () => { if (document.visibilityState === 'visible') tryRecover('visibility'); };
+    const onOnline = () => tryRecover('online');
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('online', onOnline);
+    window.addEventListener('focus', onVisible);
+
+    return () => {
+      subscription.unsubscribe();
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('focus', onVisible);
+    };
   }, []);
 
   const signUp = async (email: string, password: string, username?: string) => {
@@ -209,6 +251,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    console.log('[auth] user-initiated signOut');
     try {
       const { error } = await supabase.auth.signOut({ scope: 'local' });
       if (error) {
