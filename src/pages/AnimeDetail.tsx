@@ -636,7 +636,11 @@ export default function AnimeDetail() {
                   {anime.studio}
                 </span>
               )}
-              <span className="badge-glass-hdub">H-DUB</span>
+              {(anime as any).is_eng_dub ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-md">E-DUB</span>
+              ) : (
+                <span className="badge-glass-hdub">H-DUB</span>
+              )}
             </div>
 
             {/* Description — accent border card */}
