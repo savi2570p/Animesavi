@@ -16,6 +16,7 @@ interface AnimeSeries {
   episode_count: number;
   status: string | null;
   latest_episode_date: string | null;
+  is_eng_dub?: boolean | null;
 }
 
 export const LatestSeries = memo(function LatestSeries() {
@@ -30,7 +31,7 @@ export const LatestSeries = memo(function LatestSeries() {
     try {
       const { data: animeData, error: animeError } = await supabase
         .from('anime')
-        .select(`id, title, cover_image, created_at, updated_at, type, status`)
+        .select(`id, title, cover_image, created_at, updated_at, type, status, is_eng_dub`)
         .eq('type', 'series')
         .order('updated_at', { ascending: false })
         .limit(500);
@@ -236,7 +237,11 @@ export const LatestSeries = memo(function LatestSeries() {
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
                       4K
                     </span>
-                    <span className="badge-glass-hdub">H-DUB</span>
+                    {anime.is_eng_dub ? (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow">E-DUB</span>
+                    ) : (
+                      <span className="badge-glass-hdub">H-DUB</span>
+                    )}
                   </div>
 
                   {/* Top-left status */}
