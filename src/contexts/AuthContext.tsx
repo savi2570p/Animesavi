@@ -251,6 +251,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    console.log('[auth] user-initiated signOut');
     try {
       const { error } = await supabase.auth.signOut({ scope: 'local' });
       if (error) {
