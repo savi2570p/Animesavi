@@ -23,6 +23,7 @@ interface LatestEpisode {
       cover_image: string | null;
       type: string | null;
       status: string | null;
+      is_eng_dub?: boolean | null;
     };
   };
 }
@@ -39,6 +40,7 @@ interface GroupedEpisode {
   latestEpisodeId: string;
   latestCreatedAt: string;
   status: string | null;
+  isEngDub?: boolean | null;
 }
 
 export const LatestEpisodes = memo(function LatestEpisodes() {
@@ -57,7 +59,7 @@ export const LatestEpisodes = memo(function LatestEpisodes() {
           id, title, episode_number, thumbnail, created_at, duration,
           season:season_id (
             season_number,
-            anime:anime_id ( id, title, cover_image, type, status, updated_at )
+            anime:anime_id ( id, title, cover_image, type, status, updated_at, is_eng_dub )
           )
         `)
         .order('created_at', { ascending: false })
@@ -109,6 +111,7 @@ export const LatestEpisodes = memo(function LatestEpisodes() {
           latestEpisodeId: ep.id,
           latestCreatedAt: ep.created_at,
           status: ep.season.anime.status,
+          isEngDub: (ep.season.anime as any).is_eng_dub ?? false,
         });
       }
     }
@@ -266,9 +269,15 @@ export const LatestEpisodes = memo(function LatestEpisodes() {
                       <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
                         4K
                       </span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/90 text-black shadow">
-                        H-DUB
-                      </span>
+                      {group.isEngDub ? (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow">
+                          E-DUB
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/90 text-black shadow">
+                          H-DUB
+                        </span>
+                      )}
                     </div>
 
                     {/* Crown */}
