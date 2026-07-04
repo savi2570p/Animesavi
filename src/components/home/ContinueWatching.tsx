@@ -532,7 +532,11 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
                           <span className="px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-semibold text-white tabular-nums">
                             {Math.round(progressPct)}%
                           </span>
-                          <span className="badge-glass-hdub">H-DUB</span>
+                          {(item.anime as any)?.is_eng_dub ? (
+                            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-md">E-DUB</span>
+                          ) : (
+                            <span className="badge-glass-hdub">H-DUB</span>
+                          )}
                         </div>
                       </div>
 
