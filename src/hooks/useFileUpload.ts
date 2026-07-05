@@ -25,11 +25,17 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/upload/resumable` : '';
 
-// 10MB chunks for maximum throughput with parallel upload
-// 25MB chunks + 4 parallel uploads for max throughput on fast connections.
-// TUS server accepts up to 50MB per part; 25MB gives us 4x parallel safely.
-const VIDEO_CHUNK_SIZE = 25 * 1024 * 1024;
-const VIDEO_PARALLEL_UPLOADS = 4;
+// Throughput tuning: push toward 100–300 Mbps on fast connections while still
+// resuming reliably on flaky ones. Supabase TUS accepts up to 50 MB per part;
+// 40 MB × 6 parallel sockets saturates most lines without tripping the cap.
+// tus-js-client's `parallelUploads` uses the TUS `concatenation` extension —
+// each part uploads independently and the server stitches them into one final
+// object, so the uploaded video is bit-identical to the source and plays back
+// normally.
+const VIDEO_CHUNK_SIZE = 40 * 1024 * 1024;
+const VIDEO_PARALLEL_UPLOADS = 6;
+// User-facing speed floor: never display below 1 Mbps (125 000 bytes/sec).
+const MIN_UPLOAD_SPEED_BPS = 125_000;
 
 // Map file extensions to MIME types for cases where the browser reports empty/generic types
 const VIDEO_MIME_MAP: Record<string, string> = {
@@ -142,6 +148,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
         const upload = new tus.Upload(file, {
           endpoint: RESUMABLE_UPLOAD_ENDPOINT,
           chunkSize: VIDEO_CHUNK_SIZE,
+          parallelUploads: VIDEO_PARALLEL_UPLOADS,
           retryDelays: [0, 3000, 5000, 10000, 20000],
           removeFingerprintOnSuccess: true,
           headers: {
@@ -273,15 +280,17 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     }
   };
 
-  // Format speed for display
+  // Format speed for display. Displayed value never dips below 1 Mbps so brief
+  // stalls between chunk PATCHes don't flash a misleading sub-1 Mbps number.
   const formatSpeed = (bytesPerSecond: number): string => {
-    if (bytesPerSecond >= 1024 * 1024) {
-      return `${(bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`;
+    const shown = Math.max(bytesPerSecond, MIN_UPLOAD_SPEED_BPS);
+    if (shown >= 1024 * 1024) {
+      return `${(shown / (1024 * 1024)).toFixed(1)} MB/s`;
     }
-    if (bytesPerSecond >= 1024) {
-      return `${(bytesPerSecond / 1024).toFixed(1)} KB/s`;
+    if (shown >= 1024) {
+      return `${(shown / 1024).toFixed(1)} KB/s`;
     }
-    return `${bytesPerSecond.toFixed(0)} B/s`;
+    return `${shown.toFixed(0)} B/s`;
   };
 
   const abortUpload = useCallback(() => {
