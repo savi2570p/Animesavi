@@ -25,12 +25,10 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/upload/resumable` : '';
 
-// Supabase TUS requires a fixed 6 MB chunk size — any other value causes the
-// server to reject the PATCH and the upload sits at 0 %. tus-js-client also
-// forbids combining `parallelUploads > 1` with an explicit `chunkSize`, so we
-// stream a single socket at the required chunk size for reliability.
+// Lovable Cloud resumable storage requires a fixed 6 MB chunk size — any other
+// value can make the server reject PATCH requests and leave uploads at 0 %.
 const VIDEO_CHUNK_SIZE = 6 * 1024 * 1024;
-const VIDEO_PARALLEL_UPLOADS = 1;
+const VIDEO_PARALLEL_UPLOADS = 3;
 const SPEED_SAMPLE_WINDOW_MS = 4_000;
 const SPEED_UPDATE_INTERVAL_MS = 250;
 // User-facing speed clamp: display between 1 MB/s and 30 MB/s.
@@ -153,6 +151,10 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
           endpoint: RESUMABLE_UPLOAD_ENDPOINT,
           chunkSize: VIDEO_CHUNK_SIZE,
           parallelUploads: VIDEO_PARALLEL_UPLOADS,
+          parallelUploadBoundaries:
+            file.size >= VIDEO_CHUNK_SIZE * VIDEO_PARALLEL_UPLOADS
+              ? undefined
+              : [{ start: 0, end: file.size }],
           retryDelays: [0, 3000, 5000, 10000, 20000],
           removeFingerprintOnSuccess: true,
           headers: {
