@@ -150,11 +150,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
         const upload = new tus.Upload(file, {
           endpoint: RESUMABLE_UPLOAD_ENDPOINT,
           chunkSize: VIDEO_CHUNK_SIZE,
-          parallelUploads: VIDEO_PARALLEL_UPLOADS,
-          parallelUploadBoundaries:
-            file.size >= VIDEO_CHUNK_SIZE * VIDEO_PARALLEL_UPLOADS
-              ? undefined
-              : [{ start: 0, end: file.size }],
+          parallelUploads: file.size >= VIDEO_CHUNK_SIZE * VIDEO_PARALLEL_UPLOADS ? VIDEO_PARALLEL_UPLOADS : 1,
+          uploadDataDuringCreation: true,
           retryDelays: [0, 3000, 5000, 10000, 20000],
           removeFingerprintOnSuccess: true,
           headers: {
@@ -214,7 +211,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             activeUploadRef.current = null;
             pendingFileRef.current = null;
             setUploadProgress(100);
-            setUploadSpeed(Math.max(uploadSpeed, MIN_UPLOAD_SPEED_BPS));
+            setUploadSpeed((currentSpeed) => Math.max(currentSpeed, MIN_UPLOAD_SPEED_BPS));
             speedSamplesRef.current = [];
             resolve();
           },
