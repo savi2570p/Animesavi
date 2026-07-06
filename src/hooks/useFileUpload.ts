@@ -27,13 +27,16 @@ const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/upl
 
 // Lovable Cloud resumable storage requires a fixed 6 MB chunk size — any other
 // value can make the server reject PATCH requests and leave uploads at 0 %.
+// IMPORTANT: parallelUploads MUST stay at 1. tus-js-client's parallelUploads
+// relies on the TUS `concatenation` extension, which the resumable storage
+// endpoint does not support, causing uploads to restart mid-stream after a
+// certain percentage. Keep this single-stream for reliability.
 const VIDEO_CHUNK_SIZE = 6 * 1024 * 1024;
-const VIDEO_PARALLEL_UPLOADS = 3;
-const SPEED_SAMPLE_WINDOW_MS = 4_000;
-const SPEED_UPDATE_INTERVAL_MS = 250;
-// User-facing speed clamp: display between 1 MB/s and 30 MB/s.
+const SPEED_SAMPLE_WINDOW_MS = 3_000;
+const SPEED_UPDATE_INTERVAL_MS = 200;
+// User-facing speed floor: never show below 1 MB/s during brief PATCH stalls.
+// No upper clamp — the real measured throughput drives the display.
 const MIN_UPLOAD_SPEED_BPS = 1 * 1024 * 1024;
-const MAX_UPLOAD_SPEED_BPS = 30 * 1024 * 1024;
 
 // Map file extensions to MIME types for cases where the browser reports empty/generic types
 const VIDEO_MIME_MAP: Record<string, string> = {
@@ -150,7 +153,10 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
         const upload = new tus.Upload(file, {
           endpoint: RESUMABLE_UPLOAD_ENDPOINT,
           chunkSize: VIDEO_CHUNK_SIZE,
-          parallelUploads: file.size >= VIDEO_CHUNK_SIZE * VIDEO_PARALLEL_UPLOADS ? VIDEO_PARALLEL_UPLOADS : 1,
+          // Single-stream upload — parallelUploads with chunkSize triggers the
+          // TUS concatenation extension, which Lovable Cloud storage rejects
+          // partway through, causing the upload to restart.
+          parallelUploads: 1,
           uploadDataDuringCreation: true,
           retryDelays: [0, 3000, 5000, 10000, 20000],
           removeFingerprintOnSuccess: true,
@@ -302,12 +308,13 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
 
   // Format speed for display. Displayed value never dips below 1 Mbps so brief
   // stalls between chunk PATCHes don't flash a misleading sub-1 Mbps number.
+  // Format speed for display. Real measured throughput drives the number;
+  // we only floor it at 1 MB/s so brief PATCH stalls don't flash a
+  // misleading sub-1 MB/s value while bytes are still being transferred.
   const formatSpeed = (bytesPerSecond: number): string => {
-    const clamped = Math.min(
-      Math.max(bytesPerSecond, MIN_UPLOAD_SPEED_BPS),
-      MAX_UPLOAD_SPEED_BPS,
-    );
-    return `${(clamped / (1024 * 1024)).toFixed(1)} MB/s`;
+    const value = Math.max(bytesPerSecond, MIN_UPLOAD_SPEED_BPS);
+    if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB/s`;
+    return `${(value / 1024).toFixed(0)} KB/s`;
   };
 
   const abortUpload = useCallback(() => {
