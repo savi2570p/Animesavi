@@ -281,14 +281,11 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
   // Format speed for display. Displayed value never dips below 1 Mbps so brief
   // stalls between chunk PATCHes don't flash a misleading sub-1 Mbps number.
   const formatSpeed = (bytesPerSecond: number): string => {
-    const shown = Math.max(bytesPerSecond, MIN_UPLOAD_SPEED_BPS);
-    if (shown >= 1024 * 1024) {
-      return `${(shown / (1024 * 1024)).toFixed(1)} MB/s`;
-    }
-    if (shown >= 1024) {
-      return `${(shown / 1024).toFixed(1)} KB/s`;
-    }
-    return `${shown.toFixed(0)} B/s`;
+    const clamped = Math.min(
+      Math.max(bytesPerSecond, MIN_UPLOAD_SPEED_BPS),
+      MAX_UPLOAD_SPEED_BPS,
+    );
+    return `${(clamped / (1024 * 1024)).toFixed(1)} MB/s`;
   };
 
   const abortUpload = useCallback(() => {
