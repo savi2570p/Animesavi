@@ -27,13 +27,16 @@ const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/upl
 
 // Lovable Cloud resumable storage requires a fixed 6 MB chunk size — any other
 // value can make the server reject PATCH requests and leave uploads at 0 %.
+// IMPORTANT: parallelUploads MUST stay at 1. tus-js-client's parallelUploads
+// relies on the TUS `concatenation` extension, which the resumable storage
+// endpoint does not support, causing uploads to restart mid-stream after a
+// certain percentage. Keep this single-stream for reliability.
 const VIDEO_CHUNK_SIZE = 6 * 1024 * 1024;
-const VIDEO_PARALLEL_UPLOADS = 3;
-const SPEED_SAMPLE_WINDOW_MS = 4_000;
-const SPEED_UPDATE_INTERVAL_MS = 250;
-// User-facing speed clamp: display between 1 MB/s and 30 MB/s.
+const SPEED_SAMPLE_WINDOW_MS = 3_000;
+const SPEED_UPDATE_INTERVAL_MS = 200;
+// User-facing speed floor: never show below 1 MB/s during brief PATCH stalls.
+// No upper clamp — the real measured throughput drives the display.
 const MIN_UPLOAD_SPEED_BPS = 1 * 1024 * 1024;
-const MAX_UPLOAD_SPEED_BPS = 30 * 1024 * 1024;
 
 // Map file extensions to MIME types for cases where the browser reports empty/generic types
 const VIDEO_MIME_MAP: Record<string, string> = {
