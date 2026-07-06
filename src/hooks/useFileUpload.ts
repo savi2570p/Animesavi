@@ -25,12 +25,12 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/upload/resumable` : '';
 
-// Supabase TUS requires a fixed 6 MB chunk size — any other value causes the
-// server to reject the PATCH and the upload sits at 0 %. tus-js-client also
-// forbids combining `parallelUploads > 1` with an explicit `chunkSize`, so we
-// stream a single socket at the required chunk size for reliability.
+// Lovable Cloud resumable storage requires a fixed 6 MB chunk size — any other
+// value can make the server reject PATCH requests and leave uploads at 0 %.
 const VIDEO_CHUNK_SIZE = 6 * 1024 * 1024;
-const VIDEO_PARALLEL_UPLOADS = 1;
+const VIDEO_PARALLEL_UPLOADS = 3;
+const SPEED_SAMPLE_WINDOW_MS = 4_000;
+const SPEED_UPDATE_INTERVAL_MS = 250;
 // User-facing speed clamp: display between 1 MB/s and 30 MB/s.
 const MIN_UPLOAD_SPEED_BPS = 1 * 1024 * 1024;
 const MAX_UPLOAD_SPEED_BPS = 30 * 1024 * 1024;
@@ -87,7 +87,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
   const isOnline = useOnlineStatus();
   const activeUploadRef = useRef<tus.Upload | null>(null);
   const pendingFileRef = useRef<{ file: File; filePath: string } | null>(null);
-  const lastProgressRef = useRef<{ bytes: number; time: number }>({ bytes: 0, time: Date.now() });
+  const lastProgressRef = useRef<{ bytes: number; time: number }>({ bytes: 0, time: 0 });
+  const speedSamplesRef = useRef<Array<{ bytes: number; time: number }>>([]);
 
   // Auto-resume upload when coming back online
   useEffect(() => {
@@ -142,11 +143,15 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
 
     try {
       setUploadProgress(0);
+      setUploadSpeed(MIN_UPLOAD_SPEED_BPS);
+      lastProgressRef.current = { bytes: 0, time: performance.now() };
+      speedSamplesRef.current = [{ bytes: 0, time: performance.now() }];
       await new Promise<void>((resolve, reject) => {
         const upload = new tus.Upload(file, {
           endpoint: RESUMABLE_UPLOAD_ENDPOINT,
           chunkSize: VIDEO_CHUNK_SIZE,
-          parallelUploads: VIDEO_PARALLEL_UPLOADS,
+          parallelUploads: file.size >= VIDEO_CHUNK_SIZE * VIDEO_PARALLEL_UPLOADS ? VIDEO_PARALLEL_UPLOADS : 1,
+          uploadDataDuringCreation: true,
           retryDelays: [0, 3000, 5000, 10000, 20000],
           removeFingerprintOnSuccess: true,
           headers: {
@@ -163,14 +168,27 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
           onProgress: (bytesUploaded, bytesTotal) => {
             const percentage = Math.round((bytesUploaded / bytesTotal) * 100);
             setUploadProgress(percentage);
-            
-            const now = Date.now();
-            const timeDiff = (now - lastProgressRef.current.time) / 1000;
-            const bytesDiff = bytesUploaded - lastProgressRef.current.bytes;
-            
-            if (timeDiff > 0.5) {
-              const speed = bytesDiff / timeDiff;
-              setUploadSpeed(speed);
+
+            const now = performance.now();
+            const lastProgress = lastProgressRef.current;
+            const timeDiffMs = now - lastProgress.time;
+            const bytesDiff = bytesUploaded - lastProgress.bytes;
+
+            if (bytesDiff > 0 && timeDiffMs >= SPEED_UPDATE_INTERVAL_MS) {
+              const samples = [
+                ...speedSamplesRef.current,
+                { bytes: bytesUploaded, time: now },
+              ].filter((sample) => now - sample.time <= SPEED_SAMPLE_WINDOW_MS);
+
+              const firstSample = samples[0];
+              const timeWindowSeconds = Math.max((now - firstSample.time) / 1000, 0.001);
+              const bytesWindow = Math.max(bytesUploaded - firstSample.bytes, bytesDiff);
+              const rollingSpeed = bytesWindow / timeWindowSeconds;
+              const instantSpeed = bytesDiff / (timeDiffMs / 1000);
+              const measuredSpeed = Math.max(rollingSpeed, instantSpeed);
+
+              setUploadSpeed(measuredSpeed);
+              speedSamplesRef.current = samples;
               lastProgressRef.current = { bytes: bytesUploaded, time: now };
             }
           },
@@ -184,6 +202,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             activeUploadRef.current = null;
             pendingFileRef.current = null;
             setUploadProgress(0);
+            setUploadSpeed(0);
+            speedSamplesRef.current = [];
             reject(err);
           },
           onSuccess: () => {
@@ -191,6 +211,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             activeUploadRef.current = null;
             pendingFileRef.current = null;
             setUploadProgress(100);
+            setUploadSpeed((currentSpeed) => Math.max(currentSpeed, MIN_UPLOAD_SPEED_BPS));
+            speedSamplesRef.current = [];
             resolve();
           },
         });
