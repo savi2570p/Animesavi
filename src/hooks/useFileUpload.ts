@@ -25,17 +25,15 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/upload/resumable` : '';
 
-// Throughput tuning: push toward 100–300 Mbps on fast connections while still
-// resuming reliably on flaky ones. Supabase TUS accepts up to 50 MB per part;
-// 40 MB × 6 parallel sockets saturates most lines without tripping the cap.
-// tus-js-client's `parallelUploads` uses the TUS `concatenation` extension —
-// each part uploads independently and the server stitches them into one final
-// object, so the uploaded video is bit-identical to the source and plays back
-// normally.
-const VIDEO_CHUNK_SIZE = 40 * 1024 * 1024;
-const VIDEO_PARALLEL_UPLOADS = 6;
-// User-facing speed floor: never display below 1 Mbps (125 000 bytes/sec).
-const MIN_UPLOAD_SPEED_BPS = 125_000;
+// Supabase TUS requires a fixed 6 MB chunk size — any other value causes the
+// server to reject the PATCH and the upload sits at 0 %. tus-js-client also
+// forbids combining `parallelUploads > 1` with an explicit `chunkSize`, so we
+// stream a single socket at the required chunk size for reliability.
+const VIDEO_CHUNK_SIZE = 6 * 1024 * 1024;
+const VIDEO_PARALLEL_UPLOADS = 1;
+// User-facing speed clamp: display between 1 MB/s and 30 MB/s.
+const MIN_UPLOAD_SPEED_BPS = 1 * 1024 * 1024;
+const MAX_UPLOAD_SPEED_BPS = 30 * 1024 * 1024;
 
 // Map file extensions to MIME types for cases where the browser reports empty/generic types
 const VIDEO_MIME_MAP: Record<string, string> = {
