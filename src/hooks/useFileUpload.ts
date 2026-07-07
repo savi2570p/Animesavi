@@ -99,6 +99,10 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     }
   }, [isOnline]);
 
+  // Re-render when the Boost Speed toggle flips so the displayed speed reflects it.
+  const [, setBoostTick] = useState(0);
+  useEffect(() => subscribeBoost(() => setBoostTick((t) => t + 1)), []);
+
   // Determine default max size based on bucket
   const getMaxSize = () => {
     if (maxSizeGB) return maxSizeGB * 1024 * 1024 * 1024;
