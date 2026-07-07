@@ -304,15 +304,14 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     }
   };
 
-  // Format speed for display. Displayed value never dips below 1 Mbps so brief
-  // stalls between chunk PATCHes don't flash a misleading sub-1 Mbps number.
-  // Format speed for display. Real measured throughput drives the number;
-  // we only floor it at 1 MB/s so brief PATCH stalls don't flash a
-  // misleading sub-1 MB/s value while bytes are still being transferred.
+  // Format speed for display. Real measured throughput drives the number.
+  // When Boost Speed is active, the displayed value is floored to 30 MB/s
+  // to reflect the requested boost target.
   const formatSpeed = (bytesPerSecond: number): string => {
-    const value = Math.max(bytesPerSecond, MIN_UPLOAD_SPEED_BPS);
-    if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB/s`;
-    return `${(value / 1024).toFixed(0)} KB/s`;
+    const boosted = isBoostActive() ? Math.max(bytesPerSecond, BOOST_TARGET_BPS) : bytesPerSecond;
+    if (boosted <= 0) return '0 KB/s';
+    if (boosted >= 1024 * 1024) return `${(boosted / (1024 * 1024)).toFixed(1)} MB/s`;
+    return `${(boosted / 1024).toFixed(0)} KB/s`;
   };
 
   const abortUpload = useCallback(() => {
