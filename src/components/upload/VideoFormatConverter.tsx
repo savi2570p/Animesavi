@@ -225,8 +225,22 @@ export function VideoFormatConverter({
           onCheckedChange={setAutoConvert}
         />
       </div>
+
+      <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+        <div className="flex items-center gap-2">
+          <Rocket className="h-4 w-4 text-orange-500" />
+          <div>
+            <Label className="text-sm font-medium">Boost Speed</Label>
+            <p className="text-xs text-muted-foreground">
+              Push uploads to 30 MB/s for 10s. 1 minute cooldown after use.
+            </p>
+          </div>
+        </div>
+        {BoostButton}
+      </div>
     </div>
   );
+
 
   if (!showAsCard) {
     return content;
