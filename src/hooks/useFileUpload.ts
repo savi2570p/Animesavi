@@ -35,9 +35,6 @@ const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/upl
 const VIDEO_CHUNK_SIZE = 6 * 1024 * 1024;
 const SPEED_SAMPLE_WINDOW_MS = 3_000;
 const SPEED_UPDATE_INTERVAL_MS = 200;
-// User-facing speed floor: never show below 1 MB/s during brief PATCH stalls.
-// No upper clamp — the real measured throughput drives the display.
-const MIN_UPLOAD_SPEED_BPS = 1 * 1024 * 1024;
 
 // Map file extensions to MIME types for cases where the browser reports empty/generic types
 const VIDEO_MIME_MAP: Record<string, string> = {
