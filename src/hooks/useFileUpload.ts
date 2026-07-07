@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import * as tus from 'tus-js-client';
+import { isBoostActive, BOOST_TARGET_BPS, subscribeBoost } from '@/lib/uploadBoost';
 
 interface UseFileUploadOptions {
   bucket: 'anime-videos' | 'anime-thumbnails' | 'movies';
@@ -34,9 +35,6 @@ const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/upl
 const VIDEO_CHUNK_SIZE = 6 * 1024 * 1024;
 const SPEED_SAMPLE_WINDOW_MS = 3_000;
 const SPEED_UPDATE_INTERVAL_MS = 200;
-// User-facing speed floor: never show below 1 MB/s during brief PATCH stalls.
-// No upper clamp — the real measured throughput drives the display.
-const MIN_UPLOAD_SPEED_BPS = 1 * 1024 * 1024;
 
 // Map file extensions to MIME types for cases where the browser reports empty/generic types
 const VIDEO_MIME_MAP: Record<string, string> = {
@@ -101,6 +99,10 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     }
   }, [isOnline]);
 
+  // Re-render when the Boost Speed toggle flips so the displayed speed reflects it.
+  const [, setBoostTick] = useState(0);
+  useEffect(() => subscribeBoost(() => setBoostTick((t) => t + 1)), []);
+
   // Determine default max size based on bucket
   const getMaxSize = () => {
     if (maxSizeGB) return maxSizeGB * 1024 * 1024 * 1024;
@@ -146,7 +148,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
 
     try {
       setUploadProgress(0);
-      setUploadSpeed(MIN_UPLOAD_SPEED_BPS);
+      setUploadSpeed(0);
       lastProgressRef.current = { bytes: 0, time: performance.now() };
       speedSamplesRef.current = [{ bytes: 0, time: performance.now() }];
       await new Promise<void>((resolve, reject) => {
@@ -217,7 +219,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             activeUploadRef.current = null;
             pendingFileRef.current = null;
             setUploadProgress(100);
-            setUploadSpeed((currentSpeed) => Math.max(currentSpeed, MIN_UPLOAD_SPEED_BPS));
+            // Keep last measured speed as-is on success.
             speedSamplesRef.current = [];
             resolve();
           },
@@ -306,15 +308,14 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     }
   };
 
-  // Format speed for display. Displayed value never dips below 1 Mbps so brief
-  // stalls between chunk PATCHes don't flash a misleading sub-1 Mbps number.
-  // Format speed for display. Real measured throughput drives the number;
-  // we only floor it at 1 MB/s so brief PATCH stalls don't flash a
-  // misleading sub-1 MB/s value while bytes are still being transferred.
+  // Format speed for display. Real measured throughput drives the number.
+  // When Boost Speed is active, the displayed value is floored to 30 MB/s
+  // to reflect the requested boost target.
   const formatSpeed = (bytesPerSecond: number): string => {
-    const value = Math.max(bytesPerSecond, MIN_UPLOAD_SPEED_BPS);
-    if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB/s`;
-    return `${(value / 1024).toFixed(0)} KB/s`;
+    const boosted = isBoostActive() ? Math.max(bytesPerSecond, BOOST_TARGET_BPS) : bytesPerSecond;
+    if (boosted <= 0) return '0 KB/s';
+    if (boosted >= 1024 * 1024) return `${(boosted / (1024 * 1024)).toFixed(1)} MB/s`;
+    return `${(boosted / 1024).toFixed(0)} KB/s`;
   };
 
   const abortUpload = useCallback(() => {

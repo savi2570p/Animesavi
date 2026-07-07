@@ -1,12 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { RefreshCw, Smartphone, Monitor, AlertTriangle, Check, Info } from 'lucide-react';
+import { RefreshCw, Smartphone, Monitor, AlertTriangle, Check, Info, Rocket, Timer } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  activateBoost,
+  subscribeBoost,
+  type BoostState,
+  BOOST_DURATION_MS,
+  BOOST_COOLDOWN_MS,
+} from '@/lib/uploadBoost';
 
 interface VideoFormatConverterProps {
   onFormatChange?: (format: 'original' | 'mp4') => void;
@@ -23,11 +30,25 @@ export function VideoFormatConverter({
 }: VideoFormatConverterProps) {
   const [selectedFormat, setSelectedFormat] = useState<'original' | 'mp4'>(currentFormat);
   const [autoConvert, setAutoConvert] = useState(false);
+  const [boost, setBoost] = useState<BoostState>({
+    active: false,
+    cooldown: false,
+    activeUntil: 0,
+    cooldownUntil: 0,
+  });
+  const [now, setNow] = useState<number>(() => Date.now());
+
+  useEffect(() => subscribeBoost(setBoost), []);
+  useEffect(() => {
+    if (!boost.active && !boost.cooldown) return;
+    const id = window.setInterval(() => setNow(Date.now()), 250);
+    return () => window.clearInterval(id);
+  }, [boost.active, boost.cooldown]);
 
   const handleFormatChange = (format: 'original' | 'mp4') => {
     setSelectedFormat(format);
     onFormatChange?.(format);
-    
+
     if (format === 'mp4') {
       toast.info('Videos will be converted to MP4 for iOS compatibility', {
         description: 'Note: Server-side conversion will process MKV files after upload',
@@ -35,9 +56,60 @@ export function VideoFormatConverter({
     }
   };
 
+  const handleBoost = () => {
+    if (boost.active || boost.cooldown) return;
+    const started = activateBoost();
+    if (started) {
+      toast.success('Boost Speed activated — 30 MB/s for 10 seconds', {
+        description: 'Cools down for 1 minute after boost ends.',
+      });
+    }
+  };
+
+  const boostSecondsLeft = boost.active
+    ? Math.max(0, Math.ceil((boost.activeUntil - now) / 1000))
+    : boost.cooldown
+      ? Math.max(0, Math.ceil((boost.cooldownUntil - now) / 1000))
+      : 0;
+
+  const BoostButton = (
+    <Button
+      type="button"
+      size="sm"
+      variant={boost.active ? 'default' : 'outline'}
+      onClick={handleBoost}
+      disabled={boost.active || boost.cooldown}
+      className={
+        boost.active
+          ? 'h-8 gap-1.5 bg-gradient-to-r from-red-500 via-orange-500 to-amber-500 text-white border-0 shadow-md shadow-orange-500/40 animate-pulse'
+          : 'h-8 gap-1.5'
+      }
+      title={
+        boost.active
+          ? `Boost active — ${boostSecondsLeft}s left`
+          : boost.cooldown
+            ? `Cooling down — ${boostSecondsLeft}s`
+            : 'Boost upload to 30 MB/s for 10 seconds'
+      }
+    >
+      {boost.cooldown && !boost.active ? (
+        <Timer className="h-3.5 w-3.5" />
+      ) : (
+        <Rocket className="h-3.5 w-3.5" />
+      )}
+      <span className="text-xs font-semibold">
+        {boost.active
+          ? `Boosting ${boostSecondsLeft}s`
+          : boost.cooldown
+            ? `Cooldown ${boostSecondsLeft}s`
+            : 'Boost Speed'}
+      </span>
+    </Button>
+  );
+
   if (compact) {
     return (
-      <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+      <div className="flex flex-wrap items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border/50">
         <div className="flex items-center gap-2">
           <RefreshCw className="h-4 w-4 text-muted-foreground" />
           <Label className="text-sm font-medium">Output Format:</Label>
@@ -61,6 +133,7 @@ export function VideoFormatConverter({
             </SelectItem>
           </SelectContent>
         </Select>
+        {BoostButton}
         {selectedFormat === 'mp4' && (
           <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
             <Check className="h-3 w-3 mr-1" />
@@ -70,6 +143,7 @@ export function VideoFormatConverter({
       </div>
     );
   }
+
 
   const content = (
     <div className="space-y-4">
@@ -151,8 +225,22 @@ export function VideoFormatConverter({
           onCheckedChange={setAutoConvert}
         />
       </div>
+
+      <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+        <div className="flex items-center gap-2">
+          <Rocket className="h-4 w-4 text-orange-500" />
+          <div>
+            <Label className="text-sm font-medium">Boost Speed</Label>
+            <p className="text-xs text-muted-foreground">
+              Push uploads to 30 MB/s for 10s. 1 minute cooldown after use.
+            </p>
+          </div>
+        </div>
+        {BoostButton}
+      </div>
     </div>
   );
+
 
   if (!showAsCard) {
     return content;
