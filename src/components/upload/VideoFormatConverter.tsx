@@ -30,17 +30,82 @@ export function VideoFormatConverter({
 }: VideoFormatConverterProps) {
   const [selectedFormat, setSelectedFormat] = useState<'original' | 'mp4'>(currentFormat);
   const [autoConvert, setAutoConvert] = useState(false);
+  const [boost, setBoost] = useState<BoostState>({
+    active: false,
+    cooldown: false,
+    activeUntil: 0,
+    cooldownUntil: 0,
+  });
+  const [now, setNow] = useState<number>(() => Date.now());
+
+  useEffect(() => subscribeBoost(setBoost), []);
+  useEffect(() => {
+    if (!boost.active && !boost.cooldown) return;
+    const id = window.setInterval(() => setNow(Date.now()), 250);
+    return () => window.clearInterval(id);
+  }, [boost.active, boost.cooldown]);
 
   const handleFormatChange = (format: 'original' | 'mp4') => {
     setSelectedFormat(format);
     onFormatChange?.(format);
-    
+
     if (format === 'mp4') {
       toast.info('Videos will be converted to MP4 for iOS compatibility', {
         description: 'Note: Server-side conversion will process MKV files after upload',
       });
     }
   };
+
+  const handleBoost = () => {
+    if (boost.active || boost.cooldown) return;
+    const started = activateBoost();
+    if (started) {
+      toast.success('Boost Speed activated — 30 MB/s for 10 seconds', {
+        description: 'Cools down for 1 minute after boost ends.',
+      });
+    }
+  };
+
+  const boostSecondsLeft = boost.active
+    ? Math.max(0, Math.ceil((boost.activeUntil - now) / 1000))
+    : boost.cooldown
+      ? Math.max(0, Math.ceil((boost.cooldownUntil - now) / 1000))
+      : 0;
+
+  const BoostButton = (
+    <Button
+      type="button"
+      size="sm"
+      variant={boost.active ? 'default' : 'outline'}
+      onClick={handleBoost}
+      disabled={boost.active || boost.cooldown}
+      className={
+        boost.active
+          ? 'h-8 gap-1.5 bg-gradient-to-r from-red-500 via-orange-500 to-amber-500 text-white border-0 shadow-md shadow-orange-500/40 animate-pulse'
+          : 'h-8 gap-1.5'
+      }
+      title={
+        boost.active
+          ? `Boost active — ${boostSecondsLeft}s left`
+          : boost.cooldown
+            ? `Cooling down — ${boostSecondsLeft}s`
+            : 'Boost upload to 30 MB/s for 10 seconds'
+      }
+    >
+      {boost.cooldown && !boost.active ? (
+        <Timer className="h-3.5 w-3.5" />
+      ) : (
+        <Rocket className="h-3.5 w-3.5" />
+      )}
+      <span className="text-xs font-semibold">
+        {boost.active
+          ? `Boosting ${boostSecondsLeft}s`
+          : boost.cooldown
+            ? `Cooldown ${boostSecondsLeft}s`
+            : 'Boost Speed'}
+      </span>
+    </Button>
+  );
 
   if (compact) {
     return (
