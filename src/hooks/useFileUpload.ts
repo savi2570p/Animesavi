@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import * as tus from 'tus-js-client';
+import { isBoostActive, BOOST_TARGET_BPS } from '@/lib/uploadBoost';
 
 interface UseFileUploadOptions {
   bucket: 'anime-videos' | 'anime-thumbnails' | 'movies';
