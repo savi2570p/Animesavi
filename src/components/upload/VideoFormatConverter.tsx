@@ -109,7 +109,7 @@ export function VideoFormatConverter({
 
   if (compact) {
     return (
-      <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border/50">
+      <div className="flex flex-wrap items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border/50">
         <div className="flex items-center gap-2">
           <RefreshCw className="h-4 w-4 text-muted-foreground" />
           <Label className="text-sm font-medium">Output Format:</Label>
@@ -133,6 +133,7 @@ export function VideoFormatConverter({
             </SelectItem>
           </SelectContent>
         </Select>
+        {BoostButton}
         {selectedFormat === 'mp4' && (
           <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
             <Check className="h-3 w-3 mr-1" />
@@ -142,6 +143,7 @@ export function VideoFormatConverter({
       </div>
     );
   }
+
 
   const content = (
     <div className="space-y-4">
