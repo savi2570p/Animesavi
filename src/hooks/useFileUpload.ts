@@ -215,7 +215,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             activeUploadRef.current = null;
             pendingFileRef.current = null;
             setUploadProgress(100);
-            setUploadSpeed((currentSpeed) => Math.max(currentSpeed, MIN_UPLOAD_SPEED_BPS));
+            // Keep last measured speed as-is on success.
             speedSamplesRef.current = [];
             resolve();
           },
