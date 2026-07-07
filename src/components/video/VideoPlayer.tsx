@@ -2076,43 +2076,47 @@ export function VideoPlayer({
     const isDirectFile = /\.(mp4|mkv|webm|avi|m3u8|m4v)(\?.*)?$/i.test(anyVideoUrl);
     
     if (isStorageUrl || isDirectFile) {
-      // For direct video URLs, fall back to native player instead of iframe
+      // "Use Embed Player" clicked on a direct file (uploaded mp4/mkv). Auto-mount
+      // the uploaded file inside a minimal iframe player so the user keeps
+      // watching without switching servers manually.
+      const embedHtml = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;height:100%;background:#000;overflow:hidden}video{width:100%;height:100%;object-fit:contain;background:#000}</style></head><body><video src="${anyVideoUrl.replace(/"/g, '&quot;')}" controls autoplay playsinline crossorigin="anonymous"></video></body></html>`;
+      const embedSrc = `data:text/html;charset=utf-8,${encodeURIComponent(embedHtml)}`;
       return (
-        <div 
-          ref={containerRef} 
+        <div
+          ref={containerRef}
           className={`relative bg-black w-full ${isFullscreen ? 'fixed inset-0 z-[9999]' : ''}`}
-          style={{ 
-            aspectRatio: isFullscreen ? undefined : '16/9', 
+          style={{
+            aspectRatio: isFullscreen ? undefined : '16/9',
             maxHeight: isFullscreen ? '100vh' : '70vh',
             height: isFullscreen ? '100vh' : undefined,
           }}
         >
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
-            <div className="text-destructive mb-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-            </div>
-            <h3 className="text-white font-semibold text-lg">Video Not Available</h3>
-            <p className="text-white/70 text-sm max-w-md">
-              This video file could not be played. It may have been removed or the link is broken.
-            </p>
-            <Button
-              onClick={() => {
-                setUseIframeFallback(false);
-                setVideoError(false);
-                if (videoRef.current) {
-                  videoRef.current.load();
-                  videoRef.current.play().catch(() => {});
-                }
-              }}
-              variant="outline"
-              className="text-white border-white/30 hover:bg-white/10"
-            >
-              Try Again
-            </Button>
-          </div>
+          <iframe
+            src={embedSrc}
+            title={`${animeTitle} - Episode ${episodeNumber}`}
+            className="absolute inset-0 w-full h-full border-0"
+            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+            allowFullScreen
+          />
+          <Button
+            onClick={() => {
+              setUseIframeFallback(false);
+              setVideoError(false);
+              if (videoRef.current) {
+                videoRef.current.load();
+                videoRef.current.play().catch(() => {});
+              }
+            }}
+            variant="outline"
+            size="sm"
+            className="absolute top-2 right-2 z-10 text-white border-white/30 bg-black/50 hover:bg-white/10"
+          >
+            Back to Native
+          </Button>
         </div>
       );
     }
+
 
     // YouTube URLs — use smart embed with fallback
     if (isYouTubeUrl(anyVideoUrl)) {
