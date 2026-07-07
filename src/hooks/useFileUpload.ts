@@ -144,7 +144,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
 
     try {
       setUploadProgress(0);
-      setUploadSpeed(MIN_UPLOAD_SPEED_BPS);
+      setUploadSpeed(0);
       lastProgressRef.current = { bytes: 0, time: performance.now() };
       speedSamplesRef.current = [{ bytes: 0, time: performance.now() }];
       await new Promise<void>((resolve, reject) => {
