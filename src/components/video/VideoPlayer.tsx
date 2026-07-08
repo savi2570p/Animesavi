@@ -63,6 +63,7 @@ import { ScreenMirroringDialog } from './ScreenMirroringDialog';
 import { YouTubeEmbed, isYouTubeUrl } from './YouTubeEmbed';
 import { EmbedIframePlayer } from './EmbedIframePlayer';
 import { PureEmbedPlayer } from './PureEmbedPlayer';
+import { EmbedFallbackFrame } from './EmbedFallbackFrame';
 
 // Unified flat control style — purple-tinted, no circular background.
 // Matches the X-PLUS minimal aesthetic across every server.
