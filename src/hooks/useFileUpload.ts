@@ -188,9 +188,15 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
 
     try {
       setUploadProgress(0);
+      setDisplayedProgress(0);
       setUploadSpeed(0);
+      realProgressRef.current = 0;
+      boostExtraPctRef.current = 0;
+      boostLastTickRef.current = Date.now();
+      currentFileSizeRef.current = file.size;
       lastProgressRef.current = { bytes: 0, time: performance.now() };
       speedSamplesRef.current = [{ bytes: 0, time: performance.now() }];
+      beginUpload(file.size);
       await new Promise<void>((resolve, reject) => {
         const upload = new tus.Upload(file, {
           endpoint: RESUMABLE_UPLOAD_ENDPOINT,
