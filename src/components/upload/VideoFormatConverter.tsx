@@ -141,6 +141,9 @@ export function VideoFormatConverter({
             iOS Ready
           </Badge>
         )}
+        <div className="w-full">
+          <SpeedValidationPanel />
+        </div>
       </div>
     );
   }
