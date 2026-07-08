@@ -242,6 +242,8 @@ export function VideoFormatConverter({
         </div>
         {BoostButton}
       </div>
+
+      <SpeedValidationPanel />
     </div>
   );
 
