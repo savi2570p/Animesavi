@@ -449,6 +449,81 @@ export default function EpisodeEdit() {
             )}
           </div>
 
+          {/* Quick Import .vtt/.srt — uploads the file to storage and attaches it as CC */}
+          <div className="space-y-2 p-4 rounded-lg border border-border/50 bg-muted/30">
+            <Label className="flex items-center gap-2">
+              <Upload className="h-4 w-4 text-primary" />
+              Import .vtt / .srt Subtitles
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Upload a WebVTT (.vtt) or SubRip (.srt) file. SRT is auto-converted to VTT.
+            </p>
+            <input
+              id="subtitle-file-import"
+              type="file"
+              accept=".vtt,.srt,text/vtt,application/x-subrip"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                e.target.value = '';
+                if (!file) return;
+                const ext = file.name.split('.').pop()?.toLowerCase();
+                if (ext !== 'vtt' && ext !== 'srt') {
+                  toast.error('Please choose a .vtt or .srt file');
+                  return;
+                }
+                if (file.size > 20 * 1024 * 1024) {
+                  toast.error('Subtitle file too large (max 20MB)');
+                  return;
+                }
+                const loadingId = toast.loading('Uploading subtitles…');
+                try {
+                  let text = await file.text();
+                  // Convert SRT → VTT (comma → dot in timecodes + WEBVTT header)
+                  if (ext === 'srt') {
+                    text = 'WEBVTT\n\n' + text.replace(/(\d\d:\d\d:\d\d),(\d{3})/g, '$1.$2');
+                  } else if (!text.trim().startsWith('WEBVTT')) {
+                    text = 'WEBVTT\n\n' + text;
+                  }
+                  const blob = new Blob([text], { type: 'text/vtt' });
+                  const fileName = `anime/${animeId}/subtitles/ep_${episodeId}_import.vtt`;
+                  const { error: upErr } = await supabase.storage
+                    .from('anime-subtitles')
+                    .upload(fileName, blob, { upsert: true, contentType: 'text/vtt', cacheControl: '3600' });
+                  if (upErr) {
+                    toast.error('Upload failed', { id: loadingId, description: upErr.message });
+                    return;
+                  }
+                  const { data: urlData } = supabase.storage
+                    .from('anime-subtitles')
+                    .getPublicUrl(fileName);
+                  const publicUrl = `${urlData.publicUrl}?v=${Date.now()}`;
+                  const { error: updErr } = await supabase
+                    .from('episodes')
+                    .update({ captions_url: publicUrl })
+                    .eq('id', episodeId);
+                  if (updErr) {
+                    toast.error('Failed to attach subtitles', { id: loadingId, description: updErr.message });
+                    return;
+                  }
+                  setEpisode(prev => prev ? { ...prev, captions_url: publicUrl } : null);
+                  toast.success(`Imported "${file.name}"`, { id: loadingId });
+                } catch (err: any) {
+                  toast.error('Import failed', { id: loadingId, description: err?.message });
+                }
+              }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => document.getElementById('subtitle-file-import')?.click()}
+              className="w-full sm:w-auto"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Choose .vtt / .srt file
+            </Button>
+          </div>
+
           {/* CC Subtitle Editor */}
           <SubtitleEditor
             compact={true}
