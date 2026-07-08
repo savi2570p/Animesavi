@@ -109,6 +109,40 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
   const [, setBoostTick] = useState(0);
   useEffect(() => subscribeBoost(() => setBoostTick((t) => t + 1)), []);
 
+  // Boost-driven progress inflation. TUS uploads run at the network's true
+  // speed regardless of the Boost toggle, but when the user activates Boost
+  // we surface a matching 30 MB/s throughput reading — so the progress bar
+  // must climb in sync with that displayed speed. We accumulate an
+  // "inflated" percentage while Boost is active and layer it on top of the
+  // real progress, capped at 99 % so completion always wins.
+  useEffect(() => {
+    if (!isUploading) return;
+    const id = window.setInterval(() => {
+      const boost = getBoostState();
+      const now = Date.now();
+      if (boost.active && now < boost.activeUntil && currentFileSizeRef.current > 0) {
+        const last = boostLastTickRef.current || now;
+        const deltaSec = Math.max((now - last) / 1000, 0);
+        boostLastTickRef.current = now;
+        // Extra bytes we'd have moved at BOOST_TARGET_BPS over the delta.
+        const extraBytes = BOOST_TARGET_BPS * deltaSec;
+        const extraPct = (extraBytes / currentFileSizeRef.current) * 100;
+        boostExtraPctRef.current = Math.min(
+          99 - realProgressRef.current,
+          boostExtraPctRef.current + extraPct,
+        );
+      } else {
+        boostLastTickRef.current = now;
+      }
+      const combined = Math.min(
+        99,
+        Math.max(realProgressRef.current, realProgressRef.current + boostExtraPctRef.current),
+      );
+      setDisplayedProgress(Math.round(combined));
+    }, 200);
+    return () => window.clearInterval(id);
+  }, [isUploading]);
+
   // Determine default max size based on bucket
   const getMaxSize = () => {
     if (maxSizeGB) return maxSizeGB * 1024 * 1024 * 1024;
