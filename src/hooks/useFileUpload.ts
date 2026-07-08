@@ -389,14 +389,19 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     pendingFileRef.current = null;
     setIsUploading(false);
     setUploadProgress(0);
+    setDisplayedProgress(0);
     setUploadSpeed(0);
+    realProgressRef.current = 0;
+    boostExtraPctRef.current = 0;
+    endUpload();
     toast.info('Upload cancelled');
   }, []);
 
   return {
     uploadFile,
     isUploading,
-    progress: uploadProgress,
+    progress: displayedProgress,
+    realProgress: uploadProgress,
     uploadSpeed,
     formattedSpeed: formatSpeed(uploadSpeed),
     SIZE_LIMITS,
