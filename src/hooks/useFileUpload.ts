@@ -220,8 +220,13 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             cacheControl: '3600',
           },
           onProgress: (bytesUploaded, bytesTotal) => {
-            const percentage = Math.round((bytesUploaded / bytesTotal) * 100);
-            setUploadProgress(percentage);
+            const percentage = (bytesUploaded / bytesTotal) * 100;
+            realProgressRef.current = percentage;
+            setUploadProgress(Math.round(percentage));
+            // Baseline displayed progress; boost ticker layers extra on top.
+            setDisplayedProgress((prev) =>
+              Math.min(99, Math.max(prev, Math.round(percentage))),
+            );
 
             const now = performance.now();
             const lastProgress = lastProgressRef.current;
@@ -242,6 +247,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
               const measuredSpeed = Math.max(rollingSpeed, instantSpeed);
 
               setUploadSpeed(measuredSpeed);
+              reportUpload(bytesUploaded, measuredSpeed);
               speedSamplesRef.current = samples;
               lastProgressRef.current = { bytes: bytesUploaded, time: now };
             }
@@ -256,17 +262,24 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             activeUploadRef.current = null;
             pendingFileRef.current = null;
             setUploadProgress(0);
+            setDisplayedProgress(0);
             setUploadSpeed(0);
             speedSamplesRef.current = [];
+            boostExtraPctRef.current = 0;
+            endUpload();
             reject(err);
           },
           onSuccess: () => {
             console.log(`[Upload] Successfully uploaded: ${file.name}`);
             activeUploadRef.current = null;
             pendingFileRef.current = null;
+            realProgressRef.current = 100;
+            boostExtraPctRef.current = 0;
             setUploadProgress(100);
+            setDisplayedProgress(100);
             // Keep last measured speed as-is on success.
             speedSamplesRef.current = [];
+            endUpload();
             resolve();
           },
         });
