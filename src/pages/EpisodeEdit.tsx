@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { ArrowLeft, Save, Film, Volume2, Subtitles, Wand2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Film, Volume2, Subtitles, Wand2, Loader2, Upload } from 'lucide-react';
 import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { IntroOutroEditor } from '@/components/upload/IntroOutroEditor';
 import { VideoFormatConverter } from '@/components/upload/VideoFormatConverter';
