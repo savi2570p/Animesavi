@@ -14,6 +14,7 @@ import {
   BOOST_DURATION_MS,
   BOOST_COOLDOWN_MS,
 } from '@/lib/uploadBoost';
+import { SpeedValidationPanel } from './SpeedValidationPanel';
 
 interface VideoFormatConverterProps {
   onFormatChange?: (format: 'original' | 'mp4') => void;
@@ -140,6 +141,9 @@ export function VideoFormatConverter({
             iOS Ready
           </Badge>
         )}
+        <div className="w-full">
+          <SpeedValidationPanel />
+        </div>
       </div>
     );
   }
@@ -238,6 +242,8 @@ export function VideoFormatConverter({
         </div>
         {BoostButton}
       </div>
+
+      <SpeedValidationPanel />
     </div>
   );
 

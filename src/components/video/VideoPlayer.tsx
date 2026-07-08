@@ -63,6 +63,7 @@ import { ScreenMirroringDialog } from './ScreenMirroringDialog';
 import { YouTubeEmbed, isYouTubeUrl } from './YouTubeEmbed';
 import { EmbedIframePlayer } from './EmbedIframePlayer';
 import { PureEmbedPlayer } from './PureEmbedPlayer';
+import { EmbedFallbackFrame } from './EmbedFallbackFrame';
 
 // Unified flat control style — purple-tinted, no circular background.
 // Matches the X-PLUS minimal aesthetic across every server.
@@ -2079,41 +2080,26 @@ export function VideoPlayer({
       // "Use Embed Player" clicked on a direct file (uploaded mp4/mkv). Auto-mount
       // the uploaded file inside a minimal iframe player so the user keeps
       // watching without switching servers manually.
-      const embedHtml = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;height:100%;background:#000;overflow:hidden}video{width:100%;height:100%;object-fit:contain;background:#000}</style></head><body><video src="${anyVideoUrl.replace(/"/g, '&quot;')}" controls autoplay playsinline crossorigin="anonymous"></video></body></html>`;
-      const embedSrc = `data:text/html;charset=utf-8,${encodeURIComponent(embedHtml)}`;
+      // Auto-retry: the injected <video> posts an 'embed-error' message to the
+      // parent on failure. We reload the iframe up to 2 times, first with a
+      // cache-busting param, then swapping to the alternate URL (external_url
+      // ↔ video_url) so the player lands on the playable source automatically.
       return (
-        <div
-          ref={containerRef}
-          className={`relative bg-black w-full ${isFullscreen ? 'fixed inset-0 z-[9999]' : ''}`}
-          style={{
-            aspectRatio: isFullscreen ? undefined : '16/9',
-            maxHeight: isFullscreen ? '100vh' : '70vh',
-            height: isFullscreen ? '100vh' : undefined,
+        <EmbedFallbackFrame
+          primaryUrl={anyVideoUrl}
+          alternateUrl={videoUrl && externalUrl && videoUrl !== externalUrl ? (anyVideoUrl === videoUrl ? externalUrl : videoUrl) : null}
+          title={`${animeTitle} - Episode ${episodeNumber}`}
+          onBackToNative={() => {
+            setUseIframeFallback(false);
+            setVideoError(false);
+            if (videoRef.current) {
+              videoRef.current.load();
+              videoRef.current.play().catch(() => {});
+            }
           }}
-        >
-          <iframe
-            src={embedSrc}
-            title={`${animeTitle} - Episode ${episodeNumber}`}
-            className="absolute inset-0 w-full h-full border-0"
-            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-            allowFullScreen
-          />
-          <Button
-            onClick={() => {
-              setUseIframeFallback(false);
-              setVideoError(false);
-              if (videoRef.current) {
-                videoRef.current.load();
-                videoRef.current.play().catch(() => {});
-              }
-            }}
-            variant="outline"
-            size="sm"
-            className="absolute top-2 right-2 z-10 text-white border-white/30 bg-black/50 hover:bg-white/10"
-          >
-            Back to Native
-          </Button>
-        </div>
+          isFullscreen={isFullscreen}
+          containerRef={containerRef}
+        />
       );
     }
 
