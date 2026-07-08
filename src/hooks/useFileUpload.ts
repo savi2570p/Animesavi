@@ -85,12 +85,17 @@ function useOnlineStatus() {
 export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadOptions) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [displayedProgress, setDisplayedProgress] = useState(0);
   const [uploadSpeed, setUploadSpeed] = useState<number>(0); // bytes per second
   const isOnline = useOnlineStatus();
   const activeUploadRef = useRef<tus.Upload | null>(null);
   const pendingFileRef = useRef<{ file: File; filePath: string } | null>(null);
   const lastProgressRef = useRef<{ bytes: number; time: number }>({ bytes: 0, time: 0 });
   const speedSamplesRef = useRef<Array<{ bytes: number; time: number }>>([]);
+  const realProgressRef = useRef(0);
+  const boostExtraPctRef = useRef(0);
+  const boostLastTickRef = useRef<number>(0);
+  const currentFileSizeRef = useRef<number>(0);
 
   // Auto-resume upload when coming back online
   useEffect(() => {
