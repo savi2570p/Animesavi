@@ -299,6 +299,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             pendingFileRef.current = null;
             realProgressRef.current = 100;
             boostExtraPctRef.current = 0;
+            displayedProgressFloatRef.current = 100;
             setUploadProgress(100);
             setDisplayedProgress(100);
             // Keep last measured speed as-is on success.
@@ -306,6 +307,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             endUpload();
             resolve();
           },
+
         });
 
         activeUploadRef.current = upload;
