@@ -249,7 +249,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             // % never falls behind actual bytes transferred. Boost inflation
             // continues to layer on top via the ticker.
             if (percentage > displayedProgressFloatRef.current) {
-              displayedProgressFloatRef.current = Math.min(99, percentage);
+              displayedProgressFloatRef.current = percentage >= 100 ? 100 : Math.min(99, percentage);
             }
 
             const now = performance.now();
