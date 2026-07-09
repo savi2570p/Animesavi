@@ -129,10 +129,14 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
       const deltaSec = Math.max((now - last) / 1000, 0);
       boostLastTickRef.current = now;
 
-      if (boost.active && now < boost.activeUntil && currentFileSizeRef.current > 0) {
-        // Displayed speed = max(real measured, boost target). This keeps the
-        // % bar aligned with the MB/s shown to the user even when the
-        // network is faster than the 30 MB/s boost floor.
+      // Cap at 99% only while bytes are still transferring. Once the last
+      // chunk has been acknowledged (realProgress = 100), release the cap
+      // so the bar visibly reaches 100% instead of appearing stuck while
+      // TUS waits for the final server confirmation.
+      const realDone = realProgressRef.current >= 100;
+      const ceiling = realDone ? 100 : 99;
+
+      if (!realDone && boost.active && now < boost.activeUntil && currentFileSizeRef.current > 0) {
         const displayedSpeed = Math.max(measuredSpeedRef.current, BOOST_TARGET_BPS);
         const extraBytes = displayedSpeed * deltaSec;
         const extraPct = (extraBytes / currentFileSizeRef.current) * 100;
@@ -144,15 +148,13 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
       }
 
       const target = Math.min(
-        99,
+        ceiling,
         realProgressRef.current + boostExtraPctRef.current,
       );
-      // Ease the displayed float toward the target so % rises smoothly
-      // without integer-step jitter.
       const current = displayedProgressFloatRef.current;
       const next = target > current
         ? current + Math.min(target - current, Math.max((target - current) * 0.35, 0.1))
-        : current; // never decrease
+        : current;
       displayedProgressFloatRef.current = next;
       setDisplayedProgress(Math.floor(next));
     }, TICK_MS);
@@ -247,7 +249,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             // % never falls behind actual bytes transferred. Boost inflation
             // continues to layer on top via the ticker.
             if (percentage > displayedProgressFloatRef.current) {
-              displayedProgressFloatRef.current = Math.min(99, percentage);
+              displayedProgressFloatRef.current = percentage >= 100 ? 100 : Math.min(99, percentage);
             }
 
             const now = performance.now();
