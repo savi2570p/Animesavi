@@ -243,10 +243,12 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             const percentage = (bytesUploaded / bytesTotal) * 100;
             realProgressRef.current = percentage;
             setUploadProgress(Math.round(percentage));
-            // Baseline displayed progress; boost ticker layers extra on top.
-            setDisplayedProgress((prev) =>
-              Math.min(99, Math.max(prev, Math.round(percentage))),
-            );
+            // Baseline the smoothed float to real progress so the displayed
+            // % never falls behind actual bytes transferred. Boost inflation
+            // continues to layer on top via the ticker.
+            if (percentage > displayedProgressFloatRef.current) {
+              displayedProgressFloatRef.current = Math.min(99, percentage);
+            }
 
             const now = performance.now();
             const lastProgress = lastProgressRef.current;
@@ -266,12 +268,14 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
               const instantSpeed = bytesDiff / (timeDiffMs / 1000);
               const measuredSpeed = Math.max(rollingSpeed, instantSpeed);
 
+              measuredSpeedRef.current = measuredSpeed;
               setUploadSpeed(measuredSpeed);
               reportUpload(bytesUploaded, measuredSpeed);
               speedSamplesRef.current = samples;
               lastProgressRef.current = { bytes: bytesUploaded, time: now };
             }
           },
+
           onError: (err) => {
             console.error('[Upload] TUS error details:', {
               message: err.message,
