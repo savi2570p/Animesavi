@@ -211,9 +211,12 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
       boostExtraPctRef.current = 0;
       boostLastTickRef.current = Date.now();
       currentFileSizeRef.current = file.size;
+      measuredSpeedRef.current = 0;
+      displayedProgressFloatRef.current = 0;
       lastProgressRef.current = { bytes: 0, time: performance.now() };
       speedSamplesRef.current = [{ bytes: 0, time: performance.now() }];
       beginUpload(file.size);
+
       await new Promise<void>((resolve, reject) => {
         const upload = new tus.Upload(file, {
           endpoint: RESUMABLE_UPLOAD_ENDPOINT,
