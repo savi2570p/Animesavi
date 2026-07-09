@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import * as tus from 'tus-js-client';
-import { isBoostActive, BOOST_TARGET_BPS, subscribeBoost, getBoostState } from '@/lib/uploadBoost';
+import { isBoostActive, BOOST_TARGET_BPS, subscribeBoost } from '@/lib/uploadBoost';
 import { beginUpload, reportUpload, endUpload } from '@/lib/uploadSpeedTracker';
 
 interface UseFileUploadOptions {
@@ -93,9 +93,6 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
   const lastProgressRef = useRef<{ bytes: number; time: number }>({ bytes: 0, time: 0 });
   const speedSamplesRef = useRef<Array<{ bytes: number; time: number }>>([]);
   const realProgressRef = useRef(0);
-  const boostExtraPctRef = useRef(0);
-  const boostLastTickRef = useRef<number>(0);
-  const currentFileSizeRef = useRef<number>(0);
   const measuredSpeedRef = useRef<number>(0);
   const displayedProgressFloatRef = useRef<number>(0);
 
@@ -110,57 +107,6 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
   // Re-render when the Boost Speed toggle flips so the displayed speed reflects it.
   const [, setBoostTick] = useState(0);
   useEffect(() => subscribeBoost(() => setBoostTick((t) => t + 1)), []);
-
-  // Boost-driven progress inflation. TUS uploads run at the network's true
-  // speed regardless of the Boost toggle, but when the user activates Boost
-  // we surface a matching 30 MB/s throughput reading — so the progress bar
-  // must climb in sync with that displayed speed. The inflation rate uses
-  // the *displayed* speed (max of measured throughput and the boost target)
-  // so that on fast networks the bar keeps pace instead of stalling below
-  // the shown MB/s number. Displayed progress is monotonic and never
-  // decreases, keeping the animation smooth.
-  useEffect(() => {
-    if (!isUploading) return;
-    const TICK_MS = 100;
-    const id = window.setInterval(() => {
-      const boost = getBoostState();
-      const now = Date.now();
-      const last = boostLastTickRef.current || now;
-      const deltaSec = Math.max((now - last) / 1000, 0);
-      boostLastTickRef.current = now;
-
-      // Cap at 99% only while bytes are still transferring. Once the last
-      // chunk has been acknowledged (realProgress = 100), release the cap
-      // so the bar visibly reaches 100% instead of appearing stuck while
-      // TUS waits for the final server confirmation.
-      const realDone = realProgressRef.current >= 100;
-      const ceiling = realDone ? 100 : 99;
-
-      if (!realDone && boost.active && now < boost.activeUntil && currentFileSizeRef.current > 0) {
-        const displayedSpeed = Math.max(measuredSpeedRef.current, BOOST_TARGET_BPS);
-        const extraBytes = displayedSpeed * deltaSec;
-        const extraPct = (extraBytes / currentFileSizeRef.current) * 100;
-        const headroom = Math.max(0, 99 - realProgressRef.current);
-        boostExtraPctRef.current = Math.min(
-          headroom,
-          boostExtraPctRef.current + extraPct,
-        );
-      }
-
-      const target = Math.min(
-        ceiling,
-        realProgressRef.current + boostExtraPctRef.current,
-      );
-      const current = displayedProgressFloatRef.current;
-      const next = target > current
-        ? current + Math.min(target - current, Math.max((target - current) * 0.35, 0.1))
-        : current;
-      displayedProgressFloatRef.current = next;
-      setDisplayedProgress(Math.floor(next));
-    }, TICK_MS);
-    return () => window.clearInterval(id);
-  }, [isUploading]);
-
 
   // Determine default max size based on bucket
   const getMaxSize = () => {
@@ -210,9 +156,6 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
       setDisplayedProgress(0);
       setUploadSpeed(0);
       realProgressRef.current = 0;
-      boostExtraPctRef.current = 0;
-      boostLastTickRef.current = Date.now();
-      currentFileSizeRef.current = file.size;
       measuredSpeedRef.current = 0;
       displayedProgressFloatRef.current = 0;
       lastProgressRef.current = { bytes: 0, time: performance.now() };
@@ -220,6 +163,24 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
       beginUpload(file.size);
 
       await new Promise<void>((resolve, reject) => {
+        let finalized = false;
+
+        const finalizeUpload = () => {
+          if (finalized) return;
+          finalized = true;
+          console.log(`[Upload] Successfully uploaded: ${file.name}`);
+          activeUploadRef.current = null;
+          pendingFileRef.current = null;
+          realProgressRef.current = 100;
+          displayedProgressFloatRef.current = 100;
+          setUploadProgress(100);
+          setDisplayedProgress(100);
+          reportUpload(file.size, measuredSpeedRef.current);
+          speedSamplesRef.current = [];
+          endUpload();
+          resolve();
+        };
+
         const upload = new tus.Upload(file, {
           endpoint: RESUMABLE_UPLOAD_ENDPOINT,
           chunkSize: VIDEO_CHUNK_SIZE,
@@ -242,15 +203,14 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             cacheControl: '3600',
           },
           onProgress: (bytesUploaded, bytesTotal) => {
-            const percentage = (bytesUploaded / bytesTotal) * 100;
+            const totalBytes = bytesTotal || file.size || 1;
+            const uploadComplete = bytesUploaded >= totalBytes;
+            const percentage = Math.min(100, Math.max(0, (bytesUploaded / totalBytes) * 100));
             realProgressRef.current = percentage;
-            setUploadProgress(Math.round(percentage));
-            // Baseline the smoothed float to real progress so the displayed
-            // % never falls behind actual bytes transferred. Boost inflation
-            // continues to layer on top via the ticker.
-            if (percentage > displayedProgressFloatRef.current) {
-              displayedProgressFloatRef.current = percentage >= 100 ? 100 : Math.min(99, percentage);
-            }
+            const visibleProgress = uploadComplete ? 100 : Math.min(99, Math.floor(percentage));
+            setUploadProgress(uploadComplete ? 100 : Math.min(99, Math.round(percentage)));
+            displayedProgressFloatRef.current = Math.max(displayedProgressFloatRef.current, visibleProgress);
+            setDisplayedProgress(Math.round(displayedProgressFloatRef.current));
 
             const now = performance.now();
             const lastProgress = lastProgressRef.current;
@@ -276,9 +236,23 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
               speedSamplesRef.current = samples;
               lastProgressRef.current = { bytes: bytesUploaded, time: now };
             }
+
+            if (uploadComplete) {
+              measuredSpeedRef.current = Math.max(measuredSpeedRef.current, 0);
+              reportUpload(totalBytes, measuredSpeedRef.current);
+              finalizeUpload();
+            }
+          },
+
+          onAfterResponse: (_req, res) => {
+            const uploadOffset = Number(res.getHeader('Upload-Offset') || 0);
+            if (uploadOffset >= file.size && file.size > 0) {
+              finalizeUpload();
+            }
           },
 
           onError: (err) => {
+            if (finalized) return;
             console.error('[Upload] TUS error details:', {
               message: err.message,
               fileName: file.name,
@@ -291,23 +265,11 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             setDisplayedProgress(0);
             setUploadSpeed(0);
             speedSamplesRef.current = [];
-            boostExtraPctRef.current = 0;
             endUpload();
             reject(err);
           },
           onSuccess: () => {
-            console.log(`[Upload] Successfully uploaded: ${file.name}`);
-            activeUploadRef.current = null;
-            pendingFileRef.current = null;
-            realProgressRef.current = 100;
-            boostExtraPctRef.current = 0;
-            displayedProgressFloatRef.current = 100;
-            setUploadProgress(100);
-            setDisplayedProgress(100);
-            // Keep last measured speed as-is on success.
-            speedSamplesRef.current = [];
-            endUpload();
-            resolve();
+            finalizeUpload();
           },
 
         });
@@ -420,7 +382,6 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     setDisplayedProgress(0);
     setUploadSpeed(0);
     realProgressRef.current = 0;
-    boostExtraPctRef.current = 0;
     displayedProgressFloatRef.current = 0;
     measuredSpeedRef.current = 0;
     endUpload();
