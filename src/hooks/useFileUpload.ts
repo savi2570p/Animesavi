@@ -93,7 +93,6 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
   const lastProgressRef = useRef<{ bytes: number; time: number }>({ bytes: 0, time: 0 });
   const speedSamplesRef = useRef<Array<{ bytes: number; time: number }>>([]);
   const realProgressRef = useRef(0);
-  const currentFileSizeRef = useRef<number>(0);
   const measuredSpeedRef = useRef<number>(0);
   const displayedProgressFloatRef = useRef<number>(0);
 
@@ -157,7 +156,6 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
       setDisplayedProgress(0);
       setUploadSpeed(0);
       realProgressRef.current = 0;
-      currentFileSizeRef.current = file.size;
       measuredSpeedRef.current = 0;
       displayedProgressFloatRef.current = 0;
       lastProgressRef.current = { bytes: 0, time: performance.now() };
