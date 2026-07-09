@@ -165,6 +165,24 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
       beginUpload(file.size);
 
       await new Promise<void>((resolve, reject) => {
+        let finalized = false;
+
+        const finalizeUpload = () => {
+          if (finalized) return;
+          finalized = true;
+          console.log(`[Upload] Successfully uploaded: ${file.name}`);
+          activeUploadRef.current = null;
+          pendingFileRef.current = null;
+          realProgressRef.current = 100;
+          displayedProgressFloatRef.current = 100;
+          setUploadProgress(100);
+          setDisplayedProgress(100);
+          reportUpload(file.size, measuredSpeedRef.current);
+          speedSamplesRef.current = [];
+          endUpload();
+          resolve();
+        };
+
         const upload = new tus.Upload(file, {
           endpoint: RESUMABLE_UPLOAD_ENDPOINT,
           chunkSize: VIDEO_CHUNK_SIZE,
@@ -224,10 +242,19 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             if (uploadComplete) {
               measuredSpeedRef.current = Math.max(measuredSpeedRef.current, 0);
               reportUpload(totalBytes, measuredSpeedRef.current);
+              finalizeUpload();
+            }
+          },
+
+          onAfterResponse: (_req, res) => {
+            const uploadOffset = Number(res.getHeader('Upload-Offset') || 0);
+            if (uploadOffset >= file.size && file.size > 0) {
+              finalizeUpload();
             }
           },
 
           onError: (err) => {
+            if (finalized) return;
             console.error('[Upload] TUS error details:', {
               message: err.message,
               fileName: file.name,
@@ -244,17 +271,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             reject(err);
           },
           onSuccess: () => {
-            console.log(`[Upload] Successfully uploaded: ${file.name}`);
-            activeUploadRef.current = null;
-            pendingFileRef.current = null;
-            realProgressRef.current = 100;
-            displayedProgressFloatRef.current = 100;
-            setUploadProgress(100);
-            setDisplayedProgress(100);
-            // Keep last measured speed as-is on success.
-            speedSamplesRef.current = [];
-            endUpload();
-            resolve();
+            finalizeUpload();
           },
 
         });
