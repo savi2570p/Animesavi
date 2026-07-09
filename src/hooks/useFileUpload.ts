@@ -419,7 +419,10 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     setUploadSpeed(0);
     realProgressRef.current = 0;
     boostExtraPctRef.current = 0;
+    displayedProgressFloatRef.current = 0;
+    measuredSpeedRef.current = 0;
     endUpload();
+
     toast.info('Upload cancelled');
   }, []);
 
