@@ -598,9 +598,27 @@ export default function Watch() {
 
     try {
       if (watchHistoryId) {
+        // Guard: never downgrade a previously-completed episode back to
+        // "in progress" when the user simply re-opens it. Only rewind if
+        // they actively rewatched past a meaningful threshold (>60s AND
+        // <85% of duration), otherwise leave the completed row alone so
+        // it doesn't resurface in Continue Watching as episode 1.
+        const isMeaningfulRewatch = currentTime > 60 && progressPercent < 85;
+
+        const { data: existing } = await supabase
+          .from('watch_history')
+          .select('completed')
+          .eq('id', watchHistoryId)
+          .maybeSingle();
+
+        if (existing?.completed && !completed && !isMeaningfulRewatch) {
+          // Skip write — episode is already marked done, tiny replay tick.
+          return;
+        }
+
         await supabase
           .from('watch_history')
-          .update({ 
+          .update({
             progress: completed ? 100 : progressPercent,
             completed,
             watched_at: new Date().toISOString(),
