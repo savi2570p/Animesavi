@@ -108,6 +108,33 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
   const [, setBoostTick] = useState(0);
   useEffect(() => subscribeBoost(() => setBoostTick((t) => t + 1)), []);
 
+  // While a Boost is active during an upload, smoothly inflate the displayed
+  // percentage toward the boosted throughput so the progress bar visibly
+  // climbs even if the real byte-transfer rate hasn't caught up yet. Capped at
+  // 99% until the final byte is confirmed by the server.
+  useEffect(() => {
+    if (!isUploading) return;
+    const tick = window.setInterval(() => {
+      if (!isBoostActive()) return;
+      const totalBytes = pendingFileRef.current?.file.size || 0;
+      if (totalBytes <= 0) return;
+      // How much extra % Boost should add per 100ms based on 30 MB/s target.
+      const percentPerTick = (BOOST_TARGET_BPS * 0.1 / totalBytes) * 100;
+      const current = displayedProgressFloatRef.current;
+      const real = realProgressRef.current;
+      if (real >= 100) return;
+      // Never race more than 15 percentage points ahead of real progress,
+      // and always keep the bar under 99 until the server confirms.
+      const ceiling = Math.min(99, real + 15);
+      const next = Math.min(ceiling, current + percentPerTick);
+      if (next > current) {
+        displayedProgressFloatRef.current = next;
+        setDisplayedProgress(Math.round(next));
+      }
+    }, 100);
+    return () => window.clearInterval(tick);
+  }, [isUploading]);
+
   // Determine default max size based on bucket
   const getMaxSize = () => {
     if (maxSizeGB) return maxSizeGB * 1024 * 1024 * 1024;
