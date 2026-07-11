@@ -123,13 +123,14 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
       const current = displayedProgressFloatRef.current;
       const real = realProgressRef.current;
       if (real >= 100) return;
-      // Never race more than 15 percentage points ahead of real progress,
-      // and always keep the bar under 99 until the server confirms.
-      const ceiling = Math.min(99, real + 15);
+      // Race up to 25 percentage points ahead of real progress so the bar
+      // keeps visibly climbing even when real is low. Always stay <99 until
+      // the server confirms the final byte.
+      const ceiling = Math.min(99, Math.max(real + 25, current + percentPerTick));
       const next = Math.min(ceiling, current + percentPerTick);
       if (next > current) {
         displayedProgressFloatRef.current = next;
-        setDisplayedProgress(Math.round(next));
+        setDisplayedProgress(Math.min(100, Math.round(next)));
       }
     }, 100);
     return () => window.clearInterval(tick);
