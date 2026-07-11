@@ -238,7 +238,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             const visibleProgress = uploadComplete ? 100 : Math.min(99, Math.floor(percentage));
             setUploadProgress(uploadComplete ? 100 : Math.min(99, Math.round(percentage)));
             displayedProgressFloatRef.current = Math.max(displayedProgressFloatRef.current, visibleProgress);
-            setDisplayedProgress(Math.round(displayedProgressFloatRef.current));
+            setDisplayedProgress(Math.min(100, Math.round(displayedProgressFloatRef.current)));
 
             const now = performance.now();
             const lastProgress = lastProgressRef.current;
