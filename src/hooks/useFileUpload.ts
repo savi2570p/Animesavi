@@ -167,9 +167,14 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
       await new Promise<void>((resolve, reject) => {
         let finalized = false;
         let finalizing = false;
+        let completionGraceTimer: number | null = null;
         let completionWatchdog: number | null = null;
 
-        const clearCompletionWatchdog = () => {
+        const clearCompletionTimers = () => {
+          if (completionGraceTimer !== null) {
+            window.clearTimeout(completionGraceTimer);
+            completionGraceTimer = null;
+          }
           if (completionWatchdog !== null) {
             window.clearTimeout(completionWatchdog);
             completionWatchdog = null;
@@ -180,7 +185,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
           if (finalized || finalizing) return;
           finalizing = true;
           console.log('[Upload] Finalize called');
-          clearCompletionWatchdog();
+          clearCompletionTimers();
           finalized = true;
           activeUploadRef.current = null;
           pendingFileRef.current = null;
@@ -196,35 +201,47 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
           resolve();
         };
 
-        // If the final PATCH was accepted but the TUS client misses onSuccess,
-        // verify the existing upload offset after 30 seconds. This retries only
-        // finalization and never restarts or deletes the uploaded file.
-        const scheduleFinalizeWatchdog = (upload: tus.Upload) => {
-          if (completionWatchdog !== null || finalized) return;
+        const verifyFinalOffset = async (upload: tus.Upload): Promise<boolean> => {
+          if (finalized || finalizing || !upload.url) return false;
+          console.log('[Upload] Verifying...');
+          try {
+            const response = await fetch(upload.url, {
+              method: 'HEAD',
+              headers: {
+                authorization: `Bearer ${accessToken}`,
+                apikey: SUPABASE_PUBLISHABLE_KEY,
+                'Tus-Resumable': '1.0.0',
+              },
+            });
+            const committedOffset = Number(response.headers.get('Upload-Offset') || 0);
+            if (response.ok && committedOffset >= file.size) {
+              console.log('[Upload] Upload finished');
+              finalizeUpload();
+              return true;
+            }
+          } catch (error) {
+            console.warn('[Upload] Finalize verification failed', error);
+          }
+          return false;
+        };
+
+        // The normal onSuccess path completes immediately. A one-second grace
+        // check covers a missed callback, while the 30-second watchdog retries
+        // only the final offset verification—never the file upload itself.
+        const scheduleFinalizeChecks = (upload: tus.Upload) => {
+          if (finalized || completionGraceTimer !== null || completionWatchdog !== null) return;
+          completionGraceTimer = window.setTimeout(async () => {
+            completionGraceTimer = null;
+            await verifyFinalOffset(upload);
+          }, 1_000);
+
           completionWatchdog = window.setTimeout(async () => {
             completionWatchdog = null;
-            if (finalized || finalizing || !upload.url) return;
-            console.log('[Upload] Verifying...');
-            try {
-              const response = await fetch(upload.url, {
-                method: 'HEAD',
-                headers: {
-                  authorization: `Bearer ${accessToken}`,
-                  apikey: SUPABASE_PUBLISHABLE_KEY,
-                  'Tus-Resumable': '1.0.0',
-                },
-              });
-              const committedOffset = Number(response.headers.get('Upload-Offset') || 0);
-              if (response.ok && committedOffset >= file.size) {
-                console.log('[Upload] Upload finished');
-                finalizeUpload();
-                return;
-              }
+            if (finalized || finalizing) return;
+            const complete = await verifyFinalOffset(upload);
+            if (!complete) {
               console.warn('[Upload] Finalize verification pending; retrying finalize check only');
-              scheduleFinalizeWatchdog(upload);
-            } catch (error) {
-              console.warn('[Upload] Finalize verification failed; retrying finalize check only', error);
-              scheduleFinalizeWatchdog(upload);
+              scheduleFinalizeChecks(upload);
             }
           }, 30_000);
         };
@@ -290,13 +307,13 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
               reportUpload(totalBytes, measuredSpeedRef.current);
               console.log('[Upload] Upload finished');
               console.log('[Upload] Verifying...');
-              scheduleFinalizeWatchdog(upload);
+              scheduleFinalizeChecks(upload);
             }
           },
 
           onError: (err) => {
             if (finalized) return;
-            clearCompletionWatchdog();
+            clearCompletionTimers();
             console.error('[Upload] TUS error details:', {
               message: err.message,
               fileName: file.name,
@@ -413,7 +430,9 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
   const abortUpload = useCallback(() => {
     if (activeUploadRef.current) {
       try {
-        activeUploadRef.current.abort(true); // true = remove from server
+        // Preserve resumable server state so cancelling/retrying never deletes
+        // bytes that storage has already accepted.
+        activeUploadRef.current.abort(false);
       } catch (e) {
         // Ignore abort errors
       }
