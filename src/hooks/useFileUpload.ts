@@ -167,6 +167,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
       await new Promise<void>((resolve, reject) => {
         let finalized = false;
         let finalizing = false;
+        let allBytesUploaded = false;
         let completionGraceTimer: number | null = null;
         let completionWatchdog: number | null = null;
 
@@ -303,6 +304,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             }
 
             if (uploadComplete) {
+              allBytesUploaded = true;
               measuredSpeedRef.current = Math.max(measuredSpeedRef.current, 0);
               reportUpload(totalBytes, measuredSpeedRef.current);
               console.log('[Upload] Upload finished');
@@ -313,6 +315,11 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
 
           onError: (err) => {
             if (finalized) return;
+            if (allBytesUploaded) {
+              console.warn('[Upload] Completion response failed after all bytes uploaded; preserving file and retrying finalize only', err);
+              scheduleFinalizeChecks(upload);
+              return;
+            }
             clearCompletionTimers();
             console.error('[Upload] TUS error details:', {
               message: err.message,
