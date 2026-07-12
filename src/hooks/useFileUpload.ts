@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import * as tus from 'tus-js-client';
-import { isBoostActive, BOOST_TARGET_BPS, subscribeBoost } from '@/lib/uploadBoost';
+import { subscribeBoost } from '@/lib/uploadBoost';
 import { beginUpload, reportUpload, endUpload } from '@/lib/uploadSpeedTracker';
 
 interface UseFileUploadOptions {
@@ -92,9 +92,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
   const pendingFileRef = useRef<{ file: File; filePath: string } | null>(null);
   const lastProgressRef = useRef<{ bytes: number; time: number }>({ bytes: 0, time: 0 });
   const speedSamplesRef = useRef<Array<{ bytes: number; time: number }>>([]);
-  const realProgressRef = useRef(0);
   const measuredSpeedRef = useRef<number>(0);
-  const displayedProgressFloatRef = useRef<number>(0);
 
   // Auto-resume upload when coming back online
   useEffect(() => {
@@ -104,37 +102,14 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     }
   }, [isOnline]);
 
-  // Re-render when the Boost Speed toggle flips so the displayed speed reflects it.
-  const [, setBoostTick] = useState(0);
-  useEffect(() => subscribeBoost(() => setBoostTick((t) => t + 1)), []);
-
-  // While a Boost is active during an upload, smoothly inflate the displayed
-  // percentage toward the boosted throughput so the progress bar visibly
-  // climbs even if the real byte-transfer rate hasn't caught up yet. Capped at
-  // 99% until the final byte is confirmed by the server.
+  // Speed Boost is intentionally isolated from progress and finalization.
+  // It may tune transfer scheduling elsewhere, but it must never synthesize
+  // bytes, hold the bar at 99%, or interfere with the TUS completion callback.
   useEffect(() => {
-    if (!isUploading) return;
-    const tick = window.setInterval(() => {
-      if (!isBoostActive()) return;
-      const totalBytes = pendingFileRef.current?.file.size || 0;
-      if (totalBytes <= 0) return;
-      // How much extra % Boost should add per 100ms based on 30 MB/s target.
-      const percentPerTick = (BOOST_TARGET_BPS * 0.1 / totalBytes) * 100;
-      const current = displayedProgressFloatRef.current;
-      const real = realProgressRef.current;
-      if (real >= 100) return;
-      // Race up to 25 percentage points ahead of real progress so the bar
-      // keeps visibly climbing even when real is low. Always stay <99 until
-      // the server confirms the final byte.
-      const ceiling = Math.min(99, Math.max(real + 25, current + percentPerTick));
-      const next = Math.min(ceiling, current + percentPerTick);
-      if (next > current) {
-        displayedProgressFloatRef.current = next;
-        setDisplayedProgress(Math.min(100, Math.round(next)));
-      }
-    }, 100);
-    return () => window.clearInterval(tick);
-  }, [isUploading]);
+    return subscribeBoost((boost) => {
+      if (boost.active) console.log('[Upload] Speed Boost enabled');
+    });
+  }, []);
 
   // Determine default max size based on bucket
   const getMaxSize = () => {
@@ -177,36 +152,81 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
       return null;
     }
 
-    console.log(`[Upload] Starting resumable upload: ${file.name}, size: ${(file.size / (1024 * 1024 * 1024)).toFixed(2)} GB (${file.size} bytes), type: ${getVideoMimeType(file)}`);
+    console.log(`[Upload] Upload started: ${file.name}, size: ${(file.size / (1024 * 1024 * 1024)).toFixed(2)} GB (${file.size} bytes), type: ${getVideoMimeType(file)}`);
+    console.log('[Upload] Uploading...');
 
     try {
       setUploadProgress(0);
       setDisplayedProgress(0);
       setUploadSpeed(0);
-      realProgressRef.current = 0;
       measuredSpeedRef.current = 0;
-      displayedProgressFloatRef.current = 0;
       lastProgressRef.current = { bytes: 0, time: performance.now() };
       speedSamplesRef.current = [{ bytes: 0, time: performance.now() }];
       beginUpload(file.size);
 
       await new Promise<void>((resolve, reject) => {
         let finalized = false;
+        let finalizing = false;
+        let completionWatchdog: number | null = null;
+
+        const clearCompletionWatchdog = () => {
+          if (completionWatchdog !== null) {
+            window.clearTimeout(completionWatchdog);
+            completionWatchdog = null;
+          }
+        };
 
         const finalizeUpload = () => {
-          if (finalized) return;
+          if (finalized || finalizing) return;
+          finalizing = true;
+          console.log('[Upload] Finalize called');
+          clearCompletionWatchdog();
           finalized = true;
-          console.log(`[Upload] Successfully uploaded: ${file.name}`);
           activeUploadRef.current = null;
           pendingFileRef.current = null;
-          realProgressRef.current = 100;
-          displayedProgressFloatRef.current = 100;
           setUploadProgress(100);
           setDisplayedProgress(100);
           reportUpload(file.size, measuredSpeedRef.current);
           speedSamplesRef.current = [];
           endUpload();
+          console.log('[Upload] Storage commit...');
+          console.log('[Upload] Finalize completed');
+          console.log('[Upload] Progress reached 100%');
+          console.log(`[Upload] Upload Complete: ${file.name}`);
           resolve();
+        };
+
+        // If the final PATCH was accepted but the TUS client misses onSuccess,
+        // verify the existing upload offset after 30 seconds. This retries only
+        // finalization and never restarts or deletes the uploaded file.
+        const scheduleFinalizeWatchdog = (upload: tus.Upload) => {
+          if (completionWatchdog !== null || finalized) return;
+          completionWatchdog = window.setTimeout(async () => {
+            completionWatchdog = null;
+            if (finalized || finalizing || !upload.url) return;
+            console.log('[Upload] Verifying...');
+            try {
+              const response = await fetch(upload.url, {
+                method: 'HEAD',
+                headers: {
+                  authorization: `Bearer ${accessToken}`,
+                  apikey: SUPABASE_PUBLISHABLE_KEY,
+                  'Tus-Resumable': '1.0.0',
+                },
+              });
+              const committedOffset = Number(response.headers.get('Upload-Offset') || 0);
+              if (response.ok && committedOffset >= file.size) {
+                console.log('[Upload] Upload finished');
+                finalizeUpload();
+                return;
+              }
+              console.warn('[Upload] Finalize verification pending; retrying finalize check only');
+              scheduleFinalizeWatchdog(upload);
+            } catch (error) {
+              console.warn('[Upload] Finalize verification failed; retrying finalize check only', error);
+              scheduleFinalizeWatchdog(upload);
+            }
+          }, 30_000);
         };
 
         const upload = new tus.Upload(file, {
@@ -234,11 +254,11 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             const totalBytes = bytesTotal || file.size || 1;
             const uploadComplete = bytesUploaded >= totalBytes;
             const percentage = Math.min(100, Math.max(0, (bytesUploaded / totalBytes) * 100));
-            realProgressRef.current = percentage;
-            const visibleProgress = uploadComplete ? 100 : Math.min(99, Math.floor(percentage));
-            setUploadProgress(uploadComplete ? 100 : Math.min(99, Math.round(percentage)));
-            displayedProgressFloatRef.current = Math.max(displayedProgressFloatRef.current, visibleProgress);
-            setDisplayedProgress(Math.min(100, Math.round(displayedProgressFloatRef.current)));
+            // The visible percentage is derived only from acknowledged bytes.
+            // Reserve 100 for the storage completion callback or watchdog.
+            const visibleProgress = uploadComplete ? 99 : Math.min(99, Math.floor(percentage));
+            setUploadProgress(visibleProgress);
+            setDisplayedProgress(visibleProgress);
 
             const now = performance.now();
             const lastProgress = lastProgressRef.current;
@@ -268,19 +288,15 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             if (uploadComplete) {
               measuredSpeedRef.current = Math.max(measuredSpeedRef.current, 0);
               reportUpload(totalBytes, measuredSpeedRef.current);
-              finalizeUpload();
-            }
-          },
-
-          onAfterResponse: (_req, res) => {
-            const uploadOffset = Number(res.getHeader('Upload-Offset') || 0);
-            if (uploadOffset >= file.size && file.size > 0) {
-              finalizeUpload();
+              console.log('[Upload] Upload finished');
+              console.log('[Upload] Verifying...');
+              scheduleFinalizeWatchdog(upload);
             }
           },
 
           onError: (err) => {
             if (finalized) return;
+            clearCompletionWatchdog();
             console.error('[Upload] TUS error details:', {
               message: err.message,
               fileName: file.name,
@@ -297,6 +313,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             reject(err);
           },
           onSuccess: () => {
+            console.log('[Upload] Upload finished');
             finalizeUpload();
           },
 
@@ -385,14 +402,12 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     }
   };
 
-  // Format speed for display. Real measured throughput drives the number.
-  // When Boost Speed is active, the displayed value is floored to 30 MB/s
-  // to reflect the requested boost target.
+  // Format only measured transferred-byte throughput. Speed Boost must not
+  // fabricate a network rate or alter progress/completion state.
   const formatSpeed = (bytesPerSecond: number): string => {
-    const boosted = isBoostActive() ? Math.max(bytesPerSecond, BOOST_TARGET_BPS) : bytesPerSecond;
-    if (boosted <= 0) return '0 KB/s';
-    if (boosted >= 1024 * 1024) return `${(boosted / (1024 * 1024)).toFixed(1)} MB/s`;
-    return `${(boosted / 1024).toFixed(0)} KB/s`;
+    if (bytesPerSecond <= 0) return '0 KB/s';
+    if (bytesPerSecond >= 1024 * 1024) return `${(bytesPerSecond / (1024 * 1024)).toFixed(1)} MB/s`;
+    return `${(bytesPerSecond / 1024).toFixed(0)} KB/s`;
   };
 
   const abortUpload = useCallback(() => {
@@ -409,8 +424,6 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     setUploadProgress(0);
     setDisplayedProgress(0);
     setUploadSpeed(0);
-    realProgressRef.current = 0;
-    displayedProgressFloatRef.current = 0;
     measuredSpeedRef.current = 0;
     endUpload();
 
