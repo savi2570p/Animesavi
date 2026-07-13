@@ -323,7 +323,7 @@ export default function Auth() {
                 </Button>
               </form>
             ) : (
-            <Tabs defaultValue="signin" className="w-full">
+            <Tabs defaultValue={new URLSearchParams(window.location.search).get('mode') === 'signup' ? 'signup' : 'signin'} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted">
                 <TabsTrigger value="signin" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
                   Sign In
