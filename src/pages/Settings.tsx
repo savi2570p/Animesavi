@@ -84,12 +84,39 @@ export default function Settings() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
+  // Delete account state
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Redirect to auth if not logged in
   useEffect(() => {
     if (!user) {
       navigate('/auth');
     }
   }, [user, navigate]);
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm.trim().toUpperCase() !== 'DELETE') {
+      toast.error('Type DELETE to confirm');
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-account');
+      if (error || (data && (data as { error?: string }).error)) {
+        throw new Error(error?.message || (data as { error?: string })?.error || 'Failed to delete account');
+      }
+      toast.success('Account deleted. All data will be removed within 24 hours.');
+      await signOut();
+      navigate('/auth?mode=signup', { replace: true });
+    } catch (err) {
+      toast.error('Failed to delete account', { description: (err as Error).message });
+    } finally {
+      setIsDeleting(false);
+      setDeleteOpen(false);
+    }
+  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
