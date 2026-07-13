@@ -13,6 +13,14 @@ import { PinLockSettings } from '@/components/settings/PinLockSettings';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { rememberAccount } from '@/components/AccountSwitcher';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   Settings as SettingsIcon,
   Moon,
   Globe,
@@ -33,6 +41,7 @@ import {
   PlayCircle,
   LogOut,
   Crown,
+  AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -75,12 +84,39 @@ export default function Settings() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
+  // Delete account state
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Redirect to auth if not logged in
   useEffect(() => {
     if (!user) {
       navigate('/auth');
     }
   }, [user, navigate]);
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm.trim().toUpperCase() !== 'DELETE') {
+      toast.error('Type DELETE to confirm');
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-account');
+      if (error || (data && (data as { error?: string }).error)) {
+        throw new Error(error?.message || (data as { error?: string })?.error || 'Failed to delete account');
+      }
+      toast.success('Account deleted. All data will be removed within 24 hours.');
+      await signOut();
+      navigate('/auth?mode=signup', { replace: true });
+    } catch (err) {
+      toast.error('Failed to delete account', { description: (err as Error).message });
+    } finally {
+      setIsDeleting(false);
+      setDeleteOpen(false);
+    }
+  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -531,7 +567,7 @@ export default function Settings() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <Button
                   variant="outline"
                   className="justify-start h-11 border-border/50 hover:border-primary/40 hover:bg-primary/5"
@@ -553,11 +589,65 @@ export default function Settings() {
                   <LogOut className="h-4 w-4 mr-2" />
                   Log Out
                 </Button>
+                <Button
+                  variant="outline"
+                  className="justify-start h-11 border-destructive/60 bg-destructive/5 text-destructive hover:bg-destructive/15 hover:text-destructive"
+                  onClick={() => { setDeleteConfirm(''); setDeleteOpen(true); }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete my Account
+                </Button>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Delete account confirmation */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="max-w-md border-destructive/40 bg-background/95 backdrop-blur-xl">
+          <DialogHeader>
+            <div className="mx-auto mb-2 h-14 w-14 rounded-2xl bg-gradient-to-br from-destructive to-rose-600 flex items-center justify-center shadow-2xl">
+              <AlertTriangle className="h-7 w-7 text-white" />
+            </div>
+            <DialogTitle className="text-center text-xl">Delete your account?</DialogTitle>
+            <DialogDescription className="text-center leading-relaxed pt-1">
+              Within <span className="font-semibold text-foreground">24 hours</span> all of your data — profile,
+              watch history, favorites, saved list and preferences — will be permanently removed from our servers.
+              <br /><br />
+              This action <span className="font-semibold text-destructive">cannot be undone</span>. You will be
+              signed out immediately and will need to sign up again to use AnimeSavi.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2 pt-2">
+            <Label htmlFor="del-confirm" className="text-xs uppercase tracking-wider text-muted-foreground">
+              Type <span className="text-destructive font-bold">DELETE</span> to confirm
+            </Label>
+            <Input
+              id="del-confirm"
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              placeholder="DELETE"
+              className="bg-muted/40 border-border/50 h-11 uppercase tracking-widest text-center font-bold"
+              autoComplete="off"
+            />
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={isDeleting} className="flex-1">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteAccount}
+              disabled={isDeleting || deleteConfirm.trim().toUpperCase() !== 'DELETE'}
+              className="flex-1 bg-gradient-to-r from-destructive to-rose-600 hover:opacity-90 text-white font-semibold"
+            >
+              {isDeleting ? 'Deleting…' : 'Delete Account'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
