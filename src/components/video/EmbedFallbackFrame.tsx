@@ -89,7 +89,9 @@ export function EmbedFallbackFrame({
   const bustedUrl = reloadKey > 0
     ? `${currentUrl}${currentUrl.includes('?') ? '&' : '?'}_r=${reloadKey}`
     : currentUrl;
-  const embedSrc = `data:text/html;charset=utf-8,${encodeURIComponent(buildEmbedHtml(bustedUrl))}`;
+  // Use srcDoc instead of a data: URL — modern Chrome/Edge block top-level
+  // navigation to data: URLs inside iframes ("This content is blocked").
+  const embedDoc = buildEmbedHtml(bustedUrl);
 
   return (
     <div
