@@ -105,7 +105,7 @@ export function EmbedFallbackFrame({
     >
       <iframe
         key={`${currentUrl}-${reloadKey}`}
-        src={embedSrc}
+        srcDoc={embedDoc}
         title={title}
         className="absolute inset-0 w-full h-full border-0"
         allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
