@@ -13,6 +13,14 @@ import { PinLockSettings } from '@/components/settings/PinLockSettings';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { rememberAccount } from '@/components/AccountSwitcher';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   Settings as SettingsIcon,
   Moon,
   Globe,
@@ -33,6 +41,7 @@ import {
   PlayCircle,
   LogOut,
   Crown,
+  AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
