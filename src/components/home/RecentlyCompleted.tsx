@@ -135,8 +135,16 @@ export function RecentlyCompleted() {
       <div className="container">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <CheckCircle className="h-6 w-6 text-green-500" />
-            <h2 className="text-xl md:text-2xl font-heading font-bold">Recently Completed</h2>
+            <div className="relative">
+              <div className="absolute inset-0 bg-emerald-500/40 blur-xl rounded-full" />
+              <div className="relative h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg">
+                <CheckCircle className="h-5 w-5 text-white" />
+              </div>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-emerald-400/80 font-semibold">Finished</p>
+              <h2 className="text-xl md:text-2xl font-heading font-bold leading-tight">Recently Completed</h2>
+            </div>
           </div>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/history" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
@@ -150,7 +158,7 @@ export function RecentlyCompleted() {
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="space-y-2 w-[140px] md:w-auto shrink-0">
-                <Skeleton className="aspect-[2/3] rounded-lg" />
+                <Skeleton className="aspect-[2/3] rounded-2xl" />
                 <Skeleton className="h-4 w-3/4" />
               </div>
             ))
@@ -161,12 +169,12 @@ export function RecentlyCompleted() {
                 to={`/anime/${anime.id}`}
                 className="group relative w-[140px] md:w-[160px] lg:w-[180px] shrink-0"
               >
-                <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-muted">
+                <div className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-muted ring-1 ring-white/5 shadow-lg shadow-black/40 transition-all duration-300 group-hover:ring-emerald-400/50 group-hover:shadow-emerald-500/20 group-hover:-translate-y-1">
                   {anime.cover_image ? (
                     <img
                       src={anime.cover_image}
                       alt={anime.title}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       loading="lazy"
                     />
                   ) : (
@@ -174,21 +182,23 @@ export function RecentlyCompleted() {
                       <span className="text-muted-foreground">No Image</span>
                     </div>
                   )}
-                  
-                  {/* Completed Badge */}
-                  <div className="absolute top-2 left-2 px-2 py-1 rounded bg-green-500/90 text-white text-xs font-bold flex items-center gap-1">
+
+                  {/* Completed badge — liquid glass */}
+                  <div className="absolute top-2 left-2 px-2 py-1 rounded-lg bg-emerald-500/25 backdrop-blur-md border border-emerald-300/40 text-emerald-50 text-[10px] font-bold flex items-center gap-1 shadow-lg">
                     <CheckCircle className="h-3 w-3" />
-                    COMPLETE
+                    DONE
                   </div>
 
-                  {/* Top-right H-DUB */}
-                  <span className="absolute top-2 right-2 badge-glass-hdub">H-DUB</span>
+                  {/* Bottom gradient overlay always subtle, intensifies on hover */}
+                  <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/85 via-black/30 to-transparent opacity-70 group-hover:opacity-100 transition-opacity" />
 
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  {/* Title on hover */}
+                  <div className="absolute inset-x-2 bottom-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span className="text-[10px] uppercase tracking-widest text-emerald-300/90 font-semibold">Rewatch</span>
+                  </div>
                 </div>
 
-                <h3 className="mt-2 text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                <h3 className="mt-2 text-sm font-medium line-clamp-2 group-hover:text-emerald-300 transition-colors">
                   {anime.title}
                 </h3>
               </Link>
