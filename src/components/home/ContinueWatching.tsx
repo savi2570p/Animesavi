@@ -467,7 +467,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
             asChild
             className="text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all shrink-0"
           >
-            <Link to="/history" className="flex items-center gap-1">
+            <Link to="/continue-watching" className="flex items-center gap-1">
               <span className="hidden sm:inline">View all</span>
               <span className="sm:hidden">All</span>
               <ChevronRight className="h-4 w-4" />

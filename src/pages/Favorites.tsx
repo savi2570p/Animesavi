@@ -5,8 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Heart, Play, Trash2 } from 'lucide-react';
+import { Heart, Play, Trash2, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ShareCollectionDialog } from '@/components/ShareCollectionDialog';
 
 interface Anime {
   id: string;
@@ -28,6 +29,7 @@ export default function Favorites() {
   const navigate = useNavigate();
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -77,12 +79,20 @@ export default function Favorites() {
 
   return (
     <div className="container py-8">
-      <div className="flex items-center gap-3 mb-8">
-        <Heart className="h-8 w-8 text-anime-pink fill-anime-pink" />
-        <h1 className="text-3xl font-heading font-bold">
-          My <span className="anime-gradient-text">Favorites</span>
-        </h1>
+      <div className="flex items-center justify-between gap-3 mb-8 flex-wrap">
+        <div className="flex items-center gap-3">
+          <Heart className="h-8 w-8 text-anime-pink fill-anime-pink" />
+          <h1 className="text-3xl font-heading font-bold">
+            My <span className="anime-gradient-text">Favorites</span>
+          </h1>
+        </div>
+        {favorites.length > 0 && (
+          <Button onClick={() => setShareOpen(true)} className="rounded-full">
+            <Share2 className="h-4 w-4 mr-2" /> Share with Friends
+          </Button>
+        )}
       </div>
+      <ShareCollectionDialog open={shareOpen} onOpenChange={setShareOpen} />
 
       {favorites.length === 0 ? (
         <div className="text-center py-20">

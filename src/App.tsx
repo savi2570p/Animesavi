@@ -70,6 +70,8 @@ const ShadowArise = lazy(() => import("./pages/ShadowArise"));
 const FloxAnimePage = lazy(() => import("./pages/FloxAnimePage"));
 const FloxWatch = lazy(() => import("./pages/FloxWatch"));
 const SiteHealth = lazy(() => import("./pages/SiteHealth"));
+const SharePage = lazy(() => import("./pages/SharePage"));
+const ContinueWatchingAll = lazy(() => import("./pages/ContinueWatchingAll"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -244,6 +246,8 @@ const App = () => (
                     <Route path="/watch/:episodeId" element={<Watch />} />
                     <Route path="/favorites" element={<Favorites />} />
                     <Route path="/history" element={<History />} />
+                    <Route path="/continue-watching" element={<ContinueWatchingAll />} />
+                    <Route path="/share/:token" element={<SharePage />} />
                     <Route path="/upload" element={<Upload />} />
                     <Route path="/upload/anime/:animeId" element={<UploadAnimeEdit />} />
                     <Route path="/upload/anime/:animeId/episode/:episodeId/edit" element={<EpisodeEdit />} />

@@ -836,6 +836,74 @@ export type Database = {
           },
         ]
       }
+      shared_collection_likes: {
+        Row: {
+          collection_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          collection_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          collection_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_collection_likes_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "shared_collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shared_collections: {
+        Row: {
+          anime_ids: string[]
+          created_at: string
+          description: string | null
+          id: string
+          likes: number
+          share_token: string
+          title: string
+          updated_at: string
+          user_id: string
+          views: number
+        }
+        Insert: {
+          anime_ids?: string[]
+          created_at?: string
+          description?: string | null
+          id?: string
+          likes?: number
+          share_token?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          views?: number
+        }
+        Update: {
+          anime_ids?: string[]
+          created_at?: string
+          description?: string | null
+          id?: string
+          likes?: number
+          share_token?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          views?: number
+        }
+        Relationships: []
+      }
       shorts: {
         Row: {
           created_at: string

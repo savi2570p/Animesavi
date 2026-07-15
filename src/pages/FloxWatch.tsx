@@ -19,11 +19,14 @@ interface FloxRow {
   season_number: number | null;
 }
 
+type Server = 'flox' | 'anime-plus';
+
 export default function FloxWatch() {
   const { episodeId } = useParams();
   const navigate = useNavigate();
   const [ep, setEp] = useState<FloxRow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [server, setServer] = useState<Server>('flox');
 
   useEffect(() => {
     (async () => {
@@ -57,7 +60,29 @@ export default function FloxWatch() {
           <p className="text-sm text-muted-foreground">Episode not found.</p>
         ) : (
           <div className="space-y-4">
+            {/* Server switcher */}
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Server:</span>
+              {([
+                { id: 'flox', label: 'Flox +' },
+                { id: 'anime-plus', label: 'Anime+' },
+              ] as { id: Server; label: string }[]).map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setServer(s.id)}
+                  className={`px-3 py-1 rounded-full text-xs border transition-all ${
+                    server === s.id
+                      ? 'bg-primary text-primary-foreground border-primary shadow shadow-primary/30'
+                      : 'bg-card/40 text-muted-foreground border-border/40 hover:text-foreground'
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+
             <FloxPlayer
+              key={server}
               sourceType={ep.source_type}
               sourceUrl={ep.source_url}
               poster={ep.poster_url || ep.banner_url || undefined}
@@ -79,7 +104,7 @@ export default function FloxWatch() {
                   Season {ep.season_number ?? 1} · Episode {ep.episode_number ?? '—'}
                 </p>
                 <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">
-                  Flox + (only server)
+                  {server === 'anime-plus' ? 'Anime+ server' : 'Flox + server'}
                 </span>
               </div>
             </div>
