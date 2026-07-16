@@ -116,6 +116,7 @@ export function RecentlyCompleted() {
           title: data.anime.title,
           cover_image: data.anime.cover_image,
           watched_at: data.latestWatch,
+          is_eng_dub: data.anime.is_eng_dub ?? false,
         });
       }
     }
