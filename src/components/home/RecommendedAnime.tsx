@@ -59,6 +59,18 @@ export function RecommendedAnime() {
 
   const moodGenres = useMemo(() => MOODS.find((m) => m.id === mood)?.genres ?? [], [mood]);
 
+  const enrichWithDub = async (list: Anime[]): Promise<Anime[]> => {
+    if (!list.length) return list;
+    try {
+      const ids = list.map((a) => a.id);
+      const { data } = await supabase.from('anime').select('id, is_eng_dub').in('id', ids);
+      const map = new Map((data ?? []).map((r: any) => [r.id, !!r.is_eng_dub]));
+      return list.map((a) => ({ ...a, is_eng_dub: map.get(a.id) ?? false }));
+    } catch {
+      return list;
+    }
+  };
+
   const fetchSmart = async () => {
     setIsLoading(true);
 
