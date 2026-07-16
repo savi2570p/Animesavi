@@ -41,7 +41,8 @@ export function RecentlyCompleted() {
         anime:anime_id (
           id,
           title,
-          cover_image
+          cover_image,
+          is_eng_dub
         )
       `)
       .eq('user_id', user.id)
