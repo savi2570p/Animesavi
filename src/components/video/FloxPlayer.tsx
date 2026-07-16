@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Play, Pause, RotateCcw, RotateCw, Maximize, Minimize } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Play, Pause, RotateCcw, RotateCw, Maximize, Minimize, AlertTriangle, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getSecureStreamUrl } from '@/lib/antiPiracy';
 
@@ -8,6 +8,22 @@ interface FloxPlayerProps {
   sourceUrl: string;
   poster?: string;
   title?: string;
+}
+
+// Browsers reliably play these containers natively.
+const NATIVE_EXTS = new Set(['mp4', 'm4v', 'webm', 'mov', 'ogg', 'ogv']);
+const MIME_MAP: Record<string, string> = {
+  mp4: 'video/mp4', m4v: 'video/mp4', mov: 'video/quicktime',
+  webm: 'video/webm', ogg: 'video/ogg', ogv: 'video/ogg',
+  mkv: 'video/x-matroska', avi: 'video/x-msvideo',
+};
+function extOf(url: string): string {
+  try {
+    const p = new URL(url, window.location.href).pathname;
+    return (p.split('.').pop() || '').toLowerCase();
+  } catch {
+    return (url.split('?')[0].split('.').pop() || '').toLowerCase();
+  }
 }
 
 /**
