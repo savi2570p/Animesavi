@@ -121,6 +121,41 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
 
   const secureUrl = getSecureStreamUrl(sourceUrl);
 
+  // Unsupported container (mkv/avi/ts/wmv/…): don't blank-screen the user.
+  // Show a clean fallback with a direct-open link. The upstream file was
+  // uploaded via file-manager but browsers can't decode it inline.
+  if (!isNativeContainer || videoError) {
+    return (
+      <div
+        ref={containerRef}
+        className="relative w-full aspect-video bg-black rounded-md overflow-hidden select-none flex items-center justify-center"
+      >
+        <div className="text-center px-6 py-8 max-w-md space-y-3">
+          <div className="mx-auto h-12 w-12 rounded-full bg-amber-500/15 border border-amber-400/40 flex items-center justify-center">
+            <AlertTriangle className="h-6 w-6 text-amber-300" />
+          </div>
+          <h3 className="text-white text-base font-semibold">
+            {videoError ? 'This video failed to load in the player' : 'Format not supported by browser'}
+          </h3>
+          <p className="text-white/70 text-xs leading-relaxed">
+            {fileExt
+              ? `The uploaded file (.${fileExt}) can't play natively in the browser. Open it directly or re-upload as MP4/WebM for inline playback.`
+              : 'The uploaded file could not be decoded. Try opening it directly or re-upload as MP4/WebM.'}
+          </p>
+          <a
+            href={secureUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-medium transition"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Open video
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       ref={containerRef}
@@ -133,6 +168,7 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
         poster={poster}
         playsInline
         preload="metadata"
+        crossOrigin="anonymous"
         controlsList="nodownload noremoteplayback noplaybackrate"
         disablePictureInPicture
         onContextMenu={(e) => e.preventDefault()}
@@ -140,9 +176,13 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
         onPause={() => setPlaying(false)}
         onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
+        onError={() => setVideoError('playback_failed')}
         onClick={togglePlay}
       >
+        <source src={secureUrl} type={sourceMime} />
+        {/* Also provide the URL without type so browsers can sniff */}
         <source src={secureUrl} />
+      </video>
       </video>
 
       {/* Flat controls bar */}
