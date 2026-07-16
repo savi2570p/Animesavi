@@ -11,6 +11,7 @@ interface CompletedAnime {
   title: string;
   cover_image: string | null;
   watched_at: string;
+  is_eng_dub?: boolean | null;
 }
 
 export function RecentlyCompleted() {
@@ -40,7 +41,8 @@ export function RecentlyCompleted() {
         anime:anime_id (
           id,
           title,
-          cover_image
+          cover_image,
+          is_eng_dub
         )
       `)
       .eq('user_id', user.id)
@@ -114,6 +116,7 @@ export function RecentlyCompleted() {
           title: data.anime.title,
           cover_image: data.anime.cover_image,
           watched_at: data.latestWatch,
+          is_eng_dub: data.anime.is_eng_dub ?? false,
         });
       }
     }
@@ -187,6 +190,11 @@ export function RecentlyCompleted() {
                   <div className="absolute top-2 left-2 px-2 py-1 rounded-lg bg-emerald-500/25 backdrop-blur-md border border-emerald-300/40 text-emerald-50 text-[10px] font-bold flex items-center gap-1 shadow-lg">
                     <CheckCircle className="h-3 w-3" />
                     DONE
+                  </div>
+
+                  {/* Dub badge */}
+                  <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded text-[10px] font-bold text-white shadow backdrop-blur-md ${anime.is_eng_dub ? 'bg-emerald-500/90' : 'bg-amber-500/90'}`}>
+                    {anime.is_eng_dub ? 'E-DUB' : 'H-DUB'}
                   </div>
 
                   {/* Bottom gradient overlay always subtle, intensifies on hover */}

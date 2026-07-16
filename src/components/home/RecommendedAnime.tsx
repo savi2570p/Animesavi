@@ -18,6 +18,7 @@ interface Anime {
   status: string | null;
   view_count: number | null;
   release_year: number | null;
+  is_eng_dub?: boolean | null;
 }
 
 type MoodId = 'auto' | 'chill' | 'thrill' | 'feels' | 'epic' | 'funny' | 'dark' | 'wholesome';
@@ -57,6 +58,18 @@ export function RecommendedAnime() {
   }, [user, mood]);
 
   const moodGenres = useMemo(() => MOODS.find((m) => m.id === mood)?.genres ?? [], [mood]);
+
+  const enrichWithDub = async (list: Anime[]): Promise<Anime[]> => {
+    if (!list.length) return list;
+    try {
+      const ids = list.map((a) => a.id);
+      const { data } = await supabase.from('anime').select('id, is_eng_dub').in('id', ids);
+      const map = new Map((data ?? []).map((r: any) => [r.id, !!r.is_eng_dub]));
+      return list.map((a) => ({ ...a, is_eng_dub: map.get(a.id) ?? false }));
+    } catch {
+      return list;
+    }
+  };
 
   const fetchSmart = async () => {
     setIsLoading(true);
@@ -138,7 +151,7 @@ export function RecommendedAnime() {
     if (data && data.length > 0) {
       // Light shuffle so it doesn't look identical session-to-session.
       const shuffled = [...data].sort(() => Math.random() - 0.5).slice(0, 14);
-      setRecommendations(shuffled);
+      setRecommendations(await enrichWithDub(shuffled));
     } else {
       // Mood with no matches → fall back to popular instead of empty state.
       const { data: pop } = await supabase
@@ -146,7 +159,7 @@ export function RecommendedAnime() {
         .select('*')
         .order('view_count', { ascending: false })
         .limit(14);
-      setRecommendations((pop ?? []).sort(() => Math.random() - 0.5));
+      setRecommendations(await enrichWithDub((pop ?? []).sort(() => Math.random() - 0.5)));
     }
 
     setIsLoading(false);
@@ -161,7 +174,7 @@ export function RecommendedAnime() {
       .limit(14);
     if (data) {
       const shuffled = [...data].sort(() => Math.random() - 0.5);
-      setRecommendations(shuffled);
+      setRecommendations(await enrichWithDub(shuffled));
     }
     setIsLoading(false);
   };
@@ -333,6 +346,15 @@ export function RecommendedAnime() {
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
                       4K
                     </span>
+                    {anime.is_eng_dub ? (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/90 text-white shadow backdrop-blur-md">
+                        E-DUB
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/90 text-white shadow backdrop-blur-md">
+                        H-DUB
+                      </span>
+                    )}
                   </div>
 
                   <div className="pointer-events-none">
