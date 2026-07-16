@@ -346,6 +346,15 @@ export function RecommendedAnime() {
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
                       4K
                     </span>
+                    {anime.is_eng_dub ? (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/90 text-white shadow backdrop-blur-md">
+                        E-DUB
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/90 text-white shadow backdrop-blur-md">
+                        H-DUB
+                      </span>
+                    )}
                   </div>
 
                   <div className="pointer-events-none">
