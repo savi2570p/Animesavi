@@ -11,6 +11,7 @@ interface CompletedAnime {
   title: string;
   cover_image: string | null;
   watched_at: string;
+  is_eng_dub?: boolean | null;
 }
 
 export function RecentlyCompleted() {
