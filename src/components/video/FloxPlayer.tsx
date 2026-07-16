@@ -38,6 +38,15 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isFs, setIsFs] = useState(false);
+  const [videoError, setVideoError] = useState<string | null>(null);
+
+  // Format detection — files uploaded from mobile file managers are often
+  // MKV/AVI/etc which browsers cannot play natively. Detect up-front so we
+  // can either warn or route to the iframe fallback instead of showing a
+  // black screen.
+  const fileExt = useMemo(() => (sourceType === 'file' ? extOf(sourceUrl) : ''), [sourceType, sourceUrl]);
+  const sourceMime = useMemo(() => MIME_MAP[fileExt] || 'video/mp4', [fileExt]);
+  const isNativeContainer = sourceType !== 'file' || !fileExt || NATIVE_EXTS.has(fileExt);
 
   // Fullscreen sync
   useEffect(() => {
