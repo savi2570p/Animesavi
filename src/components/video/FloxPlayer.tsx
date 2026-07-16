@@ -183,7 +183,6 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
         {/* Also provide the URL without type so browsers can sniff */}
         <source src={secureUrl} />
       </video>
-      </video>
 
       {/* Flat controls bar */}
       <div className="absolute inset-x-0 bottom-0 px-3 py-2 bg-black/60 backdrop-blur-sm flex items-center gap-3">
