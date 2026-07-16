@@ -18,6 +18,7 @@ interface Anime {
   status: string | null;
   view_count: number | null;
   release_year: number | null;
+  is_eng_dub?: boolean | null;
 }
 
 type MoodId = 'auto' | 'chill' | 'thrill' | 'feels' | 'epic' | 'funny' | 'dark' | 'wholesome';
