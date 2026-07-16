@@ -151,7 +151,7 @@ export function RecommendedAnime() {
     if (data && data.length > 0) {
       // Light shuffle so it doesn't look identical session-to-session.
       const shuffled = [...data].sort(() => Math.random() - 0.5).slice(0, 14);
-      setRecommendations(shuffled);
+      setRecommendations(await enrichWithDub(shuffled));
     } else {
       // Mood with no matches → fall back to popular instead of empty state.
       const { data: pop } = await supabase
@@ -159,7 +159,7 @@ export function RecommendedAnime() {
         .select('*')
         .order('view_count', { ascending: false })
         .limit(14);
-      setRecommendations((pop ?? []).sort(() => Math.random() - 0.5));
+      setRecommendations(await enrichWithDub((pop ?? []).sort(() => Math.random() - 0.5)));
     }
 
     setIsLoading(false);
@@ -174,7 +174,7 @@ export function RecommendedAnime() {
       .limit(14);
     if (data) {
       const shuffled = [...data].sort(() => Math.random() - 0.5);
-      setRecommendations(shuffled);
+      setRecommendations(await enrichWithDub(shuffled));
     }
     setIsLoading(false);
   };
