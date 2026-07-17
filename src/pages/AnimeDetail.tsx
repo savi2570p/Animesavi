@@ -704,6 +704,13 @@ export default function AnimeDetail() {
                 </Button>
               )}
 
+              {/* More info drawer */}
+              <MoreInfoDrawer
+                anime={anime as any}
+                totalSeasons={seasons.length}
+                totalAvailableEpisodes={anime.total_episodes ?? episodes.length}
+              />
+
               {/* Batch Download */}
               {episodes.length > 0 && (
                 <BatchDownload episodes={episodes} animeTitle={anime.title} />
