@@ -692,7 +692,7 @@ export function UpdatePopup() {
           <Header
             title={isManualWhatsNew ? "What's New" : 'You are up to date'}
             subtitle={isManualWhatsNew ? 'Latest fixes and polish for your experience.' : currentGroup.highlight}
-            pillLabel={isManualWhatsNew ? APP_VERSION : `${APP_VERSION} • ${currentGroup.date}`}
+            pillLabel={`${APP_VERSION} • ${currentGroup.date}`}
             showSparkles
           />
 
