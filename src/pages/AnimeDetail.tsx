@@ -14,6 +14,8 @@ import { preloadImages } from '@/lib/imageOptimization';
 import { BatchDownload } from '@/components/download/BatchDownload';
 import { AnimeReviews } from '@/components/anime/AnimeReviews';
 import { AnimeDetailLoader } from '@/components/anime/AnimeDetailLoader';
+import { MoreInfoDrawer } from '@/components/anime/MoreInfoDrawer';
+import { EpisodeGrid } from '@/components/anime/EpisodeGrid';
 import { ShareEmbedPopup } from '@/components/ShareEmbedPopup';
 import { SEO } from '@/components/SEO';
 import {
