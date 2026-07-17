@@ -20,25 +20,27 @@ interface VersionGroup {
   items: ChangelogItem[];
 }
 
-const APP_VERSION = 'V 28.1';
+const APP_VERSION = 'V 29';
+const RELEASE_DATE = 'July 17, 2026';
 
-// Fixed download size for V 28.1 patch
-const RANDOM_DOWNLOAD_MB = 50;
+// Fixed download size for V 29 patch
+const RANDOM_DOWNLOAD_MB = 32.53;
 
 const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'V 28.1',
-    date: 'June 27, 2026',
-    highlight: 'This patch fixes the Continue Watching "Done" action, uses real watch-time data for stats, and keeps the Continue Watching list accurate when episodes finish or new ones drop.',
+    version: 'V 29',
+    date: RELEASE_DATE,
+    highlight: 'A performance-focused update: smoother scrolling, faster transitions, and refined polish across the entire app.',
     items: [
-      { icon: '✅', badge: 'FIX', title: '"Done" Button Works Again', desc: 'Tapping Done in Continue Watching now instantly marks the episode complete and refreshes the row instead of showing "Failed to mark as complete".' },
-      { icon: '📺', badge: 'FIX', title: 'Continue Watching Auto-Updates', desc: 'When the last released episode is marked complete, the anime is removed from Continue Watching. When a new episode drops, it reappears on the newest episode.' },
-      { icon: '⏱️', badge: 'FIX', title: 'Real Watch Hours in History', desc: 'Watch history and user stats now use the actual saved playback position and duration instead of fake 24-minute estimates.' },
-      { icon: '📈', badge: 'FIX', title: 'Stats No Longer Show 0 Hours', desc: 'The "hours watched" counter now reads the real saved progress from every episode, so the total is accurate.' },
-      { icon: '🔄', badge: 'FIX', title: 'Smarter Continue Watching Engine', desc: 'Progress, completion, and new-episode detection now flow through a single backend routine so the list stays in sync across the site.' },
+      { icon: '⚡', badge: 'IMPROVED', title: 'Faster App Response', desc: 'Navigation, taps, and page transitions feel noticeably snappier across mobile and desktop.' },
+      { icon: '🪶', badge: 'IMPROVED', title: 'Smoother Scrolling', desc: 'Home rows, episode grids, and long lists now scroll with buttery, frame-perfect motion.' },
+      { icon: '✨', badge: 'IMPROVED', title: 'Refined UI Polish', desc: 'Subtle spacing, contrast, and animation tweaks make the entire interface feel more premium.' },
+      { icon: '🎬', badge: 'IMPROVED', title: 'Quicker Player Startup', desc: 'Video player boots faster with reduced initial delay before playback begins.' },
+      { icon: '🧊', badge: 'IMPROVED', title: 'Lighter Memory Footprint', desc: 'Reduced background work keeps the app fast even after long browsing sessions.' },
     ],
   },
 ];
+
 
 const BADGE_LABELS: Record<BadgeKind, string> = {
   NEW: 'NEW',
@@ -690,7 +692,7 @@ export function UpdatePopup() {
           <Header
             title={isManualWhatsNew ? "What's New" : 'You are up to date'}
             subtitle={isManualWhatsNew ? 'Latest fixes and polish for your experience.' : currentGroup.highlight}
-            pillLabel={isManualWhatsNew ? APP_VERSION : `${APP_VERSION} • ${currentGroup.date}`}
+            pillLabel={`${APP_VERSION} • ${currentGroup.date}`}
             showSparkles
           />
 
