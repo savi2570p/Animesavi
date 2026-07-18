@@ -13,7 +13,7 @@ import {
   Star,
   Tv,
 } from 'lucide-react';
-import { getViewCount, formatViews } from '@/lib/viewCount';
+import { getViewCount, formatViews, getLikeCount, formatLikes } from '@/lib/viewCount';
 
 interface MoreInfoAnime {
   id: string;
