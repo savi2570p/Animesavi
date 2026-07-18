@@ -58,3 +58,16 @@ export function formatViews(views: number): string {
   if (views >= 1_000) return `${(views / 1_000).toFixed(0)}K`;
   return String(views);
 }
+
+// Stable curated like count between 100K and 1M per anime title.
+export function getLikeCount(title: string, dbLikeCount?: number | null): number {
+  const seed = stableHash(title || 'anime');
+  // Range: 100,000 – 999,999
+  return 100_000 + (seed % 900_000);
+}
+
+export function formatLikes(likes: number): string {
+  if (likes >= 1_000_000) return `${(likes / 1_000_000).toFixed(1)}M`;
+  if (likes >= 1_000) return `${(likes / 1_000).toFixed(0)}K`;
+  return String(likes);
+}
