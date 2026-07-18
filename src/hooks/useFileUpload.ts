@@ -33,7 +33,7 @@ const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/upl
 // relies on the TUS `concatenation` extension, which the resumable storage
 // endpoint does not support, causing uploads to restart mid-stream after a
 // certain percentage. Keep this single-stream for reliability.
-const VIDEO_CHUNK_SIZE = 6 * 1024 * 1024;
+const VIDEO_CHUNK_SIZE = 16 * 1024 * 1024;
 const SPEED_SAMPLE_WINDOW_MS = 3_000;
 const SPEED_UPDATE_INTERVAL_MS = 200;
 
