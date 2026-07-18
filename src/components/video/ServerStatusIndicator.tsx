@@ -45,7 +45,7 @@ export function ServerStatusIndicator({
         <Badge
           variant="outline"
           className={cn(
-            'gap-0.5 px-1.5 py-0 text-[8px] md:text-[10px] font-medium transition-all duration-300',
+            'gap-0.5 px-1 py-0 text-[7px] md:text-[9px] font-medium transition-all duration-300',
             isServerLoading
               ? 'border-yellow-500/40 text-yellow-400 animate-pulse'
               : fallbackOccurred
@@ -54,11 +54,11 @@ export function ServerStatusIndicator({
           )}
         >
           {isServerLoading ? (
-            <Wifi className="h-1.5 w-1.5 md:h-2 md:w-2 animate-pulse" />
+            <Wifi className="h-1 w-1 md:h-1.5 md:w-1.5 animate-pulse" />
           ) : fallbackOccurred ? (
-            <ArrowRightLeft className="h-1.5 w-1.5 md:h-2 md:w-2" />
+            <ArrowRightLeft className="h-1 w-1 md:h-1.5 md:w-1.5" />
           ) : (
-            <CheckCircle2 className="h-1.5 w-1.5 md:h-2 md:w-2" />
+            <CheckCircle2 className="h-1 w-1 md:h-1.5 md:w-1.5" />
           )}
           {config.name}
           {isServerLoading && ' …'}
@@ -71,10 +71,10 @@ export function ServerStatusIndicator({
               <Badge
                 key={server}
                 variant="outline"
-                className="gap-0.5 px-1 py-0 text-[7px] md:text-[9px] border-red-500/25 text-red-400/60 cursor-pointer hover:border-red-500/50 transition-colors"
+                className="gap-0.5 px-0.5 py-0 text-[6px] md:text-[8px] border-red-500/25 text-red-400/60 cursor-pointer hover:border-red-500/50 transition-colors"
                 onClick={(e) => { e.stopPropagation(); handleFailedClick(server); }}
               >
-                <WifiOff className="h-1.5 w-1.5 md:h-2 md:w-2" />
+                <WifiOff className="h-1 w-1 md:h-1.5 md:w-1.5" />
                 {SERVER_CONFIGS[server]?.name}
               </Badge>
             ))}
