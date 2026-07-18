@@ -13,6 +13,7 @@ import {
   Star,
   Tv,
 } from 'lucide-react';
+import { getViewCount, formatViews } from '@/lib/viewCount';
 
 interface MoreInfoAnime {
   id: string;
@@ -57,7 +58,7 @@ export function MoreInfoDrawer({
   };
 
   const stats = [
-    { icon: Eye, label: 'Views', value: formatCount(anime.view_count) },
+    { icon: Eye, label: 'Views', value: formatViews(getViewCount(anime.title, anime.view_count)) },
     { icon: Heart, label: 'Likes', value: formatCount(anime.like_count) },
     { icon: ListVideo, label: 'Episodes', value: totalAvailableEpisodes ?? anime.total_episodes ?? '—' },
     { icon: Tv, label: 'Seasons', value: totalSeasons ?? '—' },
