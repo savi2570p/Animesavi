@@ -59,7 +59,7 @@ export function MoreInfoDrawer({
 
   const stats = [
     { icon: Eye, label: 'Views', value: formatViews(getViewCount(anime.title, anime.view_count)) },
-    { icon: Heart, label: 'Likes', value: formatCount(anime.like_count) },
+    { icon: Heart, label: 'Likes', value: formatLikes(getLikeCount(anime.title, anime.like_count)) },
     { icon: ListVideo, label: 'Episodes', value: totalAvailableEpisodes ?? anime.total_episodes ?? '—' },
     { icon: Tv, label: 'Seasons', value: totalSeasons ?? '—' },
   ];
