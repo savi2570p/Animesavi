@@ -71,10 +71,10 @@ export function ServerStatusIndicator({
               <Badge
                 key={server}
                 variant="outline"
-                className="gap-0.5 px-1 py-0 text-[7px] md:text-[9px] border-red-500/25 text-red-400/60 cursor-pointer hover:border-red-500/50 transition-colors"
+                className="gap-0.5 px-0.5 py-0 text-[6px] md:text-[8px] border-red-500/25 text-red-400/60 cursor-pointer hover:border-red-500/50 transition-colors"
                 onClick={(e) => { e.stopPropagation(); handleFailedClick(server); }}
               >
-                <WifiOff className="h-1.5 w-1.5 md:h-2 md:w-2" />
+                <WifiOff className="h-1 w-1 md:h-1.5 md:w-1.5" />
                 {SERVER_CONFIGS[server]?.name}
               </Badge>
             ))}
