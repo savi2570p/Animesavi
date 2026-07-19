@@ -152,7 +152,7 @@ export function AnimeHoverCard({
       <Tooltip delayDuration={300}>
         <TooltipTrigger asChild>
           <div
-            className={cn("relative group", className)}
+            className={cn("relative group bouncy-card", className)}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
