@@ -142,6 +142,23 @@ body.scroll-locked {
   backface-visibility: hidden;
 }
 
+/* Bouncy hover effect for anime & episode cards */
+.bouncy-card {
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease;
+  will-change: transform;
+}
+.bouncy-card:hover {
+  animation: bouncy-card 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  z-index: 10;
+}
+@keyframes bouncy-card {
+  0% { transform: scale(1) translateY(0); }
+  30% { transform: scale(1.07) translateY(-4px); }
+  55% { transform: scale(1.03) translateY(-1px); }
+  75% { transform: scale(1.05) translateY(-3px); }
+  100% { transform: scale(1.04) translateY(-2px); }
+}
+
 /* Images: lazy decode but do NOT use content-visibility — it caused
    text/posters to blank out during fast scrolls on iOS. */
 img, video {
