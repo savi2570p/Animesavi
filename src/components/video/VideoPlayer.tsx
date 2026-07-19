@@ -2047,7 +2047,7 @@ export function VideoPlayer({
     return (
       <div 
         ref={containerRef} 
-        className="relative bg-black w-full"
+        className="relative bg-black w-full rounded-2xl overflow-hidden"
         style={{ aspectRatio: '16/9', maxHeight: isFullscreen ? '100vh' : '70vh' }}
       >
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
@@ -2117,7 +2117,7 @@ export function VideoPlayer({
     return (
       <div 
         ref={containerRef} 
-        className={`relative bg-black w-full ${isFullscreen ? 'fixed inset-0 z-[9999]' : ''}`}
+        className={`relative bg-black w-full ${isFullscreen ? 'fixed inset-0 z-[9999]' : 'rounded-2xl overflow-hidden'}`}
         style={{ 
           aspectRatio: isFullscreen ? undefined : '16/9', 
           maxHeight: isFullscreen ? '100vh' : '70vh',
@@ -2428,8 +2428,9 @@ export function VideoPlayer({
       className={`relative bg-black w-full touch-manipulation select-none ${
         isFullscreen 
           ? 'fixed inset-0 z-[9999]' 
-          : ''
+          : 'rounded-2xl overflow-hidden'
       } ${!showControls && isPlaying ? 'cursor-none' : ''}`}
+
       style={{ 
         aspectRatio: isFullscreen ? undefined : '16/9', 
         maxHeight: isFullscreen ? '100dvh' : '70vh',
