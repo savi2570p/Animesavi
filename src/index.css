@@ -2024,3 +2024,46 @@ html {
   min-width: 56px;
   min-height: 56px;
 }
+
+/* ============================================================
+   Ultra Beast Premium Hover — continuous float on anime cards
+   Desktop-only (mouse pointer). GPU-accelerated transform only.
+   ============================================================ */
+@media (hover: hover) and (pointer: fine) {
+  @keyframes cardFloatY {
+    0%, 100% { transform: translate3d(0, -4px, 0) scale(1.03); }
+    50%      { transform: translate3d(0,  4px, 0) scale(1.03); }
+  }
+
+  /* Base card layer inside a `group` hover container (home rows, favorites,
+     search, flox, continue-watching, most-popular, recommended, etc.) */
+  .group > .aspect-\[2\/3\],
+  .group .aspect-\[2\/3\].rounded-xl,
+  .group .aspect-\[2\/3\].rounded-2xl,
+  .bouncy-card {
+    transition: transform 0.35s ease-out,
+                box-shadow 0.35s ease-out,
+                filter 0.35s ease-out;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .group:hover > .aspect-\[2\/3\],
+  .group:hover .aspect-\[2\/3\].rounded-xl,
+  .group:hover .aspect-\[2\/3\].rounded-2xl,
+  .bouncy-card:hover {
+    animation: cardFloatY 0.9s ease-in-out infinite;
+    filter: brightness(1.08);
+    box-shadow: 0 24px 48px -18px rgba(0, 0, 0, 0.65);
+  }
+}
+
+/* Touch devices: no continuous bounce — keep tap behavior clean */
+@media (hover: none), (pointer: coarse) {
+  .bouncy-card:hover,
+  .group:hover .aspect-\[2\/3\] {
+    animation: none !important;
+  }
+}
