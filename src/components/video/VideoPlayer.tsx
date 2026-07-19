@@ -2117,7 +2117,7 @@ export function VideoPlayer({
     return (
       <div 
         ref={containerRef} 
-        className={`relative bg-black w-full ${isFullscreen ? 'fixed inset-0 z-[9999]' : ''}`}
+        className={`relative bg-black w-full ${isFullscreen ? 'fixed inset-0 z-[9999]' : 'rounded-2xl overflow-hidden'}`}
         style={{ 
           aspectRatio: isFullscreen ? undefined : '16/9', 
           maxHeight: isFullscreen ? '100vh' : '70vh',
