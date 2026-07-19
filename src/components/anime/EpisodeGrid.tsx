@@ -43,7 +43,7 @@ function EpisodeCardImpl({
   return (
     <Link
       to={`/watch/${ep.id}`}
-      className="group relative rounded-xl overflow-hidden border border-border/40 bg-card/60 backdrop-blur-sm hover:border-primary/50 hover:-translate-y-0.5 transition-all duration-300 animate-fade-in shadow-sm hover:shadow-lg hover:shadow-primary/10"
+      className="bouncy-card group relative rounded-xl overflow-hidden border border-border/40 bg-card/60 backdrop-blur-sm hover:border-primary/50 transition-all duration-300 animate-fade-in shadow-sm hover:shadow-lg hover:shadow-primary/10"
       style={{ animationDelay: `${Math.min(index * 25, 400)}ms` }}
     >
       <div className="relative aspect-video overflow-hidden">
