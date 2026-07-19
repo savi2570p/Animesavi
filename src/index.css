@@ -1951,3 +1951,59 @@ nav[class*="fixed"][class*="bottom-"] {
   }
 }
 
+
+/* ============================================================
+   Android smoothness pass
+   Chromium on Android chokes on heavy backdrop-filter + large
+   compositor layers. Reduce blur radius, promote scroll layers
+   to GPU, and virtualize offscreen rows with content-visibility.
+   ============================================================ */
+@supports (-webkit-touch-callout: none) {
+  /* iOS — leave blurs as-is (Metal handles them well) */
+}
+@media (hover: none) and (pointer: coarse) {
+  :root {
+    --lg-blur: 12px;
+    --lg-blur-strong: 18px;
+  }
+  /* Cap ALL backdrop blurs on touch devices to keep 60fps */
+  *:not(.video-player):not(.video-player *) {
+    /* no-op selector to scope specificity */
+  }
+  .backdrop-blur-2xl,
+  .backdrop-blur-xl {
+    backdrop-filter: blur(14px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
+  }
+  .backdrop-blur-lg,
+  .backdrop-blur-md {
+    backdrop-filter: blur(10px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(150%) !important;
+  }
+}
+
+/* Promote scrollers to their own layer — smoother swipes */
+.snap-row,
+[data-scroll-container],
+main {
+  -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
+}
+
+/* Virtualize offscreen sections so they don't paint on every scroll */
+section, article {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 500px;
+}
+
+/* Smooth momentum + hide junky tap-highlight on Android */
+html {
+  -webkit-tap-highlight-color: transparent;
+  text-rendering: optimizeSpeed;
+}
+
+/* Larger touch targets on the sheet close (iOS reliability) */
+[data-radix-dialog-content] > button[aria-label="Close"] {
+  min-width: 56px;
+  min-height: 56px;
+}
