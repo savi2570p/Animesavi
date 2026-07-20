@@ -103,7 +103,7 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
     return (
       <div
         ref={containerRef}
-        className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden select-none"
+        className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden select-none player-shell"
         style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
       >
         <iframe
@@ -128,7 +128,7 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
     return (
       <div
         ref={containerRef}
-        className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden select-none flex items-center justify-center"
+        className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden select-none flex items-center justify-center player-shell"
       >
         <div className="text-center px-6 py-8 max-w-md space-y-3">
           <div className="mx-auto h-12 w-12 rounded-full bg-amber-500/15 border border-amber-400/40 flex items-center justify-center">
@@ -159,7 +159,7 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
   return (
     <div
       ref={containerRef}
-      className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden select-none group"
+      className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden select-none group player-shell"
       style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
     >
       <video

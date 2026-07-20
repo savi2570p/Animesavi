@@ -1952,6 +1952,16 @@ nav[class*="fixed"][class*="bottom-"] {
   border: 1px solid rgba(255,255,255,0.14);
 }
 
+/* Extra-rounded player corners on mobile landscape */
+.player-shell {
+  border-radius: 16px;
+}
+@media (orientation: landscape) and (hover: none) and (pointer: coarse) {
+  .player-shell {
+    border-radius: 28px !important;
+  }
+}
+
 /* Reduced motion: kill heavy blur transitions */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
