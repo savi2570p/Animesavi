@@ -2047,7 +2047,7 @@ export function VideoPlayer({
     return (
       <div 
         ref={containerRef} 
-        className="relative bg-black w-full rounded-2xl overflow-hidden"
+        className="relative bg-black w-full rounded-2xl overflow-hidden player-shell"
         style={{ aspectRatio: '16/9', maxHeight: isFullscreen ? '100vh' : '70vh' }}
       >
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
