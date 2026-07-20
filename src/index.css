@@ -1952,15 +1952,20 @@ nav[class*="fixed"][class*="bottom-"] {
   border: 1px solid rgba(255,255,255,0.14);
 }
 
-/* Extra-rounded player corners on mobile landscape */
+/* Extra-rounded player corners on mobile landscape.
+   Smooth border-radius transition on orientation change so edges never
+   flash sharp when rotating the phone portrait ↔ landscape. */
 .player-shell {
   border-radius: 16px;
+  transition: border-radius 350ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: border-radius;
 }
 @media (orientation: landscape) and (hover: none) and (pointer: coarse) {
   .player-shell {
     border-radius: 28px !important;
   }
 }
+
 
 /* Reduced motion: kill heavy blur transitions */
 @media (prefers-reduced-motion: reduce) {
