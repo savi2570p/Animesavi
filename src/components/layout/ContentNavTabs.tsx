@@ -56,7 +56,7 @@ export function ContentNavTabs() {
   return (
     <div className="sticky top-14 z-40 bg-background/95 backdrop-blur-md border-b border-border/50 safe-area-top">
       <div className="container">
-        <nav className="flex items-center gap-0.5 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <nav className="flex items-center gap-0.5 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none snap-x snap-mandatory scroll-smooth" style={{ WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}>
           <Button
             variant="ghost"
             size="icon"
@@ -75,12 +75,13 @@ export function ContentNavTabs() {
                 key={tab.to}
                 to={tab.to}
                 className={cn(
-                  "flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-3 sm:py-2.5 text-[10px] sm:text-xs md:text-sm font-medium whitespace-nowrap border-b-2 leading-none transition-all duration-200 shrink-0",
+                  "snap-start flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-3 sm:py-2.5 text-[10px] sm:text-xs md:text-sm font-medium whitespace-nowrap border-b-2 leading-none shrink-0 transition-[color,border-color,background-color,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.97] will-change-transform",
                   tab.to === '/flox' && "sm:px-2.5 md:px-3",
                   isActive
                     ? "border-primary text-primary"
                     : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                 )}
+
               >
                 {tab.customIcon ? (
                   <img src={tab.customIcon} alt={tab.label} className="h-3 w-3 sm:h-4 sm:w-4 rounded-full object-cover" />

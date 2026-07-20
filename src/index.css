@@ -1952,15 +1952,20 @@ nav[class*="fixed"][class*="bottom-"] {
   border: 1px solid rgba(255,255,255,0.14);
 }
 
-/* Extra-rounded player corners on mobile landscape */
+/* Extra-rounded player corners on mobile landscape.
+   Smooth border-radius transition on orientation change so edges never
+   flash sharp when rotating the phone portrait ↔ landscape. */
 .player-shell {
   border-radius: 16px;
+  transition: border-radius 350ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: border-radius;
 }
 @media (orientation: landscape) and (hover: none) and (pointer: coarse) {
   .player-shell {
     border-radius: 28px !important;
   }
 }
+
 
 /* Reduced motion: kill heavy blur transitions */
 @media (prefers-reduced-motion: reduce) {
@@ -2077,3 +2082,45 @@ html {
     animation: none !important;
   }
 }
+
+/* ============================================================
+   Smooth tab & orientation-change polish
+   - Every tab button interpolates color/border smoothly
+   - Orientation change animates rounded shells (no sharp flash)
+   - Welcome page gets buttery scroll + section fade-in
+   ============================================================ */
+
+/* Global tab smoothness: shadcn Tabs + custom nav tabs */
+[role="tablist"] { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+[role="tab"] {
+  transition:
+    color 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+  will-change: transform, color, background-color;
+}
+[role="tab"]:active { transform: scale(0.97); }
+
+/* Orientation transition: interpolate radii on rotate so edges never flash sharp */
+.player-shell,
+[class*="rounded-2xl"],
+[class*="rounded-3xl"],
+[class*="rounded-xl"] {
+  transition-property: border-radius, box-shadow, background-color, border-color;
+  transition-duration: 320ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Welcome page smoothness */
+.welcome-smooth,
+.home-smooth {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+.welcome-smooth * {
+  -webkit-tap-highlight-color: transparent;
+}
+
