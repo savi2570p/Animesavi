@@ -103,7 +103,7 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
     return (
       <div
         ref={containerRef}
-        className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden select-none"
+        className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden select-none player-shell"
         style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
       >
         <iframe
