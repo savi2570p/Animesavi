@@ -206,7 +206,7 @@ export default function Welcome() {
 
   return (
     <div
-      className="relative min-h-[100dvh] overflow-x-hidden bg-background text-foreground"
+      className="welcome-smooth relative min-h-[100dvh] overflow-x-hidden bg-background text-foreground"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
         paddingBottom: 'env(safe-area-inset-bottom)',
