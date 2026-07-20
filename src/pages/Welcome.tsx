@@ -326,7 +326,7 @@ export default function Welcome() {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-1.5 mt-3">
-                <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground/70 font-bold mr-1">Tonight:</span>
+                <span className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground/70 font-bold mr-1">Trending:</span>
                 {['Solo Leveling', 'Demon Slayer', 'Dandadan', 'Frieren'].map(t => (
                   <button key={t} type="button" onClick={() => navigate(`/browse?q=${encodeURIComponent(t)}`)}
                           className="text-[11px] font-semibold text-muted-foreground hover:text-primary px-2.5 py-1 rounded-md bg-card/40 hover:bg-card/80 border border-border/30 transition-colors">
