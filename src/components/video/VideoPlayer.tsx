@@ -2425,7 +2425,7 @@ export function VideoPlayer({
   return (
     <div 
       ref={containerRef} 
-      className={`relative bg-black w-full touch-manipulation select-none ${
+      className={`relative bg-black w-full touch-manipulation select-none player-shell ${
         isFullscreen 
           ? 'fixed inset-0 z-[9999]' 
           : 'rounded-2xl overflow-hidden'
