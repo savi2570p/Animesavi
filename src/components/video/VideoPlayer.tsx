@@ -2543,14 +2543,14 @@ export function VideoPlayer({
         </button>
       )}
 
-      {/* Next Episode Button */}
+      {/* Next Episode Button — compact pill */}
       {showNextEpisode && hasNextEpisode && onNextEpisode && !showWatchNextOverlay && (
         <button
           onClick={(e) => { e.stopPropagation(); onNextEpisode(); }}
-          className="absolute bottom-28 right-4 z-[100] px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center gap-2 animate-fade-in"
+          className="absolute bottom-24 right-3 z-[100] px-3 py-1.5 text-xs bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-full shadow-md transition-all duration-300 flex items-center gap-1 animate-fade-in"
         >
-          Next Episode
-          <ChevronRight className="w-5 h-5" />
+          Next Ep
+          <ChevronRight className="w-3.5 h-3.5" />
         </button>
       )}
       
