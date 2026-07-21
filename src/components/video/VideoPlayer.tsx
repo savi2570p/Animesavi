@@ -2084,10 +2084,32 @@ export function VideoPlayer({
       // parent on failure. We reload the iframe up to 2 times, first with a
       // cache-busting param, then swapping to the alternate URL (external_url
       // ↔ video_url) so the player lands on the playable source automatically.
+      // Prefer externalUrl as the embed primary when it's an embed-style link
+      // (e.g. UPNShare/Streamtape/etc.), since videoUrl likely just failed with
+      // Object_not_found or a broken storage link. This gives "Use Embed Player"
+      // a real chance to succeed instead of reloading the same broken source.
+      const externalIsEmbed = !!externalUrl && !/\.(mp4|mkv|webm|avi|m3u8|m4v|mov)(\?|#|$)/i.test(externalUrl)
+        && !/supabase.*storage|blob\.core\.windows|s3\.amazonaws|cloudfront\.net|r2\.cloudflarestorage|storage\.googleapis/i.test(externalUrl);
+      const primary = externalIsEmbed ? (externalUrl as string) : anyVideoUrl;
+      const alternate = externalIsEmbed
+        ? (videoUrl && videoUrl !== externalUrl ? videoUrl : null)
+        : (videoUrl && externalUrl && videoUrl !== externalUrl ? (anyVideoUrl === videoUrl ? externalUrl : videoUrl) : null);
+
+      // If externalUrl is an embed host, route through PureEmbedPlayer directly.
+      if (externalIsEmbed) {
+        return (
+          <PureEmbedPlayer
+            url={externalUrl as string}
+            title={`${animeTitle} - Episode ${episodeNumber}`}
+            onSwitchServer={() => setUseIframeFallback(false)}
+          />
+        );
+      }
+
       return (
         <EmbedFallbackFrame
-          primaryUrl={anyVideoUrl}
-          alternateUrl={videoUrl && externalUrl && videoUrl !== externalUrl ? (anyVideoUrl === videoUrl ? externalUrl : videoUrl) : null}
+          primaryUrl={primary}
+          alternateUrl={alternate}
           title={`${animeTitle} - Episode ${episodeNumber}`}
           onBackToNative={() => {
             setUseIframeFallback(false);
@@ -2543,14 +2565,14 @@ export function VideoPlayer({
         </button>
       )}
 
-      {/* Next Episode Button */}
+      {/* Next Episode Button — compact pill */}
       {showNextEpisode && hasNextEpisode && onNextEpisode && !showWatchNextOverlay && (
         <button
           onClick={(e) => { e.stopPropagation(); onNextEpisode(); }}
-          className="absolute bottom-28 right-4 z-[100] px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center gap-2 animate-fade-in"
+          className="absolute bottom-24 right-3 z-[100] px-3 py-1.5 text-xs bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-full shadow-md transition-all duration-300 flex items-center gap-1 animate-fade-in"
         >
-          Next Episode
-          <ChevronRight className="w-5 h-5" />
+          Next Ep
+          <ChevronRight className="w-3.5 h-3.5" />
         </button>
       )}
       
@@ -2830,7 +2852,7 @@ export function VideoPlayer({
         const isHls = !!effectiveVideoUrl && /\.m3u8(\?|#|$)/i.test(effectiveVideoUrl);
         const fmtLabel = isUnsupportedContainer ? 'Unsupported container' : isHls ? 'HLS stream' : 'Direct file';
         return (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="absolute inset-0 z-[200] flex items-center justify-center p-3 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
             <div
               className="relative w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-zinc-900/95 to-zinc-950/95 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9)] animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
               onClick={(e) => e.stopPropagation()}
