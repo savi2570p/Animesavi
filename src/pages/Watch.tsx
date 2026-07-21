@@ -719,7 +719,7 @@ export default function Watch() {
         // First check for existing episode entry to get saved progress for resume.
         const { data: existingHistory } = await supabase
           .from('watch_history')
-          .select('id, progress, episode_id')
+          .select('id, progress, episode_id, completed')
           .eq('user_id', user.id)
           .eq('episode_id', episodeId)
           .maybeSingle();
@@ -728,10 +728,25 @@ export default function Watch() {
           setSavedPlaybackProgress(existingHistory.progress);
         }
 
+        // If the user is re-opening an already-completed episode, reset it back
+        // to in-progress so it surfaces in Continue Watching again (and so any
+        // newer skipped-to episode of the same anime doesn't dominate the row).
+        const isRewatchingCompleted = !!existingHistory?.completed;
+
         const historyMutation = existingHistory?.id
           ? supabase
               .from('watch_history')
-              .update({ watched_at: new Date().toISOString() })
+              .update(
+                isRewatchingCompleted
+                  ? {
+                      watched_at: new Date().toISOString(),
+                      completed: false,
+                      completed_at: null,
+                      progress: 0,
+                      last_position: 0,
+                    }
+                  : { watched_at: new Date().toISOString() }
+              )
               .eq('id', existingHistory.id)
               .select('id')
               .maybeSingle()
