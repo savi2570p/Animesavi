@@ -2830,7 +2830,7 @@ export function VideoPlayer({
         const isHls = !!effectiveVideoUrl && /\.m3u8(\?|#|$)/i.test(effectiveVideoUrl);
         const fmtLabel = isUnsupportedContainer ? 'Unsupported container' : isHls ? 'HLS stream' : 'Direct file';
         return (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="absolute inset-0 z-[200] flex items-center justify-center p-3 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
             <div
               className="relative w-full max-w-[300px] sm:max-w-xs overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-zinc-900/95 to-zinc-950/95 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.9)] animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
               onClick={(e) => e.stopPropagation()}
