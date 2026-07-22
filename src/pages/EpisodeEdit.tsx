@@ -367,7 +367,49 @@ export default function EpisodeEdit() {
           />
 
           <div className="space-y-2">
-            <Label htmlFor="externalUrl">External URL (Alternative)</Label>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <Label htmlFor="externalUrl">External URL (Alternative)</Label>
+              {(() => {
+                const trimmed = externalUrl.trim();
+                const parsed = trimmed ? extractEmbedSrc(trimmed) : null;
+                const autoEmbedPrefix = `${window.location.origin}/embed/${episodeId}`;
+                const isAuto = trimmed === autoEmbedPrefix;
+                let status: 'valid' | 'auto' | 'needs-fix' | 'empty' = 'empty';
+                if (!trimmed) status = videoUrl.trim() ? 'auto' : 'empty';
+                else if (isAuto) status = 'auto';
+                else if (parsed) status = 'valid';
+                else status = 'needs-fix';
+                const styles = {
+                  valid: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+                  auto: 'bg-sky-500/15 text-sky-400 border-sky-500/30',
+                  'needs-fix': 'bg-red-500/15 text-red-400 border-red-500/30',
+                  empty: 'bg-muted/40 text-muted-foreground border-border/50',
+                }[status];
+                const label = {
+                  valid: '✓ Valid embed',
+                  auto: '⚡ Auto-generated',
+                  'needs-fix': '⚠ Needs fix',
+                  empty: '— No embed',
+                }[status];
+                return (
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border backdrop-blur-md ${styles}`}>
+                      {label}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExternalUrl(autoEmbedPrefix);
+                        toast.success('Embed link regenerated');
+                      }}
+                      className="text-[10px] font-medium px-2 py-0.5 rounded-full border border-primary/40 bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+                    >
+                      Regenerate
+                    </button>
+                  </div>
+                );
+              })()}
+            </div>
             <Input
               id="externalUrl"
               type="url"
@@ -376,6 +418,9 @@ export default function EpisodeEdit() {
               onChange={(e) => setExternalUrl(e.target.value)}
               className="bg-muted/50"
             />
+            <p className="text-xs text-muted-foreground">
+              Powers the "Use embed player" fallback. Leave blank to auto-generate a working link from the uploaded file.
+            </p>
           </div>
 
           <FileUploadInput
