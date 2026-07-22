@@ -164,6 +164,18 @@ export default function EpisodeEdit() {
       return;
     }
 
+    // Validate embed URL when provided; auto-generate a working same-origin embed
+    // when a video file exists but no explicit embed link was set so that
+    // "Use embed player" always has something to connect to.
+    let resolvedExternalUrl: string | null = extractEmbedSrc(externalUrl) || null;
+    if (externalUrl.trim() && !resolvedExternalUrl) {
+      toast.error('Embed URL is invalid. Paste a valid https:// link or iframe embed code.');
+      return;
+    }
+    if (!resolvedExternalUrl && videoUrl.trim()) {
+      resolvedExternalUrl = `${window.location.origin}/embed/${episodeId}`;
+    }
+
     setIsSaving(true);
 
     const { error } = await supabase
@@ -172,7 +184,7 @@ export default function EpisodeEdit() {
         title: title.trim(),
         description: description.trim() || null,
         video_url: videoUrl.trim() || null,
-        external_url: extractEmbedSrc(externalUrl) || null,
+        external_url: resolvedExternalUrl,
         thumbnail: thumbnail.trim() || null,
         duration: duration ? parseInt(duration) : null,
         episode_number: parseInt(episodeNumber),
