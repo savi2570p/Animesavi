@@ -80,6 +80,7 @@ Deno.serve(async (req) => {
     const anime = (ep as any).season.anime;
     const animeId: string = anime.id;
     const animeTitle: string = anime.title;
+    const seasonNum: number = (ep as any).season.season_number ?? 1;
     const cover: string | null = ep.thumbnail || anime.cover_image || null;
     const epNum: number = ep.episode_number;
     // Deep link directly to the watch page for this episode so a tap opens the player.
@@ -104,7 +105,7 @@ Deno.serve(async (req) => {
       if (dupErr) { skipped++; continue; }
 
       const title = '🎬 New Episode Released';
-      const body = `${animeTitle} Episode ${epNum} is now available to watch.`;
+      const body = `New episode is released from animesavi+ ${animeTitle}, Season ${seasonNum}, Episode ${epNum}`;
 
       // Always queue an in-app fallback row so the bell shows it.
       await supabase.from('notification_queue').insert({
