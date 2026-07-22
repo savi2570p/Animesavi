@@ -89,7 +89,7 @@ export function NotificationBell() {
             season_number: ep.season.season_number,
             episode_id: ep.id,
             created_at: ep.created_at,
-            link: `/anime/${ep.season.anime.id}`,
+            link: `/watch/${ep.id}`,
             is_read: true,
             source: 'episode',
           }));
