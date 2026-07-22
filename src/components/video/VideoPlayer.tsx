@@ -2569,10 +2569,11 @@ export function VideoPlayer({
       {showNextEpisode && hasNextEpisode && onNextEpisode && !showWatchNextOverlay && (
         <button
           onClick={(e) => { e.stopPropagation(); onNextEpisode(); }}
-          className="absolute bottom-24 right-3 z-[100] px-3 py-1.5 text-xs bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-full shadow-md transition-all duration-300 flex items-center gap-1 animate-fade-in"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + clamp(4.5rem, 14vh, 7rem))', right: 'max(env(safe-area-inset-right, 0px), 0.75rem)' }}
+          className="absolute z-[100] px-2.5 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-xs bg-primary/90 hover:bg-primary text-primary-foreground font-semibold rounded-full shadow-md backdrop-blur-md transition-all duration-300 flex items-center gap-1 animate-fade-in landscape:bottom-[clamp(3.5rem,10vh,5rem)] max-[380px]:px-2 max-[380px]:text-[10px]"
         >
-          Next Ep
-          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="whitespace-nowrap">Next Ep</span>
+          <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
         </button>
       )}
       

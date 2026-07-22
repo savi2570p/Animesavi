@@ -111,6 +111,14 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
       return;
     }
 
+    // Uploader validation: if a user typed an embed URL/iframe, it must parse.
+    for (const ep of validEpisodes) {
+      if (ep.externalUrl && ep.externalUrl.trim() && !extractEmbedSrc(ep.externalUrl)) {
+        toast.error(`Episode "${ep.title}" has an invalid embed URL. Paste a valid https:// link or iframe embed code.`);
+        return;
+      }
+    }
+
     setIsUploading(true);
     setUploadProgress({ completed: 0, total: validEpisodes.length });
 
@@ -133,15 +141,33 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
       for (let i = 0; i < episodesToInsert.length; i += CHUNK_SIZE) {
         const chunk = episodesToInsert.slice(i, i + CHUNK_SIZE);
         
-        const { error } = await supabase
+        const { data: inserted, error } = await supabase
           .from('episodes')
-          .insert(chunk);
+          .insert(chunk)
+          .select('id, video_url, external_url');
 
         if (error) {
           console.error('Batch upload chunk error:', error);
           hasError = true;
           toast.error(`Failed to upload episodes ${i + 1}-${i + chunk.length}`);
           break;
+        }
+
+        // Auto-generate a working embed link for any inserted episode that
+        // has a video file but no explicit embed URL. This guarantees the
+        // "Use embed player" button always has a target to connect to.
+        const needsEmbed = (inserted || []).filter(
+          (row: any) => row.video_url && !row.external_url
+        );
+        if (needsEmbed.length > 0) {
+          await Promise.all(
+            needsEmbed.map((row: any) =>
+              supabase
+                .from('episodes')
+                .update({ external_url: `${window.location.origin}/embed/${row.id}` })
+                .eq('id', row.id)
+            )
+          );
         }
 
         completed += chunk.length;
