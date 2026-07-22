@@ -45,7 +45,7 @@ export function NotificationBell() {
       const queueItems: Notification[] = (queue || []).map((q: any) => ({
         id: q.id,
         anime_id: q.anime_id,
-        anime_title: q.body?.split(' Episode ')[0] || 'New Episode',
+        anime_title: q.body || 'New Episode',
         cover_image: q.image_url,
         episode_number: null,
         season_number: null,
