@@ -470,6 +470,20 @@ export default function Admin() {
           Open Site Health →
         </button>
       </div>
+
+      {/* Quick link to Featured Hero Lineup editor */}
+      <div className="mt-4 p-4 rounded-lg border border-border/60 bg-muted/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <div className="text-sm font-semibold text-foreground">Featured Hero Lineup</div>
+          <div className="text-xs text-muted-foreground">Edit the homepage hero slider — reorder, swap covers/banners, or override titles without touching code.</div>
+        </div>
+        <button
+          onClick={() => navigate('/admin/featured')}
+          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors self-start sm:self-auto"
+        >
+          Open Lineup Editor →
+        </button>
+      </div>
     </div>
   );
 }
