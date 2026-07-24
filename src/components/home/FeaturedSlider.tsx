@@ -26,34 +26,32 @@ const formatViews = (views: number): string => {
 };
 
 const VIEW_COUNT_MAP: Record<string, number> = {
-  'Your Name': 9500000,
   'Your lie in April': 3400000,
   'The Angel Next Door Spoils me Rotten': 3600000,
   'The angel next door spoils me rotten': 3600000,
   'Mechanical Marie': 977000,
   'Solo Leveling': 730000,
-  'Witch Hat atelier': 5400000,
   'Grand Blue Dreaming': 4800000,
   "A Gatherer's Adventure in Isekai": 267000,
   'Jujutsu Kaisen': 8700000,
   'My Dress-Up Darling': 6200000,
   'Reborn to Master the Blade: From Hero-King to Extraordinary Squire': 1800000,
-  'attack on titan Muse India DUB': 9200000,
-  'Attack on Titan Muse India DUB': 9200000,
   'attack on titan': 8900000,
   'Attack on Titan': 8900000,
   'Attack on Titan OAD': 2100000,
   'LIAR GAME': 7800000,
   'Liar Game': 7800000,
-  'Dorohedoro': 6400000,
   'Easygoing Territory Defense by the Optimistic Lord': 5200000,
   "Tamon's B-side": 5100000,
   'Yowayowa Sensei': 4900000,
-  'Marriage Toxin': 4600000,
   'The Rising of the Shield Hero': 7100000,
-  'Eren the Southpaw': 4300000,
   'Dr. Stone': 6800000,
   'Dr. stone': 6800000,
+  'Chainsmoker cat': 5800000,
+  'Smoking Behind the Supermarket with You': 5500000,
+  'Re: Zero – Starting Life in Another World': 9200000,
+  'Sparks of tomorrow': 4700000,
+  'Clevatess': 5300000,
 };
 
 const getViewCount = (title: string, dbViewCount: number | null): number => {
@@ -89,14 +87,14 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
           // Curated fixed hero lineup (stable order, not random) — sourced from "Most Popular".
           const HERO_LINEUP = [
             'The Angel Next Door Spoils me Rotten',
-            'Witch Hat Atelier',
-            'That Time I Got Reincarnated as a Slime',
+            'Smoking Behind the Supermarket with You',
+            'Chainsmoker cat',
             'Yowayowa Sensei',
             'The Rising of the Shield Hero',
-            'Eren the Southpaw',
-            'Dorohedoro',
+            'Clevatess',
+            'Re: Zero – Starting Life in Another World',
             "Tamon's B-side",
-            'Marriage Toxin',
+            'Sparks of tomorrow',
             'Dr. Stone',
           ];
 
