@@ -583,8 +583,10 @@ export function Header() {
             </SheetTrigger>
             <SheetContent
               side="right"
-              className={`bg-background border-border p-0 overflow-y-auto ${isMobileOS ? 'w-[17rem] sm:w-72' : 'w-[19rem] sm:w-80'}`}
+              className={`bg-background border-border p-0 overflow-y-auto z-[80] ${isMobileOS ? 'w-[17rem] sm:w-72' : 'w-[19rem] sm:w-80'}`}
+              style={{ paddingTop: 'env(safe-area-inset-top)' }}
             >
+
               {/* Cinematic header */}
               <div className="relative overflow-hidden border-b border-border/40">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-primary/5 to-transparent" />
