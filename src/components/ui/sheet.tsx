@@ -59,12 +59,13 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
         {children}
         <SheetPrimitive.Close
           aria-label="Close"
-          className="absolute right-2 z-[70] flex h-14 w-14 items-center justify-center rounded-full bg-white/10 backdrop-blur-2xl border border-white/20 text-white shadow-lg ring-offset-background transition-all hover:bg-white/20 active:scale-95 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none touch-manipulation"
-          style={{ top: 'max(0.75rem, calc(env(safe-area-inset-top) + 1.25rem))', WebkitTapHighlightColor: 'transparent' }}
+          className="absolute right-2 z-[70] flex h-9 w-9 items-center justify-center rounded-full bg-white/10 backdrop-blur-2xl border border-white/20 text-white shadow-lg ring-offset-background transition-all hover:bg-white/20 active:scale-95 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none touch-manipulation"
+          style={{ top: 'max(0.5rem, calc(env(safe-area-inset-top) + 0.5rem))', WebkitTapHighlightColor: 'transparent' }}
         >
-          <X className="h-6 w-6" strokeWidth={2.5} />
+          <X className="h-4 w-4" strokeWidth={2.5} />
           <span className="sr-only">Close</span>
         </SheetPrimitive.Close>
+
 
       </SheetPrimitive.Content>
     </SheetPortal>
