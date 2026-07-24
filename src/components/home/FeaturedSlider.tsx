@@ -74,7 +74,37 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
   useEffect(() => {
     const fetchFeaturedAnime = async () => {
       try {
-        // Pull top viewed anime, then re-rank using the same Most Popular logic.
+        // 1) Try admin-curated lineup from featured_hero_lineup table.
+        const { data: lineup } = await supabase
+          .from('featured_hero_lineup')
+          .select(`
+            position, custom_title, custom_cover_url, custom_banner_url, is_active,
+            anime:anime_id ( id, title, description, cover_image, banner_image, genres, view_count, status )
+          `)
+          .eq('is_active', true)
+          .order('position', { ascending: true });
+
+        if (lineup && lineup.length > 0) {
+          const items = lineup
+            .filter((row: any) => row.anime)
+            .map((row: any) => ({
+              id: row.anime.id,
+              title: row.custom_title || row.anime.title,
+              description: row.anime.description,
+              thumbnail: row.custom_cover_url || row.anime.cover_image,
+              banner: row.custom_banner_url || row.anime.banner_image,
+              genres: row.anime.genres || [],
+              views: getViewCount(row.anime.title, row.anime.view_count),
+              status: row.anime.status,
+            }));
+          if (items.length > 0) {
+            setFeaturedAnime(items);
+            preloadImages(items.slice(0, 3).map(a => a.banner || a.thumbnail));
+            return;
+          }
+        }
+
+        // 2) Fallback: hard-coded curated lineup by title match.
         const { data, error } = await supabase
           .from('anime')
           .select('id, title, description, cover_image, banner_image, genres, view_count, status')
@@ -84,7 +114,6 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
         if (error) throw error;
 
         if (data && data.length > 0) {
-          // Curated fixed hero lineup (stable order, not random) — sourced from "Most Popular".
           const HERO_LINEUP = [
             'The Angel Next Door Spoils me Rotten',
             'Smoking Behind the Supermarket with You',
@@ -98,9 +127,12 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
             'Dr. Stone',
           ];
 
+          const norm = (s: string) => s?.toLowerCase().replace(/[\s.]+/g, '') || '';
           const byTitle = (t: string) =>
             data.find(a => a.title?.toLowerCase() === t.toLowerCase()) ||
-            data.find(a => a.title?.toLowerCase().includes(t.toLowerCase()));
+            data.find(a => a.title?.toLowerCase().includes(t.toLowerCase())) ||
+            data.find(a => norm(a.title) === norm(t)) ||
+            data.find(a => norm(a.title).includes(norm(t)));
 
           const matched: typeof data = [];
           const seen = new Set<string>();
@@ -108,7 +140,6 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
             const f = byTitle(t);
             if (f && !seen.has(f.id)) { matched.push(f); seen.add(f.id); }
           }
-          // Fill any missing slots from top-viewed fallback so we always show 10.
           if (matched.length < 10) {
             const ranked = [...data].sort((a, b) =>
               getViewCount(b.title, b.view_count) - getViewCount(a.title, a.view_count)
@@ -140,6 +171,7 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
     };
     fetchFeaturedAnime();
   }, []);
+
 
 
   const goTo = useCallback((nextIdx: number, dir: 'next' | 'prev') => {

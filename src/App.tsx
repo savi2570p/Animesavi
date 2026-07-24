@@ -70,6 +70,7 @@ const ShadowArise = lazy(() => import("./pages/ShadowArise"));
 const FloxAnimePage = lazy(() => import("./pages/FloxAnimePage"));
 const FloxWatch = lazy(() => import("./pages/FloxWatch"));
 const SiteHealth = lazy(() => import("./pages/SiteHealth"));
+const AdminFeaturedLineup = lazy(() => import("./pages/AdminFeaturedLineup"));
 const SharePage = lazy(() => import("./pages/SharePage"));
 const ContinueWatchingAll = lazy(() => import("./pages/ContinueWatchingAll"));
 
@@ -253,6 +254,7 @@ const App = () => (
                     <Route path="/upload/anime/:animeId/episode/:episodeId/edit" element={<EpisodeEdit />} />
                     <Route path="/admin" element={<Admin />} />
                     <Route path="/admin/site-health" element={<SiteHealth />} />
+                    <Route path="/admin/featured" element={<AdminFeaturedLineup />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/stats" element={<UserStats />} />
