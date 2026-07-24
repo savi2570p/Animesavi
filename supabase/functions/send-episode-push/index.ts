@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
       if (dupErr) { skipped++; continue; }
 
       const title = '🎬 New Episode Released';
-      const body = `New episode is released from animesavi+ ${animeTitle}, Season ${seasonNum}, Episode ${epNum}`;
+      const body = `${animeTitle}, Season ${seasonNum}, Episode ${epNum}`;
 
       // Always queue an in-app fallback row so the bell shows it.
       await supabase.from('notification_queue').insert({
