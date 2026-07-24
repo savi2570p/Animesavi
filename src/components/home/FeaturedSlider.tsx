@@ -87,14 +87,14 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
           // Curated fixed hero lineup (stable order, not random) — sourced from "Most Popular".
           const HERO_LINEUP = [
             'The Angel Next Door Spoils me Rotten',
-            'Witch Hat Atelier',
-            'That Time I Got Reincarnated as a Slime',
+            'Smoking Behind the Supermarket with You',
+            'Chainsmoker cat',
             'Yowayowa Sensei',
             'The Rising of the Shield Hero',
-            'Eren the Southpaw',
-            'Dorohedoro',
+            'Clevatess',
+            'Re: Zero – Starting Life in Another World',
             "Tamon's B-side",
-            'Marriage Toxin',
+            'Sparks of tomorrow',
             'Dr. Stone',
           ];
 
