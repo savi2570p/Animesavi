@@ -1120,7 +1120,9 @@ export default function Watch() {
     );
   }
 
-  const accessValid = hasValidTokenAccess(user?.email);
+  // DB-authoritative: super admin bypass OR verified DB grant. localStorage is
+  // only a UI countdown cache and is NEVER trusted for the gate decision.
+  const accessValid = isSuperAdmin(user?.email) || dbAccessValid;
 
   // Bypass token gate when casting / mirroring to a TV — playback must continue
   if (tokenSystemActive && !accessValid && !isCastingScreen) {
