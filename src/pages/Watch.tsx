@@ -25,7 +25,7 @@ import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hook
 import { isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 import { useEmbedWatchTracker } from '@/hooks/useEmbedWatchTracker';
 import { z } from 'zod';
-import { hasValidTokenAccess, isSuperAdmin, fetchTokenSystemStatus } from '@/components/AccessBanner';
+import { hasValidTokenAccess, isSuperAdmin, fetchTokenSystemStatus, fetchTokenAccessFromDB } from '@/components/AccessBanner';
 import { TokenExpiredPopup } from '@/components/TokenExpiredPopup';
 import { useCastDetection } from '@/hooks/useCastDetection';
 import {
@@ -188,6 +188,7 @@ export default function Watch() {
   const [showFreeAccessPopup, setShowFreeAccessPopup] = useState(false);
   const [tokenSystemReady, setTokenSystemReady] = useState(false);
   const [tokenSystemActive, setTokenSystemActive] = useState(true);
+  const [dbAccessValid, setDbAccessValid] = useState(false);
   const [initialSeekDone, setInitialSeekDone] = useState(false);
   const [showResumeNotification, setShowResumeNotification] = useState(false);
   const [savedPlaybackProgress, setSavedPlaybackProgress] = useState(0);
@@ -261,16 +262,25 @@ export default function Watch() {
     checkEncoding();
   }, [episodeId]);
 
-  // Fetch token system status directly from DB on every mount — no caching
+  // Fetch token system status + DB-authoritative access on every mount — never
+  // trust localStorage alone (it can be forged in DevTools to bypass the gate).
   useEffect(() => {
-    fetchTokenSystemStatus().then((enabled) => {
+    let cancelled = false;
+    (async () => {
+      const [enabled, access] = await Promise.all([
+        fetchTokenSystemStatus(),
+        fetchTokenAccessFromDB(),
+      ]);
+      if (cancelled) return;
       setTokenSystemActive(enabled);
+      setDbAccessValid(access.hasAccess);
       setTokenSystemReady(true);
       if (!enabled && !isSuperAdmin(user?.email)) {
         setShowFreeAccessPopup(true);
       }
-    });
-  }, [user?.email]);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.email, user?.id]);
 
   // Check if Telegram popup should be shown (once per day, and not if dismissed this session)
   useEffect(() => {
@@ -1110,7 +1120,9 @@ export default function Watch() {
     );
   }
 
-  const accessValid = hasValidTokenAccess(user?.email);
+  // DB-authoritative: super admin bypass OR verified DB grant. localStorage is
+  // only a UI countdown cache and is NEVER trusted for the gate decision.
+  const accessValid = isSuperAdmin(user?.email) || dbAccessValid;
 
   // Bypass token gate when casting / mirroring to a TV — playback must continue
   if (tokenSystemActive && !accessValid && !isCastingScreen) {
