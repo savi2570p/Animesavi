@@ -2124,3 +2124,98 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ============================================================
+   FLOX — Liquid Glass System (iOS-style)
+   Used across /flox library, detail view and video player.
+   ============================================================ */
+.flox-glass {
+  position: relative;
+  background:
+    linear-gradient(135deg, hsl(0 0% 100% / 0.10) 0%, hsl(0 0% 100% / 0.03) 40%, hsl(0 0% 100% / 0.06) 100%);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid hsl(0 0% 100% / 0.12);
+  box-shadow:
+    inset 0 1px 0 hsl(0 0% 100% / 0.18),
+    inset 0 -1px 0 hsl(0 0% 100% / 0.05),
+    0 20px 60px -20px hsl(0 0% 0% / 0.6);
+  border-radius: 24px;
+}
+.flox-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(120% 60% at 50% 0%, hsl(0 85% 60% / 0.10), transparent 70%);
+  pointer-events: none;
+}
+.flox-glass-strong {
+  background:
+    linear-gradient(135deg, hsl(0 0% 100% / 0.14) 0%, hsl(0 0% 100% / 0.05) 45%, hsl(0 0% 100% / 0.10) 100%);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid hsl(0 0% 100% / 0.16);
+  box-shadow:
+    inset 0 1px 0 hsl(0 0% 100% / 0.22),
+    inset 0 -1px 0 hsl(0 0% 100% / 0.06),
+    0 30px 80px -20px hsl(0 0% 0% / 0.7);
+  border-radius: 28px;
+}
+.flox-glass-chip {
+  background: hsl(0 0% 100% / 0.08);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid hsl(0 0% 100% / 0.14);
+  box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.18);
+}
+.flox-glass-chip[data-active="true"] {
+  background: linear-gradient(135deg, hsl(0 85% 55% / 0.85), hsl(0 75% 45% / 0.85));
+  border-color: hsl(0 85% 65% / 0.6);
+  color: white;
+  box-shadow:
+    inset 0 1px 0 hsl(0 0% 100% / 0.35),
+    0 10px 30px -10px hsl(0 85% 50% / 0.6);
+}
+.flox-aurora {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(80px);
+  opacity: 0.55;
+  background:
+    radial-gradient(35% 30% at 20% 30%, hsl(0 85% 55% / 0.55), transparent 70%),
+    radial-gradient(35% 30% at 80% 20%, hsl(270 80% 60% / 0.45), transparent 70%),
+    radial-gradient(40% 35% at 60% 80%, hsl(200 90% 55% / 0.40), transparent 70%);
+  animation: floxAurora 18s ease-in-out infinite alternate;
+}
+@keyframes floxAurora {
+  0%   { transform: translate3d(0,0,0) scale(1); }
+  100% { transform: translate3d(2%, -3%, 0) scale(1.08); }
+}
+.flox-scrim {
+  background: linear-gradient(180deg,
+    hsl(0 0% 0% / 0.0) 0%,
+    hsl(0 0% 0% / 0.35) 45%,
+    hsl(0 0% 0% / 0.85) 100%);
+}
+.flox-card {
+  border-radius: 20px;
+  overflow: hidden;
+  background: hsl(0 0% 100% / 0.04);
+  border: 1px solid hsl(0 0% 100% / 0.08);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 300ms ease,
+              box-shadow 300ms ease;
+}
+@media (hover: hover) {
+  .flox-card:hover {
+    border-color: hsl(0 85% 60% / 0.45);
+    box-shadow: 0 20px 50px -20px hsl(0 85% 50% / 0.45);
+    transform: translateY(-4px);
+  }
+}
+
+
