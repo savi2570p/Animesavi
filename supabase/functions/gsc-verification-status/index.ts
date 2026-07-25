@@ -1,4 +1,5 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 
 const GATEWAY_BASE = 'https://connector-gateway.lovable.dev/google_search_console';
 const SITE_IDENTIFIER = 'https://animesavi.com/';
@@ -6,6 +7,37 @@ const ENCODED_SITE = encodeURIComponent(SITE_IDENTIFIER);
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  // Require an authenticated admin caller — this proxies the workspace GSC
+  // credentials, so it must never be publicly invokable.
+  const authHeader = req.headers.get('Authorization') || '';
+  if (!authHeader.startsWith('Bearer ')) {
+    return json({ error: 'Unauthorized' }, 401);
+  }
+  try {
+    const authed = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsErr } = await authed.auth.getClaims(token);
+    if (claimsErr || !claimsData?.claims?.sub) {
+      return json({ error: 'Unauthorized' }, 401);
+    }
+    const admin = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      { auth: { persistSession: false } }
+    );
+    const { data: isAdmin } = await admin.rpc('has_role', {
+      _user_id: claimsData.claims.sub,
+      _role: 'admin',
+    });
+    if (!isAdmin) return json({ error: 'Forbidden' }, 403);
+  } catch {
+    return json({ error: 'Unauthorized' }, 401);
+  }
 
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   const GSC_KEY = Deno.env.get('GOOGLE_SEARCH_CONSOLE_API_KEY');
