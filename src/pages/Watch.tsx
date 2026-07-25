@@ -188,6 +188,7 @@ export default function Watch() {
   const [showFreeAccessPopup, setShowFreeAccessPopup] = useState(false);
   const [tokenSystemReady, setTokenSystemReady] = useState(false);
   const [tokenSystemActive, setTokenSystemActive] = useState(true);
+  const [dbAccessValid, setDbAccessValid] = useState(false);
   const [initialSeekDone, setInitialSeekDone] = useState(false);
   const [showResumeNotification, setShowResumeNotification] = useState(false);
   const [savedPlaybackProgress, setSavedPlaybackProgress] = useState(0);
