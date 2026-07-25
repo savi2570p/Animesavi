@@ -144,22 +144,21 @@ export default function FloxAnimePage() {
 
   return (
     <AntiPiracyShield mode="strict" noRedirect>
-      {/* Welcome popup */}
+      {/* Welcome popup — liquid glass */}
       <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md flox-glass-strong border-white/15 text-white">
           <DialogHeader>
             <div className="flex items-center gap-2">
               <PartyPopper className="h-6 w-6 text-primary" />
-              <DialogTitle>Great news!</DialogTitle>
+              <DialogTitle className="text-white">Welcome to Flox +</DialogTitle>
             </div>
-            <DialogDescription className="pt-2 text-base">
-              Congratulations guys, we got the streaming rights from{' '}
-              <span className="font-semibold text-foreground">Flox Anime India</span> to stream the Hindi
-              Dubbed anime from Flox Anime India.
+            <DialogDescription className="pt-2 text-base text-white/80">
+              We got the streaming rights from{' '}
+              <span className="font-semibold text-white">Flox Anime India</span> to bring you their premium Hindi Dub library — right here in a liquid-glass experience.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button onClick={() => setShowWelcome(false)}>Let's go</Button>
+            <Button onClick={() => setShowWelcome(false)} className="rounded-full">Let's go</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -180,94 +179,125 @@ export default function FloxAnimePage() {
         />
       )}
 
-      <div className="container py-6 space-y-6 select-none">
-        {/* Header */}
-        <header className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            {selectedAnime && (
-              <Button variant="ghost" size="icon" onClick={() => setSelectedTitle(null)}>
-                <ArrowLeft className="h-5 w-5" />
+      {/* Ambient aurora backdrop */}
+      <div className="relative min-h-screen overflow-hidden">
+        <div className="flox-aurora" aria-hidden />
+
+        <div className="relative z-10 container py-6 space-y-8 select-none">
+          {/* Glass Header */}
+          <header className="flox-glass px-4 py-3 flex items-center justify-between gap-3 rounded-3xl">
+            <div className="flex items-center gap-3 min-w-0">
+              {selectedAnime && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSelectedTitle(null)}
+                  className="rounded-full hover:bg-white/10 text-white"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              )}
+              <img
+                src={floxLogo}
+                alt="Flox +"
+                draggable={false}
+                className="h-11 w-11 rounded-2xl object-cover ring-1 ring-white/20 shadow-lg"
+              />
+              <div className="min-w-0">
+                <h1 className="text-lg md:text-2xl font-bold tracking-tight text-white truncate">
+                  Flox <span className="text-primary">+</span>
+                </h1>
+                <p className="text-[11px] text-white/60 truncate">Premium Hindi dubs · Liquid experience</p>
+              </div>
+            </div>
+
+            {isAdmin && (
+              <Button
+                size="sm"
+                onClick={() => { setEditAnime(null); setUploadOpen(true); }}
+                className="rounded-full bg-primary/90 hover:bg-primary shadow-lg shadow-primary/30"
+              >
+                <UploadIcon className="h-4 w-4 mr-1.5" /> Upload
               </Button>
             )}
-            <img
-              src={floxLogo}
-              alt="Flox Anime India +"
-              draggable={false}
-              className="h-10 w-10 rounded-full object-cover ring-2 ring-primary/30"
+          </header>
+
+          {/* Detail view */}
+          {selectedAnime ? (
+            <FloxDetailView
+              anime={selectedAnime}
+              isAdmin={isAdmin}
+              onPlayEpisode={openEpisode}
+              onAddEpisode={() => { setEditAnime(selectedAnime); setUploadOpen(true); }}
+              onEditAnime={() => { setEditAnime(selectedAnime); setUploadOpen(true); }}
+              onDeleteAnime={() => removeAnime(selectedAnime.title)}
+              onDeleteEpisode={removeRow}
             />
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold tracking-tight">Flox Anime India +</h1>
-              <p className="text-[11px] text-muted-foreground">Premium curated Hindi dubs</p>
-            </div>
-          </div>
-
-          {isAdmin && (
-            <Button size="sm" onClick={() => { setEditAnime(null); setUploadOpen(true); }}>
-              <UploadIcon className="h-4 w-4 mr-1.5" /> Upload
-            </Button>
-          )}
-        </header>
-
-        {/* Detail view */}
-        {selectedAnime ? (
-          <FloxDetailView
-            anime={selectedAnime}
-            isAdmin={isAdmin}
-            onPlayEpisode={openEpisode}
-            onAddEpisode={() => { setEditAnime(selectedAnime); setUploadOpen(true); }}
-            onEditAnime={() => { setEditAnime(selectedAnime); setUploadOpen(true); }}
-            onDeleteAnime={() => removeAnime(selectedAnime.title)}
-            onDeleteEpisode={removeRow}
-          />
-        ) : (
-          /* Library grid */
-          <section>
-            {loading ? (
-              <div className="flex items-center justify-center py-12 text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            /* Library grid */
+            <section className="space-y-4">
+              <div className="flex items-end justify-between">
+                <div>
+                  <h2 className="text-xl md:text-2xl font-bold text-white">Library</h2>
+                  <p className="text-xs text-white/60">{animeList.length} title{animeList.length === 1 ? '' : 's'}</p>
+                </div>
               </div>
-            ) : animeList.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No Flox content yet.</p>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {animeList.map((a) => (
-                  <button
-                    key={a.title}
-                    onClick={() => setSelectedTitle(a.title)}
-                    className="group text-left rounded-md overflow-hidden bg-card border border-border/40 hover:border-primary/40 transition-colors"
-                  >
-                    <div className="relative aspect-[2/3] bg-black overflow-hidden">
-                      {a.poster_url ? (
-                        <img
-                          src={a.poster_url}
-                          alt={a.title}
-                          draggable={false}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          onContextMenu={(e) => e.preventDefault()}
-                        />
-                      ) : a.banner_url ? (
-                        <img
-                          src={a.banner_url}
-                          alt={a.title}
-                          draggable={false}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full grid place-items-center text-xs text-muted-foreground p-2 text-center">
-                          {a.title}
+
+              {loading ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <div key={i} className="flox-card aspect-[2/3] animate-pulse bg-white/[0.03]" />
+                  ))}
+                </div>
+              ) : animeList.length === 0 ? (
+                <div className="flox-glass rounded-3xl p-10 text-center text-white/70">
+                  <p className="text-sm">No Flox content yet.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+                  {animeList.map((a) => (
+                    <button
+                      key={a.title}
+                      onClick={() => setSelectedTitle(a.title)}
+                      className="flox-card group text-left"
+                    >
+                      <div className="relative aspect-[2/3] bg-black overflow-hidden">
+                        {a.poster_url ? (
+                          <img
+                            src={a.poster_url}
+                            alt={a.title}
+                            draggable={false}
+                            className="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-500 ease-out"
+                            onContextMenu={(e) => e.preventDefault()}
+                          />
+                        ) : a.banner_url ? (
+                          <img
+                            src={a.banner_url}
+                            alt={a.title}
+                            draggable={false}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full grid place-items-center text-xs text-white/70 p-2 text-center">
+                            {a.title}
+                          </div>
+                        )}
+                        {/* glass scrim */}
+                        <div className="absolute inset-x-0 bottom-0 h-1/2 flox-scrim pointer-events-none" />
+                        <div className="absolute top-2 left-2 flox-glass-chip px-2 py-0.5 rounded-full text-[10px] font-medium text-white">
+                          {a.episodes.length} ep
                         </div>
-                      )}
-                    </div>
-                    <div className="px-2 py-2">
-                      <p className="text-xs font-medium line-clamp-1">{a.title}</p>
-                      <p className="text-[10px] text-muted-foreground">{a.episodes.length} ep</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </section>
-        )}
+                        <div className="absolute bottom-2 left-2 right-2">
+                          <p className="text-xs md:text-sm font-semibold text-white line-clamp-1 drop-shadow">{a.title}</p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+        </div>
       </div>
     </AntiPiracyShield>
   );
@@ -305,8 +335,8 @@ function FloxDetailView({
         await (navigator as any).share(shareData);
         return;
       }
-    } catch (err) {
-      // user cancelled — fall through to clipboard
+    } catch {
+      // user cancelled
     }
     try {
       await navigator.clipboard.writeText(shareUrl);
@@ -315,62 +345,71 @@ function FloxDetailView({
       toast.error('Unable to share link');
     }
   };
+
   return (
-    <div className="space-y-5">
-      {/* Banner hero with poster overlay */}
-      <div className="relative w-full rounded-lg overflow-hidden">
-        <div className="relative aspect-[16/7] bg-black">
+    <div className="space-y-6">
+      {/* Cinematic hero */}
+      <div className="relative rounded-3xl overflow-hidden flox-glass-strong">
+        <div className="relative aspect-[16/8] md:aspect-[16/6] bg-black">
           {anime.banner_url ? (
             <img
               src={anime.banner_url}
               alt={anime.title}
               draggable={false}
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover scale-[1.02]"
             />
           ) : anime.poster_url ? (
             <img
               src={anime.poster_url}
               alt={anime.title}
               draggable={false}
-              className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-60"
+              className="absolute inset-0 w-full h-full object-cover blur-2xl scale-125 opacity-70"
             />
           ) : null}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-transparent" />
         </div>
 
-        <div className="relative -mt-24 md:-mt-32 px-4 md:px-6 flex flex-col md:flex-row gap-4 md:gap-6 md:items-end">
+        <div className="relative -mt-28 md:-mt-40 px-4 md:px-8 pb-6 flex flex-col md:flex-row gap-5 md:gap-7 md:items-end">
           {anime.poster_url && (
             <img
               src={anime.poster_url}
               alt={anime.title}
               draggable={false}
-              className="w-32 md:w-44 aspect-[2/3] object-cover rounded-md shadow-xl ring-1 ring-border/40"
+              className="w-32 md:w-48 aspect-[2/3] object-cover rounded-2xl shadow-2xl ring-1 ring-white/20"
             />
           )}
-          <div className="flex-1 space-y-2 pb-2">
-            <h2 className="text-2xl md:text-3xl font-bold">{anime.title}</h2>
+          <div className="flex-1 space-y-3 pb-1">
+            <div className="inline-flex flox-glass-chip px-2.5 py-1 rounded-full text-[10px] uppercase tracking-widest text-white/80">
+              Flox + · Hindi Dub
+            </div>
+            <h2 className="text-2xl md:text-4xl font-bold text-white drop-shadow">{anime.title}</h2>
             {anime.description && (
-              <p className="text-sm text-muted-foreground max-w-2xl">{anime.description}</p>
+              <p className="text-sm text-white/75 max-w-2xl leading-relaxed line-clamp-3">{anime.description}</p>
             )}
-            <p className="text-xs text-muted-foreground">{anime.episodes.length} episode(s)</p>
+            <p className="text-xs text-white/55">{anime.episodes.length} episode(s)</p>
             <div className="flex flex-wrap gap-2 pt-1">
               {firstEpisode && (
-                <Button size="sm" onClick={() => onPlayEpisode(firstEpisode)}>
+                <Button
+                  size="sm"
+                  onClick={() => onPlayEpisode(firstEpisode)}
+                  className="rounded-full bg-white text-black hover:bg-white/90 shadow-lg"
+                >
                   <Play className="h-4 w-4 mr-1 fill-current" /> Watch Now
                 </Button>
               )}
-              <Button size="sm" variant="outline" onClick={handleShare}>
+              <Button size="sm" variant="ghost" onClick={handleShare} className="rounded-full flox-glass-chip text-white hover:bg-white/15">
                 <Share2 className="h-4 w-4 mr-1" /> Share
               </Button>
               {isAdmin && (
                 <>
-                  <Button size="sm" variant="outline" onClick={onAddEpisode}>
+                  <Button size="sm" variant="ghost" onClick={onAddEpisode} className="rounded-full flox-glass-chip text-white hover:bg-white/15">
                     <Plus className="h-4 w-4 mr-1" /> Add episode
                   </Button>
-                  <Button size="sm" variant="outline" onClick={onEditAnime}>
+                  <Button size="sm" variant="ghost" onClick={onEditAnime} className="rounded-full flox-glass-chip text-white hover:bg-white/15">
                     <Pencil className="h-4 w-4 mr-1" /> Edit
                   </Button>
-                  <Button size="sm" variant="ghost" className="text-destructive" onClick={onDeleteAnime}>
+                  <Button size="sm" variant="ghost" className="rounded-full flox-glass-chip text-red-300 hover:text-red-200 hover:bg-red-500/20" onClick={onDeleteAnime}>
                     <Trash2 className="h-4 w-4 mr-1" /> Delete
                   </Button>
                 </>
@@ -380,35 +419,38 @@ function FloxDetailView({
         </div>
       </div>
 
-      {/* Episode list */}
-      <section className="space-y-2">
-        <h3 className="text-sm font-semibold text-muted-foreground">Episodes</h3>
+      {/* Episode list — glass tiles */}
+      <section className="space-y-3">
+        <div className="flex items-baseline justify-between">
+          <h3 className="text-lg font-semibold text-white">Episodes</h3>
+          <span className="text-xs text-white/50">{anime.episodes.length} total</span>
+        </div>
         {anime.episodes.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No episodes yet.</p>
+          <div className="flox-glass rounded-2xl p-8 text-center text-white/60 text-sm">No episodes yet.</div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {anime.episodes.map((ep) => (
               <div
                 key={ep.id}
-                className="flex items-center gap-2 p-3 rounded-md border border-border/40 bg-card hover:border-primary/40 transition-colors"
+                className="flox-glass rounded-2xl p-3 flex items-center gap-3 group"
               >
                 <button
-                  className="flex-1 text-left flex items-center gap-3"
+                  className="flex-1 text-left flex items-center gap-3 min-w-0"
                   onClick={() => onPlayEpisode(ep)}
                 >
-                  <div className="h-9 w-9 grid place-items-center rounded-full bg-primary/15 text-primary">
-                    <Play className="h-4 w-4 fill-current" />
+                  <div className="h-11 w-11 grid place-items-center rounded-2xl bg-gradient-to-br from-primary to-red-700 text-white shadow-lg shadow-primary/30 shrink-0 group-hover:scale-105 transition-transform">
+                    <Play className="h-5 w-5 fill-current" />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium">Episode {ep.episode_number ?? '—'}</p>
-                    <p className="text-[11px] text-muted-foreground capitalize">{ep.source_type}</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-white truncate">Episode {ep.episode_number ?? '—'}</p>
+                    <p className="text-[11px] text-white/55 capitalize">{ep.source_type} source</p>
                   </div>
                 </button>
                 {isAdmin && (
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-destructive"
+                    className="h-8 w-8 text-red-300 hover:bg-red-500/20 rounded-full"
                     onClick={() => onDeleteEpisode(ep.id)}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -422,6 +464,7 @@ function FloxDetailView({
     </div>
   );
 }
+
 
 /* -------------------- Upload dialog -------------------- */
 

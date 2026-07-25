@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Server as ServerIcon } from 'lucide-react';
 import { FloxPlayer } from '@/components/video/FloxPlayer';
 import { AntiPiracyShield } from '@/components/security/AntiPiracyShield';
 import { toast } from 'sonner';
@@ -42,74 +42,112 @@ export default function FloxWatch() {
     })();
   }, [episodeId]);
 
+  const servers: { id: Server; label: string }[] = [
+    { id: 'flox', label: 'Flox +' },
+    { id: 'anime-plus', label: 'Anime+' },
+  ];
+
   return (
     <AntiPiracyShield mode="strict" noRedirect>
-      <div className="container py-4 space-y-4 select-none">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <span className="text-sm text-muted-foreground">Back</span>
-        </div>
+      <div className="relative min-h-screen overflow-hidden">
+        <div className="flox-aurora" aria-hidden />
+        {/* Poster blurred behind for cinematic ambience */}
+        {ep?.poster_url && (
+          <img
+            src={ep.poster_url}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 w-full h-full object-cover opacity-30 blur-3xl scale-125 pointer-events-none"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/85 to-background pointer-events-none" />
 
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-5 w-5 animate-spin" />
+        <div className="relative z-10 container py-4 md:py-6 space-y-5 select-none">
+          {/* Glass back bar */}
+          <div className="flox-glass rounded-2xl px-3 py-2 flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="rounded-full hover:bg-white/10 text-white"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <span className="text-sm text-white/70">Back</span>
+            {ep && (
+              <span className="ml-auto text-[11px] text-white/60 truncate max-w-[60%]">
+                {ep.title} · S{ep.season_number ?? 1} E{ep.episode_number ?? '—'}
+              </span>
+            )}
           </div>
-        ) : !ep ? (
-          <p className="text-sm text-muted-foreground">Episode not found.</p>
-        ) : (
-          <div className="space-y-4">
-            {/* Server switcher */}
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Server:</span>
-              {([
-                { id: 'flox', label: 'Flox +' },
-                { id: 'anime-plus', label: 'Anime+' },
-              ] as { id: Server; label: string }[]).map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setServer(s.id)}
-                  className={`px-3 py-1 rounded-full text-xs border transition-all ${
-                    server === s.id
-                      ? 'bg-primary text-primary-foreground border-primary shadow shadow-primary/30'
-                      : 'bg-card/40 text-muted-foreground border-border/40 hover:text-foreground'
-                  }`}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
 
-            <FloxPlayer
-              key={server}
-              sourceType={ep.source_type}
-              sourceUrl={ep.source_url}
-              poster={ep.poster_url || ep.banner_url || undefined}
-              title={ep.title}
-            />
-            <div className="flex items-start gap-4">
-              {ep.poster_url && (
-                <img
-                  src={ep.poster_url}
-                  alt={ep.title}
-                  draggable={false}
-                  className="w-20 md:w-28 aspect-[2/3] object-cover rounded-md shadow-lg ring-1 ring-border/40"
-                  onContextMenu={(e) => e.preventDefault()}
-                />
-              )}
-              <div className="flex-1 space-y-1">
-                <h1 className="text-xl md:text-2xl font-bold">{ep.title}</h1>
-                <p className="text-sm text-muted-foreground">
-                  Season {ep.season_number ?? 1} · Episode {ep.episode_number ?? '—'}
-                </p>
-                <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">
-                  {server === 'anime-plus' ? 'Anime+ server' : 'Flox + server'}
-                </span>
+          {loading ? (
+            <div className="flox-glass rounded-3xl aspect-video grid place-items-center">
+              <Loader2 className="h-6 w-6 animate-spin text-white/70" />
+            </div>
+          ) : !ep ? (
+            <div className="flox-glass rounded-3xl p-10 text-center text-white/70">
+              <p className="text-sm">Episode not found.</p>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              <FloxPlayer
+                key={server}
+                sourceType={ep.source_type}
+                sourceUrl={ep.source_url}
+                poster={ep.poster_url || ep.banner_url || undefined}
+                title={ep.title}
+              />
+
+              {/* Server switcher — liquid glass chips */}
+              <div className="flox-glass rounded-2xl p-3 flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-widest text-white/60">
+                  <ServerIcon className="h-3.5 w-3.5" />
+                  Server
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {servers.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setServer(s.id)}
+                      data-active={server === s.id}
+                      className="flox-glass-chip px-3.5 py-1.5 rounded-full text-xs font-medium text-white/80 transition-all data-[active=true]:text-white"
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Episode info — glass panel */}
+              <div className="flox-glass rounded-3xl p-4 md:p-5 flex items-start gap-4">
+                {ep.poster_url && (
+                  <img
+                    src={ep.poster_url}
+                    alt={ep.title}
+                    draggable={false}
+                    className="w-20 md:w-28 aspect-[2/3] object-cover rounded-2xl shadow-xl ring-1 ring-white/15 shrink-0"
+                    onContextMenu={(e) => e.preventDefault()}
+                  />
+                )}
+                <div className="flex-1 space-y-2 min-w-0">
+                  <h1 className="text-xl md:text-2xl font-bold text-white leading-tight">{ep.title}</h1>
+                  <p className="text-sm text-white/70">
+                    Season {ep.season_number ?? 1} · Episode {ep.episode_number ?? '—'}
+                  </p>
+                  <span className="inline-flex flox-glass-chip px-2.5 py-1 rounded-full text-[10px] uppercase tracking-widest text-white/80">
+                    {server === 'anime-plus' ? 'Anime+ server' : 'Flox + server'}
+                  </span>
+                  {ep.description && (
+                    <p className="text-xs md:text-sm text-white/60 leading-relaxed line-clamp-3 pt-1">
+                      {ep.description}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </AntiPiracyShield>
   );
