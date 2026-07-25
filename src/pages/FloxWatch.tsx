@@ -26,7 +26,8 @@ export default function FloxWatch() {
   const navigate = useNavigate();
   const [ep, setEp] = useState<FloxRow | null>(null);
   const [loading, setLoading] = useState(true);
-  const [server, setServer] = useState<Server>('flox');
+  const [server, setServer] = useState<Server>('anime-plus');
+  const [showFloxRemoved, setShowFloxRemoved] = useState(false);
 
   useEffect(() => {
     (async () => {
