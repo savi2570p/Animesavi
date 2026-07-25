@@ -3294,7 +3294,7 @@ export function VideoPlayer({
             <div className="flex items-center gap-2">
               <span className="text-white/90 text-[10px] md:text-xs font-mono min-w-[36px] md:min-w-[44px]">{formatTime(currentTime)}</span>
               <div 
-                className={`flex-1 relative ${isIOS ? 'h-[3px]' : 'h-1 md:h-1.5'}`}
+                className="flex-1 relative h-[2px] md:h-1.5"
                 onMouseMove={handleTimelineHover}
                 onMouseLeave={handleTimelineLeave}
               >
