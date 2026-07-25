@@ -155,6 +155,25 @@ export default function FloxWatch() {
             </div>
           )}
         </div>
+
+        <AlertDialog open={showFloxRemoved} onOpenChange={setShowFloxRemoved}>
+          <AlertDialogContent className="bg-black/80 backdrop-blur-2xl border-white/10 max-w-xs rounded-3xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-white text-base">Server Removed</AlertDialogTitle>
+              <AlertDialogDescription className="text-white/70 text-xs">
+                This server is removed because it contain ads.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction
+                className="bg-primary hover:bg-primary/90 text-white text-xs px-4 py-2 rounded-full"
+                onClick={() => setShowFloxRemoved(false)}
+              >
+                OK
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AntiPiracyShield>
   );
