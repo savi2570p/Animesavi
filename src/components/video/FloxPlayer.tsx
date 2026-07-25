@@ -10,7 +10,6 @@ interface FloxPlayerProps {
   title?: string;
 }
 
-// Browsers reliably play these containers natively.
 const NATIVE_EXTS = new Set(['mp4', 'm4v', 'webm', 'mov', 'ogg', 'ogv']);
 const MIME_MAP: Record<string, string> = {
   mp4: 'video/mp4', m4v: 'video/mp4', mov: 'video/quicktime',
@@ -27,35 +26,30 @@ function extOf(url: string): string {
 }
 
 /**
- * Ultra-minimal flat player for Flox Anime India + content.
- * Controls: -10s · Play/Pause · +10s · Timeline · Fullscreen
- * No download, no quality menu, no audio menu, no share.
+ * Flox liquid-glass player — iOS aesthetic.
+ * Controls: -10s · Play/Pause · +10s · Glass Timeline · Fullscreen
  */
 export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hideTimer = useRef<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isFs, setIsFs] = useState(false);
   const [videoError, setVideoError] = useState<string | null>(null);
+  const [showControls, setShowControls] = useState(true);
 
-  // Format detection — files uploaded from mobile file managers are often
-  // MKV/AVI/etc which browsers cannot play natively. Detect up-front so we
-  // can either warn or route to the iframe fallback instead of showing a
-  // black screen.
   const fileExt = useMemo(() => (sourceType === 'file' ? extOf(sourceUrl) : ''), [sourceType, sourceUrl]);
   const sourceMime = useMemo(() => MIME_MAP[fileExt] || 'video/mp4', [fileExt]);
   const isNativeContainer = sourceType !== 'file' || !fileExt || NATIVE_EXTS.has(fileExt);
 
-  // Fullscreen sync
   useEffect(() => {
     const sync = () => setIsFs(Boolean(document.fullscreenElement));
     document.addEventListener('fullscreenchange', sync);
     return () => document.removeEventListener('fullscreenchange', sync);
   }, []);
 
-  // Block long-press context on the container (mobile)
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -63,6 +57,14 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
     el.addEventListener('contextmenu', block);
     return () => el.removeEventListener('contextmenu', block);
   }, []);
+
+  const bumpControls = () => {
+    setShowControls(true);
+    if (hideTimer.current) window.clearTimeout(hideTimer.current);
+    hideTimer.current = window.setTimeout(() => {
+      if (playing) setShowControls(false);
+    }, 2600);
+  };
 
   const fmt = (s: number) => {
     if (!isFinite(s)) return '0:00';
@@ -82,13 +84,13 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
     const v = videoRef.current;
     if (!v) return;
     v.currentTime = Math.max(0, Math.min((v.duration || 0), v.currentTime + delta));
+    bumpControls();
   };
 
   const toggleFs = async () => {
     const el = containerRef.current;
     const v = videoRef.current;
     if (!el) return;
-    // iOS Safari: use native fullscreen on the video element (no custom controls)
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
       (navigator.platform === 'MacIntel' && (navigator as any).maxTouchPoints > 1);
     if (isIOS && v && (v as any).webkitEnterFullscreen) {
@@ -103,7 +105,7 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
     return (
       <div
         ref={containerRef}
-        className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden select-none player-shell"
+        className="relative w-full aspect-video bg-black rounded-3xl overflow-hidden select-none player-shell ring-1 ring-white/10 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7)]"
         style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
       >
         <iframe
@@ -114,23 +116,19 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
           allowFullScreen
           referrerPolicy="no-referrer-when-downgrade"
         />
-
       </div>
     );
   }
 
   const secureUrl = getSecureStreamUrl(sourceUrl);
 
-  // Unsupported container (mkv/avi/ts/wmv/…): don't blank-screen the user.
-  // Show a clean fallback with a direct-open link. The upstream file was
-  // uploaded via file-manager but browsers can't decode it inline.
   if (!isNativeContainer || videoError) {
     return (
       <div
         ref={containerRef}
-        className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden select-none flex items-center justify-center player-shell"
+        className="relative w-full aspect-video bg-black rounded-3xl overflow-hidden select-none flex items-center justify-center player-shell ring-1 ring-white/10"
       >
-        <div className="text-center px-6 py-8 max-w-md space-y-3">
+        <div className="flox-glass rounded-2xl text-center px-6 py-7 max-w-md space-y-3 mx-4">
           <div className="mx-auto h-12 w-12 rounded-full bg-amber-500/15 border border-amber-400/40 flex items-center justify-center">
             <AlertTriangle className="h-6 w-6 text-amber-300" />
           </div>
@@ -139,14 +137,14 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
           </h3>
           <p className="text-white/70 text-xs leading-relaxed">
             {fileExt
-              ? `The uploaded file (.${fileExt}) can't play natively in the browser. Open it directly or re-upload as MP4/WebM for inline playback.`
+              ? `The uploaded file (.${fileExt}) can't play natively. Open it directly or re-upload as MP4/WebM.`
               : 'The uploaded file could not be decoded. Try opening it directly or re-upload as MP4/WebM.'}
           </p>
           <a
             href={secureUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 text-white text-xs font-medium transition"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full flox-glass-chip text-white text-xs font-medium"
           >
             <ExternalLink className="h-3.5 w-3.5" />
             Open video
@@ -156,10 +154,14 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
     );
   }
 
+  const progressPct = duration ? (time / duration) * 100 : 0;
+
   return (
     <div
       ref={containerRef}
-      className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden select-none group player-shell"
+      onMouseMove={bumpControls}
+      onTouchStart={bumpControls}
+      className="relative w-full aspect-video bg-black rounded-3xl overflow-hidden select-none group player-shell ring-1 ring-white/10 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.7)]"
       style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
     >
       <video
@@ -172,74 +174,117 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
         controlsList="nodownload noremoteplayback noplaybackrate"
         disablePictureInPicture
         onContextMenu={(e) => e.preventDefault()}
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
+        onPlay={() => { setPlaying(true); bumpControls(); }}
+        onPause={() => { setPlaying(false); setShowControls(true); }}
         onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
         onError={() => setVideoError('playback_failed')}
         onClick={togglePlay}
       >
         <source src={secureUrl} type={sourceMime} />
-        {/* Also provide the URL without type so browsers can sniff */}
         <source src={secureUrl} />
       </video>
 
-      {/* Flat controls bar */}
-      <div className="absolute inset-x-0 bottom-0 px-3 py-2 bg-black/60 backdrop-blur-sm flex items-center gap-3">
+      {/* Center play tap-target when paused */}
+      {!playing && (
         <button
-          aria-label="Back 10 seconds"
-          onClick={() => skip(-10)}
-          className="text-white/90 hover:text-white"
-        >
-          <RotateCcw className="h-5 w-5" />
-        </button>
-        <button
-          aria-label={playing ? 'Pause' : 'Play'}
+          aria-label="Play"
           onClick={togglePlay}
-          className="text-white"
+          className="absolute inset-0 grid place-items-center bg-black/20"
         >
-          {playing ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+          <span className="flox-glass-strong h-20 w-20 rounded-full grid place-items-center text-white shadow-2xl">
+            <Play className="h-9 w-9 fill-current translate-x-0.5" />
+          </span>
         </button>
-        <button
-          aria-label="Forward 10 seconds"
-          onClick={() => skip(10)}
-          className="text-white/90 hover:text-white"
-        >
-          <RotateCw className="h-5 w-5" />
-        </button>
+      )}
 
-        <div className="flex-1 flex items-center gap-2">
-          <span className="text-[11px] tabular-nums text-white/80 w-10">{fmt(time)}</span>
-          <input
-            type="range"
-            min={0}
-            max={duration || 0}
-            step={0.1}
-            value={time}
-            onChange={(e) => {
-              const v = videoRef.current;
-              if (v) v.currentTime = Number(e.target.value);
-            }}
-            className={cn(
-              'flex-1 appearance-none h-[2px] bg-white/20 rounded-full',
-              '[&::-webkit-slider-thumb]:appearance-none',
-              '[&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3',
-              '[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white',
-            )}
-            style={{
-              background: `linear-gradient(to right, hsl(0 85% 55%) ${(time / (duration || 1)) * 100}%, rgba(255,255,255,0.2) ${(time / (duration || 1)) * 100}%)`,
-            }}
-          />
-          <span className="text-[11px] tabular-nums text-white/80 w-10 text-right">{fmt(duration)}</span>
+      {/* Top gradient */}
+      <div
+        className={cn(
+          'absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/60 to-transparent pointer-events-none transition-opacity duration-300',
+          showControls ? 'opacity-100' : 'opacity-0'
+        )}
+      />
+      {title && (
+        <div
+          className={cn(
+            'absolute top-3 left-3 right-3 flex items-center transition-opacity duration-300',
+            showControls ? 'opacity-100' : 'opacity-0'
+          )}
+        >
+          <span className="text-white/90 text-xs md:text-sm font-medium drop-shadow line-clamp-1">{title}</span>
         </div>
+      )}
 
-        <button
-          aria-label="Fullscreen"
-          onClick={toggleFs}
-          className="text-white/90 hover:text-white"
-        >
-          {isFs ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
-        </button>
+      {/* Bottom liquid-glass control dock */}
+      <div
+        className={cn(
+          'absolute inset-x-3 bottom-3 transition-all duration-300',
+          showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'
+        )}
+      >
+        <div className="flox-glass rounded-2xl px-3 py-2 flex items-center gap-2 md:gap-3">
+          <button
+            aria-label="Back 10 seconds"
+            onClick={() => skip(-10)}
+            className="h-9 w-9 grid place-items-center rounded-full text-white/90 hover:bg-white/10 transition"
+          >
+            <RotateCcw className="h-5 w-5" />
+          </button>
+          <button
+            aria-label={playing ? 'Pause' : 'Play'}
+            onClick={togglePlay}
+            className="h-10 w-10 grid place-items-center rounded-full bg-white text-black hover:scale-105 transition shadow-lg"
+          >
+            {playing ? <Pause className="h-5 w-5 fill-current" /> : <Play className="h-5 w-5 fill-current translate-x-[1px]" />}
+          </button>
+          <button
+            aria-label="Forward 10 seconds"
+            onClick={() => skip(10)}
+            className="h-9 w-9 grid place-items-center rounded-full text-white/90 hover:bg-white/10 transition"
+          >
+            <RotateCw className="h-5 w-5" />
+          </button>
+
+          <div className="flex-1 flex items-center gap-2 px-1">
+            <span className="text-[11px] tabular-nums text-white/80 w-10">{fmt(time)}</span>
+            <div className="relative flex-1 h-6 flex items-center">
+              <div className="absolute inset-x-0 h-[3px] rounded-full bg-white/15" />
+              <div
+                className="absolute h-[3px] rounded-full bg-gradient-to-r from-primary to-red-400 shadow-[0_0_8px_hsl(0_85%_55%/0.6)]"
+                style={{ width: `${progressPct}%` }}
+              />
+              <input
+                type="range"
+                min={0}
+                max={duration || 0}
+                step={0.1}
+                value={time}
+                onChange={(e) => {
+                  const v = videoRef.current;
+                  if (v) v.currentTime = Number(e.target.value);
+                }}
+                aria-label="Seek"
+                className={cn(
+                  'relative w-full h-6 appearance-none bg-transparent cursor-pointer',
+                  '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4',
+                  '[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white',
+                  '[&::-webkit-slider-thumb]:shadow-[0_0_0_4px_hsl(0_85%_55%/0.35)]',
+                  '[&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0'
+                )}
+              />
+            </div>
+            <span className="text-[11px] tabular-nums text-white/80 w-10 text-right">{fmt(duration)}</span>
+          </div>
+
+          <button
+            aria-label="Fullscreen"
+            onClick={toggleFs}
+            className="h-9 w-9 grid place-items-center rounded-full text-white/90 hover:bg-white/10 transition"
+          >
+            {isFs ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
     </div>
   );
