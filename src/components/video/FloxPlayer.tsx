@@ -256,10 +256,10 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
 
           <div className="flex-1 flex items-center gap-2 px-1">
             <span className="text-[11px] tabular-nums text-white/80 w-10">{fmt(time)}</span>
-            <div className="relative flex-1 h-6 flex items-center">
-              <div className="absolute inset-x-0 h-[2px] md:h-[3px] rounded-full bg-white/15" />
+            <div className="flox-timeline">
+              <div className="flox-timeline__track" />
               <div
-                className="absolute h-[2px] md:h-[3px] rounded-full bg-gradient-to-r from-primary to-red-400 shadow-[0_0_8px_hsl(0_85%_55%/0.6)]"
+                className="flox-timeline__fill"
                 style={{ width: `${progressPct}%` }}
               />
               <input
@@ -272,14 +272,11 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
                   const v = videoRef.current;
                   if (v) v.currentTime = Number(e.target.value);
                 }}
+                onPointerDown={(e) => e.currentTarget.parentElement?.classList.add('is-dragging')}
+                onPointerUp={(e) => e.currentTarget.parentElement?.classList.remove('is-dragging')}
+                onPointerCancel={(e) => e.currentTarget.parentElement?.classList.remove('is-dragging')}
                 aria-label="Seek"
-                className={cn(
-                  'relative w-full h-6 appearance-none bg-transparent cursor-pointer',
-                  '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4',
-                  '[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white',
-                  '[&::-webkit-slider-thumb]:shadow-[0_0_0_4px_hsl(0_85%_55%/0.35)]',
-                  '[&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0'
-                )}
+                className="flox-timeline__input"
               />
             </div>
             <span className="text-[11px] tabular-nums text-white/80 w-10 text-right">{fmt(duration)}</span>
