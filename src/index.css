@@ -2267,11 +2267,18 @@ html {
   box-shadow: 0 0 0 5px hsl(0 85% 55% / 0.35), 0 3px 10px rgba(0,0,0,0.45);
 }
 
-/* Only slim on portrait mobile — leave desktop and landscape untouched */
+/* Desktop + landscape: preserve prior chunkier thumb/track */
 @media (min-width: 768px), (orientation: landscape) {
-  .flox-timeline { height: 24px; }
   .flox-timeline__track,
   .flox-timeline__fill { height: 3px; }
+  .flox-timeline__input::-webkit-slider-thumb {
+    width: 16px; height: 16px; margin-top: 4px;
+    box-shadow: 0 0 0 4px hsl(0 85% 55% / 0.35);
+  }
+  .flox-timeline__input::-moz-range-thumb {
+    width: 16px; height: 16px;
+    box-shadow: 0 0 0 4px hsl(0 85% 55% / 0.35);
+  }
 }
 .flox-aurora {
   position: absolute;
