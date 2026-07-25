@@ -109,7 +109,7 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
         style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
       >
         <iframe
-          src={sourceUrl}
+          src={sourceUrl + (sourceUrl.includes('?') ? '&' : '?') + 'autoplay=1'}
           title={title || 'Flox Embed'}
           className="absolute inset-0 w-full h-full border-0"
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write; accelerometer; gyroscope"
@@ -169,7 +169,8 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
         className="w-full h-full"
         poster={poster}
         playsInline
-        preload="metadata"
+        autoPlay
+        preload="auto"
         crossOrigin="anonymous"
         controlsList="nodownload noremoteplayback noplaybackrate"
         disablePictureInPicture
@@ -177,7 +178,14 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
         onPlay={() => { setPlaying(true); bumpControls(); }}
         onPause={() => { setPlaying(false); setShowControls(true); }}
         onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
-        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
+        onLoadedMetadata={(e) => {
+          setDuration(e.currentTarget.duration || 0);
+          const v = e.currentTarget;
+          v.play().catch(() => {
+            v.muted = true;
+            v.play().catch(() => {});
+          });
+        }}
         onError={() => setVideoError('playback_failed')}
         onClick={togglePlay}
       >
