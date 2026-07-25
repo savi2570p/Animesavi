@@ -110,7 +110,13 @@ export default function FloxWatch() {
                   {servers.map((s) => (
                     <button
                       key={s.id}
-                      onClick={() => setServer(s.id)}
+                      onClick={() => {
+                        if (s.id === 'flox') {
+                          setShowFloxRemoved(true);
+                          return;
+                        }
+                        setServer(s.id);
+                      }}
                       data-active={server === s.id}
                       className="flox-glass-chip px-3.5 py-1.5 rounded-full text-xs font-medium text-white/80 transition-all data-[active=true]:text-white"
                     >
