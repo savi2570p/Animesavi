@@ -262,16 +262,25 @@ export default function Watch() {
     checkEncoding();
   }, [episodeId]);
 
-  // Fetch token system status directly from DB on every mount — no caching
+  // Fetch token system status + DB-authoritative access on every mount — never
+  // trust localStorage alone (it can be forged in DevTools to bypass the gate).
   useEffect(() => {
-    fetchTokenSystemStatus().then((enabled) => {
+    let cancelled = false;
+    (async () => {
+      const [enabled, access] = await Promise.all([
+        fetchTokenSystemStatus(),
+        fetchTokenAccessFromDB(),
+      ]);
+      if (cancelled) return;
       setTokenSystemActive(enabled);
+      setDbAccessValid(access.hasAccess);
       setTokenSystemReady(true);
       if (!enabled && !isSuperAdmin(user?.email)) {
         setShowFreeAccessPopup(true);
       }
-    });
-  }, [user?.email]);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.email, user?.id]);
 
   // Check if Telegram popup should be shown (once per day, and not if dismissed this session)
   useEffect(() => {
