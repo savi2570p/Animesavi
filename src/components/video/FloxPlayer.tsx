@@ -257,9 +257,9 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
           <div className="flex-1 flex items-center gap-2 px-1">
             <span className="text-[11px] tabular-nums text-white/80 w-10">{fmt(time)}</span>
             <div className="relative flex-1 h-6 flex items-center">
-              <div className="absolute inset-x-0 h-[3px] rounded-full bg-white/15" />
+              <div className="absolute inset-x-0 h-[2px] md:h-[3px] rounded-full bg-white/15" />
               <div
-                className="absolute h-[3px] rounded-full bg-gradient-to-r from-primary to-red-400 shadow-[0_0_8px_hsl(0_85%_55%/0.6)]"
+                className="absolute h-[2px] md:h-[3px] rounded-full bg-gradient-to-r from-primary to-red-400 shadow-[0_0_8px_hsl(0_85%_55%/0.6)]"
                 style={{ width: `${progressPct}%` }}
               />
               <input
