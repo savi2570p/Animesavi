@@ -25,7 +25,7 @@ import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hook
 import { isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 import { useEmbedWatchTracker } from '@/hooks/useEmbedWatchTracker';
 import { z } from 'zod';
-import { hasValidTokenAccess, isSuperAdmin, fetchTokenSystemStatus } from '@/components/AccessBanner';
+import { hasValidTokenAccess, isSuperAdmin, fetchTokenSystemStatus, fetchTokenAccessFromDB } from '@/components/AccessBanner';
 import { TokenExpiredPopup } from '@/components/TokenExpiredPopup';
 import { useCastDetection } from '@/hooks/useCastDetection';
 import {
