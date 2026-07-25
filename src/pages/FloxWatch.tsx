@@ -6,6 +6,15 @@ import { ArrowLeft, Loader2, Server as ServerIcon } from 'lucide-react';
 import { FloxPlayer } from '@/components/video/FloxPlayer';
 import { AntiPiracyShield } from '@/components/security/AntiPiracyShield';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface FloxRow {
   id: string;
@@ -26,7 +35,8 @@ export default function FloxWatch() {
   const navigate = useNavigate();
   const [ep, setEp] = useState<FloxRow | null>(null);
   const [loading, setLoading] = useState(true);
-  const [server, setServer] = useState<Server>('flox');
+  const [server, setServer] = useState<Server>('anime-plus');
+  const [showFloxRemoved, setShowFloxRemoved] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -109,7 +119,13 @@ export default function FloxWatch() {
                   {servers.map((s) => (
                     <button
                       key={s.id}
-                      onClick={() => setServer(s.id)}
+                      onClick={() => {
+                        if (s.id === 'flox') {
+                          setShowFloxRemoved(true);
+                          return;
+                        }
+                        setServer(s.id);
+                      }}
                       data-active={server === s.id}
                       className="flox-glass-chip px-3.5 py-1.5 rounded-full text-xs font-medium text-white/80 transition-all data-[active=true]:text-white"
                     >
@@ -148,6 +164,25 @@ export default function FloxWatch() {
             </div>
           )}
         </div>
+
+        <AlertDialog open={showFloxRemoved} onOpenChange={setShowFloxRemoved}>
+          <AlertDialogContent className="bg-black/80 backdrop-blur-2xl border-white/10 max-w-xs rounded-3xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-white text-base">Server Removed</AlertDialogTitle>
+              <AlertDialogDescription className="text-white/70 text-xs">
+                This server is removed because it contain ads.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction
+                className="bg-primary hover:bg-primary/90 text-white text-xs px-4 py-2 rounded-full"
+                onClick={() => setShowFloxRemoved(false)}
+              >
+                OK
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AntiPiracyShield>
   );
