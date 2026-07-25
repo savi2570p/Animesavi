@@ -109,7 +109,7 @@ export function FloxPlayer({ sourceType, sourceUrl, poster, title }: FloxPlayerP
         style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
       >
         <iframe
-          src={sourceUrl}
+          src={sourceUrl + (sourceUrl.includes('?') ? '&' : '?') + 'autoplay=1'}
           title={title || 'Flox Embed'}
           className="absolute inset-0 w-full h-full border-0"
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write; accelerometer; gyroscope"
