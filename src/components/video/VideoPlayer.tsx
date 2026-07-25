@@ -2072,44 +2072,55 @@ export function VideoPlayer({
 
   // External URL player (iframe) - Only use for embeddable URLs, not direct video/storage URLs
   if (shouldUseIframe && anyVideoUrl) {
-    // Check if URL is a direct video/storage URL that won't work in an iframe
+    // "Use Embed Player" path.
+    //
+    // Priority order — always in this exact sequence — so the button never
+    // reloads the same broken source and never shows "Object_not_found":
+    //
+    //   1. If the episode has a real external embed URL (UPNShare / Streamtape
+    //      / iframe markup / etc.), open it directly in PureEmbedPlayer.
+    //   2. Otherwise, if we know the episodeId, mount the internal
+    //      `/embed/:episodeId` route in an iframe. That route re-resolves the
+    //      episode server-side (video_url ↔ external_url ↔ ios_ready fallback)
+    //      and plays it — this is the same URL the "Regenerate" button in the
+    //      uploader writes as the auto-generated embed link, so both paths
+    //      resolve to the exact same working player.
+    //   3. Only as a last resort, wrap the raw file URL in EmbedFallbackFrame.
+    const externalIsEmbed = !!externalUrl
+      && !/\.(mp4|mkv|webm|avi|m3u8|m4v|mov)(\?|#|$)/i.test(externalUrl)
+      && !/supabase.*storage|blob\.core\.windows|s3\.amazonaws|cloudfront\.net|r2\.cloudflarestorage|storage\.googleapis/i.test(externalUrl);
+
+    if (externalIsEmbed) {
+      console.info('[VideoPlayer] Embed fallback → external embed URL', { episodeId, url: externalUrl });
+      return (
+        <PureEmbedPlayer
+          url={externalUrl as string}
+          title={`${animeTitle} - Episode ${episodeNumber}`}
+          onSwitchServer={() => setUseIframeFallback(false)}
+        />
+      );
+    }
+
+    if (episodeId) {
+      const internalEmbed = `${window.location.origin}/embed/${episodeId}`;
+      console.info('[VideoPlayer] Embed fallback → internal /embed route', { episodeId, url: internalEmbed });
+      return (
+        <PureEmbedPlayer
+          url={internalEmbed}
+          title={`${animeTitle} - Episode ${episodeNumber}`}
+          onSwitchServer={() => setUseIframeFallback(false)}
+        />
+      );
+    }
+
     const isStorageUrl = /supabase.*storage|blob\.core\.windows|s3\.amazonaws|cloudfront\.net|r2\.cloudflarestorage|storage\.googleapis/i.test(anyVideoUrl);
     const isDirectFile = /\.(mp4|mkv|webm|avi|m3u8|m4v)(\?.*)?$/i.test(anyVideoUrl);
-    
+
     if (isStorageUrl || isDirectFile) {
-      // "Use Embed Player" clicked on a direct file (uploaded mp4/mkv). Auto-mount
-      // the uploaded file inside a minimal iframe player so the user keeps
-      // watching without switching servers manually.
-      // Auto-retry: the injected <video> posts an 'embed-error' message to the
-      // parent on failure. We reload the iframe up to 2 times, first with a
-      // cache-busting param, then swapping to the alternate URL (external_url
-      // ↔ video_url) so the player lands on the playable source automatically.
-      // Prefer externalUrl as the embed primary when it's an embed-style link
-      // (e.g. UPNShare/Streamtape/etc.), since videoUrl likely just failed with
-      // Object_not_found or a broken storage link. This gives "Use Embed Player"
-      // a real chance to succeed instead of reloading the same broken source.
-      const externalIsEmbed = !!externalUrl && !/\.(mp4|mkv|webm|avi|m3u8|m4v|mov)(\?|#|$)/i.test(externalUrl)
-        && !/supabase.*storage|blob\.core\.windows|s3\.amazonaws|cloudfront\.net|r2\.cloudflarestorage|storage\.googleapis/i.test(externalUrl);
-      const primary = externalIsEmbed ? (externalUrl as string) : anyVideoUrl;
-      const alternate = externalIsEmbed
-        ? (videoUrl && videoUrl !== externalUrl ? videoUrl : null)
-        : (videoUrl && externalUrl && videoUrl !== externalUrl ? (anyVideoUrl === videoUrl ? externalUrl : videoUrl) : null);
-
-      // If externalUrl is an embed host, route through PureEmbedPlayer directly.
-      if (externalIsEmbed) {
-        return (
-          <PureEmbedPlayer
-            url={externalUrl as string}
-            title={`${animeTitle} - Episode ${episodeNumber}`}
-            onSwitchServer={() => setUseIframeFallback(false)}
-          />
-        );
-      }
-
       return (
         <EmbedFallbackFrame
-          primaryUrl={primary}
-          alternateUrl={alternate}
+          primaryUrl={anyVideoUrl}
+          alternateUrl={null}
           title={`${animeTitle} - Episode ${episodeNumber}`}
           onBackToNative={() => {
             setUseIframeFallback(false);
