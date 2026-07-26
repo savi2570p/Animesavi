@@ -426,7 +426,9 @@ export default function Upload() {
     : `${Math.floor(lastUploadAgoMs / 86_400_000)}d ago`;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen upload-glass relative">
+      <div className="upload-aurora" aria-hidden />
+
       {/* Cinematic dashboard hero */}
       <div className="relative overflow-hidden border-b border-border/40">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-purple-500/5 to-transparent" />
