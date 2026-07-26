@@ -23,7 +23,7 @@ import { SEO } from "@/components/SEO";
 
 
 export default function Index() {
-  const { user } = useAuth();
+  
   const navigate = useNavigate();
   const rootRef = useRef<HTMLDivElement | null>(null);
 
