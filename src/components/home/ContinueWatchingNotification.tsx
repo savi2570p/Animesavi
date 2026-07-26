@@ -98,7 +98,7 @@ export function ContinueWatchingNotification() {
     setIsVisible(false);
   };
 
-  if (!isVisible || !lastWatched) return null;
+  if (!isHome || !isVisible || !lastWatched) return null;
 
   const progress = Math.round(lastWatched.progress || 0);
   const timeLeft = formatTimeLeft(progress, lastWatched.episode.duration);
