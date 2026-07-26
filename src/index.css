@@ -2504,3 +2504,163 @@ html {
   border: 1px solid hsl(0 0% 100% / 0.08);
   box-shadow: 0 20px 60px -20px rgba(0,0,0,0.55), inset 0 1px 0 hsl(0 0% 100% / 0.05);
 }
+
+/* ============================================================
+   Liquid-glass theme — Upload & Browse pages
+   ============================================================ */
+
+/* Shared aurora backdrop (fixed, subtle, GPU-only) */
+.upload-aurora,
+.browse-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.upload-aurora::before,
+.browse-aurora::before,
+.upload-aurora::after,
+.browse-aurora::after {
+  content: "";
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.55;
+  will-change: transform;
+}
+.upload-aurora::before,
+.browse-aurora::before {
+  top: -18%;
+  left: -10%;
+  width: 55vw;
+  height: 55vw;
+  background: radial-gradient(circle, hsl(var(--primary) / 0.45), transparent 60%);
+  animation: aurora-drift-a 22s ease-in-out infinite;
+}
+.upload-aurora::after,
+.browse-aurora::after {
+  bottom: -22%;
+  right: -12%;
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle, hsl(280 90% 60% / 0.38), transparent 60%);
+  animation: aurora-drift-b 26s ease-in-out infinite;
+}
+@keyframes aurora-drift-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(6vw, 4vh) scale(1.08); }
+}
+@keyframes aurora-drift-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-5vw, -3vh) scale(1.05); }
+}
+
+/* Keep page content above the aurora layer */
+.upload-glass > *:not(.upload-aurora),
+.browse-glass > *:not(.browse-aurora) {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- Cards → liquid glass ---------- */
+.upload-glass [class*="rounded-lg"][class*="border"][class*="bg-card"],
+.upload-glass .rounded-xl.border,
+.upload-glass .rounded-2xl.border,
+.browse-glass [class*="rounded-lg"][class*="border"][class*="bg-card"] {
+  background: linear-gradient(140deg, hsl(0 0% 100% / 0.055) 0%, hsl(0 0% 100% / 0.02) 45%, hsl(var(--primary) / 0.05) 100%) !important;
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  border: 1px solid hsl(0 0% 100% / 0.08) !important;
+  box-shadow: 0 18px 50px -22px rgba(0,0,0,0.55), inset 0 1px 0 hsl(0 0% 100% / 0.06);
+  border-radius: 18px !important;
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.upload-glass [class*="rounded-lg"][class*="border"][class*="bg-card"]:hover,
+.upload-glass .rounded-xl.border:hover,
+.upload-glass .rounded-2xl.border:hover {
+  border-color: hsl(var(--primary) / 0.35) !important;
+  box-shadow: 0 26px 70px -20px hsl(var(--primary) / 0.35), inset 0 1px 0 hsl(0 0% 100% / 0.08);
+}
+
+/* ---------- Inputs / Textareas / Selects → frosted ---------- */
+.upload-glass input:not([type="checkbox"]):not([type="radio"]),
+.upload-glass textarea,
+.upload-glass [role="combobox"],
+.browse-glass input:not([type="checkbox"]):not([type="radio"]) {
+  background: hsl(0 0% 100% / 0.04) !important;
+  border: 1px solid hsl(0 0% 100% / 0.1) !important;
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border-radius: 12px !important;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+.upload-glass input:focus,
+.upload-glass textarea:focus,
+.upload-glass [role="combobox"]:focus,
+.browse-glass input:focus {
+  border-color: hsl(var(--primary) / 0.55) !important;
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.18), 0 8px 24px -8px hsl(var(--primary) / 0.35) !important;
+  background: hsl(0 0% 100% / 0.06) !important;
+}
+
+/* ---------- TabsList → liquid pill ---------- */
+.upload-glass [role="tablist"],
+.browse-glass [role="tablist"] {
+  background: linear-gradient(140deg, hsl(0 0% 100% / 0.06), hsl(var(--primary) / 0.05)) !important;
+  border: 1px solid hsl(0 0% 100% / 0.08) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 14px !important;
+  box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.06), 0 10px 28px -12px rgba(0,0,0,0.5);
+}
+.upload-glass [role="tab"],
+.browse-glass [role="tab"] {
+  border-radius: 10px !important;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+.upload-glass [role="tab"][data-state="active"],
+.browse-glass [role="tab"][data-state="active"] {
+  background: linear-gradient(140deg, hsl(var(--primary) / 0.35), hsl(280 90% 60% / 0.28)) !important;
+  color: hsl(0 0% 100%) !important;
+  box-shadow: 0 8px 22px -6px hsl(var(--primary) / 0.55), inset 0 1px 0 hsl(0 0% 100% / 0.25) !important;
+  border: 1px solid hsl(0 0% 100% / 0.18) !important;
+}
+
+/* ---------- Badges → glass chips ---------- */
+.upload-glass .inline-flex.items-center.rounded-full,
+.upload-glass [class*="rounded-md"][class*="border"][class*="px-"],
+.browse-glass .inline-flex.items-center.rounded-full {
+  backdrop-filter: blur(10px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
+  border-color: hsl(0 0% 100% / 0.12) !important;
+}
+
+/* ---------- Buttons: give ghost/outline glass hover ---------- */
+.upload-glass button[class*="border"][class*="bg-background"]:hover,
+.browse-glass button[class*="border"][class*="bg-background"]:hover {
+  background: hsl(var(--primary) / 0.14) !important;
+  border-color: hsl(var(--primary) / 0.5) !important;
+  box-shadow: 0 8px 22px -8px hsl(var(--primary) / 0.45);
+}
+
+/* ---------- Section header pop-in ---------- */
+.upload-glass h1, .upload-glass h2, .upload-glass h3,
+.browse-glass h1, .browse-glass h2, .browse-glass h3 {
+  text-shadow: 0 2px 20px hsl(var(--primary) / 0.18);
+}
+
+/* Reduce heavy blur on lower-end mobile for perf */
+@media (max-width: 640px) {
+  .upload-aurora::before, .upload-aurora::after,
+  .browse-aurora::before, .browse-aurora::after {
+    filter: blur(70px);
+    opacity: 0.4;
+  }
+  .upload-glass [class*="rounded-lg"][class*="border"][class*="bg-card"],
+  .upload-glass .rounded-xl.border,
+  .upload-glass .rounded-2xl.border {
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+  }
+}
