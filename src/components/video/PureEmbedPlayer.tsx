@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { AlertCircle, RefreshCw, ShieldAlert } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { AlertCircle, RefreshCw, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { isEmbedUrlAllowed, getHostname } from '@/lib/embedAllowlist';
 
@@ -107,6 +107,32 @@ export function PureEmbedPlayer({ url, title, onSwitchServer }: PureEmbedPlayerP
     );
   }
 
+  // Mandatory ad-block layer for the Embed server.
+  // 1) Sandbox removes `allow-popups` and `allow-top-navigation`, killing
+  //    pop-unders and full-page redirect ads that embed hosts inject.
+  // 2) While this player is mounted, we override `window.open` and block
+  //    top-level navigations coming from the embedded frame — this catches
+  //    the residue that escapes the sandbox (e.g. same-origin bridges).
+  // Cannot be disabled by users or embed hosts.
+  useEffect(() => {
+    if (hasError || !allowed || !cleanUrl) return;
+    const originalOpen = window.open;
+    (window as any).open = () => null;
+    const blockUnload = (e: BeforeUnloadEvent) => {
+      // Only block if the navigation was NOT user-initiated from our UI.
+      // Our own links/buttons set data-user-nav; ad redirects don't.
+      const active = document.activeElement as HTMLElement | null;
+      if (active?.closest('[data-user-nav="true"]')) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', blockUnload);
+    return () => {
+      window.open = originalOpen;
+      window.removeEventListener('beforeunload', blockUnload);
+    };
+  }, [cleanUrl, allowed, hasError]);
+
   return (
     <div
       className="embed-player relative w-full bg-black overflow-hidden"
@@ -122,12 +148,20 @@ export function PureEmbedPlayer({ url, title, onSwitchServer }: PureEmbedPlayerP
           className="embed-frame absolute inset-0 w-full h-full border-0"
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write; accelerometer; gyroscope"
           allowFullScreen
-          referrerPolicy="no-referrer-when-downgrade"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-orientation-lock"
+          referrerPolicy="no-referrer"
           onError={() => setHasError(true)}
           onContextMenu={(e) => e.preventDefault()}
           style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' } as React.CSSProperties}
         />
         <div className="embed-frame-shield" aria-hidden="true" onContextMenu={(e) => e.preventDefault()} />
+        <div
+          className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-semibold text-emerald-300 pointer-events-none select-none"
+          aria-label="Ad blocker active"
+        >
+          <ShieldCheck className="h-3 w-3" />
+          Ad-Block On
+        </div>
         </>
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 bg-black">
