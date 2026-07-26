@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { Flame, Sparkles, Tv, Film, Languages, CalendarClock, Compass } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import crunchyrollLogo from "@/assets/crunchyroll-logo.png";
 import museinLogo from "@/assets/musein-logo.jpg";
 import floxLogo from "@/assets/flox-anime-india-logo.jpg";
@@ -69,14 +69,6 @@ export default function Index() {
     };
   }, []);
 
-  const collections = [
-    { to: "/browse?sort=trending", label: "Trending", icon: Flame, tint: "from-fuchsia-500/30 to-purple-600/20" },
-    { to: "/latest-series", label: "New Series", icon: Tv, tint: "from-purple-500/30 to-indigo-600/20" },
-    { to: "/latest-movies", label: "Movies", icon: Film, tint: "from-violet-500/30 to-purple-600/20" },
-    { to: "/eng-dub", label: "ENG DUB", icon: Languages, tint: "from-pink-500/25 to-fuchsia-600/20" },
-    { to: "/schedule", label: "Schedule", icon: CalendarClock, tint: "from-indigo-500/25 to-purple-600/20" },
-    { to: "/browse", label: "Explore", icon: Compass, tint: "from-purple-500/25 to-blue-600/20" },
-  ];
 
   return (
     <div
@@ -97,10 +89,9 @@ export default function Index() {
       {/* Continue Watching */}
       <ContinueWatching showOnHomeOnly={true} />
 
-      {/* Featured — Platform Chips + Collections */}
+      {/* Platform chips */}
       <section className="pt-3 md:pt-5">
-        <div className="container space-y-3 md:space-y-4">
-          {/* Platform chips row */}
+        <div className="container">
           <div className="flex items-center gap-2 md:gap-3 overflow-x-auto snap-row -mx-1 px-1 pb-1">
             <div className="hidden sm:flex items-center gap-1.5 text-xs uppercase tracking-widest text-muted-foreground pr-2 shrink-0">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
@@ -124,32 +115,6 @@ export default function Index() {
                 {p.label}
               </Link>
             ))}
-          </div>
-
-          {/* Featured collections grid */}
-          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
-            {collections.map((c) => {
-              const Icon = c.icon;
-              return (
-                <Link
-                  key={c.label}
-                  to={c.to}
-                  className="lg-section group relative overflow-hidden aspect-[1.4/1] md:aspect-[1.6/1] p-2.5 md:p-3 flex flex-col justify-between transition-transform duration-300 hover:-translate-y-0.5 active:scale-[0.98]"
-                >
-                  <div className={`absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br ${c.tint}`} />
-                  <div className="absolute -top-6 -right-6 h-16 w-16 md:h-20 md:w-20 rounded-full bg-primary/30 blur-2xl pointer-events-none" />
-                  <div className="relative flex items-center justify-between">
-                    <div className="lg-chip rounded-full p-1.5 md:p-2">
-                      <Icon className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary-foreground/90" />
-                    </div>
-                  </div>
-                  <div className="relative">
-                    <div className="text-[11px] md:text-xs uppercase tracking-wider text-white/70">Explore</div>
-                    <div className="text-sm md:text-base font-bold text-white leading-tight">{c.label}</div>
-                  </div>
-                </Link>
-              );
-            })}
           </div>
         </div>
       </section>

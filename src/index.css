@@ -2479,5 +2479,6 @@ html {
   .home-smooth a.group:hover > div.relative::after { opacity: 1; }
   .home-smooth a.group:hover > div.relative > img { filter: saturate(1.1) brightness(1.05); }
 }
-/* Keep child overlays above the glass sheen */
-.home-smooth a.group > div.relative > *:not(img) { position: relative; z-index: 3; }
+/* Keep child overlays above the glass sheen — must NOT override absolute positioning */
+.home-smooth a.group > div.relative > *:not(img) { z-index: 3; }
+.home-smooth a.group > div.relative > .absolute { z-index: 3; }
