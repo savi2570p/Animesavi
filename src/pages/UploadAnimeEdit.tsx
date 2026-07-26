@@ -558,9 +558,19 @@ export default function UploadAnimeEdit() {
               onClick={async () => {
                 const query = editTitle.trim() || anime?.title;
                 if (!query) { toast.error('Enter a title first'); return; }
-                const t = toast.loading('Fetching metadata from AniList…');
+                const t = toast.loading('Fetching metadata…');
+                let filled = 0;
+                const apply = (studio?: string | null, eps?: number | null, year?: number | null, desc?: string | null, genres?: string[] | null, cover?: string | null, banner?: string | null) => {
+                  if (studio) { setEditStudio(studio); filled++; }
+                  if (typeof eps === 'number' && eps > 0) { setEditTotalEpisodes(String(eps)); filled++; }
+                  if (year && !editReleaseYear) { setEditReleaseYear(String(year)); filled++; }
+                  if (desc && !editDescription) { setEditDescription(desc.replace(/<[^>]+>/g, '').trim()); filled++; }
+                  if (genres?.length && (!editGenres || editGenres.length === 0)) { setEditGenres(genres); filled++; }
+                  if (cover && !editCoverImage) { setEditCoverImage(cover); filled++; }
+                  if (banner && !editBannerImage) { setEditBannerImage(banner); filled++; }
+                };
                 try {
-                  const gql = `query ($search: String) { Media(search: $search, type: ANIME) { studios { nodes { name } } episodes } }`;
+                  const gql = `query ($search: String) { Media(search: $search, type: ANIME) { episodes seasonYear description(asHtml: false) genres coverImage { extraLarge large } bannerImage studios { nodes { name isAnimationStudio } } } }`;
                   const res = await fetch('https://graphql.anilist.co', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -568,15 +578,21 @@ export default function UploadAnimeEdit() {
                   });
                   const json = await res.json();
                   const m = json?.data?.Media;
-                  if (!m) throw new Error('Not found on AniList');
-                  let filled = 0;
-                  if (m.studios?.nodes?.[0]?.name) { setEditStudio(m.studios.nodes[0].name); filled++; }
-                  if (typeof m.episodes === 'number') { setEditTotalEpisodes(String(m.episodes)); filled++; }
-                  if (!filled) throw new Error('No studio / episodes found');
-                  toast.success('Studio & total episodes filled — review & Save.', { id: t });
-                } catch (e) {
-                  toast.error(e instanceof Error ? e.message : 'Fetch failed', { id: t });
+                  if (m) {
+                    const animStudio = m.studios?.nodes?.find((n: any) => n.isAnimationStudio)?.name || m.studios?.nodes?.[0]?.name;
+                    apply(animStudio, m.episodes, m.seasonYear, m.description, m.genres, m.coverImage?.extraLarge || m.coverImage?.large, m.bannerImage);
+                  }
+                } catch { /* ignore, try Jikan */ }
+                if (filled === 0) {
+                  try {
+                    const r = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=1&sfw=false`);
+                    const j = await r.json();
+                    const a = j?.data?.[0];
+                    if (a) apply(a.studios?.[0]?.name, a.episodes, a.year, a.synopsis, a.genres?.map((g: any) => g.name), a.images?.jpg?.large_image_url, null);
+                  } catch { /* ignore */ }
                 }
+                if (filled === 0) toast.error('No metadata found', { id: t });
+                else toast.success(`Filled ${filled} field${filled === 1 ? '' : 's'} — review & Save.`, { id: t });
               }}
             >
               <Save className="h-3.5 w-3.5 mr-1.5" />
