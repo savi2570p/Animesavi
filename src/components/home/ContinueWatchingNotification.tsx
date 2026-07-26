@@ -44,16 +44,20 @@ function formatTimeLeft(progress: number, durationSec: number | null) {
 
 export function ContinueWatchingNotification() {
   const { user } = useAuth();
+  const location = useLocation();
   const [lastWatched, setLastWatched] = useState<WatchHistoryItem | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
+  // Only render on the main/home page
+  const isHome = location.pathname === '/';
+
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isHome) return;
     const sessionShown = sessionStorage.getItem(NOTIFICATION_KEY);
     if (sessionShown === 'true') return;
     fetchLastWatched();
-  }, [user]);
+  }, [user, isHome]);
 
   const fetchLastWatched = async () => {
     if (!user) return;
