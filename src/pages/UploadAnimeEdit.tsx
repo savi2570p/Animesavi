@@ -579,7 +579,7 @@ export default function UploadAnimeEdit() {
                   const m = json?.data?.Media;
                   if (m) {
                     const animStudio = m.studios?.nodes?.find((n: any) => n.isAnimationStudio)?.name || m.studios?.nodes?.[0]?.name;
-                    apply(animStudio, m.episodes, m.seasonYear, m.description, m.genres, m.coverImage?.extraLarge || m.coverImage?.large, m.bannerImage);
+                    apply(animStudio, m.episodes, m.seasonYear, m.genres, m.coverImage?.extraLarge || m.coverImage?.large, m.bannerImage);
                   }
                 } catch { /* ignore, try Jikan */ }
                 if (filled === 0) {
@@ -587,7 +587,7 @@ export default function UploadAnimeEdit() {
                     const r = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=1&sfw=false`);
                     const j = await r.json();
                     const a = j?.data?.[0];
-                    if (a) apply(a.studios?.[0]?.name, a.episodes, a.year, a.synopsis, a.genres?.map((g: any) => g.name), a.images?.jpg?.large_image_url, null);
+                    if (a) apply(a.studios?.[0]?.name, a.episodes, a.year, a.genres?.map((g: any) => g.name), a.images?.jpg?.large_image_url, null);
                   } catch { /* ignore */ }
                 }
                 if (filled === 0) toast.error('No metadata found', { id: t });
