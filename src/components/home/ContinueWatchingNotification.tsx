@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -44,16 +44,20 @@ function formatTimeLeft(progress: number, durationSec: number | null) {
 
 export function ContinueWatchingNotification() {
   const { user } = useAuth();
+  const location = useLocation();
   const [lastWatched, setLastWatched] = useState<WatchHistoryItem | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
+  // Only render on the main/home page
+  const isHome = location.pathname === '/';
+
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isHome) return;
     const sessionShown = sessionStorage.getItem(NOTIFICATION_KEY);
     if (sessionShown === 'true') return;
     fetchLastWatched();
-  }, [user]);
+  }, [user, isHome]);
 
   const fetchLastWatched = async () => {
     if (!user) return;
@@ -94,7 +98,7 @@ export function ContinueWatchingNotification() {
     setIsVisible(false);
   };
 
-  if (!isVisible || !lastWatched) return null;
+  if (!isHome || !isVisible || !lastWatched) return null;
 
   const progress = Math.round(lastWatched.progress || 0);
   const timeLeft = formatTimeLeft(progress, lastWatched.episode.duration);

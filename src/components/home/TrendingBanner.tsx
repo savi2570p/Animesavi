@@ -161,20 +161,22 @@ export const TrendingBanner = memo(function TrendingBanner() {
           <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 bg-rose-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
           <Link to={`/anime/${current.id}`} className="group absolute inset-0 block">
-            {/* Background image with slow zoom */}
+            {/* Background image with slow zoom — kept vivid so it reads as the banner thumbnail */}
             <div className="absolute inset-0 overflow-hidden">
               <img
                 src={current.banner_image || current.cover_image || '/placeholder.svg'}
                 alt=""
                 loading="eager"
                 decoding="async"
-                className="w-full h-full object-cover transition-transform duration-[8000ms] ease-out group-hover:scale-105"
+                className="w-full h-full object-cover scale-105 transition-transform duration-[8000ms] ease-out group-hover:scale-110"
+                style={{ filter: 'saturate(1.15) brightness(0.95)' }}
               />
-              {/* Cinematic gradient overlays */}
-              <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/30" />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/40" />
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.12),transparent_50%)]" />
+              {/* Light cinematic scrims — leave the thumbnail clearly visible */}
+              <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/35 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-background/10" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.18),transparent_55%)]" />
             </div>
+
 
             {/* Top progress bar */}
             <div className="absolute top-0 left-0 right-0 z-20 h-1 bg-white/5">

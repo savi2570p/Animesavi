@@ -1215,83 +1215,6 @@ export default function Watch() {
       )}
 
 
-      {/* Above Player - Server Selection & Season Switcher (moved above per UX) */}
-      <div className="container py-3 md:py-4">
-        <div className="relative rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-2xl p-3 md:p-4 shadow-[0_10px_40px_-15px_hsl(270_80%_10%/0.6)] overflow-hidden">
-          <div className="absolute -top-12 -right-12 w-40 h-40 bg-primary/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative flex flex-col md:flex-row md:items-center gap-3 md:gap-5">
-            {/* Server Selection */}
-            <div className="flex flex-col gap-2 flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-md bg-primary/15 border border-primary/30">
-                  <Server className="h-3 w-3 md:h-3.5 md:w-3.5 text-primary" />
-                </div>
-                <span className="text-[11px] md:text-xs font-bold uppercase tracking-wider text-foreground/80">Streaming Server</span>
-                <ServerStatusIndicator
-                  activeServer={activeServer}
-                  failedServers={failedServers}
-                  isServerLoading={serverLoading}
-                  fallbackOccurred={fallbackOccurred}
-                  fallbackFrom={fallbackFrom}
-                />
-              </div>
-              <div className="flex gap-1.5 md:gap-2 flex-wrap">
-                {availableServers.map((server) => {
-                  const config = SERVER_CONFIGS[server];
-                  const isFailed = failedServers.has(server);
-                  const isActive = activeServer === server;
-                  return (
-                    <button
-                      key={server}
-                      onClick={() => handleServerChange(server)}
-                      disabled={serverLoading}
-                      title={config.description}
-                      className={`group relative px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg border text-[11px] md:text-xs font-semibold transition-all duration-300 backdrop-blur-xl ${
-                        isActive
-                          ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-primary shadow-lg shadow-primary/30 scale-[1.02]'
-                          : 'bg-white/[0.04] text-foreground/80 border-white/10 hover:border-primary/50 hover:bg-primary/10 hover:text-foreground'
-                      } ${isFailed ? 'opacity-50 line-through' : ''} ${serverLoading ? 'cursor-wait' : ''}`}
-                    >
-                      <span className="flex items-center gap-1.5">
-                        {isActive && (
-                          <span className="relative flex h-1.5 w-1.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-foreground opacity-75" />
-                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary-foreground" />
-                          </span>
-                        )}
-                        {config.name}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Season Switcher */}
-            {allSeasons.length > 0 && (
-              <div className="flex items-center gap-2 md:gap-3 md:border-l md:border-white/10 md:pl-5 min-w-0 md:ml-auto">
-                <span className="text-[11px] md:text-xs font-bold uppercase tracking-wider text-foreground/80 shrink-0">Season</span>
-                <div className="relative flex-1 md:flex-initial">
-                  <select
-                    value={currentSeason?.id || ''}
-                    onChange={(e) => handleSeasonChange(e.target.value)}
-                    className="w-full appearance-none bg-white/[0.04] border border-white/10 rounded-lg pl-3 pr-9 py-1.5 md:py-2 text-xs md:text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 hover:border-primary/40 transition-colors cursor-pointer backdrop-blur-xl"
-                  >
-                    {allSeasons.map((season) => (
-                      <option key={season.id} value={season.id}>
-                        Season {season.season_number} {season.episode_count !== undefined ? `· ${season.episode_count} eps` : ''}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronRight className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 rotate-90 text-muted-foreground pointer-events-none" />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* Main Watch Area - Video + Episode List */}
       <div className="flex">
@@ -1413,6 +1336,84 @@ export default function Watch() {
         </div>
       </div>
 
+
+      {/* Below Player - Server Selection & Season Switcher */}
+      <div className="container py-3 md:py-4">
+        <div className="relative rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-2xl p-3 md:p-4 shadow-[0_10px_40px_-15px_hsl(270_80%_10%/0.6)] overflow-hidden">
+          <div className="absolute -top-12 -right-12 w-40 h-40 bg-primary/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative flex flex-col md:flex-row md:items-center gap-3 md:gap-5">
+            {/* Server Selection */}
+            <div className="flex flex-col gap-2 flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-md bg-primary/15 border border-primary/30">
+                  <Server className="h-3 w-3 md:h-3.5 md:w-3.5 text-primary" />
+                </div>
+                <span className="text-[11px] md:text-xs font-bold uppercase tracking-wider text-foreground/80">Streaming Server</span>
+                <ServerStatusIndicator
+                  activeServer={activeServer}
+                  failedServers={failedServers}
+                  isServerLoading={serverLoading}
+                  fallbackOccurred={fallbackOccurred}
+                  fallbackFrom={fallbackFrom}
+                />
+              </div>
+              <div className="flex gap-1.5 md:gap-2 flex-wrap">
+                {availableServers.map((server) => {
+                  const config = SERVER_CONFIGS[server];
+                  const isFailed = failedServers.has(server);
+                  const isActive = activeServer === server;
+                  return (
+                    <button
+                      key={server}
+                      onClick={() => handleServerChange(server)}
+                      disabled={serverLoading}
+                      title={config.description}
+                      className={`group relative px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg border text-[11px] md:text-xs font-semibold transition-all duration-300 backdrop-blur-xl ${
+                        isActive
+                          ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-primary shadow-lg shadow-primary/30 scale-[1.02]'
+                          : 'bg-white/[0.04] text-foreground/80 border-white/10 hover:border-primary/50 hover:bg-primary/10 hover:text-foreground'
+                      } ${isFailed ? 'opacity-50 line-through' : ''} ${serverLoading ? 'cursor-wait' : ''}`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        {isActive && (
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-foreground opacity-75" />
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary-foreground" />
+                          </span>
+                        )}
+                        {config.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Season Switcher */}
+            {allSeasons.length > 0 && (
+              <div className="flex items-center gap-2 md:gap-3 md:border-l md:border-white/10 md:pl-5 min-w-0 md:ml-auto">
+                <span className="text-[11px] md:text-xs font-bold uppercase tracking-wider text-foreground/80 shrink-0">Season</span>
+                <div className="relative flex-1 md:flex-initial">
+                  <select
+                    value={currentSeason?.id || ''}
+                    onChange={(e) => handleSeasonChange(e.target.value)}
+                    className="w-full appearance-none bg-white/[0.04] border border-white/10 rounded-lg pl-3 pr-9 py-1.5 md:py-2 text-xs md:text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 hover:border-primary/40 transition-colors cursor-pointer backdrop-blur-xl"
+                  >
+                    {allSeasons.map((season) => (
+                      <option key={season.id} value={season.id}>
+                        Season {season.season_number} {season.episode_count !== undefined ? `· ${season.episode_count} eps` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronRight className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 rotate-90 text-muted-foreground pointer-events-none" />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Mobile Episode List - Below Server/Season Selection */}
       <div className="lg:hidden container py-4 border-b border-border/30">
