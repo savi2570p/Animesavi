@@ -69,14 +69,6 @@ export default function Index() {
     };
   }, []);
 
-  const collections = [
-    { to: "/browse?sort=trending", label: "Trending", icon: Flame, tint: "from-fuchsia-500/30 to-purple-600/20" },
-    { to: "/latest-series", label: "New Series", icon: Tv, tint: "from-purple-500/30 to-indigo-600/20" },
-    { to: "/latest-movies", label: "Movies", icon: Film, tint: "from-violet-500/30 to-purple-600/20" },
-    { to: "/eng-dub", label: "ENG DUB", icon: Languages, tint: "from-pink-500/25 to-fuchsia-600/20" },
-    { to: "/schedule", label: "Schedule", icon: CalendarClock, tint: "from-indigo-500/25 to-purple-600/20" },
-    { to: "/browse", label: "Explore", icon: Compass, tint: "from-purple-500/25 to-blue-600/20" },
-  ];
 
   return (
     <div
