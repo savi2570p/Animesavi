@@ -2509,12 +2509,16 @@ html {
    Liquid-glass theme — Upload & Browse pages
    ============================================================ */
 
-/* Shared aurora backdrop (fixed, subtle, GPU-only) */
+/* Shared aurora backdrop (fixed, subtle, GPU-only, behind content) */
+.upload-glass,
+.browse-glass {
+  isolation: isolate;
+}
 .upload-aurora,
 .browse-aurora {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
   overflow: hidden;
 }
@@ -2528,6 +2532,7 @@ html {
   filter: blur(90px);
   opacity: 0.55;
   will-change: transform;
+  pointer-events: none;
 }
 .upload-aurora::before,
 .browse-aurora::before {
@@ -2554,13 +2559,6 @@ html {
 @keyframes aurora-drift-b {
   0%, 100% { transform: translate(0, 0) scale(1); }
   50%      { transform: translate(-5vw, -3vh) scale(1.05); }
-}
-
-/* Keep page content above the aurora layer */
-.upload-glass > *:not(.upload-aurora),
-.browse-glass > *:not(.browse-aurora) {
-  position: relative;
-  z-index: 1;
 }
 
 /* ---------- Cards → liquid glass ---------- */
