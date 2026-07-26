@@ -2426,3 +2426,58 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .home-aurora::after { animation: none; }
 }
+
+/* ============================================================
+   HOME — Liquid Glass Anime Cards
+   Scoped to `.home-smooth` so it never bleeds into other pages.
+   Targets the common card structure used across home rows:
+     <a class="group ...">
+       <div class="relative aspect-[...] rounded-... overflow-hidden ...">
+         <img />
+         ...overlays
+       </div>
+     </a>
+   ============================================================ */
+.home-smooth a.group > div.relative {
+  border-radius: 18px;
+  border: 1px solid hsl(280 60% 70% / 0.10);
+  box-shadow:
+    0 12px 30px -14px hsl(270 80% 6% / 0.75),
+    inset 0 1px 0 hsl(280 100% 90% / 0.06);
+  transition: transform 400ms cubic-bezier(.2,.8,.2,1),
+              box-shadow 400ms cubic-bezier(.2,.8,.2,1),
+              border-color 300ms ease;
+  will-change: transform;
+  background: hsl(265 40% 8%);
+}
+.home-smooth a.group > div.relative::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, hsl(280 100% 80% / 0.18), transparent 35%),
+    linear-gradient(to top, hsl(270 90% 20% / 0.35), transparent 55%);
+  mix-blend-mode: screen;
+  opacity: 0.85;
+  transition: opacity 400ms ease;
+  z-index: 2;
+}
+.home-smooth a.group > div.relative > img {
+  transition: transform 700ms cubic-bezier(.2,.8,.2,1), filter 400ms ease;
+}
+@media (hover: hover) {
+  .home-smooth a.group:hover > div.relative {
+    transform: translateY(-4px);
+    border-color: hsl(280 90% 70% / 0.38);
+    box-shadow:
+      0 22px 45px -16px hsl(275 100% 40% / 0.55),
+      0 0 0 1px hsl(280 90% 70% / 0.15),
+      inset 0 1px 0 hsl(280 100% 90% / 0.14);
+  }
+  .home-smooth a.group:hover > div.relative::after { opacity: 1; }
+  .home-smooth a.group:hover > div.relative > img { filter: saturate(1.1) brightness(1.05); }
+}
+/* Keep child overlays above the glass sheen */
+.home-smooth a.group > div.relative > *:not(img) { position: relative; z-index: 3; }
