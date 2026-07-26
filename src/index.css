@@ -2482,3 +2482,25 @@ html {
 /* Keep child overlays above the glass sheen — must NOT override absolute positioning */
 .home-smooth a.group > div.relative > *:not(img) { z-index: 3; }
 .home-smooth a.group > div.relative > .absolute { z-index: 3; }
+
+/* Liquid-glass skeleton shimmer */
+@keyframes skeleton-sheen {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Anime detail section fade+rise on mount */
+@keyframes ad-section-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ad-section {
+  animation: ad-section-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.ad-glass {
+  background: linear-gradient(140deg, hsl(0 0% 100% / 0.05) 0%, hsl(0 0% 100% / 0.02) 45%, hsl(var(--primary) / 0.05) 100%);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid hsl(0 0% 100% / 0.08);
+  box-shadow: 0 20px 60px -20px rgba(0,0,0,0.55), inset 0 1px 0 hsl(0 0% 100% / 0.05);
+}
