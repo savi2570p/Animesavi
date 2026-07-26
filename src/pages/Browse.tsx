@@ -400,7 +400,8 @@ export default function Browse() {
   const showDropdownContent = showSuggestions || showHistory;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen browse-glass relative">
+      <div className="browse-aurora" aria-hidden />
       {/* Content Navigation Tabs */}
       <ContentNavTabs />
       
