@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import { SEO } from "@/components/SEO";
 export default function Index() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   // Redirect first-time visitors to /welcome
   useEffect(() => {
@@ -36,8 +37,42 @@ export default function Index() {
     }
   }, [navigate]);
 
+  // Track pointer for aurora glow (desktop only, throttled via rAF)
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || typeof window === "undefined") return;
+    if (!window.matchMedia("(hover: hover)").matches) return;
+    let raf = 0;
+    const onMove = (e: PointerEvent) => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const x = (e.clientX / window.innerWidth) * 100;
+        const y = (e.clientY / window.innerHeight) * 100;
+        el.style.setProperty("--mx", `${x}%`);
+        el.style.setProperty("--my", `${y}%`);
+      });
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  const Glass = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+    <section className={`py-2 md:py-4 ${className}`}>
+      <div className="container">
+        <div className="lg-section p-3 md:p-5">{children}</div>
+      </div>
+    </section>
+  );
+
   return (
-    <div className="home-smooth min-h-screen bg-background [&_section]:py-2 [&_section]:md:py-4 [&_.container]:px-3 [&_.container]:md:px-4">
+    <div
+      ref={rootRef}
+      className="home-smooth home-aurora min-h-screen [&_section]:py-2 [&_section]:md:py-4 [&_.container]:px-3 [&_.container]:md:px-4"
+    >
       <SEO
         title="AnimeSavi - Watch Anime in Hindi DUB"
         description="Watch your favorite anime in official Hindi DUB. Stream the best anime series and movies for free. Episode update same day as release calendar."
@@ -45,7 +80,6 @@ export default function Index() {
       />
       {/* Hero Banner */}
       <FeaturedSlider />
-
 
       {/* Trending Now */}
       <TrendingBanner />
@@ -55,24 +89,24 @@ export default function Index() {
 
       {/* Platform Links */}
       <section className="py-2 md:py-3">
-        <div className="container flex items-center gap-3">
+        <div className="container flex items-center gap-3 overflow-x-auto snap-row">
           <Link
             to="/crunchy"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border bg-card/50 text-muted-foreground border-border/50 hover:bg-primary/10 hover:border-primary/50 hover:text-primary"
+            className="lg-chip inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 text-foreground/90 hover:text-primary hover:scale-[1.03]"
           >
             <img src={crunchyrollLogo} alt="Crunchy" className="h-5 w-auto object-contain" />
             Crunchy
           </Link>
           <Link
             to="/musein"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border bg-card/50 text-muted-foreground border-border/50 hover:bg-primary/10 hover:border-primary/50 hover:text-primary"
+            className="lg-chip inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 text-foreground/90 hover:text-primary hover:scale-[1.03]"
           >
-           <img src={museinLogo} alt="MuseIN" className="h-5 w-5 rounded-full object-cover" />
+            <img src={museinLogo} alt="MuseIN" className="h-5 w-5 rounded-full object-cover" />
             MuseIN
           </Link>
           <Link
             to="/flox"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border bg-card/50 text-muted-foreground border-border/50 hover:bg-primary/10 hover:border-primary/50 hover:text-primary"
+            className="lg-chip inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 text-foreground/90 hover:text-primary hover:scale-[1.03]"
           >
             <img src={floxLogo} alt="Flox +" className="h-5 w-5 rounded-full object-cover" />
             Flox +
@@ -80,58 +114,56 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Recommended / Popular */}
-      <RecommendedAnime />
+      <hr className="lg-divider" />
 
-      {/* Most Popular */}
+      <RecommendedAnime />
       <MostPopular />
 
-      {/* Latest Series */}
-      <LatestSeries />
+      <hr className="lg-divider" />
 
-      {/* Latest Episodes */}
+      <LatestSeries />
       <LatestEpisodes />
 
-      {/* Coming Soon */}
+      <hr className="lg-divider" />
+
       <ComingSoon />
-
-      {/* Release Calendar */}
       <AnimeCalendar />
-
-      {/* Pending Upload */}
       <EpisodeProgress />
 
-      {/* Latest Movies */}
+      <hr className="lg-divider" />
+
       <LatestMovies />
-
-      {/* ENG DUB */}
       <LatestEngDub />
-
-      {/* Recently Completed */}
       <RecentlyCompleted />
 
       {/* Social Share */}
       <section className="py-4 md:py-8">
         <div className="container">
-          <SocialShare />
+          <div className="lg-section p-5 md:p-7">
+            <SocialShare />
+          </div>
         </div>
       </section>
 
       {/* CTA */}
       <section className="py-8 md:py-16">
         <div className="container">
-          <div className="relative overflow-visible rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-transparent border border-primary/20 p-8 md:p-12">
+          <div className="lg-section relative overflow-hidden p-8 md:p-12">
+            <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/30 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-fuchsia-500/20 blur-3xl pointer-events-none" />
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="h-5 w-5 text-primary" />
                 <span className="text-sm font-medium text-primary">Start Watching Today</span>
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to Start Your Anime Journey?</h2>
+              <h2 className="text-2xl md:text-3xl font-bold mb-4 bg-gradient-to-r from-white via-purple-100 to-purple-300 bg-clip-text text-transparent">
+                Ready to Start Your Anime Journey?
+              </h2>
               <p className="text-muted-foreground mb-6 max-w-xl">
                 Sign up now and get access to thousands of anime series and movies for free. No credit card required.
               </p>
               <div className="flex flex-wrap gap-3">
-                <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button asChild size="lg" className="bg-gradient-to-r from-primary to-fuchsia-500 text-primary-foreground hover:opacity-90 shadow-[0_10px_30px_-10px_hsl(275_90%_50%/0.7)]">
                   <Link to={user ? "/browse" : "/auth"}>
                     {user ? "Browse Anime" : "Get Started Free"}
                     <ArrowRight className="h-4 w-4 ml-2" />
@@ -145,3 +177,4 @@ export default function Index() {
     </div>
   );
 }
+

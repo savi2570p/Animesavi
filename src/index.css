@@ -180,8 +180,8 @@ button, [role="button"], a {
     --font-body: 'Inter', sans-serif;
 
     /* Default to dark mode to prevent white flash */
-    --background: 0 0% 5%;
-    --foreground: 0 0% 95%;
+    --background: 265 40% 5%;
+    --foreground: 270 20% 96%;
 
     --card: 0 0% 100%;
     --card-foreground: 265 4% 12.9%;
@@ -264,34 +264,34 @@ button, [role="button"], a {
   }
 
   .dark {
-    /* Netflix-inspired dark theme - deep blacks with red accent */
-    --background: 0 0% 5%;
-    --foreground: 0 0% 95%;
+    /* Deep dark purple theme with liquid-glass accents */
+    --background: 265 40% 5%;
+    --foreground: 270 20% 96%;
 
-    --card: 0 0% 9%;
-    --card-foreground: 0 0% 95%;
+    --card: 265 35% 9%;
+    --card-foreground: 270 15% 96%;
 
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 265 40% 7%;
+    --popover-foreground: 270 15% 96%;
 
-    --primary: 270 75% 55%;
+    --primary: 270 85% 62%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 14%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary: 265 30% 14%;
+    --secondary-foreground: 270 15% 96%;
 
-    --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 265 25% 13%;
+    --muted-foreground: 270 12% 68%;
 
-    --accent: 0 0% 16%;
-    --accent-foreground: 0 0% 95%;
+    --accent: 275 60% 22%;
+    --accent-foreground: 270 15% 96%;
 
-    --destructive: 270 80% 65%;
-    --destructive-foreground: 0 0% 95%;
+    --destructive: 340 82% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 16%;
-    --input: 0 0% 16%;
-    --ring: 270 75% 55%;
+    --border: 270 30% 18%;
+    --input: 270 30% 18%;
+    --ring: 270 85% 62%;
 
     /* Sidebar variables - dark mode */
     --sidebar-background: 0 0% 4%;
@@ -2323,3 +2323,106 @@ html {
 }
 
 
+
+/* ============================================================
+   HOME — Deep Purple Liquid Glass System
+   ============================================================ */
+.home-aurora {
+  position: relative;
+  background:
+    radial-gradient(1200px 700px at 15% -10%, hsl(275 90% 45% / 0.28), transparent 60%),
+    radial-gradient(900px 600px at 100% 10%, hsl(290 85% 50% / 0.22), transparent 65%),
+    radial-gradient(1000px 800px at 50% 100%, hsl(260 90% 40% / 0.25), transparent 70%),
+    linear-gradient(180deg, hsl(265 45% 4%) 0%, hsl(268 50% 6%) 50%, hsl(265 45% 4%) 100%);
+  isolation: isolate;
+}
+.home-aurora::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(600px 400px at var(--mx, 30%) var(--my, 20%), hsl(280 100% 60% / 0.10), transparent 60%),
+    radial-gradient(500px 350px at calc(100% - var(--mx, 30%)) calc(100% - var(--my, 20%)), hsl(260 100% 55% / 0.10), transparent 60%);
+  transition: background 800ms ease;
+  mix-blend-mode: screen;
+}
+.home-aurora > * { position: relative; z-index: 1; }
+
+/* Floating blobs */
+.home-aurora::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(closest-side, hsl(275 90% 60% / 0.18), transparent 70%),
+    radial-gradient(closest-side, hsl(295 90% 55% / 0.15), transparent 70%);
+  background-repeat: no-repeat;
+  background-size: 45vmax 45vmax, 40vmax 40vmax;
+  background-position: -10% 15%, 110% 85%;
+  filter: blur(30px);
+  animation: home-aurora-drift 22s ease-in-out infinite alternate;
+  z-index: 0;
+}
+@keyframes home-aurora-drift {
+  0%   { background-position: -10% 15%, 110% 85%; }
+  50%  { background-position: 20% 40%, 80% 60%; }
+  100% { background-position: 5% 70%, 95% 30%; }
+}
+
+/* Liquid glass section wrapper */
+.lg-section {
+  position: relative;
+  border-radius: 22px;
+  background: linear-gradient(180deg, hsl(270 40% 12% / 0.55), hsl(265 50% 7% / 0.55));
+  border: 1px solid hsl(275 60% 70% / 0.10);
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  box-shadow:
+    inset 0 1px 0 hsl(280 100% 90% / 0.08),
+    0 20px 50px -20px hsl(265 80% 5% / 0.7);
+  overflow: hidden;
+}
+.lg-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, hsl(280 100% 70% / 0.10), transparent 40%, hsl(260 100% 60% / 0.06));
+}
+.lg-section > * { position: relative; }
+
+.lg-chip {
+  background: linear-gradient(135deg, hsl(275 60% 25% / 0.55), hsl(265 60% 18% / 0.45));
+  border: 1px solid hsl(280 90% 75% / 0.18);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: inset 0 1px 0 hsl(280 100% 90% / 0.14), 0 6px 20px -8px hsl(275 80% 20% / 0.5);
+}
+
+/* Smoother scrolling for home */
+.home-smooth {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  content-visibility: auto;
+  contain-intrinsic-size: 1200px;
+}
+.home-smooth section {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Section divider — subtle purple gradient rule */
+.lg-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(280 90% 60% / 0.35), transparent);
+  border: 0;
+  margin: 0.5rem auto;
+  max-width: 90%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-aurora::after { animation: none; }
+}
