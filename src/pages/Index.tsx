@@ -36,22 +36,32 @@ export default function Index() {
     }
   }, [navigate]);
 
-  // Track pointer for aurora glow (desktop only, throttled via rAF)
+  // Cursor-following aurora — rAF + 60ms time throttle. Enabled on touch too
+  // (attached to pointermove which fires on tap/scroll drag) with low update rate.
   useEffect(() => {
     const el = rootRef.current;
     if (!el || typeof window === "undefined") return;
-    if (!window.matchMedia("(hover: hover)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
     let raf = 0;
+    let last = 0;
+    const MIN_MS = 60; // ~16 FPS cap for the background paint — plenty for a glow
+
+    const apply = (x: number, y: number) => {
+      el.style.setProperty("--mx", `${x}%`);
+      el.style.setProperty("--my", `${y}%`);
+    };
+
     const onMove = (e: PointerEvent) => {
-      if (raf) return;
+      const now = performance.now();
+      if (raf || now - last < MIN_MS) return;
+      last = now;
       raf = requestAnimationFrame(() => {
         raf = 0;
-        const x = (e.clientX / window.innerWidth) * 100;
-        const y = (e.clientY / window.innerHeight) * 100;
-        el.style.setProperty("--mx", `${x}%`);
-        el.style.setProperty("--my", `${y}%`);
+        apply((e.clientX / window.innerWidth) * 100, (e.clientY / window.innerHeight) * 100);
       });
     };
+
     window.addEventListener("pointermove", onMove, { passive: true });
     return () => {
       window.removeEventListener("pointermove", onMove);
@@ -59,13 +69,14 @@ export default function Index() {
     };
   }, []);
 
-  const Glass = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-    <section className={`py-2 md:py-4 ${className}`}>
-      <div className="container">
-        <div className="lg-section p-3 md:p-5">{children}</div>
-      </div>
-    </section>
-  );
+  const collections = [
+    { to: "/browse?sort=trending", label: "Trending", icon: Flame, tint: "from-fuchsia-500/30 to-purple-600/20" },
+    { to: "/latest-series", label: "New Series", icon: Tv, tint: "from-purple-500/30 to-indigo-600/20" },
+    { to: "/latest-movies", label: "Movies", icon: Film, tint: "from-violet-500/30 to-purple-600/20" },
+    { to: "/eng-dub", label: "ENG DUB", icon: Languages, tint: "from-pink-500/25 to-fuchsia-600/20" },
+    { to: "/schedule", label: "Schedule", icon: CalendarClock, tint: "from-indigo-500/25 to-purple-600/20" },
+    { to: "/browse", label: "Explore", icon: Compass, tint: "from-purple-500/25 to-blue-600/20" },
+  ];
 
   return (
     <div
@@ -86,30 +97,60 @@ export default function Index() {
       {/* Continue Watching */}
       <ContinueWatching showOnHomeOnly={true} />
 
-      {/* Platform Links */}
-      <section className="py-2 md:py-3">
-        <div className="container flex items-center gap-3 overflow-x-auto snap-row">
-          <Link
-            to="/crunchy"
-            className="lg-chip inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 text-foreground/90 hover:text-primary hover:scale-[1.03]"
-          >
-            <img src={crunchyrollLogo} alt="Crunchy" className="h-5 w-auto object-contain" />
-            Crunchy
-          </Link>
-          <Link
-            to="/musein"
-            className="lg-chip inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 text-foreground/90 hover:text-primary hover:scale-[1.03]"
-          >
-            <img src={museinLogo} alt="MuseIN" className="h-5 w-5 rounded-full object-cover" />
-            MuseIN
-          </Link>
-          <Link
-            to="/flox"
-            className="lg-chip inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 text-foreground/90 hover:text-primary hover:scale-[1.03]"
-          >
-            <img src={floxLogo} alt="Flox +" className="h-5 w-5 rounded-full object-cover" />
-            Flox +
-          </Link>
+      {/* Featured — Platform Chips + Collections */}
+      <section className="pt-3 md:pt-5">
+        <div className="container space-y-3 md:space-y-4">
+          {/* Platform chips row */}
+          <div className="flex items-center gap-2 md:gap-3 overflow-x-auto snap-row -mx-1 px-1 pb-1">
+            <div className="hidden sm:flex items-center gap-1.5 text-xs uppercase tracking-widest text-muted-foreground pr-2 shrink-0">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              Platforms
+            </div>
+            {[
+              { to: "/crunchy", src: crunchyrollLogo, label: "Crunchy", round: false },
+              { to: "/musein", src: museinLogo, label: "MuseIN", round: true },
+              { to: "/flox", src: floxLogo, label: "Flox +", round: true },
+            ].map((p) => (
+              <Link
+                key={p.label}
+                to={p.to}
+                className="lg-chip shrink-0 inline-flex items-center gap-2 px-3.5 md:px-4 py-2 rounded-full text-sm font-semibold text-foreground/90 transition-transform duration-300 hover:text-primary hover:scale-[1.04] active:scale-95"
+              >
+                <img
+                  src={p.src}
+                  alt={p.label}
+                  className={`h-5 w-5 object-cover ${p.round ? "rounded-full" : "w-auto object-contain"}`}
+                />
+                {p.label}
+              </Link>
+            ))}
+          </div>
+
+          {/* Featured collections grid */}
+          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
+            {collections.map((c) => {
+              const Icon = c.icon;
+              return (
+                <Link
+                  key={c.label}
+                  to={c.to}
+                  className="lg-section group relative overflow-hidden aspect-[1.4/1] md:aspect-[1.6/1] p-2.5 md:p-3 flex flex-col justify-between transition-transform duration-300 hover:-translate-y-0.5 active:scale-[0.98]"
+                >
+                  <div className={`absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br ${c.tint}`} />
+                  <div className="absolute -top-6 -right-6 h-16 w-16 md:h-20 md:w-20 rounded-full bg-primary/30 blur-2xl pointer-events-none" />
+                  <div className="relative flex items-center justify-between">
+                    <div className="lg-chip rounded-full p-1.5 md:p-2">
+                      <Icon className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary-foreground/90" />
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <div className="text-[11px] md:text-xs uppercase tracking-wider text-white/70">Explore</div>
+                    <div className="text-sm md:text-base font-bold text-white leading-tight">{c.label}</div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </section>
 
@@ -143,37 +184,8 @@ export default function Index() {
           </div>
         </div>
       </section>
-
-      {/* CTA */}
-      <section className="py-8 md:py-16">
-        <div className="container">
-          <div className="lg-section relative overflow-hidden p-8 md:p-12">
-            <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/30 blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-fuchsia-500/20 blur-3xl pointer-events-none" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-4">
-                <Sparkles className="h-5 w-5 text-primary" />
-                <span className="text-sm font-medium text-primary">Start Watching Today</span>
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold mb-4 bg-gradient-to-r from-white via-purple-100 to-purple-300 bg-clip-text text-transparent">
-                Ready to Start Your Anime Journey?
-              </h2>
-              <p className="text-muted-foreground mb-6 max-w-xl">
-                Sign up now and get access to thousands of anime series and movies for free. No credit card required.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Button asChild size="lg" className="bg-gradient-to-r from-primary to-fuchsia-500 text-primary-foreground hover:opacity-90 shadow-[0_10px_30px_-10px_hsl(275_90%_50%/0.7)]">
-                  <Link to={user ? "/browse" : "/auth"}>
-                    {user ? "Browse Anime" : "Get Started Free"}
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
+
 
