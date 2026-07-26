@@ -1,8 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { Flame, Sparkles, Tv, Film, Languages, CalendarClock, Compass } from "lucide-react";
 import crunchyrollLogo from "@/assets/crunchyroll-logo.png";
 import museinLogo from "@/assets/musein-logo.jpg";
 import floxLogo from "@/assets/flox-anime-india-logo.jpg";
