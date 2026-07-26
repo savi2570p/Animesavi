@@ -560,11 +560,10 @@ export default function UploadAnimeEdit() {
                 if (!query) { toast.error('Enter a title first'); return; }
                 const t = toast.loading('Fetching metadata…');
                 let filled = 0;
-                const apply = (studio?: string | null, eps?: number | null, year?: number | null, desc?: string | null, genres?: string[] | null, cover?: string | null, banner?: string | null) => {
+                const apply = (studio?: string | null, eps?: number | null, year?: number | null, genres?: string[] | null, cover?: string | null, banner?: string | null) => {
                   if (studio) { setEditStudio(studio); filled++; }
                   if (typeof eps === 'number' && eps > 0) { setEditTotalEpisodes(String(eps)); filled++; }
                   if (year && !editReleaseYear) { setEditReleaseYear(String(year)); filled++; }
-                  if (desc && !editDescription) { setEditDescription(desc.replace(/<[^>]+>/g, '').trim()); filled++; }
                   if (genres?.length && (!editGenres || editGenres.length === 0)) { setEditGenres(genres); filled++; }
                   if (cover && !editCoverImage) { setEditCoverImage(cover); filled++; }
                   if (banner && !editBannerImage) { setEditBannerImage(banner); filled++; }
