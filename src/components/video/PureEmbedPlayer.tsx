@@ -148,7 +148,6 @@ export function PureEmbedPlayer({ url, title, onSwitchServer }: PureEmbedPlayerP
           className="embed-frame absolute inset-0 w-full h-full border-0"
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write; accelerometer; gyroscope"
           allowFullScreen
-          sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-orientation-lock"
           referrerPolicy="no-referrer"
           onError={() => setHasError(true)}
           onContextMenu={(e) => e.preventDefault()}
