@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { AlertCircle, RefreshCw, ShieldAlert } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { AlertCircle, RefreshCw, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { isEmbedUrlAllowed, getHostname } from '@/lib/embedAllowlist';
 
