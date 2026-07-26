@@ -107,31 +107,71 @@ export function PureEmbedPlayer({ url, title, onSwitchServer }: PureEmbedPlayerP
     );
   }
 
-  // Mandatory ad-block layer for the Embed server.
-  // 1) Sandbox removes `allow-popups` and `allow-top-navigation`, killing
-  //    pop-unders and full-page redirect ads that embed hosts inject.
-  // 2) While this player is mounted, we override `window.open` and block
-  //    top-level navigations coming from the embedded frame — this catches
-  //    the residue that escapes the sandbox (e.g. same-origin bridges).
-  // Cannot be disabled by users or embed hosts.
+  // Mandatory ad + redirect blocking layer for the Embed server.
+  // Since sandbox is off (some hosts refuse to run inside one), we rely on
+  // parent-side traps + a first-click shield to strip pop-under / redirect ads.
+  //   1) window.open → no-op while embed is mounted (kills popup ads).
+  //   2) beforeunload guard → blocks unexpected top-level redirects that ad
+  //      scripts trigger via `top.location = ...` bridges.
+  //   3) target=_blank hijack → any link opened in a new tab from anywhere on
+  //      the page while embed is playing is cancelled (embed hosts inject
+  //      hidden <a target=_blank> and auto-click them).
+  //   4) One-shot click shield: the very first pointer event on the iframe is
+  //      swallowed (that's the pop-under trigger). Real playback click lands
+  //      on the second tap. This mirrors uBlock's popup-blocker heuristic.
+  //   5) Visibility guard: if the tab loses focus within 400ms of a click on
+  //      the iframe, we refocus the window (kills pop-unders that stole focus).
+  // None of this can be disabled by users or embed hosts.
   useEffect(() => {
     if (hasError || !allowed || !cleanUrl) return;
+
     const originalOpen = window.open;
     (window as any).open = () => null;
+
     const blockUnload = (e: BeforeUnloadEvent) => {
-      // Only block if the navigation was NOT user-initiated from our UI.
-      // Our own links/buttons set data-user-nav; ad redirects don't.
       const active = document.activeElement as HTMLElement | null;
       if (active?.closest('[data-user-nav="true"]')) return;
       e.preventDefault();
       e.returnValue = '';
     };
     window.addEventListener('beforeunload', blockUnload);
+
+    // Neutralise target=_blank anchors added by ad scripts on the parent doc.
+    const blockBlankClicks = (e: MouseEvent) => {
+      const a = (e.target as HTMLElement | null)?.closest?.('a[target="_blank"]') as HTMLAnchorElement | null;
+      if (!a) return;
+      if (a.closest('[data-user-nav="true"]')) return;
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    document.addEventListener('click', blockBlankClicks, true);
+    document.addEventListener('auxclick', blockBlankClicks, true);
+
+    // Refocus if a pop-under steals focus right after an iframe click.
+    let lastIframeClick = 0;
+    const markClick = () => { lastIframeClick = Date.now(); };
+    const onBlur = () => {
+      if (Date.now() - lastIframeClick < 400) {
+        setTimeout(() => window.focus(), 0);
+      }
+    };
+    window.addEventListener('blur', onBlur);
+    window.addEventListener('pointerdown', markClick, true);
+
     return () => {
       window.open = originalOpen;
       window.removeEventListener('beforeunload', blockUnload);
+      document.removeEventListener('click', blockBlankClicks, true);
+      document.removeEventListener('auxclick', blockBlankClicks, true);
+      window.removeEventListener('blur', onBlur);
+      window.removeEventListener('pointerdown', markClick, true);
     };
   }, [cleanUrl, allowed, hasError]);
+
+  // First-click shield state: swallow the very first pointer event on the
+  // iframe overlay, then get out of the way so playback controls work.
+  const [shieldArmed, setShieldArmed] = useState(true);
+  useEffect(() => { setShieldArmed(true); }, [cleanUrl, reloadKey]);
 
   return (
     <div
@@ -146,13 +186,24 @@ export function PureEmbedPlayer({ url, title, onSwitchServer }: PureEmbedPlayerP
           src={cleanUrl}
           title={title}
           className="embed-frame absolute inset-0 w-full h-full border-0"
-          allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write; accelerometer; gyroscope"
+          allow="autoplay; fullscreen; picture-in-picture; encrypted-media; accelerometer; gyroscope"
           allowFullScreen
           referrerPolicy="no-referrer"
           onError={() => setHasError(true)}
           onContextMenu={(e) => e.preventDefault()}
           style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' } as React.CSSProperties}
         />
+        {shieldArmed && (
+          <div
+            className="absolute inset-0 z-20 cursor-pointer"
+            aria-label="Tap to start"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShieldArmed(false);
+            }}
+          />
+        )}
         <div className="embed-frame-shield" aria-hidden="true" onContextMenu={(e) => e.preventDefault()} />
         <div
           className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-semibold text-emerald-300 pointer-events-none select-none"
