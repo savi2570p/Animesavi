@@ -1,5 +1,5 @@
-import { useMemo, useState, useEffect } from 'react';
-import { AlertCircle, RefreshCw, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { AlertCircle, RefreshCw, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { isEmbedUrlAllowed, getHostname } from '@/lib/embedAllowlist';
 
@@ -107,45 +107,6 @@ export function PureEmbedPlayer({ url, title, onSwitchServer }: PureEmbedPlayerP
     );
   }
 
-  // Non-invasive ad + redirect blocking for the Embed server.
-  // Rules:
-  //  - No sandbox, no CSP, no injected scripts, no overlays on the iframe.
-  //  - Keep every permission the player needs (autoplay, fullscreen, PiP,
-  //    encrypted-media, clipboard, motion sensors) so subtitles, audio
-  //    tracks, seeking and DRM playback all work.
-  //  - Only block signals we can safely trap from the parent document:
-  //      (a) window.open popups triggered via parent bridges
-  //      (b) auto-clicked <a target="_blank"> ad anchors injected into the
-  //          parent DOM (never inside the iframe).
-  //  - Nothing here can prevent playback or trigger "sandboxed player not
-  //    allowed" messages from the embed host.
-  useEffect(() => {
-    if (hasError || !allowed || !cleanUrl) return;
-
-    const originalOpen = window.open;
-    (window as any).open = () => null;
-
-    const blockBlankClicks = (e: MouseEvent) => {
-      const a = (e.target as HTMLElement | null)?.closest?.('a[target="_blank"]') as HTMLAnchorElement | null;
-      if (!a) return;
-      // Allow anchors explicitly marked as user navigation from our own UI.
-      if (a.closest('[data-user-nav="true"]')) return;
-      // Allow real, trusted user gestures on links inside our chrome
-      // (e.g. share buttons). Only stop synthetic auto-clicks.
-      if (e.isTrusted && a.closest('.embed-player') === null) return;
-      e.preventDefault();
-      e.stopPropagation();
-    };
-    document.addEventListener('click', blockBlankClicks, true);
-    document.addEventListener('auxclick', blockBlankClicks, true);
-
-    return () => {
-      window.open = originalOpen;
-      document.removeEventListener('click', blockBlankClicks, true);
-      document.removeEventListener('auxclick', blockBlankClicks, true);
-    };
-  }, [cleanUrl, allowed, hasError]);
-
   return (
     <div
       className="embed-player relative w-full bg-black overflow-hidden"
@@ -159,7 +120,7 @@ export function PureEmbedPlayer({ url, title, onSwitchServer }: PureEmbedPlayerP
           src={cleanUrl}
           title={title}
           className="embed-frame absolute inset-0 w-full h-full border-0"
-          allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write; accelerometer; gyroscope; screen-wake-lock"
+          allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write; accelerometer; gyroscope"
           allowFullScreen
           referrerPolicy="no-referrer-when-downgrade"
           onError={() => setHasError(true)}
@@ -167,13 +128,6 @@ export function PureEmbedPlayer({ url, title, onSwitchServer }: PureEmbedPlayerP
           style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' } as React.CSSProperties}
         />
         <div className="embed-frame-shield" aria-hidden="true" onContextMenu={(e) => e.preventDefault()} />
-        <div
-          className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-semibold text-emerald-300 pointer-events-none select-none"
-          aria-label="Ad blocker active"
-        >
-          <ShieldCheck className="h-3 w-3" />
-          Ad-Block On
-        </div>
         </>
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 bg-black">
