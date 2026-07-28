@@ -74,6 +74,8 @@ export default function EmbedPlayer() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [episodeData, setEpisodeData] = useState<{ title: string; videoUrl: string | null } | null>(null);
+  const [candidateUrls, setCandidateUrls] = useState<string[]>([]);
+  const [candidateIndex, setCandidateIndex] = useState(0);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
@@ -169,9 +171,15 @@ export default function EmbedPlayer() {
           .from('episodes').select('video_url, external_url, title, season_id, episode_number, captions_url')
           .eq('id', episodeId).single();
         if (error || !data) { setFetchError('Episode not found'); return; }
-        const url = data.video_url || data.external_url;
-        if (!url) { setFetchError('No video available'); return; }
-        setEpisodeData({ title: data.title, videoUrl: url });
+        // Build ordered candidate list so if one URL is broken (Object_not_found,
+        // 404, DRM, iOS-incompatible codec), we auto-fall-back to the next.
+        const candidates = [data.video_url, data.external_url]
+          .filter((u): u is string => !!u && typeof u === 'string')
+          .filter((u, i, arr) => arr.indexOf(u) === i);
+        if (candidates.length === 0) { setFetchError('No video available'); return; }
+        setCandidateUrls(candidates);
+        setCandidateIndex(0);
+        setEpisodeData({ title: data.title, videoUrl: candidates[0] });
         setCaptionsUrl(data.captions_url || null);
 
         // Fetch sibling episodes for episode selector
@@ -310,6 +318,15 @@ export default function EmbedPlayer() {
       const v = e.currentTarget as HTMLVideoElement;
       setIsLoading(false);
       if (v?.error && v.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+        // Auto-advance to the next candidate URL (external_url fallback etc.)
+        if (candidateIndex < candidateUrls.length - 1) {
+          const nextIdx = candidateIndex + 1;
+          setCandidateIndex(nextIdx);
+          setEpisodeData((prev) => prev ? { ...prev, videoUrl: candidateUrls[nextIdx] } : prev);
+          setError(null);
+          setIsLoading(true);
+          return;
+        }
         setError('Video failed to load - please try again');
       }
     };
@@ -404,7 +421,18 @@ export default function EmbedPlayer() {
     setCurrentAudioTrack(trackId);
     setShowAudioMenu(false);
   };
-  const retry = () => { setError(null); setIsLoading(true); videoRef.current?.load(); };
+  const retry = () => {
+    setError(null);
+    setIsLoading(true);
+    // Reset to the first candidate on manual retry so we always try the primary
+    // source again — if it still fails, the auto-fallback re-advances.
+    if (candidateUrls.length > 0) {
+      setCandidateIndex(0);
+      setEpisodeData((prev) => prev ? { ...prev, videoUrl: candidateUrls[0] } : prev);
+    } else {
+      videoRef.current?.load();
+    }
+  };
 
   const handleDirectDownload = (quality: string) => {
     const url = episodeData?.videoUrl;
@@ -527,9 +555,13 @@ export default function EmbedPlayer() {
     setError(null);
     const { data } = await supabase.from('episodes').select('video_url, external_url, title').eq('id', ep.id).single();
     if (!data) { setError('Episode failed to load'); return; }
-    const url = data.video_url || data.external_url;
-    if (!url) { setError('No video available'); return; }
-    setEpisodeData({ title: data.title, videoUrl: url });
+    const candidates = [data.video_url, data.external_url]
+      .filter((u): u is string => !!u && typeof u === 'string')
+      .filter((u, i, arr) => arr.indexOf(u) === i);
+    if (candidates.length === 0) { setError('No video available'); return; }
+    setCandidateUrls(candidates);
+    setCandidateIndex(0);
+    setEpisodeData({ title: data.title, videoUrl: candidates[0] });
     const idx = allEpisodes.findIndex(e => e.id === ep.id);
     if (idx >= 0) setCurrentEpisodeIndex(idx);
   }, [allEpisodes]);
