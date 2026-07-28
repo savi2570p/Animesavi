@@ -171,9 +171,15 @@ export default function EmbedPlayer() {
           .from('episodes').select('video_url, external_url, title, season_id, episode_number, captions_url')
           .eq('id', episodeId).single();
         if (error || !data) { setFetchError('Episode not found'); return; }
-        const url = data.video_url || data.external_url;
-        if (!url) { setFetchError('No video available'); return; }
-        setEpisodeData({ title: data.title, videoUrl: url });
+        // Build ordered candidate list so if one URL is broken (Object_not_found,
+        // 404, DRM, iOS-incompatible codec), we auto-fall-back to the next.
+        const candidates = [data.video_url, data.external_url]
+          .filter((u): u is string => !!u && typeof u === 'string')
+          .filter((u, i, arr) => arr.indexOf(u) === i);
+        if (candidates.length === 0) { setFetchError('No video available'); return; }
+        setCandidateUrls(candidates);
+        setCandidateIndex(0);
+        setEpisodeData({ title: data.title, videoUrl: candidates[0] });
         setCaptionsUrl(data.captions_url || null);
 
         // Fetch sibling episodes for episode selector
