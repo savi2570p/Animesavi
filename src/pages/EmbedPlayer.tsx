@@ -369,8 +369,10 @@ export default function EmbedPlayer() {
     const handleError = (e: Event) => {
       const v = e.currentTarget as HTMLVideoElement;
       setIsLoading(false);
-      if (v?.error && v.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
-        // Auto-advance to the next candidate URL (external_url fallback etc.)
+      // Auto-advance to the next candidate URL on any decode/network/format error.
+      const code = v?.error?.code;
+      const isFormatOrDecode = code === 3 /* MEDIA_ERR_DECODE */ || code === 4 /* MEDIA_ERR_SRC_NOT_SUPPORTED */;
+      if (v?.error && (v.networkState === HTMLMediaElement.NETWORK_NO_SOURCE || isFormatOrDecode)) {
         if (candidateIndex < candidateUrls.length - 1) {
           const nextIdx = candidateIndex + 1;
           setCandidateIndex(nextIdx);
@@ -379,9 +381,17 @@ export default function EmbedPlayer() {
           setIsLoading(true);
           return;
         }
-        setError('Video failed to load - please try again');
+        const kind = detectDeviceKind();
+        setError(
+          kind === 'ios'
+            ? 'This video format is not supported on iOS. Try another server.'
+            : kind === 'android'
+              ? 'This video format is not supported on Android. Try another server.'
+              : 'Video failed to load — please try another server.'
+        );
       }
     };
+
     const handleLoadedMeta = () => {
       // Native (Safari/HLS-native + MP4 with multiple audio) audio track detection
       const nativeAudio = (video as any).audioTracks;
