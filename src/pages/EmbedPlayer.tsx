@@ -11,6 +11,8 @@ import { Captions, CaptionsOff } from 'lucide-react';
 import Hls from 'hls.js';
 import { useEmbedPlayerBridge } from '@/hooks/useEmbedPlayerBridge';
 import { getNetworkInfo } from '@/lib/videoUtils';
+import { isHlsUrl as isHls, isDashUrl, selectCompatibleSources, detectDeviceKind } from '@/lib/streamSource';
+
 
 function getLowBandwidthHlsConfig() {
   const { isSlowNetwork, isCellular, saveData } = getNetworkInfo();
@@ -56,9 +58,9 @@ function detectDeviceInfo() {
 }
 
 function isHlsUrl(url: string | null): boolean {
-  if (!url) return false;
-  return /\.m3u8(\?.*)?$/i.test(url) || url.includes('.m3u8');
+  return isHls(url);
 }
+
 
 export default function EmbedPlayer() {
   const { episodeId } = useParams();
@@ -68,6 +70,8 @@ export default function EmbedPlayer() {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const dashRef = useRef<any>(null);
+
   
   const [domainAllowed, setDomainAllowed] = useState<boolean | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -171,15 +175,23 @@ export default function EmbedPlayer() {
           .from('episodes').select('video_url, external_url, title, season_id, episode_number, captions_url')
           .eq('id', episodeId).single();
         if (error || !data) { setFetchError('Episode not found'); return; }
-        // Build ordered candidate list so if one URL is broken (Object_not_found,
-        // 404, DRM, iOS-incompatible codec), we auto-fall-back to the next.
-        const candidates = [data.video_url, data.external_url]
-          .filter((u): u is string => !!u && typeof u === 'string')
-          .filter((u, i, arr) => arr.indexOf(u) === i);
-        if (candidates.length === 0) { setFetchError('No video available'); return; }
+        // Build ordered candidate list, ranked by device compatibility.
+        // iOS Safari can't play DASH/MKV → those get dropped so the fallback
+        // jumps straight to a playable HLS/MP4 source instead of showing a
+        // "Playback Error" on an unplayable format.
+        const candidates = selectCompatibleSources([data.video_url, data.external_url]);
+        if (candidates.length === 0) {
+          setFetchError(
+            deviceInfo.isIOS
+              ? 'No iOS-compatible source available for this episode (needs HLS or MP4).'
+              : 'No video available for this episode.'
+          );
+          return;
+        }
         setCandidateUrls(candidates);
         setCandidateIndex(0);
         setEpisodeData({ title: data.title, videoUrl: candidates[0] });
+
         setCaptionsUrl(data.captions_url || null);
 
         // Fetch sibling episodes for episode selector
@@ -255,9 +267,22 @@ export default function EmbedPlayer() {
     setIsLoading(true);
     setError(null);
     if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+    if (dashRef.current) { try { dashRef.current.reset(); } catch {} dashRef.current = null; }
     video.muted = true;
     setIsMuted(true);
-    
+
+    const advanceCandidate = (reason: string) => {
+      if (candidateIndex < candidateUrls.length - 1) {
+        const nextIdx = candidateIndex + 1;
+        console.warn('[EmbedPlayer] source failed, advancing candidate:', reason);
+        setCandidateIndex(nextIdx);
+        setEpisodeData((prev) => prev ? { ...prev, videoUrl: candidateUrls[nextIdx] } : prev);
+        setIsLoading(true);
+        return true;
+      }
+      return false;
+    };
+
     if (isHlsUrl(videoUrl)) {
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = videoUrl;
@@ -292,14 +317,41 @@ export default function EmbedPlayer() {
         hls.on(Hls.Events.SUBTITLE_TRACK_SWITCH, (_, data) => setCurrentSubtitleTrack(data.id));
         hls.on(Hls.Events.ERROR, (_, data) => {
           if (!data.fatal) return;
-          // Try to recover instead of slamming the user with an error overlay.
           if (data.type === 'networkError') { try { hls.startLoad(); } catch {} return; }
           if (data.type === 'mediaError') { try { hls.recoverMediaError(); } catch {} return; }
+          // Unrecoverable HLS error → try next candidate URL.
+          if (!advanceCandidate('hls-fatal')) setError('This stream could not be played on your device.');
         });
+      } else {
+        // Browser can't play HLS at all (rare) — try next candidate.
+        if (!advanceCandidate('no-hls-support')) setError('HLS streaming is not supported on this browser.');
+      }
+    } else if (isDashUrl(videoUrl)) {
+      // MPEG-DASH — requires MSE. iOS Safari cannot play this.
+      if (deviceInfo.isIOS) {
+        if (!advanceCandidate('ios-no-dash')) {
+          setError('This episode uses MPEG-DASH which iOS cannot play. Try another server.');
+        }
+      } else {
+        (async () => {
+          try {
+            const dashjs = await import('dashjs');
+            const player = dashjs.MediaPlayer().create();
+            dashRef.current = player;
+            player.initialize(video, videoUrl, true);
+            player.on(dashjs.MediaPlayer.events.ERROR, () => {
+              if (!advanceCandidate('dash-error')) setError('This DASH stream could not be played.');
+            });
+          } catch {
+            if (!advanceCandidate('dash-load-failed')) setError('Failed to load DASH player.');
+          }
+        })();
       }
     } else {
       video.src = videoUrl;
     }
+
+
     
     const handleCanPlay = () => { setIsLoading(false); if (startTime > 0) video.currentTime = startTime; video.play().catch(() => {}); };
     const handlePlay = () => setIsPlaying(true);
@@ -317,8 +369,10 @@ export default function EmbedPlayer() {
     const handleError = (e: Event) => {
       const v = e.currentTarget as HTMLVideoElement;
       setIsLoading(false);
-      if (v?.error && v.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
-        // Auto-advance to the next candidate URL (external_url fallback etc.)
+      // Auto-advance to the next candidate URL on any decode/network/format error.
+      const code = v?.error?.code;
+      const isFormatOrDecode = code === 3 /* MEDIA_ERR_DECODE */ || code === 4 /* MEDIA_ERR_SRC_NOT_SUPPORTED */;
+      if (v?.error && (v.networkState === HTMLMediaElement.NETWORK_NO_SOURCE || isFormatOrDecode)) {
         if (candidateIndex < candidateUrls.length - 1) {
           const nextIdx = candidateIndex + 1;
           setCandidateIndex(nextIdx);
@@ -327,9 +381,17 @@ export default function EmbedPlayer() {
           setIsLoading(true);
           return;
         }
-        setError('Video failed to load - please try again');
+        const kind = detectDeviceKind();
+        setError(
+          kind === 'ios'
+            ? 'This video format is not supported on iOS. Try another server.'
+            : kind === 'android'
+              ? 'This video format is not supported on Android. Try another server.'
+              : 'Video failed to load — please try another server.'
+        );
       }
     };
+
     const handleLoadedMeta = () => {
       // Native (Safari/HLS-native + MP4 with multiple audio) audio track detection
       const nativeAudio = (video as any).audioTracks;
@@ -377,6 +439,8 @@ export default function EmbedPlayer() {
       video.removeEventListener('error', handleError);
       video.removeEventListener('loadedmetadata', handleLoadedMeta);
       if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+      if (dashRef.current) { try { dashRef.current.reset(); } catch {} dashRef.current = null; }
+
     };
   }, [episodeData?.videoUrl, startTime]);
 
@@ -582,7 +646,7 @@ export default function EmbedPlayer() {
   }
 
   if (domainAllowed === null) {
-    return <div className="fixed inset-0 bg-black flex items-center justify-center"><Loader2 className="w-12 h-12 text-primary animate-spin" /></div>;
+    return <div className="fixed inset-0 bg-black flex items-center justify-center"><Loader2 className="w-6 h-6 text-primary animate-spin" /></div>;
   }
 
   if (fetchError) {
@@ -595,7 +659,7 @@ export default function EmbedPlayer() {
   }
 
   if (!episodeData) {
-    return <div className="fixed inset-0 bg-black flex items-center justify-center"><Loader2 className="w-12 h-12 text-primary animate-spin" /></div>;
+    return <div className="fixed inset-0 bg-black flex items-center justify-center"><Loader2 className="w-6 h-6 text-primary animate-spin" /></div>;
   }
 
   if (error) {
@@ -622,7 +686,7 @@ export default function EmbedPlayer() {
       {(isLoading || isBuffering) && (
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div className="flex flex-col items-center gap-2">
-            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            <Loader2 className="w-6 h-6 text-primary animate-spin" />
             {isBuffering && <span className="text-white/70 text-sm">Buffering...</span>}
           </div>
         </div>

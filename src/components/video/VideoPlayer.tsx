@@ -2051,7 +2051,7 @@ export function VideoPlayer({
         style={{ aspectRatio: '16/9', maxHeight: isFullscreen ? '100vh' : '70vh' }}
       >
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
           <p className="text-white text-lg">Loading {serverConfigs[activeServer]?.name || activeServer} server...</p>
         </div>
       </div>
@@ -2834,7 +2834,7 @@ export function VideoPlayer({
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-[50]">
           <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4 shadow-2xl animate-scale-in text-center">
             <div className="mb-4">
-              <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+              <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
             </div>
             <h3 className="text-foreground font-semibold text-lg mb-2">Video is Processing</h3>
             <p className="text-muted-foreground text-sm mb-4">
