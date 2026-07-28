@@ -318,6 +318,15 @@ export default function EmbedPlayer() {
       const v = e.currentTarget as HTMLVideoElement;
       setIsLoading(false);
       if (v?.error && v.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+        // Auto-advance to the next candidate URL (external_url fallback etc.)
+        if (candidateIndex < candidateUrls.length - 1) {
+          const nextIdx = candidateIndex + 1;
+          setCandidateIndex(nextIdx);
+          setEpisodeData((prev) => prev ? { ...prev, videoUrl: candidateUrls[nextIdx] } : prev);
+          setError(null);
+          setIsLoading(true);
+          return;
+        }
         setError('Video failed to load - please try again');
       }
     };
