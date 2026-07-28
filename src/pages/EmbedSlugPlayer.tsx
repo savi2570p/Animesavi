@@ -124,20 +124,28 @@ export default function EmbedSlugPlayer() {
       const referrer = document.referrer;
       const hostname = window.location.hostname;
 
-      if (hostname === 'localhost' || ALLOWED_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d))) {
+      if (
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname.endsWith('.lovable.app') ||
+        hostname.endsWith('.lovable.dev') ||
+        hostname.endsWith('.lovableproject.com') ||
+        hostname.endsWith('.sandbox.lovable.dev') ||
+        ALLOWED_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d))
+      ) {
         setDomainAllowed(true); return;
       }
       if (referrer) {
         try {
           const refHost = new URL(referrer).hostname;
-          if (ALLOWED_DOMAINS.some(d => refHost === d || refHost.endsWith('.' + d))) {
+          if (
+            refHost.endsWith('.lovable.app') ||
+            refHost.endsWith('.lovableproject.com') ||
+            ALLOWED_DOMAINS.some(d => refHost === d || refHost.endsWith('.' + d))
+          ) {
             setDomainAllowed(true); return;
           }
         } catch {}
-      }
-      // Allow lovable.app preview domains
-      if (hostname.includes('lovable.app')) {
-        setDomainAllowed(true); return;
       }
       setDomainAllowed(false);
     };
