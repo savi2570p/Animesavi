@@ -74,6 +74,8 @@ export default function EmbedPlayer() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [episodeData, setEpisodeData] = useState<{ title: string; videoUrl: string | null } | null>(null);
+  const [candidateUrls, setCandidateUrls] = useState<string[]>([]);
+  const [candidateIndex, setCandidateIndex] = useState(0);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
