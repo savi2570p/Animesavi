@@ -175,15 +175,23 @@ export default function EmbedPlayer() {
           .from('episodes').select('video_url, external_url, title, season_id, episode_number, captions_url')
           .eq('id', episodeId).single();
         if (error || !data) { setFetchError('Episode not found'); return; }
-        // Build ordered candidate list so if one URL is broken (Object_not_found,
-        // 404, DRM, iOS-incompatible codec), we auto-fall-back to the next.
-        const candidates = [data.video_url, data.external_url]
-          .filter((u): u is string => !!u && typeof u === 'string')
-          .filter((u, i, arr) => arr.indexOf(u) === i);
-        if (candidates.length === 0) { setFetchError('No video available'); return; }
+        // Build ordered candidate list, ranked by device compatibility.
+        // iOS Safari can't play DASH/MKV → those get dropped so the fallback
+        // jumps straight to a playable HLS/MP4 source instead of showing a
+        // "Playback Error" on an unplayable format.
+        const candidates = selectCompatibleSources([data.video_url, data.external_url]);
+        if (candidates.length === 0) {
+          setFetchError(
+            deviceInfo.isIOS
+              ? 'No iOS-compatible source available for this episode (needs HLS or MP4).'
+              : 'No video available for this episode.'
+          );
+          return;
+        }
         setCandidateUrls(candidates);
         setCandidateIndex(0);
         setEpisodeData({ title: data.title, videoUrl: candidates[0] });
+
         setCaptionsUrl(data.captions_url || null);
 
         // Fetch sibling episodes for episode selector
