@@ -70,6 +70,8 @@ export default function EmbedPlayer() {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const dashRef = useRef<any>(null);
+
   
   const [domainAllowed, setDomainAllowed] = useState<boolean | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
