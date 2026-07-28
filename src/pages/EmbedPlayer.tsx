@@ -40,6 +40,8 @@ const ALLOWED_DOMAINS = [
   'shadow-arise.lovable.app',
   'crunchysavi.lovable.app',
   'animesavi.lovable.app',
+  'animesavi.com',
+  'www.animesavi.com',
 ];
 
 const ADMIN_EMAILS = [

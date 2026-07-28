@@ -14,6 +14,9 @@ export function PWAInstallPrompt() {
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
+    // Skip entirely on embed routes
+    const p = window.location.pathname;
+    if (p.startsWith('/embed/') || p.startsWith('/embed-')) return;
     // Check if already installed or dismissed
     const dismissed = localStorage.getItem('pwa_install_dismissed');
     const dismissedDate = dismissed ? new Date(dismissed) : null;
