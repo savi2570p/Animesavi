@@ -2051,7 +2051,7 @@ export function VideoPlayer({
         style={{ aspectRatio: '16/9', maxHeight: isFullscreen ? '100vh' : '70vh' }}
       >
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
           <p className="text-white text-lg">Loading {serverConfigs[activeServer]?.name || activeServer} server...</p>
         </div>
       </div>
