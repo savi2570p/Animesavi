@@ -58,9 +58,9 @@ function detectDeviceInfo() {
 }
 
 function isHlsUrl(url: string | null): boolean {
-  if (!url) return false;
-  return /\.m3u8(\?.*)?$/i.test(url) || url.includes('.m3u8');
+  return isHls(url);
 }
+
 
 export default function EmbedPlayer() {
   const { episodeId } = useParams();
