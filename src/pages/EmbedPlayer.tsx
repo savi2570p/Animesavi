@@ -646,7 +646,7 @@ export default function EmbedPlayer() {
   }
 
   if (domainAllowed === null) {
-    return <div className="fixed inset-0 bg-black flex items-center justify-center"><Loader2 className="w-12 h-12 text-primary animate-spin" /></div>;
+    return <div className="fixed inset-0 bg-black flex items-center justify-center"><Loader2 className="w-6 h-6 text-primary animate-spin" /></div>;
   }
 
   if (fetchError) {
@@ -659,7 +659,7 @@ export default function EmbedPlayer() {
   }
 
   if (!episodeData) {
-    return <div className="fixed inset-0 bg-black flex items-center justify-center"><Loader2 className="w-12 h-12 text-primary animate-spin" /></div>;
+    return <div className="fixed inset-0 bg-black flex items-center justify-center"><Loader2 className="w-6 h-6 text-primary animate-spin" /></div>;
   }
 
   if (error) {
@@ -686,7 +686,7 @@ export default function EmbedPlayer() {
       {(isLoading || isBuffering) && (
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div className="flex flex-col items-center gap-2">
-            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            <Loader2 className="w-6 h-6 text-primary animate-spin" />
             {isBuffering && <span className="text-white/70 text-sm">Buffering...</span>}
           </div>
         </div>
