@@ -11,6 +11,8 @@ import { Captions, CaptionsOff } from 'lucide-react';
 import Hls from 'hls.js';
 import { useEmbedPlayerBridge } from '@/hooks/useEmbedPlayerBridge';
 import { getNetworkInfo } from '@/lib/videoUtils';
+import { isHlsUrl as isHls, isDashUrl, selectCompatibleSources, detectDeviceKind } from '@/lib/streamSource';
+
 
 function getLowBandwidthHlsConfig() {
   const { isSlowNetwork, isCellular, saveData } = getNetworkInfo();
