@@ -6,8 +6,12 @@ export function TokenExpiredGlobalPopup() {
   const { activePopup, dismissPopup } = usePopupQueue();
   const isCasting = useCastDetection();
 
-  // Bypass popup entirely while casting / mirroring to a TV
+  // Bypass popup entirely while casting / mirroring to a TV or on embed routes
   if (isCasting) return null;
+  if (typeof window !== 'undefined') {
+    const p = window.location.pathname;
+    if (p.startsWith('/embed/') || p.startsWith('/embed-')) return null;
+  }
   if (activePopup !== 'expired') return null;
 
   const perks = [
