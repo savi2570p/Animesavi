@@ -421,7 +421,18 @@ export default function EmbedPlayer() {
     setCurrentAudioTrack(trackId);
     setShowAudioMenu(false);
   };
-  const retry = () => { setError(null); setIsLoading(true); videoRef.current?.load(); };
+  const retry = () => {
+    setError(null);
+    setIsLoading(true);
+    // Reset to the first candidate on manual retry so we always try the primary
+    // source again — if it still fails, the auto-fallback re-advances.
+    if (candidateUrls.length > 0) {
+      setCandidateIndex(0);
+      setEpisodeData((prev) => prev ? { ...prev, videoUrl: candidateUrls[0] } : prev);
+    } else {
+      videoRef.current?.load();
+    }
+  };
 
   const handleDirectDownload = (quality: string) => {
     const url = episodeData?.videoUrl;
