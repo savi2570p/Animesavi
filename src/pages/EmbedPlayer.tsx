@@ -555,9 +555,13 @@ export default function EmbedPlayer() {
     setError(null);
     const { data } = await supabase.from('episodes').select('video_url, external_url, title').eq('id', ep.id).single();
     if (!data) { setError('Episode failed to load'); return; }
-    const url = data.video_url || data.external_url;
-    if (!url) { setError('No video available'); return; }
-    setEpisodeData({ title: data.title, videoUrl: url });
+    const candidates = [data.video_url, data.external_url]
+      .filter((u): u is string => !!u && typeof u === 'string')
+      .filter((u, i, arr) => arr.indexOf(u) === i);
+    if (candidates.length === 0) { setError('No video available'); return; }
+    setCandidateUrls(candidates);
+    setCandidateIndex(0);
+    setEpisodeData({ title: data.title, videoUrl: candidates[0] });
     const idx = allEpisodes.findIndex(e => e.id === ep.id);
     if (idx >= 0) setCurrentEpisodeIndex(idx);
   }, [allEpisodes]);
