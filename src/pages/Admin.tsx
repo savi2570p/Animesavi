@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,7 +21,7 @@ import {
   Smartphone,
   Zap,
   Bell,
-   Activity,
+  Activity,
   Key,
   Sparkles,
 } from 'lucide-react';
@@ -88,14 +87,12 @@ export default function Admin() {
   }, [user, isAdmin]);
 
   const fetchData = async () => {
-    // Fetch applications
     const { data: appsData } = await supabase
       .from('uploader_applications')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (appsData) {
-      // Fetch profiles for applications
       const userIds = [...new Set(appsData.map((a) => a.user_id))];
       const { data: profiles } = await supabase
         .from('profiles')
@@ -112,7 +109,6 @@ export default function Admin() {
       );
     }
 
-    // Fetch stats
     const [animeCount, profileCount, uploaderCount] = await Promise.all([
       supabase.from('anime').select('id', { count: 'exact', head: true }),
       supabase.from('profiles').select('id', { count: 'exact', head: true }),
@@ -136,7 +132,6 @@ export default function Admin() {
   ) => {
     setProcessingId(applicationId);
 
-    // Update application status
     const { error: updateError } = await supabase
       .from('uploader_applications')
       .update({
@@ -151,7 +146,6 @@ export default function Admin() {
       return;
     }
 
-    // If approved, add uploader role
     if (action === 'approved') {
       const { error: roleError } = await supabase.from('user_roles').insert({
         user_id: userId,
@@ -174,21 +168,21 @@ export default function Admin() {
     switch (status) {
       case 'approved':
         return (
-          <Badge className="bg-green-600">
+          <Badge className="bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 backdrop-blur-md">
             <CheckCircle className="h-3 w-3 mr-1" />
             Approved
           </Badge>
         );
       case 'rejected':
         return (
-          <Badge variant="destructive">
+          <Badge className="bg-rose-500/15 text-rose-300 border border-rose-400/30 backdrop-blur-md">
             <XCircle className="h-3 w-3 mr-1" />
             Rejected
           </Badge>
         );
       default:
         return (
-          <Badge className="bg-anime-orange">
+          <Badge className="bg-amber-500/15 text-amber-300 border border-amber-400/30 backdrop-blur-md">
             <Clock className="h-3 w-3 mr-1" />
             Pending
           </Badge>
@@ -198,291 +192,273 @@ export default function Admin() {
 
   if (isLoading) {
     return (
-      <div className="container py-12 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="relative min-h-screen overflow-hidden">
+        <div className="admin-aurora" aria-hidden />
+        <div className="container py-24 flex flex-col items-center justify-center gap-4">
+          <div className="relative h-16 w-16">
+            <div className="absolute inset-0 rounded-full bg-primary/30 blur-2xl animate-pulse" />
+            <div className="relative h-16 w-16 rounded-full border-2 border-white/10 border-t-primary animate-spin" />
+          </div>
+          <p className="text-sm text-muted-foreground tracking-[0.2em] uppercase">Booting Command Center…</p>
+        </div>
       </div>
     );
   }
 
   const tabConfig = [
-    { value: 'applications', icon: FileText, label: 'Applications', tone: 'from-amber-500/20 to-orange-500/10', accent: 'text-amber-400', count: applications.length },
-    { value: 'encoding', icon: FileVideo, label: 'Encoding', tone: 'from-violet-500/20 to-fuchsia-500/10', accent: 'text-violet-400' },
-    { value: 'ios-conversion', icon: Smartphone, label: 'iOS Convert', tone: 'from-sky-500/20 to-cyan-500/10', accent: 'text-sky-400' },
-    { value: 'hls-system', icon: Zap, label: 'HLS System', tone: 'from-yellow-500/20 to-amber-500/10', accent: 'text-yellow-400' },
-    { value: 'health', icon: Activity, label: 'Health', tone: 'from-emerald-500/20 to-green-500/10', accent: 'text-emerald-400' },
-    { value: 'notifications', icon: Bell, label: 'Alerts', tone: 'from-rose-500/20 to-pink-500/10', accent: 'text-rose-400' },
-    { value: 'cdn', icon: Globe, label: 'CDN', tone: 'from-blue-500/20 to-indigo-500/10', accent: 'text-blue-400' },
-    { value: 'tokens', icon: Key, label: 'Tokens', tone: 'from-fuchsia-500/20 to-purple-500/10', accent: 'text-fuchsia-400' },
-    { value: 'embed', icon: Globe, label: 'Embed', tone: 'from-cyan-500/20 to-sky-500/10', accent: 'text-cyan-400' },
-    { value: 'users', icon: Users, label: 'Users', tone: 'from-teal-500/20 to-emerald-500/10', accent: 'text-teal-400' },
-    { value: 'recaps', icon: Sparkles, label: 'AI Recaps', tone: 'from-primary/20 to-fuchsia-500/10', accent: 'text-primary' },
+    { value: 'applications', icon: FileText, label: 'Applications', accent: 'text-amber-300', count: applications.length },
+    { value: 'encoding', icon: FileVideo, label: 'Encoding', accent: 'text-violet-300' },
+    { value: 'ios-conversion', icon: Smartphone, label: 'iOS Convert', accent: 'text-sky-300' },
+    { value: 'hls-system', icon: Zap, label: 'HLS System', accent: 'text-yellow-300' },
+    { value: 'health', icon: Activity, label: 'Health', accent: 'text-emerald-300' },
+    { value: 'notifications', icon: Bell, label: 'Alerts', accent: 'text-rose-300' },
+    { value: 'cdn', icon: Globe, label: 'CDN', accent: 'text-blue-300' },
+    { value: 'tokens', icon: Key, label: 'Tokens', accent: 'text-fuchsia-300' },
+    { value: 'embed', icon: Globe, label: 'Embed', accent: 'text-cyan-300' },
+    { value: 'users', icon: Users, label: 'Users', accent: 'text-teal-300' },
+    { value: 'recaps', icon: Sparkles, label: 'AI Recaps', accent: 'text-primary' },
   ];
 
   return (
-    <div className="container py-6 md:py-8">
-      {/* Cinematic Hero */}
-      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/15 via-card/60 to-card/30 backdrop-blur-xl mb-6">
-        <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-32 -left-16 h-72 w-72 rounded-full bg-fuchsia-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,hsl(var(--primary)/0.12),transparent_60%)] pointer-events-none" />
-        <div className="relative p-5 md:p-7">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="absolute inset-0 rounded-2xl bg-primary/40 blur-xl" />
-                <div className="relative p-3 rounded-2xl bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/30">
-                  <Shield className="h-7 w-7 text-primary-foreground" />
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Ambient aurora backdrop */}
+      <div className="admin-aurora" aria-hidden />
+
+      <div className="container relative py-6 md:py-10 animate-fade-in">
+        {/* Cinematic Glass Hero */}
+        <div className="lg-panel relative overflow-hidden rounded-3xl mb-6 md:mb-8">
+          <div className="absolute -top-32 -right-32 h-72 w-72 rounded-full bg-primary/25 blur-[100px] pointer-events-none" />
+          <div className="absolute -bottom-40 -left-24 h-80 w-80 rounded-full bg-fuchsia-500/20 blur-[100px] pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,hsl(var(--primary)/0.18),transparent_60%)] pointer-events-none" />
+          <div className="relative p-5 md:p-8">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-2xl bg-primary/50 blur-2xl" />
+                  <div className="relative p-3.5 rounded-2xl bg-white/[0.06] border border-white/15 backdrop-blur-2xl shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.5)]">
+                    <Shield className="h-7 w-7 text-primary" />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-400/10 border border-emerald-400/30 text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-300 backdrop-blur-md">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Live
+                    </span>
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Admin Console</span>
+                  </div>
+                  <h1 className="text-2xl md:text-4xl font-heading font-bold leading-tight tracking-tight">
+                    Command <span className="anime-gradient-text">Center</span>
+                  </h1>
+                  <p className="text-xs md:text-sm text-muted-foreground mt-1.5">Pulse-check the platform, approve creators, ship features.</p>
                 </div>
               </div>
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Live Control
-                  </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Admin Console</span>
-                </div>
-                <h1 className="text-2xl md:text-4xl font-heading font-bold leading-tight">
-                  Command <span className="anime-gradient-text">Center</span>
-                </h1>
-                <p className="text-xs md:text-sm text-muted-foreground mt-1">Pulse-check the platform, approve creators, ship features.</p>
+              <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-xl">
+                <Activity className="h-4 w-4 text-emerald-300" />
+                <span className="text-xs font-semibold tabular-nums text-foreground/90">All systems nominal</span>
               </div>
             </div>
-            <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-card/60 border border-border/40 backdrop-blur-sm">
-              <Activity className="h-4 w-4 text-emerald-400" />
-              <span className="text-xs font-semibold tabular-nums">All systems nominal</span>
+
+            {/* Stats Row */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mt-7">
+              {[
+                { icon: Film, value: stats.totalAnime, label: 'Total Anime', accent: 'text-primary', glow: 'from-primary/25' },
+                { icon: Users, value: stats.totalUsers, label: 'Total Users', accent: 'text-sky-300', glow: 'from-sky-500/25' },
+                { icon: FileText, value: stats.pendingApplications, label: 'Pending Apps', accent: 'text-amber-300', glow: 'from-amber-500/25' },
+                { icon: TrendingUp, value: stats.uploaders, label: 'Uploaders', accent: 'text-emerald-300', glow: 'from-emerald-500/25' },
+              ].map((s) => (
+                <div key={s.label} className="lg-panel group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:-translate-y-0.5">
+                  <div className={`absolute -top-8 -right-8 h-24 w-24 rounded-full bg-gradient-to-br ${s.glow} to-transparent blur-2xl opacity-70 group-hover:opacity-100 transition-opacity`} />
+                  <div className="relative flex items-center gap-3">
+                    <div className={`p-2.5 rounded-xl bg-white/[0.06] border border-white/10 backdrop-blur-xl ${s.accent}`}>
+                      <s.icon className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className={`text-2xl md:text-3xl font-bold tabular-nums ${s.accent}`}>{s.value}</p>
+                      <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-semibold truncate">{s.label}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Main Tabs */}
+        <Tabs defaultValue="applications">
+          <div className="relative mb-6">
+            <div className="lg-panel rounded-2xl p-1.5 overflow-x-auto no-scrollbar">
+              <TabsList className="h-auto p-0 bg-transparent border-0 flex flex-nowrap md:flex-wrap gap-1.5 justify-start min-w-max md:min-w-0">
+                {tabConfig.map((t) => (
+                  <TabsTrigger
+                    key={t.value}
+                    value={t.value}
+                    className="group relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-300 text-muted-foreground hover:text-foreground data-[state=active]:bg-white/[0.08] data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-white/15 data-[state=active]:backdrop-blur-xl data-[state=active]:shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.4)]"
+                  >
+                    <t.icon className={`h-3.5 w-3.5 ${t.accent}`} />
+                    <span>{t.label}</span>
+                    {t.count !== undefined && t.count > 0 && (
+                      <span className={`ml-0.5 px-1.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-[10px] tabular-nums ${t.accent}`}>
+                        {t.count}
+                      </span>
+                    )}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
             </div>
           </div>
 
-          {/* Stats Row */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
-            {[
-              { icon: Film, value: stats.totalAnime, label: 'Total Anime', tone: 'from-primary/20 to-primary/5', accent: 'text-primary', ring: 'ring-primary/30' },
-              { icon: Users, value: stats.totalUsers, label: 'Total Users', tone: 'from-sky-500/20 to-sky-500/5', accent: 'text-sky-400', ring: 'ring-sky-500/30' },
-              { icon: FileText, value: stats.pendingApplications, label: 'Pending Apps', tone: 'from-amber-500/20 to-amber-500/5', accent: 'text-amber-400', ring: 'ring-amber-500/30' },
-              { icon: TrendingUp, value: stats.uploaders, label: 'Uploaders', tone: 'from-emerald-500/20 to-emerald-500/5', accent: 'text-emerald-400', ring: 'ring-emerald-500/30' },
-            ].map((s) => (
-              <div key={s.label} className={`group relative overflow-hidden rounded-xl bg-gradient-to-br ${s.tone} border border-border/40 p-4 ring-1 ${s.ring} transition-all hover:scale-[1.02]`}>
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg bg-card/70 ${s.accent}`}>
-                    <s.icon className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className={`text-2xl font-bold tabular-nums ${s.accent}`}>{s.value}</p>
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold truncate">{s.label}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+          <TabsContent value="applications" className="animate-fade-in">
+            <Tabs defaultValue="pending">
+              <TabsList className="mb-4 bg-white/[0.04] border border-white/10 backdrop-blur-xl rounded-xl">
+                <TabsTrigger value="pending" className="rounded-lg data-[state=active]:bg-white/[0.08]">
+                  Pending ({applications.filter((a) => a.status === 'pending').length})
+                </TabsTrigger>
+                <TabsTrigger value="all" className="rounded-lg data-[state=active]:bg-white/[0.08]">All Applications</TabsTrigger>
+              </TabsList>
 
-      {/* Main Tabs */}
-      <Tabs defaultValue="applications">
-        <div className="relative -mx-2 px-2 mb-6">
-          <TabsList className="w-full h-auto p-1.5 bg-card/40 border border-border/40 backdrop-blur-md rounded-2xl flex flex-wrap gap-1.5 justify-start">
-            {tabConfig.map((t) => (
-              <TabsTrigger
-                key={t.value}
-                value={t.value}
-                className={`group relative flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all data-[state=active]:bg-gradient-to-br data-[state=active]:${t.tone} data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-border/40`}
-              >
-                <t.icon className={`h-3.5 w-3.5 ${t.accent}`} />
-                <span>{t.label}</span>
-                {t.count !== undefined && (
-                  <span className={`ml-0.5 px-1.5 py-0.5 rounded-full bg-card/80 text-[10px] tabular-nums ${t.accent}`}>
-                    {t.count}
-                  </span>
-                )}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </div>
-
-        <TabsContent value="applications">
-          {/* Applications Sub-Tabs */}
-          <Tabs defaultValue="pending">
-            <TabsList className="mb-4">
-              <TabsTrigger value="pending">
-                Pending ({applications.filter((a) => a.status === 'pending').length})
-              </TabsTrigger>
-              <TabsTrigger value="all">All Applications</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="pending">
-              <div className="space-y-4">
-                {applications
-                  .filter((a) => a.status === 'pending')
-                  .map((app) => (
-                    <Card key={app.id}>
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
+              <TabsContent value="pending">
+                <div className="space-y-4">
+                  {applications
+                    .filter((a) => a.status === 'pending')
+                    .map((app) => (
+                      <div key={app.id} className="lg-panel rounded-2xl p-5 md:p-6 animate-fade-in">
+                        <div className="flex items-center justify-between mb-4">
                           <div>
-                            <CardTitle className="text-lg">
-                              {app.profile?.username || 'Unknown User'}
-                            </CardTitle>
-                            <CardDescription>
+                            <h3 className="text-lg font-semibold">{app.profile?.username || 'Unknown User'}</h3>
+                            <p className="text-xs text-muted-foreground mt-0.5">
                               Applied {new Date(app.created_at).toLocaleDateString()}
-                            </CardDescription>
+                            </p>
                           </div>
                           {getStatusBadge(app.status)}
                         </div>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-1">Reason</p>
-                          <p>{app.reason}</p>
-                        </div>
-
-                        {app.sample_work && (
+                        <div className="space-y-4">
                           <div>
-                            <p className="text-sm text-muted-foreground mb-1">Sample Work</p>
-                            <p>{app.sample_work}</p>
+                            <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-semibold mb-1">Reason</p>
+                            <p className="text-sm">{app.reason}</p>
                           </div>
-                        )}
-
-                        <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground">Admin Notes (Optional)</p>
-                          <Textarea
-                            placeholder="Add notes for the applicant..."
-                            value={adminNotes[app.id] || ''}
-                            onChange={(e) =>
-                              setAdminNotes({ ...adminNotes, [app.id]: e.target.value })
-                            }
-                            className="bg-muted/50"
-                          />
-                        </div>
-
-                        <div className="flex gap-3 pt-2">
-                          <Button
-                            onClick={() => handleApplicationAction(app.id, 'approved', app.user_id)}
-                            disabled={processingId === app.id}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Approve
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            onClick={() => handleApplicationAction(app.id, 'rejected', app.user_id)}
-                            disabled={processingId === app.id}
-                          >
-                            <XCircle className="h-4 w-4 mr-2" />
-                            Reject
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-
-                {applications.filter((a) => a.status === 'pending').length === 0 && (
-                  <Card>
-                    <CardContent className="flex flex-col items-center justify-center py-12">
-                      <CheckCircle className="h-12 w-12 text-green-500 mb-4" />
-                      <p className="text-lg font-medium">No pending applications</p>
-                      <p className="text-muted-foreground">All caught up!</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="all">
-              <div className="space-y-4">
-                {applications.map((app) => (
-                  <Card key={app.id}>
-                    <CardContent className="flex items-center justify-between p-4">
-                      <div className="flex items-center gap-4">
-                        <div>
-                          <p className="font-medium">{app.profile?.username || 'Unknown User'}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(app.created_at).toLocaleDateString()}
-                          </p>
+                          {app.sample_work && (
+                            <div>
+                              <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-semibold mb-1">Sample Work</p>
+                              <p className="text-sm">{app.sample_work}</p>
+                            </div>
+                          )}
+                          <div className="space-y-2">
+                            <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-semibold">Admin Notes (Optional)</p>
+                            <Textarea
+                              placeholder="Add notes for the applicant..."
+                              value={adminNotes[app.id] || ''}
+                              onChange={(e) =>
+                                setAdminNotes({ ...adminNotes, [app.id]: e.target.value })
+                              }
+                              className="bg-white/[0.04] border-white/10 backdrop-blur-xl rounded-xl"
+                            />
+                          </div>
+                          <div className="flex gap-3 pt-1">
+                            <Button
+                              onClick={() => handleApplicationAction(app.id, 'approved', app.user_id)}
+                              disabled={processingId === app.id}
+                              className="bg-emerald-500/90 hover:bg-emerald-500 text-white rounded-xl shadow-[0_8px_24px_-8px_rgb(16_185_129/0.6)]"
+                            >
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Approve
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              onClick={() => handleApplicationAction(app.id, 'rejected', app.user_id)}
+                              disabled={processingId === app.id}
+                              className="rounded-xl"
+                            >
+                              <XCircle className="h-4 w-4 mr-2" />
+                              Reject
+                            </Button>
+                          </div>
                         </div>
                       </div>
+                    ))}
+
+                  {applications.filter((a) => a.status === 'pending').length === 0 && (
+                    <div className="lg-panel rounded-2xl flex flex-col items-center justify-center py-16">
+                      <div className="relative mb-4">
+                        <div className="absolute inset-0 rounded-full bg-emerald-500/30 blur-2xl" />
+                        <CheckCircle className="relative h-14 w-14 text-emerald-400" />
+                      </div>
+                      <p className="text-lg font-semibold">No pending applications</p>
+                      <p className="text-sm text-muted-foreground">All caught up!</p>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="all">
+                <div className="space-y-3">
+                  {applications.map((app) => (
+                    <div key={app.id} className="lg-panel rounded-2xl flex items-center justify-between p-4">
+                      <div>
+                        <p className="font-medium">{app.profile?.username || 'Unknown User'}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(app.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
                       {getStatusBadge(app.status)}
-                    </CardContent>
-                  </Card>
-                ))}
+                    </div>
+                  ))}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+
+          <TabsContent value="encoding" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><VideoEncodingDashboard /></div></TabsContent>
+          <TabsContent value="ios-conversion" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><VideoConversionDashboard /></div></TabsContent>
+          <TabsContent value="hls-system" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><HLSConversionDashboard /></div></TabsContent>
+          <TabsContent value="health" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><ConversionHealthDashboard /></div></TabsContent>
+          <TabsContent value="notifications" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><ConversionNotifications /></div></TabsContent>
+          <TabsContent value="cdn" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><CDNHealthDashboard /></div></TabsContent>
+          <TabsContent value="tokens" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><TokenManager /></div></TabsContent>
+          <TabsContent value="embed" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><EmbedAllowlistManager /></div></TabsContent>
+          <TabsContent value="users" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><UserManagement /></div></TabsContent>
+          <TabsContent value="recaps" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><RecapAnalyticsDashboard /></div></TabsContent>
+        </Tabs>
+
+        {/* Audio debug panel */}
+        <div className="mt-8 lg-panel rounded-2xl p-4 md:p-6">
+          <EmbedAudioDebugPanel />
+        </div>
+
+        {/* Quick link tiles */}
+        <div className="grid md:grid-cols-2 gap-4 mt-6">
+          <button
+            onClick={() => navigate('/admin/site-health')}
+            className="lg-panel group rounded-2xl p-5 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Activity className="h-4 w-4 text-emerald-300" />
+                  <div className="text-sm font-semibold">Site Health</div>
+                </div>
+                <div className="text-xs text-muted-foreground">Lighthouse LCP + Search Console verification for animesavi.com.</div>
               </div>
-            </TabsContent>
-          </Tabs>
-        </TabsContent>
+              <div className="text-primary text-lg transition-transform group-hover:translate-x-1">→</div>
+            </div>
+          </button>
 
-        <TabsContent value="encoding">
-          <VideoEncodingDashboard />
-        </TabsContent>
-
-        <TabsContent value="ios-conversion">
-          <VideoConversionDashboard />
-        </TabsContent>
-
-        <TabsContent value="hls-system">
-          <HLSConversionDashboard />
-        </TabsContent>
-
-         <TabsContent value="health">
-           <ConversionHealthDashboard />
-         </TabsContent>
- 
-        <TabsContent value="notifications">
-          <ConversionNotifications />
-        </TabsContent>
-
-        <TabsContent value="cdn">
-          <CDNHealthDashboard />
-        </TabsContent>
-
-        <TabsContent value="tokens">
-          <TokenManager />
-        </TabsContent>
-
-        <TabsContent value="embed">
-          <EmbedAllowlistManager />
-        </TabsContent>
-
-        <TabsContent value="users">
-          <UserManagement />
-        </TabsContent>
-
-        <TabsContent value="recaps">
-          <RecapAnalyticsDashboard />
-        </TabsContent>
-      </Tabs>
-
-      {/* 🎧 Embed audio-track inspector (normal vs shadow, iOS/Android/desktop) */}
-      <div className="mt-8">
-        <EmbedAudioDebugPanel />
-      </div>
-
-
-      {/* Quick link to dedicated Site Health (Lighthouse LCP + GSC verification) */}
-      <div className="mt-8 p-4 rounded-lg border border-border/60 bg-muted/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <div className="text-sm font-semibold text-foreground">Site Health</div>
-          <div className="text-xs text-muted-foreground">Latest Lighthouse LCP results after each publish and Search Console verification status for animesavi.com.</div>
+          <button
+            onClick={() => navigate('/admin/featured')}
+            className="lg-panel group rounded-2xl p-5 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <div className="text-sm font-semibold">Featured Hero Lineup</div>
+                </div>
+                <div className="text-xs text-muted-foreground">Edit the homepage hero slider — reorder, swap covers, override titles.</div>
+              </div>
+              <div className="text-primary text-lg transition-transform group-hover:translate-x-1">→</div>
+            </div>
+          </button>
         </div>
-        <button
-          onClick={() => navigate('/admin/site-health')}
-          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors self-start sm:self-auto"
-        >
-          Open Site Health →
-        </button>
-      </div>
-
-      {/* Quick link to Featured Hero Lineup editor */}
-      <div className="mt-4 p-4 rounded-lg border border-border/60 bg-muted/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <div className="text-sm font-semibold text-foreground">Featured Hero Lineup</div>
-          <div className="text-xs text-muted-foreground">Edit the homepage hero slider — reorder, swap covers/banners, or override titles without touching code.</div>
-        </div>
-        <button
-          onClick={() => navigate('/admin/featured')}
-          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors self-start sm:self-auto"
-        >
-          Open Lineup Editor →
-        </button>
       </div>
     </div>
   );
