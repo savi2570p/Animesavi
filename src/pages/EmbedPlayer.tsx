@@ -267,9 +267,22 @@ export default function EmbedPlayer() {
     setIsLoading(true);
     setError(null);
     if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+    if (dashRef.current) { try { dashRef.current.reset(); } catch {} dashRef.current = null; }
     video.muted = true;
     setIsMuted(true);
-    
+
+    const advanceCandidate = (reason: string) => {
+      if (candidateIndex < candidateUrls.length - 1) {
+        const nextIdx = candidateIndex + 1;
+        console.warn('[EmbedPlayer] source failed, advancing candidate:', reason);
+        setCandidateIndex(nextIdx);
+        setEpisodeData((prev) => prev ? { ...prev, videoUrl: candidateUrls[nextIdx] } : prev);
+        setIsLoading(true);
+        return true;
+      }
+      return false;
+    };
+
     if (isHlsUrl(videoUrl)) {
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = videoUrl;
@@ -304,14 +317,41 @@ export default function EmbedPlayer() {
         hls.on(Hls.Events.SUBTITLE_TRACK_SWITCH, (_, data) => setCurrentSubtitleTrack(data.id));
         hls.on(Hls.Events.ERROR, (_, data) => {
           if (!data.fatal) return;
-          // Try to recover instead of slamming the user with an error overlay.
           if (data.type === 'networkError') { try { hls.startLoad(); } catch {} return; }
           if (data.type === 'mediaError') { try { hls.recoverMediaError(); } catch {} return; }
+          // Unrecoverable HLS error → try next candidate URL.
+          if (!advanceCandidate('hls-fatal')) setError('This stream could not be played on your device.');
         });
+      } else {
+        // Browser can't play HLS at all (rare) — try next candidate.
+        if (!advanceCandidate('no-hls-support')) setError('HLS streaming is not supported on this browser.');
+      }
+    } else if (isDashUrl(videoUrl)) {
+      // MPEG-DASH — requires MSE. iOS Safari cannot play this.
+      if (deviceInfo.isIOS) {
+        if (!advanceCandidate('ios-no-dash')) {
+          setError('This episode uses MPEG-DASH which iOS cannot play. Try another server.');
+        }
+      } else {
+        (async () => {
+          try {
+            const dashjs = await import('dashjs');
+            const player = dashjs.MediaPlayer().create();
+            dashRef.current = player;
+            player.initialize(video, videoUrl, true);
+            player.on(dashjs.MediaPlayer.events.ERROR, () => {
+              if (!advanceCandidate('dash-error')) setError('This DASH stream could not be played.');
+            });
+          } catch {
+            if (!advanceCandidate('dash-load-failed')) setError('Failed to load DASH player.');
+          }
+        })();
       }
     } else {
       video.src = videoUrl;
     }
+
+
     
     const handleCanPlay = () => { setIsLoading(false); if (startTime > 0) video.currentTime = startTime; video.play().catch(() => {}); };
     const handlePlay = () => setIsPlaying(true);
