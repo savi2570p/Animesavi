@@ -439,6 +439,8 @@ export default function EmbedPlayer() {
       video.removeEventListener('error', handleError);
       video.removeEventListener('loadedmetadata', handleLoadedMeta);
       if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+      if (dashRef.current) { try { dashRef.current.reset(); } catch {} dashRef.current = null; }
+
     };
   }, [episodeData?.videoUrl, startTime]);
 
