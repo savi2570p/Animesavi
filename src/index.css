@@ -2794,3 +2794,44 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .admin-aurora::after { animation: none; }
 }
+
+/* ---------- Continue Watching: buttery horizontal sliding ---------- */
+.cw-carousel {
+  contain: paint;
+}
+.cw-carousel [data-slot="carousel-content"],
+.cw-carousel > div[class*="overflow-hidden"] {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+/* Promote each tile to its own compositor layer so drag = pure transform */
+.cw-carousel [role="group"] > div {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+/* Kill live blur + infinite animations inside tiles — the main source of jank */
+.cw-carousel [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.cw-carousel .blur-xl,
+.cw-carousel .blur-2xl,
+.cw-carousel .blur-3xl {
+  filter: none !important;
+}
+.cw-carousel .animate-shine,
+.cw-carousel .animate-pulse,
+.cw-carousel .animate-ping {
+  animation: none !important;
+}
+.cw-carousel img {
+  transition: none !important;
+  content-visibility: auto;
+}
+@media (hover: hover) {
+  .cw-carousel img {
+    transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+  }
+}
