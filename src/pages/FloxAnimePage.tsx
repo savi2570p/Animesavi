@@ -145,7 +145,10 @@ export default function FloxAnimePage() {
 
   return (
     <AntiPiracyShield mode="strict" noRedirect>
+      <FloxLoadingScreen ready={!loading} />
+
       {/* Welcome popup — liquid glass */}
+
       <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
         <DialogContent className="max-w-md flox-glass-strong border-white/15 text-white">
           <DialogHeader>
