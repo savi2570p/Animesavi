@@ -479,8 +479,12 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
           opts={{
             align: "start",
             loop: false,
+            dragFree: true,
+            duration: 18,
+            containScroll: "trimSnaps",
+            skipSnaps: true,
           }}
-          className="w-full"
+          className="w-full cw-carousel"
         >
           <CarouselContent className="-ml-2 md:-ml-4">
             {history.map((item, index) => {
@@ -489,7 +493,8 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
               const isFading = fadingIds.has(item.id);
               return (
                 <CarouselItem key={item.id} className="pl-2 md:pl-4 basis-[80%] sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                  <div className="group relative opacity-0 animate-fade-in" style={{ animationDelay: `${index * 80}ms` }}>
+                  <div className="group relative">
+
                     {/* Single-tap link covers the entire card. All decorative overlays use pointer-events-none
                         so the first tap on mobile navigates immediately (no hover-then-tap double click). */}
                     <Link

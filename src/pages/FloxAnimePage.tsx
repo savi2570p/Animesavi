@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { FloxLoadingScreen } from '@/components/flox/FloxLoadingScreen';
 
 import { toast } from 'sonner';
 import { Loader2, Trash2, Upload as UploadIcon, PartyPopper, ArrowLeft, Plus, Pencil, Play, Share2 } from 'lucide-react';
@@ -144,7 +145,10 @@ export default function FloxAnimePage() {
 
   return (
     <AntiPiracyShield mode="strict" noRedirect>
+      <FloxLoadingScreen ready={!loading} />
+
       {/* Welcome popup — liquid glass */}
+
       <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
         <DialogContent className="max-w-md flox-glass-strong border-white/15 text-white">
           <DialogHeader>
