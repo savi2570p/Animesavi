@@ -243,6 +243,7 @@ const App = () => (
                     <Route path="/eng-dub" element={<EngDubPage />} />
                     <Route path="/schedule" element={<Schedule />} />
                     <Route path="/upcoming" element={<UpcomingPage />} />
+                    <Route path="/release-notes" element={<ReleaseNotes />} />
                     <Route path="/anime/:id" element={<AnimeDetail />} />
                     <Route path="/watch/:episodeId" element={<Watch />} />
                     <Route path="/favorites" element={<Favorites />} />
