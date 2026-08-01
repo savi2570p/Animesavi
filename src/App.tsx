@@ -60,6 +60,7 @@ const EngDubPage = lazy(() => import("./pages/EngDubPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Schedule = lazy(() => import("./pages/Schedule"));
 const UpcomingPage = lazy(() => import("./pages/UpcomingPage"));
+const ReleaseNotes = lazy(() => import("./pages/ReleaseNotes"));
 const EmbedSlugPlayer = lazy(() => import("./pages/EmbedSlugPlayer"));
 const MinimalEmbedPage = lazy(() => import("./pages/MinimalEmbedPage"));
 const Welcome = lazy(() => import("./pages/Welcome"));
@@ -243,6 +244,7 @@ const App = () => (
                     <Route path="/eng-dub" element={<EngDubPage />} />
                     <Route path="/schedule" element={<Schedule />} />
                     <Route path="/upcoming" element={<UpcomingPage />} />
+                    <Route path="/release-notes" element={<ReleaseNotes />} />
                     <Route path="/anime/:id" element={<AnimeDetail />} />
                     <Route path="/watch/:episodeId" element={<Watch />} />
                     <Route path="/favorites" element={<Favorites />} />

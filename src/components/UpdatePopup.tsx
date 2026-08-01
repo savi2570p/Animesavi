@@ -1,74 +1,25 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { usePopupQueue } from '@/contexts/PopupQueueContext';
-import { Loader2, Sparkles, X, ArrowRight, Check } from 'lucide-react';
+import { Loader2, Sparkles, X, ArrowRight, Check, FileText, Download } from 'lucide-react';
+import {
+  APP_VERSION,
+  RELEASE_DATE,
+  DOWNLOAD_SIZE_MB,
+  VERSION_GROUPS,
+  BADGE_LABELS,
+  BADGE_STYLES,
+  BADGE_ICON_RINGS,
+  BADGE_DOT,
+  type ChangelogItem,
+} from '@/data/releaseNotes';
 
 type UpdateStep = 'alert' | 'downloading' | 'installing' | 'complete' | 'entering';
-type BadgeKind = 'NEW' | 'IMPROVED' | 'FIX';
 
-interface ChangelogItem {
-  icon: string;
-  title: string;
-  desc: string;
-  badge: BadgeKind;
-}
-
-interface VersionGroup {
-  version: string;
-  date: string;
-  highlight: string;
-  items: ChangelogItem[];
-}
-
-const APP_VERSION = 'V 30';
-const RELEASE_DATE = 'August 1, 2026';
-
-// Fixed download size for V 30 patch
-const RANDOM_DOWNLOAD_MB = 20;
-
-const VERSION_GROUPS: VersionGroup[] = [
-  {
-    version: 'V 30',
-    date: RELEASE_DATE,
-    highlight: 'A smoother, faster update with focused improvements, key fixes, and a refreshed embed-player experience.',
-    items: [
-      { icon: '⚡', badge: 'IMPROVED', title: 'Faster Navigation', desc: 'Page transitions, tab switches, and scroll rows feel noticeably snappier on every device.' },
-      { icon: '🪶', badge: 'IMPROVED', title: 'Smoother Scrolling', desc: 'Home carousels, episode grids, and long lists glide with buttery, frame-perfect motion.' },
-      { icon: '✨', badge: 'IMPROVED', title: 'Liquid-Glass Polish', desc: 'Deeper transparency, softer blurs, and refined highlights across the entire interface.' },
-      { icon: '🎬', badge: 'IMPROVED', title: 'Player Reliability', desc: 'Better source fallback, faster startup, and clearer error handling inside the video player.' },
-      { icon: '🔧', badge: 'FIX', title: 'Embed Player Fixes', desc: 'Use Embed Player now routes through the correct fallback and skips blocked sources.' },
-      { icon: '🔧', badge: 'FIX', title: 'Upload Stability', desc: 'Resolved stuck progress and retry issues for large video uploads.' },
-      { icon: '🧪', badge: 'IMPROVED', title: 'Use Embed Player BETA 2.1', desc: 'Use embed player is still in BETA — currently running BETA 2.1 with ongoing improvements.' },
-    ],
-  },
-];
-
-
-const BADGE_LABELS: Record<BadgeKind, string> = {
-  NEW: 'NEW',
-  IMPROVED: 'IMPROVED',
-  FIX: 'FIXED',
-};
-
-const BADGE_STYLES: Record<BadgeKind, string> = {
-  NEW: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-  IMPROVED: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
-  FIX: 'bg-violet-500/20 text-violet-200 border-violet-400/40',
-};
-
-const BADGE_ICON_RINGS: Record<BadgeKind, string> = {
-  NEW: 'from-emerald-500/25 to-emerald-600/15 border-emerald-500/20 shadow-emerald-900/20',
-  IMPROVED: 'from-sky-500/25 to-sky-600/15 border-sky-500/20 shadow-sky-900/20',
-  FIX: 'from-violet-500/25 to-purple-600/15 border-violet-400/25 shadow-purple-900/30',
-};
-
-const BADGE_DOT: Record<BadgeKind, string> = {
-  NEW: 'bg-emerald-400',
-  IMPROVED: 'bg-sky-400',
-  FIX: 'bg-violet-300',
-};
+const RANDOM_DOWNLOAD_MB = DOWNLOAD_SIZE_MB;
 
 const DOWNLOAD_COMPLETED_KEY = `update_downloaded_${APP_VERSION}`;
+
 
 // Shared dark-purple glass overlay backdrop
 const OVERLAY =
@@ -177,6 +128,10 @@ export function UpdatePopup() {
     justDownloadedRef.current = true;
     setStep('downloading');
   }, []);
+  const openReleaseNotes = useCallback(() => {
+    dismissPopup();
+    navigate('/release-notes');
+  }, [dismissPopup, navigate]);
   const handleGo = useCallback(() => {
     // Only play the cinematic "Entering the latest version" loader when the
     // user has downloaded this version. Manual What's New views just close.
@@ -359,6 +314,17 @@ export function UpdatePopup() {
     </div>
   );
 
+  const ReleaseNotesLink = () => (
+    <button
+      onClick={openReleaseNotes}
+      className="group mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-violet-300/15 bg-violet-500/[0.07] px-3 py-2 text-[10px] font-semibold text-violet-100/85 backdrop-blur-md transition hover:bg-violet-500/15 active:scale-[0.98]"
+    >
+      <FileText className="h-3 w-3 text-violet-300" />
+      Read full release notes
+      <ArrowRight className="h-3 w-3 opacity-60 transition-transform group-hover:translate-x-0.5" />
+    </button>
+  );
+
   /* ── STEP 1: Update Alert ── */
   if (step === 'alert') {
     return (
@@ -372,6 +338,11 @@ export function UpdatePopup() {
               showSparkles
             />
 
+            <div className="mb-3 flex items-center justify-center gap-1.5 rounded-xl border border-violet-300/15 bg-violet-500/[0.07] px-2.5 py-1.5 text-[9px] font-semibold text-violet-100/85 backdrop-blur-md">
+              <Download className="h-3 w-3 text-violet-300" />
+              Update package · {TOTAL_MB}MB
+            </div>
+
             <div className="text-left mb-3 sm:mb-4">
               <ChangelogList items={VERSION_GROUPS[0].items} />
             </div>
@@ -379,11 +350,13 @@ export function UpdatePopup() {
             <GlassButton onClick={handleDownload}>
               Download
             </GlassButton>
+            <ReleaseNotesLink />
           </div>
         )}
       </div>
     );
   }
+
 
   /* ── STEP 2: Downloading ── */
   if (step === 'downloading') {
@@ -414,61 +387,87 @@ export function UpdatePopup() {
       : 'Finalizing';
 
     return (
-      <div className={OVERLAY}>
+      <div className={OVERLAY} role="dialog" aria-label="Downloading update">
         {glassCard(
           <div className="px-5 py-5 sm:px-6 sm:py-6 text-center">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-violet-300/30 bg-violet-500/15 px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.18em] text-violet-200 mb-4">
+            {/* status pill */}
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-violet-300/25 bg-violet-500/12 px-2.5 py-1 text-[8px] font-bold uppercase tracking-[0.2em] text-violet-100/90 backdrop-blur-xl shadow-[inset_0_1px_1px_rgba(216,180,254,0.25)] mb-4">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-300 opacity-75" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-violet-300" />
               </span>
-              Download {APP_VERSION}
+              {phaseLabel} · {APP_VERSION}
             </div>
 
-            <div className="relative h-24 w-24 sm:h-28 sm:w-28 mx-auto mb-4">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-500/35 to-purple-600/20 blur-2xl animate-pulse" />
+            {/* liquid glass progress orb */}
+            <div className="relative h-28 w-28 sm:h-32 sm:w-32 mx-auto mb-4">
+              <div className="absolute -inset-3 rounded-full bg-gradient-to-br from-violet-500/25 via-purple-500/15 to-indigo-500/20 blur-2xl animate-pulse" />
+              <div className="absolute inset-0 rounded-full border border-violet-200/15 bg-purple-950/30 backdrop-blur-2xl shadow-[inset_0_1px_2px_rgba(216,180,254,0.25),inset_0_-12px_28px_rgba(76,29,149,0.45)]" />
+              {/* liquid fill */}
+              <div className="absolute inset-[6px] overflow-hidden rounded-full">
+                <div
+                  className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-violet-600/70 via-purple-500/45 to-indigo-400/25 transition-[height] duration-300 ease-out"
+                  style={{ height: `${displayProgress}%` }}
+                >
+                  <div className="absolute -top-1 left-0 h-2 w-full bg-violet-200/50 blur-[2px]" />
+                </div>
+              </div>
               <svg className="relative h-full w-full -rotate-90" viewBox="0 0 128 128">
-                <circle cx="64" cy="64" r={radius} stroke="rgba(216,180,254,0.08)" strokeWidth="5" fill="none" />
+                <circle cx="64" cy="64" r={radius} stroke="rgba(216,180,254,0.10)" strokeWidth="4" fill="none" />
                 <circle
                   cx="64" cy="64" r={radius}
                   stroke="url(#dlGrad)"
-                  strokeWidth="5"
+                  strokeWidth="4"
                   strokeLinecap="round"
                   fill="none"
                   strokeDasharray={circumference}
                   strokeDashoffset={dashOffset}
-                  style={{ filter: 'drop-shadow(0 0 10px rgba(139,92,246,0.7))', transition: 'stroke-dashoffset 200ms linear' }}
+                  style={{ filter: 'drop-shadow(0 0 12px rgba(167,139,250,0.85))', transition: 'stroke-dashoffset 220ms linear' }}
                 />
                 <defs>
                   <linearGradient id="dlGrad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#c4b5fd" />
-                    <stop offset="60%" stopColor="#8b5cf6" />
+                    <stop offset="0%" stopColor="#e9d5ff" />
+                    <stop offset="55%" stopColor="#a78bfa" />
                     <stop offset="100%" stopColor="#6366f1" />
                   </linearGradient>
                 </defs>
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-xl sm:text-2xl font-bold font-mono bg-gradient-to-br from-white via-violet-100 to-violet-300 bg-clip-text text-transparent tabular-nums leading-none">
-                  {displayProgress.toFixed(0)}<span className="text-xs text-violet-300">%</span>
+                <span className="text-2xl sm:text-3xl font-bold font-mono bg-gradient-to-br from-white via-violet-100 to-violet-300 bg-clip-text text-transparent tabular-nums leading-none drop-shadow">
+                  {displayProgress.toFixed(0)}<span className="text-sm text-violet-300">%</span>
                 </span>
-                <span className="text-[7px] sm:text-[8px] uppercase tracking-[0.25em] text-violet-300/60 mt-0.5">{phaseLabel}</span>
+                <span className="mt-1 text-[7px] uppercase tracking-[0.28em] text-violet-200/55">
+                  {downloadedMb.toFixed(1)} / {TOTAL_MB}MB
+                </span>
               </div>
             </div>
 
-            <h2 className="bg-gradient-to-r from-white via-violet-100 to-white bg-clip-text text-sm font-bold text-transparent tracking-tight">
+            <h2 className="bg-gradient-to-r from-white via-violet-100 to-white bg-clip-text text-sm sm:text-base font-bold text-transparent tracking-tight">
               Downloading update
             </h2>
-            <p className="text-[10px] text-violet-200/60 mt-0.5 leading-relaxed px-2">
-              Securing the latest fixes…
+            <p
+              className="text-[10px] text-violet-200/60 mt-0.5 leading-relaxed px-2"
+              role="status"
+              aria-live="polite"
+            >
+              {phaseLabel} · {displayProgress.toFixed(0)}% of {TOTAL_MB}MB · {etaLabel} left
             </p>
 
-            <div className="relative mt-3 h-1 w-full overflow-hidden rounded-full bg-violet-300/[0.08]">
+            {/* slim glass bar */}
+            <div
+              className="relative mt-3 h-1.5 w-full overflow-hidden rounded-full bg-violet-200/[0.07] border border-violet-200/10"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(displayProgress)}
+              aria-label="Update download progress"
+            >
               <div
-                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-violet-500 via-purple-400 to-indigo-500 shadow-[0_0_10px_rgba(139,92,246,0.7)] transition-all duration-200"
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-violet-400 via-purple-300 to-indigo-400 shadow-[0_0_12px_rgba(167,139,250,0.8)] transition-all duration-200"
                 style={{ width: `${displayProgress}%` }}
               />
               <div
-                className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"
+                className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/45 to-transparent animate-shimmer"
                 style={{ left: `${Math.max(0, displayProgress - 33)}%` }}
               />
             </div>
@@ -479,7 +478,7 @@ export function UpdatePopup() {
                 { label: 'Size', value: downloadedMb.toFixed(1), unit: `/${TOTAL_MB}MB`, accent: 'text-white' },
                 { label: 'ETA', value: etaLabel, unit: '', accent: 'text-violet-200' },
               ].map((s) => (
-                <div key={s.label} className="rounded-xl border border-violet-300/15 bg-violet-500/[0.06] backdrop-blur-md px-1.5 py-1.5">
+                <div key={s.label} className="rounded-2xl border border-violet-200/12 bg-violet-400/[0.07] backdrop-blur-xl px-1.5 py-1.5 shadow-[inset_0_1px_1px_rgba(216,180,254,0.18)]">
                   <div className="text-[7px] uppercase tracking-[0.16em] text-violet-300/60 font-semibold">{s.label}</div>
                   <div className={`text-[11px] font-bold font-mono tabular-nums leading-tight mt-0.5 ${s.accent}`}>
                     {s.value}{s.unit && <span className="text-[7px] text-violet-300/60 ml-0.5 font-normal">{s.unit}</span>}
@@ -488,12 +487,12 @@ export function UpdatePopup() {
               ))}
             </div>
 
-            <div className="relative mt-2.5 h-7 w-full rounded-xl border border-violet-300/15 bg-purple-950/40 overflow-hidden px-1">
+            <div className="relative mt-2.5 h-8 w-full rounded-2xl border border-violet-200/12 bg-purple-950/35 backdrop-blur-xl overflow-hidden px-1">
               {sparkPoints ? (
                 <svg viewBox={`0 0 ${sparkW} ${sparkH}`} preserveAspectRatio="none" className="h-full w-full">
                   <defs>
                     <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.5" />
+                      <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.55" />
                       <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
                     </linearGradient>
                   </defs>
@@ -501,11 +500,11 @@ export function UpdatePopup() {
                   <polyline
                     points={sparkPoints}
                     fill="none"
-                    stroke="#a78bfa"
+                    stroke="#c4b5fd"
                     strokeWidth="1.2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    style={{ filter: 'drop-shadow(0 0 3px rgba(167,139,250,0.8))' }}
+                    style={{ filter: 'drop-shadow(0 0 4px rgba(196,181,253,0.9))' }}
                   />
                 </svg>
               ) : (
@@ -514,11 +513,14 @@ export function UpdatePopup() {
                 </div>
               )}
             </div>
+
+            <ReleaseNotesLink />
           </div>
         )}
       </div>
     );
   }
+
 
   /* ── STEP 3: Installing ── */
   if (step === 'installing') {
@@ -705,6 +707,7 @@ export function UpdatePopup() {
           <GlassButton onClick={handleGo}>
             Explore Now
           </GlassButton>
+          <ReleaseNotesLink />
         </div>
       )}
     </div>
