@@ -12,6 +12,7 @@ import Hls from 'hls.js';
 import { useEmbedPlayerBridge } from '@/hooks/useEmbedPlayerBridge';
 import { getNetworkInfo } from '@/lib/videoUtils';
 import { isHlsUrl as isHls, isDashUrl, selectCompatibleSources, detectDeviceKind } from '@/lib/streamSource';
+import { isUuid, isSelfEmbedUrl } from '@/lib/embedLink';
 
 
 function getLowBandwidthHlsConfig() {
@@ -231,7 +232,7 @@ export default function EmbedPlayer() {
                 if (eps) allEps.push(...eps.map(e => ({ ...e, season_number: s.season_number })));
               }
               setAllEpisodes(allEps);
-              const idx = allEps.findIndex(e => e.id === episodeId);
+              const idx = allEps.findIndex(e => e.id === data.id);
               if (idx >= 0) setCurrentEpisodeIndex(idx);
             }
           }
@@ -245,7 +246,7 @@ export default function EmbedPlayer() {
 
   // 📝 Save watch history from embed player → shows up in main "/" Continue Watching
   useEffect(() => {
-    if (!episodeId || !resolvedAnimeId) return;
+    if (!realEpisodeId || !resolvedAnimeId) return;
     let intervalId: ReturnType<typeof setInterval> | undefined;
     let cancelled = false;
     (async () => {
@@ -255,7 +256,7 @@ export default function EmbedPlayer() {
       await supabase.from('watch_history').upsert({
         user_id: user.id,
         anime_id: resolvedAnimeId,
-        episode_id: episodeId,
+        episode_id: realEpisodeId,
         progress: 0,
         completed: false,
         watched_at: new Date().toISOString(),
@@ -269,7 +270,7 @@ export default function EmbedPlayer() {
         await supabase.from('watch_history').upsert({
           user_id: user.id,
           anime_id: resolvedAnimeId,
-          episode_id: episodeId,
+          episode_id: realEpisodeId,
           progress: Math.floor(pct),
           completed,
           completed_at: completed ? new Date().toISOString() : null,
@@ -280,7 +281,7 @@ export default function EmbedPlayer() {
       }, 10000);
     })();
     return () => { cancelled = true; if (intervalId) clearInterval(intervalId); };
-  }, [episodeId, resolvedAnimeId]);
+  }, [realEpisodeId, resolvedAnimeId]);
 
   // Video playback setup
   useEffect(() => {
