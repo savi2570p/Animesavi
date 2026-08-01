@@ -128,6 +128,10 @@ export function UpdatePopup() {
     justDownloadedRef.current = true;
     setStep('downloading');
   }, []);
+  const openReleaseNotes = useCallback(() => {
+    dismissPopup();
+    navigate('/release-notes');
+  }, [dismissPopup, navigate]);
   const handleGo = useCallback(() => {
     // Only play the cinematic "Entering the latest version" loader when the
     // user has downloaded this version. Manual What's New views just close.
