@@ -310,6 +310,17 @@ export function UpdatePopup() {
     </div>
   );
 
+  const ReleaseNotesLink = () => (
+    <button
+      onClick={openReleaseNotes}
+      className="group mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-violet-300/15 bg-violet-500/[0.07] px-3 py-2 text-[10px] font-semibold text-violet-100/85 backdrop-blur-md transition hover:bg-violet-500/15 active:scale-[0.98]"
+    >
+      <FileText className="h-3 w-3 text-violet-300" />
+      Read full release notes
+      <ArrowRight className="h-3 w-3 opacity-60 transition-transform group-hover:translate-x-0.5" />
+    </button>
+  );
+
   /* ── STEP 1: Update Alert ── */
   if (step === 'alert') {
     return (
@@ -323,6 +334,11 @@ export function UpdatePopup() {
               showSparkles
             />
 
+            <div className="mb-3 flex items-center justify-center gap-1.5 rounded-xl border border-violet-300/15 bg-violet-500/[0.07] px-2.5 py-1.5 text-[9px] font-semibold text-violet-100/85 backdrop-blur-md">
+              <Download className="h-3 w-3 text-violet-300" />
+              Update package · {TOTAL_MB}MB
+            </div>
+
             <div className="text-left mb-3 sm:mb-4">
               <ChangelogList items={VERSION_GROUPS[0].items} />
             </div>
@@ -330,11 +346,13 @@ export function UpdatePopup() {
             <GlassButton onClick={handleDownload}>
               Download
             </GlassButton>
+            <ReleaseNotesLink />
           </div>
         )}
       </div>
     );
   }
+
 
   /* ── STEP 2: Downloading ── */
   if (step === 'downloading') {
