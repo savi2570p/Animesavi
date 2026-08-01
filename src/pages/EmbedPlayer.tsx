@@ -177,20 +177,33 @@ export default function EmbedPlayer() {
 
   // Fetch episode data (only if domain allowed)
   const [resolvedAnimeId, setResolvedAnimeId] = useState<string | null>(null);
+  const [realEpisodeId, setRealEpisodeId] = useState<string | null>(null);
   useEffect(() => {
     if (domainAllowed !== true) return;
     const fetchEpisode = async () => {
       if (!episodeId) { setFetchError('No episode ID provided'); return; }
       try {
-        const { data, error } = await supabase
-          .from('episodes').select('video_url, external_url, title, season_id, episode_number, captions_url')
-          .eq('id', episodeId).single();
+        // The route accepts BOTH the full UUID and the short 6-char code
+        // (e.g. /embed/gy7e12), so short links resolve to the same episode.
+        const key = episodeId.trim().toLowerCase();
+        const query = supabase
+          .from('episodes')
+          .select('id, video_url, external_url, title, season_id, episode_number, captions_url');
+        const { data, error } = isUuid(key)
+          ? await query.eq('id', key).maybeSingle()
+          : await query.eq('short_id', key).maybeSingle();
         if (error || !data) { setFetchError('Episode not found'); return; }
+        setRealEpisodeId(data.id);
         // Build ordered candidate list, ranked by device compatibility.
         // iOS Safari can't play DASH/MKV → those get dropped so the fallback
         // jumps straight to a playable HLS/MP4 source instead of showing a
         // "Playback Error" on an unplayable format.
-        const candidates = selectCompatibleSources([data.video_url, data.external_url]);
+        // Self-referencing embed links (our own /embed/... page stored in
+        // external_url) are NOT video sources — playing them fails.
+        const rawSources = [data.video_url, data.external_url].filter(
+          (u) => !!u && !isSelfEmbedUrl(u),
+        );
+        const candidates = selectCompatibleSources(rawSources);
         if (candidates.length === 0) {
           setFetchError(
             deviceInfo.isIOS
