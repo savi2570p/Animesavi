@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { FloxLoadingScreen } from '@/components/flox/FloxLoadingScreen';
 
 import { toast } from 'sonner';
 import { Loader2, Trash2, Upload as UploadIcon, PartyPopper, ArrowLeft, Plus, Pencil, Play, Share2 } from 'lucide-react';
