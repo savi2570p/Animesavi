@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import shadowFlixLogo from '@/assets/shadowflix-logo.jpg';
+import { buildEmbedUrl } from '@/lib/embedLink';
 
 const SHADOW_FLIX_PASSWORD = 'SHADOW X SAVI';
 const GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Thriller', 'Mystery', 'Supernatural'];
@@ -1948,7 +1949,7 @@ export default function ShadowFlix() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                   {filteredGroups.map(g => {
                     const firstEp = g.items[0];
-                    const embedUrl = firstEp ? `${window.location.origin}/embed/${firstEp.id}` : '';
+                    const embedUrl = firstEp ? buildEmbedUrl(firstEp.id) : '';
                     const seriesUrl = buildShadowFlixShareUrl(g.title);
                     const iframeCode = `<iframe src="${embedUrl}" width="100%" height="500" frameborder="0" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
                     const copyTo = (text: string, label: string) => {
@@ -2261,7 +2262,7 @@ export default function ShadowFlix() {
           {previewGroup && (() => {
             const seriesUrl = buildShadowFlixShareUrl(previewGroup.title);
             const firstEp = previewGroup.items[0];
-            const embedUrl = firstEp ? `${window.location.origin}/embed/${firstEp.id}` : seriesUrl;
+            const embedUrl = firstEp ? buildEmbedUrl(firstEp.id) : seriesUrl;
             const sortedEpisodes = [...previewGroup.items].sort((a, b) => (a.episode_number || 0) - (b.episode_number || 0));
             const recentEpisodes = sortedEpisodes.slice(-5).reverse();
             const allGenres = previewGroup.genres?.length ? previewGroup.genres : (previewGroup.genre ? [previewGroup.genre] : []);

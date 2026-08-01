@@ -9,6 +9,7 @@ import { FileUploadInput } from '@/components/upload/FileUploadInput';
 import { VideoFormatConverter } from '@/components/upload/VideoFormatConverter';
 import { supabase } from '@/integrations/supabase/client';
 import { extractEmbedSrc } from '@/components/video/PureEmbedPlayer';
+import { buildEmbedUrl } from '@/lib/embedLink';
 
 interface BatchEpisode {
   id: string;
@@ -164,7 +165,7 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
             needsEmbed.map((row: any) =>
               supabase
                 .from('episodes')
-                .update({ external_url: `${window.location.origin}/embed/${row.id}` })
+                .update({ external_url: buildEmbedUrl(row.id) })
                 .eq('id', row.id)
             )
           );

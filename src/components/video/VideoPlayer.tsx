@@ -58,6 +58,7 @@ import { MobileMuteIndicator } from './MobileMuteIndicator';
 import { VideoPlayerInfoOverlay } from './VideoPlayerInfoOverlay';
 import { PremiumLoader } from './PremiumLoader';
 import { EncodingOverlay } from './EncodingOverlay';
+import { buildEmbedUrl } from '@/lib/embedLink';
 import { useVideoGestures } from '@/hooks/useVideoGestures';
 import { ScreenMirroringDialog } from './ScreenMirroringDialog';
 import { YouTubeEmbed, isYouTubeUrl } from './YouTubeEmbed';
@@ -2102,7 +2103,7 @@ export function VideoPlayer({
     }
 
     if (episodeId) {
-      const internalEmbed = `${window.location.origin}/embed/${episodeId}`;
+      const internalEmbed = buildEmbedUrl(episodeId);
       console.info('[VideoPlayer] Embed fallback → internal /embed route', { episodeId, url: internalEmbed });
       return (
         <PureEmbedPlayer
