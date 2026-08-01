@@ -20,23 +20,25 @@ interface VersionGroup {
   items: ChangelogItem[];
 }
 
-const APP_VERSION = 'V 29';
-const RELEASE_DATE = 'July 17, 2026';
+const APP_VERSION = 'V 30';
+const RELEASE_DATE = 'August 1, 2026';
 
-// Fixed download size for V 29 patch
-const RANDOM_DOWNLOAD_MB = 32.53;
+// Fixed download size for V 30 patch
+const RANDOM_DOWNLOAD_MB = 20;
 
 const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'V 29',
+    version: 'V 30',
     date: RELEASE_DATE,
-    highlight: 'A performance-focused update: smoother scrolling, faster transitions, and refined polish across the entire app.',
+    highlight: 'A smoother, faster update with focused improvements, key fixes, and a refreshed embed-player experience.',
     items: [
-      { icon: '⚡', badge: 'IMPROVED', title: 'Faster App Response', desc: 'Navigation, taps, and page transitions feel noticeably snappier across mobile and desktop.' },
-      { icon: '🪶', badge: 'IMPROVED', title: 'Smoother Scrolling', desc: 'Home rows, episode grids, and long lists now scroll with buttery, frame-perfect motion.' },
-      { icon: '✨', badge: 'IMPROVED', title: 'Refined UI Polish', desc: 'Subtle spacing, contrast, and animation tweaks make the entire interface feel more premium.' },
-      { icon: '🎬', badge: 'IMPROVED', title: 'Quicker Player Startup', desc: 'Video player boots faster with reduced initial delay before playback begins.' },
-      { icon: '🧊', badge: 'IMPROVED', title: 'Lighter Memory Footprint', desc: 'Reduced background work keeps the app fast even after long browsing sessions.' },
+      { icon: '⚡', badge: 'IMPROVED', title: 'Faster Navigation', desc: 'Page transitions, tab switches, and scroll rows feel noticeably snappier on every device.' },
+      { icon: '🪶', badge: 'IMPROVED', title: 'Smoother Scrolling', desc: 'Home carousels, episode grids, and long lists glide with buttery, frame-perfect motion.' },
+      { icon: '✨', badge: 'IMPROVED', title: 'Liquid-Glass Polish', desc: 'Deeper transparency, softer blurs, and refined highlights across the entire interface.' },
+      { icon: '🎬', badge: 'IMPROVED', title: 'Player Reliability', desc: 'Better source fallback, faster startup, and clearer error handling inside the video player.' },
+      { icon: '🔧', badge: 'FIX', title: 'Embed Player Fixes', desc: 'Use Embed Player now routes through the correct fallback and skips blocked sources.' },
+      { icon: '🔧', badge: 'FIX', title: 'Upload Stability', desc: 'Resolved stuck progress and retry issues for large video uploads.' },
+      { icon: '🧪', badge: 'IMPROVED', title: 'Use Embed Player BETA 2.1', desc: 'Use embed player is still in BETA — currently running BETA 2.1 with ongoing improvements.' },
     ],
   },
 ];
