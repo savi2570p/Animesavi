@@ -60,6 +60,7 @@ const EngDubPage = lazy(() => import("./pages/EngDubPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Schedule = lazy(() => import("./pages/Schedule"));
 const UpcomingPage = lazy(() => import("./pages/UpcomingPage"));
+const ReleaseNotes = lazy(() => import("./pages/ReleaseNotes"));
 const EmbedSlugPlayer = lazy(() => import("./pages/EmbedSlugPlayer"));
 const MinimalEmbedPage = lazy(() => import("./pages/MinimalEmbedPage"));
 const Welcome = lazy(() => import("./pages/Welcome"));
