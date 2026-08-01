@@ -155,7 +155,10 @@ export const TrendingBanner = memo(function TrendingBanner() {
         </div>
 
         {/* Main banner card */}
-        <div className="relative overflow-hidden rounded-3xl border border-border/40 bg-card/40 backdrop-blur-xl shadow-2xl shadow-black/40 h-[220px] sm:h-[260px] md:h-[300px] lg:h-[340px]">
+        <div
+          className="relative overflow-hidden rounded-3xl border border-border/40 bg-card/40 shadow-2xl shadow-black/40 h-[220px] sm:h-[260px] md:h-[300px] lg:h-[340px]"
+          style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)', isolation: 'isolate' }}
+        >
           {/* Animated ambient glow */}
           <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 bg-primary/15 rounded-full blur-3xl animate-pulse" />
           <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 bg-rose-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
