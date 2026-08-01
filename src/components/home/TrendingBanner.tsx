@@ -212,14 +212,17 @@ export const TrendingBanner = memo(function TrendingBanner() {
               </div>
 
               {/* Cover */}
-              <div className="relative shrink-0 self-center hidden sm:block">
+              <div className="relative shrink-0 self-center block">
                 <div className="absolute inset-0 rounded-xl bg-primary/30 blur-2xl opacity-0 group-hover:opacity-70 transition-opacity duration-500" />
-                <div className="relative w-[90px] md:w-[120px] lg:w-[140px] rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10 group-hover:ring-primary/50 transition-all duration-300">
+                <div className="relative w-[62px] sm:w-[90px] md:w-[120px] lg:w-[140px] rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10 group-hover:ring-primary/50 transition-all duration-300">
                   <img
-                    src={current.cover_image || '/placeholder.svg'}
+                    src={current.cover_image || current.banner_image || '/placeholder.svg'}
                     alt={current.title || ''}
+                    loading="eager"
+                    decoding="async"
                     className="w-full aspect-[3/4] object-cover"
                   />
+
                   {/* Play overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-90 transition-opacity" />
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100">
