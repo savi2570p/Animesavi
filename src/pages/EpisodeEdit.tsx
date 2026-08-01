@@ -16,6 +16,7 @@ import { VideoFormatConverter } from '@/components/upload/VideoFormatConverter';
 import { SubtitleEditor } from '@/components/upload/SubtitleEditor';
 import { extractEmbedSrc } from '@/components/video/PureEmbedPlayer';
 import { extractEmbeddedCaptionsToVTT } from '@/lib/extractEmbeddedCaptions';
+import { buildEmbedUrl } from '@/lib/embedLink';
 
 const AUDIO_LANGUAGES = [
   { value: 'original', label: 'Original (Japanese)' },
@@ -173,7 +174,7 @@ export default function EpisodeEdit() {
       return;
     }
     if (!resolvedExternalUrl && videoUrl.trim()) {
-      resolvedExternalUrl = `${window.location.origin}/embed/${episodeId}`;
+      resolvedExternalUrl = buildEmbedUrl(episodeId!);
     }
 
     setIsSaving(true);
@@ -372,7 +373,7 @@ export default function EpisodeEdit() {
               {(() => {
                 const trimmed = externalUrl.trim();
                 const parsed = trimmed ? extractEmbedSrc(trimmed) : null;
-                const autoEmbedPrefix = `${window.location.origin}/embed/${episodeId}`;
+                const autoEmbedPrefix = buildEmbedUrl(episodeId!);
                 const isAuto = trimmed === autoEmbedPrefix;
                 let status: 'valid' | 'auto' | 'needs-fix' | 'empty' = 'empty';
                 if (!trimmed) status = videoUrl.trim() ? 'auto' : 'empty';

@@ -12,6 +12,7 @@ import Hls from 'hls.js';
 import { useEmbedPlayerBridge } from '@/hooks/useEmbedPlayerBridge';
 import { getNetworkInfo } from '@/lib/videoUtils';
 import { isHlsUrl as isHls, isDashUrl, selectCompatibleSources, detectDeviceKind } from '@/lib/streamSource';
+import { isUuid, isSelfEmbedUrl } from '@/lib/embedLink';
 
 
 function getLowBandwidthHlsConfig() {
@@ -177,20 +178,33 @@ export default function EmbedPlayer() {
 
   // Fetch episode data (only if domain allowed)
   const [resolvedAnimeId, setResolvedAnimeId] = useState<string | null>(null);
+  const [realEpisodeId, setRealEpisodeId] = useState<string | null>(null);
   useEffect(() => {
     if (domainAllowed !== true) return;
     const fetchEpisode = async () => {
       if (!episodeId) { setFetchError('No episode ID provided'); return; }
       try {
-        const { data, error } = await supabase
-          .from('episodes').select('video_url, external_url, title, season_id, episode_number, captions_url')
-          .eq('id', episodeId).single();
+        // The route accepts BOTH the full UUID and the short 6-char code
+        // (e.g. /embed/gy7e12), so short links resolve to the same episode.
+        const key = episodeId.trim().toLowerCase();
+        const query = supabase
+          .from('episodes')
+          .select('id, video_url, external_url, title, season_id, episode_number, captions_url');
+        const { data, error } = isUuid(key)
+          ? await query.eq('id', key).maybeSingle()
+          : await query.eq('short_id', key).maybeSingle();
         if (error || !data) { setFetchError('Episode not found'); return; }
+        setRealEpisodeId(data.id);
         // Build ordered candidate list, ranked by device compatibility.
         // iOS Safari can't play DASH/MKV → those get dropped so the fallback
         // jumps straight to a playable HLS/MP4 source instead of showing a
         // "Playback Error" on an unplayable format.
-        const candidates = selectCompatibleSources([data.video_url, data.external_url]);
+        // Self-referencing embed links (our own /embed/... page stored in
+        // external_url) are NOT video sources — playing them fails.
+        const rawSources = [data.video_url, data.external_url].filter(
+          (u) => !!u && !isSelfEmbedUrl(u),
+        );
+        const candidates = selectCompatibleSources(rawSources);
         if (candidates.length === 0) {
           setFetchError(
             deviceInfo.isIOS
@@ -218,7 +232,7 @@ export default function EmbedPlayer() {
                 if (eps) allEps.push(...eps.map(e => ({ ...e, season_number: s.season_number })));
               }
               setAllEpisodes(allEps);
-              const idx = allEps.findIndex(e => e.id === episodeId);
+              const idx = allEps.findIndex(e => e.id === data.id);
               if (idx >= 0) setCurrentEpisodeIndex(idx);
             }
           }
@@ -232,7 +246,7 @@ export default function EmbedPlayer() {
 
   // 📝 Save watch history from embed player → shows up in main "/" Continue Watching
   useEffect(() => {
-    if (!episodeId || !resolvedAnimeId) return;
+    if (!realEpisodeId || !resolvedAnimeId) return;
     let intervalId: ReturnType<typeof setInterval> | undefined;
     let cancelled = false;
     (async () => {
@@ -242,7 +256,7 @@ export default function EmbedPlayer() {
       await supabase.from('watch_history').upsert({
         user_id: user.id,
         anime_id: resolvedAnimeId,
-        episode_id: episodeId,
+        episode_id: realEpisodeId,
         progress: 0,
         completed: false,
         watched_at: new Date().toISOString(),
@@ -256,7 +270,7 @@ export default function EmbedPlayer() {
         await supabase.from('watch_history').upsert({
           user_id: user.id,
           anime_id: resolvedAnimeId,
-          episode_id: episodeId,
+          episode_id: realEpisodeId,
           progress: Math.floor(pct),
           completed,
           completed_at: completed ? new Date().toISOString() : null,
@@ -267,7 +281,7 @@ export default function EmbedPlayer() {
       }, 10000);
     })();
     return () => { cancelled = true; if (intervalId) clearInterval(intervalId); };
-  }, [episodeId, resolvedAnimeId]);
+  }, [realEpisodeId, resolvedAnimeId]);
 
   // Video playback setup
   useEffect(() => {
@@ -630,9 +644,9 @@ export default function EmbedPlayer() {
     setError(null);
     const { data } = await supabase.from('episodes').select('video_url, external_url, title').eq('id', ep.id).single();
     if (!data) { setError('Episode failed to load'); return; }
-    const candidates = [data.video_url, data.external_url]
-      .filter((u): u is string => !!u && typeof u === 'string')
-      .filter((u, i, arr) => arr.indexOf(u) === i);
+    const candidates = selectCompatibleSources(
+      [data.video_url, data.external_url].filter((u) => !!u && !isSelfEmbedUrl(u)),
+    );
     if (candidates.length === 0) { setError('No video available'); return; }
     setCandidateUrls(candidates);
     setCandidateIndex(0);
