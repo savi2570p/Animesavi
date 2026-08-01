@@ -707,6 +707,7 @@ export function UpdatePopup() {
           <GlassButton onClick={handleGo}>
             Explore Now
           </GlassButton>
+          <ReleaseNotesLink />
         </div>
       )}
     </div>
