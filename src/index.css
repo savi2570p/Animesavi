@@ -1818,6 +1818,23 @@ body {
   border-radius: 999px;
 }
 
+/* ------- Hairline borders on every player control surface (iOS/Android/PC) ------- */
+.video-player [class*="border"],
+.lg-player-controls [class*="border"],
+.player-shell [class*="border"] {
+  border-width: 1px !important;
+  border-color: rgba(255, 255, 255, 0.09) !important;
+}
+/* Retina/HiDPI: render a true sub-pixel hairline */
+@media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi) {
+  .video-player [class*="border"],
+  .lg-player-controls [class*="border"],
+  .player-shell [class*="border"] {
+    border-width: 0.5px !important;
+  }
+}
+
+
 
 
 
