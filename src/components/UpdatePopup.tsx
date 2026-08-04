@@ -115,6 +115,41 @@ export function UpdatePopup() {
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, [progress, step]);
 
+  // Screen-reader announcements: throttled to 10% milestones so assistive tech
+  // isn't flooded by the per-frame percentage updates.
+  const [srAnnouncement, setSrAnnouncement] = useState('');
+  const lastMilestoneRef = useRef(-1);
+
+  useEffect(() => {
+    if (step !== 'downloading') {
+      lastMilestoneRef.current = -1;
+      setSrAnnouncement('');
+      return;
+    }
+    const pct = Math.floor(progress);
+    const milestone = Math.floor(pct / 10) * 10;
+    if (milestone === lastMilestoneRef.current) return;
+    lastMilestoneRef.current = milestone;
+
+    const downloadedMbNow = (progress / 100) * TOTAL_MB;
+    const remainingMbNow = Math.max(0, TOTAL_MB - downloadedMbNow);
+    const mbPerSecNow = Math.max(0.1, speedMbps / 8);
+    const etaSecNow = pct >= 100 ? 0 : Math.ceil(remainingMbNow / mbPerSecNow);
+    const etaSpoken =
+      etaSecNow <= 0
+        ? 'finishing up'
+        : etaSecNow >= 60
+        ? `about ${Math.floor(etaSecNow / 60)} minute${Math.floor(etaSecNow / 60) > 1 ? 's' : ''} ${etaSecNow % 60} seconds remaining`
+        : `about ${etaSecNow} seconds remaining`;
+
+    setSrAnnouncement(
+      pct >= 100
+        ? `Download complete. ${TOTAL_MB} megabytes downloaded. Verifying update.`
+        : `Downloading update: ${milestone} percent, ${downloadedMbNow.toFixed(1)} of ${TOTAL_MB} megabytes, ${etaSpoken}.`
+    );
+  }, [progress, step, speedMbps, TOTAL_MB]);
+
+
   useEffect(() => {
     if (step !== 'installing') return;
     const timer = setTimeout(() => {
@@ -445,13 +480,15 @@ export function UpdatePopup() {
             <h2 className="bg-gradient-to-r from-white via-violet-100 to-white bg-clip-text text-sm sm:text-base font-bold text-transparent tracking-tight">
               Downloading update
             </h2>
-            <p
-              className="text-[10px] text-violet-200/60 mt-0.5 leading-relaxed px-2"
-              role="status"
-              aria-live="polite"
-            >
+            <p className="text-[10px] text-violet-200/60 mt-0.5 leading-relaxed px-2" aria-hidden="true">
               {phaseLabel} · {displayProgress.toFixed(0)}% of {TOTAL_MB}MB · {etaLabel} left
             </p>
+
+            {/* Throttled screen-reader progress + ETA announcements */}
+            <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+              {srAnnouncement}
+            </p>
+
 
             {/* slim glass bar */}
             <div
