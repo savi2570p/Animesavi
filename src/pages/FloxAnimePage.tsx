@@ -447,8 +447,8 @@ function FloxDetailView({
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-white truncate">Episode {ep.episode_number ?? '—'}</p>
-                    <p className="text-[11px] text-white/55 capitalize">{ep.source_type} source</p>
                   </div>
+
                 </button>
                 {isAdmin && (
                   <Button
