@@ -37,8 +37,14 @@ export function FloxLoadingScreen({ ready, onDone }: FloxLoadingScreenProps) {
     };
   }, [ready]);
 
+  // Start the fade exactly once; the timeout must not be torn down by the
+  // re-render that `setFading(true)` itself triggers (that used to leave an
+  // invisible full-screen overlay mounted, blocking every click on /flox).
+  const fadeStartedRef = useRef(false);
   useEffect(() => {
-    if (progress >= 99.5 && ready && !fading) {
+    if (fadeStartedRef.current) return;
+    if (progress >= 99.5 && ready) {
+      fadeStartedRef.current = true;
       setFading(true);
       const t = setTimeout(() => {
         setHidden(true);
@@ -46,7 +52,18 @@ export function FloxLoadingScreen({ ready, onDone }: FloxLoadingScreenProps) {
       }, 520);
       return () => clearTimeout(t);
     }
-  }, [progress, ready, fading, onDone]);
+  }, [progress, ready, onDone]);
+
+  // Safety net: never let the boot overlay outlive the data load.
+  useEffect(() => {
+    if (!ready) return;
+    const t = setTimeout(() => {
+      fadeStartedRef.current = true;
+      setHidden(true);
+    }, 3000);
+    return () => clearTimeout(t);
+  }, [ready]);
+
 
   if (hidden) return null;
 
