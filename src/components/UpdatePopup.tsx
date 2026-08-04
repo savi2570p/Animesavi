@@ -480,13 +480,15 @@ export function UpdatePopup() {
             <h2 className="bg-gradient-to-r from-white via-violet-100 to-white bg-clip-text text-sm sm:text-base font-bold text-transparent tracking-tight">
               Downloading update
             </h2>
-            <p
-              className="text-[10px] text-violet-200/60 mt-0.5 leading-relaxed px-2"
-              role="status"
-              aria-live="polite"
-            >
+            <p className="text-[10px] text-violet-200/60 mt-0.5 leading-relaxed px-2" aria-hidden="true">
               {phaseLabel} · {displayProgress.toFixed(0)}% of {TOTAL_MB}MB · {etaLabel} left
             </p>
+
+            {/* Throttled screen-reader progress + ETA announcements */}
+            <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+              {srAnnouncement}
+            </p>
+
 
             {/* slim glass bar */}
             <div
