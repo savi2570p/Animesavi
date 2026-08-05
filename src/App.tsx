@@ -72,6 +72,7 @@ const FloxAnimePage = lazy(() => import("./pages/FloxAnimePage"));
 const FloxWatch = lazy(() => import("./pages/FloxWatch"));
 const SiteHealth = lazy(() => import("./pages/SiteHealth"));
 const AdminFeaturedLineup = lazy(() => import("./pages/AdminFeaturedLineup"));
+const ClonePlatform = lazy(() => import("./pages/ClonePlatform"));
 const SharePage = lazy(() => import("./pages/SharePage"));
 const ContinueWatchingAll = lazy(() => import("./pages/ContinueWatchingAll"));
 
