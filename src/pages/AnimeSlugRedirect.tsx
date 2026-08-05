@@ -9,7 +9,9 @@ const createSlug = (title: string): string => {
 };
 
 export default function AnimeSlugRedirect() {
-  const { animeSlug, episodeSlug } = useParams<{ animeSlug: string; episodeSlug?: string }>();
+  const params = useParams<{ animeSlug?: string; slug?: string; episodeSlug?: string }>();
+  const animeSlug = params.animeSlug ?? params.slug;
+  const episodeSlug = params.episodeSlug;
   const navigate = useNavigate();
   const [notFound, setNotFound] = useState(false);
 
