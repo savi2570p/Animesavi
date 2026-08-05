@@ -233,6 +233,7 @@ const App = () => (
                   <Route path="/welcome" element={<Welcome />} />
                   <Route path="/qa-check" element={<QaCheck />} />
                   <Route path="/Shadow-Arise" element={<ShadowArise />} />
+                  <Route path="/:slug" element={<ClonePlatform />} />
                   <Route element={<MainLayout />}>
                     <Route path="/" element={<Index />} />
                     <Route path="/browse" element={<Browse />} />
