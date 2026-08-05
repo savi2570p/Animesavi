@@ -2852,3 +2852,67 @@ html {
     transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1) !important;
   }
 }
+
+/* ================= Clone Platforms — purple liquid glass ================= */
+.clone-glass {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(150deg, hsl(275 70% 60% / 0.10), hsl(270 60% 20% / 0.20));
+  border: 1px solid hsl(280 80% 80% / 0.14);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  box-shadow: 0 24px 70px -30px hsl(275 90% 40% / 0.8), inset 0 1px 0 hsl(0 0% 100% / 0.07);
+}
+.clone-boot-backdrop {
+  background: radial-gradient(circle at 50% 40%, hsl(278 70% 22% / 0.55), hsl(272 60% 5% / 0.82));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+.clone-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(48px);
+  pointer-events: none;
+}
+.clone-orb-a { top: -60px; right: -50px; height: 170px; width: 170px; background: hsl(275 90% 60% / 0.45); }
+.clone-orb-b { bottom: -70px; left: -60px; height: 190px; width: 190px; background: hsl(300 85% 62% / 0.32); }
+.clone-shell {
+  background-image: radial-gradient(circle at 15% 0%, hsl(278 70% 26% / 0.55), transparent 55%),
+                    radial-gradient(circle at 85% 100%, hsl(292 70% 26% / 0.45), transparent 55%);
+}
+.clone-bar {
+  background: hsl(275 55% 10% / 0.72);
+  border-color: hsl(280 80% 80% / 0.12);
+  border-style: solid;
+  border-width: 0;
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+}
+.clone-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  width: 26px;
+  border-radius: 10px;
+  color: hsl(0 0% 100% / 0.75);
+  border: 1px solid hsl(280 80% 80% / 0.16);
+  background: hsl(0 0% 100% / 0.05);
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+.clone-icon-btn:hover { color: #fff; background: hsl(275 90% 62% / 0.25); transform: translateY(-1px); }
+.clone-cta {
+  color: #fff;
+  background: linear-gradient(135deg, hsl(268 90% 58%), hsl(292 88% 62%));
+  border: 1px solid hsl(285 90% 82% / 0.28);
+  box-shadow: 0 14px 40px -16px hsl(280 90% 55% / 0.9);
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+.clone-cta:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.clone-input {
+  background: hsl(0 0% 100% / 0.04) !important;
+  border-color: hsl(280 80% 80% / 0.14) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 0.75rem !important;
+}
