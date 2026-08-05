@@ -24,6 +24,7 @@ import {
   Activity,
   Key,
   Sparkles,
+  Copy,
 } from 'lucide-react';
 import { VideoEncodingDashboard } from '@/components/admin/VideoEncodingDashboard';
 import { CDNHealthDashboard } from '@/components/admin/CDNHealthDashboard';
@@ -36,6 +37,7 @@ import { UserManagement } from '@/components/admin/UserManagement';
 import { EmbedAllowlistManager } from '@/components/admin/EmbedAllowlistManager';
 import { EmbedAudioDebugPanel } from '@/components/admin/EmbedAudioDebugPanel';
 import { RecapAnalyticsDashboard } from '@/components/admin/RecapAnalyticsDashboard';
+import { ClonePlatformsPanel } from '@/components/admin/ClonePlatformsPanel';
 
 interface Application {
   id: string;
@@ -217,6 +219,7 @@ export default function Admin() {
     { value: 'embed', icon: Globe, label: 'Embed', accent: 'text-cyan-300' },
     { value: 'users', icon: Users, label: 'Users', accent: 'text-teal-300' },
     { value: 'recaps', icon: Sparkles, label: 'AI Recaps', accent: 'text-primary' },
+    { value: 'clone-page', icon: Copy, label: 'Clone Page', accent: 'text-purple-300' },
   ];
 
   return (
@@ -418,6 +421,7 @@ export default function Admin() {
           <TabsContent value="embed" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><EmbedAllowlistManager /></div></TabsContent>
           <TabsContent value="users" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><UserManagement /></div></TabsContent>
           <TabsContent value="recaps" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><RecapAnalyticsDashboard /></div></TabsContent>
+          <TabsContent value="clone-page" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><ClonePlatformsPanel /></div></TabsContent>
         </Tabs>
 
         {/* Audio debug panel */}
