@@ -256,56 +256,61 @@ export default function ClonePlatform() {
   return (
     <div className="fixed inset-0 flex flex-col bg-[hsl(272_45%_6%)] clone-shell">
       {/* Top watermark bar */}
-      <div className="clone-bar flex items-center justify-between gap-3 px-3 py-1.5">
+      <div
+        className="clone-bar flex shrink-0 items-center justify-between gap-2 px-2.5 sm:px-3"
+        style={{ paddingTop: 'max(0.375rem, env(safe-area-inset-top))', paddingBottom: '0.375rem' }}
+      >
         <div className="flex min-w-0 items-center gap-2">
           {platform.logo_url ? (
             <img
               src={platform.logo_url}
               alt={`${platform.name} logo`}
-              className="h-5 w-5 rounded-md object-cover"
+              className="h-5 w-5 shrink-0 rounded-md object-cover"
               loading="lazy"
             />
           ) : null}
-          <span className="truncate text-xs font-bold tracking-tight">
+          <span className="shrink-0 text-xs font-bold tracking-tight">
             Anime<span className="text-[hsl(275_90%_72%)]">Savi</span>
           </span>
           <span className="truncate text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             {platform.name}
           </span>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1">
           <button
             onClick={() => navigate('/')}
-            aria-label="Home"
-            className="clone-icon-btn"
+            aria-label="Go to home"
+            className="clone-icon-btn flex h-9 w-9 items-center justify-center sm:h-8 sm:w-8"
           >
-            <Home className="h-3.5 w-3.5" />
+            <Home className="h-4 w-4" />
           </button>
           <button
             onClick={() => navigate('/browse')}
-            aria-label="Search"
-            className="clone-icon-btn"
+            aria-label="Search anime"
+            className="clone-icon-btn flex h-9 w-9 items-center justify-center sm:h-8 sm:w-8"
           >
-            <Search className="h-3.5 w-3.5" />
+            <Search className="h-4 w-4" />
           </button>
         </div>
       </div>
 
       {/* Frame */}
-      <div className="relative flex-1">
+      <div className="relative min-h-0 flex-1">
         <iframe
           key={platform.id}
           src={platform.target_url}
-          title={platform.name}
+          title={`${platform.name} — ad-blocked view on AnimeSavi`}
           className="h-full w-full border-0"
           style={{ pointerEvents: isLocked ? 'none' : 'auto' }}
+          referrerPolicy="no-referrer"
+          loading="lazy"
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
           allowFullScreen
           {...sandboxProps}
         />
 
         {isLocked && !booting && (
-          <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/45 backdrop-blur-[2px]">
+          <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/45 px-6 backdrop-blur-[2px]">
             <button
               onClick={() => setShowUnlockPopup(true)}
               className="clone-cta rounded-2xl px-6 py-3 text-sm font-semibold"
@@ -329,8 +334,11 @@ export default function ClonePlatform() {
       </div>
 
       {/* Bottom strip */}
-      <div className="clone-bar flex items-center justify-center gap-1.5 px-3 py-1.5">
-        <Shield className="h-3 w-3 text-[hsl(275_90%_72%)]" />
+      <div
+        className="clone-bar flex shrink-0 items-center justify-center gap-1.5 px-3"
+        style={{ paddingTop: '0.375rem', paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}
+      >
+        <Shield className="h-3 w-3 shrink-0 text-[hsl(275_90%_72%)]" />
         <span className="text-[10px] font-medium tracking-wide text-muted-foreground">
           Powered by AnimeSavi Ad Blocker
         </span>
