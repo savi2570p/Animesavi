@@ -395,8 +395,14 @@ export function ClonePlatformsPanel() {
                 <Input
                   value={row.slug}
                   onChange={(e) => patchLocal(row.id, { slug: e.target.value })}
-                  className="clone-input"
+                  aria-invalid={!!rowSlugError(row)}
+                  className={`clone-input ${rowSlugError(row) ? 'border-destructive' : ''}`}
                 />
+                {rowSlugError(row) ? (
+                  <p className="text-[11px] text-destructive">{rowSlugError(row)}</p>
+                ) : (
+                  <p className="truncate text-[11px] text-muted-foreground">/{slugify(row.slug)}</p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Category</Label>
