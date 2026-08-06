@@ -2510,7 +2510,7 @@ export function VideoPlayer({
       />
 
       {/* Premium Loading Animation - Netflix-style loader */}
-      <PremiumLoader isVisible={showPremiumLoader && !shouldUseIframe && !!effectiveVideoUrl && !showEncodingOverlay} />
+      <PremiumLoader isVisible={showPremiumLoader && !videoError && !shouldUseIframe && !!effectiveVideoUrl && !showEncodingOverlay} />
 
       {/* Buffering Indicator - only show after initial load */}
       <BufferingIndicator 
