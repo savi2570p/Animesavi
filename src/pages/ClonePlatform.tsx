@@ -166,11 +166,13 @@ function UnlockPopup({
           ) : (
             <div className="mt-6 flex flex-col gap-2">
               <button
+                ref={startRef}
                 onClick={() => setWatching(true)}
                 className="clone-cta w-full rounded-xl px-4 py-2.5 text-sm font-semibold"
               >
                 Start ad
               </button>
+
               <button
                 onClick={onClose}
                 className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-muted-foreground backdrop-blur-xl transition hover:text-foreground"
