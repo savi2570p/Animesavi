@@ -132,6 +132,15 @@ export function ClonePlatformsPanel() {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
 
   const saveRow = async (row: ClonePlatform) => {
+    if (!row.name.trim()) {
+      toast.error('Name is required');
+      return;
+    }
+    const slugIssue = rowSlugError(row);
+    if (slugIssue) {
+      toast.error(slugIssue);
+      return;
+    }
     setSavingId(row.id);
     const { error } = await supabase
       .from('clone_platforms')
