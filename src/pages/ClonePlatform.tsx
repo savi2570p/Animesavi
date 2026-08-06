@@ -238,6 +238,57 @@ export default function ClonePlatform() {
 
   const isLocked = locked && !unlocked;
 
+  /* --- postMessage unlock handshake -------------------------------------
+     The ad frame (or any child) can request an unlock by posting
+     { type: 'clone-unlock', token }. pointerEvents only re-enable once the
+     token verifies on this page. We also broadcast the confirmation back. */
+  const frameRef = useRef<HTMLIFrameElement>(null);
+
+  const applyUnlock = useCallback((token: string) => {
+    if (!verifyUnlockToken(token)) return false;
+    setUnlocked(true);
+    setShowUnlockPopup(false);
+    frameRef.current?.contentWindow?.postMessage(
+      { type: 'clone-unlock-ack', ok: true },
+      '*'
+    );
+    return true;
+  }, []);
+
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      const data = e.data as { type?: string; token?: string } | null;
+      if (!data || data.type !== 'clone-unlock' || typeof data.token !== 'string') return;
+      applyUnlock(data.token);
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [applyUnlock]);
+
+  /* --- Lazy mount the iframe only when it's near the viewport ----------- */
+  const frameHostRef = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = frameHostRef.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((en) => en.isIntersecting)) {
+          setInView(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: '300px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [platform?.id]);
+
   // Sandbox: allow the embedded site to run, but block popups, top-level
   // navigation, pointer lock and downloads so ad scripts can't hijack the tab.
   const sandboxProps = useMemo(
@@ -247,6 +298,7 @@ export default function ClonePlatform() {
         : {},
     [platform?.sandbox_enabled]
   );
+
 
   if (loading) {
     return (
