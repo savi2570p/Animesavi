@@ -219,7 +219,7 @@ export default function Admin() {
     { value: 'embed', icon: Globe, label: 'Embed', accent: 'text-cyan-300' },
     { value: 'users', icon: Users, label: 'Users', accent: 'text-teal-300' },
     { value: 'recaps', icon: Sparkles, label: 'AI Recaps', accent: 'text-primary' },
-    { value: 'clone-page', icon: Copy, label: 'Clone Page', accent: 'text-purple-300' },
+    { value: 'clone-page', icon: Copy, label: 'Clone', accent: 'text-purple-300' },
   ];
 
   return (
