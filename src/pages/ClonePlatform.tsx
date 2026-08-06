@@ -1,7 +1,12 @@
-import { useEffect, useMemo, useState, lazy, Suspense } from 'react';
+import { useEffect, useMemo, useRef, useState, lazy, Suspense, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { ShieldCheck, Zap, Home, Search, Shield, PlayCircle, Lock } from 'lucide-react';
+import {
+  issueUnlockToken,
+  verifyUnlockToken,
+  hasActiveUnlock,
+} from '@/lib/cloneUnlock';
 
 const AnimeSlugRedirect = lazy(() => import('./AnimeSlugRedirect'));
 
@@ -15,33 +20,8 @@ interface ClonePlatformRow {
   is_active: boolean;
 }
 
-const UNLOCK_KEY = 'clone_platform_unlock_until';
-const UNLOCK_TOKEN_KEY = 'clone_platform_unlock_token';
-const UNLOCK_DURATION_MS = 6 * 60 * 60 * 1000; // 6 hours
 const AD_WATCH_SECONDS = 15;
 
-function issueUnlockToken() {
-  const until = Date.now() + UNLOCK_DURATION_MS;
-  const token =
-    (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)) + '.' + until;
-  try {
-    localStorage.setItem(UNLOCK_KEY, String(until));
-    localStorage.setItem(UNLOCK_TOKEN_KEY, token);
-  } catch {}
-  return token;
-}
-
-function hasActiveUnlock() {
-  try {
-    const raw = localStorage.getItem(UNLOCK_KEY);
-    const token = localStorage.getItem(UNLOCK_TOKEN_KEY);
-    if (!raw || !token) return false;
-    const until = parseInt(raw, 10);
-    return Number.isFinite(until) && Date.now() < until && token.endsWith(String(until));
-  } catch {
-    return false;
-  }
-}
 
 /* ---------------------------------------------------------------- Boot overlay */
 function BootOverlay({ siteName }: { siteName: string }) {
