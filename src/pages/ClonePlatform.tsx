@@ -100,9 +100,7 @@ function UnlockPopup({ onClose, onUnlocked }: { onClose: () => void; onUnlocked:
       setLeft((v) => {
         if (v <= 1) {
           window.clearInterval(id);
-          try {
-            localStorage.setItem(UNLOCK_KEY, String(Date.now() + UNLOCK_DURATION_MS));
-          } catch {}
+          issueUnlockToken();
           onUnlocked();
           return 0;
         }
