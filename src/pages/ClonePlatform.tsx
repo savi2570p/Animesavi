@@ -379,19 +379,24 @@ export default function ClonePlatform() {
       </div>
 
       {/* Frame */}
-      <div className="relative min-h-0 flex-1">
-        <iframe
-          key={platform.id}
-          src={platform.target_url}
-          title={`${platform.name} — ad-blocked view on AnimeSavi`}
-          className="h-full w-full border-0"
-          style={{ pointerEvents: isLocked ? 'none' : 'auto' }}
-          referrerPolicy="no-referrer"
-          loading="lazy"
-          allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-          allowFullScreen
-          {...sandboxProps}
-        />
+      <div ref={frameHostRef} className="relative min-h-0 flex-1">
+        {inView ? (
+          <iframe
+            ref={frameRef}
+            key={platform.id}
+            src={platform.target_url}
+            title={`${platform.name} — ad-blocked view on AnimeSavi`}
+            className="h-full w-full border-0"
+            style={{ pointerEvents: isLocked ? 'none' : 'auto' }}
+            referrerPolicy="no-referrer"
+            loading="lazy"
+            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+            allowFullScreen
+            {...sandboxProps}
+          />
+        ) : (
+          <div className="h-full w-full bg-[hsl(272_45%_6%)]" aria-hidden />
+        )}
 
         {isLocked && !booting && (
           <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/45 px-6 backdrop-blur-[2px]">
@@ -409,13 +414,11 @@ export default function ClonePlatform() {
         {showUnlockPopup && (
           <UnlockPopup
             onClose={() => setShowUnlockPopup(false)}
-            onUnlocked={() => {
-              setUnlocked(true);
-              setShowUnlockPopup(false);
-            }}
+            onUnlocked={(token) => applyUnlock(token)}
           />
         )}
       </div>
+
 
       {/* Bottom strip */}
       <div
