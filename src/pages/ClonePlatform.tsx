@@ -70,9 +70,17 @@ function BootOverlay({ siteName }: { siteName: string }) {
 }
 
 /* ------------------------------------------------------------- Unlock popup */
-function UnlockPopup({ onClose, onUnlocked }: { onClose: () => void; onUnlocked: () => void }) {
+function UnlockPopup({
+  onClose,
+  onUnlocked,
+}: {
+  onClose: () => void;
+  onUnlocked: (token: string) => void;
+}) {
   const [watching, setWatching] = useState(false);
   const [left, setLeft] = useState(AD_WATCH_SECONDS);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const startRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!watching) return;
@@ -80,8 +88,7 @@ function UnlockPopup({ onClose, onUnlocked }: { onClose: () => void; onUnlocked:
       setLeft((v) => {
         if (v <= 1) {
           window.clearInterval(id);
-          issueUnlockToken();
-          onUnlocked();
+          onUnlocked(issueUnlockToken());
           return 0;
         }
         return v - 1;
@@ -90,9 +97,52 @@ function UnlockPopup({ onClose, onUnlocked }: { onClose: () => void; onUnlocked:
     return () => window.clearInterval(id);
   }, [watching, onUnlocked]);
 
+  // Focus the primary action on open, restore focus on close.
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    startRef.current?.focus();
+    return () => previouslyFocused?.focus?.();
+  }, []);
+
+  // Focus trap + Escape to close.
+  const onKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const focusables = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusables || focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    },
+    [onClose]
+  );
+
   return (
-    <div className="absolute inset-0 z-[60] flex items-center justify-center px-6 clone-boot-backdrop">
-      <div className="clone-glass relative w-full max-w-sm rounded-3xl p-7 text-center animate-scale-in">
+    <div
+      className="absolute inset-0 z-[60] flex items-center justify-center px-6 clone-boot-backdrop"
+      onKeyDown={onKeyDown}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Watch a short ad to unlock this page"
+        className="clone-glass relative w-full max-w-sm rounded-3xl p-7 text-center animate-scale-in"
+      >
+
         <div className="clone-orb clone-orb-a" aria-hidden />
         <div className="relative">
           <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.07] backdrop-blur-2xl">
