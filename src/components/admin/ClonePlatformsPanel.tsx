@@ -257,8 +257,12 @@ export function ClonePlatformsPanel() {
                 if (!slugTouched) setNewSlug(slugify(e.target.value));
               }}
               placeholder="HiAnime"
-              className="clone-input"
+              aria-invalid={!!nameError}
+              className={`clone-input ${nameError && newName.length > 0 ? 'border-destructive' : ''}`}
             />
+            {nameError && newName.length > 0 && (
+              <p className="text-[11px] text-destructive">{nameError}</p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Slug</Label>
@@ -269,8 +273,19 @@ export function ClonePlatformsPanel() {
                 setNewSlug(e.target.value);
               }}
               placeholder="hianime"
-              className="clone-input"
+              aria-invalid={!!slugError}
+              className={`clone-input ${slugError && effectiveSlug ? 'border-destructive' : ''}`}
             />
+            {slugError && effectiveSlug ? (
+              <p className="text-[11px] text-destructive">{slugError}</p>
+            ) : (
+              <p className="truncate text-[11px] text-muted-foreground">
+                Preview:{' '}
+                <span className="text-[hsl(275_90%_78%)]">
+                  {window.location.origin}/{effectiveSlug || '…'}
+                </span>
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Target URL</Label>
@@ -297,7 +312,7 @@ export function ClonePlatformsPanel() {
             </Select>
           </div>
         </div>
-        <Button onClick={createCard} disabled={creating} className="clone-cta mt-4 rounded-xl">
+        <Button onClick={createCard} disabled={!canCreate} className="clone-cta mt-4 rounded-xl">
           <Plus className="mr-2 h-4 w-4" />
           Add card
         </Button>
