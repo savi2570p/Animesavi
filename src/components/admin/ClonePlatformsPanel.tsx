@@ -84,17 +84,33 @@ export function ClonePlatformsPanel() {
     toast.success(checked ? 'All clone pages locked' : 'All clone pages unlocked');
   };
 
+  const effectiveSlug = slugify(slugTouched ? newSlug : newName);
+  const slugTaken = rows.some((r) => r.slug === effectiveSlug);
+  const nameError = !newName.trim() ? 'Name is required' : null;
+  const slugError = !effectiveSlug
+    ? 'Slug is required'
+    : slugTaken
+    ? 'That slug is already used by another card'
+    : null;
+  const canCreate = !nameError && !slugError && !creating;
+
+  const rowSlugError = (row: ClonePlatform) => {
+    const s = slugify(row.slug);
+    if (!s) return 'Slug is required';
+    if (rows.some((r) => r.id !== row.id && slugify(r.slug) === s)) return 'Duplicate slug';
+    return null;
+  };
+
   const createCard = async () => {
     const name = newName.trim();
-    const slug = slugify(slugTouched ? newSlug : newName);
-    if (!name || !slug) {
-      toast.error('Name and slug are required');
+    if (nameError || slugError) {
+      toast.error(nameError ?? slugError ?? 'Invalid card');
       return;
     }
     setCreating(true);
     const { error } = await supabase.from('clone_platforms').insert({
       name,
-      slug,
+      slug: effectiveSlug,
       target_url: newUrl.trim(),
       category: newCategory,
       sort_order: rows.length,
