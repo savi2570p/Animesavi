@@ -1,7 +1,12 @@
-import { useEffect, useMemo, useState, lazy, Suspense } from 'react';
+import { useEffect, useMemo, useRef, useState, lazy, Suspense, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { ShieldCheck, Zap, Home, Search, Shield, PlayCircle, Lock } from 'lucide-react';
+import {
+  issueUnlockToken,
+  verifyUnlockToken,
+  hasActiveUnlock,
+} from '@/lib/cloneUnlock';
 
 const AnimeSlugRedirect = lazy(() => import('./AnimeSlugRedirect'));
 
@@ -15,33 +20,8 @@ interface ClonePlatformRow {
   is_active: boolean;
 }
 
-const UNLOCK_KEY = 'clone_platform_unlock_until';
-const UNLOCK_TOKEN_KEY = 'clone_platform_unlock_token';
-const UNLOCK_DURATION_MS = 6 * 60 * 60 * 1000; // 6 hours
 const AD_WATCH_SECONDS = 15;
 
-function issueUnlockToken() {
-  const until = Date.now() + UNLOCK_DURATION_MS;
-  const token =
-    (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)) + '.' + until;
-  try {
-    localStorage.setItem(UNLOCK_KEY, String(until));
-    localStorage.setItem(UNLOCK_TOKEN_KEY, token);
-  } catch {}
-  return token;
-}
-
-function hasActiveUnlock() {
-  try {
-    const raw = localStorage.getItem(UNLOCK_KEY);
-    const token = localStorage.getItem(UNLOCK_TOKEN_KEY);
-    if (!raw || !token) return false;
-    const until = parseInt(raw, 10);
-    return Number.isFinite(until) && Date.now() < until && token.endsWith(String(until));
-  } catch {
-    return false;
-  }
-}
 
 /* ---------------------------------------------------------------- Boot overlay */
 function BootOverlay({ siteName }: { siteName: string }) {
@@ -90,9 +70,17 @@ function BootOverlay({ siteName }: { siteName: string }) {
 }
 
 /* ------------------------------------------------------------- Unlock popup */
-function UnlockPopup({ onClose, onUnlocked }: { onClose: () => void; onUnlocked: () => void }) {
+function UnlockPopup({
+  onClose,
+  onUnlocked,
+}: {
+  onClose: () => void;
+  onUnlocked: (token: string) => void;
+}) {
   const [watching, setWatching] = useState(false);
   const [left, setLeft] = useState(AD_WATCH_SECONDS);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const startRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!watching) return;
@@ -100,8 +88,7 @@ function UnlockPopup({ onClose, onUnlocked }: { onClose: () => void; onUnlocked:
       setLeft((v) => {
         if (v <= 1) {
           window.clearInterval(id);
-          issueUnlockToken();
-          onUnlocked();
+          onUnlocked(issueUnlockToken());
           return 0;
         }
         return v - 1;
@@ -110,9 +97,52 @@ function UnlockPopup({ onClose, onUnlocked }: { onClose: () => void; onUnlocked:
     return () => window.clearInterval(id);
   }, [watching, onUnlocked]);
 
+  // Focus the primary action on open, restore focus on close.
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    startRef.current?.focus();
+    return () => previouslyFocused?.focus?.();
+  }, []);
+
+  // Focus trap + Escape to close.
+  const onKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const focusables = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusables || focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    },
+    [onClose]
+  );
+
   return (
-    <div className="absolute inset-0 z-[60] flex items-center justify-center px-6 clone-boot-backdrop">
-      <div className="clone-glass relative w-full max-w-sm rounded-3xl p-7 text-center animate-scale-in">
+    <div
+      className="absolute inset-0 z-[60] flex items-center justify-center px-6 clone-boot-backdrop"
+      onKeyDown={onKeyDown}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Watch a short ad to unlock this page"
+        className="clone-glass relative w-full max-w-sm rounded-3xl p-7 text-center animate-scale-in"
+      >
+
         <div className="clone-orb clone-orb-a" aria-hidden />
         <div className="relative">
           <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.07] backdrop-blur-2xl">
@@ -136,11 +166,13 @@ function UnlockPopup({ onClose, onUnlocked }: { onClose: () => void; onUnlocked:
           ) : (
             <div className="mt-6 flex flex-col gap-2">
               <button
+                ref={startRef}
                 onClick={() => setWatching(true)}
                 className="clone-cta w-full rounded-xl px-4 py-2.5 text-sm font-semibold"
               >
                 Start ad
               </button>
+
               <button
                 onClick={onClose}
                 className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-muted-foreground backdrop-blur-xl transition hover:text-foreground"
@@ -206,6 +238,57 @@ export default function ClonePlatform() {
 
   const isLocked = locked && !unlocked;
 
+  /* --- postMessage unlock handshake -------------------------------------
+     The ad frame (or any child) can request an unlock by posting
+     { type: 'clone-unlock', token }. pointerEvents only re-enable once the
+     token verifies on this page. We also broadcast the confirmation back. */
+  const frameRef = useRef<HTMLIFrameElement>(null);
+
+  const applyUnlock = useCallback((token: string) => {
+    if (!verifyUnlockToken(token)) return false;
+    setUnlocked(true);
+    setShowUnlockPopup(false);
+    frameRef.current?.contentWindow?.postMessage(
+      { type: 'clone-unlock-ack', ok: true },
+      '*'
+    );
+    return true;
+  }, []);
+
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      const data = e.data as { type?: string; token?: string } | null;
+      if (!data || data.type !== 'clone-unlock' || typeof data.token !== 'string') return;
+      applyUnlock(data.token);
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [applyUnlock]);
+
+  /* --- Lazy mount the iframe only when it's near the viewport ----------- */
+  const frameHostRef = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = frameHostRef.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((en) => en.isIntersecting)) {
+          setInView(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: '300px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [platform?.id]);
+
   // Sandbox: allow the embedded site to run, but block popups, top-level
   // navigation, pointer lock and downloads so ad scripts can't hijack the tab.
   const sandboxProps = useMemo(
@@ -215,6 +298,7 @@ export default function ClonePlatform() {
         : {},
     [platform?.sandbox_enabled]
   );
+
 
   if (loading) {
     return (
@@ -295,19 +379,24 @@ export default function ClonePlatform() {
       </div>
 
       {/* Frame */}
-      <div className="relative min-h-0 flex-1">
-        <iframe
-          key={platform.id}
-          src={platform.target_url}
-          title={`${platform.name} — ad-blocked view on AnimeSavi`}
-          className="h-full w-full border-0"
-          style={{ pointerEvents: isLocked ? 'none' : 'auto' }}
-          referrerPolicy="no-referrer"
-          loading="lazy"
-          allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-          allowFullScreen
-          {...sandboxProps}
-        />
+      <div ref={frameHostRef} className="relative min-h-0 flex-1">
+        {inView ? (
+          <iframe
+            ref={frameRef}
+            key={platform.id}
+            src={platform.target_url}
+            title={`${platform.name} — ad-blocked view on AnimeSavi`}
+            className="h-full w-full border-0"
+            style={{ pointerEvents: isLocked ? 'none' : 'auto' }}
+            referrerPolicy="no-referrer"
+            loading="lazy"
+            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+            allowFullScreen
+            {...sandboxProps}
+          />
+        ) : (
+          <div className="h-full w-full bg-[hsl(272_45%_6%)]" aria-hidden />
+        )}
 
         {isLocked && !booting && (
           <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/45 px-6 backdrop-blur-[2px]">
@@ -325,13 +414,11 @@ export default function ClonePlatform() {
         {showUnlockPopup && (
           <UnlockPopup
             onClose={() => setShowUnlockPopup(false)}
-            onUnlocked={() => {
-              setUnlocked(true);
-              setShowUnlockPopup(false);
-            }}
+            onUnlocked={(token) => applyUnlock(token)}
           />
         )}
       </div>
+
 
       {/* Bottom strip */}
       <div

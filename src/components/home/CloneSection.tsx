@@ -35,10 +35,7 @@ export function CloneSection() {
     <section className="container py-5 md:py-7">
       <div className="mb-3 flex items-center gap-2">
         <Copy className="h-4 w-4 text-[hsl(275_90%_78%)]" />
-        <h2 className="text-lg font-bold tracking-tight md:text-xl">Clone</h2>
-        <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          Ad-blocked mirrors
-        </span>
+        <h2 className="text-lg font-bold tracking-tight md:text-xl">Clones</h2>
       </div>
 
       <div className="snap-row flex gap-3 overflow-x-auto pb-2 scrollbar-none">

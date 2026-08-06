@@ -2916,3 +2916,46 @@ html {
   -webkit-backdrop-filter: blur(14px);
   border-radius: 0.75rem !important;
 }
+
+/* ============================================================
+   Butter-smooth pass — Android/iOS (touch devices)
+   Trim compositor work: no animated aurora, fewer stacked blurs,
+   cheaper shadows, and scroll-time paint containment.
+   ============================================================ */
+@media (hover: none) and (pointer: coarse) {
+  /* Ambient aurora/orb layers are decorative — freeze them */
+  .home-aurora,
+  .clone-orb,
+  [class*="aurora"],
+  [class*="-orb"] {
+    animation: none !important;
+    filter: blur(40px) !important;
+    opacity: 0.35 !important;
+  }
+
+  /* Cursor-follow glows never apply on touch */
+  [data-cursor-glow] { display: none !important; }
+
+  /* Cheaper shadows: big spread shadows are expensive to raster */
+  .shadow-2xl, .shadow-\[0_20px_60px_-15px_rgba\(0\,0\,0\,0\.9\)\] {
+    box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.7) !important;
+  }
+
+  /* Contain paint on rows/cards so scrolling only repaints what moved */
+  .snap-row > *,
+  .lg-card,
+  .lg-chip {
+    contain: paint;
+  }
+
+  /* Kill hover-only transitions that still cost on touch */
+  .bouncy-card { animation: none !important; transition: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
