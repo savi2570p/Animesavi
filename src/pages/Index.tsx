@@ -121,6 +121,8 @@ export default function Index() {
 
       <hr className="lg-divider" />
 
+      <CloneSection />
+
       <RecommendedAnime />
       <MostPopular />
 
