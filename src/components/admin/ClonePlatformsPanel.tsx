@@ -84,17 +84,33 @@ export function ClonePlatformsPanel() {
     toast.success(checked ? 'All clone pages locked' : 'All clone pages unlocked');
   };
 
+  const effectiveSlug = slugify(slugTouched ? newSlug : newName);
+  const slugTaken = rows.some((r) => r.slug === effectiveSlug);
+  const nameError = !newName.trim() ? 'Name is required' : null;
+  const slugError = !effectiveSlug
+    ? 'Slug is required'
+    : slugTaken
+    ? 'That slug is already used by another card'
+    : null;
+  const canCreate = !nameError && !slugError && !creating;
+
+  const rowSlugError = (row: ClonePlatform) => {
+    const s = slugify(row.slug);
+    if (!s) return 'Slug is required';
+    if (rows.some((r) => r.id !== row.id && slugify(r.slug) === s)) return 'Duplicate slug';
+    return null;
+  };
+
   const createCard = async () => {
     const name = newName.trim();
-    const slug = slugify(slugTouched ? newSlug : newName);
-    if (!name || !slug) {
-      toast.error('Name and slug are required');
+    if (nameError || slugError) {
+      toast.error(nameError ?? slugError ?? 'Invalid card');
       return;
     }
     setCreating(true);
     const { error } = await supabase.from('clone_platforms').insert({
       name,
-      slug,
+      slug: effectiveSlug,
       target_url: newUrl.trim(),
       category: newCategory,
       sort_order: rows.length,
@@ -116,6 +132,15 @@ export function ClonePlatformsPanel() {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
 
   const saveRow = async (row: ClonePlatform) => {
+    if (!row.name.trim()) {
+      toast.error('Name is required');
+      return;
+    }
+    const slugIssue = rowSlugError(row);
+    if (slugIssue) {
+      toast.error(slugIssue);
+      return;
+    }
     setSavingId(row.id);
     const { error } = await supabase
       .from('clone_platforms')
@@ -232,8 +257,12 @@ export function ClonePlatformsPanel() {
                 if (!slugTouched) setNewSlug(slugify(e.target.value));
               }}
               placeholder="HiAnime"
-              className="clone-input"
+              aria-invalid={!!nameError}
+              className={`clone-input ${nameError && newName.length > 0 ? 'border-destructive' : ''}`}
             />
+            {nameError && newName.length > 0 && (
+              <p className="text-[11px] text-destructive">{nameError}</p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Slug</Label>
@@ -244,8 +273,19 @@ export function ClonePlatformsPanel() {
                 setNewSlug(e.target.value);
               }}
               placeholder="hianime"
-              className="clone-input"
+              aria-invalid={!!slugError}
+              className={`clone-input ${slugError && effectiveSlug ? 'border-destructive' : ''}`}
             />
+            {slugError && effectiveSlug ? (
+              <p className="text-[11px] text-destructive">{slugError}</p>
+            ) : (
+              <p className="truncate text-[11px] text-muted-foreground">
+                Preview:{' '}
+                <span className="text-[hsl(275_90%_78%)]">
+                  {window.location.origin}/{effectiveSlug || '…'}
+                </span>
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Target URL</Label>
@@ -272,7 +312,7 @@ export function ClonePlatformsPanel() {
             </Select>
           </div>
         </div>
-        <Button onClick={createCard} disabled={creating} className="clone-cta mt-4 rounded-xl">
+        <Button onClick={createCard} disabled={!canCreate} className="clone-cta mt-4 rounded-xl">
           <Plus className="mr-2 h-4 w-4" />
           Add card
         </Button>
@@ -355,8 +395,14 @@ export function ClonePlatformsPanel() {
                 <Input
                   value={row.slug}
                   onChange={(e) => patchLocal(row.id, { slug: e.target.value })}
-                  className="clone-input"
+                  aria-invalid={!!rowSlugError(row)}
+                  className={`clone-input ${rowSlugError(row) ? 'border-destructive' : ''}`}
                 />
+                {rowSlugError(row) ? (
+                  <p className="text-[11px] text-destructive">{rowSlugError(row)}</p>
+                ) : (
+                  <p className="truncate text-[11px] text-muted-foreground">/{slugify(row.slug)}</p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Category</Label>
