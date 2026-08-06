@@ -8,6 +8,7 @@ import floxLogo from "@/assets/flox-anime-india-logo.jpg";
 import { FeaturedSlider } from "@/components/home/FeaturedSlider";
 import { ContinueWatching } from "@/components/home/ContinueWatching";
 import { RecommendedAnime } from "@/components/home/RecommendedAnime";
+import { CloneSection } from "@/components/home/CloneSection";
 import { LatestEpisodes } from "@/components/home/LatestEpisodes";
 import { LatestMovies } from "@/components/home/LatestMovies";
 import { LatestEngDub } from "@/components/home/LatestEngDub";
