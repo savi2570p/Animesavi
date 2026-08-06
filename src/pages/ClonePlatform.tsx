@@ -206,8 +206,13 @@ export default function ClonePlatform() {
 
   const isLocked = locked && !unlocked;
 
+  // Sandbox: allow the embedded site to run, but block popups, top-level
+  // navigation, pointer lock and downloads so ad scripts can't hijack the tab.
   const sandboxProps = useMemo(
-    () => (platform?.sandbox_enabled ? { sandbox: 'allow-scripts allow-same-origin allow-forms' } : {}),
+    () =>
+      platform?.sandbox_enabled
+        ? { sandbox: 'allow-scripts allow-same-origin allow-forms allow-presentation' }
+        : {},
     [platform?.sandbox_enabled]
   );
 
