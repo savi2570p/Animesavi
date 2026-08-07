@@ -71,7 +71,34 @@ export interface StreamDownloadOptions {
   onProgress?: (p: DownloadProgress) => void;
   /** Use the same-origin proxy edge function (fallback for CORS). */
   useProxy?: boolean;
+  /**
+   * When set, completed byte-range slices are cached under this key so a
+   * cancelled / failed download can resume where it stopped instead of
+   * restarting from zero.
+   */
+  resumeKey?: string;
 }
+
+/**
+ * Resume store — keeps already-downloaded range slices in memory (per tab)
+ * keyed by a caller-supplied resumeKey (typically the episode id).
+ */
+interface ResumeEntry {
+  total: number;
+  parts: Map<number, Uint8Array>;
+}
+const resumeStore = new Map<string, ResumeEntry>();
+
+export const getResumeBytes = (key: string): number => {
+  const e = resumeStore.get(key);
+  if (!e) return 0;
+  let n = 0;
+  e.parts.forEach((p) => { n += p.length; });
+  return n;
+};
+
+export const clearResume = (key: string) => { resumeStore.delete(key); };
+
 
 const guessMime = (url: string) => {
   const ext = (url.split('?')[0].split('.').pop() || 'mp4').toLowerCase();
