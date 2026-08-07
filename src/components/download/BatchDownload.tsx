@@ -11,9 +11,10 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Download, CheckCircle2, Loader2, X, FileVideo, Ban, FolderDown } from 'lucide-react';
+import { Download, CheckCircle2, Loader2, X, FileVideo, Ban, FolderDown, RotateCcw, AlertTriangle, Bell, BellOff } from 'lucide-react';
 import { toast } from 'sonner';
-import { streamDownload, saveBlob, fmtSpeed, fmtEta, fmtSize } from '@/lib/downloadUtils';
+import { streamDownload, saveBlob, fmtSpeed, fmtEta, fmtSize, getResumeBytes, clearResume } from '@/lib/downloadUtils';
+import { ensureDownloadNotifyPermission, notifyDownload } from '@/lib/downloadNotify';
 
 interface Episode {
   id: string;
@@ -36,7 +37,19 @@ interface DownloadItem {
   etaSec: number;
   received: number;
   total: number;
+  /** Human-readable reason the episode failed. */
+  error?: string;
+  /** How many transport attempts were made (direct + proxy + manual retries). */
+  attempts: number;
+  /** Bytes already on hand from a previous cancelled attempt (resume). */
+  resumedFrom: number;
 }
+
+const newItem = (episode: Episode): DownloadItem => ({
+  episode, status: 'pending', progress: 0, speed: 0, etaSec: 0, received: 0, total: 0,
+  attempts: 0, resumedFrom: 0,
+});
+
 
 const QUALITY_OPTIONS = ['480p', '720p', '1080p', '2160p'] as const;
 
