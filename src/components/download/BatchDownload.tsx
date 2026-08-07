@@ -392,8 +392,15 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
         ) : (
           <>
             <div className="flex items-center justify-between py-2 border-b border-border">
-              <span className="text-sm font-medium">
+              <span className="text-sm font-medium flex items-center gap-2">
                 Downloaded: {completedCount} / {downloadQueue.length}
+                <span
+                  title={notifyOn ? 'Background notifications on' : 'Background notifications off'}
+                  className={`inline-flex items-center gap-1 text-[10px] font-medium ${notifyOn ? 'text-primary' : 'text-muted-foreground'}`}
+                >
+                  {notifyOn ? <Bell className="h-3 w-3" /> : <BellOff className="h-3 w-3" />}
+                  {notifyOn ? 'Alerts on' : 'Alerts off'}
+                </span>
               </span>
               {isDownloading && (
                 <Button size="sm" variant="destructive" onClick={cancelDownload} className="h-7 gap-1">
@@ -404,15 +411,23 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
             </div>
             <ScrollArea className="h-[300px] pr-4">
               <div className="space-y-3">
-                {downloadQueue.map((item) => (
+                {downloadQueue.map((item, index) => (
                   <div key={item.episode.id} className="p-3 rounded-lg bg-muted/30">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Episode {item.episode.episode_number}</span>
-                      {item.status === 'pending' && <span className="text-xs text-muted-foreground">Waiting…</span>}
-                      {item.status === 'downloading' && <Loader2 className="h-4 w-4 text-primary animate-spin" />}
-                      {item.status === 'completed' && <CheckCircle2 className="h-4 w-4 text-primary" />}
-                      {item.status === 'failed' && <X className="h-4 w-4 text-destructive" />}
-                      {item.status === 'cancelled' && <Ban className="h-4 w-4 text-muted-foreground" />}
+                    <div className="flex items-center justify-between mb-2 gap-2">
+                      <span className="text-sm font-medium truncate">Episode {item.episode.episode_number}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {item.attempts > 1 && item.status !== 'completed' && (
+                          <span className="text-[10px] text-muted-foreground">retry {item.attempts - 1}</span>
+                        )}
+                        {item.resumedFrom > 0 && item.status === 'downloading' && (
+                          <span className="text-[10px] text-primary">resumed {fmtSize(item.resumedFrom)}</span>
+                        )}
+                        {item.status === 'pending' && <span className="text-xs text-muted-foreground">Waiting…</span>}
+                        {item.status === 'downloading' && <Loader2 className="h-4 w-4 text-primary animate-spin" />}
+                        {item.status === 'completed' && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                        {item.status === 'failed' && <X className="h-4 w-4 text-destructive" />}
+                        {item.status === 'cancelled' && <Ban className="h-4 w-4 text-muted-foreground" />}
+                      </div>
                     </div>
                     <Progress value={item.progress} className="h-1.5" />
                     {item.status === 'downloading' && (
@@ -421,8 +436,27 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
                         <span>{fmtSpeed(item.speed)} · ETA {fmtEta(item.etaSec)}</span>
                       </div>
                     )}
+                    {(item.status === 'failed' || item.status === 'cancelled') && (
+                      <div className="mt-2 flex items-start justify-between gap-2">
+                        <p className={`flex items-start gap-1.5 text-[11px] leading-snug ${item.status === 'failed' ? 'text-destructive' : 'text-muted-foreground'}`}>
+                          <AlertTriangle className="h-3 w-3 mt-[1px] shrink-0" />
+                          <span>{item.error || 'Download stopped'}</span>
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={isDownloading}
+                          onClick={() => retryEpisode(index)}
+                          className="h-7 gap-1 shrink-0 text-[11px]"
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                          {getResumeBytes(item.episode.id) > 0 ? 'Resume' : 'Retry'}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))}
+
               </div>
             </ScrollArea>
             {zipProgress !== null && (
