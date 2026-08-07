@@ -268,7 +268,7 @@ async function parallelRangeDownload(opts: {
  * resume support.
  */
 export async function streamDownload(opts: StreamDownloadOptions): Promise<{ chunks: BlobPart[]; total: number; received: number; mime: string }> {
-  const { url, signal, onProgress, startAt = 0, useProxy } = opts;
+  const { url, signal, onProgress, startAt = 0, useProxy, resumeKey } = opts;
   const fetchUrl = useProxy ? proxyUrl(url, opts.filename) : url;
   const mimeGuess = opts.mime || guessMime(url);
 
@@ -282,13 +282,24 @@ export async function streamDownload(opts: StreamDownloadOptions): Promise<{ chu
       probe.total >= PARALLEL_MIN_BYTES &&
       !(probe.mime || '').includes('text/html')
     ) {
+      let resume: ResumeEntry | undefined;
+      if (resumeKey) {
+        const existing = resumeStore.get(resumeKey);
+        // A size mismatch means a different source — discard stale slices.
+        resume = existing && existing.total === probe.total
+          ? existing
+          : { total: probe.total, parts: new Map() };
+        resumeStore.set(resumeKey, resume);
+      }
       try {
         const { chunks, received } = await parallelRangeDownload({
           url: fetchUrl,
           total: probe.total,
           signal,
           onProgress,
+          resume,
         });
+        if (resumeKey) resumeStore.delete(resumeKey);
         return { chunks, total: probe.total, received, mime: probe.mime || mimeGuess };
       } catch (e) {
         // If the parallel path fails (e.g. mid-stream 5xx), fall through to
@@ -299,6 +310,7 @@ export async function streamDownload(opts: StreamDownloadOptions): Promise<{ chu
   }
 
   // Fallback: single-connection stream (also the resume path).
+
   const headers: Record<string, string> = {};
   if (startAt > 0) headers['Range'] = `bytes=${startAt}-`;
 
