@@ -21,9 +21,9 @@ const formatViews = (count: number) => {
 
 // Curated trending titles in priority order
 const TRENDING_TITLES = [
-  'The Angel Next Door Spoils me Rotten',
+  'Hanaori-san Still Wants to Fight in the Next Life',
   'Grand Blue Dreaming',
-  'Dr. Stone',
+  'Trapped in a Dating Sim: The World of Otome Games Is Tough for Mobs',
   'Witch Hat Atelier',
   'Wistoria: Wand and Sword',
   'Liar Game',

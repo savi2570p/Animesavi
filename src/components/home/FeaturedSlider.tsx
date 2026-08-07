@@ -27,7 +27,7 @@ const formatViews = (views: number): string => {
 
 const VIEW_COUNT_MAP: Record<string, number> = {
   'Your lie in April': 3400000,
-  'The Angel Next Door Spoils me Rotten': 3600000,
+  'Hanaori-san Still Wants to Fight in the Next Life': 3600000,
   'The angel next door spoils me rotten': 3600000,
   'Mechanical Marie': 977000,
   'Solo Leveling': 730000,
@@ -45,7 +45,7 @@ const VIEW_COUNT_MAP: Record<string, number> = {
   "Tamon's B-side": 5100000,
   'Yowayowa Sensei': 4900000,
   'The Rising of the Shield Hero': 7100000,
-  'Dr. Stone': 6800000,
+  'Trapped in a Dating Sim: The World of Otome Games Is Tough for Mobs': 6800000,
   'Dr. stone': 6800000,
   'Chainsmoker cat': 5800000,
   'Smoking Behind the Supermarket with You': 5500000,
@@ -115,7 +115,7 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
 
         if (data && data.length > 0) {
           const HERO_LINEUP = [
-            'The Angel Next Door Spoils me Rotten',
+            'Hanaori-san Still Wants to Fight in the Next Life',
             'Smoking Behind the Supermarket with You',
             'Chainsmoker cat',
             'Yowayowa Sensei',
@@ -124,7 +124,7 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
             'Re: Zero – Starting Life in Another World',
             "Tamon's B-side",
             'Sparks of tomorrow',
-            'Dr. Stone',
+            'Trapped in a Dating Sim: The World of Otome Games Is Tough for Mobs',
           ];
 
           const norm = (s: string) => s?.toLowerCase().replace(/[\s.]+/g, '') || '';
