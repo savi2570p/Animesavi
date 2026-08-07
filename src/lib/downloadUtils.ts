@@ -14,9 +14,10 @@
 const PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-proxy`;
 
 // Tunables — chosen for 100–300 Mbps ceilings on modern networks.
-const PARALLEL_CONNECTIONS = 8;          // simultaneous range requests
-const PARALLEL_MIN_BYTES = 8 * 1024 * 1024; // only split files ≥ 8 MB
-const RANGE_CHUNK_TARGET = 4 * 1024 * 1024; // ~4 MB per range slice
+const PARALLEL_CONNECTIONS = 12;         // simultaneous range requests
+const PARALLEL_MIN_BYTES = 4 * 1024 * 1024; // split files ≥ 4 MB
+const RANGE_CHUNK_TARGET = 8 * 1024 * 1024; // ~8 MB per range slice
+const RANGE_RETRIES = 3;                 // per-slice retries before failing
 const DISPLAY_SPEED_FLOOR_BPS = 1_000_000 / 8 * 1_000_000 / 1_000_000; // placeholder, real floor below
 const MIN_DISPLAY_BPS = 1_000_000 / 8 * 1_000_000; // 1 Mbps in bytes/sec = 125_000; but user wants Mbps display floor
 // User-facing speed floor: 1 Mbps = 125_000 bytes/sec.
