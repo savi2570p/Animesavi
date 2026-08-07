@@ -229,7 +229,10 @@ async function parallelRangeDownload(opts: {
           let o = 0;
           for (const p of pieces) { merged.set(p, o); o += p.length; }
           parts[my.index] = merged;
+          // Persist the completed slice so a cancel/failure can resume later.
+          resume?.parts.set(my.index, merged);
           break;
+
         } catch (err) {
           if ((err as any)?.name === 'AbortError') throw err;
           // Roll back the partial bytes counted for this failed attempt.
