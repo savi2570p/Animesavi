@@ -106,38 +106,48 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
 
     updateItem(index, { status: 'downloading', progress: 0, speed: 0, etaSec: 0, received: 0, total: 0 });
 
-    abortRef.current = new AbortController();
     const onProgress = (p: { received: number; total: number; pct: number; speed: number; etaSec: number }) => {
       updateItem(index, { progress: p.pct, speed: p.speed, etaSec: p.etaSec, received: p.received, total: p.total });
     };
 
+    let lastError: any = null;
+    // Try the direct URL first, then the same-origin proxy (CORS fallback).
     for (const useProxy of [false, true]) {
+      if (cancelledRef.current) { updateItem(index, { status: 'cancelled' }); return null; }
+      // A fresh controller per attempt — a controller aborted by an earlier
+      // failed attempt must never cancel the next one.
+      const controller = new AbortController();
+      abortRef.current = controller;
       try {
         const { chunks, total, received, mime } = await streamDownload({
           url: videoUrl,
           filename: `${animeTitle} - Episode ${episode.episode_number} [${quality}].${safeExt}`,
-          signal: abortRef.current.signal,
+          signal: controller.signal,
           onProgress,
           useProxy,
         });
         if (cancelledRef.current) { updateItem(index, { status: 'cancelled' }); return null; }
-        if (received < 100 * 1024) throw new Error('payload too small');
-        if (total > 0 && Math.abs(received - total) > 1024) throw new Error('size mismatch');
+        if (received <= 0) throw new Error('empty response');
+        // Only reject clearly truncated payloads (>2% short). Small deltas from
+        // proxies / chunked transfer must not throw away a good file.
+        if (total > 0 && received < total * 0.98) throw new Error('incomplete download');
         updateItem(index, { status: 'completed', progress: 100 });
         return { chunks, mime, ext: safeExt };
       } catch (e: any) {
-        if (e?.name === 'AbortError' || cancelledRef.current) {
+        lastError = e;
+        if (cancelledRef.current) {
           updateItem(index, { status: 'cancelled' });
           return null;
         }
-        if (useProxy) {
-          updateItem(index, { status: 'failed' });
-          return null;
-        }
+        // An AbortError that is not a user cancel means the stream died — retry
+        // via the proxy instead of marking the episode as cancelled.
       }
     }
+    console.warn('[BatchDownload] episode failed', episode.episode_number, lastError);
+    updateItem(index, { status: 'failed' });
     return null;
   };
+
 
   const startDownload = useCallback(async () => {
     if (selectedEpisodes.size === 0) { toast.error('Please select at least one episode'); return; }
