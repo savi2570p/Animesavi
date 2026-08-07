@@ -161,6 +161,7 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
     cancelledRef.current = false;
 
     let successCount = 0;
+    let failCount = 0;
     for (let i = 0; i < episodesToDownload.length; i++) {
       if (cancelledRef.current) break;
       const ep = episodesToDownload[i];
@@ -175,8 +176,10 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
         successCount++;
         setCompletedCount(successCount);
         if (i < episodesToDownload.length - 1) {
-          await new Promise((r) => setTimeout(r, 900));
+          await new Promise((r) => setTimeout(r, 600));
         }
+      } else if (!cancelledRef.current) {
+        failCount++;
       }
     }
 
@@ -188,9 +191,14 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
 
     if (successCount === 0) {
       setIsDownloading(false);
-      toast.error('Download failed. Please try again.');
+      toast.error('Download failed — the source blocked the request. Try a different server or quality.');
       return;
     }
+
+    if (failCount > 0) {
+      toast.warning(`${failCount} episode${failCount !== 1 ? 's' : ''} could not be downloaded`);
+    }
+
 
     setIsDownloading(false);
     toast.success(`Saved ${successCount} episode${successCount !== 1 ? 's' : ''} to your Downloads folder`);
