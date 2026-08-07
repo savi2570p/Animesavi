@@ -141,21 +141,32 @@ async function parallelRangeDownload(opts: {
   signal?: AbortSignal;
   onProgress?: (p: DownloadProgress) => void;
   startAt?: number;
+  resume?: ResumeEntry;
 }): Promise<{ chunks: BlobPart[]; received: number }> {
-  const { url, total, signal, onProgress, startAt = 0 } = opts;
+  const { url, total, signal, onProgress, startAt = 0, resume } = opts;
 
   // Build byte-range slices.
-  const ranges: Array<{ index: number; start: number; end: number }> = [];
+  const allRanges: Array<{ index: number; start: number; end: number }> = [];
   let cursor = startAt;
   let idx = 0;
   while (cursor < total) {
     const end = Math.min(total - 1, cursor + RANGE_CHUNK_TARGET - 1);
-    ranges.push({ index: idx++, start: cursor, end });
+    allRanges.push({ index: idx++, start: cursor, end });
     cursor = end + 1;
   }
 
-  const parts: Uint8Array[] = new Array(ranges.length);
-  let received = startAt;
+  // Skip slices already downloaded in a previous (cancelled) attempt.
+  const parts: Uint8Array[] = new Array(allRanges.length);
+  let cached = 0;
+  if (resume) {
+    for (const r of allRanges) {
+      const p = resume.parts.get(r.index);
+      if (p) { parts[r.index] = p; cached += p.length; }
+    }
+  }
+  const ranges = allRanges.filter((r) => !parts[r.index]);
+  let received = startAt + cached;
+
   const t0 = performance.now();
   let lastReport = t0;
   let lastBytes = received;
