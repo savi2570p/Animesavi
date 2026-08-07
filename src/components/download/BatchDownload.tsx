@@ -61,6 +61,10 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
   const [completedCount, setCompletedCount] = useState(0);
   const [quality, setQuality] = useState<typeof QUALITY_OPTIONS[number]>('2160p');
   const [zipProgress, setZipProgress] = useState<number | null>(null);
+  const [notifyOn, setNotifyOn] = useState(
+    typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted'
+  );
+
   const abortRef = useRef<AbortController | null>(null);
   const cancelledRef = useRef(false);
 
