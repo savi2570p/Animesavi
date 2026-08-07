@@ -71,7 +71,34 @@ export interface StreamDownloadOptions {
   onProgress?: (p: DownloadProgress) => void;
   /** Use the same-origin proxy edge function (fallback for CORS). */
   useProxy?: boolean;
+  /**
+   * When set, completed byte-range slices are cached under this key so a
+   * cancelled / failed download can resume where it stopped instead of
+   * restarting from zero.
+   */
+  resumeKey?: string;
 }
+
+/**
+ * Resume store — keeps already-downloaded range slices in memory (per tab)
+ * keyed by a caller-supplied resumeKey (typically the episode id).
+ */
+interface ResumeEntry {
+  total: number;
+  parts: Map<number, Uint8Array>;
+}
+const resumeStore = new Map<string, ResumeEntry>();
+
+export const getResumeBytes = (key: string): number => {
+  const e = resumeStore.get(key);
+  if (!e) return 0;
+  let n = 0;
+  e.parts.forEach((p) => { n += p.length; });
+  return n;
+};
+
+export const clearResume = (key: string) => { resumeStore.delete(key); };
+
 
 const guessMime = (url: string) => {
   const ext = (url.split('?')[0].split('.').pop() || 'mp4').toLowerCase();
@@ -114,21 +141,32 @@ async function parallelRangeDownload(opts: {
   signal?: AbortSignal;
   onProgress?: (p: DownloadProgress) => void;
   startAt?: number;
+  resume?: ResumeEntry;
 }): Promise<{ chunks: BlobPart[]; received: number }> {
-  const { url, total, signal, onProgress, startAt = 0 } = opts;
+  const { url, total, signal, onProgress, startAt = 0, resume } = opts;
 
   // Build byte-range slices.
-  const ranges: Array<{ index: number; start: number; end: number }> = [];
+  const allRanges: Array<{ index: number; start: number; end: number }> = [];
   let cursor = startAt;
   let idx = 0;
   while (cursor < total) {
     const end = Math.min(total - 1, cursor + RANGE_CHUNK_TARGET - 1);
-    ranges.push({ index: idx++, start: cursor, end });
+    allRanges.push({ index: idx++, start: cursor, end });
     cursor = end + 1;
   }
 
-  const parts: Uint8Array[] = new Array(ranges.length);
-  let received = startAt;
+  // Skip slices already downloaded in a previous (cancelled) attempt.
+  const parts: Uint8Array[] = new Array(allRanges.length);
+  let cached = 0;
+  if (resume) {
+    for (const r of allRanges) {
+      const p = resume.parts.get(r.index);
+      if (p) { parts[r.index] = p; cached += p.length; }
+    }
+  }
+  const ranges = allRanges.filter((r) => !parts[r.index]);
+  let received = startAt + cached;
+
   const t0 = performance.now();
   let lastReport = t0;
   let lastBytes = received;
@@ -191,7 +229,10 @@ async function parallelRangeDownload(opts: {
           let o = 0;
           for (const p of pieces) { merged.set(p, o); o += p.length; }
           parts[my.index] = merged;
+          // Persist the completed slice so a cancel/failure can resume later.
+          resume?.parts.set(my.index, merged);
           break;
+
         } catch (err) {
           if ((err as any)?.name === 'AbortError') throw err;
           // Roll back the partial bytes counted for this failed attempt.
@@ -227,7 +268,7 @@ async function parallelRangeDownload(opts: {
  * resume support.
  */
 export async function streamDownload(opts: StreamDownloadOptions): Promise<{ chunks: BlobPart[]; total: number; received: number; mime: string }> {
-  const { url, signal, onProgress, startAt = 0, useProxy } = opts;
+  const { url, signal, onProgress, startAt = 0, useProxy, resumeKey } = opts;
   const fetchUrl = useProxy ? proxyUrl(url, opts.filename) : url;
   const mimeGuess = opts.mime || guessMime(url);
 
@@ -241,13 +282,24 @@ export async function streamDownload(opts: StreamDownloadOptions): Promise<{ chu
       probe.total >= PARALLEL_MIN_BYTES &&
       !(probe.mime || '').includes('text/html')
     ) {
+      let resume: ResumeEntry | undefined;
+      if (resumeKey) {
+        const existing = resumeStore.get(resumeKey);
+        // A size mismatch means a different source — discard stale slices.
+        resume = existing && existing.total === probe.total
+          ? existing
+          : { total: probe.total, parts: new Map() };
+        resumeStore.set(resumeKey, resume);
+      }
       try {
         const { chunks, received } = await parallelRangeDownload({
           url: fetchUrl,
           total: probe.total,
           signal,
           onProgress,
+          resume,
         });
+        if (resumeKey) resumeStore.delete(resumeKey);
         return { chunks, total: probe.total, received, mime: probe.mime || mimeGuess };
       } catch (e) {
         // If the parallel path fails (e.g. mid-stream 5xx), fall through to
@@ -258,6 +310,7 @@ export async function streamDownload(opts: StreamDownloadOptions): Promise<{ chu
   }
 
   // Fallback: single-connection stream (also the resume path).
+
   const headers: Record<string, string> = {};
   if (startAt > 0) headers['Range'] = `bytes=${startAt}-`;
 
