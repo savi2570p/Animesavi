@@ -14,8 +14,8 @@ export interface VersionGroup {
   items: ChangelogItem[];
 }
 
-export const APP_VERSION = 'V 30';
-export const RELEASE_DATE = 'August 1, 2026';
+export const APP_VERSION = 'V 30.1';
+export const RELEASE_DATE = 'August 7, 2026';
 export const DOWNLOAD_SIZE_MB = 20;
 
 export const BETA_NOTE =
@@ -23,8 +23,21 @@ export const BETA_NOTE =
 
 export const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'V 30',
+    version: 'V 30.1',
     date: RELEASE_DATE,
+    highlight:
+      'A brand new page joins the app, plus important bug fixes for batch downloads and playback.',
+    items: [
+      { icon: '🆕', badge: 'NEW', title: 'New Page Added', desc: 'A brand new page is now live in the app with a fresh liquid-glass layout.' },
+      { icon: '⬇️', badge: 'FIX', title: 'Batch Download Fixed', desc: 'Selected episodes no longer cancel themselves after showing the estimated time — downloads now retry and complete.' },
+      { icon: '🚀', badge: 'IMPROVED', title: 'Faster Batch Downloads', desc: 'More parallel connections and bigger chunks push downloads closer to your full line speed.' },
+      { icon: '🧩', badge: 'FIX', title: 'Save Reliability', desc: 'Episodes save straight to your Downloads folder as real .mp4 files with clearer failure messages.' },
+      { icon: '🐞', badge: 'FIX', title: 'General Bug Fixes', desc: 'Various stability and interface fixes across the app.' },
+    ],
+  },
+  {
+    version: 'V 30',
+    date: 'August 1, 2026',
     highlight:
       'A smoother, faster update with focused improvements, key fixes, and a refreshed embed-player experience.',
     items: [
@@ -38,6 +51,7 @@ export const VERSION_GROUPS: VersionGroup[] = [
     ],
   },
 ];
+
 
 export const BADGE_LABELS: Record<BadgeKind, string> = {
   NEW: 'NEW',
