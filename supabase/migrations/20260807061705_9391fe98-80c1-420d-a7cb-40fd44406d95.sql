@@ -1,0 +1,2 @@
+UPDATE public.featured_hero_lineup SET anime_id='62c1c229-54cb-4bef-aa30-c580b2591109' WHERE id='d6704885-e0cb-4be7-8a24-35395c19d0c4';
+UPDATE public.featured_hero_lineup SET anime_id='f9d4e177-3144-44c0-bd30-b520f6c7ec58' WHERE id='ac7b0561-086c-4aa2-b598-e8891a026e24';
