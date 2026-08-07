@@ -14,9 +14,10 @@
 const PROXY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-proxy`;
 
 // Tunables — chosen for 100–300 Mbps ceilings on modern networks.
-const PARALLEL_CONNECTIONS = 8;          // simultaneous range requests
-const PARALLEL_MIN_BYTES = 8 * 1024 * 1024; // only split files ≥ 8 MB
-const RANGE_CHUNK_TARGET = 4 * 1024 * 1024; // ~4 MB per range slice
+const PARALLEL_CONNECTIONS = 12;         // simultaneous range requests
+const PARALLEL_MIN_BYTES = 4 * 1024 * 1024; // split files ≥ 4 MB
+const RANGE_CHUNK_TARGET = 8 * 1024 * 1024; // ~8 MB per range slice
+const RANGE_RETRIES = 3;                 // per-slice retries before failing
 const DISPLAY_SPEED_FLOOR_BPS = 1_000_000 / 8 * 1_000_000 / 1_000_000; // placeholder, real floor below
 const MIN_DISPLAY_BPS = 1_000_000 / 8 * 1_000_000; // 1 Mbps in bytes/sec = 125_000; but user wants Mbps display floor
 // User-facing speed floor: 1 Mbps = 125_000 bytes/sec.
@@ -138,53 +139,72 @@ async function parallelRangeDownload(opts: {
     while (next < ranges.length) {
       const my = ranges[next++];
       if (!my) break;
-      const res = await fetch(url, {
-        headers: { Range: `bytes=${my.start}-${my.end}` },
-        credentials: 'omit',
-        signal,
-      });
-      if (!res.ok && res.status !== 206) throw new Error(`HTTP ${res.status}`);
-      const reader = res.body?.getReader();
-      const pieces: Uint8Array[] = [];
-      let pieceLen = 0;
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          if (value) {
-            pieces.push(value);
-            pieceLen += value.length;
-            received += value.length;
-            const now = performance.now();
-            if (now - lastReport > 200) {
-              const speed = ((received - lastBytes) * 1000) / (now - lastReport);
-              const remaining = Math.max(0, total - received);
-              const etaSec = speed > 0 && remaining > 0 ? remaining / speed : 0;
-              onProgress?.({
-                received,
-                total,
-                pct: total > 0 ? Math.min(99.9, (received / total) * 100) : 0,
-                speed,
-                etaSec,
-              });
-              lastReport = now;
-              lastBytes = received;
+
+      let attempt = 0;
+      // Retry each slice a few times — a single transient 5xx/socket reset
+      // must never abort the whole multi-GB download.
+      for (;;) {
+        const before = received;
+        try {
+          const res = await fetch(url, {
+            headers: { Range: `bytes=${my.start}-${my.end}` },
+            credentials: 'omit',
+            signal,
+          });
+          if (!res.ok && res.status !== 206) throw new Error(`HTTP ${res.status}`);
+          const reader = res.body?.getReader();
+          const pieces: Uint8Array[] = [];
+          let pieceLen = 0;
+          if (reader) {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              if (value) {
+                pieces.push(value);
+                pieceLen += value.length;
+                received += value.length;
+                const now = performance.now();
+                if (now - lastReport > 200) {
+                  const speed = ((received - lastBytes) * 1000) / (now - lastReport);
+                  const remaining = Math.max(0, total - received);
+                  const etaSec = speed > 0 && remaining > 0 ? remaining / speed : 0;
+                  onProgress?.({
+                    received,
+                    total,
+                    pct: total > 0 ? Math.min(99.9, (received / total) * 100) : 0,
+                    speed,
+                    etaSec,
+                  });
+                  lastReport = now;
+                  lastBytes = received;
+                }
+              }
             }
+          } else {
+            const buf = new Uint8Array(await res.arrayBuffer());
+            pieces.push(buf);
+            pieceLen = buf.length;
+            received += buf.length;
           }
+          // Merge this range's pieces into one contiguous Uint8Array at its index.
+          const merged = new Uint8Array(pieceLen);
+          let o = 0;
+          for (const p of pieces) { merged.set(p, o); o += p.length; }
+          parts[my.index] = merged;
+          break;
+        } catch (err) {
+          if ((err as any)?.name === 'AbortError') throw err;
+          // Roll back the partial bytes counted for this failed attempt.
+          received = before;
+          lastBytes = Math.min(lastBytes, received);
+          attempt++;
+          if (attempt >= RANGE_RETRIES) throw err;
+          await new Promise((r) => setTimeout(r, 300 * attempt));
         }
-      } else {
-        const buf = new Uint8Array(await res.arrayBuffer());
-        pieces.push(buf);
-        pieceLen = buf.length;
-        received += buf.length;
       }
-      // Merge this range's pieces into one contiguous Uint8Array at its index.
-      const merged = new Uint8Array(pieceLen);
-      let o = 0;
-      for (const p of pieces) { merged.set(p, o); o += p.length; }
-      parts[my.index] = merged;
     }
   };
+
 
   const workers = Array.from({ length: Math.min(PARALLEL_CONNECTIONS, ranges.length) }, () => worker());
   await Promise.all(workers);
