@@ -265,32 +265,63 @@ export default function ClonePlatform() {
     return () => window.removeEventListener('message', onMessage);
   }, [applyUnlock]);
 
-  /* --- Lazy mount the iframe only when it's near the viewport ----------- */
+  /* --- Frame load watchdog ---------------------------------------------
+     iOS/Android Safari + Chrome never fire the IntersectionObserver reliably
+     for a full-screen iframe inside a `position: fixed` flex shell, which left
+     the frame unmounted -> black screen. The frame is the whole page, so it is
+     always mounted eagerly now. A watchdog surfaces a readable fallback when
+     the remote site refuses to be framed (X-Frame-Options / CSP). */
   const frameHostRef = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
+  const [frameLoaded, setFrameLoaded] = useState(false);
+  const [frameBlocked, setFrameBlocked] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    const el = frameHostRef.current;
-    if (!el) return;
-    if (typeof IntersectionObserver === 'undefined') {
-      setInView(true);
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((en) => en.isIntersecting)) {
-          setInView(true);
-          io.disconnect();
-        }
-      },
-      { rootMargin: '300px' }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [platform?.id]);
+    if (!platform?.target_url) return;
+    setFrameLoaded(false);
+    setFrameBlocked(false);
+    const t = window.setTimeout(() => {
+      setFrameBlocked((prev) => prev || !frameLoadedRef.current);
+    }, 12000);
+    return () => window.clearTimeout(t);
+  }, [platform?.target_url, reloadKey]);
 
-  // Sandbox: allow the embedded site to run, but block popups, top-level
-  // navigation, pointer lock and downloads so ad scripts can't hijack the tab.
+  const frameLoadedRef = useRef(false);
+  useEffect(() => {
+    frameLoadedRef.current = frameLoaded;
+  }, [frameLoaded]);
+
+  /* --- Navigation lock ---------------------------------------------------
+     Belt-and-braces on top of the sandbox: neutralise any window.open() and
+     any anchor that tries to escape the app while this page is mounted. */
+  useEffect(() => {
+    const originalOpen = window.open;
+    window.open = function blockedOpen() {
+      return null;
+    } as typeof window.open;
+
+    const onClick = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement | null)?.closest?.('a');
+      if (!anchor) return;
+      const href = anchor.getAttribute('href') || '';
+      const isExternal = /^https?:\/\//i.test(href) && !href.startsWith(window.location.origin);
+      if (isExternal || anchor.target === '_blank') {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    document.addEventListener('click', onClick, true);
+    return () => {
+      window.open = originalOpen;
+      document.removeEventListener('click', onClick, true);
+    };
+  }, []);
+
+  // Sandbox: allow the embedded site to render and run, but strip popups,
+  // top-level navigation and downloads so ad scripts can never hijack the tab.
+  // Intentionally EXCLUDED: allow-popups, allow-popups-to-escape-sandbox,
+  // allow-top-navigation, allow-top-navigation-by-user-activation.
   const sandboxProps = useMemo(
     () =>
       platform?.sandbox_enabled
@@ -298,6 +329,7 @@ export default function ClonePlatform() {
         : {},
     [platform?.sandbox_enabled]
   );
+
 
 
   if (loading) {
@@ -379,24 +411,58 @@ export default function ClonePlatform() {
       </div>
 
       {/* Frame */}
-      <div ref={frameHostRef} className="relative min-h-0 flex-1">
-        {inView ? (
-          <iframe
-            ref={frameRef}
-            key={platform.id}
-            src={platform.target_url}
-            title={`${platform.name} — ad-blocked view on AnimeSavi`}
-            className="h-full w-full border-0"
-            style={{ pointerEvents: isLocked ? 'none' : 'auto' }}
-            referrerPolicy="no-referrer"
-            loading="lazy"
-            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-            allowFullScreen
-            {...sandboxProps}
-          />
-        ) : (
-          <div className="h-full w-full bg-[hsl(272_45%_6%)]" aria-hidden />
+      <div ref={frameHostRef} className="relative min-h-0 flex-1 overflow-hidden bg-[hsl(272_45%_6%)]">
+        <iframe
+          ref={frameRef}
+          key={`${platform.id}-${reloadKey}`}
+          src={platform.target_url}
+          title={`${platform.name} — ad-blocked view on AnimeSavi`}
+          className="absolute inset-0 border-0"
+          style={{
+            width: '100%',
+            height: '100%',
+            pointerEvents: isLocked ? 'none' : 'auto',
+            background: 'hsl(272 45% 6%)',
+          }}
+          referrerPolicy="no-referrer"
+          allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+          allowFullScreen
+          onLoad={() => {
+            setFrameLoaded(true);
+            setFrameBlocked(false);
+          }}
+          {...sandboxProps}
+        />
+
+        {!frameLoaded && !frameBlocked && !booting && (
+          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+            <div className="h-7 w-7 animate-spin rounded-full border-2 border-[hsl(275_90%_70%)] border-t-transparent" />
+          </div>
         )}
+
+        {frameBlocked && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center px-6">
+            <div className="clone-glass w-full max-w-sm rounded-3xl px-6 py-8 text-center">
+              <Shield className="mx-auto mb-3 h-7 w-7 text-[hsl(275_90%_78%)]" />
+              <h2 className="text-sm font-semibold">This site refused to load</h2>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                {platform.name} blocks embedding from other sites. Try again, or open it from
+                your browser.
+              </p>
+              <button
+                onClick={() => {
+                  setFrameLoaded(false);
+                  setFrameBlocked(false);
+                  setReloadKey((k) => k + 1);
+                }}
+                className="clone-cta mt-5 rounded-2xl px-5 py-2.5 text-xs font-semibold"
+              >
+                Try again
+              </button>
+            </div>
+          </div>
+        )}
+
 
         {isLocked && !booting && (
           <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/45 px-6 backdrop-blur-[2px]">
