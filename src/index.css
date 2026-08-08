@@ -2923,15 +2923,25 @@ html {
    cheaper shadows, and scroll-time paint containment.
    ============================================================ */
 @media (hover: none) and (pointer: coarse) {
-  /* Ambient aurora/orb layers are decorative — freeze them */
-  .home-aurora,
+  /* Ambient aurora layers are decorative and live in the ::before/::after of
+     the page container — freeze only those. NEVER blur/fade the container
+     itself: `.home-aurora` wraps the whole Home page content, so a filter or
+     opacity here frosts the entire page (root cause of the blurred Home bug). */
+  .home-aurora::before,
+  .home-aurora::after,
+  [class*="aurora"]::before,
+  [class*="aurora"]::after {
+    animation: none !important;
+  }
+
+  /* Standalone decorative orb elements (never content wrappers) */
   .clone-orb,
-  [class*="aurora"],
   [class*="-orb"] {
     animation: none !important;
     filter: blur(40px) !important;
     opacity: 0.35 !important;
   }
+
 
   /* Cursor-follow glows never apply on touch */
   [data-cursor-glow] { display: none !important; }
