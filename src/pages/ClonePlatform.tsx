@@ -411,24 +411,58 @@ export default function ClonePlatform() {
       </div>
 
       {/* Frame */}
-      <div ref={frameHostRef} className="relative min-h-0 flex-1">
-        {inView ? (
-          <iframe
-            ref={frameRef}
-            key={platform.id}
-            src={platform.target_url}
-            title={`${platform.name} — ad-blocked view on AnimeSavi`}
-            className="h-full w-full border-0"
-            style={{ pointerEvents: isLocked ? 'none' : 'auto' }}
-            referrerPolicy="no-referrer"
-            loading="lazy"
-            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-            allowFullScreen
-            {...sandboxProps}
-          />
-        ) : (
-          <div className="h-full w-full bg-[hsl(272_45%_6%)]" aria-hidden />
+      <div ref={frameHostRef} className="relative min-h-0 flex-1 overflow-hidden bg-[hsl(272_45%_6%)]">
+        <iframe
+          ref={frameRef}
+          key={`${platform.id}-${reloadKey}`}
+          src={platform.target_url}
+          title={`${platform.name} — ad-blocked view on AnimeSavi`}
+          className="absolute inset-0 border-0"
+          style={{
+            width: '100%',
+            height: '100%',
+            pointerEvents: isLocked ? 'none' : 'auto',
+            background: 'hsl(272 45% 6%)',
+          }}
+          referrerPolicy="no-referrer"
+          allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+          allowFullScreen
+          onLoad={() => {
+            setFrameLoaded(true);
+            setFrameBlocked(false);
+          }}
+          {...sandboxProps}
+        />
+
+        {!frameLoaded && !frameBlocked && !booting && (
+          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+            <div className="h-7 w-7 animate-spin rounded-full border-2 border-[hsl(275_90%_70%)] border-t-transparent" />
+          </div>
         )}
+
+        {frameBlocked && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center px-6">
+            <div className="clone-glass w-full max-w-sm rounded-3xl px-6 py-8 text-center">
+              <Shield className="mx-auto mb-3 h-7 w-7 text-[hsl(275_90%_78%)]" />
+              <h2 className="text-sm font-semibold">This site refused to load</h2>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                {platform.name} blocks embedding from other sites. Try again, or open it from
+                your browser.
+              </p>
+              <button
+                onClick={() => {
+                  setFrameLoaded(false);
+                  setFrameBlocked(false);
+                  setReloadKey((k) => k + 1);
+                }}
+                className="clone-cta mt-5 rounded-2xl px-5 py-2.5 text-xs font-semibold"
+              >
+                Try again
+              </button>
+            </div>
+          </div>
+        )}
+
 
         {isLocked && !booting && (
           <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/45 px-6 backdrop-blur-[2px]">
