@@ -370,12 +370,23 @@ export default function ClonePlatform() {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-[hsl(272_45%_6%)] clone-shell">
+    <div
+      className="fixed inset-0 grid bg-[hsl(272_45%_6%)] clone-shell"
+      style={{
+        // iOS/Android Safari collapse `flex-1` children inside a fixed shell,
+        // which left the iframe at 0px (the "black screen"). An explicit
+        // dvh-based grid keeps the frame row measurable on every browser.
+        height: '100dvh',
+        maxHeight: '100dvh',
+        gridTemplateRows: 'auto minmax(0, 1fr) auto',
+      }}
+    >
       {/* Top watermark bar */}
       <div
         className="clone-bar flex shrink-0 items-center justify-between gap-2 px-2.5 sm:px-3"
         style={{ paddingTop: 'max(0.375rem, env(safe-area-inset-top))', paddingBottom: '0.375rem' }}
       >
+
         <div className="flex min-w-0 items-center gap-2">
           {platform.logo_url ? (
             <img
