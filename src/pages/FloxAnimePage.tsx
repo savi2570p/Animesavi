@@ -503,7 +503,7 @@ function FloxUploadDialog({
 
   // Episode fields
   const [episodeNumber, setEpisodeNumber] = useState<string>('');
-  const [sourceMode, setSourceMode] = useState<'embed' | 'file'>('embed');
+  const [embedServer, setEmbedServer] = useState<'anime-plus' | 'flox'>('anime-plus');
   const [embedUrl, setEmbedUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [skipEpisode, setSkipEpisode] = useState(false); // for edit-only
