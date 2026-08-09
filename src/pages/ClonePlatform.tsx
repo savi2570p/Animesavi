@@ -236,6 +236,14 @@ export default function ClonePlatform() {
     return () => window.clearTimeout(t);
   }, [loading, platform]);
 
+  // Full-screen wrapper: suppress the global premium timer banner while here.
+  useEffect(() => {
+    if (!platform) return;
+    document.body.classList.add('clone-mode');
+    return () => document.body.classList.remove('clone-mode');
+  }, [platform]);
+
+
   const isLocked = locked && !unlocked;
 
   /* --- postMessage unlock handshake -------------------------------------
