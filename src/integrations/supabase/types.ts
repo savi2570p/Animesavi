@@ -548,10 +548,13 @@ export type Database = {
       }
       flox_content: {
         Row: {
+          anime_plus_source_type: string | null
+          anime_plus_source_url: string | null
           banner_url: string | null
           created_at: string
           description: string | null
           episode_number: number | null
+          flox_source_url: string | null
           id: string
           is_featured: boolean
           poster_url: string | null
@@ -564,10 +567,13 @@ export type Database = {
           uploaded_by: string | null
         }
         Insert: {
+          anime_plus_source_type?: string | null
+          anime_plus_source_url?: string | null
           banner_url?: string | null
           created_at?: string
           description?: string | null
           episode_number?: number | null
+          flox_source_url?: string | null
           id?: string
           is_featured?: boolean
           poster_url?: string | null
@@ -580,10 +586,13 @@ export type Database = {
           uploaded_by?: string | null
         }
         Update: {
+          anime_plus_source_type?: string | null
+          anime_plus_source_url?: string | null
           banner_url?: string | null
           created_at?: string
           description?: string | null
           episode_number?: number | null
+          flox_source_url?: string | null
           id?: string
           is_featured?: boolean
           poster_url?: string | null

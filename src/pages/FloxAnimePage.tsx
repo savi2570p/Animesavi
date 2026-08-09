@@ -503,7 +503,7 @@ function FloxUploadDialog({
 
   // Episode fields
   const [episodeNumber, setEpisodeNumber] = useState<string>('');
-  const [sourceMode, setSourceMode] = useState<'embed' | 'file'>('embed');
+  const [embedServer, setEmbedServer] = useState<'anime-plus' | 'flox'>('anime-plus');
   const [embedUrl, setEmbedUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
   const [skipEpisode, setSkipEpisode] = useState(false); // for edit-only
@@ -534,7 +534,7 @@ function FloxUploadDialog({
     }
     setEmbedUrl('');
     setVideoUrl('');
-    setSourceMode('embed');
+    setEmbedServer('anime-plus');
   }, [open, editAnime]);
 
   // When user picks an existing anime in "existing" mode, prefill ep number
@@ -546,6 +546,29 @@ function FloxUploadDialog({
     }
   }, [selectedTitle, mode, existing, editing]);
 
+  /** Build the per-server source payload for a flox_content row. */
+  const buildSources = () => {
+    const link = embedUrl.trim();
+    const file = videoUrl.trim();
+    const floxUrl = embedServer === 'flox' ? link : '';
+    const apUrl = embedServer === 'anime-plus' && link ? link : file;
+    const apType: 'embed' | 'file' =
+      embedServer === 'anime-plus' && link ? 'embed' : 'file';
+
+    if (!floxUrl && !apUrl) throw new Error('Add an embed link or a video file');
+
+    const primaryUrl = apUrl || floxUrl;
+    const primaryType: 'embed' | 'file' = apUrl ? apType : 'embed';
+
+    return {
+      source_type: primaryType,
+      source_url: primaryUrl,
+      flox_source_url: floxUrl || null,
+      anime_plus_source_url: apUrl || null,
+      anime_plus_source_type: apUrl ? apType : null,
+    };
+  };
+
   const submit = async () => {
     setSubmitting(true);
     try {
@@ -553,22 +576,20 @@ function FloxUploadDialog({
         if (!title.trim()) throw new Error('Title is required');
         if (!posterUrl) throw new Error('Poster image is required for new anime');
         const epNum = parseInt(episodeNumber || '1', 10);
-        const src = sourceMode === 'embed' ? embedUrl.trim() : videoUrl.trim();
-        if (!src) throw new Error('Episode source is required');
 
         const { error } = await supabase.from('flox_content').insert({
           title: title.trim(),
           description: description.trim() || null,
           poster_url: posterUrl,
           banner_url: bannerUrl || null,
-          source_type: sourceMode,
-          source_url: src,
+          ...buildSources(),
           episode_number: epNum,
           season_number: 1,
           uploaded_by: userId,
         });
         if (error) throw error;
         toast.success('Anime created');
+
       } else {
         // existing anime: optionally edit metadata, optionally add an episode
         const targetTitle = editing ? editAnime!.title : selectedTitle;
@@ -594,8 +615,6 @@ function FloxUploadDialog({
 
         if (!skipEpisode) {
           const epNum = parseInt(episodeNumber || '1', 10);
-          const src = sourceMode === 'embed' ? embedUrl.trim() : videoUrl.trim();
-          if (!src) throw new Error('Episode source is required');
           // Carry over poster/banner from existing for consistency
           const ref = existing.find((a) => a.title === targetTitle);
           const finalTitle = editing ? (title.trim() || editAnime!.title) : targetTitle;
@@ -604,12 +623,12 @@ function FloxUploadDialog({
             description: ref?.description || null,
             poster_url: ref?.poster_url || null,
             banner_url: ref?.banner_url || null,
-            source_type: sourceMode,
-            source_url: src,
+            ...buildSources(),
             episode_number: epNum,
             season_number: 1,
             uploaded_by: userId,
           });
+
           if (error) throw error;
         }
         toast.success(editing ? 'Anime updated' : 'Episode added');
@@ -672,8 +691,8 @@ function FloxUploadDialog({
             <EpisodeFields
               episodeNumber={episodeNumber}
               setEpisodeNumber={setEpisodeNumber}
-              sourceMode={sourceMode}
-              setSourceMode={setSourceMode}
+              embedServer={embedServer}
+              setEmbedServer={setEmbedServer}
               embedUrl={embedUrl}
               setEmbedUrl={setEmbedUrl}
               videoUrl={videoUrl}
@@ -744,8 +763,8 @@ function FloxUploadDialog({
               <EpisodeFields
                 episodeNumber={episodeNumber}
                 setEpisodeNumber={setEpisodeNumber}
-                sourceMode={sourceMode}
-                setSourceMode={setSourceMode}
+                embedServer={embedServer}
+                setEmbedServer={setEmbedServer}
                 embedUrl={embedUrl}
                 setEmbedUrl={setEmbedUrl}
                 videoUrl={videoUrl}
@@ -770,8 +789,8 @@ function FloxUploadDialog({
 function EpisodeFields({
   episodeNumber,
   setEpisodeNumber,
-  sourceMode,
-  setSourceMode,
+  embedServer,
+  setEmbedServer,
   embedUrl,
   setEmbedUrl,
   videoUrl,
@@ -779,8 +798,8 @@ function EpisodeFields({
 }: {
   episodeNumber: string;
   setEpisodeNumber: (v: string) => void;
-  sourceMode: 'embed' | 'file';
-  setSourceMode: (m: 'embed' | 'file') => void;
+  embedServer: 'anime-plus' | 'flox';
+  setEmbedServer: (m: 'anime-plus' | 'flox') => void;
   embedUrl: string;
   setEmbedUrl: (v: string) => void;
   videoUrl: string;
@@ -788,49 +807,51 @@ function EpisodeFields({
 }) {
   return (
     <div className="space-y-3 p-3 rounded-md border border-border/50 bg-muted/30">
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label>Episode #</Label>
-          <Input
-            type="number"
-            min={1}
-            value={episodeNumber}
-            onChange={(e) => setEpisodeNumber(e.target.value)}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label>Source</Label>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant={sourceMode === 'embed' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSourceMode('embed')}
-            >
-              Embed
-            </Button>
-            <Button
-              type="button"
-              variant={sourceMode === 'file' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSourceMode('file')}
-            >
-              Video file
-            </Button>
-          </div>
-        </div>
+      <div className="space-y-1 max-w-[180px]">
+        <Label>Episode #</Label>
+        <Input
+          type="number"
+          min={1}
+          value={episodeNumber}
+          onChange={(e) => setEpisodeNumber(e.target.value)}
+        />
       </div>
 
-      {sourceMode === 'embed' ? (
-        <div className="space-y-1">
-          <Label>Embed URL</Label>
-          <Input
-            placeholder="https://..."
-            value={embedUrl}
-            onChange={(e) => setEmbedUrl(e.target.value)}
-          />
+      <div className="space-y-2 rounded-lg border border-border/50 p-3">
+        <Label>Embed link</Label>
+        <p className="text-[11px] text-muted-foreground">
+          Choose the server this link should play on.
+        </p>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant={embedServer === 'anime-plus' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setEmbedServer('anime-plus')}
+          >
+            Anime+
+          </Button>
+          <Button
+            type="button"
+            variant={embedServer === 'flox' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setEmbedServer('flox')}
+          >
+            Flox +
+          </Button>
         </div>
-      ) : (
+        <Input
+          placeholder="https://... (leave blank to skip)"
+          value={embedUrl}
+          onChange={(e) => setEmbedUrl(e.target.value)}
+        />
+      </div>
+
+      <div className="space-y-2 rounded-lg border border-border/50 p-3">
+        <Label>Anime+ file source</Label>
+        <p className="text-[11px] text-muted-foreground">
+          Optional — upload a video file to play on the Anime+ server.
+        </p>
         <FileUploadInput
           label="Video file (resumable, fast)"
           accept="video"
@@ -839,7 +860,8 @@ function EpisodeFields({
           folder="flox/videos"
           contentType="episode"
         />
-      )}
+      </div>
     </div>
   );
 }
+

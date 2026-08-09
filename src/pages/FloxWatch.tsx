@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -6,15 +6,6 @@ import { ArrowLeft, Loader2, Server as ServerIcon } from 'lucide-react';
 import { FloxPlayer } from '@/components/video/FloxPlayer';
 import { AntiPiracyShield } from '@/components/security/AntiPiracyShield';
 import { toast } from 'sonner';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
 interface FloxRow {
   id: string;
@@ -24,6 +15,9 @@ interface FloxRow {
   poster_url: string | null;
   source_type: 'embed' | 'file';
   source_url: string;
+  flox_source_url: string | null;
+  anime_plus_source_url: string | null;
+  anime_plus_source_type: string | null;
   episode_number: number | null;
   season_number: number | null;
 }
@@ -36,7 +30,6 @@ export default function FloxWatch() {
   const [ep, setEp] = useState<FloxRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [server, setServer] = useState<Server>('anime-plus');
-  const [showFloxRemoved, setShowFloxRemoved] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -53,9 +46,32 @@ export default function FloxWatch() {
   }, [episodeId]);
 
   const servers: { id: Server; label: string }[] = [
-    { id: 'flox', label: 'Flox +' },
     { id: 'anime-plus', label: 'Anime+' },
+    { id: 'flox', label: 'Flox +' },
   ];
+
+  /** Resolve the playable source for the selected server, with a safe
+   *  fallback to the legacy single-source columns. */
+  const active = useMemo(() => {
+    if (!ep) return null;
+    if (server === 'flox') {
+      const url = ep.flox_source_url || (ep.source_type === 'embed' ? ep.source_url : '');
+      return url ? { url, type: 'embed' as const } : null;
+    }
+    const url = ep.anime_plus_source_url || ep.source_url;
+    const type = (ep.anime_plus_source_url
+      ? (ep.anime_plus_source_type as 'embed' | 'file') || 'file'
+      : ep.source_type) as 'embed' | 'file';
+    return url ? { url, type } : null;
+  }, [ep, server]);
+
+  // If the default server has no source, switch to the one that does.
+  useEffect(() => {
+    if (!ep || active) return;
+    setServer((s) => (s === 'anime-plus' ? 'flox' : 'anime-plus'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ep]);
+
 
   return (
     <AntiPiracyShield mode="strict" noRedirect>
@@ -101,13 +117,21 @@ export default function FloxWatch() {
             </div>
           ) : (
             <div className="space-y-5">
-              <FloxPlayer
-                key={server}
-                sourceType={ep.source_type}
-                sourceUrl={ep.source_url}
-                poster={ep.poster_url || ep.banner_url || undefined}
-                title={ep.title}
-              />
+              {active ? (
+                <FloxPlayer
+                  key={`${server}-${active.url}`}
+                  sourceType={active.type}
+                  sourceUrl={active.url}
+                  poster={ep.poster_url || ep.banner_url || undefined}
+                  title={ep.title}
+                />
+              ) : (
+                <div className="flox-glass rounded-3xl aspect-video grid place-items-center text-center px-6">
+                  <p className="text-sm text-white/70">
+                    No source available on this server yet.
+                  </p>
+                </div>
+              )}
 
               {/* Server switcher — liquid glass chips */}
               <div className="flox-glass rounded-2xl p-3 flex items-center gap-2 flex-wrap">
@@ -119,13 +143,7 @@ export default function FloxWatch() {
                   {servers.map((s) => (
                     <button
                       key={s.id}
-                      onClick={() => {
-                        if (s.id === 'flox') {
-                          setShowFloxRemoved(true);
-                          return;
-                        }
-                        setServer(s.id);
-                      }}
+                      onClick={() => setServer(s.id)}
                       data-active={server === s.id}
                       className="flox-glass-chip px-3.5 py-1.5 rounded-full text-xs font-medium text-white/80 transition-all data-[active=true]:text-white"
                     >
@@ -165,24 +183,6 @@ export default function FloxWatch() {
           )}
         </div>
 
-        <AlertDialog open={showFloxRemoved} onOpenChange={setShowFloxRemoved}>
-          <AlertDialogContent className="bg-black/80 backdrop-blur-2xl border-white/10 max-w-xs rounded-3xl">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-white text-base">Server Removed</AlertDialogTitle>
-              <AlertDialogDescription className="text-white/70 text-xs">
-                This server is removed because it contain ads.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogAction
-                className="bg-primary hover:bg-primary/90 text-white text-xs px-4 py-2 rounded-full"
-                onClick={() => setShowFloxRemoved(false)}
-              >
-                OK
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     </AntiPiracyShield>
   );

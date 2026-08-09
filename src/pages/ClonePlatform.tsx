@@ -236,6 +236,14 @@ export default function ClonePlatform() {
     return () => window.clearTimeout(t);
   }, [loading, platform]);
 
+  // Full-screen wrapper: suppress the global premium timer banner while here.
+  useEffect(() => {
+    if (!platform) return;
+    document.body.classList.add('clone-mode');
+    return () => document.body.classList.remove('clone-mode');
+  }, [platform]);
+
+
   const isLocked = locked && !unlocked;
 
   /* --- postMessage unlock handshake -------------------------------------
@@ -370,12 +378,23 @@ export default function ClonePlatform() {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-[hsl(272_45%_6%)] clone-shell">
+    <div
+      className="fixed inset-0 grid bg-[hsl(272_45%_6%)] clone-shell"
+      style={{
+        // iOS/Android Safari collapse `flex-1` children inside a fixed shell,
+        // which left the iframe at 0px (the "black screen"). An explicit
+        // dvh-based grid keeps the frame row measurable on every browser.
+        height: '100dvh',
+        maxHeight: '100dvh',
+        gridTemplateRows: 'auto minmax(0, 1fr) auto',
+      }}
+    >
       {/* Top watermark bar */}
       <div
         className="clone-bar flex shrink-0 items-center justify-between gap-2 px-2.5 sm:px-3"
         style={{ paddingTop: 'max(0.375rem, env(safe-area-inset-top))', paddingBottom: '0.375rem' }}
       >
+
         <div className="flex min-w-0 items-center gap-2">
           {platform.logo_url ? (
             <img
@@ -411,19 +430,27 @@ export default function ClonePlatform() {
       </div>
 
       {/* Frame */}
-      <div ref={frameHostRef} className="relative min-h-0 flex-1 overflow-hidden bg-[hsl(272_45%_6%)]">
+      <div
+        ref={frameHostRef}
+        className="relative min-h-0 overflow-hidden bg-[hsl(272_45%_6%)]"
+        style={{ height: '100%' }}
+      >
         <iframe
           ref={frameRef}
           key={`${platform.id}-${reloadKey}`}
           src={platform.target_url}
           title={`${platform.name} — ad-blocked view on AnimeSavi`}
-          className="absolute inset-0 border-0"
+          className="absolute left-0 top-0 border-0"
           style={{
             width: '100%',
             height: '100%',
+            minHeight: '100%',
+            display: 'block',
+            zIndex: 1,
             pointerEvents: isLocked ? 'none' : 'auto',
             background: 'hsl(272 45% 6%)',
           }}
+
           referrerPolicy="no-referrer"
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
           allowFullScreen

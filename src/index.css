@@ -2880,6 +2880,9 @@ html {
   background-image: radial-gradient(circle at 15% 0%, hsl(278 70% 26% / 0.55), transparent 55%),
                     radial-gradient(circle at 85% 100%, hsl(292 70% 26% / 0.45), transparent 55%);
 }
+/* Clone pages are a full-screen wrapper — never overlay the premium timer bar */
+body.clone-mode .access-banner { display: none !important; }
+
 .clone-bar {
   background: hsl(275 55% 10% / 0.72);
   border-color: hsl(280 80% 80% / 0.12);
