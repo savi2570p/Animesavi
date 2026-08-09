@@ -422,19 +422,27 @@ export default function ClonePlatform() {
       </div>
 
       {/* Frame */}
-      <div ref={frameHostRef} className="relative min-h-0 flex-1 overflow-hidden bg-[hsl(272_45%_6%)]">
+      <div
+        ref={frameHostRef}
+        className="relative min-h-0 overflow-hidden bg-[hsl(272_45%_6%)]"
+        style={{ height: '100%' }}
+      >
         <iframe
           ref={frameRef}
           key={`${platform.id}-${reloadKey}`}
           src={platform.target_url}
           title={`${platform.name} — ad-blocked view on AnimeSavi`}
-          className="absolute inset-0 border-0"
+          className="absolute left-0 top-0 border-0"
           style={{
             width: '100%',
             height: '100%',
+            minHeight: '100%',
+            display: 'block',
+            zIndex: 1,
             pointerEvents: isLocked ? 'none' : 'auto',
             background: 'hsl(272 45% 6%)',
           }}
+
           referrerPolicy="no-referrer"
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
           allowFullScreen
