@@ -534,7 +534,7 @@ function FloxUploadDialog({
     }
     setEmbedUrl('');
     setVideoUrl('');
-    setSourceMode('embed');
+    setEmbedServer('anime-plus');
   }, [open, editAnime]);
 
   // When user picks an existing anime in "existing" mode, prefill ep number
