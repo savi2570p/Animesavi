@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -6,15 +6,6 @@ import { ArrowLeft, Loader2, Server as ServerIcon } from 'lucide-react';
 import { FloxPlayer } from '@/components/video/FloxPlayer';
 import { AntiPiracyShield } from '@/components/security/AntiPiracyShield';
 import { toast } from 'sonner';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
 interface FloxRow {
   id: string;
@@ -24,6 +15,9 @@ interface FloxRow {
   poster_url: string | null;
   source_type: 'embed' | 'file';
   source_url: string;
+  flox_source_url: string | null;
+  anime_plus_source_url: string | null;
+  anime_plus_source_type: string | null;
   episode_number: number | null;
   season_number: number | null;
 }
@@ -36,7 +30,6 @@ export default function FloxWatch() {
   const [ep, setEp] = useState<FloxRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [server, setServer] = useState<Server>('anime-plus');
-  const [showFloxRemoved, setShowFloxRemoved] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -53,9 +46,32 @@ export default function FloxWatch() {
   }, [episodeId]);
 
   const servers: { id: Server; label: string }[] = [
-    { id: 'flox', label: 'Flox +' },
     { id: 'anime-plus', label: 'Anime+' },
+    { id: 'flox', label: 'Flox +' },
   ];
+
+  /** Resolve the playable source for the selected server, with a safe
+   *  fallback to the legacy single-source columns. */
+  const active = useMemo(() => {
+    if (!ep) return null;
+    if (server === 'flox') {
+      const url = ep.flox_source_url || (ep.source_type === 'embed' ? ep.source_url : '');
+      return url ? { url, type: 'embed' as const } : null;
+    }
+    const url = ep.anime_plus_source_url || ep.source_url;
+    const type = (ep.anime_plus_source_url
+      ? (ep.anime_plus_source_type as 'embed' | 'file') || 'file'
+      : ep.source_type) as 'embed' | 'file';
+    return url ? { url, type } : null;
+  }, [ep, server]);
+
+  // If the default server has no source, switch to the one that does.
+  useEffect(() => {
+    if (!ep || active) return;
+    setServer((s) => (s === 'anime-plus' ? 'flox' : 'anime-plus'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ep]);
+
 
   return (
     <AntiPiracyShield mode="strict" noRedirect>
