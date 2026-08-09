@@ -615,8 +615,6 @@ function FloxUploadDialog({
 
         if (!skipEpisode) {
           const epNum = parseInt(episodeNumber || '1', 10);
-          const src = sourceMode === 'embed' ? embedUrl.trim() : videoUrl.trim();
-          if (!src) throw new Error('Episode source is required');
           // Carry over poster/banner from existing for consistency
           const ref = existing.find((a) => a.title === targetTitle);
           const finalTitle = editing ? (title.trim() || editAnime!.title) : targetTitle;
@@ -625,12 +623,12 @@ function FloxUploadDialog({
             description: ref?.description || null,
             poster_url: ref?.poster_url || null,
             banner_url: ref?.banner_url || null,
-            source_type: sourceMode,
-            source_url: src,
+            ...buildSources(),
             episode_number: epNum,
             season_number: 1,
             uploaded_by: userId,
           });
+
           if (error) throw error;
         }
         toast.success(editing ? 'Anime updated' : 'Episode added');
