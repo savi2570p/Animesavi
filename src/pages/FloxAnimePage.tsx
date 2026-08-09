@@ -691,8 +691,8 @@ function FloxUploadDialog({
             <EpisodeFields
               episodeNumber={episodeNumber}
               setEpisodeNumber={setEpisodeNumber}
-              sourceMode={sourceMode}
-              setSourceMode={setSourceMode}
+              embedServer={embedServer}
+              setEmbedServer={setEmbedServer}
               embedUrl={embedUrl}
               setEmbedUrl={setEmbedUrl}
               videoUrl={videoUrl}
@@ -763,8 +763,8 @@ function FloxUploadDialog({
               <EpisodeFields
                 episodeNumber={episodeNumber}
                 setEpisodeNumber={setEpisodeNumber}
-                sourceMode={sourceMode}
-                setSourceMode={setSourceMode}
+                embedServer={embedServer}
+                setEmbedServer={setEmbedServer}
                 embedUrl={embedUrl}
                 setEmbedUrl={setEmbedUrl}
                 videoUrl={videoUrl}
