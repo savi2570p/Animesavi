@@ -546,6 +546,29 @@ function FloxUploadDialog({
     }
   }, [selectedTitle, mode, existing, editing]);
 
+  /** Build the per-server source payload for a flox_content row. */
+  const buildSources = () => {
+    const link = embedUrl.trim();
+    const file = videoUrl.trim();
+    const floxUrl = embedServer === 'flox' ? link : '';
+    const apUrl = embedServer === 'anime-plus' && link ? link : file;
+    const apType: 'embed' | 'file' =
+      embedServer === 'anime-plus' && link ? 'embed' : 'file';
+
+    if (!floxUrl && !apUrl) throw new Error('Add an embed link or a video file');
+
+    const primaryUrl = apUrl || floxUrl;
+    const primaryType: 'embed' | 'file' = apUrl ? apType : 'embed';
+
+    return {
+      source_type: primaryType,
+      source_url: primaryUrl,
+      flox_source_url: floxUrl || null,
+      anime_plus_source_url: apUrl || null,
+      anime_plus_source_type: apUrl ? apType : null,
+    };
+  };
+
   const submit = async () => {
     setSubmitting(true);
     try {
@@ -553,22 +576,20 @@ function FloxUploadDialog({
         if (!title.trim()) throw new Error('Title is required');
         if (!posterUrl) throw new Error('Poster image is required for new anime');
         const epNum = parseInt(episodeNumber || '1', 10);
-        const src = sourceMode === 'embed' ? embedUrl.trim() : videoUrl.trim();
-        if (!src) throw new Error('Episode source is required');
 
         const { error } = await supabase.from('flox_content').insert({
           title: title.trim(),
           description: description.trim() || null,
           poster_url: posterUrl,
           banner_url: bannerUrl || null,
-          source_type: sourceMode,
-          source_url: src,
+          ...buildSources(),
           episode_number: epNum,
           season_number: 1,
           uploaded_by: userId,
         });
         if (error) throw error;
         toast.success('Anime created');
+
       } else {
         // existing anime: optionally edit metadata, optionally add an episode
         const targetTitle = editing ? editAnime!.title : selectedTitle;
