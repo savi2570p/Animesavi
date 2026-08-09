@@ -117,13 +117,21 @@ export default function FloxWatch() {
             </div>
           ) : (
             <div className="space-y-5">
-              <FloxPlayer
-                key={server}
-                sourceType={ep.source_type}
-                sourceUrl={ep.source_url}
-                poster={ep.poster_url || ep.banner_url || undefined}
-                title={ep.title}
-              />
+              {active ? (
+                <FloxPlayer
+                  key={`${server}-${active.url}`}
+                  sourceType={active.type}
+                  sourceUrl={active.url}
+                  poster={ep.poster_url || ep.banner_url || undefined}
+                  title={ep.title}
+                />
+              ) : (
+                <div className="flox-glass rounded-3xl aspect-video grid place-items-center text-center px-6">
+                  <p className="text-sm text-white/70">
+                    No source available on this server yet.
+                  </p>
+                </div>
+              )}
 
               {/* Server switcher — liquid glass chips */}
               <div className="flox-glass rounded-2xl p-3 flex items-center gap-2 flex-wrap">
@@ -135,13 +143,7 @@ export default function FloxWatch() {
                   {servers.map((s) => (
                     <button
                       key={s.id}
-                      onClick={() => {
-                        if (s.id === 'flox') {
-                          setShowFloxRemoved(true);
-                          return;
-                        }
-                        setServer(s.id);
-                      }}
+                      onClick={() => setServer(s.id)}
                       data-active={server === s.id}
                       className="flox-glass-chip px-3.5 py-1.5 rounded-full text-xs font-medium text-white/80 transition-all data-[active=true]:text-white"
                     >
@@ -181,24 +183,6 @@ export default function FloxWatch() {
           )}
         </div>
 
-        <AlertDialog open={showFloxRemoved} onOpenChange={setShowFloxRemoved}>
-          <AlertDialogContent className="bg-black/80 backdrop-blur-2xl border-white/10 max-w-xs rounded-3xl">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-white text-base">Server Removed</AlertDialogTitle>
-              <AlertDialogDescription className="text-white/70 text-xs">
-                This server is removed because it contain ads.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogAction
-                className="bg-primary hover:bg-primary/90 text-white text-xs px-4 py-2 rounded-full"
-                onClick={() => setShowFloxRemoved(false)}
-              >
-                OK
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     </AntiPiracyShield>
   );
