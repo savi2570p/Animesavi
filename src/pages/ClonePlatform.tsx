@@ -230,12 +230,6 @@ export default function ClonePlatform() {
     };
   }, [slug]);
 
-  useEffect(() => {
-    if (loading || !platform) return;
-    const t = window.setTimeout(() => setBooting(false), 4000);
-    return () => window.clearTimeout(t);
-  }, [loading, platform]);
-
   // Full-screen wrapper: suppress the global premium timer banner while here.
   useEffect(() => {
     if (!platform) return;
@@ -286,10 +280,13 @@ export default function ClonePlatform() {
 
   useEffect(() => {
     if (!platform?.target_url) return;
+    frameLoadedRef.current = false;
     setFrameLoaded(false);
     setFrameBlocked(false);
+    setBooting(true);
     const t = window.setTimeout(() => {
       setFrameBlocked((prev) => prev || !frameLoadedRef.current);
+      if (!frameLoadedRef.current) setBooting(false);
     }, 12000);
     return () => window.clearTimeout(t);
   }, [platform?.target_url, reloadKey]);
@@ -379,13 +376,8 @@ export default function ClonePlatform() {
 
   return (
     <div
-      className="fixed inset-0 grid bg-[hsl(272_45%_6%)] clone-shell"
+      className="fixed inset-0 grid overflow-hidden bg-[hsl(272_45%_6%)] clone-shell"
       style={{
-        // iOS/Android Safari collapse `flex-1` children inside a fixed shell,
-        // which left the iframe at 0px (the "black screen"). An explicit
-        // dvh-based grid keeps the frame row measurable on every browser.
-        height: '100dvh',
-        maxHeight: '100dvh',
         gridTemplateRows: 'auto minmax(0, 1fr) auto',
       }}
     >
@@ -437,6 +429,7 @@ export default function ClonePlatform() {
       >
         <iframe
           ref={frameRef}
+          data-preserve-sandbox="true"
           key={`${platform.id}-${reloadKey}`}
           src={platform.target_url}
           title={`${platform.name} — ad-blocked view on AnimeSavi`}
@@ -455,8 +448,16 @@ export default function ClonePlatform() {
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
           allowFullScreen
           onLoad={() => {
+            frameLoadedRef.current = true;
             setFrameLoaded(true);
             setFrameBlocked(false);
+            setBooting(false);
+          }}
+          onError={() => {
+            frameLoadedRef.current = false;
+            setFrameLoaded(false);
+            setFrameBlocked(true);
+            setBooting(false);
           }}
           {...sandboxProps}
         />
@@ -478,8 +479,10 @@ export default function ClonePlatform() {
               </p>
               <button
                 onClick={() => {
+                  frameLoadedRef.current = false;
                   setFrameLoaded(false);
                   setFrameBlocked(false);
+                  setBooting(true);
                   setReloadKey((k) => k + 1);
                 }}
                 className="clone-cta mt-5 rounded-2xl px-5 py-2.5 text-xs font-semibold"

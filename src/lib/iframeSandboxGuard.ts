@@ -13,6 +13,9 @@
 let installed = false;
 
 function stripSandbox(iframe: HTMLIFrameElement) {
+  // ClonePlatform deliberately uses a strict sandbox to contain redirect ads.
+  // Other video embeds keep the legacy unsandboxed behavior they require.
+  if (iframe.dataset.preserveSandbox === 'true') return;
   if (iframe.hasAttribute('sandbox')) {
     iframe.removeAttribute('sandbox');
   }
@@ -55,7 +58,11 @@ export function installIframeSandboxGuard() {
   //    calls are silently ignored on iframes.
   const originalSetAttribute = Element.prototype.setAttribute;
   Element.prototype.setAttribute = function (name: string, value: string) {
-    if (this instanceof HTMLIFrameElement && name.toLowerCase() === 'sandbox') {
+    if (
+      this instanceof HTMLIFrameElement &&
+      name.toLowerCase() === 'sandbox' &&
+      this.dataset.preserveSandbox !== 'true'
+    ) {
       return;
     }
     return originalSetAttribute.call(this, name, value);
