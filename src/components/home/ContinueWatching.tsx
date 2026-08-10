@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Play, ChevronRight, Clock, Check, User } from 'lucide-react';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
-import { fhdImageUrl, fhdFallback } from '@/lib/imageOptimization';
+import { optimizedImageUrl, fhdFallback } from '@/lib/imageOptimization';
 
 import { toast } from 'sonner';
 import {
@@ -508,7 +508,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
                         const raw = item.episode.thumbnail || item.anime.cover_image || '/placeholder.svg';
                         return (
                           <img
-                            src={fhdImageUrl(raw, 'banner')}
+                            src={optimizedImageUrl(raw, { width: 960, quality: 78 })}
                             onError={fhdFallback(raw)}
                             alt={item.anime.title}
                             className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
