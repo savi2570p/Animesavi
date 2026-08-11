@@ -39,7 +39,9 @@ export function PWAInstallPrompt() {
 
     // For iOS, show custom prompt after delay
     if (iOS && !standalone) {
-      const timer = setTimeout(() => setShowPrompt(true), 3000);
+      const timer = setTimeout(() => {
+        if (!document.body.classList.contains('clone-mode')) setShowPrompt(true);
+      }, 3000);
       return () => clearTimeout(timer);
     }
 
@@ -47,7 +49,9 @@ export function PWAInstallPrompt() {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setTimeout(() => setShowPrompt(true), 3000);
+      setTimeout(() => {
+        if (!document.body.classList.contains('clone-mode')) setShowPrompt(true);
+      }, 3000);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);

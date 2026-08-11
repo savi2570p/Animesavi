@@ -273,7 +273,6 @@ export default function ClonePlatform() {
      the frame unmounted -> black screen. The frame is the whole page, so it is
      always mounted eagerly now. A watchdog surfaces a readable fallback when
      the remote site refuses to be framed (X-Frame-Options / CSP). */
-  const frameHostRef = useRef<HTMLDivElement>(null);
   const [frameLoaded, setFrameLoaded] = useState(false);
   const [frameBlocked, setFrameBlocked] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
@@ -423,9 +422,7 @@ export default function ClonePlatform() {
 
       {/* Frame */}
       <div
-        ref={frameHostRef}
-        className="relative min-h-0 overflow-hidden bg-[hsl(272_45%_6%)]"
-        style={{ height: '100%' }}
+        className="relative min-h-0 overflow-hidden bg-background"
       >
         <iframe
           ref={frameRef}
@@ -433,15 +430,10 @@ export default function ClonePlatform() {
           key={`${platform.id}-${reloadKey}`}
           src={platform.target_url}
           title={`${platform.name} — ad-blocked view on AnimeSavi`}
-          className="absolute left-0 top-0 border-0"
+          className="absolute inset-0 block h-full w-full border-0"
           style={{
-            width: '100%',
-            height: '100%',
-            minHeight: '100%',
-            display: 'block',
             zIndex: 1,
             pointerEvents: isLocked ? 'none' : 'auto',
-            background: 'hsl(272 45% 6%)',
           }}
 
           referrerPolicy="no-referrer"
