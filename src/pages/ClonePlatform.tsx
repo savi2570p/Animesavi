@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, lazy, Suspense, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { ShieldCheck, Zap, Home, Search, Shield, PlayCircle, Lock } from 'lucide-react';
+import { ShieldCheck, Home, Search, Shield, PlayCircle, Lock } from 'lucide-react';
 import {
   issueUnlockToken,
   verifyUnlockToken,
@@ -25,16 +25,7 @@ const AD_WATCH_SECONDS = 15;
 
 /* ---------------------------------------------------------------- Boot overlay */
 function BootOverlay({ siteName }: { siteName: string }) {
-  const [phase, setPhase] = useState(0);
-
-  useEffect(() => {
-    const t = window.setTimeout(() => setPhase(1), 2000);
-    return () => window.clearTimeout(t);
-  }, []);
-
-  const copy = phase === 0
-    ? { title: 'Verifying Human…', sub: 'Checking your session securely', pct: 45, Icon: ShieldCheck }
-    : { title: `Enabling ${siteName} Ad Blocker…`, sub: 'Loading a clean, ad-free experience', pct: 95, Icon: Zap };
+  const copy = { title: `Opening ${siteName}…`, sub: 'Securing embedded navigation', Icon: ShieldCheck };
 
   const { Icon } = copy;
 
@@ -54,15 +45,7 @@ function BootOverlay({ siteName }: { siteName: string }) {
           <h2 className="text-lg font-semibold tracking-tight text-foreground">{copy.title}</h2>
           <p className="mt-1.5 text-xs text-muted-foreground">{copy.sub}</p>
 
-          <div className="mt-6 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-[hsl(268_90%_62%)] to-[hsl(292_90%_70%)] transition-[width] duration-[1400ms] ease-out"
-              style={{ width: `${copy.pct}%` }}
-            />
-          </div>
-          <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground tabular-nums">
-            {copy.pct}%
-          </p>
+          <div className="mx-auto mt-6 h-5 w-5 animate-spin rounded-full border-2 border-[hsl(275_90%_70%)] border-t-transparent" />
         </div>
       </div>
     </div>
@@ -259,21 +242,24 @@ export default function ClonePlatform() {
 
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
+      if (!platform?.target_url) return;
+      let targetOrigin: string;
+      try {
+        targetOrigin = new URL(platform.target_url).origin;
+      } catch {
+        return;
+      }
+      if (e.origin !== targetOrigin || e.source !== frameRef.current?.contentWindow) return;
       const data = e.data as { type?: string; token?: string } | null;
       if (!data || data.type !== 'clone-unlock' || typeof data.token !== 'string') return;
       applyUnlock(data.token);
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [applyUnlock]);
+  }, [applyUnlock, platform?.target_url]);
 
-  /* --- Frame load watchdog ---------------------------------------------
-     iOS/Android Safari + Chrome never fire the IntersectionObserver reliably
-     for a full-screen iframe inside a `position: fixed` flex shell, which left
-     the frame unmounted -> black screen. The frame is the whole page, so it is
-     always mounted eagerly now. A watchdog surfaces a readable fallback when
-     the remote site refuses to be framed (X-Frame-Options / CSP). */
-  const frameHostRef = useRef<HTMLDivElement>(null);
+  /* The frame is mounted eagerly. Its load/error events are the only lifecycle
+     source of truth; timers misclassify slow, ad-heavy mobile pages. */
   const [frameLoaded, setFrameLoaded] = useState(false);
   const [frameBlocked, setFrameBlocked] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
@@ -284,11 +270,6 @@ export default function ClonePlatform() {
     setFrameLoaded(false);
     setFrameBlocked(false);
     setBooting(true);
-    const t = window.setTimeout(() => {
-      setFrameBlocked((prev) => prev || !frameLoadedRef.current);
-      if (!frameLoadedRef.current) setBooting(false);
-    }, 12000);
-    return () => window.clearTimeout(t);
   }, [platform?.target_url, reloadKey]);
 
   const frameLoadedRef = useRef(false);
@@ -423,9 +404,7 @@ export default function ClonePlatform() {
 
       {/* Frame */}
       <div
-        ref={frameHostRef}
-        className="relative min-h-0 overflow-hidden bg-[hsl(272_45%_6%)]"
-        style={{ height: '100%' }}
+        className="relative min-h-0 overflow-hidden bg-background"
       >
         <iframe
           ref={frameRef}
@@ -433,15 +412,10 @@ export default function ClonePlatform() {
           key={`${platform.id}-${reloadKey}`}
           src={platform.target_url}
           title={`${platform.name} — ad-blocked view on AnimeSavi`}
-          className="absolute left-0 top-0 border-0"
+          className="absolute inset-0 block h-full w-full border-0"
           style={{
-            width: '100%',
-            height: '100%',
-            minHeight: '100%',
-            display: 'block',
             zIndex: 1,
             pointerEvents: isLocked ? 'none' : 'auto',
-            background: 'hsl(272 45% 6%)',
           }}
 
           referrerPolicy="no-referrer"

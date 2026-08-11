@@ -2816,6 +2816,12 @@ html {
 .cw-carousel {
   contain: layout paint;
 }
+.cw-carousel .cw-slide {
+  /* Native rendering virtualization keeps Embla's measured slide geometry
+     intact while skipping layout/paint for off-screen cards. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px 180px;
+}
 .cw-carousel [data-slot="carousel-content"],
 .cw-carousel > div[class*="overflow-hidden"] {
   -webkit-overflow-scrolling: touch;
@@ -2877,9 +2883,10 @@ html {
 .clone-orb-b { bottom: -70px; left: -60px; height: 190px; width: 190px; background: hsl(300 85% 62% / 0.32); }
 .clone-shell {
   width: 100%;
-  height: 100%;
+  height: 100vh;
   min-height: 100vh;
   max-width: 100vw;
+  isolation: isolate;
   background-image: radial-gradient(circle at 15% 0%, hsl(278 70% 26% / 0.55), transparent 55%),
                     radial-gradient(circle at 85% 100%, hsl(292 70% 26% / 0.45), transparent 55%);
 }
@@ -2889,8 +2896,14 @@ html {
 @supports (height: 100dvh) {
   .clone-shell { height: 100dvh; min-height: 100dvh; }
 }
+@supports (height: 100lvh) {
+  @media (orientation: landscape) {
+    .clone-shell { max-height: 100lvh; }
+  }
+}
 /* Clone pages are a full-screen wrapper — never overlay the premium timer bar */
 body.clone-mode .access-banner { display: none !important; }
+body.clone-mode .app-global-overlay { display: none !important; }
 
 .clone-bar {
   background: hsl(275 55% 10% / 0.72);
@@ -2946,6 +2959,7 @@ body.clone-mode .access-banner { display: none !important; }
 
   .clone-shell {
     overscroll-behavior: none;
+    background-image: none;
   }
 
   .cw-carousel [role="group"] > div {

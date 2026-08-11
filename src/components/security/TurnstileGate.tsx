@@ -138,7 +138,7 @@ export const TurnstileGate = () => {
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-300 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(91,33,182,0.5),rgba(20,5,40,0.7)_55%,rgba(8,2,20,0.88))] backdrop-blur-2xl"
+      className="app-global-overlay fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-300 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(91,33,182,0.5),rgba(20,5,40,0.7)_55%,rgba(8,2,20,0.88))] backdrop-blur-2xl"
       role="dialog"
       aria-modal="true"
       aria-label="Verifying you are human"

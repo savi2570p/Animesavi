@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { memo, useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -54,6 +54,110 @@ interface WatchHistoryItem {
 interface ContinueWatchingProps {
   showOnHomeOnly?: boolean;
 }
+
+const CONTINUE_WATCHING_CAROUSEL_OPTIONS = {
+  align: 'start' as const,
+  loop: false,
+  dragFree: true,
+  duration: 18,
+  containScroll: 'trimSnaps' as const,
+  skipSnaps: true,
+};
+
+function formatTimeLeft(progress: number | null, duration: number | null) {
+  if (!progress || !duration) return null;
+  const remaining = Math.max(0, duration - (duration * progress / 100));
+  return `${Math.floor(remaining / 60)}m left`;
+}
+
+interface ContinueWatchingCardProps {
+  item: WatchHistoryItem;
+  isFading: boolean;
+  onMarkCompleted: (event: React.MouseEvent, historyId: string, animeTitle: string) => void;
+}
+
+const ContinueWatchingCard = memo(function ContinueWatchingCard({
+  item,
+  isFading,
+  onMarkCompleted,
+}: ContinueWatchingCardProps) {
+  const progressPct = Math.min(Math.max(item.progress || 0, 0), 100);
+  const timeLeft = formatTimeLeft(item.progress, item.episode.duration);
+  const raw = item.episode.thumbnail || item.anime.cover_image || '/placeholder.svg';
+
+  return (
+    <CarouselItem className="cw-slide pl-2 md:pl-4 basis-[80%] sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+      <div className="group relative">
+        <Link
+          to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
+          className={`relative block aspect-video rounded-2xl overflow-hidden bg-muted/40 border border-border/40 group-hover:border-primary/50 transition-all duration-500 shadow-md hover:shadow-xl hover:shadow-primary/20 ${
+            isFading ? 'cw-tile-fading' : 'cw-tile-fresh'
+          }`}
+          aria-label={`Resume ${item.anime.title} episode ${item.episode.episode_number}`}
+        >
+          <img
+            src={optimizedImageUrl(raw, { width: 960, quality: 78 })}
+            onError={fhdFallback(raw)}
+            alt={item.anime.title}
+            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+          <div className="pointer-events-none absolute top-2 left-2 right-2 flex items-start justify-between gap-2">
+            <div className="flex items-center gap-1 flex-wrap">
+              <span className="px-2 py-0.5 rounded-md bg-primary/95 text-[10px] font-bold text-primary-foreground shadow-sm">
+                S{item.season?.season_number || 1} · E{item.episode.episode_number}
+              </span>
+              {item.hasNewEpisode && <span className="badge-glass-new animate-pulse shadow-lg shadow-green-500/40">NEW</span>}
+            </div>
+            <div className="flex flex-col items-end gap-1">
+              <span className="px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-semibold text-white tabular-nums">
+                {Math.round(progressPct)}%
+              </span>
+              {(item.anime as Anime & { is_eng_dub?: boolean }).is_eng_dub ? (
+                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-md">E-DUB</span>
+              ) : (
+                <span className="badge-glass-hdub">H-DUB</span>
+              )}
+            </div>
+          </div>
+          <div className="pointer-events-none absolute inset-0 hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/30 rounded-full blur-xl scale-150" />
+              <div className="relative w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/50">
+                <Play className="h-5 w-5 text-primary-foreground fill-current ml-0.5" />
+              </div>
+            </div>
+          </div>
+          <div className="pointer-events-none"><TokenCrownBadge /></div>
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 p-3 pb-4">
+            <h3 className="text-sm font-semibold text-white line-clamp-1 drop-shadow-md">{item.anime.title}</h3>
+            <p className="text-[11px] text-white/75 mt-0.5 flex items-center gap-1.5">
+              <span>EP {item.episode.episode_number}</span>
+              {timeLeft && <><span className="opacity-50">·</span><span className="text-primary-foreground/90">{timeLeft}</span></>}
+            </p>
+          </div>
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-1 bg-black/60">
+            <div className="relative h-full bg-gradient-to-r from-primary via-primary to-primary/80 transition-[width] duration-500 ease-out" style={{ width: `${progressPct}%` }}>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shine" />
+            </div>
+          </div>
+        </Link>
+        <button
+          type="button"
+          onClick={(event) => onMarkCompleted(event, item.id, item.anime.title)}
+          className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 h-6 px-2 rounded-full text-[10px] font-semibold bg-background/80 backdrop-blur-md border border-border/60 text-foreground/80 hover:text-primary hover:border-primary/60 hover:bg-background opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-200 shadow-md"
+          aria-label={`Mark ${item.anime.title} as completed`}
+          style={{ marginTop: '1.75rem' }}
+        >
+          <Check className="h-3 w-3" /> Done
+        </button>
+      </div>
+    </CarouselItem>
+  );
+});
 
 export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingProps) {
   const { user } = useAuth();
@@ -289,7 +393,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
     };
   }, [user?.id, shouldRender, fetchRecentHistory, fetchUserProfile]);
 
-  const handleMarkCompleted = async (
+  const handleMarkCompleted = useCallback(async (
     e: React.MouseEvent,
     historyId: string,
     animeTitle: string,
@@ -401,14 +505,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       void fetchRecentHistory(false);
       toast.success(`Episode marked as watched · Next episode ready`);
     }
-  };
-
-  const formatTimeLeft = (progress: number | null, duration: number | null) => {
-    if (!progress || !duration) return null;
-    const remaining = Math.max(0, duration - (duration * progress / 100));
-    const minutes = Math.floor(remaining / 60);
-    return `${minutes}m left`;
-  };
+  }, [fetchRecentHistory, history, user]);
 
   if (!user || !shouldRender || (!isLoading && history.length === 0)) return null;
 
@@ -476,133 +573,18 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
         </div>
 
         <Carousel
-          opts={{
-            align: "start",
-            loop: false,
-            dragFree: true,
-            duration: 18,
-            containScroll: "trimSnaps",
-            skipSnaps: true,
-          }}
+          opts={CONTINUE_WATCHING_CAROUSEL_OPTIONS}
           className="w-full cw-carousel"
         >
           <CarouselContent className="-ml-2 md:-ml-4">
-            {history.map((item, index) => {
-              const progressPct = Math.min(Math.max(item.progress || 0, 0), 100);
-              const timeLeft = formatTimeLeft(item.progress, item.episode.duration);
-              const isFading = fadingIds.has(item.id);
-              return (
-                <CarouselItem key={item.id} className="pl-2 md:pl-4 basis-[80%] sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                  <div className="group relative">
-
-                    {/* Single-tap link covers the entire card. All decorative overlays use pointer-events-none
-                        so the first tap on mobile navigates immediately (no hover-then-tap double click). */}
-                    <Link
-                      to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
-                      className={`relative block aspect-video rounded-2xl overflow-hidden bg-muted/40 border border-border/40 group-hover:border-primary/50 transition-all duration-500 shadow-md hover:shadow-xl hover:shadow-primary/20 ${
-                        isFading ? 'cw-tile-fading' : 'cw-tile-fresh'
-                      }`}
-                      aria-label={`Resume ${item.anime.title} episode ${item.episode.episode_number}`}
-                    >
-                      {(() => {
-                        const raw = item.episode.thumbnail || item.anime.cover_image || '/placeholder.svg';
-                        return (
-                          <img
-                            src={optimizedImageUrl(raw, { width: 960, quality: 78 })}
-                            onError={fhdFallback(raw)}
-                            alt={item.anime.title}
-                            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
-                            loading="lazy"
-                            draggable={false}
-                          />
-                        );
-                      })()}
-
-                      {/* Bottom gradient for legibility */}
-                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-
-                      {/* Top badges row */}
-                      <div className="pointer-events-none absolute top-2 left-2 right-2 flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-1 flex-wrap">
-                          <span className="px-2 py-0.5 rounded-md bg-primary/95 text-[10px] font-bold text-primary-foreground shadow-sm">
-                            S{item.season?.season_number || 1} · E{item.episode.episode_number}
-                          </span>
-                          {item.hasNewEpisode && (
-                            <span className="badge-glass-new animate-pulse shadow-lg shadow-green-500/40">
-                              NEW
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                          <span className="px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-semibold text-white tabular-nums">
-                            {Math.round(progressPct)}%
-                          </span>
-                          {(item.anime as any)?.is_eng_dub ? (
-                            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-md">E-DUB</span>
-                          ) : (
-                            <span className="badge-glass-hdub">H-DUB</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Center play hint — desktop hover only, never blocks taps */}
-                      <div className="pointer-events-none absolute inset-0 hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <div className="relative">
-                          <div className="absolute inset-0 bg-primary/30 rounded-full blur-xl scale-150" />
-                          <div className="relative w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/50">
-                            <Play className="h-5 w-5 text-primary-foreground fill-current ml-0.5" />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Token Crown Badge (decorative) */}
-                      <div className="pointer-events-none">
-                        <TokenCrownBadge />
-                      </div>
-
-                      {/* Bottom info: title + meta inside the card for a more premium look */}
-                      <div className="pointer-events-none absolute bottom-0 left-0 right-0 p-3 pb-4">
-                        <h3 className="text-sm font-semibold text-white line-clamp-1 drop-shadow-md">
-                          {item.anime.title}
-                        </h3>
-                        <p className="text-[11px] text-white/75 mt-0.5 flex items-center gap-1.5">
-                          <span>EP {item.episode.episode_number}</span>
-                          {timeLeft && (
-                            <>
-                              <span className="opacity-50">·</span>
-                              <span className="text-primary-foreground/90">{timeLeft}</span>
-                            </>
-                          )}
-                        </p>
-                      </div>
-
-                      {/* Premium progress bar pinned to the very bottom edge */}
-                      <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-1 bg-black/60">
-                        <div
-                          className="relative h-full bg-gradient-to-r from-primary via-primary to-primary/80 transition-[width] duration-500 ease-out"
-                          style={{ width: `${progressPct}%` }}
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shine" />
-                        </div>
-                      </div>
-                    </Link>
-
-                    {/* "Done" action — sits ABOVE the link, never on the tap path of the thumbnail center.
-                        Tiny pill in the top-right that only appears on hover (desktop) or always on mobile via active state. */}
-                    <button
-                      type="button"
-                      onClick={(e) => handleMarkCompleted(e, item.id, item.anime.title)}
-                      className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 h-6 px-2 rounded-full text-[10px] font-semibold bg-background/80 backdrop-blur-md border border-border/60 text-foreground/80 hover:text-primary hover:border-primary/60 hover:bg-background opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-200 shadow-md"
-                      aria-label={`Mark ${item.anime.title} as completed`}
-                      style={{ marginTop: '1.75rem' }}
-                    >
-                      <Check className="h-3 w-3" />
-                      Done
-                    </button>
-                  </div>
-                </CarouselItem>
-              );
-            })}
+            {history.map((item) => (
+              <ContinueWatchingCard
+                key={item.id}
+                item={item}
+                isFading={fadingIds.has(item.id)}
+                onMarkCompleted={handleMarkCompleted}
+              />
+            ))}
           </CarouselContent>
           <CarouselPrevious className="hidden md:flex -left-4 bg-background/80 backdrop-blur-sm border-border/50 hover:bg-primary/10 hover:border-primary/50" />
           <CarouselNext className="hidden md:flex -right-4 bg-background/80 backdrop-blur-sm border-border/50 hover:bg-primary/10 hover:border-primary/50" />
