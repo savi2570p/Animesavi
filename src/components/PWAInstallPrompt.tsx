@@ -83,7 +83,7 @@ export function PWAInstallPrompt() {
   // iOS-specific instructions
   if (isIOS) {
     return (
-      <div className="fixed bottom-4 left-4 right-4 z-50 animate-slide-up">
+      <div className="app-global-overlay fixed bottom-4 left-4 right-4 z-50 animate-slide-up">
         <div className="bg-card border border-border rounded-2xl p-4 shadow-2xl max-w-md mx-auto">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -136,7 +136,7 @@ export function PWAInstallPrompt() {
 
   // Android/Desktop prompt
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 animate-slide-up">
+    <div className="app-global-overlay fixed bottom-4 left-4 right-4 z-50 animate-slide-up">
       <div className="bg-card border border-border rounded-2xl p-4 shadow-2xl max-w-md mx-auto">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">

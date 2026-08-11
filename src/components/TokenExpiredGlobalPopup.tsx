@@ -24,7 +24,7 @@ export function TokenExpiredGlobalPopup() {
   return (
     <div
       data-scroll-lock="active"
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-300"
+      className="app-global-overlay fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-300"
       style={{
         background:
           'radial-gradient(ellipse at center, hsla(0, 65%, 12%, 0.55) 0%, hsla(0, 0%, 0%, 0.92) 70%)',

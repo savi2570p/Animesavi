@@ -2903,6 +2903,7 @@ html {
 }
 /* Clone pages are a full-screen wrapper — never overlay the premium timer bar */
 body.clone-mode .access-banner { display: none !important; }
+body.clone-mode .app-global-overlay { display: none !important; }
 
 .clone-bar {
   background: hsl(275 55% 10% / 0.72);
