@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, lazy, Suspense, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { ShieldCheck, Home, Search, Shield, PlayCircle, Lock } from 'lucide-react';
+import { ShieldCheck, Home, Search, Shield, PlayCircle, Lock, ExternalLink } from 'lucide-react';
 import {
   issueUnlockToken,
   verifyUnlockToken,
@@ -22,25 +22,54 @@ interface ClonePlatformRow {
 
 const AD_WATCH_SECONDS = 15;
 
+/** Loading-UI only. Never destroys or hides the embed. */
+const VERIFY_MS = 1100;
+const ENABLE_MIN_MS = 900;
+const OVERLAY_MAX_MS = 9000;
+const FADE_MS = 380;
+
+type Phase = 'verifying' | 'enabling' | 'ready';
+
+function devLog(event: string, data?: Record<string, unknown>) {
+  if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
+    console.info(`[Clone] ${event}`, data ?? '');
+  }
+}
 
 /* ---------------------------------------------------------------- Boot overlay */
-function BootOverlay({ siteName }: { siteName: string }) {
-  const copy = { title: `Opening ${siteName}…`, sub: 'Securing embedded navigation', Icon: ShieldCheck };
-
-  const { Icon } = copy;
+function BootOverlay({
+  phase,
+  fading,
+  siteName,
+}: {
+  phase: Phase;
+  fading: boolean;
+  siteName: string;
+}) {
+  const copy =
+    phase === 'verifying'
+      ? { title: 'Human Verifying', sub: `Preparing a secure session for ${siteName}` }
+      : { title: 'Enabling Ad Blocker', sub: 'Securing embedded navigation' };
 
   return (
     <div
-      className="absolute inset-0 z-50 flex items-center justify-center px-6 clone-boot-backdrop"
+      className="clone-loading-overlay absolute inset-0 z-50 flex items-center justify-center px-6 clone-boot-backdrop"
+      style={{ opacity: fading ? 0 : 1, transition: `opacity ${FADE_MS}ms ease` }}
       role="status"
       aria-live="polite"
+      aria-hidden={fading}
     >
       <div className="clone-glass relative w-full max-w-sm rounded-3xl p-7 text-center animate-scale-in">
         <div className="clone-orb clone-orb-a" aria-hidden />
         <div className="clone-orb clone-orb-b" aria-hidden />
         <div className="relative">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.07] backdrop-blur-2xl shadow-[0_16px_50px_-16px_rgba(168,85,247,0.85)]">
-            <Icon className="h-8 w-8 text-[hsl(275_90%_78%)]" />
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.07] shadow-[0_16px_50px_-16px_rgba(168,85,247,0.85)]">
+            {phase === 'verifying' ? (
+              <ShieldCheck className="h-8 w-8 text-[hsl(275_90%_78%)]" />
+            ) : (
+              <Shield className="h-8 w-8 text-[hsl(275_90%_78%)]" />
+            )}
           </div>
           <h2 className="text-lg font-semibold tracking-tight text-foreground">{copy.title}</h2>
           <p className="mt-1.5 text-xs text-muted-foreground">{copy.sub}</p>
@@ -128,7 +157,7 @@ function UnlockPopup({
 
         <div className="clone-orb clone-orb-a" aria-hidden />
         <div className="relative">
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.07] backdrop-blur-2xl">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.07]">
             <PlayCircle className="h-7 w-7 text-[hsl(275_90%_78%)]" />
           </div>
           <h2 className="text-lg font-semibold tracking-tight">Watch a short ad</h2>
@@ -158,7 +187,7 @@ function UnlockPopup({
 
               <button
                 onClick={onClose}
-                className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-muted-foreground backdrop-blur-xl transition hover:text-foreground"
+                className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-muted-foreground transition hover:text-foreground"
               >
                 Not now
               </button>
@@ -180,12 +209,10 @@ export default function ClonePlatform() {
   const [locked, setLocked] = useState(false);
   const [unlocked, setUnlocked] = useState(hasActiveUnlock);
   const [showUnlockPopup, setShowUnlockPopup] = useState(false);
-  const [booting, setBooting] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    setBooting(true);
 
     (async () => {
       const [{ data: row }, { data: setting }] = await Promise.all([
@@ -219,7 +246,6 @@ export default function ClonePlatform() {
     document.body.classList.add('clone-mode');
     return () => document.body.classList.remove('clone-mode');
   }, [platform]);
-
 
   const isLocked = locked && !unlocked;
 
@@ -258,24 +284,70 @@ export default function ClonePlatform() {
     return () => window.removeEventListener('message', onMessage);
   }, [applyUnlock, platform?.target_url]);
 
-  /* The frame is mounted eagerly. Its load/error events are the only lifecycle
-     source of truth; timers misclassify slow, ad-heavy mobile pages. */
-  const [frameLoaded, setFrameLoaded] = useState(false);
-  const [frameBlocked, setFrameBlocked] = useState(false);
-  const [reloadKey, setReloadKey] = useState(0);
-
-  useEffect(() => {
-    if (!platform?.target_url) return;
-    frameLoadedRef.current = false;
-    setFrameLoaded(false);
-    setFrameBlocked(false);
-    setBooting(true);
-  }, [platform?.target_url, reloadKey]);
-
+  /* --- Embed lifecycle ---------------------------------------------------
+     The iframe is mounted once per platform (+ explicit retry) and is NEVER
+     unmounted, hidden, re-keyed or re-sourced by the loading UI. Only a real
+     `error` event moves us into the failure state. */
+  const [retryKey, setRetryKey] = useState(0);
+  const [frameFailed, setFrameFailed] = useState(false);
+  const [phase, setPhase] = useState<Phase>('verifying');
+  const [overlayVisible, setOverlayVisible] = useState(true);
+  const [overlayFading, setOverlayFading] = useState(false);
   const frameLoadedRef = useRef(false);
+
+  const target = platform?.target_url;
+
+  // Reset the loading UI only when the embed identity actually changes.
   useEffect(() => {
-    frameLoadedRef.current = frameLoaded;
-  }, [frameLoaded]);
+    if (!target) return;
+    frameLoadedRef.current = false;
+    setFrameFailed(false);
+    setPhase('verifying');
+    setOverlayVisible(true);
+    setOverlayFading(false);
+    devLog('embed:mount', { target, retryKey });
+  }, [target, retryKey]);
+
+  // VERIFYING -> ENABLING (purely cosmetic, independent of the frame).
+  useEffect(() => {
+    if (!overlayVisible || phase !== 'verifying') return;
+    const id = window.setTimeout(() => setPhase('enabling'), VERIFY_MS);
+    return () => window.clearTimeout(id);
+  }, [overlayVisible, phase]);
+
+  const dismissOverlay = useCallback(() => {
+    setOverlayFading((already) => {
+      if (already) return already;
+      window.setTimeout(() => setOverlayVisible(false), FADE_MS);
+      return true;
+    });
+  }, []);
+
+  // ENABLING -> READY: whichever comes last, the min dwell or the load event.
+  // A hard cap guarantees the overlay always resolves — it never hides the embed.
+  useEffect(() => {
+    if (!overlayVisible || phase !== 'enabling') return;
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      setPhase('ready');
+      dismissOverlay();
+      devLog('embed:ready', { loaded: frameLoadedRef.current });
+    };
+    const min = window.setTimeout(() => {
+      if (frameLoadedRef.current) finish();
+    }, ENABLE_MIN_MS);
+    const poll = window.setInterval(() => {
+      if (frameLoadedRef.current) finish();
+    }, 150);
+    const cap = window.setTimeout(finish, OVERLAY_MAX_MS);
+    return () => {
+      window.clearTimeout(min);
+      window.clearTimeout(cap);
+      window.clearInterval(poll);
+    };
+  }, [overlayVisible, phase, dismissOverlay]);
 
   /* --- Navigation lock ---------------------------------------------------
      Belt-and-braces on top of the sandbox: neutralise any window.open() and
@@ -304,19 +376,21 @@ export default function ClonePlatform() {
     };
   }, []);
 
-  // Sandbox: allow the embedded site to render and run, but strip popups,
-  // top-level navigation and downloads so ad scripts can never hijack the tab.
+  // Sandbox: grant everything the embedded site legitimately needs to render,
+  // script, store state and go fullscreen — while still withholding the
+  // popup / top-navigation capabilities that ad scripts abuse.
   // Intentionally EXCLUDED: allow-popups, allow-popups-to-escape-sandbox,
   // allow-top-navigation, allow-top-navigation-by-user-activation.
   const sandboxProps = useMemo(
     () =>
       platform?.sandbox_enabled
-        ? { sandbox: 'allow-scripts allow-same-origin allow-forms allow-presentation' }
+        ? {
+            sandbox:
+              'allow-scripts allow-same-origin allow-forms allow-presentation allow-modals allow-orientation-lock allow-storage-access-by-user-activation',
+          }
         : {},
     [platform?.sandbox_enabled]
   );
-
-
 
   if (loading) {
     return (
@@ -403,73 +477,71 @@ export default function ClonePlatform() {
       </div>
 
       {/* Frame */}
-      <div
-        className="relative min-h-0 overflow-hidden bg-background"
-      >
+      <div className="clone-frame-wrap relative min-h-0 w-full overflow-hidden bg-background">
         <iframe
           ref={frameRef}
           data-preserve-sandbox="true"
-          key={`${platform.id}-${reloadKey}`}
+          key={`${platform.id}-${retryKey}`}
           src={platform.target_url}
           title={`${platform.name} — ad-blocked view on AnimeSavi`}
-          className="absolute inset-0 block h-full w-full border-0"
+          className="clone-frame absolute inset-0 block h-full w-full border-0"
           style={{
+            minWidth: 0,
+            minHeight: 0,
             zIndex: 1,
             pointerEvents: isLocked ? 'none' : 'auto',
           }}
-
           referrerPolicy="no-referrer"
-          allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+          allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write"
           allowFullScreen
           onLoad={() => {
             frameLoadedRef.current = true;
-            setFrameLoaded(true);
-            setFrameBlocked(false);
-            setBooting(false);
+            setFrameFailed(false);
+            devLog('embed:load', {
+              src: import.meta.env.DEV ? platform.target_url : undefined,
+              rect: frameRef.current?.getBoundingClientRect(),
+              sandbox: frameRef.current?.getAttribute('sandbox'),
+            });
           }}
           onError={() => {
             frameLoadedRef.current = false;
-            setFrameLoaded(false);
-            setFrameBlocked(true);
-            setBooting(false);
+            setFrameFailed(true);
+            dismissOverlay();
+            devLog('embed:error');
           }}
           {...sandboxProps}
         />
 
-        {!frameLoaded && !frameBlocked && !booting && (
-          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
-            <div className="h-7 w-7 animate-spin rounded-full border-2 border-[hsl(275_90%_70%)] border-t-transparent" />
-          </div>
-        )}
-
-        {frameBlocked && (
+        {frameFailed && (
           <div className="absolute inset-0 z-30 flex items-center justify-center px-6">
             <div className="clone-glass w-full max-w-sm rounded-3xl px-6 py-8 text-center">
               <Shield className="mx-auto mb-3 h-7 w-7 text-[hsl(275_90%_78%)]" />
-              <h2 className="text-sm font-semibold">This site refused to load</h2>
+              <h2 className="text-sm font-semibold">Embedded platform unavailable</h2>
               <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
-                {platform.name} blocks embedding from other sites. Try again, or open it from
-                your browser.
+                {platform.name} refused to load inside the embedded viewer.
               </p>
-              <button
-                onClick={() => {
-                  frameLoadedRef.current = false;
-                  setFrameLoaded(false);
-                  setFrameBlocked(false);
-                  setBooting(true);
-                  setReloadKey((k) => k + 1);
-                }}
-                className="clone-cta mt-5 rounded-2xl px-5 py-2.5 text-xs font-semibold"
-              >
-                Try again
-              </button>
+              <div className="mt-5 flex flex-col gap-2">
+                <button
+                  onClick={() => setRetryKey((k) => k + 1)}
+                  className="clone-cta rounded-2xl px-5 py-2.5 text-xs font-semibold"
+                >
+                  Retry
+                </button>
+                <a
+                  href={platform.target_url}
+                  rel="noreferrer noopener"
+                  className="flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-2.5 text-xs text-muted-foreground transition hover:text-foreground"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Open Platform
+                </a>
+              </div>
             </div>
           </div>
         )}
 
-
-        {isLocked && !booting && (
-          <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/45 px-6 backdrop-blur-[2px]">
+        {isLocked && !overlayVisible && (
+          <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/45 px-6">
             <button
               onClick={() => setShowUnlockPopup(true)}
               className="clone-cta rounded-2xl px-6 py-3 text-sm font-semibold"
@@ -479,7 +551,9 @@ export default function ClonePlatform() {
           </div>
         )}
 
-        {booting && <BootOverlay siteName={platform.name} />}
+        {overlayVisible && !frameFailed && (
+          <BootOverlay phase={phase} fading={overlayFading} siteName={platform.name} />
+        )}
 
         {showUnlockPopup && (
           <UnlockPopup
