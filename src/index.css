@@ -2905,25 +2905,37 @@ html {
    paints such a frame black. */
 .clone-frame-wrap {
   position: relative;
+  flex: 1 1 0%;
   width: 100%;
   height: 100%;
   min-width: 0;
   min-height: 0;
+  background: hsl(var(--background));
 }
 .clone-frame {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 100%;
   height: 100%;
   min-width: 0;
   min-height: 0;
   border: 0;
-  background: transparent;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
+  background: hsl(var(--background));
+  /* Never promote a cross-origin iframe with translateZ(0): real iOS Safari
+     can leave that remote layer permanently black even though it loaded. */
+  -webkit-transform: none !important;
+  transform: none !important;
+  -webkit-backface-visibility: visible;
+  backface-visibility: visible;
 }
 /* Clone pages are a full-screen wrapper — never overlay the premium timer bar */
 body.clone-mode .access-banner { display: none !important; }
 body.clone-mode .app-global-overlay { display: none !important; }
+body.clone-mode {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
 
 .clone-bar {
   background: hsl(275 55% 10% / 0.72);
@@ -2980,6 +2992,18 @@ body.clone-mode .app-global-overlay { display: none !important; }
   .clone-shell {
     overscroll-behavior: none;
     background-image: none;
+  }
+
+  /* Keep the remote document in Safari's normal paint tree. Filters,
+     containment and accelerated transforms on this branch can produce a
+     touchable but visually black iframe on physical iPhones/iPads. */
+  .clone-frame-wrap,
+  .clone-frame {
+    contain: none !important;
+    content-visibility: visible !important;
+    filter: none !important;
+    opacity: 1 !important;
+    will-change: auto !important;
   }
 
   .cw-carousel [role="group"] > div {
