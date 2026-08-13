@@ -431,10 +431,7 @@ export default function ClonePlatform() {
 
   return (
     <div
-      className="fixed inset-0 grid overflow-hidden bg-[hsl(272_45%_6%)] clone-shell"
-      style={{
-        gridTemplateRows: 'auto minmax(0, 1fr) auto',
-      }}
+      className="fixed inset-0 flex flex-col overflow-hidden bg-[hsl(272_45%_6%)] clone-shell"
     >
       {/* Top watermark bar */}
       <div
@@ -477,20 +474,20 @@ export default function ClonePlatform() {
       </div>
 
       {/* Frame */}
-      <div className="clone-frame-wrap relative min-h-0 w-full overflow-hidden bg-background">
+      <div className="clone-frame-wrap relative min-h-0 w-full flex-1 overflow-hidden bg-background">
         <iframe
           ref={frameRef}
           data-preserve-sandbox="true"
           key={`${platform.id}-${retryKey}`}
           src={platform.target_url}
           title={`${platform.name} — ad-blocked view on AnimeSavi`}
-          className="clone-frame absolute inset-0 block h-full w-full border-0"
+          className="clone-frame block h-full w-full border-0"
           style={{
             minWidth: 0,
             minHeight: 0,
-            zIndex: 1,
             pointerEvents: isLocked ? 'none' : 'auto',
           }}
+          loading="eager"
           referrerPolicy="no-referrer"
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media; clipboard-write"
           allowFullScreen
