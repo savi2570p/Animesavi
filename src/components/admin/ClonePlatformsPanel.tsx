@@ -47,6 +47,7 @@ export function ClonePlatformsPanel() {
   const [globalLock, setGlobalLock] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [dirtyIds, setDirtyIds] = useState<Set<string>>(new Set());
 
   // add form
   const [newName, setNewName] = useState('');
