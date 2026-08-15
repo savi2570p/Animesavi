@@ -65,6 +65,7 @@ export function ClonePlatformsPanel() {
     if (error) toast.error('Failed to load clone platforms');
     setRows((data as ClonePlatform[]) ?? []);
     setGlobalLock(setting?.value === true);
+    setDirtyIds(new Set());
     setLoading(false);
   };
 
@@ -129,8 +130,10 @@ export function ClonePlatformsPanel() {
     load();
   };
 
-  const patchLocal = (id: string, patch: Partial<ClonePlatform>) =>
+  const patchLocal = (id: string, patch: Partial<ClonePlatform>) => {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+    setDirtyIds((prev) => new Set(prev).add(id));
+  };
 
   const saveRow = async (row: ClonePlatform) => {
     if (!row.name.trim()) {
@@ -161,8 +164,18 @@ export function ClonePlatformsPanel() {
       toast.error('Failed to save card');
       return;
     }
+    setDirtyIds((prev) => {
+      const next = new Set(prev);
+      next.delete(row.id);
+      return next;
+    });
     toast.success(`${row.name} saved`);
-    load();
+  };
+
+  const saveAll = async () => {
+    const pending = rows.filter((r) => dirtyIds.has(r.id));
+    if (pending.length === 0) return;
+    await Promise.all(pending.map((r) => saveRow(r)));
   };
 
   const deleteRow = async (row: ClonePlatform) => {
