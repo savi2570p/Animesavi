@@ -47,6 +47,7 @@ export function ClonePlatformsPanel() {
   const [globalLock, setGlobalLock] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [dirtyIds, setDirtyIds] = useState<Set<string>>(new Set());
 
   // add form
   const [newName, setNewName] = useState('');
@@ -64,6 +65,7 @@ export function ClonePlatformsPanel() {
     if (error) toast.error('Failed to load clone platforms');
     setRows((data as ClonePlatform[]) ?? []);
     setGlobalLock(setting?.value === true);
+    setDirtyIds(new Set());
     setLoading(false);
   };
 
@@ -128,8 +130,10 @@ export function ClonePlatformsPanel() {
     load();
   };
 
-  const patchLocal = (id: string, patch: Partial<ClonePlatform>) =>
+  const patchLocal = (id: string, patch: Partial<ClonePlatform>) => {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+    setDirtyIds((prev) => new Set(prev).add(id));
+  };
 
   const saveRow = async (row: ClonePlatform) => {
     if (!row.name.trim()) {
@@ -160,8 +164,18 @@ export function ClonePlatformsPanel() {
       toast.error('Failed to save card');
       return;
     }
+    setDirtyIds((prev) => {
+      const next = new Set(prev);
+      next.delete(row.id);
+      return next;
+    });
     toast.success(`${row.name} saved`);
-    load();
+  };
+
+  const saveAll = async () => {
+    const pending = rows.filter((r) => dirtyIds.has(r.id));
+    if (pending.length === 0) return;
+    await Promise.all(pending.map((r) => saveRow(r)));
   };
 
   const deleteRow = async (row: ClonePlatform) => {
@@ -240,6 +254,27 @@ export function ClonePlatformsPanel() {
         </div>
         <Switch checked={globalLock} onCheckedChange={toggleGlobalLock} />
       </div>
+
+      {/* Unsaved changes banner */}
+      {dirtyIds.size > 0 && (
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 backdrop-blur-xl">
+          <div className="flex items-center gap-2">
+            <Save className="h-4 w-4 text-amber-400" />
+            <p className="text-xs font-semibold text-amber-100">
+              {dirtyIds.size} unsaved change{dirtyIds.size === 1 ? '' : 's'}
+            </p>
+          </div>
+          <Button
+            onClick={saveAll}
+            disabled={savingId !== null}
+            size="sm"
+            className="clone-cta rounded-xl px-4 text-xs font-semibold"
+          >
+            {savingId !== null && <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />}
+            Save all
+          </Button>
+        </div>
+      )}
 
       {/* Add card */}
       <div className="clone-glass rounded-2xl p-4 md:p-5">
@@ -336,7 +371,14 @@ export function ClonePlatformsPanel() {
                   </div>
                 )}
                 <div>
-                  <p className="text-sm font-semibold">{row.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold">{row.name}</p>
+                    {dirtyIds.has(row.id) && (
+                      <span className="rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-300 ring-1 ring-amber-500/30">
+                        Unsaved
+                      </span>
+                    )}
+                  </div>
                   <a
                     href={`/${row.slug}`}
                     target="_blank"

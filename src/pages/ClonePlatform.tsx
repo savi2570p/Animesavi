@@ -435,23 +435,23 @@ export default function ClonePlatform() {
     >
       {/* Top watermark bar */}
       <div
-        className="clone-bar flex shrink-0 items-center justify-between gap-2 px-2.5 sm:px-3"
-        style={{ paddingTop: 'max(0.375rem, env(safe-area-inset-top))', paddingBottom: '0.375rem' }}
+        className="clone-bar flex shrink-0 items-center justify-between gap-2 px-2 sm:px-2.5"
+        style={{ paddingTop: 'max(2px, env(safe-area-inset-top))', paddingBottom: '2px' }}
       >
 
-        <div className="flex min-w-0 items-center gap-2">
+        <div className="flex min-w-0 items-center gap-1.5">
           {platform.logo_url ? (
             <img
               src={platform.logo_url}
               alt={`${platform.name} logo`}
-              className="h-5 w-5 shrink-0 rounded-md object-cover"
+              className="h-4 w-4 shrink-0 rounded-md object-cover"
               loading="lazy"
             />
           ) : null}
-          <span className="shrink-0 text-xs font-bold tracking-tight">
+          <span className="shrink-0 text-[11px] font-bold tracking-tight">
             Anime<span className="text-[hsl(275_90%_72%)]">Savi</span>
           </span>
-          <span className="truncate text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          <span className="truncate text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
             {platform.name}
           </span>
         </div>
@@ -459,16 +459,16 @@ export default function ClonePlatform() {
           <button
             onClick={() => navigate('/')}
             aria-label="Go to home"
-            className="clone-icon-btn flex h-9 w-9 items-center justify-center sm:h-8 sm:w-8"
+            className="clone-icon-btn flex h-7 w-7 items-center justify-center"
           >
-            <Home className="h-4 w-4" />
+            <Home className="h-3.5 w-3.5" />
           </button>
           <button
             onClick={() => navigate('/browse')}
             aria-label="Search anime"
-            className="clone-icon-btn flex h-9 w-9 items-center justify-center sm:h-8 sm:w-8"
+            className="clone-icon-btn flex h-7 w-7 items-center justify-center"
           >
-            <Search className="h-4 w-4" />
+            <Search className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
@@ -563,11 +563,11 @@ export default function ClonePlatform() {
 
       {/* Bottom strip */}
       <div
-        className="clone-bar flex shrink-0 items-center justify-center gap-1.5 px-3"
-        style={{ paddingTop: '0.375rem', paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}
+        className="clone-bar flex shrink-0 items-center justify-center gap-1 px-2.5"
+        style={{ paddingTop: '2px', paddingBottom: 'max(2px, env(safe-area-inset-bottom))' }}
       >
-        <Shield className="h-3 w-3 shrink-0 text-[hsl(275_90%_72%)]" />
-        <span className="text-[10px] font-medium tracking-wide text-muted-foreground">
+        <Shield className="h-2.5 w-2.5 shrink-0 text-[hsl(275_90%_72%)]" />
+        <span className="text-[9px] font-medium tracking-wide text-muted-foreground">
           Powered by AnimeSavi Ad Blocker
         </span>
       </div>

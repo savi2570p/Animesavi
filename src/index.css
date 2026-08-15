@@ -2858,6 +2858,66 @@ html {
   }
 }
 
+/* ================= Welcome page — liquid glass ================= */
+.wlc-page {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  background-image:
+    radial-gradient(circle at 12% 0%, hsl(270 80% 55% / 0.12), transparent 45%),
+    radial-gradient(circle at 88% 12%, hsl(300 70% 50% / 0.10), transparent 40%),
+    radial-gradient(circle at 50% 100%, hsl(260 80% 45% / 0.08), transparent 50%);
+}
+
+.wlc-glass {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(150deg, hsl(275 60% 18% / 0.55), hsl(270 50% 10% / 0.45));
+  border: 1px solid hsl(280 60% 80% / 0.12);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  box-shadow:
+    0 20px 60px -24px hsl(275 90% 35% / 0.45),
+    inset 0 1px 0 hsl(0 0% 100% / 0.08);
+}
+
+.wlc-chip {
+  position: relative;
+  overflow: hidden;
+  background: hsl(0 0% 100% / 0.05);
+  border: 1px solid hsl(280 60% 80% / 0.10);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: hsl(0 0% 100% / 0.9);
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.wlc-chip:hover {
+  background: hsl(0 0% 100% / 0.09);
+  border-color: hsl(280 60% 80% / 0.18);
+  color: #fff;
+}
+
+.wlc-loader-bg {
+  background:
+    radial-gradient(circle at 30% 30%, hsl(275 80% 30% / 0.45), transparent 55%),
+    radial-gradient(circle at 70% 70%, hsl(300 80% 28% / 0.40), transparent 55%),
+    hsl(272 45% 6% / 0.92);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+.wlc-loader-card {
+  background: linear-gradient(150deg, hsl(275 60% 18% / 0.70), hsl(270 50% 10% / 0.60));
+  border: 1px solid hsl(280 60% 80% / 0.14);
+  backdrop-filter: blur(30px) saturate(160%);
+  -webkit-backdrop-filter: blur(30px) saturate(160%);
+  box-shadow:
+    0 28px 80px -30px hsl(275 90% 35% / 0.55),
+    inset 0 1px 0 hsl(0 0% 100% / 0.10);
+}
+
 /* ================= Clone Platforms — purple liquid glass ================= */
 .clone-glass {
   position: relative;
@@ -2949,13 +3009,14 @@ body.clone-mode {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 26px;
-  width: 26px;
-  border-radius: 10px;
+  height: 28px;
+  width: 28px;
+  border-radius: 9px;
   color: hsl(0 0% 100% / 0.75);
-  border: 1px solid hsl(280 80% 80% / 0.16);
+  border: 1px solid hsl(280 80% 80% / 0.14);
   background: hsl(0 0% 100% / 0.05);
   transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+  flex-shrink: 0;
 }
 .clone-icon-btn:hover { color: #fff; background: hsl(275 90% 62% / 0.25); transform: translateY(-1px); }
 .clone-cta {
