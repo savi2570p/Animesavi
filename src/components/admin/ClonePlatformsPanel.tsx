@@ -255,6 +255,27 @@ export function ClonePlatformsPanel() {
         <Switch checked={globalLock} onCheckedChange={toggleGlobalLock} />
       </div>
 
+      {/* Unsaved changes banner */}
+      {dirtyIds.size > 0 && (
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 backdrop-blur-xl">
+          <div className="flex items-center gap-2">
+            <Save className="h-4 w-4 text-amber-400" />
+            <p className="text-xs font-semibold text-amber-100">
+              {dirtyIds.size} unsaved change{dirtyIds.size === 1 ? '' : 's'}
+            </p>
+          </div>
+          <Button
+            onClick={saveAll}
+            disabled={savingId !== null}
+            size="sm"
+            className="clone-cta rounded-xl px-4 text-xs font-semibold"
+          >
+            {savingId !== null && <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />}
+            Save all
+          </Button>
+        </div>
+      )}
+
       {/* Add card */}
       <div className="clone-glass rounded-2xl p-4 md:p-5">
         <div className="mb-4 flex items-center gap-2">
