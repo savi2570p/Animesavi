@@ -371,7 +371,14 @@ export function ClonePlatformsPanel() {
                   </div>
                 )}
                 <div>
-                  <p className="text-sm font-semibold">{row.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold">{row.name}</p>
+                    {dirtyIds.has(row.id) && (
+                      <span className="rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-300 ring-1 ring-amber-500/30">
+                        Unsaved
+                      </span>
+                    )}
+                  </div>
                   <a
                     href={`/${row.slug}`}
                     target="_blank"
