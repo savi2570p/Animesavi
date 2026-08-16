@@ -385,7 +385,7 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
             </div>
 
             {/* Title */}
-            <h2 className="text-lg font-heading font-extrabold leading-tight line-clamp-2 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] bg-gradient-to-br from-foreground to-foreground/80 bg-clip-text text-transparent">
+            <h2 className="text-[15px] xs:text-base font-heading font-bold leading-snug line-clamp-2 tracking-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] bg-gradient-to-br from-foreground to-foreground/80 bg-clip-text text-transparent">
               {current.title}
             </h2>
 
