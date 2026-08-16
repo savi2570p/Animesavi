@@ -156,7 +156,7 @@ export const TrendingBanner = memo(function TrendingBanner() {
 
         {/* Main banner card */}
         <div
-          className="relative overflow-hidden rounded-3xl border border-border/40 bg-card/40 shadow-2xl shadow-black/40 h-[220px] sm:h-[260px] md:h-[300px] lg:h-[340px]"
+          className="relative overflow-hidden rounded-3xl border border-border/40 bg-card/40 shadow-2xl shadow-black/40 aspect-[16/9] max-h-[420px]"
           style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)', isolation: 'isolate' }}
         >
           {/* Animated ambient glow */}
@@ -164,20 +164,19 @@ export const TrendingBanner = memo(function TrendingBanner() {
           <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 bg-rose-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
           <Link to={`/anime/${current.id}`} className="group absolute inset-0 block">
-            {/* Background image with slow zoom — kept vivid so it reads as the banner thumbnail */}
+            {/* 16:9 banner thumbnail fills the card on desktop and mobile */}
             <div className="absolute inset-0 overflow-hidden">
               <img
                 src={current.banner_image || current.cover_image || '/placeholder.svg'}
                 alt=""
                 loading="eager"
                 decoding="async"
-                className="w-full h-full object-cover scale-105 transition-transform duration-[8000ms] ease-out group-hover:scale-110"
+                className="w-full h-full object-cover object-center scale-105 transition-transform duration-[8000ms] ease-out group-hover:scale-110"
                 style={{ filter: 'saturate(1.15) brightness(0.95)' }}
               />
               {/* Light cinematic scrims — leave the thumbnail clearly visible */}
-              <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/35 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-background/10" />
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.18),transparent_55%)]" />
+              <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/15 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
             </div>
 
 
