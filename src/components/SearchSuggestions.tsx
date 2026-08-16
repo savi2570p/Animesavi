@@ -81,8 +81,7 @@ export function SearchSuggestions({ query, isVisible, onSelect, className }: Sea
             <a
               key={anime.id}
               href={`/anime/${anime.id}`}
-              onMouseDown={(e) => handlePick(e, anime.id)}
-              onTouchStart={(e) => handlePick(e, anime.id)}
+              onMouseDown={(e) => e.preventDefault()}
               onClick={(e) => handlePick(e, anime.id)}
               className="flex items-center gap-3 px-3 py-2.5 hover:bg-accent/50 transition-colors cursor-pointer"
             >
