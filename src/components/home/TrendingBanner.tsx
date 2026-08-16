@@ -156,7 +156,7 @@ export const TrendingBanner = memo(function TrendingBanner() {
 
         {/* Main banner card */}
         <div
-          className="relative overflow-hidden rounded-3xl border border-border/40 bg-card/40 shadow-2xl shadow-black/40 aspect-[16/9] max-h-[420px]"
+          className="relative w-full overflow-hidden rounded-3xl border border-border/40 bg-card/40 shadow-2xl shadow-black/40 h-[230px] sm:h-[300px] md:h-[360px] lg:h-[420px]"
           style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)', isolation: 'isolate' }}
         >
           {/* Animated ambient glow */}
@@ -166,17 +166,24 @@ export const TrendingBanner = memo(function TrendingBanner() {
           <Link to={`/anime/${current.id}`} className="group absolute inset-0 block">
             {/* 16:9 banner thumbnail fills the card on desktop and mobile */}
             <div className="absolute inset-0 overflow-hidden">
+              {/* Blurred fill layer so there is always a visible backdrop */}
+              <img
+                src={current.banner_image || current.cover_image || '/placeholder.svg'}
+                alt=""
+                aria-hidden
+                className="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl opacity-60"
+              />
               <img
                 src={current.banner_image || current.cover_image || '/placeholder.svg'}
                 alt=""
                 loading="eager"
                 decoding="async"
-                className="w-full h-full object-cover object-center scale-105 transition-transform duration-[8000ms] ease-out group-hover:scale-110"
+                className="relative w-full h-full object-cover object-center scale-105 transition-transform duration-[8000ms] ease-out group-hover:scale-110"
                 style={{ filter: 'saturate(1.15) brightness(0.95)' }}
               />
               {/* Light cinematic scrims — leave the thumbnail clearly visible */}
-              <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/15 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-r from-background/75 via-background/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/55 via-transparent to-transparent" />
             </div>
 
 
