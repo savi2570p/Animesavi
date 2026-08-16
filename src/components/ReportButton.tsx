@@ -168,7 +168,7 @@ export function ReportButton() {
       ? `\n📎 Screenshot: ${screenshotUrl}`
       : '';
 
-    const text = `🚨 Report from AnimeSavi\n\n📂 Category: ${category}\n📄 Page: ${window.location.pathname}\n📱 Device: ${navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}\n🖥️ OS: ${osInfo}\n🌐 Browser: ${browserInfo}\n📐 Screen: ${window.innerWidth}x${window.innerHeight}\n🕐 Time: ${new Date().toLocaleString('en-IN')}${screenshotLine}\n\n💬 Details:\n${message.trim()}`;
+    const text = `📄 Page: ${window.location.pathname}\n🖥️ OS: ${osInfo}\n🌐 Browser: ${browserInfo}\n🕐 Time: ${new Date().toLocaleString('en-IN')}\n\n💬 Details:\n${message.trim()}`;
 
     setIsSending(false);
     toast.success(screenshotUrl ? 'Opening Telegram with your screenshot' : 'Opening Telegram to send your report');

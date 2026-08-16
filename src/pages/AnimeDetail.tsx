@@ -202,8 +202,11 @@ export default function AnimeDetail() {
     // Preload cover and banner for instant display
     preloadImages([animeData.cover_image, animeData.banner_image]);
 
-    // Replace URL with slug-based URL for clean sharing
-    if (animeData.title) {
+    // Replace URL with slug-based URL for clean sharing.
+    // Only rewrite when we are still on this anime's own /anime/:id route —
+    // otherwise a rewrite can race a navigation the user just triggered
+    // (e.g. picking a different search suggestion) and bounce them home.
+    if (animeData.title && window.location.pathname === `/anime/${id}`) {
       const slug = createSlug(animeData.title);
       const slugUrl = `/${slug}`;
       if (window.location.pathname !== slugUrl) {
