@@ -1796,6 +1796,52 @@ export type Database = {
       }
     }
     Functions: {
+      claim_conversion_jobs: {
+        Args: { _limit?: number; _worker_id: string }
+        Returns: {
+          audio_channels: number | null
+          audio_codec: string | null
+          audio_sample_rate: number | null
+          compatibility_details: Json | null
+          container_format: string | null
+          conversion_completed_at: string | null
+          conversion_progress: number | null
+          conversion_stage: string | null
+          conversion_started_at: string | null
+          created_at: string
+          episode_id: string | null
+          error_message: string | null
+          estimated_seconds_remaining: number | null
+          file_size_bytes: number | null
+          hls_path: string | null
+          hls_url: string | null
+          id: string
+          ios_compatible: boolean | null
+          ios_file_size_bytes: number | null
+          ios_ready_path: string | null
+          ios_ready_url: string | null
+          is_10bit: boolean | null
+          is_hevc: boolean | null
+          max_retries: number | null
+          needs_conversion: boolean | null
+          original_path: string | null
+          original_url: string
+          pixel_format: string | null
+          retry_count: number | null
+          status: string
+          subtitle_format: string | null
+          updated_at: string
+          video_codec: string | null
+          video_profile: string | null
+          worker_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "video_conversions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       end_watch_party: { Args: { party_uuid: string }; Returns: boolean }
       get_token_duration: { Args: { _token_id: string }; Returns: number }
       get_token_system_status: { Args: never; Returns: boolean }
@@ -1828,6 +1874,13 @@ export type Database = {
           next_season_number: number
         }[]
       }
+      recover_stuck_conversions: {
+        Args: { _stale_minutes?: number }
+        Returns: {
+          failed: number
+          requeued: number
+        }[]
+      }
       redeem_unlock_token: {
         Args: { _token: string; _user_agent?: string; _user_id?: string }
         Returns: {
@@ -1835,6 +1888,17 @@ export type Database = {
           expires_at: number
           id: string
         }[]
+      }
+      upsert_watch_progress: {
+        Args: {
+          _anime_id: string
+          _completed?: boolean
+          _duration?: number
+          _episode_id: string
+          _last_position?: number
+          _progress: number
+        }
+        Returns: string
       }
       verify_unlock_token: {
         Args: { _token: string }
