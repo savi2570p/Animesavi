@@ -689,18 +689,21 @@ export default function Watch() {
         .order('season_number');
 
       if (seasonsData) {
-        // Fetch episode counts for each season
-        const seasonsWithCounts = await Promise.all(
-          seasonsData.map(async (season) => {
-            const { count } = await supabase
-              .from('episodes')
-              .select('id', { count: 'exact', head: true })
-              .eq('season_id', season.id);
-            return { ...season, episode_count: count || 0 };
-          })
-        );
-        setAllSeasons(seasonsWithCounts);
+        // Single query for all episode ids across every season (was N+1: one
+        // COUNT request per season, which multiplied DB load on long series).
+        const { data: seasonEpisodeRows } = await supabase
+          .from('episodes')
+          .select('season_id')
+          .in('season_id', seasonsData.map((s) => s.id));
+
+        const counts = new Map<string, number>();
+        (seasonEpisodeRows ?? []).forEach((row: { season_id: string }) => {
+          counts.set(row.season_id, (counts.get(row.season_id) ?? 0) + 1);
+        });
+
+        setAllSeasons(seasonsData.map((season) => ({ ...season, episode_count: counts.get(season.id) ?? 0 })));
       }
+
 
       // Fetch all episodes in this season
       const { data: episodesData } = await supabase
