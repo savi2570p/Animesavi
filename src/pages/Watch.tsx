@@ -606,41 +606,30 @@ export default function Watch() {
       try { localStorage.removeItem(`resume:${episodeId}`); } catch {}
     }
 
-    try {
-      if (watchHistoryId) {
-        // Guard: never downgrade a previously-completed episode back to
-        // "in progress" when the user simply re-opens it. Only rewind if
-        // they actively rewatched past a meaningful threshold (>60s AND
-        // <85% of duration), otherwise leave the completed row alone so
-        // it doesn't resurface in Continue Watching as episode 1.
-        const isMeaningfulRewatch = currentTime > 60 && progressPercent < 85;
+    // Atomic, idempotent, monotonic progress write. The DB function decides
+    // whether this tick may advance / rewind / complete the row, so two tabs,
+    // rapid seeks or a retried request can never lose or downgrade progress.
+    // Best-effort: a failed progress ping must never break playback.
+    const result = await bestEffort(
+      async () => {
+        const { data, error } = await supabase.rpc('upsert_watch_progress', {
+          _anime_id: anime.id,
+          _episode_id: episodeId,
+          _progress: progressPercent,
+          _completed: completed,
+          _last_position: Math.floor(completed ? duration : currentTime),
+          _duration: Math.floor(duration),
+        });
+        if (error) throw error;
+        return data as string | null;
+      },
+      { operation: 'watch_progress.upsert', attempts: 3, timeoutMs: 10000 },
+    );
 
-        const { data: existing } = await supabase
-          .from('watch_history')
-          .select('completed')
-          .eq('id', watchHistoryId)
-          .maybeSingle();
-
-        if (existing?.completed && !completed && !isMeaningfulRewatch) {
-          // Skip write — episode is already marked done, tiny replay tick.
-          return;
-        }
-
-        await supabase
-          .from('watch_history')
-          .update({
-            progress: completed ? 100 : progressPercent,
-            completed,
-            watched_at: new Date().toISOString(),
-            completed_at: completed ? new Date().toISOString() : null,
-            last_position: Math.floor(completed ? duration : currentTime),
-            duration: Math.floor(duration),
-          })
-          .eq('id', watchHistoryId);
-      }
-    } catch (error) {
-      console.error('Error updating watch progress:', error);
+    if (result.ok && result.data && result.data !== watchHistoryId) {
+      setWatchHistoryId(result.data);
     }
+
   }, [user, episodeId, anime, watchHistoryId, resumeProgress, initialSeekDone, searchParams]);
 
   // ─── ULTRA BEAST EMBED CONTINUE WATCHING ───
