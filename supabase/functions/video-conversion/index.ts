@@ -185,6 +185,16 @@ Deno.serve(async (req) => {
       }
 
       if (action === 'pending') {
+        // Self-healing: before handing work out, release jobs whose worker
+        // died mid-encode (lease expired) so they become retryable instead of
+        // being pinned in "processing" forever.
+        const { error: recoverError } = await supabaseClient.rpc('recover_stuck_conversions', {
+          _stale_minutes: 30,
+        });
+        if (recoverError) {
+          console.log(JSON.stringify({ operation: 'recover_stuck_conversions', status: 'error', detail: recoverError.message }));
+        }
+
         const { data: pending, error } = await supabaseClient
           .from('video_conversions')
           .select(`*, episodes (title, episode_number, seasons (season_number, anime (title)))`)
@@ -192,6 +202,7 @@ Deno.serve(async (req) => {
           .order('created_at', { ascending: true })
           .limit(100);
         if (error) throw error;
+
         return new Response(
           JSON.stringify({ conversions: pending }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
