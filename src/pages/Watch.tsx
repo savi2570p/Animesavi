@@ -656,17 +656,30 @@ export default function Watch() {
   const fetchEpisodeData = async (isEpisodeSwitch = false) => {
     if (!isEpisodeSwitch) setIsLoading(true);
 
-    const { data: episodeData, error } = await supabase
-      .from('episodes')
-      .select('*')
-      .eq('id', episodeId)
-      .single();
+    // Retry transient network/5xx failures with bounded backoff so a momentary
+    // blip no longer shows a misleading "Episode not found".
+    let episodeData: any = null;
+    try {
+      episodeData = await withRetry(
+        async () => {
+          const { data, error } = await supabase.from('episodes').select('*').eq('id', episodeId).single();
+          if (error) throw error;
+          return data;
+        },
+        { operation: 'episode.fetch', attempts: 3, timeoutMs: 12000 },
+      );
+    } catch (err) {
+      toast.error((err as Error).message || 'Episode could not be loaded');
+      setIsLoading(false);
+      return;
+    }
 
-    if (error || !episodeData) {
+    if (!episodeData) {
       toast.error('Episode not found');
       setIsLoading(false);
       return;
     }
+
 
     setEpisode(episodeData);
 
