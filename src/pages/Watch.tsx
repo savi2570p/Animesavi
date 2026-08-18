@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { bestEffort, withRetry } from '@/lib/backendClient';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ShareEmbedPopup } from '@/components/ShareEmbedPopup';
@@ -606,41 +608,30 @@ export default function Watch() {
       try { localStorage.removeItem(`resume:${episodeId}`); } catch {}
     }
 
-    try {
-      if (watchHistoryId) {
-        // Guard: never downgrade a previously-completed episode back to
-        // "in progress" when the user simply re-opens it. Only rewind if
-        // they actively rewatched past a meaningful threshold (>60s AND
-        // <85% of duration), otherwise leave the completed row alone so
-        // it doesn't resurface in Continue Watching as episode 1.
-        const isMeaningfulRewatch = currentTime > 60 && progressPercent < 85;
+    // Atomic, idempotent, monotonic progress write. The DB function decides
+    // whether this tick may advance / rewind / complete the row, so two tabs,
+    // rapid seeks or a retried request can never lose or downgrade progress.
+    // Best-effort: a failed progress ping must never break playback.
+    const result = await bestEffort(
+      async () => {
+        const { data, error } = await supabase.rpc('upsert_watch_progress', {
+          _anime_id: anime.id,
+          _episode_id: episodeId,
+          _progress: progressPercent,
+          _completed: completed,
+          _last_position: Math.floor(completed ? duration : currentTime),
+          _duration: Math.floor(duration),
+        });
+        if (error) throw error;
+        return data as string | null;
+      },
+      { operation: 'watch_progress.upsert', attempts: 3, timeoutMs: 10000 },
+    );
 
-        const { data: existing } = await supabase
-          .from('watch_history')
-          .select('completed')
-          .eq('id', watchHistoryId)
-          .maybeSingle();
-
-        if (existing?.completed && !completed && !isMeaningfulRewatch) {
-          // Skip write — episode is already marked done, tiny replay tick.
-          return;
-        }
-
-        await supabase
-          .from('watch_history')
-          .update({
-            progress: completed ? 100 : progressPercent,
-            completed,
-            watched_at: new Date().toISOString(),
-            completed_at: completed ? new Date().toISOString() : null,
-            last_position: Math.floor(completed ? duration : currentTime),
-            duration: Math.floor(duration),
-          })
-          .eq('id', watchHistoryId);
-      }
-    } catch (error) {
-      console.error('Error updating watch progress:', error);
+    if (result.ok && result.data && result.data !== watchHistoryId) {
+      setWatchHistoryId(result.data);
     }
+
   }, [user, episodeId, anime, watchHistoryId, resumeProgress, initialSeekDone, searchParams]);
 
   // ─── ULTRA BEAST EMBED CONTINUE WATCHING ───
@@ -665,17 +656,30 @@ export default function Watch() {
   const fetchEpisodeData = async (isEpisodeSwitch = false) => {
     if (!isEpisodeSwitch) setIsLoading(true);
 
-    const { data: episodeData, error } = await supabase
-      .from('episodes')
-      .select('*')
-      .eq('id', episodeId)
-      .single();
+    // Retry transient network/5xx failures with bounded backoff so a momentary
+    // blip no longer shows a misleading "Episode not found".
+    let episodeData: any = null;
+    try {
+      episodeData = await withRetry(
+        async () => {
+          const { data, error } = await supabase.from('episodes').select('*').eq('id', episodeId).single();
+          if (error) throw error;
+          return data;
+        },
+        { operation: 'episode.fetch', attempts: 3, timeoutMs: 12000 },
+      );
+    } catch (err) {
+      toast.error((err as Error).message || 'Episode could not be loaded');
+      setIsLoading(false);
+      return;
+    }
 
-    if (error || !episodeData) {
+    if (!episodeData) {
       toast.error('Episode not found');
       setIsLoading(false);
       return;
     }
+
 
     setEpisode(episodeData);
 
@@ -698,18 +702,21 @@ export default function Watch() {
         .order('season_number');
 
       if (seasonsData) {
-        // Fetch episode counts for each season
-        const seasonsWithCounts = await Promise.all(
-          seasonsData.map(async (season) => {
-            const { count } = await supabase
-              .from('episodes')
-              .select('id', { count: 'exact', head: true })
-              .eq('season_id', season.id);
-            return { ...season, episode_count: count || 0 };
-          })
-        );
-        setAllSeasons(seasonsWithCounts);
+        // Single query for all episode ids across every season (was N+1: one
+        // COUNT request per season, which multiplied DB load on long series).
+        const { data: seasonEpisodeRows } = await supabase
+          .from('episodes')
+          .select('season_id')
+          .in('season_id', seasonsData.map((s) => s.id));
+
+        const counts = new Map<string, number>();
+        (seasonEpisodeRows ?? []).forEach((row: { season_id: string }) => {
+          counts.set(row.season_id, (counts.get(row.season_id) ?? 0) + 1);
+        });
+
+        setAllSeasons(seasonsData.map((season) => ({ ...season, episode_count: counts.get(season.id) ?? 0 })));
       }
+
 
       // Fetch all episodes in this season
       const { data: episodesData } = await supabase
