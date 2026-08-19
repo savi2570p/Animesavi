@@ -32,7 +32,8 @@ import {
   Download,
   ListVideo,
   RefreshCw,
-  Clock
+  Clock,
+  CalendarDays
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -734,7 +735,7 @@ export function Header() {
                     Discover
                   </p>
                   <nav className="grid grid-cols-2 gap-1.5">
-                    {navLinks.map((link) => {
+                    {[...navLinks, { to: '/schedule', label: 'Schedule', icon: CalendarDays }].map((link) => {
                       const active = isActivePath(link.to);
                       const Icon = link.icon || Home;
                       return (

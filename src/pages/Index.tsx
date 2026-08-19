@@ -18,7 +18,6 @@ import { EpisodeProgress } from "@/components/home/EpisodeProgress";
 import { ComingSoon } from "@/components/home/ComingSoon";
 import { SocialShare } from "@/components/home/SocialShare";
 import { MostPopular } from "@/components/home/MostPopular";
-import { AnimeCalendar } from "@/components/AnimeCalendar";
 import { TrendingBanner } from "@/components/home/TrendingBanner";
 import { SEO } from "@/components/SEO";
 
@@ -135,7 +134,6 @@ export default function Index() {
       <hr className="lg-divider" />
 
       <ComingSoon />
-      <AnimeCalendar />
       <EpisodeProgress />
 
       <hr className="lg-divider" />

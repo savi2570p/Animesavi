@@ -1,381 +1,346 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Play, ChevronLeft, ChevronRight, Filter, ArrowUpDown } from 'lucide-react';
-import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { SEO } from '@/components/SEO';
+import { CalendarDays, Clock, Flame, Search, Tv } from 'lucide-react';
+import { addDays, parseISO } from 'date-fns';
 
 interface ScheduleAnime {
   id: string;
   title: string;
   cover_image: string | null;
-  status: string | null;
-  updated_at: string;
   genres: string[] | null;
-  schedule_day: number | null;
+  release_day: number;
+  season_number: number;
+  next_episode: number;
+  latest_episode_date: string | null;
+  release_hour: number;
+  release_minute: number;
 }
 
-const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAYS_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const LANGUAGES = ['Hindi', 'Tamil', 'Telugu', 'English', 'Japanese'];
 
-export default function Schedule() {
-  const [animeList, setAnimeList] = useState<ScheduleAnime[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedDay, setSelectedDay] = useState(new Date().getDay());
-  const [weekStart, setWeekStart] = useState(startOfWeek(new Date()));
-  const [search, setSearch] = useState('');
-  const [genreFilter, setGenreFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'recent' | 'title-asc' | 'title-desc'>('recent');
-  const [airingNowOnly, setAiringNowOnly] = useState(false);
+function formatTime(hour: number, minute: number) {
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const h = hour % 12 || 12;
+  return `${h}:${String(minute).padStart(2, '0')} ${ampm}`;
+}
 
-
-  useEffect(() => {
-    fetchOngoingAnime();
-  }, []);
-
-  const fetchOngoingAnime = async () => {
-    setIsLoading(true);
-    
-    // 1. Get all ongoing anime
-    const { data: ongoingAnime } = await supabase
-      .from('anime')
-      .select('id, title, cover_image, status, updated_at, genres, schedule_day')
-      .eq('status', 'ongoing')
-      .order('updated_at', { ascending: false });
-
-    if (!ongoingAnime || ongoingAnime.length === 0) {
-      setAnimeList([]);
-      setIsLoading(false);
-      return;
+/** Next occurrence of the anime's weekly slot. */
+function getNextRelease(anime: ScheduleAnime) {
+  const now = new Date();
+  if (anime.latest_episode_date) {
+    const last = parseISO(anime.latest_episode_date);
+    const since = now.getTime() - last.getTime();
+    if (since >= 0 && since < 7 * 86400000) {
+      const next = addDays(last, 7);
+      return new Date(next.getFullYear(), next.getMonth(), next.getDate(), anime.release_hour, anime.release_minute, 0, 0);
     }
-
-    // 2. Get seasons for these anime to find which have episodes
-    const animeIds = ongoingAnime.map(a => a.id).filter(Boolean) as string[];
-    const { data: seasons } = await supabase
-      .from('seasons')
-      .select('id, anime_id')
-      .in('anime_id', animeIds);
-
-    const seasonIds = (seasons || []).map(s => s.id);
-    const seasonToAnime = new Map((seasons || []).map(s => [s.id, s.anime_id]));
-    const animeWithEpisodes = new Set<string>();
-
-    if (seasonIds.length > 0) {
-      let offset = 0;
-      const pageSize = 1000;
-      let hasMore = true;
-      while (hasMore) {
-        const { data: episodeBatch } = await supabase
-          .from('episodes')
-          .select('season_id')
-          .in('season_id', seasonIds)
-          .range(offset, offset + pageSize - 1);
-        (episodeBatch || []).forEach(ep => {
-          const animeId = seasonToAnime.get(ep.season_id);
-          if (animeId) animeWithEpisodes.add(animeId);
-        });
-        hasMore = (episodeBatch?.length || 0) === pageSize;
-        offset += pageSize;
-      }
-    }
-
-    // 3. Only show anime that actually have episodes (exclude pending upload / zero episodes)
-    const filtered = ongoingAnime.filter(a => a.id && animeWithEpisodes.has(a.id));
-    setAnimeList(filtered);
-    setIsLoading(false);
-  };
-
-  // All genres present in the current list, for the filter dropdown
-  const allGenres = useMemo(() => {
-    const s = new Set<string>();
-    animeList.forEach(a => (a.genres || []).forEach(g => g && s.add(g)));
-    return Array.from(s).sort();
-  }, [animeList]);
-
-  const matchesFilters = (anime: ScheduleAnime) => {
-    if (search && !anime.title.toLowerCase().includes(search.toLowerCase())) return false;
-    if (genreFilter !== 'all' && !(anime.genres || []).includes(genreFilter)) return false;
-    return true;
-  };
-
-  const sortList = (list: ScheduleAnime[]) => {
-    const copy = [...list];
-    if (sortBy === 'title-asc') copy.sort((a, b) => a.title.localeCompare(b.title));
-    else if (sortBy === 'title-desc') copy.sort((a, b) => b.title.localeCompare(a.title));
-    else copy.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
-    return copy;
-  };
-
-  // Distribute anime across days based on schedule_day (or hash fallback) — filters applied
-  const getAnimeForDay = (dayIndex: number) => {
-    const filtered = animeList.filter((anime) => {
-      if (anime.schedule_day === -1) return false; // Hidden from calendar
-      const matchesDay = anime.schedule_day !== null && anime.schedule_day !== undefined
-        ? anime.schedule_day === dayIndex
-        : ((anime.id || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % 7 === dayIndex;
-      if (!matchesDay) return false;
-      return matchesFilters(anime);
-    });
-    return sortList(filtered);
-  };
-
-  const navigateWeek = (direction: 'prev' | 'next') => {
-    const days = direction === 'next' ? 7 : -7;
-    setWeekStart(addDays(weekStart, days));
-  };
-
-  const jumpToAiringNow = () => {
-    const todayIdx = new Date().getDay();
-    setWeekStart(startOfWeek(new Date()));
-    setSelectedDay(todayIdx);
-    setAiringNowOnly(true);
-  };
-
-  const resetFilters = () => {
-    setSearch('');
-    setGenreFilter('all');
-    setSortBy('recent');
-    setAiringNowOnly(false);
-  };
-
-  const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const today = new Date();
-
-
-  if (isLoading) {
-    return (
-      <div className="container py-12 flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
   }
+  let daysUntil = ((anime.release_day % 7) - now.getDay() + 7) % 7;
+  const slotToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), anime.release_hour, anime.release_minute, 0, 0);
+  if (daysUntil === 0 && now.getTime() >= slotToday.getTime()) daysUntil = 7;
+  const next = addDays(now, daysUntil);
+  return new Date(next.getFullYear(), next.getMonth(), next.getDate(), anime.release_hour, anime.release_minute, 0, 0);
+}
+
+function Countdown({ target, now }: { target: Date; now: number }) {
+  const diff = Math.max(0, target.getTime() - now);
+  const parts = [
+    { v: Math.floor(diff / 86400000), l: 'Days' },
+    { v: Math.floor((diff % 86400000) / 3600000), l: 'Hrs' },
+    { v: Math.floor((diff % 3600000) / 60000), l: 'Min' },
+    { v: Math.floor((diff % 60000) / 1000), l: 'Sec' },
+  ];
 
   return (
-    <div className="container py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <Calendar className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl md:text-4xl font-heading font-bold">
-            Anime <span className="text-primary">Schedule</span>
-          </h1>
-        </div>
-        <p className="text-muted-foreground">
-          Weekly release calendar for ongoing anime series
-        </p>
-      </div>
-
-
-      {/* Filters & sorting */}
-      <div className="mb-6 grid gap-3 md:grid-cols-[1fr_auto_auto_auto] items-stretch bg-card/40 backdrop-blur rounded-xl p-3 md:p-4 border border-border/50">
-        <Input
-          placeholder="Search ongoing anime..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="h-10"
-        />
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
-          <Select value={genreFilter} onValueChange={setGenreFilter}>
-            <SelectTrigger className="min-w-[150px]">
-              <SelectValue placeholder="Genre" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All genres</SelectItem>
-              {allGenres.map(g => (
-                <SelectItem key={g} value={g}>{g}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-center gap-2">
-          <ArrowUpDown className="h-4 w-4 text-muted-foreground shrink-0" />
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-            <SelectTrigger className="min-w-[170px]">
-              <SelectValue placeholder="Sort" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="recent">Recently updated</SelectItem>
-              <SelectItem value="title-asc">Title A → Z</SelectItem>
-              <SelectItem value="title-desc">Title Z → A</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant={airingNowOnly ? 'default' : 'outline'}
-            onClick={() => (airingNowOnly ? setAiringNowOnly(false) : jumpToAiringNow())}
-            className="whitespace-nowrap"
+    <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-3 md:p-4 w-full md:w-[340px] shrink-0">
+      <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2.5">
+        Next Episode
+      </p>
+      <div className="grid grid-cols-4 gap-1.5 md:gap-2">
+        {parts.map((p) => (
+          <div
+            key={p.l}
+            className="rounded-xl border border-white/5 bg-gradient-to-b from-white/[0.06] to-transparent py-2 text-center"
           >
-            <Clock className="h-4 w-4 mr-1.5" />
-            {airingNowOnly ? 'Airing now ✓' : 'Airing now'}
-          </Button>
-          {(search || genreFilter !== 'all' || sortBy !== 'recent' || airingNowOnly) && (
-            <Button variant="ghost" onClick={resetFilters} className="whitespace-nowrap">
-              Reset
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Week Navigation */}
-      <div className="flex items-center justify-between mb-6 bg-card/50 backdrop-blur rounded-xl p-4 border border-border/50">
-        <Button variant="ghost" size="icon" onClick={() => navigateWeek('prev')}>
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        
-        <div className="flex gap-1 md:gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {weekDates.map((date, index) => {
-            const isToday = isSameDay(date, today);
-            const isSelected = selectedDay === index;
-            const animeCount = getAnimeForDay(index).length;
-
-            
-            return (
-              <button
-                key={index}
-                onClick={() => setSelectedDay(index)}
-                className={`flex flex-col items-center min-w-[60px] md:min-w-[80px] p-2 md:p-3 rounded-xl transition-all ${
-                  isSelected 
-                    ? 'bg-primary text-primary-foreground' 
-                    : isToday 
-                      ? 'bg-primary/20 text-primary' 
-                      : 'hover:bg-muted'
-                }`}
-              >
-                <span className="text-xs font-medium">
-                  {DAYS_OF_WEEK[index].slice(0, 3)}
-                </span>
-                <span className="text-lg font-bold">{format(date, 'd')}</span>
-                {animeCount > 0 && (
-                  <span className={`text-xs mt-1 px-1.5 py-0.5 rounded-full ${
-                    isSelected ? 'bg-primary-foreground/20' : 'bg-primary/20 text-primary'
-                  }`}>
-                    {animeCount}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        <Button variant="ghost" size="icon" onClick={() => navigateWeek('next')}>
-          <ChevronRight className="h-5 w-5" />
-        </Button>
-      </div>
-
-      {/* Selected Day Content */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Clock className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-semibold">
-            {DAYS_OF_WEEK[selectedDay]} - {format(weekDates[selectedDay], 'MMM d, yyyy')}
-          </h2>
-        </div>
-
-        {getAnimeForDay(selectedDay).length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No releases scheduled</h3>
-              <p className="text-muted-foreground">
-                Check back later for updates on this day
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {getAnimeForDay(selectedDay).map((anime) => (
-              <Link key={anime.id} to={`/anime/${anime.id}`}>
-                <Card className="group overflow-hidden hover:border-primary/50 transition-all duration-300">
-                  <div className="relative aspect-[3/4] overflow-hidden">
-                    <img
-                      src={anime.cover_image || '/placeholder.svg'}
-                      alt={anime.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
-                    
-                    {/* Play overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="h-14 w-14 rounded-full bg-primary/90 backdrop-blur flex items-center justify-center shadow-lg">
-                        <Play className="h-6 w-6 text-primary-foreground ml-1" />
-                      </div>
-                    </div>
-                    
-                    {/* Status badge */}
-                    <Badge className="absolute top-2 right-2 bg-primary/90">
-                      Ongoing
-                    </Badge>
-                  </div>
-                  
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold line-clamp-1 group-hover:text-primary transition-colors">
-                      {anime.title}
-                    </h3>
-                    {anime.genres && anime.genres.length > 0 && (
-                      <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
-                        {anime.genres.slice(0, 2).join(', ')}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+            <div className="font-heading text-lg md:text-2xl font-black leading-none tabular-nums">
+              {String(p.v).padStart(2, '0')}
+            </div>
+            <div className="mt-1 text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+              {p.l}
+            </div>
           </div>
-        )}
-      </div>
-
-      {/* All Ongoing Section — filtered + sorted */}
-      <div className="mt-12">
-        {(() => {
-          const visible = sortList(animeList.filter(matchesFilters));
-          return (
-            <>
-              <h2 className="text-2xl font-bold mb-6">
-                All Ongoing Series <span className="text-muted-foreground text-base">({visible.length})</span>
-              </h2>
-              {visible.length === 0 ? (
-                <p className="text-muted-foreground text-sm">No series match the current filters.</p>
-              ) : (
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {visible.map((anime) => (
-                    <Link key={anime.id} to={`/anime/${anime.id}`}>
-                      <Card className="group overflow-hidden hover:border-primary/50 transition-all">
-                        <CardContent className="flex items-center gap-3 p-3">
-                          <img
-                            src={anime.cover_image || '/placeholder.svg'}
-                            alt={anime.title}
-                            className="w-14 h-20 object-cover rounded-lg flex-shrink-0"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                              {anime.title}
-                            </h3>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Updated {format(new Date(anime.updated_at), 'MMM d')}
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </>
-          );
-        })()}
+        ))}
       </div>
     </div>
   );
 }
 
+export default function Schedule() {
+  const [animeList, setAnimeList] = useState<ScheduleAnime[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [dayFilter, setDayFilter] = useState<'all' | number>('all');
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const { data: ongoing } = await supabase
+          .from('anime')
+          .select('id, title, cover_image, genres, schedule_day, updated_at')
+          .eq('status', 'ongoing')
+          .order('updated_at', { ascending: false });
+
+        const visible = (ongoing || []).filter((a) => a.id && a.schedule_day !== -1);
+        if (visible.length === 0) {
+          if (!cancelled) { setAnimeList([]); setIsLoading(false); }
+          return;
+        }
+
+        const animeIds = visible.map((a) => a.id as string);
+        const { data: seasons } = await supabase
+          .from('seasons')
+          .select('id, anime_id, season_number')
+          .in('anime_id', animeIds);
+
+        const seasonIds = (seasons || []).map((s) => s.id);
+        const seasonMeta = new Map((seasons || []).map((s) => [s.id, s]));
+
+        const { data: episodes } = seasonIds.length
+          ? await supabase
+              .from('episodes')
+              .select('season_id, episode_number, created_at')
+              .in('season_id', seasonIds)
+              .order('created_at', { ascending: false })
+          : { data: [] as any[] };
+
+        // Latest episode per anime + highest season/episode numbers
+        const agg = new Map<string, { latest: string; season: number; ep: number }>();
+        (episodes || []).forEach((ep: any) => {
+          const meta = seasonMeta.get(ep.season_id);
+          if (!meta?.anime_id) return;
+          const existing = agg.get(meta.anime_id);
+          if (!existing) {
+            agg.set(meta.anime_id, {
+              latest: ep.created_at,
+              season: meta.season_number ?? 1,
+              ep: ep.episode_number ?? 1,
+            });
+          }
+        });
+
+        const list: ScheduleAnime[] = visible
+          .filter((a) => agg.has(a.id as string))
+          .map((a) => {
+            const info = agg.get(a.id as string)!;
+            const last = parseISO(info.latest);
+            const hash = (a.id as string).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+            return {
+              id: a.id as string,
+              title: a.title || 'Unknown',
+              cover_image: a.cover_image,
+              genres: a.genres,
+              release_day:
+                a.schedule_day !== null && a.schedule_day !== undefined && a.schedule_day !== 7
+                  ? a.schedule_day
+                  : last.getDay(),
+              season_number: info.season,
+              next_episode: (info.ep || 0) + 1,
+              latest_episode_date: info.latest,
+              release_hour: last.getHours(),
+              release_minute: last.getMinutes() - (last.getMinutes() % 15),
+            };
+          });
+
+        if (!cancelled) setAnimeList(list);
+      } catch (e) {
+        console.error('Schedule load failed', e);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  const rows = useMemo(() => {
+    return animeList
+      .filter((a) => (dayFilter === 'all' ? true : a.release_day === dayFilter))
+      .filter((a) => (search ? a.title.toLowerCase().includes(search.toLowerCase()) : true))
+      .map((a) => ({ anime: a, next: getNextRelease(a) }))
+      .sort((a, b) => a.next.getTime() - b.next.getTime());
+  }, [animeList, dayFilter, search]);
+
+  const todayIdx = new Date().getDay();
+
+  return (
+    <div className="container py-6 md:py-10">
+      <SEO
+        title="Anime Release Schedule - AnimeSavi"
+        description="Live weekly anime release schedule with countdowns to the next episode of every ongoing series in Hindi dub."
+        path="/schedule"
+      />
+
+      {/* Header */}
+      <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-black/80 via-card/60 to-black/80 backdrop-blur-xl p-5 md:p-7 mb-5">
+        <div className="absolute -top-20 -right-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+        <div className="relative flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+          <div className="flex items-stretch gap-3.5 min-w-0">
+            <div className="w-[3px] rounded-full bg-gradient-to-b from-primary via-primary/80 to-transparent shadow-[0_0_14px_hsl(var(--primary))]" />
+            <div className="min-w-0">
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+                <CalendarDays className="h-3 w-3" />
+                Weekly Schedule
+              </span>
+              <h1 className="text-2xl md:text-3xl font-heading font-bold leading-tight tracking-tight mt-1.5">
+                Anime <span className="anime-gradient-text">Schedule</span>
+              </h1>
+              <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                Live countdowns to the next episode of every ongoing series.
+              </p>
+            </div>
+          </div>
+          <div className="relative w-full md:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search ongoing anime..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-10 rounded-xl bg-black/40 border-white/10"
+            />
+          </div>
+        </div>
+
+        {/* Day filter */}
+        <div className="relative mt-4 flex items-center gap-1 p-1 rounded-2xl bg-black/40 border border-white/5 overflow-x-auto scrollbar-none">
+          {[{ id: 'all' as const, label: 'All' }, ...DAYS_FULL.map((d, i) => ({ id: i, label: d.slice(0, 3) }))].map(
+            (f) => {
+              const active = dayFilter === f.id;
+              return (
+                <button
+                  key={String(f.id)}
+                  onClick={() => setDayFilter(f.id as 'all' | number)}
+                  className={`shrink-0 px-3 py-1.5 rounded-xl text-[11.5px] font-semibold transition-all ${
+                    active
+                      ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_6px_20px_-6px_hsl(var(--primary)/0.8)]'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                  }`}
+                  aria-pressed={active}
+                >
+                  {f.label}
+                  {f.id === todayIdx && <span className="ml-1 text-[9px] opacity-70">•</span>}
+                </button>
+              );
+            },
+          )}
+        </div>
+      </div>
+
+      {/* Section title */}
+      <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl px-4 py-3 mb-4 border-l-[3px] border-l-primary">
+        <Flame className="h-4 w-4 text-primary" />
+        <h2 className="text-base md:text-lg font-bold">Ongoing Releases</h2>
+        <span className="ml-auto text-xs text-muted-foreground">{rows.length} series</span>
+      </div>
+
+      {/* Rows */}
+      {isLoading ? (
+        <div className="space-y-3">
+          {Array(5).fill(0).map((_, i) => (
+            <Skeleton key={i} className="h-[150px] w-full rounded-2xl" />
+          ))}
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border/60 py-16 text-center">
+          <Tv className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+          <h3 className="font-semibold mb-1">No releases scheduled</h3>
+          <p className="text-sm text-muted-foreground">Try a different day or clear your search.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {rows.map(({ anime, next }) => (
+            <div
+              key={anime.id}
+              className="group relative rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl p-3 md:p-4 transition-all hover:border-primary/40 hover:bg-card/60"
+            >
+              <div className="flex flex-col md:flex-row md:items-center gap-4">
+                <Link to={`/anime/${anime.id}`} className="flex gap-3 md:gap-4 flex-1 min-w-0">
+                  <img
+                    src={anime.cover_image || '/placeholder.svg'}
+                    alt={`${anime.title} poster`}
+                    loading="lazy"
+                    className="w-[92px] h-[138px] md:w-[120px] md:h-[180px] object-cover rounded-xl shrink-0 shadow-lg"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-base md:text-xl font-bold leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+                      {anime.title}
+                    </h3>
+
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      <span className="px-2 py-0.5 rounded-md bg-primary/15 border border-primary/30 text-primary text-[10px] font-bold">
+                        Season {anime.season_number}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md bg-primary/15 border border-primary/30 text-primary text-[10px] font-bold">
+                        EP {anime.next_episode}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      {LANGUAGES.map((lang, i) => (
+                        <span
+                          key={lang}
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+                            i === 0
+                              ? 'bg-amber-500/10 border-amber-500/40 text-amber-300'
+                              : 'bg-white/5 border-white/10 text-muted-foreground'
+                          }`}
+                        >
+                          {lang}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-semibold">
+                        <CalendarDays className="h-3 w-3 text-primary" />
+                        {DAYS_FULL[anime.release_day]}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-semibold">
+                        <Clock className="h-3 w-3 text-primary" />
+                        {formatTime(anime.release_hour, anime.release_minute)}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+
+                <Countdown target={next} now={now} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-8 text-center">
+        <Button asChild variant="outline" className="rounded-xl">
+          <Link to="/browse">Browse all anime</Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
