@@ -1,0 +1,1 @@
+UPDATE public.anime SET schedule_day = 3 WHERE id = '47c8d464-b7bb-4959-8228-10255a0215e2';
