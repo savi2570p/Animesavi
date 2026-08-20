@@ -347,7 +347,7 @@ export default function Schedule() {
         </div>
       ) : (
         <div className="space-y-3">
-          {rows.map(({ anime, next }) => (
+          {rows.map((anime) => (
             <div
               key={anime.id}
               className="group relative rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl p-3 md:p-4 transition-all hover:border-primary/40 hover:bg-card/60"
@@ -374,20 +374,23 @@ export default function Schedule() {
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                      {LANGUAGES.map((lang, i) => (
-                        <span
-                          key={lang}
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
-                            i === 0
-                              ? 'bg-amber-500/10 border-amber-500/40 text-amber-300'
-                              : 'bg-white/5 border-white/10 text-muted-foreground'
-                          }`}
-                        >
-                          {lang}
-                        </span>
-                      ))}
-                    </div>
+                    {anime.languages.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        {anime.languages.map((lang, i) => (
+                          <span
+                            key={lang}
+                            className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+                              i === 0
+                                ? 'bg-amber-500/10 border-amber-500/40 text-amber-300'
+                                : 'bg-white/5 border-white/10 text-muted-foreground'
+                            }`}
+                          >
+                            {lang}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
 
                     <div className="flex flex-wrap items-center gap-1.5 mt-2">
                       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-semibold">
