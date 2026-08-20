@@ -212,22 +212,18 @@ export default function Schedule() {
           .filter((a) => agg.has(a.id as string))
           .map((a) => {
             const info = agg.get(a.id as string)!;
-            const last = parseISO(info.latest);
-            const hash = (a.id as string).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
             return {
               id: a.id as string,
               title: a.title || 'Unknown',
               cover_image: a.cover_image,
               genres: a.genres,
-              release_day:
+              schedule_day:
                 a.schedule_day !== null && a.schedule_day !== undefined && a.schedule_day !== 7
                   ? a.schedule_day
-                  : last.getDay(),
+                  : null,
               season_number: info.season,
               next_episode: (info.ep || 0) + 1,
               latest_episode_date: info.latest,
-              release_hour: last.getHours(),
-              release_minute: last.getMinutes() - (last.getMinutes() % 15),
             };
           });
 
@@ -243,15 +239,27 @@ export default function Schedule() {
     return () => { cancelled = true; };
   }, []);
 
-  const rows = useMemo(() => {
+  const rows = useMemo<ScheduleRow[]>(() => {
     return animeList
+      .map((a) => {
+        const lastParts = getZonedParts(parseISO(a.latest_episode_date), timeZone);
+        const release_hour = lastParts.hour;
+        const release_minute = lastParts.minute - (lastParts.minute % 15);
+        const release_day = a.schedule_day ?? lastParts.weekday;
+        const base = { ...a, release_day, release_hour, release_minute };
+        return {
+          ...base,
+          languages: getLanguages(a.genres),
+          next: getNextRelease(base, timeZone),
+        };
+      })
       .filter((a) => (dayFilter === 'all' ? true : a.release_day === dayFilter))
       .filter((a) => (search ? a.title.toLowerCase().includes(search.toLowerCase()) : true))
-      .map((a) => ({ anime: a, next: getNextRelease(a) }))
       .sort((a, b) => a.next.getTime() - b.next.getTime());
-  }, [animeList, dayFilter, search]);
+  }, [animeList, dayFilter, search, timeZone]);
 
-  const todayIdx = new Date().getDay();
+  const todayIdx = getZonedParts(new Date(now), timeZone).weekday;
+
 
   return (
     <div className="container py-6 md:py-10">
