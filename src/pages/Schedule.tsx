@@ -405,7 +405,7 @@ export default function Schedule() {
                   </div>
                 </Link>
 
-                <Countdown target={next} now={now} />
+                <Countdown target={anime.next} now={now} />
               </div>
             </div>
           ))}
