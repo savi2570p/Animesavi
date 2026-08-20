@@ -4,25 +4,77 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { SEO } from '@/components/SEO';
-import { CalendarDays, Clock, Flame, Search, Tv } from 'lucide-react';
-import { addDays, parseISO } from 'date-fns';
+import { CalendarDays, Clock, Flame, Globe, Search, Tv } from 'lucide-react';
+import { parseISO } from 'date-fns';
+import {
+  getStoredTimeZone,
+  storeTimeZone,
+  getZonedParts,
+  nextZonedSlot,
+  getCommonTimeZones,
+  getAllTimeZones,
+  getTimeZoneLabel,
+  formatTimeZoneName,
+} from '@/lib/timezone';
 
 interface ScheduleAnime {
   id: string;
   title: string;
   cover_image: string | null;
   genres: string[] | null;
-  release_day: number;
+  schedule_day: number | null;
+  latest_episode_date: string;
   season_number: number;
   next_episode: number;
-  latest_episode_date: string | null;
+}
+
+interface ScheduleRow extends ScheduleAnime {
+  release_day: number;
   release_hour: number;
   release_minute: number;
+  languages: string[];
+  next: Date;
 }
 
 const DAYS_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const LANGUAGES = ['Hindi', 'Tamil', 'Telugu', 'English', 'Japanese'];
+
+/** Audio/language tags that may appear inside an anime's genre list. */
+const LANGUAGE_TAGS = [
+  'Hindi',
+  'Tamil',
+  'Telugu',
+  'Malayalam',
+  'Kannada',
+  'Bengali',
+  'Marathi',
+  'Punjabi',
+  'Urdu',
+  'English',
+  'Japanese',
+  'Korean',
+  'Chinese',
+  'Spanish',
+  'Portuguese',
+  'French',
+  'German',
+];
+
+/** Languages actually tagged on the anime, in canonical order. */
+function getLanguages(genres: string[] | null): string[] {
+  if (!genres?.length) return [];
+  const set = new Set(genres.map((g) => g.trim().toLowerCase()));
+  return LANGUAGE_TAGS.filter((lang) => set.has(lang.toLowerCase()));
+}
 
 function formatTime(hour: number, minute: number) {
   const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -30,22 +82,23 @@ function formatTime(hour: number, minute: number) {
   return `${h}:${String(minute).padStart(2, '0')} ${ampm}`;
 }
 
-/** Next occurrence of the anime's weekly slot. */
-function getNextRelease(anime: ScheduleAnime) {
+/** Next occurrence of the anime's weekly slot, in the viewer's timezone. */
+function getNextRelease(
+  anime: { latest_episode_date: string; release_day: number; release_hour: number; release_minute: number },
+  timeZone: string,
+) {
   const now = new Date();
-  if (anime.latest_episode_date) {
-    const last = parseISO(anime.latest_episode_date);
-    const since = now.getTime() - last.getTime();
-    if (since >= 0 && since < 7 * 86400000) {
-      const next = addDays(last, 7);
-      return new Date(next.getFullYear(), next.getMonth(), next.getDate(), anime.release_hour, anime.release_minute, 0, 0);
-    }
+  const last = parseISO(anime.latest_episode_date);
+  const since = now.getTime() - last.getTime();
+  if (since >= 0 && since < 7 * 86400000) {
+    return nextZonedSlot(last, 7, anime.release_hour, anime.release_minute, timeZone);
   }
-  let daysUntil = ((anime.release_day % 7) - now.getDay() + 7) % 7;
-  const slotToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), anime.release_hour, anime.release_minute, 0, 0);
+
+  const nowParts = getZonedParts(now, timeZone);
+  let daysUntil = ((anime.release_day % 7) - nowParts.weekday + 7) % 7;
+  const slotToday = nextZonedSlot(now, 0, anime.release_hour, anime.release_minute, timeZone);
   if (daysUntil === 0 && now.getTime() >= slotToday.getTime()) daysUntil = 7;
-  const next = addDays(now, daysUntil);
-  return new Date(next.getFullYear(), next.getMonth(), next.getDate(), anime.release_hour, anime.release_minute, 0, 0);
+  return nextZonedSlot(now, daysUntil, anime.release_hour, anime.release_minute, timeZone);
 }
 
 function Countdown({ target, now }: { target: Date; now: number }) {
@@ -80,6 +133,7 @@ function Countdown({ target, now }: { target: Date; now: number }) {
     </div>
   );
 }
+
 
 export default function Schedule() {
   const [animeList, setAnimeList] = useState<ScheduleAnime[]>([]);
