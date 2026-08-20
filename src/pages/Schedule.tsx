@@ -141,11 +141,22 @@ export default function Schedule() {
   const [search, setSearch] = useState('');
   const [dayFilter, setDayFilter] = useState<'all' | number>('all');
   const [now, setNow] = useState(Date.now());
+  const [timeZone, setTimeZone] = useState<string>(() => getStoredTimeZone());
+
+  const commonZones = useMemo(() => getCommonTimeZones(), []);
+  const allZones = useMemo(() => getAllTimeZones().filter((z) => !commonZones.includes(z)), [commonZones]);
+  const tzLabel = useMemo(() => getTimeZoneLabel(timeZone), [timeZone]);
+
+  const handleTimeZoneChange = (tz: string) => {
+    setTimeZone(tz);
+    storeTimeZone(tz);
+  };
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, []);
+
 
   useEffect(() => {
     let cancelled = false;
