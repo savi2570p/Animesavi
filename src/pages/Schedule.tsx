@@ -289,15 +289,47 @@ export default function Schedule() {
               </p>
             </div>
           </div>
-          <div className="relative w-full md:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search ongoing anime..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-10 rounded-xl bg-black/40 border-white/10"
-            />
+          <div className="flex flex-col sm:flex-row md:flex-col gap-2 w-full md:w-72">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search ongoing anime..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 h-10 rounded-xl bg-black/40 border-white/10"
+              />
+            </div>
+            <Select value={timeZone} onValueChange={handleTimeZoneChange}>
+              <SelectTrigger
+                aria-label="Time zone"
+                className="h-10 rounded-xl bg-black/40 border-white/10 text-xs flex-1"
+              >
+                <Globe className="h-4 w-4 text-primary shrink-0" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-[320px]">
+                <SelectGroup>
+                  <SelectLabel>Common</SelectLabel>
+                  {commonZones.map((tz) => (
+                    <SelectItem key={tz} value={tz} className="text-xs">
+                      {formatTimeZoneName(tz)}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+                {allZones.length > 0 && (
+                  <SelectGroup>
+                    <SelectLabel>All time zones</SelectLabel>
+                    {allZones.map((tz) => (
+                      <SelectItem key={tz} value={tz} className="text-xs">
+                        {formatTimeZoneName(tz)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                )}
+              </SelectContent>
+            </Select>
           </div>
+
         </div>
 
         {/* Day filter */}
