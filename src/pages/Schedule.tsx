@@ -4,25 +4,77 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { SEO } from '@/components/SEO';
-import { CalendarDays, Clock, Flame, Search, Tv } from 'lucide-react';
-import { addDays, parseISO } from 'date-fns';
+import { CalendarDays, Clock, Flame, Globe, Search, Tv } from 'lucide-react';
+import { parseISO } from 'date-fns';
+import {
+  getStoredTimeZone,
+  storeTimeZone,
+  getZonedParts,
+  nextZonedSlot,
+  getCommonTimeZones,
+  getAllTimeZones,
+  getTimeZoneLabel,
+  formatTimeZoneName,
+} from '@/lib/timezone';
 
 interface ScheduleAnime {
   id: string;
   title: string;
   cover_image: string | null;
   genres: string[] | null;
-  release_day: number;
+  schedule_day: number | null;
+  latest_episode_date: string;
   season_number: number;
   next_episode: number;
-  latest_episode_date: string | null;
+}
+
+interface ScheduleRow extends ScheduleAnime {
+  release_day: number;
   release_hour: number;
   release_minute: number;
+  languages: string[];
+  next: Date;
 }
 
 const DAYS_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const LANGUAGES = ['Hindi', 'Tamil', 'Telugu', 'English', 'Japanese'];
+
+/** Audio/language tags that may appear inside an anime's genre list. */
+const LANGUAGE_TAGS = [
+  'Hindi',
+  'Tamil',
+  'Telugu',
+  'Malayalam',
+  'Kannada',
+  'Bengali',
+  'Marathi',
+  'Punjabi',
+  'Urdu',
+  'English',
+  'Japanese',
+  'Korean',
+  'Chinese',
+  'Spanish',
+  'Portuguese',
+  'French',
+  'German',
+];
+
+/** Languages actually tagged on the anime, in canonical order. */
+function getLanguages(genres: string[] | null): string[] {
+  if (!genres?.length) return [];
+  const set = new Set(genres.map((g) => g.trim().toLowerCase()));
+  return LANGUAGE_TAGS.filter((lang) => set.has(lang.toLowerCase()));
+}
 
 function formatTime(hour: number, minute: number) {
   const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -30,22 +82,23 @@ function formatTime(hour: number, minute: number) {
   return `${h}:${String(minute).padStart(2, '0')} ${ampm}`;
 }
 
-/** Next occurrence of the anime's weekly slot. */
-function getNextRelease(anime: ScheduleAnime) {
+/** Next occurrence of the anime's weekly slot, in the viewer's timezone. */
+function getNextRelease(
+  anime: { latest_episode_date: string; release_day: number; release_hour: number; release_minute: number },
+  timeZone: string,
+) {
   const now = new Date();
-  if (anime.latest_episode_date) {
-    const last = parseISO(anime.latest_episode_date);
-    const since = now.getTime() - last.getTime();
-    if (since >= 0 && since < 7 * 86400000) {
-      const next = addDays(last, 7);
-      return new Date(next.getFullYear(), next.getMonth(), next.getDate(), anime.release_hour, anime.release_minute, 0, 0);
-    }
+  const last = parseISO(anime.latest_episode_date);
+  const since = now.getTime() - last.getTime();
+  if (since >= 0 && since < 7 * 86400000) {
+    return nextZonedSlot(last, 7, anime.release_hour, anime.release_minute, timeZone);
   }
-  let daysUntil = ((anime.release_day % 7) - now.getDay() + 7) % 7;
-  const slotToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), anime.release_hour, anime.release_minute, 0, 0);
+
+  const nowParts = getZonedParts(now, timeZone);
+  let daysUntil = ((anime.release_day % 7) - nowParts.weekday + 7) % 7;
+  const slotToday = nextZonedSlot(now, 0, anime.release_hour, anime.release_minute, timeZone);
   if (daysUntil === 0 && now.getTime() >= slotToday.getTime()) daysUntil = 7;
-  const next = addDays(now, daysUntil);
-  return new Date(next.getFullYear(), next.getMonth(), next.getDate(), anime.release_hour, anime.release_minute, 0, 0);
+  return nextZonedSlot(now, daysUntil, anime.release_hour, anime.release_minute, timeZone);
 }
 
 function Countdown({ target, now }: { target: Date; now: number }) {
@@ -81,17 +134,29 @@ function Countdown({ target, now }: { target: Date; now: number }) {
   );
 }
 
+
 export default function Schedule() {
   const [animeList, setAnimeList] = useState<ScheduleAnime[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dayFilter, setDayFilter] = useState<'all' | number>('all');
   const [now, setNow] = useState(Date.now());
+  const [timeZone, setTimeZone] = useState<string>(() => getStoredTimeZone());
+
+  const commonZones = useMemo(() => getCommonTimeZones(), []);
+  const allZones = useMemo(() => getAllTimeZones().filter((z) => !commonZones.includes(z)), [commonZones]);
+  const tzLabel = useMemo(() => getTimeZoneLabel(timeZone), [timeZone]);
+
+  const handleTimeZoneChange = (tz: string) => {
+    setTimeZone(tz);
+    storeTimeZone(tz);
+  };
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, []);
+
 
   useEffect(() => {
     let cancelled = false;
@@ -147,22 +212,18 @@ export default function Schedule() {
           .filter((a) => agg.has(a.id as string))
           .map((a) => {
             const info = agg.get(a.id as string)!;
-            const last = parseISO(info.latest);
-            const hash = (a.id as string).split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
             return {
               id: a.id as string,
               title: a.title || 'Unknown',
               cover_image: a.cover_image,
               genres: a.genres,
-              release_day:
+              schedule_day:
                 a.schedule_day !== null && a.schedule_day !== undefined && a.schedule_day !== 7
                   ? a.schedule_day
-                  : last.getDay(),
+                  : null,
               season_number: info.season,
               next_episode: (info.ep || 0) + 1,
               latest_episode_date: info.latest,
-              release_hour: last.getHours(),
-              release_minute: last.getMinutes() - (last.getMinutes() % 15),
             };
           });
 
@@ -178,15 +239,27 @@ export default function Schedule() {
     return () => { cancelled = true; };
   }, []);
 
-  const rows = useMemo(() => {
+  const rows = useMemo<ScheduleRow[]>(() => {
     return animeList
+      .map((a) => {
+        const lastParts = getZonedParts(parseISO(a.latest_episode_date), timeZone);
+        const release_hour = lastParts.hour;
+        const release_minute = lastParts.minute - (lastParts.minute % 15);
+        const release_day = a.schedule_day ?? lastParts.weekday;
+        const base = { ...a, release_day, release_hour, release_minute };
+        return {
+          ...base,
+          languages: getLanguages(a.genres),
+          next: getNextRelease(base, timeZone),
+        };
+      })
       .filter((a) => (dayFilter === 'all' ? true : a.release_day === dayFilter))
       .filter((a) => (search ? a.title.toLowerCase().includes(search.toLowerCase()) : true))
-      .map((a) => ({ anime: a, next: getNextRelease(a) }))
       .sort((a, b) => a.next.getTime() - b.next.getTime());
-  }, [animeList, dayFilter, search]);
+  }, [animeList, dayFilter, search, timeZone]);
 
-  const todayIdx = new Date().getDay();
+  const todayIdx = getZonedParts(new Date(now), timeZone).weekday;
+
 
   return (
     <div className="container py-6 md:py-10">
@@ -216,15 +289,47 @@ export default function Schedule() {
               </p>
             </div>
           </div>
-          <div className="relative w-full md:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search ongoing anime..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-10 rounded-xl bg-black/40 border-white/10"
-            />
+          <div className="flex flex-col sm:flex-row md:flex-col gap-2 w-full md:w-72">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search ongoing anime..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 h-10 rounded-xl bg-black/40 border-white/10"
+              />
+            </div>
+            <Select value={timeZone} onValueChange={handleTimeZoneChange}>
+              <SelectTrigger
+                aria-label="Time zone"
+                className="h-10 rounded-xl bg-black/40 border-white/10 text-xs flex-1"
+              >
+                <Globe className="h-4 w-4 text-primary shrink-0" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-[320px]">
+                <SelectGroup>
+                  <SelectLabel>Common</SelectLabel>
+                  {commonZones.map((tz) => (
+                    <SelectItem key={tz} value={tz} className="text-xs">
+                      {formatTimeZoneName(tz)}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+                {allZones.length > 0 && (
+                  <SelectGroup>
+                    <SelectLabel>All time zones</SelectLabel>
+                    {allZones.map((tz) => (
+                      <SelectItem key={tz} value={tz} className="text-xs">
+                        {formatTimeZoneName(tz)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                )}
+              </SelectContent>
+            </Select>
           </div>
+
         </div>
 
         {/* Day filter */}
@@ -274,7 +379,7 @@ export default function Schedule() {
         </div>
       ) : (
         <div className="space-y-3">
-          {rows.map(({ anime, next }) => (
+          {rows.map((anime) => (
             <div
               key={anime.id}
               className="group relative rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl p-3 md:p-4 transition-all hover:border-primary/40 hover:bg-card/60"
@@ -301,20 +406,23 @@ export default function Schedule() {
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                      {LANGUAGES.map((lang, i) => (
-                        <span
-                          key={lang}
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
-                            i === 0
-                              ? 'bg-amber-500/10 border-amber-500/40 text-amber-300'
-                              : 'bg-white/5 border-white/10 text-muted-foreground'
-                          }`}
-                        >
-                          {lang}
-                        </span>
-                      ))}
-                    </div>
+                    {anime.languages.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        {anime.languages.map((lang, i) => (
+                          <span
+                            key={lang}
+                            className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+                              i === 0
+                                ? 'bg-amber-500/10 border-amber-500/40 text-amber-300'
+                                : 'bg-white/5 border-white/10 text-muted-foreground'
+                            }`}
+                          >
+                            {lang}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
 
                     <div className="flex flex-wrap items-center gap-1.5 mt-2">
                       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-semibold">
@@ -329,7 +437,7 @@ export default function Schedule() {
                   </div>
                 </Link>
 
-                <Countdown target={next} now={now} />
+                <Countdown target={anime.next} now={now} />
               </div>
             </div>
           ))}
