@@ -542,6 +542,84 @@ export default function Schedule() {
         </div>
       )}
 
+      {/* Upcoming */}
+      {upcomingRows.length > 0 && (
+        <>
+          <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl px-4 py-3 mt-8 mb-4 border-l-[3px] border-l-primary">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <h2 className="text-base md:text-lg font-bold">Upcoming</h2>
+            <span className="ml-auto text-xs text-muted-foreground">{upcomingRows.length} titles</span>
+          </div>
+
+          <div className="space-y-3">
+            {upcomingRows.map((u) => (
+              <div
+                key={u.id}
+                className="group relative rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl p-3 md:p-4 transition-all hover:border-primary/40 hover:bg-card/60"
+              >
+                <div className="flex flex-col md:flex-row md:items-center gap-4">
+                  <Link to={`/anime/${u.anime_id}`} className="flex gap-3 md:gap-4 flex-1 min-w-0">
+                    <img
+                      src={u.cover_image || '/placeholder.svg'}
+                      alt={`${u.title} poster`}
+                      loading="lazy"
+                      className="w-[92px] h-[138px] md:w-[120px] md:h-[180px] object-cover rounded-xl shrink-0 shadow-lg"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/30 text-primary text-[10px] font-bold uppercase tracking-[0.14em]">
+                        Upcoming
+                      </span>
+                      <h3 className="text-base md:text-xl font-bold leading-tight line-clamp-2 mt-1.5 group-hover:text-primary transition-colors">
+                        {u.title}
+                      </h3>
+
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        <span className="px-2 py-0.5 rounded-md bg-primary/15 border border-primary/30 text-primary text-[10px] font-bold">
+                          Season {u.season_number}
+                        </span>
+                      </div>
+
+                      {u.languages.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                          {u.languages.map((lang, i) => (
+                            <span
+                              key={lang}
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+                                i === 0
+                                  ? 'bg-amber-500/10 border-amber-500/40 text-amber-300'
+                                  : 'bg-white/5 border-white/10 text-muted-foreground'
+                              }`}
+                            >
+                              {lang}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-semibold">
+                          <CalendarDays className="h-3 w-3 text-primary" />
+                          {u.target.toLocaleDateString(undefined, {
+                            weekday: 'long',
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            timeZone,
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+
+                  <Countdown target={u.target} now={now} label="Premieres In" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+
       <div className="mt-8 text-center">
         <Button asChild variant="outline" className="rounded-xl">
           <Link to="/browse">Browse all anime</Link>
