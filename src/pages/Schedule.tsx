@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SEO } from '@/components/SEO';
-import { CalendarDays, Clock, Flame, Globe, Search, Tv } from 'lucide-react';
+import { CalendarDays, Clock, Flame, Globe, Search, Sparkles, Tv } from 'lucide-react';
 import { parseISO } from 'date-fns';
 import {
   getStoredTimeZone,
