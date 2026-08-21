@@ -355,7 +355,14 @@ export default function Schedule() {
             },
           )}
         </div>
+
+        <p className="relative mt-2.5 text-[11px] text-muted-foreground">
+          Days, times and countdowns shown in{' '}
+          <span className="font-semibold text-foreground">{formatTimeZoneName(timeZone)}</span>
+          {tzLabel ? ` (${tzLabel})` : ''}
+        </p>
       </div>
+
 
       {/* Section title */}
       <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl px-4 py-3 mb-4 border-l-[3px] border-l-primary">
