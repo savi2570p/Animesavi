@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SEO } from '@/components/SEO';
-import { CalendarDays, Clock, Flame, Globe, Search, Tv } from 'lucide-react';
+import { CalendarDays, Clock, Flame, Globe, Search, Sparkles, Tv } from 'lucide-react';
 import { parseISO } from 'date-fns';
 import {
   getStoredTimeZone,
@@ -25,6 +25,7 @@ import {
   getAllTimeZones,
   getTimeZoneLabel,
   formatTimeZoneName,
+  zonedWallClockToDate,
 } from '@/lib/timezone';
 
 interface ScheduleAnime {
@@ -44,6 +45,16 @@ interface ScheduleRow extends ScheduleAnime {
   release_minute: number;
   languages: string[];
   next: Date;
+}
+
+interface UpcomingRow {
+  id: string;
+  anime_id: string;
+  title: string;
+  cover_image: string | null;
+  languages: string[];
+  season_number: number;
+  release_date: string;
 }
 
 const DAYS_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -101,7 +112,7 @@ function getNextRelease(
   return nextZonedSlot(now, daysUntil, anime.release_hour, anime.release_minute, timeZone);
 }
 
-function Countdown({ target, now }: { target: Date; now: number }) {
+function Countdown({ target, now, label = 'Next Episode' }: { target: Date; now: number; label?: string }) {
   const diff = Math.max(0, target.getTime() - now);
   const parts = [
     { v: Math.floor(diff / 86400000), l: 'Days' },
@@ -113,7 +124,7 @@ function Countdown({ target, now }: { target: Date; now: number }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-3 md:p-4 w-full md:w-[340px] shrink-0">
       <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2.5">
-        Next Episode
+        {label}
       </p>
       <div className="grid grid-cols-4 gap-1.5 md:gap-2">
         {parts.map((p) => (
@@ -142,6 +153,8 @@ export default function Schedule() {
   const [dayFilter, setDayFilter] = useState<'all' | number>('all');
   const [now, setNow] = useState(Date.now());
   const [timeZone, setTimeZone] = useState<string>(() => getStoredTimeZone());
+  const [upcoming, setUpcoming] = useState<UpcomingRow[]>([]);
+  const [rollovers, setRollovers] = useState<Record<string, number>>({});
 
   const commonZones = useMemo(() => getCommonTimeZones(), []);
   const allZones = useMemo(() => getAllTimeZones().filter((z) => !commonZones.includes(z)), [commonZones]);
@@ -239,26 +252,104 @@ export default function Schedule() {
     return () => { cancelled = true; };
   }, []);
 
+  // Upcoming seasons (with an announced release date)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('seasons')
+          .select('id, season_number, release_date, anime:anime_id (id, title, cover_image, genres)')
+          .eq('is_upcoming', true)
+          .not('release_date', 'is', null)
+          .order('release_date', { ascending: true });
+
+        const list: UpcomingRow[] = (data || [])
+          .filter((s: any) => s.anime?.id && s.release_date)
+          .map((s: any) => ({
+            id: s.id,
+            anime_id: s.anime.id,
+            title: s.anime.title || 'Unknown',
+            cover_image: s.anime.cover_image,
+            languages: getLanguages(s.anime.genres),
+            season_number: s.season_number ?? 1,
+            release_date: s.release_date,
+          }));
+        if (!cancelled) setUpcoming(list);
+      } catch (e) {
+        console.error('Upcoming load failed', e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  /** Base weekly slots, independent of the ticking clock. */
+  const baseRows = useMemo<ScheduleRow[]>(() => {
+    return animeList.map((a) => {
+      const lastParts = getZonedParts(parseISO(a.latest_episode_date), timeZone);
+      const release_hour = lastParts.hour;
+      const release_minute = lastParts.minute - (lastParts.minute % 15);
+      const release_day = a.schedule_day ?? lastParts.weekday;
+      const base = { ...a, release_day, release_hour, release_minute };
+      return {
+        ...base,
+        languages: getLanguages(a.genres),
+        next: getNextRelease(base, timeZone),
+      };
+    });
+  }, [animeList, timeZone]);
+
+  // Reset rollovers whenever the source data or timezone changes.
+  useEffect(() => {
+    setRollovers({});
+  }, [animeList, timeZone]);
+
+  // When a countdown hits zero, roll the slot forward a week (moves it to the end).
+  useEffect(() => {
+    setRollovers((prev) => {
+      let changed = false;
+      const updated = { ...prev };
+      baseRows.forEach((r) => {
+        const current = updated[r.id] ?? r.next.getTime();
+        if (current <= now) {
+          let d = new Date(current);
+          let guard = 0;
+          while (d.getTime() <= now && guard++ < 60) {
+            d = nextZonedSlot(d, 7, r.release_hour, r.release_minute, timeZone);
+          }
+          updated[r.id] = d.getTime();
+          changed = true;
+        }
+      });
+      return changed ? updated : prev;
+    });
+  }, [now, baseRows, timeZone]);
+
   const rows = useMemo<ScheduleRow[]>(() => {
-    return animeList
-      .map((a) => {
-        const lastParts = getZonedParts(parseISO(a.latest_episode_date), timeZone);
-        const release_hour = lastParts.hour;
-        const release_minute = lastParts.minute - (lastParts.minute % 15);
-        const release_day = a.schedule_day ?? lastParts.weekday;
-        const base = { ...a, release_day, release_hour, release_minute };
-        return {
-          ...base,
-          languages: getLanguages(a.genres),
-          next: getNextRelease(base, timeZone),
-        };
+    return baseRows
+      .map((r) => {
+        const next = new Date(rollovers[r.id] ?? r.next.getTime());
+        // The weekday label always matches the actual next airing in the viewer's timezone.
+        return { ...r, next, release_day: getZonedParts(next, timeZone).weekday };
       })
       .filter((a) => (dayFilter === 'all' ? true : a.release_day === dayFilter))
       .filter((a) => (search ? a.title.toLowerCase().includes(search.toLowerCase()) : true))
       .sort((a, b) => a.next.getTime() - b.next.getTime());
-  }, [animeList, dayFilter, search, timeZone]);
+  }, [baseRows, rollovers, dayFilter, search, timeZone]);
+
+  const upcomingRows = useMemo(() => {
+    return upcoming
+      .map((u) => {
+        const [y, m, d] = u.release_date.split('-').map(Number);
+        return { ...u, target: zonedWallClockToDate(y, m, d, 0, 0, timeZone) };
+      })
+      .filter((u) => u.target.getTime() > now - 86400000)
+      .filter((u) => (search ? u.title.toLowerCase().includes(search.toLowerCase()) : true))
+      .sort((a, b) => a.target.getTime() - b.target.getTime());
+  }, [upcoming, search, timeZone, now]);
 
   const todayIdx = getZonedParts(new Date(now), timeZone).weekday;
+
 
 
   return (
@@ -450,6 +541,84 @@ export default function Schedule() {
           ))}
         </div>
       )}
+
+      {/* Upcoming */}
+      {upcomingRows.length > 0 && (
+        <>
+          <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl px-4 py-3 mt-8 mb-4 border-l-[3px] border-l-primary">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <h2 className="text-base md:text-lg font-bold">Upcoming</h2>
+            <span className="ml-auto text-xs text-muted-foreground">{upcomingRows.length} titles</span>
+          </div>
+
+          <div className="space-y-3">
+            {upcomingRows.map((u) => (
+              <div
+                key={u.id}
+                className="group relative rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl p-3 md:p-4 transition-all hover:border-primary/40 hover:bg-card/60"
+              >
+                <div className="flex flex-col md:flex-row md:items-center gap-4">
+                  <Link to={`/anime/${u.anime_id}`} className="flex gap-3 md:gap-4 flex-1 min-w-0">
+                    <img
+                      src={u.cover_image || '/placeholder.svg'}
+                      alt={`${u.title} poster`}
+                      loading="lazy"
+                      className="w-[92px] h-[138px] md:w-[120px] md:h-[180px] object-cover rounded-xl shrink-0 shadow-lg"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/30 text-primary text-[10px] font-bold uppercase tracking-[0.14em]">
+                        Upcoming
+                      </span>
+                      <h3 className="text-base md:text-xl font-bold leading-tight line-clamp-2 mt-1.5 group-hover:text-primary transition-colors">
+                        {u.title}
+                      </h3>
+
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        <span className="px-2 py-0.5 rounded-md bg-primary/15 border border-primary/30 text-primary text-[10px] font-bold">
+                          Season {u.season_number}
+                        </span>
+                      </div>
+
+                      {u.languages.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                          {u.languages.map((lang, i) => (
+                            <span
+                              key={lang}
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+                                i === 0
+                                  ? 'bg-amber-500/10 border-amber-500/40 text-amber-300'
+                                  : 'bg-white/5 border-white/10 text-muted-foreground'
+                              }`}
+                            >
+                              {lang}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-semibold">
+                          <CalendarDays className="h-3 w-3 text-primary" />
+                          {u.target.toLocaleDateString(undefined, {
+                            weekday: 'long',
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                            timeZone,
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+
+                  <Countdown target={u.target} now={now} label="Premieres In" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
 
       <div className="mt-8 text-center">
         <Button asChild variant="outline" className="rounded-xl">
