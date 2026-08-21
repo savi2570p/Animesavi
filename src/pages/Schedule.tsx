@@ -239,26 +239,104 @@ export default function Schedule() {
     return () => { cancelled = true; };
   }, []);
 
+  // Upcoming seasons (with an announced release date)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('seasons')
+          .select('id, season_number, release_date, anime:anime_id (id, title, cover_image, genres)')
+          .eq('is_upcoming', true)
+          .not('release_date', 'is', null)
+          .order('release_date', { ascending: true });
+
+        const list: UpcomingRow[] = (data || [])
+          .filter((s: any) => s.anime?.id && s.release_date)
+          .map((s: any) => ({
+            id: s.id,
+            anime_id: s.anime.id,
+            title: s.anime.title || 'Unknown',
+            cover_image: s.anime.cover_image,
+            languages: getLanguages(s.anime.genres),
+            season_number: s.season_number ?? 1,
+            release_date: s.release_date,
+          }));
+        if (!cancelled) setUpcoming(list);
+      } catch (e) {
+        console.error('Upcoming load failed', e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  /** Base weekly slots, independent of the ticking clock. */
+  const baseRows = useMemo<ScheduleRow[]>(() => {
+    return animeList.map((a) => {
+      const lastParts = getZonedParts(parseISO(a.latest_episode_date), timeZone);
+      const release_hour = lastParts.hour;
+      const release_minute = lastParts.minute - (lastParts.minute % 15);
+      const release_day = a.schedule_day ?? lastParts.weekday;
+      const base = { ...a, release_day, release_hour, release_minute };
+      return {
+        ...base,
+        languages: getLanguages(a.genres),
+        next: getNextRelease(base, timeZone),
+      };
+    });
+  }, [animeList, timeZone]);
+
+  // Reset rollovers whenever the source data or timezone changes.
+  useEffect(() => {
+    setRollovers({});
+  }, [animeList, timeZone]);
+
+  // When a countdown hits zero, roll the slot forward a week (moves it to the end).
+  useEffect(() => {
+    setRollovers((prev) => {
+      let changed = false;
+      const updated = { ...prev };
+      baseRows.forEach((r) => {
+        const current = updated[r.id] ?? r.next.getTime();
+        if (current <= now) {
+          let d = new Date(current);
+          let guard = 0;
+          while (d.getTime() <= now && guard++ < 60) {
+            d = nextZonedSlot(d, 7, r.release_hour, r.release_minute, timeZone);
+          }
+          updated[r.id] = d.getTime();
+          changed = true;
+        }
+      });
+      return changed ? updated : prev;
+    });
+  }, [now, baseRows, timeZone]);
+
   const rows = useMemo<ScheduleRow[]>(() => {
-    return animeList
-      .map((a) => {
-        const lastParts = getZonedParts(parseISO(a.latest_episode_date), timeZone);
-        const release_hour = lastParts.hour;
-        const release_minute = lastParts.minute - (lastParts.minute % 15);
-        const release_day = a.schedule_day ?? lastParts.weekday;
-        const base = { ...a, release_day, release_hour, release_minute };
-        return {
-          ...base,
-          languages: getLanguages(a.genres),
-          next: getNextRelease(base, timeZone),
-        };
+    return baseRows
+      .map((r) => {
+        const next = new Date(rollovers[r.id] ?? r.next.getTime());
+        // The weekday label always matches the actual next airing in the viewer's timezone.
+        return { ...r, next, release_day: getZonedParts(next, timeZone).weekday };
       })
       .filter((a) => (dayFilter === 'all' ? true : a.release_day === dayFilter))
       .filter((a) => (search ? a.title.toLowerCase().includes(search.toLowerCase()) : true))
       .sort((a, b) => a.next.getTime() - b.next.getTime());
-  }, [animeList, dayFilter, search, timeZone]);
+  }, [baseRows, rollovers, dayFilter, search, timeZone]);
+
+  const upcomingRows = useMemo(() => {
+    return upcoming
+      .map((u) => {
+        const [y, m, d] = u.release_date.split('-').map(Number);
+        return { ...u, target: zonedWallClockToDate(y, m, d, 0, 0, timeZone) };
+      })
+      .filter((u) => u.target.getTime() > now - 86400000)
+      .filter((u) => (search ? u.title.toLowerCase().includes(search.toLowerCase()) : true))
+      .sort((a, b) => a.target.getTime() - b.target.getTime());
+  }, [upcoming, search, timeZone, now]);
 
   const todayIdx = getZonedParts(new Date(now), timeZone).weekday;
+
 
 
   return (
