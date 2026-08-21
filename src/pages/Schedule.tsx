@@ -47,6 +47,16 @@ interface ScheduleRow extends ScheduleAnime {
   next: Date;
 }
 
+interface UpcomingRow {
+  id: string;
+  anime_id: string;
+  title: string;
+  cover_image: string | null;
+  languages: string[];
+  season_number: number;
+  release_date: string;
+}
+
 const DAYS_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 /** Audio/language tags that may appear inside an anime's genre list. */
