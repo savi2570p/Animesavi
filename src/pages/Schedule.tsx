@@ -153,6 +153,8 @@ export default function Schedule() {
   const [dayFilter, setDayFilter] = useState<'all' | number>('all');
   const [now, setNow] = useState(Date.now());
   const [timeZone, setTimeZone] = useState<string>(() => getStoredTimeZone());
+  const [upcoming, setUpcoming] = useState<UpcomingRow[]>([]);
+  const [rollovers, setRollovers] = useState<Record<string, number>>({});
 
   const commonZones = useMemo(() => getCommonTimeZones(), []);
   const allZones = useMemo(() => getAllTimeZones().filter((z) => !commonZones.includes(z)), [commonZones]);
