@@ -112,7 +112,7 @@ function getNextRelease(
   return nextZonedSlot(now, daysUntil, anime.release_hour, anime.release_minute, timeZone);
 }
 
-function Countdown({ target, now }: { target: Date; now: number }) {
+function Countdown({ target, now, label = 'Next Episode' }: { target: Date; now: number; label?: string }) {
   const diff = Math.max(0, target.getTime() - now);
   const parts = [
     { v: Math.floor(diff / 86400000), l: 'Days' },
@@ -124,7 +124,7 @@ function Countdown({ target, now }: { target: Date; now: number }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-3 md:p-4 w-full md:w-[340px] shrink-0">
       <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2.5">
-        Next Episode
+        {label}
       </p>
       <div className="grid grid-cols-4 gap-1.5 md:gap-2">
         {parts.map((p) => (
