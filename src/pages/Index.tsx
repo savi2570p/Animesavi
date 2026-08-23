@@ -134,7 +134,7 @@ export default function Index() {
 
       <hr className="lg-divider" />
 
-      <SectionBoundary label="home:coming-soon"><ComingSoon /></SectionBoundary>
+      {/* Coming Soon lives on the /schedule tab only */}
       <SectionBoundary label="home:episode-progress"><EpisodeProgress /></SectionBoundary>
 
       <hr className="lg-divider" />
