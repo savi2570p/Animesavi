@@ -2500,6 +2500,16 @@ html {
 .home-smooth a.group > div.relative > *:not(img) { z-index: 3; }
 .home-smooth a.group > div.relative > .absolute { z-index: 3; }
 
+/* Trending banner content layer must stay transparent so the 16:9 banner shows */
+.home-smooth a.group > div.relative.trending-banner-content,
+.trending-banner-content {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.home-smooth a.group > div.relative.trending-banner-content::after { content: none !important; }
+
+
 /* Liquid-glass skeleton shimmer */
 @keyframes skeleton-sheen {
   0% { transform: translateX(-100%); }
