@@ -19,7 +19,7 @@ export const RELEASE_DATE = 'August 23, 2026';
 export const DOWNLOAD_SIZE_MB = 30;
 
 export const BETA_NOTE =
-  'Use Embed Player is still in BETA — currently running BETA 2.1. Playback sources, fallbacks, and mobile compatibility are actively being improved.';
+  'Use Embed Player is now running BETA V2.5 — a rebuilt token-based embed system with faster resolution, direct source fallback, and a dedicated liquid-glass player.';
 
 export const VERSION_GROUPS: VersionGroup[] = [
   {
@@ -28,6 +28,7 @@ export const VERSION_GROUPS: VersionGroup[] = [
     highlight:
       'A faster, smoother update focused on the new Schedule experience, Clone Platforms, and download reliability.',
     items: [
+      { icon: '📺', badge: 'NEW', title: 'Embed Player BETA V2.5', desc: 'Brand-new token-based embed player with automatic link generation, a dedicated liquid-glass interface, and fallback source switching.' },
       { icon: '📅', badge: 'NEW', title: 'Schedule Tab', desc: 'A dedicated, timezone-aware Schedule page with weekly countdowns and a cleaner release calendar interface.' },
       { icon: '🌐', badge: 'NEW', title: 'Timezone Support', desc: 'Pick your timezone so release days, airing times, and live countdowns match your local clock.' },
       { icon: '🔗', badge: 'NEW', title: 'Clone Platforms', desc: 'New admin-managed clone embeds with a smoother, ad-unlockable viewing experience across mobile and desktop.' },
