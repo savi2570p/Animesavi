@@ -457,6 +457,17 @@ export function VideoPlayer({
     enabled: isMobile && !shouldUseIframe,
   });
   
+  // "Use Embed Player" → look up this episode's own public embed token so the
+  // fallback always opens the SAME episode through our custom embed player.
+  useEffect(() => {
+    if (!useIframeFallback || !episodeId) return;
+    let active = true;
+    lookupEmbedTokenForEpisode(episodeId).then((token) => {
+      if (active && token) setTokenEmbedUrl(buildLocalEmbedUrl(token));
+    });
+    return () => { active = false; };
+  }, [useIframeFallback, episodeId]);
+
   // Reset state when video URL or server changes
   useEffect(() => {
     setVideoError(false);
