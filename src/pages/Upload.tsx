@@ -372,6 +372,8 @@ export default function Upload() {
         supabase.functions
           .invoke('generate-episode-recap', { body: { episode_id: inserted.id } })
           .catch((e) => console.warn('[recap] auto-generate failed', e));
+        // Public custom-domain embed token (created once playback is valid).
+        if (episodeVideoUrl.trim()) void autoEnsureEmbed(inserted.id);
       }
       // Reset form
       setEpisodeTitle('');
@@ -1465,6 +1467,12 @@ export default function Upload() {
                           description: description.trim() || null,
                           video_url: episodeVideoUrl.trim(),
                           thumbnail: coverImage.trim() || null,
+                        })
+                        .select('id')
+                        .single()
+                        .then(async ({ data: movieEp, error }) => {
+                          if (movieEp?.id) await autoEnsureEmbed(movieEp.id);
+                          return { error };
                         });
                       
                       if (episodeError) {

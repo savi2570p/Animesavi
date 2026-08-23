@@ -341,6 +341,7 @@ export default function UploadAnimeEdit() {
       toast.error('Failed to add episode');
     } else {
       toast.success('Episode added');
+      if (data?.id && newEpisodeVideoUrl.trim()) void autoEnsureEmbed(data.id);
       // Reset form
       setNewEpisodeTitle('');
       setNewEpisodeDescription('');
