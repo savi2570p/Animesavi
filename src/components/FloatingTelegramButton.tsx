@@ -8,12 +8,17 @@ const PERSONAL_URL = 'https://t.me/Lv_Savi';
 export function FloatingTelegramButton() {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const location = useLocation();
 
-  // Hide on embed routes
-  const isEmbed = typeof window !== 'undefined' && (
-    window.location.pathname.startsWith('/embed/') ||
-    new URLSearchParams(window.location.search).get('embed') === 'true'
-  );
+  // Hide on all embed routes (legacy /embed, new /e/:token, and embed mode)
+  const isEmbed = useMemo(() => {
+    const search = new URLSearchParams(window.location.search);
+    return (
+      location.pathname.startsWith('/embed/') ||
+      location.pathname.startsWith('/e/') ||
+      search.get('embed') === 'true'
+    );
+  }, [location.pathname]);
 
   // Close on outside click / Esc
   useEffect(() => {
