@@ -231,19 +231,19 @@ export function SocialShare({ className = '' }: SocialShareProps) {
         className="absolute -inset-4 bg-primary/5 rounded-[2.5rem] blur-3xl pointer-events-none"
       />
 
-      <div className="relative bg-card/40 border border-border/40 rounded-[2rem] overflow-hidden backdrop-blur-2xl shadow-2xl">
+      <div className="relative bg-card/40 border border-border/40 rounded-2xl overflow-hidden backdrop-blur-2xl shadow-xl">
         <div className="flex flex-col lg:flex-row">
           {/* Left: Configuration */}
-          <div className="flex-1 p-6 md:p-8 lg:p-10 border-b lg:border-b-0 lg:border-r border-border/40">
-            <h3 className="font-heading text-2xl font-bold text-foreground mb-2">
+          <div className="flex-1 p-4 md:p-5 border-b lg:border-b-0 lg:border-r border-border/40">
+            <h3 className="font-heading text-lg font-bold text-foreground mb-1">
               Share with <span className="anime-gradient-text">friends</span>
             </h3>
-            <p className="text-muted-foreground text-sm mb-6 md:mb-8">{TAGLINE}</p>
+            <p className="text-muted-foreground text-xs mb-4">{TAGLINE}</p>
 
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Poster Editor */}
               <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-3">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-2">
                   Poster Editor
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -264,10 +264,10 @@ export function SocialShare({ className = '' }: SocialShareProps) {
 
               {/* Template Picker */}
               <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-3">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-2">
                   Select Theme
                 </label>
-                <div className="flex gap-3 flex-wrap">
+                <div className="flex gap-2 flex-wrap">
                   {MESSAGE_TEMPLATES.map(t => {
                     const active = t.id === templateId;
                     return (
@@ -277,7 +277,7 @@ export function SocialShare({ className = '' }: SocialShareProps) {
                         title={t.label}
                         aria-label={`Theme: ${t.label}`}
                         aria-pressed={active}
-                        className={`relative w-12 h-12 rounded-xl bg-gradient-to-br ${t.swatch} transition-all shadow-lg ${
+                        className={`relative w-9 h-9 rounded-lg bg-gradient-to-br ${t.swatch} transition-all shadow-lg ${
                           active
                             ? 'border-2 border-foreground ring-2 ring-primary/30 scale-105'
                             : 'border border-border/40 hover:border-border/80'
@@ -294,18 +294,18 @@ export function SocialShare({ className = '' }: SocialShareProps) {
 
               {/* One-tap Share Grid */}
               <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-3">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-2">
                   One-tap Share
                 </label>
-                <div className="grid grid-cols-4 gap-2 md:gap-3">
+                <div className="grid grid-cols-4 gap-2">
                   {shareOptions.map(option => (
                     <button
                       key={option.name}
                       onClick={() => handleShareOption(option.url, option.name)}
                       aria-label={`Share on ${option.name}`}
-                      className="group/icon aspect-square flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-background/40 border border-border/40 hover:bg-background/60 hover:border-primary/50 transition-all"
+                      className="group/icon flex flex-col items-center justify-center gap-1 py-2 rounded-xl bg-background/40 border border-border/40 hover:bg-background/60 hover:border-primary/50 transition-all"
                     >
-                      <option.icon className="h-5 w-5 text-muted-foreground group-hover/icon:text-primary transition-colors" />
+                      <option.icon className="h-4 w-4 text-muted-foreground group-hover/icon:text-primary transition-colors" />
                       <span className="text-[10px] font-semibold text-muted-foreground group-hover/icon:text-foreground transition-colors">
                         {option.name}
                       </span>
@@ -317,19 +317,19 @@ export function SocialShare({ className = '' }: SocialShareProps) {
           </div>
 
           {/* Right: Live Poster Preview */}
-          <div className="w-full lg:w-[380px] p-6 md:p-8 lg:p-10 bg-background/40">
+          <div className="w-full lg:w-[280px] p-4 md:p-5 bg-background/40">
             <div
               ref={posterRef}
-              className="relative aspect-[4/5] w-full rounded-2xl overflow-hidden shadow-2xl"
+              className="relative aspect-[4/5] w-full max-w-[240px] mx-auto rounded-xl overflow-hidden shadow-xl"
             >
               <div
-                className="absolute inset-0 flex flex-col justify-end p-6 transition-all duration-500"
+                className="absolute inset-0 flex flex-col justify-end p-4 transition-all duration-500"
                 style={{
                   backgroundImage: `linear-gradient(to top, ${template.posterStops[0]}, ${template.posterStops[1]} 55%, ${template.posterStops[2]})`,
                 }}
               >
-                <div className="absolute top-6 left-6 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+                <div className="absolute top-4 left-4 flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
                     <Sparkles className="h-4 w-4 text-white" />
                   </div>
                   <span className="text-[10px] font-bold text-white uppercase tracking-wider">
@@ -337,7 +337,7 @@ export function SocialShare({ className = '' }: SocialShareProps) {
                   </span>
                 </div>
                 <div className="space-y-2">
-                  <h4 className="font-heading text-3xl font-black text-white leading-tight uppercase break-words">
+                  <h4 className="font-heading text-xl font-black text-white leading-tight uppercase break-words">
                     {animeTitle || 'AnimeSavi'}
                   </h4>
                   {seasonLabel && (
@@ -355,7 +355,7 @@ export function SocialShare({ className = '' }: SocialShareProps) {
             </div>
 
             {/* Copy Actions */}
-            <div className="mt-6 space-y-3">
+            <div className="mt-4 space-y-2">
               <div className="flex items-center gap-2 bg-card/80 border border-border/40 rounded-xl p-2 pl-3">
                 <code className="flex-1 text-xs text-muted-foreground truncate font-mono">
                   {websiteUrl.replace(/^https?:\/\//, '')}
@@ -379,7 +379,7 @@ export function SocialShare({ className = '' }: SocialShareProps) {
               </div>
               <Button
                 onClick={handleCopyMessage}
-                className="w-full h-11 rounded-xl bg-gradient-to-r from-primary to-rose-700 hover:opacity-95 text-primary-foreground text-xs font-bold uppercase tracking-widest shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.7)] gap-2"
+                className="w-full h-9 rounded-lg bg-gradient-to-r from-primary to-rose-700 hover:opacity-95 text-primary-foreground text-xs font-bold uppercase tracking-widest shadow-[0_8px_30px_-8px_hsl(var(--primary)/0.7)] gap-2"
               >
                 {msgCopied ? (
                   <>
@@ -395,7 +395,7 @@ export function SocialShare({ className = '' }: SocialShareProps) {
                 onClick={handleDownloadInvite}
                 disabled={downloading}
                 variant="outline"
-                className="w-full h-11 rounded-xl border-border/60 bg-background/40 hover:bg-background text-foreground text-xs font-bold uppercase tracking-widest gap-2"
+                className="w-full h-9 rounded-lg border-border/60 bg-background/40 hover:bg-background text-foreground text-xs font-bold uppercase tracking-widest gap-2"
               >
                 <Download className="h-4 w-4" />
                 {downloading ? 'Rendering…' : 'Download invite image'}
