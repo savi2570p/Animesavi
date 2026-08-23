@@ -196,7 +196,7 @@ export const TrendingBanner = memo(function TrendingBanner() {
             </div>
 
             {/* Content */}
-            <div className="relative z-10 flex items-center h-full px-5 md:px-8 py-6 gap-4 md:gap-6">
+            <div className="trending-banner-content relative z-10 flex items-center h-full px-5 md:px-8 py-6 gap-4 md:gap-6">
               {/* Rank */}
               <div className="relative shrink-0 self-end md:self-center">
                 <div
