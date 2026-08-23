@@ -139,6 +139,7 @@ export function RecentlyCompleted() {
     // Sort by watch date (most recent first)
     result.sort((a, b) => new Date(b.watched_at).getTime() - new Date(a.watched_at).getTime());
 
+    if (!isActive()) return;
     setCompletedAnime(result.slice(0, 8));
     setIsLoading(false);
   };
