@@ -86,38 +86,47 @@ export function RecentlyCompleted() {
       }
     });
 
-    // Get total episode counts for each anime and filter to only fully completed
+    // Episode totals in 2 batched queries instead of a per-anime/per-season
+    // waterfall (previously 1 + N + M sequential round-trips).
+    const animeIds = [...animeMap.keys()];
     const result: CompletedAnime[] = [];
-    
-    for (const [animeId, data] of animeMap) {
-      // Get total episodes for this anime
+
+    if (animeIds.length > 0) {
       const { data: seasons } = await supabase
         .from('seasons')
-        .select('id')
-        .eq('anime_id', animeId);
+        .select('id, anime_id')
+        .in('anime_id', animeIds);
 
-      let totalEpisodes = 0;
-      if (seasons) {
-        for (const season of seasons) {
-          const { count } = await supabase
-            .from('episodes')
-            .select('id', { count: 'exact', head: true })
-            .eq('season_id', season.id);
-          totalEpisodes += count || 0;
-        }
+      const seasonIds = (seasons ?? []).map((s) => s.id);
+      const seasonToAnime = new Map<string, string>();
+      (seasons ?? []).forEach((s) => seasonToAnime.set(s.id, s.anime_id));
+
+      const totals = new Map<string, number>();
+      if (seasonIds.length > 0) {
+        const { data: episodes } = await supabase
+          .from('episodes')
+          .select('id, season_id')
+          .in('season_id', seasonIds);
+
+        (episodes ?? []).forEach((ep) => {
+          const animeId = seasonToAnime.get(ep.season_id);
+          if (!animeId) return;
+          totals.set(animeId, (totals.get(animeId) ?? 0) + 1);
+        });
       }
 
-      // Only include if ALL episodes are completed
-      const allCompleted = totalEpisodes > 0 && data.completedEpisodes.size >= totalEpisodes;
-      
-      if (allCompleted) {
-        result.push({
-          id: data.anime.id,
-          title: data.anime.title,
-          cover_image: data.anime.cover_image,
-          watched_at: data.latestWatch,
-          is_eng_dub: data.anime.is_eng_dub ?? false,
-        });
+      for (const [animeId, data] of animeMap) {
+        const totalEpisodes = totals.get(animeId) ?? 0;
+        // Only include if ALL episodes are completed
+        if (totalEpisodes > 0 && data.completedEpisodes.size >= totalEpisodes) {
+          result.push({
+            id: data.anime.id,
+            title: data.anime.title,
+            cover_image: data.anime.cover_image,
+            watched_at: data.latestWatch,
+            is_eng_dub: data.anime.is_eng_dub ?? false,
+          });
+        }
       }
     }
 
