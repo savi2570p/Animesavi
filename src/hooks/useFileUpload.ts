@@ -351,9 +351,27 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
               reportUpload(bytesUploaded, measuredSpeed);
               speedSamplesRef.current = samples;
               lastProgressRef.current = { bytes: bytesUploaded, time: now };
+
+              const elapsedSec = Math.max((now - startedAtRef.current) / 1000, 0.001);
+              const averageSpeed = bytesUploaded / elapsedSec;
+              const remaining = Math.max(totalBytes - bytesUploaded, 0);
+              const rate = measuredSpeed > 0 ? measuredSpeed : averageSpeed;
+              patchStats({
+                bytesUploaded,
+                bytesTotal: totalBytes,
+                currentSpeed: measuredSpeed,
+                averageSpeed,
+                etaSeconds: rate > 0 ? remaining / rate : null,
+                chunksDone: Math.min(
+                  Math.floor(bytesUploaded / chunkSize),
+                  Math.max(1, Math.ceil(totalBytes / chunkSize))
+                ),
+                connection: 'stable',
+              });
             }
 
             if (uploadComplete) {
+
               allBytesUploaded = true;
               measuredSpeedRef.current = Math.max(measuredSpeedRef.current, 0);
               reportUpload(totalBytes, measuredSpeedRef.current);
