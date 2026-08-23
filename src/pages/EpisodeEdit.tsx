@@ -203,6 +203,9 @@ export default function EpisodeEdit() {
       toast.error('Failed to update episode');
     } else {
       toast.success('Episode updated successfully');
+      // Keep the public embed mapping pointed at the current playback source
+      // (also covers video replacement) — never blocks saving.
+      if (videoUrl.trim()) void autoEnsureEmbed(episodeId!);
       navigate(`/upload/anime/${animeId}`);
     }
 
