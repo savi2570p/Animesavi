@@ -20,6 +20,7 @@ import { SocialShare } from "@/components/home/SocialShare";
 import { MostPopular } from "@/components/home/MostPopular";
 import { TrendingBanner } from "@/components/home/TrendingBanner";
 import { SEO } from "@/components/SEO";
+import { SectionBoundary } from "@/components/common/SectionBoundary";
 
 
 export default function Index() {
@@ -81,13 +82,13 @@ export default function Index() {
         path="/"
       />
       {/* Hero Banner */}
-      <FeaturedSlider />
+      <SectionBoundary label="home:featured"><FeaturedSlider /></SectionBoundary>
 
       {/* Trending Now */}
-      <TrendingBanner />
+      <SectionBoundary label="home:trending"><TrendingBanner /></SectionBoundary>
 
       {/* Continue Watching */}
-      <ContinueWatching showOnHomeOnly={true} />
+      <SectionBoundary label="home:continue-watching"><ContinueWatching showOnHomeOnly={true} /></SectionBoundary>
 
       {/* Platform chips */}
       <section className="pt-3 md:pt-5">
@@ -121,32 +122,32 @@ export default function Index() {
 
       <hr className="lg-divider" />
 
-      <CloneSection />
+      <SectionBoundary label="home:clones"><CloneSection /></SectionBoundary>
 
-      <RecommendedAnime />
-      <MostPopular />
-
-      <hr className="lg-divider" />
-
-      <LatestSeries />
-      <LatestEpisodes />
+      <SectionBoundary label="home:recommended"><RecommendedAnime /></SectionBoundary>
+      <SectionBoundary label="home:most-popular"><MostPopular /></SectionBoundary>
 
       <hr className="lg-divider" />
 
-      <ComingSoon />
-      <EpisodeProgress />
+      <SectionBoundary label="home:latest-series"><LatestSeries /></SectionBoundary>
+      <SectionBoundary label="home:latest-episodes"><LatestEpisodes /></SectionBoundary>
 
       <hr className="lg-divider" />
 
-      <LatestMovies />
-      <LatestEngDub />
-      <RecentlyCompleted />
+      <SectionBoundary label="home:coming-soon"><ComingSoon /></SectionBoundary>
+      <SectionBoundary label="home:episode-progress"><EpisodeProgress /></SectionBoundary>
+
+      <hr className="lg-divider" />
+
+      <SectionBoundary label="home:latest-movies"><LatestMovies /></SectionBoundary>
+      <SectionBoundary label="home:latest-eng-dub"><LatestEngDub /></SectionBoundary>
+      <SectionBoundary label="home:recently-completed"><RecentlyCompleted /></SectionBoundary>
 
       {/* Social Share */}
       <section className="py-4 md:py-8">
         <div className="container">
           <div className="lg-section p-5 md:p-7">
-            <SocialShare />
+            <SectionBoundary label="home:social-share"><SocialShare /></SectionBoundary>
           </div>
         </div>
       </section>

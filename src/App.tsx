@@ -8,6 +8,11 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { MiniPlayerProvider } from "@/contexts/MiniPlayerContext";
 import { PopupQueueProvider } from "@/contexts/PopupQueueContext";
 import { MainLayout } from "@/components/layout";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { RouteBoundary } from "@/components/common/RouteBoundary";
+import { installGlobalErrorHandlers } from "@/lib/errors/logger";
+
+installGlobalErrorHandlers();
 import { WelcomePopup } from "@/components/WelcomePopup";
 import { FloatingTelegramButton } from "@/components/FloatingTelegramButton";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
@@ -199,26 +204,31 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <PopupQueueProvider>
-              <AntiPiracyShield mode="soft" />
-              <TurnstileGate />
-              <PinLockGate />
-              <BanGuard />
-              <ScrollRecoveryInitializer />
-              <ScrollToTop />
-              <AccessBanner />
-              <TokenExpiredGlobalPopup />
-              <AdminTrialPopup />
-              <OfflineIndicator />
-              <WelcomePopup />
-              <FloatingTelegramButton />
-              <ReportButton />
-              <MiniPlayer />
-              <PWAInstallPrompt />
-              <NetworkSpeedInitializer />
-              <BackgroundSyncInitializer />
-              <AutoVideoScanInitializer />
-              <TokenAccessSyncInitializer />
-              <RoutePrefetchInitializer />
+              {/* Global overlays/initializers are non-essential: if any of them
+                  crash, they disappear silently instead of blanking the app. */}
+              <ErrorBoundary silent label="global-overlays">
+                <AntiPiracyShield mode="soft" />
+                <TurnstileGate />
+                <PinLockGate />
+                <BanGuard />
+                <ScrollRecoveryInitializer />
+                <ScrollToTop />
+                <AccessBanner />
+                <TokenExpiredGlobalPopup />
+                <AdminTrialPopup />
+                <OfflineIndicator />
+                <WelcomePopup />
+                <FloatingTelegramButton />
+                <ReportButton />
+                <MiniPlayer />
+                <PWAInstallPrompt />
+                <NetworkSpeedInitializer />
+                <BackgroundSyncInitializer />
+                <AutoVideoScanInitializer />
+                <TokenAccessSyncInitializer />
+                <RoutePrefetchInitializer />
+              </ErrorBoundary>
+              <RouteBoundary>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/auth" element={<Auth />} />
@@ -272,6 +282,7 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
+              </RouteBoundary>
             </PopupQueueProvider>
           </BrowserRouter>
         </TooltipProvider>

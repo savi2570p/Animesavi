@@ -15,6 +15,7 @@ import { UserProfileHoverCard } from '@/components/UserProfileHoverCard';
 import { toast } from 'sonner';
 import { VideoPlayer } from '@/components/video/VideoPlayer';
 import { ServerType } from '@/hooks/useServerAutoSelect';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { EpisodeList } from '@/components/video/EpisodeList';
 import { RecommendedAnime } from '@/components/home/RecommendedAnime';
 import { WatchParty } from '@/components/WatchParty';
@@ -1240,6 +1241,30 @@ export default function Watch() {
         {/* Video Player */}
         <div className="flex-1">
           <div className="relative">
+            {/* Player crash isolation: a playback-engine error swaps in a
+                recovery card instead of taking the whole watch page down. */}
+            <ErrorBoundary
+              label="watch:player"
+              resetKeys={[episodeId, activeServer]}
+              fallback={(_error, reset) => (
+                <div
+                  role="alert"
+                  className="aspect-video w-full flex items-center justify-center rounded-2xl border border-border/40 bg-card/40 backdrop-blur-2xl px-4 text-center"
+                >
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      The player stopped unexpectedly. You can retry or switch servers.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                      <Button size="sm" onClick={reset}>Retry playback</Button>
+                      <Button size="sm" variant="outline" onClick={() => { reset(); handleServerChange('EMBED'); }}>
+                        Use Embed player
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            >
             <VideoPlayer
               key={`${episodeId}-${activeServer}-${reloadToken}`}
               videoUrl={deviceOptimizedVideo.videoUrl || episode.video_url}
@@ -1274,6 +1299,7 @@ export default function Watch() {
               onVideoLoadSuccess={onVideoLoadSuccess}
               onVideoLoadError={onVideoLoadError}
             />
+            </ErrorBoundary>
 
             {/* Server-mismatch modal — centered inside the player area, never collapsed */}
             {serverBlockMessage && (
