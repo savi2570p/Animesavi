@@ -19,7 +19,7 @@ export const RELEASE_DATE = 'August 23, 2026';
 export const DOWNLOAD_SIZE_MB = 30;
 
 export const BETA_NOTE =
-  'Use Embed Player is still in BETA — currently running BETA 2.1. Playback sources, fallbacks, and mobile compatibility are actively being improved.';
+  'Use Embed Player is now running BETA V2.5 — a rebuilt token-based embed system with faster resolution, direct source fallback, and a dedicated liquid-glass player.';
 
 export const VERSION_GROUPS: VersionGroup[] = [
   {
