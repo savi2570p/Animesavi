@@ -315,6 +315,16 @@ export default function TokenEmbedPlayer() {
               >
                 <RefreshCw className="h-4 w-4" /> Retry
               </button>
+              {activeSource && (
+                <a
+                  href={activeSource.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20"
+                >
+                  Open directly
+                </a>
+              )}
               {sources.length > 1 && (
                 <button
                   onClick={() => { setPlaybackError(null); setSourceIndex((i) => (i + 1) % sources.length); }}
