@@ -28,22 +28,41 @@ export default function FloxWatch() {
   const { episodeId } = useParams();
   const navigate = useNavigate();
   const [ep, setEp] = useState<FloxRow | null>(null);
+  const [siblings, setSiblings] = useState<FloxRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [server, setServer] = useState<Server>('anime-plus');
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       if (!episodeId) return;
+      setLoading(true);
       const { data, error } = await supabase
         .from('flox_content')
         .select('*')
         .eq('id', episodeId)
         .maybeSingle();
+      if (cancelled) return;
       if (error) toast.error(error.message);
-      setEp((data as FloxRow) || null);
+      const row = (data as FloxRow) || null;
+      setEp(row);
       setLoading(false);
+
+      if (row?.title) {
+        const { data: sibs } = await supabase
+          .from('flox_content')
+          .select('*')
+          .eq('title', row.title)
+          .order('season_number', { ascending: true })
+          .order('episode_number', { ascending: true });
+        if (!cancelled) setSiblings((sibs as FloxRow[]) || []);
+      }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [episodeId]);
+
 
   const servers: { id: Server; label: string }[] = [
     { id: 'anime-plus', label: 'Anime+' },
