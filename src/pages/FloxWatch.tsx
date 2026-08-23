@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, Server as ServerIcon } from 'lucide-react';
+import { ArrowLeft, Loader2, Server as ServerIcon, ListVideo } from 'lucide-react';
 import { FloxPlayer } from '@/components/video/FloxPlayer';
 import { AntiPiracyShield } from '@/components/security/AntiPiracyShield';
 import { toast } from 'sonner';
@@ -28,22 +28,41 @@ export default function FloxWatch() {
   const { episodeId } = useParams();
   const navigate = useNavigate();
   const [ep, setEp] = useState<FloxRow | null>(null);
+  const [siblings, setSiblings] = useState<FloxRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [server, setServer] = useState<Server>('anime-plus');
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       if (!episodeId) return;
+      setLoading(true);
       const { data, error } = await supabase
         .from('flox_content')
         .select('*')
         .eq('id', episodeId)
         .maybeSingle();
+      if (cancelled) return;
       if (error) toast.error(error.message);
-      setEp((data as FloxRow) || null);
+      const row = (data as FloxRow) || null;
+      setEp(row);
       setLoading(false);
+
+      if (row?.title) {
+        const { data: sibs } = await supabase
+          .from('flox_content')
+          .select('*')
+          .eq('title', row.title)
+          .order('season_number', { ascending: true })
+          .order('episode_number', { ascending: true });
+        if (!cancelled) setSiblings((sibs as FloxRow[]) || []);
+      }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [episodeId]);
+
 
   const servers: { id: Server; label: string }[] = [
     { id: 'anime-plus', label: 'Anime+' },
@@ -152,6 +171,39 @@ export default function FloxWatch() {
                   ))}
                 </div>
               </div>
+
+              {/* Episodes — switch directly under the player */}
+              {siblings.length > 1 && (
+                <div className="flox-glass rounded-2xl p-3 md:p-4 space-y-3">
+                  <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-widest text-white/60">
+                    <ListVideo className="h-3.5 w-3.5" />
+                    Episodes
+                    <span className="ml-auto normal-case tracking-normal text-white/40">
+                      {siblings.length} total
+                    </span>
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto snap-row pb-1 md:grid md:grid-cols-6 lg:grid-cols-8 md:overflow-visible">
+                    {siblings.map((s) => {
+                      const isActive = s.id === ep.id;
+                      return (
+                        <button
+                          key={s.id}
+                          onClick={() => !isActive && navigate(`/flox/watch/${s.id}`)}
+                          data-active={isActive}
+                          title={`S${s.season_number ?? 1} E${s.episode_number ?? '—'}`}
+                          className="flox-glass-chip shrink-0 snap-start min-w-[74px] md:min-w-0 px-3 py-2 rounded-xl text-xs font-semibold text-white/75 transition-all hover:text-white data-[active=true]:text-white data-[active=true]:ring-1 data-[active=true]:ring-white/40"
+                        >
+                          <span className="block text-[9px] uppercase tracking-widest text-white/45">
+                            S{s.season_number ?? 1}
+                          </span>
+                          EP {s.episode_number ?? '—'}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
 
               {/* Episode info — glass panel */}
               <div className="flox-glass rounded-3xl p-4 md:p-5 flex items-start gap-4">
