@@ -79,6 +79,18 @@ Deno.serve(async (req) => {
 
     const publicUrl = (token: string) => `${EMBED_ORIGIN}/${token}`;
 
+    /** Keep the episode's `external_url` pointing at its own public embed link,
+     *  so "Use Embed Player" works everywhere. Never overwrites a third-party URL. */
+    const syncExternalUrl = async (token: string) => {
+      const target = publicUrl(token);
+      const current = (episode.external_url ?? '').trim();
+      const ownEmbed = /^https?:\/\/(www\.)?animesavi\.(com|cloudsavi)\/[A-Za-z0-9]{4,24}\/?$/i.test(current);
+      if (current && !ownEmbed) return;
+      if (current === target) return;
+      await admin.from('episodes').update({ external_url: target }).eq('id', episode.id);
+    };
+
+
     if (action === 'status') {
       return json(existing
         ? { exists: true, token: existing.token, url: publicUrl(existing.token), status: existing.status,
@@ -139,6 +151,7 @@ Deno.serve(async (req) => {
         error_message: sources.length ? null : (conversion?.error_message ?? 'No playback source yet.'),
         last_verified_at: new Date().toISOString(),
       }).eq('id', existing.id);
+      await syncExternalUrl(existing.token);
       return json({ created: false, token: existing.token, url: publicUrl(existing.token), status });
     }
 
@@ -146,6 +159,7 @@ Deno.serve(async (req) => {
       await admin.from('video_embeds').update({ status: 'DISABLED' }).eq('id', existing.id);
     }
     if (action === 'generate' && existing) {
+      await syncExternalUrl(existing.token);
       return json({ created: false, token: existing.token, url: publicUrl(existing.token), status: existing.status });
     }
 
@@ -200,6 +214,8 @@ Deno.serve(async (req) => {
       return json({ created: true, verified: false, token: inserted.token,
         url: publicUrl(inserted.token), status: 'FAILED', error: verifyReason }, 200);
     }
+
+    await syncExternalUrl(inserted.token);
 
     return json({
       created: true,

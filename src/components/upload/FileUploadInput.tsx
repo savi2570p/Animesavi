@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Upload, X, FileVideo, Image as ImageIcon, Check, Loader2, RotateCw } from 'lucide-react';
 import { useFileUpload } from '@/hooks/useFileUpload';
+import { EmbedUploadDialog } from '@/components/upload/EmbedUploadDialog';
 import { cn } from '@/lib/utils';
 
 interface FileUploadInputProps {
@@ -38,6 +39,7 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
   const [fileName, setFileName] = useState<string>('');
   const [lastFile, setLastFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [embedUploadOpen, setEmbedUploadOpen] = useState(false);
 
   const bucket = accept === 'video' ? 'anime-videos' : 'anime-thumbnails';
 
@@ -273,13 +275,20 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
             <p className="text-sm font-medium truncate">{fileName || 'Upload failed'}</p>
             <p className="text-xs text-destructive truncate">{uploadError}</p>
           </div>
-          <Button type="button" variant="outline" size="sm" onClick={handleRetry} className="shrink-0">
-            <RotateCw className="h-4 w-4 mr-2" />
-            Retry
-          </Button>
-          <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={handleClear}>
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={handleRetry}>
+              <RotateCw className="h-4 w-4 mr-2" />
+              Try again
+            </Button>
+            {accept === 'video' && (
+              <Button type="button" size="sm" onClick={() => setEmbedUploadOpen(true)}>
+                Upload on embed
+              </Button>
+            )}
+            <Button type="button" variant="ghost" size="icon" className="h-9 w-9" onClick={handleClear}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="space-y-2">
@@ -324,6 +333,15 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
             </p>
           )}
         </div>
+      )}
+
+      {accept === 'video' && (
+        <EmbedUploadDialog
+          open={embedUploadOpen}
+          onOpenChange={setEmbedUploadOpen}
+          initialFile={lastFile}
+          onUploaded={(url) => { onChange(url); setUploadError(null); }}
+        />
       )}
     </div>
   );
