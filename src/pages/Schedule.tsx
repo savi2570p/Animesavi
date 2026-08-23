@@ -605,21 +605,31 @@ export default function Schedule() {
                       )}
 
                       <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-semibold">
-                          <CalendarDays className="h-3 w-3 text-primary" />
-                          {u.target.toLocaleDateString(undefined, {
-                            weekday: 'long',
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                            timeZone,
-                          })}
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[10px] font-semibold ${u.target ? 'bg-white/5 border-white/10' : 'bg-amber-500/10 border-amber-500/30 text-amber-300'}`}>
+                          <CalendarDays className={`h-3 w-3 ${u.target ? 'text-primary' : 'text-amber-300'}`} />
+                          {u.target
+                            ? u.target.toLocaleDateString(undefined, {
+                                weekday: 'long',
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                                timeZone,
+                              })
+                            : 'Release date not announced'}
                         </span>
                       </div>
                     </div>
                   </Link>
 
-                  <Countdown target={u.target} now={now} label="Premieres In" />
+                  {u.target ? (
+                    <Countdown target={u.target} now={now} label="Premieres In" />
+                  ) : (
+                    <div className="shrink-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center">
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Premieres In</p>
+                      <p className="text-sm font-bold text-amber-300 mt-1">TBA</p>
+                    </div>
+                  )}
+
                 </div>
               </div>
             ))}
