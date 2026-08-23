@@ -20,14 +20,20 @@ export function RecentlyCompleted() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Stale-response guard: an in-flight fetch is discarded when the user
+    // changes or the component unmounts (prevents state updates after unmount).
+    let cancelled = false;
     if (user) {
-      fetchCompletedAnime();
+      void fetchCompletedAnime(() => !cancelled);
     } else {
       setIsLoading(false);
     }
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
-  const fetchCompletedAnime = async () => {
+  const fetchCompletedAnime = async (isActive: () => boolean) => {
     if (!user) return;
 
     // Fetch all watch history for user, grouped by anime
