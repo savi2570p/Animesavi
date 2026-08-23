@@ -8,6 +8,11 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { MiniPlayerProvider } from "@/contexts/MiniPlayerContext";
 import { PopupQueueProvider } from "@/contexts/PopupQueueContext";
 import { MainLayout } from "@/components/layout";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { RouteBoundary } from "@/components/common/RouteBoundary";
+import { installGlobalErrorHandlers } from "@/lib/errors/logger";
+
+installGlobalErrorHandlers();
 import { WelcomePopup } from "@/components/WelcomePopup";
 import { FloatingTelegramButton } from "@/components/FloatingTelegramButton";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
