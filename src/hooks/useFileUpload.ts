@@ -189,14 +189,27 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     console.log(`[Upload] Upload started: ${file.name}, size: ${(file.size / (1024 * 1024 * 1024)).toFixed(2)} GB (${file.size} bytes), type: ${getVideoMimeType(file)}`);
     console.log('[Upload] Uploading...');
 
+    const chunkSize = pickChunkSize(file.size);
+
     try {
       setUploadProgress(0);
       setDisplayedProgress(0);
       setUploadSpeed(0);
       measuredSpeedRef.current = 0;
+      startedAtRef.current = performance.now();
       lastProgressRef.current = { bytes: 0, time: performance.now() };
       speedSamplesRef.current = [{ bytes: 0, time: performance.now() }];
+      setStats({
+        ...emptyStats,
+        fileName: file.name,
+        bytesTotal: file.size,
+        chunkSize,
+        chunksTotal: Math.max(1, Math.ceil(file.size / chunkSize)),
+        connection: 'stable',
+        storagePath: filePath,
+      });
       beginUpload(file.size);
+
 
       await new Promise<void>((resolve, reject) => {
         let finalized = false;
