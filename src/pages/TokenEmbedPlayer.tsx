@@ -147,8 +147,16 @@ export default function TokenEmbedPlayer() {
     const onPlaying = () => setBuffering(false);
     const onVol = () => setIsMuted(video.muted);
     const onError = () => {
-      if (sourceIndex < sources.length - 1) setSourceIndex((i) => i + 1);
-      else setPlaybackError('This video could not be played in your browser.');
+      // Walk every remaining source before declaring failure — a single bad or
+      // CORS-restricted URL must not kill playback.
+      if (sourceIndex < sources.length - 1) {
+        setPlaybackError(null);
+        setSourceIndex((i) => i + 1);
+        return;
+      }
+      setPlaybackError(
+        'This video could not be played here. Try another source or open it in a new tab.',
+      );
     };
     video.addEventListener('timeupdate', onTime);
     video.addEventListener('durationchange', onDur);
@@ -282,7 +290,6 @@ export default function TokenEmbedPlayer() {
         playsInline
         controls={false}
         preload="metadata"
-        crossOrigin="anonymous"
         onClick={togglePlay}
       >
         {resolution?.captions && (
