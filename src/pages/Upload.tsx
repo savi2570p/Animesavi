@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { autoEnsureEmbed } from '@/lib/embedTokens';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -372,6 +373,8 @@ export default function Upload() {
         supabase.functions
           .invoke('generate-episode-recap', { body: { episode_id: inserted.id } })
           .catch((e) => console.warn('[recap] auto-generate failed', e));
+        // Public custom-domain embed token (created once playback is valid).
+        if (episodeVideoUrl.trim()) void autoEnsureEmbed(inserted.id);
       }
       // Reset form
       setEpisodeTitle('');
@@ -1456,7 +1459,7 @@ export default function Upload() {
                     
                     // Create the movie episode with uploaded video
                     if (episodeVideoUrl) {
-                      const { error: episodeError } = await supabase
+                      const { data: movieEpisode, error: episodeError } = await supabase
                         .from('episodes')
                         .insert({
                           season_id: seasonData.id,
@@ -1465,10 +1468,14 @@ export default function Upload() {
                           description: description.trim() || null,
                           video_url: episodeVideoUrl.trim(),
                           thumbnail: coverImage.trim() || null,
-                        });
-                      
+                        })
+                        .select('id')
+                        .single();
+
                       if (episodeError) {
                         toast.error('Movie created but video upload failed');
+                      } else if (movieEpisode?.id) {
+                        void autoEnsureEmbed(movieEpisode.id);
                       }
                     }
                     

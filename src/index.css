@@ -3132,3 +3132,45 @@ body.clone-mode {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------------------------------------------------------------
+   Custom token embed player (/<TOKEN>) — flat, accurate seek bar
+   --------------------------------------------------------------- */
+.embed-seek {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 16px;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
+}
+.embed-seek::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+}
+.embed-seek::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+}
+.embed-seek::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -4px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+  transition: transform 0.12s ease;
+}
+.embed-seek:active::-webkit-slider-thumb { transform: scale(1.25); }
+.embed-seek::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: none;
+  border-radius: 999px;
+  background: #ffffff;
+}
+.embed-seek:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6); outline-offset: 2px; }

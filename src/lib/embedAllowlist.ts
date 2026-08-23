@@ -113,11 +113,24 @@ export function getHostname(url: string): string | null {
  */
 export function isEmbedUrlAllowed(url: string, state?: AllowlistState): boolean {
   const list = state ?? getAllowlist();
+  const host = getHostname(url);
+
+  // Our own embed pages (same origin / branded embed domains) are always allowed.
+  if (
+    host &&
+    (host === 'animesavi.com' ||
+      host === 'www.animesavi.com' ||
+      host === 'animesavi.cloudsavi' ||
+      host.endsWith('.lovable.app') ||
+      (typeof window !== 'undefined' && host === window.location.hostname))
+  ) {
+    return true;
+  }
+
   if (!list.enforced) return true;
   if (list.domains.length === 0) return false;
-
-  const host = getHostname(url);
   if (!host) return false;
+
 
   return list.domains.some(
     (allowed) => host === allowed || host.endsWith(`.${allowed}`),

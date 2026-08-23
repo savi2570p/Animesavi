@@ -10,6 +10,7 @@ import { VideoFormatConverter } from '@/components/upload/VideoFormatConverter';
 import { supabase } from '@/integrations/supabase/client';
 import { extractEmbedSrc } from '@/components/video/PureEmbedPlayer';
 import { buildEmbedUrl } from '@/lib/embedLink';
+import { autoEnsureEmbed } from '@/lib/embedTokens';
 
 interface BatchEpisode {
   id: string;
@@ -170,6 +171,15 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
             )
           );
         }
+
+        // Create the public custom-domain embed token for every uploaded
+        // episode that already has a playback source.
+        await Promise.all(
+          (inserted || [])
+            .filter((row: any) => row.video_url)
+            .map((row: any) => autoEnsureEmbed(row.id)),
+        );
+
 
         completed += chunk.length;
         setUploadProgress({ completed, total: validEpisodes.length });

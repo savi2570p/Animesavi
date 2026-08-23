@@ -17,6 +17,8 @@ import { SubtitleEditor } from '@/components/upload/SubtitleEditor';
 import { extractEmbedSrc } from '@/components/video/PureEmbedPlayer';
 import { extractEmbeddedCaptionsToVTT } from '@/lib/extractEmbeddedCaptions';
 import { buildEmbedUrl } from '@/lib/embedLink';
+import { autoEnsureEmbed } from '@/lib/embedTokens';
+import { EmbedManagerPanel } from '@/components/admin/EmbedManagerPanel';
 
 const AUDIO_LANGUAGES = [
   { value: 'original', label: 'Original (Japanese)' },
@@ -201,6 +203,9 @@ export default function EpisodeEdit() {
       toast.error('Failed to update episode');
     } else {
       toast.success('Episode updated successfully');
+      // Keep the public embed mapping pointed at the current playback source
+      // (also covers video replacement) — never blocks saving.
+      if (videoUrl.trim()) void autoEnsureEmbed(episodeId!);
       navigate(`/upload/anime/${animeId}`);
     }
 
@@ -423,6 +428,10 @@ export default function EpisodeEdit() {
               Powers the "Use embed player" fallback. Leave blank to auto-generate a working link from the uploaded file.
             </p>
           </div>
+
+          {/* Public custom-domain embed (token → episode → playback source) */}
+          <EmbedManagerPanel episodeId={episodeId!} />
+
 
           <FileUploadInput
             label="Thumbnail"

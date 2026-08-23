@@ -59,6 +59,7 @@ import { VideoPlayerInfoOverlay } from './VideoPlayerInfoOverlay';
 import { PremiumLoader } from './PremiumLoader';
 import { EncodingOverlay } from './EncodingOverlay';
 import { buildEmbedUrl } from '@/lib/embedLink';
+import { buildLocalEmbedUrl, lookupEmbedTokenForEpisode } from '@/lib/embedTokens';
 import { useVideoGestures } from '@/hooks/useVideoGestures';
 import { ScreenMirroringDialog } from './ScreenMirroringDialog';
 import { YouTubeEmbed, isYouTubeUrl } from './YouTubeEmbed';
@@ -306,6 +307,8 @@ export function VideoPlayer({
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   // Auto-use iframe/embed for external URL uploads (no video_url, only external_url)
   const [useIframeFallback, setUseIframeFallback] = useState(!videoUrl && !!externalUrl);
+  // Public custom-domain embed (/<TOKEN>) for this episode, resolved on demand.
+  const [tokenEmbedUrl, setTokenEmbedUrl] = useState<string | null>(null);
   const [audioTracks, setAudioTracks] = useState<AudioTrackInfo[]>([]);
   const [currentAudioTrack, setCurrentAudioTrack] = useState<number>(0);
   
@@ -455,6 +458,17 @@ export function VideoPlayer({
     enabled: isMobile && !shouldUseIframe,
   });
   
+  // "Use Embed Player" → look up this episode's own public embed token so the
+  // fallback always opens the SAME episode through our custom embed player.
+  useEffect(() => {
+    if (!useIframeFallback || !episodeId) return;
+    let active = true;
+    lookupEmbedTokenForEpisode(episodeId).then((token) => {
+      if (active && token) setTokenEmbedUrl(buildLocalEmbedUrl(token));
+    });
+    return () => { active = false; };
+  }, [useIframeFallback, episodeId]);
+
   // Reset state when video URL or server changes
   useEffect(() => {
     setVideoError(false);
@@ -2087,6 +2101,18 @@ export function VideoPlayer({
     //      uploader writes as the auto-generated embed link, so both paths
     //      resolve to the exact same working player.
     //   3. Only as a last resort, wrap the raw file URL in EmbedFallbackFrame.
+    // 0. Preferred: this episode's own custom embed token (/<TOKEN>) — resolves
+    //    server-side to the exact same playback source as the normal player.
+    if (tokenEmbedUrl) {
+      return (
+        <PureEmbedPlayer
+          url={tokenEmbedUrl}
+          title={`${animeTitle} - Episode ${episodeNumber}`}
+          onSwitchServer={() => setUseIframeFallback(false)}
+        />
+      );
+    }
+
     const externalIsEmbed = !!externalUrl
       && !/\.(mp4|mkv|webm|avi|m3u8|m4v|mov)(\?|#|$)/i.test(externalUrl)
       && !/supabase.*storage|blob\.core\.windows|s3\.amazonaws|cloudfront\.net|r2\.cloudflarestorage|storage\.googleapis/i.test(externalUrl);

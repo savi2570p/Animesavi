@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { autoEnsureEmbed } from '@/lib/embedTokens';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -341,6 +342,7 @@ export default function UploadAnimeEdit() {
       toast.error('Failed to add episode');
     } else {
       toast.success('Episode added');
+      if (data?.id && newEpisodeVideoUrl.trim()) void autoEnsureEmbed(data.id);
       // Reset form
       setNewEpisodeTitle('');
       setNewEpisodeDescription('');
