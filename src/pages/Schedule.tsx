@@ -54,7 +54,7 @@ interface UpcomingRow {
   cover_image: string | null;
   languages: string[];
   season_number: number;
-  release_date: string;
+  release_date: string | null;
 }
 
 const DAYS_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
