@@ -94,7 +94,24 @@ Deno.serve(async (req) => {
       poster = anime?.banner_image ?? anime?.cover_image ?? null;
     }
 
-    const sources = buildSources(episode, conversion ?? null);
+    const allSources = buildSources(episode, conversion ?? null);
+
+    // Drop sources whose file no longer exists (failed/partial uploads leave
+    // dead storage URLs behind) so the player never shows a false error.
+    const reachable = await Promise.all(
+      allSources.map(async (s) => {
+        try {
+          const probe = await fetch(s.url, { method: 'GET', headers: { Range: 'bytes=0-1' } });
+          try { await probe.body?.cancel(); } catch { /* ignore */ }
+          return probe.ok || probe.status === 206 || probe.status === 405 ? s : null;
+        } catch {
+          return null;
+        }
+      }),
+    );
+    const liveSources = reachable.filter((s): s is NonNullable<typeof s> => s !== null);
+    const sources = liveSources.length > 0 ? liveSources : [];
+
     const meta = {
       token: embed.token,
       title: episode.title,
@@ -111,7 +128,10 @@ Deno.serve(async (req) => {
       const status = processing ? 'PROCESSING' : 'FAILED';
       const reason = processing
         ? 'Video is still processing.'
-        : conversion?.error_message || 'No playback source is available for this video yet.';
+        : allSources.length > 0
+          ? 'The video file for this episode is missing or was not uploaded completely. Please re-upload it.'
+          : conversion?.error_message || 'No playback source is available for this video yet.';
+
 
       if (embed.status !== status) {
         await supabase.from('video_embeds').update({ status, error_message: reason }).eq('id', embed.id);
