@@ -56,7 +56,7 @@ export function RecentlyCompleted() {
 
     if (error) {
       console.error('Error fetching watched anime:', error);
-      setIsLoading(false);
+      if (isActive()) setIsLoading(false);
       return;
     }
 
