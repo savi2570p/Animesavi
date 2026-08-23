@@ -425,16 +425,20 @@ button, [role="button"], a {
     padding-top: max(0px, env(safe-area-inset-top));
   }
 
-  /* Stable top slot — ALWAYS rendered, owns the iOS safe-area inset so the
-     navbar height/position can never change while token access is resolving. */
+  /* Stable top slot — ALWAYS rendered so the navbar height/position can never
+     change while token access is resolving.
+     NOTE: the iOS top safe-area inset is already applied once on <body>.
+     Do NOT re-apply env(safe-area-inset-top) here — that double-compensates
+     and pushes the navbar far down on iPhone. */
   .app-top-slot {
     position: sticky;
     top: 0;
     z-index: 60;
-    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: 0;
     background: hsl(var(--background));
     contain: layout;
   }
+
 
   /* Access banner: locked 25px height in EVERY mode (Safari, Chrome,
      iPhone/iPad Home Screen PWA). Safe-area insets must never inflate it. */
