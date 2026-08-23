@@ -79,6 +79,18 @@ Deno.serve(async (req) => {
 
     const publicUrl = (token: string) => `${EMBED_ORIGIN}/${token}`;
 
+    /** Keep the episode's `external_url` pointing at its own public embed link,
+     *  so "Use Embed Player" works everywhere. Never overwrites a third-party URL. */
+    const syncExternalUrl = async (token: string) => {
+      const target = publicUrl(token);
+      const current = (episode.external_url ?? '').trim();
+      const ownEmbed = /^https?:\/\/(www\.)?animesavi\.(com|cloudsavi)\/[A-Za-z0-9]{4,24}\/?$/i.test(current);
+      if (current && !ownEmbed) return;
+      if (current === target) return;
+      await admin.from('episodes').update({ external_url: target }).eq('id', episode.id);
+    };
+
+
     if (action === 'status') {
       return json(existing
         ? { exists: true, token: existing.token, url: publicUrl(existing.token), status: existing.status,
