@@ -32,9 +32,12 @@ export function classifySource(url: string): PlaybackType {
 
 /** Is this one of our own embed/watch pages (never a video source)? */
 function isSelfPage(url: string): boolean {
+  // Root token links like https://animesavi.cloudsavi/7xK92p are our own embed pages.
+  if (/^https?:\/\/(www\.)?animesavi\.(com|cloudsavi)\/[A-Za-z0-9]{4,24}\/?$/i.test(url)) return true;
   return /animesavi\.(com|cloudsavi)|lovable\.(app|dev)|lovableproject\.com/i.test(url) &&
-    /\/(embed|watch)[-/]/i.test(url);
+    /\/(embed|watch|e)[-/]/i.test(url);
 }
+
 
 interface ConversionRow {
   hls_url?: string | null;
