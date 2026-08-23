@@ -213,7 +213,11 @@ const App = () => (
                 <BanGuard />
                 <ScrollRecoveryInitializer />
                 <ScrollToTop />
-                <AccessBanner />
+                {/* Stable top slot: always present so the navbar geometry can
+                    never depend on async token/premium state. */}
+                <div className="app-top-slot">
+                  <AccessBanner />
+                </div>
                 <TokenExpiredGlobalPopup />
                 <AdminTrialPopup />
                 <OfflineIndicator />

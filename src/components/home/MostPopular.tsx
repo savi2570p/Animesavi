@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Flame, ChevronRight, Play, Eye, Filter, Crown, TrendingUp } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
+import { getViewCount, formatViews } from '@/lib/viewCount';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,21 +29,18 @@ const ALL_GENRES = [
   'Sports', 'Supernatural', 'Thriller'
 ];
 
-const VIEW_COUNT_MAP: Record<string, number> = {
+// Extra curated counts specific to this row, merged over the shared map.
+const EXTRA_VIEW_COUNTS: Record<string, number> = {
   'Your Name': 9500000,
-  'Your lie in April': 3400000,
-  'The angel next door spoils me rotten': 3600000,
   'The Angel Next Door Spoils me Rotten': 3600000,
-  'Mechanical Marie': 977000,
-  'Solo Leveling': 730000,
   "BOFURI: I Don't Want to Get Hurt, so I'll Max Out My Defense.": 2300000,
-  "A Gatherer's Adventure in Isekai": 267000,
-  'Jujutsu Kaisen': 8700000,
-  'My Dress-Up Darling': 6200000,
-  'Reborn to Master the Blade: From Hero-King to Extraordinary Squire': 1800000,
 };
 
-const formatViews = (v: number) => v >= 1_000_000 ? `${(v/1_000_000).toFixed(1)}M` : `${(v/1000).toFixed(0)}K`;
+const resolveViews = (title: string, dbViews: number | null | undefined) => {
+  const key = Object.keys(EXTRA_VIEW_COUNTS).find(k => k.toLowerCase() === (title || '').toLowerCase());
+  if (key) return EXTRA_VIEW_COUNTS[key];
+  return getViewCount(title, dbViews);
+};
 
 export const MostPopular = memo(function MostPopular() {
   const [animeList, setAnimeList] = useState<PopularAnime[]>([]);
@@ -58,15 +56,23 @@ export const MostPopular = memo(function MostPopular() {
 
   const fetchPopularAnime = async () => {
     try {
-      const { data, error } = await supabase
-        .from('anime')
-        .select('id, title, cover_image, view_count, status, genres')
-        .order('view_count', { ascending: false })
-        .limit(12);
-      if (error) throw error;
-      const animeWithViews = (data || []).map(a => ({
+      const COLS = 'id, title, cover_image, view_count, status, genres';
+      // Pull the all-time leaders AND the newest additions so freshly added
+      // anime (which still have 0 DB views) can enter the popular row too.
+      const [topRes, newRes] = await Promise.all([
+        supabase.from('anime').select(COLS).order('view_count', { ascending: false }).limit(30),
+        supabase.from('anime').select(COLS).order('created_at', { ascending: false }).limit(24),
+      ]);
+      if (topRes.error) throw topRes.error;
+
+      const merged = new Map<string, PopularAnime>();
+      [...(topRes.data || []), ...(newRes.data || [])].forEach((a: PopularAnime) => {
+        if (!merged.has(a.id)) merged.set(a.id, a);
+      });
+
+      const animeWithViews = Array.from(merged.values()).map(a => ({
         ...a,
-        view_count: VIEW_COUNT_MAP[a.title] || Math.floor(Math.random() * (9000000 - 1000000) + 1000000)
+        view_count: resolveViews(a.title, a.view_count),
       }));
       animeWithViews.sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
       setAnimeList(animeWithViews);
@@ -162,7 +168,7 @@ export const MostPopular = memo(function MostPopular() {
           </div>
         ) : (
           <div className="flex gap-4 md:gap-5 overflow-x-auto pb-4 -mx-4 px-4 snap-row scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
-            {filteredList.slice(0, 10).map((anime, index) => {
+            {filteredList.slice(0, 14).map((anime, index) => {
               const rank = index + 1;
               const isTop3 = rank <= 3;
               return (

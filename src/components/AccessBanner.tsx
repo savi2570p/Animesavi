@@ -135,8 +135,20 @@ export function AccessBanner() {
   const { user } = useAuth();
   const isCasting = useCastDetection();
   const [tokenEnabled, setTokenEnabled] = useState(true);
-  const [expiresAt, setExpiresAt] = useState<number | null>(null);
-  const [time, setTime] = useState<ReturnType<typeof getTimeRemaining>>(null);
+  // Resolve the cached expiry SYNCHRONOUSLY on first render so the banner slot
+  // has its final geometry from the very first paint (no post-hydration jump).
+  const [expiresAt, setExpiresAt] = useState<number | null>(() => {
+    try {
+      const raw = localStorage.getItem('unlock_token_expires');
+      const exp = raw ? parseInt(raw, 10) : 0;
+      return exp && Date.now() < exp ? exp : null;
+    } catch {
+      return null;
+    }
+  });
+  const [time, setTime] = useState<ReturnType<typeof getTimeRemaining>>(() =>
+    getTimeRemaining(true, null)
+  );
   const [dbChecked, setDbChecked] = useState(false);
   const isSynced = wasAccessSyncedFromCloud();
 
@@ -183,16 +195,6 @@ export function AccessBanner() {
   }, [tokenEnabled, expiresAt, dbChecked, isCasting]);
 
   const visible = !(isEmbedRoute || superAdmin || !time || isCasting);
-
-  // Toggle a body class so the Header can drop its own safe-area-top padding
-  // when the banner is already sitting in the safe area above it (prevents a
-  // visible gap between banner and nav on iOS/Android).
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    if (visible) document.body.classList.add('has-access-banner');
-    else document.body.classList.remove('has-access-banner');
-    return () => document.body.classList.remove('has-access-banner');
-  }, [visible]);
 
   if (!visible) return null;
 

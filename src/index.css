@@ -425,10 +425,15 @@ button, [role="button"], a {
     padding-top: max(0px, env(safe-area-inset-top));
   }
 
-  /* When the AccessBanner is visible the Header below it must NOT add
-     another safe-area padding, or the nav drops far below the banner. */
-  body.has-access-banner header.safe-area-top {
-    padding-top: 0 !important;
+  /* Stable top slot — ALWAYS rendered, owns the iOS safe-area inset so the
+     navbar height/position can never change while token access is resolving. */
+  .app-top-slot {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    padding-top: env(safe-area-inset-top, 0px);
+    background: hsl(var(--background));
+    contain: layout;
   }
 
   /* Access banner: locked 25px height in EVERY mode (Safari, Chrome,

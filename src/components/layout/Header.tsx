@@ -60,7 +60,13 @@ export function Header() {
   const hasPremium = !!user && (isAdmin || hasValidTokenAccess(user?.email));
   const desktopSearchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
-  const [isMobileOS, setIsMobileOS] = useState(false);
+  // Resolve synchronously on first render — deriving this in an effect made the
+  // navbar render a desktop layout first and then stretch on mobile.
+  const [isMobileOS, setIsMobileOS] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return /iPad|iPhone|iPod|Android/.test(navigator.userAgent) ||
+      window.matchMedia('(max-width: 767px)').matches;
+  });
 
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -230,7 +236,7 @@ export function Header() {
 
   return (
     <header
-      className={`sticky top-0 z-[100] w-full safe-area-top lg-nav-floating transition-transform duration-300 will-change-transform ${
+      className={`sticky top-0 z-[100] w-full lg-nav-floating transition-transform duration-300 will-change-transform ${
         navHidden ? '-translate-y-[120%]' : 'translate-y-0'
       }`}
     >
