@@ -252,7 +252,7 @@ export default function Schedule() {
     return () => { cancelled = true; };
   }, []);
 
-  // Upcoming seasons (with an announced release date)
+  // Upcoming seasons (announced date optional)
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -261,11 +261,10 @@ export default function Schedule() {
           .from('seasons')
           .select('id, season_number, release_date, anime:anime_id (id, title, cover_image, genres)')
           .eq('is_upcoming', true)
-          .not('release_date', 'is', null)
-          .order('release_date', { ascending: true });
+          .order('release_date', { ascending: true, nullsFirst: false });
 
         const list: UpcomingRow[] = (data || [])
-          .filter((s: any) => s.anime?.id && s.release_date)
+          .filter((s: any) => s.anime?.id)
           .map((s: any) => ({
             id: s.id,
             anime_id: s.anime.id,
@@ -273,8 +272,9 @@ export default function Schedule() {
             cover_image: s.anime.cover_image,
             languages: getLanguages(s.anime.genres),
             season_number: s.season_number ?? 1,
-            release_date: s.release_date,
+            release_date: s.release_date ?? null,
           }));
+
         if (!cancelled) setUpcoming(list);
       } catch (e) {
         console.error('Upcoming load failed', e);
