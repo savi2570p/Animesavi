@@ -2101,6 +2101,18 @@ export function VideoPlayer({
     //      uploader writes as the auto-generated embed link, so both paths
     //      resolve to the exact same working player.
     //   3. Only as a last resort, wrap the raw file URL in EmbedFallbackFrame.
+    // 0. Preferred: this episode's own custom embed token (/<TOKEN>) — resolves
+    //    server-side to the exact same playback source as the normal player.
+    if (tokenEmbedUrl) {
+      return (
+        <PureEmbedPlayer
+          url={tokenEmbedUrl}
+          title={`${animeTitle} - Episode ${episodeNumber}`}
+          onSwitchServer={() => setUseIframeFallback(false)}
+        />
+      );
+    }
+
     const externalIsEmbed = !!externalUrl
       && !/\.(mp4|mkv|webm|avi|m3u8|m4v|mov)(\?|#|$)/i.test(externalUrl)
       && !/supabase.*storage|blob\.core\.windows|s3\.amazonaws|cloudfront\.net|r2\.cloudflarestorage|storage\.googleapis/i.test(externalUrl);
