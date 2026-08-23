@@ -54,7 +54,7 @@ interface UpcomingRow {
   cover_image: string | null;
   languages: string[];
   season_number: number;
-  release_date: string;
+  release_date: string | null;
 }
 
 const DAYS_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -252,7 +252,7 @@ export default function Schedule() {
     return () => { cancelled = true; };
   }, []);
 
-  // Upcoming seasons (with an announced release date)
+  // Upcoming seasons (announced date optional)
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -261,11 +261,10 @@ export default function Schedule() {
           .from('seasons')
           .select('id, season_number, release_date, anime:anime_id (id, title, cover_image, genres)')
           .eq('is_upcoming', true)
-          .not('release_date', 'is', null)
-          .order('release_date', { ascending: true });
+          .order('release_date', { ascending: true, nullsFirst: false });
 
         const list: UpcomingRow[] = (data || [])
-          .filter((s: any) => s.anime?.id && s.release_date)
+          .filter((s: any) => s.anime?.id)
           .map((s: any) => ({
             id: s.id,
             anime_id: s.anime.id,
@@ -273,8 +272,9 @@ export default function Schedule() {
             cover_image: s.anime.cover_image,
             languages: getLanguages(s.anime.genres),
             season_number: s.season_number ?? 1,
-            release_date: s.release_date,
+            release_date: s.release_date ?? null,
           }));
+
         if (!cancelled) setUpcoming(list);
       } catch (e) {
         console.error('Upcoming load failed', e);
@@ -340,13 +340,21 @@ export default function Schedule() {
   const upcomingRows = useMemo(() => {
     return upcoming
       .map((u) => {
+        if (!u.release_date) return { ...u, target: null as Date | null };
         const [y, m, d] = u.release_date.split('-').map(Number);
         return { ...u, target: zonedWallClockToDate(y, m, d, 0, 0, timeZone) };
       })
-      .filter((u) => u.target.getTime() > now - 86400000)
+      .filter((u) => !u.target || u.target.getTime() > now - 86400000)
       .filter((u) => (search ? u.title.toLowerCase().includes(search.toLowerCase()) : true))
-      .sort((a, b) => a.target.getTime() - b.target.getTime());
+      .sort((a, b) => {
+        // Announced dates first (soonest → latest), unannounced titles last
+        if (!a.target && !b.target) return a.title.localeCompare(b.title);
+        if (!a.target) return 1;
+        if (!b.target) return -1;
+        return a.target.getTime() - b.target.getTime();
+      });
   }, [upcoming, search, timeZone, now]);
+
 
   const todayIdx = getZonedParts(new Date(now), timeZone).weekday;
 
@@ -597,21 +605,31 @@ export default function Schedule() {
                       )}
 
                       <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-semibold">
-                          <CalendarDays className="h-3 w-3 text-primary" />
-                          {u.target.toLocaleDateString(undefined, {
-                            weekday: 'long',
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                            timeZone,
-                          })}
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[10px] font-semibold ${u.target ? 'bg-white/5 border-white/10' : 'bg-amber-500/10 border-amber-500/30 text-amber-300'}`}>
+                          <CalendarDays className={`h-3 w-3 ${u.target ? 'text-primary' : 'text-amber-300'}`} />
+                          {u.target
+                            ? u.target.toLocaleDateString(undefined, {
+                                weekday: 'long',
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                                timeZone,
+                              })
+                            : 'Release date not announced'}
                         </span>
                       </div>
                     </div>
                   </Link>
 
-                  <Countdown target={u.target} now={now} label="Premieres In" />
+                  {u.target ? (
+                    <Countdown target={u.target} now={now} label="Premieres In" />
+                  ) : (
+                    <div className="shrink-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center">
+                      <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Premieres In</p>
+                      <p className="text-sm font-bold text-amber-300 mt-1">TBA</p>
+                    </div>
+                  )}
+
                 </div>
               </div>
             ))}

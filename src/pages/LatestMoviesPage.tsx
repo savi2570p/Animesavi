@@ -17,6 +17,7 @@ interface Movie {
   created_at: string;
   view_count: number | null;
   status: string | null;
+  is_eng_dub?: boolean | null;
   firstEpisodeId?: string | null;
 }
 
@@ -161,9 +162,16 @@ export default function LatestMoviesPage() {
                           NEW
                         </div>
                       )}
-                      <div className="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-lg shadow-md">
-                        H-DUB
-                      </div>
+                      {movie.is_eng_dub ? (
+                        <div className="px-2 py-0.5 text-[10px] font-bold bg-gradient-to-r from-sky-500 to-indigo-500 text-white rounded-lg shadow-md">
+                          E-DUB
+                        </div>
+                      ) : (
+                        <div className="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-lg shadow-md">
+                          H-DUB
+                        </div>
+                      )}
+
                     </div>
 
                     {movie.status === 'upcoming' && (
