@@ -1502,6 +1502,59 @@ export type Database = {
           },
         ]
       }
+      video_embeds: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          episode_id: string | null
+          error_message: string | null
+          id: string
+          last_verified_at: string | null
+          playback_type: string | null
+          playback_url: string | null
+          status: string
+          token: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          episode_id?: string | null
+          error_message?: string | null
+          id?: string
+          last_verified_at?: string | null
+          playback_type?: string | null
+          playback_url?: string | null
+          status?: string
+          token: string
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          episode_id?: string | null
+          error_message?: string | null
+          id?: string
+          last_verified_at?: string | null
+          playback_type?: string | null
+          playback_url?: string | null
+          status?: string
+          token?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_embeds_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       watch_history: {
         Row: {
           anime_id: string

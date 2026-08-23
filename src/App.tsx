@@ -78,6 +78,8 @@ const FloxWatch = lazy(() => import("./pages/FloxWatch"));
 const SiteHealth = lazy(() => import("./pages/SiteHealth"));
 const AdminFeaturedLineup = lazy(() => import("./pages/AdminFeaturedLineup"));
 const ClonePlatform = lazy(() => import("./pages/ClonePlatform"));
+const RootSlugRouter = lazy(() => import("./pages/RootSlugRouter"));
+const TokenEmbedPlayer = lazy(() => import("./pages/TokenEmbedPlayer"));
 const SharePage = lazy(() => import("./pages/SharePage"));
 const ContinueWatchingAll = lazy(() => import("./pages/ContinueWatchingAll"));
 
@@ -247,7 +249,8 @@ const App = () => (
                   <Route path="/welcome" element={<Welcome />} />
                   <Route path="/qa-check" element={<QaCheck />} />
                   <Route path="/Shadow-Arise" element={<ShadowArise />} />
-                  <Route path="/:slug" element={<ClonePlatform />} />
+                  <Route path="/e/:token" element={<TokenEmbedPlayer />} />
+                  <Route path="/:slug" element={<RootSlugRouter />} />
                   <Route element={<MainLayout />}>
                     <Route path="/" element={<Index />} />
                     <Route path="/browse" element={<Browse />} />
