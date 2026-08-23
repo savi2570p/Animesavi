@@ -56,15 +56,23 @@ export const MostPopular = memo(function MostPopular() {
 
   const fetchPopularAnime = async () => {
     try {
-      const { data, error } = await supabase
-        .from('anime')
-        .select('id, title, cover_image, view_count, status, genres')
-        .order('view_count', { ascending: false })
-        .limit(30);
-      if (error) throw error;
-      const animeWithViews = (data || []).map(a => ({
+      const COLS = 'id, title, cover_image, view_count, status, genres';
+      // Pull the all-time leaders AND the newest additions so freshly added
+      // anime (which still have 0 DB views) can enter the popular row too.
+      const [topRes, newRes] = await Promise.all([
+        supabase.from('anime').select(COLS).order('view_count', { ascending: false }).limit(30),
+        supabase.from('anime').select(COLS).order('created_at', { ascending: false }).limit(24),
+      ]);
+      if (topRes.error) throw topRes.error;
+
+      const merged = new Map<string, PopularAnime>();
+      [...(topRes.data || []), ...(newRes.data || [])].forEach((a: PopularAnime) => {
+        if (!merged.has(a.id)) merged.set(a.id, a);
+      });
+
+      const animeWithViews = Array.from(merged.values()).map(a => ({
         ...a,
-        view_count: resolveViews(a.title, a.view_count)
+        view_count: resolveViews(a.title, a.view_count),
       }));
       animeWithViews.sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
       setAnimeList(animeWithViews);
