@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { rememberAccount } from '@/lib/accountUtils';
@@ -276,21 +276,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin = rolesLoaded && roles.includes('admin');
   const isRolesLoaded = rolesLoaded;
 
+  // Memoized so consumers (header, home rows, player) don't re-render on every
+  // provider render — only when auth state actually changes.
+  const value = useMemo(
+    () => ({
+      user,
+      session,
+      isLoading,
+      isRolesLoaded,
+      roles,
+      isUploader,
+      isAdmin,
+      signUp,
+      signIn,
+      signOut,
+    }),
+    [user, session, isLoading, isRolesLoaded, roles, isUploader, isAdmin]
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        isLoading,
-        isRolesLoaded,
-        roles,
-        isUploader,
-        isAdmin,
-        signUp,
-        signIn,
-        signOut,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
