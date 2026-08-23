@@ -7,13 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { RefreshCw, Smartphone, Monitor, AlertTriangle, Check, Info, Rocket, Timer } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  activateBoost,
-  subscribeBoost,
-  type BoostState,
-  BOOST_DURATION_MS,
-  BOOST_COOLDOWN_MS,
-} from '@/lib/uploadBoost';
+import { subscribeTuning, setTurbo } from '@/lib/uploadTuning';
 import { SpeedValidationPanel } from './SpeedValidationPanel';
 
 interface VideoFormatConverterProps {
