@@ -17,6 +17,7 @@ interface Movie {
   created_at: string;
   view_count: number | null;
   status: string | null;
+  is_eng_dub?: boolean | null;
   firstEpisodeId?: string | null;
 }
 
