@@ -306,6 +306,8 @@ export function VideoPlayer({
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   // Auto-use iframe/embed for external URL uploads (no video_url, only external_url)
   const [useIframeFallback, setUseIframeFallback] = useState(!videoUrl && !!externalUrl);
+  // Public custom-domain embed (/<TOKEN>) for this episode, resolved on demand.
+  const [tokenEmbedUrl, setTokenEmbedUrl] = useState<string | null>(null);
   const [audioTracks, setAudioTracks] = useState<AudioTrackInfo[]>([]);
   const [currentAudioTrack, setCurrentAudioTrack] = useState<number>(0);
   
