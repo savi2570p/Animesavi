@@ -45,11 +45,20 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
   const effectiveMaxSize =
     maxSizeGB ?? (contentType === 'movie' ? 100 : contentType === 'episode' ? 50 : accept === 'image' ? 1 : 50);
 
-  const { uploadFile, isUploading, progress, formattedSpeed, abortUpload } = useFileUpload({
+  const { uploadFile, isUploading, progress, formattedSpeed, formatSpeed, stats, abortUpload } = useFileUpload({
     bucket,
     folder,
     maxSizeGB: effectiveMaxSize,
   });
+
+  const formatEta = (seconds: number | null) => {
+    if (seconds === null || !isFinite(seconds) || seconds <= 0) return '—';
+    const s = Math.round(seconds);
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    return `${m}m ${String(s % 60).padStart(2, '0')}s`;
+  };
+
 
   const acceptTypes =
     accept === 'video'
