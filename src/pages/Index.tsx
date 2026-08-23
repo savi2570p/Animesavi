@@ -144,13 +144,14 @@ export default function Index() {
       <SectionBoundary label="home:recently-completed"><RecentlyCompleted /></SectionBoundary>
 
       {/* Social Share */}
-      <section className="py-4 md:py-8">
+      <section className="py-3 md:py-6">
         <div className="container">
-          <div className="lg-section p-5 md:p-7">
+          <div className="lg-section p-3 md:p-4 max-w-3xl mx-auto">
             <SectionBoundary label="home:social-share"><SocialShare /></SectionBoundary>
           </div>
         </div>
       </section>
+
     </div>
   );
 }
