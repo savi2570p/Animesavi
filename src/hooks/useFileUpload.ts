@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import * as tus from 'tus-js-client';
-import { subscribeBoost } from '@/lib/uploadBoost';
+import { pickChunkSize } from '@/lib/uploadTuning';
 import { beginUpload, reportUpload, endUpload } from '@/lib/uploadSpeedTracker';
 
 interface UseFileUploadOptions {
@@ -27,13 +27,14 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/upload/resumable` : '';
 
-// Lovable Cloud resumable storage requires a fixed 6 MB chunk size — any other
-// value can make the server reject PATCH requests and leave uploads at 0 %.
+// Lovable Cloud resumable storage requires chunk sizes that are multiples of
+// 6 MB. The chunk size is chosen per-file at runtime (see uploadTuning.ts) so
+// large files on fast links use fewer, larger round trips — a real throughput
+// gain, not a cosmetic one.
 // IMPORTANT: parallelUploads MUST stay at 1. tus-js-client's parallelUploads
 // relies on the TUS `concatenation` extension, which the resumable storage
 // endpoint does not support, causing uploads to restart mid-stream after a
 // certain percentage. Keep this single-stream for reliability.
-const VIDEO_CHUNK_SIZE = 16 * 1024 * 1024;
 const SPEED_SAMPLE_WINDOW_MS = 3_000;
 const SPEED_UPDATE_INTERVAL_MS = 200;
 
@@ -82,34 +83,67 @@ function useOnlineStatus() {
   return isOnline;
 }
 
+export interface UploadStats {
+  fileName: string;
+  bytesUploaded: number;
+  bytesTotal: number;
+  currentSpeed: number; // bytes/s (rolling, measured)
+  averageSpeed: number; // bytes/s (measured over whole upload)
+  etaSeconds: number | null;
+  chunkSize: number;
+  chunksDone: number;
+  chunksTotal: number;
+  retries: number;
+  connection: 'idle' | 'stable' | 'retrying' | 'offline' | 'finalizing' | 'complete';
+  storagePath: string;
+  error: string | null;
+}
+
+const emptyStats: UploadStats = {
+  fileName: '',
+  bytesUploaded: 0,
+  bytesTotal: 0,
+  currentSpeed: 0,
+  averageSpeed: 0,
+  etaSeconds: null,
+  chunkSize: 0,
+  chunksDone: 0,
+  chunksTotal: 0,
+  retries: 0,
+  connection: 'idle',
+  storagePath: '',
+  error: null,
+};
+
 export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadOptions) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [displayedProgress, setDisplayedProgress] = useState(0);
   const [uploadSpeed, setUploadSpeed] = useState<number>(0); // bytes per second
+  const [stats, setStats] = useState<UploadStats>(emptyStats);
   const isOnline = useOnlineStatus();
   const activeUploadRef = useRef<tus.Upload | null>(null);
   const pendingFileRef = useRef<{ file: File; filePath: string } | null>(null);
   const lastProgressRef = useRef<{ bytes: number; time: number }>({ bytes: 0, time: 0 });
   const speedSamplesRef = useRef<Array<{ bytes: number; time: number }>>([]);
   const measuredSpeedRef = useRef<number>(0);
+  const startedAtRef = useRef<number>(0);
+
+  const patchStats = useCallback((patch: Partial<UploadStats>) => {
+    setStats((prev) => ({ ...prev, ...patch }));
+  }, []);
 
   // Auto-resume upload when coming back online
   useEffect(() => {
     if (isOnline && activeUploadRef.current && pendingFileRef.current) {
       toast.info('Resuming upload...');
+      patchStats({ connection: 'stable' });
       activeUploadRef.current.start();
+    } else if (!isOnline && activeUploadRef.current) {
+      patchStats({ connection: 'offline' });
     }
-  }, [isOnline]);
+  }, [isOnline, patchStats]);
 
-  // Speed Boost is intentionally isolated from progress and finalization.
-  // It may tune transfer scheduling elsewhere, but it must never synthesize
-  // bytes, hold the bar at 99%, or interfere with the TUS completion callback.
-  useEffect(() => {
-    return subscribeBoost((boost) => {
-      if (boost.active) console.log('[Upload] Speed Boost enabled');
-    });
-  }, []);
 
   // Determine default max size based on bucket
   const getMaxSize = () => {
@@ -155,14 +189,27 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     console.log(`[Upload] Upload started: ${file.name}, size: ${(file.size / (1024 * 1024 * 1024)).toFixed(2)} GB (${file.size} bytes), type: ${getVideoMimeType(file)}`);
     console.log('[Upload] Uploading...');
 
+    const chunkSize = pickChunkSize(file.size);
+
     try {
       setUploadProgress(0);
       setDisplayedProgress(0);
       setUploadSpeed(0);
       measuredSpeedRef.current = 0;
+      startedAtRef.current = performance.now();
       lastProgressRef.current = { bytes: 0, time: performance.now() };
       speedSamplesRef.current = [{ bytes: 0, time: performance.now() }];
+      setStats({
+        ...emptyStats,
+        fileName: file.name,
+        bytesTotal: file.size,
+        chunkSize,
+        chunksTotal: Math.max(1, Math.ceil(file.size / chunkSize)),
+        connection: 'stable',
+        storagePath: filePath,
+      });
       beginUpload(file.size);
+
 
       await new Promise<void>((resolve, reject) => {
         let finalized = false;
@@ -194,6 +241,14 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
           setDisplayedProgress(100);
           reportUpload(file.size, measuredSpeedRef.current);
           speedSamplesRef.current = [];
+          patchStats({
+            bytesUploaded: file.size,
+            bytesTotal: file.size,
+            currentSpeed: 0,
+            etaSeconds: 0,
+            chunksDone: Math.max(1, Math.ceil(file.size / chunkSize)),
+            connection: 'complete',
+          });
           endUpload();
           console.log('[Upload] Storage commit...');
           console.log('[Upload] Finalize completed');
@@ -227,14 +282,16 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
         };
 
         // The normal onSuccess path completes immediately. A one-second grace
-        // check covers a missed callback, while the 30-second watchdog retries
-        // only the final offset verification—never the file upload itself.
+        // check covers a missed callback, and a 5-second watchdog keeps
+        // re-verifying the committed offset (never re-uploading the file), so
+        // the bar can never sit at 99% while storage already holds the object.
         const scheduleFinalizeChecks = (upload: tus.Upload) => {
           if (finalized || completionGraceTimer !== null || completionWatchdog !== null) return;
+          patchStats({ connection: 'finalizing' });
           completionGraceTimer = window.setTimeout(async () => {
             completionGraceTimer = null;
             await verifyFinalOffset(upload);
-          }, 1_000);
+          }, 800);
 
           completionWatchdog = window.setTimeout(async () => {
             completionWatchdog = null;
@@ -244,12 +301,13 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
               console.warn('[Upload] Finalize verification pending; retrying finalize check only');
               scheduleFinalizeChecks(upload);
             }
-          }, 30_000);
+          }, 5_000);
         };
+
 
         const upload = new tus.Upload(file, {
           endpoint: RESUMABLE_UPLOAD_ENDPOINT,
-          chunkSize: VIDEO_CHUNK_SIZE,
+          chunkSize,
           // Single-stream upload — parallelUploads with chunkSize triggers the
           // TUS concatenation extension, which Lovable Cloud storage rejects
           // partway through, causing the upload to restart.
@@ -301,9 +359,27 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
               reportUpload(bytesUploaded, measuredSpeed);
               speedSamplesRef.current = samples;
               lastProgressRef.current = { bytes: bytesUploaded, time: now };
+
+              const elapsedSec = Math.max((now - startedAtRef.current) / 1000, 0.001);
+              const averageSpeed = bytesUploaded / elapsedSec;
+              const remaining = Math.max(totalBytes - bytesUploaded, 0);
+              const rate = measuredSpeed > 0 ? measuredSpeed : averageSpeed;
+              patchStats({
+                bytesUploaded,
+                bytesTotal: totalBytes,
+                currentSpeed: measuredSpeed,
+                averageSpeed,
+                etaSeconds: rate > 0 ? remaining / rate : null,
+                chunksDone: Math.min(
+                  Math.floor(bytesUploaded / chunkSize),
+                  Math.max(1, Math.ceil(totalBytes / chunkSize))
+                ),
+                connection: 'stable',
+              });
             }
 
             if (uploadComplete) {
+
               allBytesUploaded = true;
               measuredSpeedRef.current = Math.max(measuredSpeedRef.current, 0);
               reportUpload(totalBytes, measuredSpeedRef.current);
@@ -317,6 +393,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             if (finalized) return;
             if (allBytesUploaded) {
               console.warn('[Upload] Completion response failed after all bytes uploaded; preserving file and retrying finalize only', err);
+              setStats((prev) => ({ ...prev, retries: prev.retries + 1, connection: 'retrying' }));
               scheduleFinalizeChecks(upload);
               return;
             }
@@ -327,6 +404,13 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
               fileSize: file.size,
               filePath,
             });
+            setStats((prev) => ({
+              ...prev,
+              retries: prev.retries + 1,
+              connection: navigator.onLine ? 'retrying' : 'offline',
+              error: err.message,
+            }));
+
             activeUploadRef.current = null;
             pendingFileRef.current = null;
             setUploadProgress(0);
@@ -463,6 +547,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     realProgress: uploadProgress,
     uploadSpeed,
     formattedSpeed: formatSpeed(uploadSpeed),
+    formatSpeed,
+    stats,
     SIZE_LIMITS,
     abortUpload,
   };
