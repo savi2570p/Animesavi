@@ -15,7 +15,7 @@ import { LatestEngDub } from "@/components/home/LatestEngDub";
 import { LatestSeries } from "@/components/home/LatestSeries";
 import { RecentlyCompleted } from "@/components/home/RecentlyCompleted";
 import { EpisodeProgress } from "@/components/home/EpisodeProgress";
-import { ComingSoon } from "@/components/home/ComingSoon";
+
 import { SocialShare } from "@/components/home/SocialShare";
 import { MostPopular } from "@/components/home/MostPopular";
 import { TrendingBanner } from "@/components/home/TrendingBanner";
