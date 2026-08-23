@@ -296,7 +296,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
 
         const upload = new tus.Upload(file, {
           endpoint: RESUMABLE_UPLOAD_ENDPOINT,
-          chunkSize: VIDEO_CHUNK_SIZE,
+          chunkSize,
           // Single-stream upload — parallelUploads with chunkSize triggers the
           // TUS concatenation extension, which Lovable Cloud storage rejects
           // partway through, causing the upload to restart.
