@@ -83,34 +83,67 @@ function useOnlineStatus() {
   return isOnline;
 }
 
+export interface UploadStats {
+  fileName: string;
+  bytesUploaded: number;
+  bytesTotal: number;
+  currentSpeed: number; // bytes/s (rolling, measured)
+  averageSpeed: number; // bytes/s (measured over whole upload)
+  etaSeconds: number | null;
+  chunkSize: number;
+  chunksDone: number;
+  chunksTotal: number;
+  retries: number;
+  connection: 'idle' | 'stable' | 'retrying' | 'offline' | 'finalizing' | 'complete';
+  storagePath: string;
+  error: string | null;
+}
+
+const emptyStats: UploadStats = {
+  fileName: '',
+  bytesUploaded: 0,
+  bytesTotal: 0,
+  currentSpeed: 0,
+  averageSpeed: 0,
+  etaSeconds: null,
+  chunkSize: 0,
+  chunksDone: 0,
+  chunksTotal: 0,
+  retries: 0,
+  connection: 'idle',
+  storagePath: '',
+  error: null,
+};
+
 export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadOptions) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [displayedProgress, setDisplayedProgress] = useState(0);
   const [uploadSpeed, setUploadSpeed] = useState<number>(0); // bytes per second
+  const [stats, setStats] = useState<UploadStats>(emptyStats);
   const isOnline = useOnlineStatus();
   const activeUploadRef = useRef<tus.Upload | null>(null);
   const pendingFileRef = useRef<{ file: File; filePath: string } | null>(null);
   const lastProgressRef = useRef<{ bytes: number; time: number }>({ bytes: 0, time: 0 });
   const speedSamplesRef = useRef<Array<{ bytes: number; time: number }>>([]);
   const measuredSpeedRef = useRef<number>(0);
+  const startedAtRef = useRef<number>(0);
+
+  const patchStats = useCallback((patch: Partial<UploadStats>) => {
+    setStats((prev) => ({ ...prev, ...patch }));
+  }, []);
 
   // Auto-resume upload when coming back online
   useEffect(() => {
     if (isOnline && activeUploadRef.current && pendingFileRef.current) {
       toast.info('Resuming upload...');
+      patchStats({ connection: 'stable' });
       activeUploadRef.current.start();
+    } else if (!isOnline && activeUploadRef.current) {
+      patchStats({ connection: 'offline' });
     }
-  }, [isOnline]);
+  }, [isOnline, patchStats]);
 
-  // Speed Boost is intentionally isolated from progress and finalization.
-  // It may tune transfer scheduling elsewhere, but it must never synthesize
-  // bytes, hold the bar at 99%, or interfere with the TUS completion callback.
-  useEffect(() => {
-    return subscribeBoost((boost) => {
-      if (boost.active) console.log('[Upload] Speed Boost enabled');
-    });
-  }, []);
 
   // Determine default max size based on bucket
   const getMaxSize = () => {
