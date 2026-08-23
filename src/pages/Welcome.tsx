@@ -34,7 +34,7 @@ const TRENDING_SEARCHES = [
   'Demon Slayer',
   'Dandadan',
   'Frieren',
-  'One Piece',
+  
   'Jujutsu Kaisen',
   'Chainsaw Man',
   'Re:Zero',
