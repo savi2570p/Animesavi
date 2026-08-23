@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Flame, ChevronRight, Play, Eye, Filter, Crown, TrendingUp } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
+import { getViewCount, formatViews } from '@/lib/viewCount';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,11 +60,11 @@ export const MostPopular = memo(function MostPopular() {
         .from('anime')
         .select('id, title, cover_image, view_count, status, genres')
         .order('view_count', { ascending: false })
-        .limit(12);
+        .limit(30);
       if (error) throw error;
       const animeWithViews = (data || []).map(a => ({
         ...a,
-        view_count: VIEW_COUNT_MAP[a.title] || Math.floor(Math.random() * (9000000 - 1000000) + 1000000)
+        view_count: resolveViews(a.title, a.view_count)
       }));
       animeWithViews.sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
       setAnimeList(animeWithViews);
