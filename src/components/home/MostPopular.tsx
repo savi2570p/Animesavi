@@ -28,21 +28,18 @@ const ALL_GENRES = [
   'Sports', 'Supernatural', 'Thriller'
 ];
 
-const VIEW_COUNT_MAP: Record<string, number> = {
+// Extra curated counts specific to this row, merged over the shared map.
+const EXTRA_VIEW_COUNTS: Record<string, number> = {
   'Your Name': 9500000,
-  'Your lie in April': 3400000,
-  'The angel next door spoils me rotten': 3600000,
   'The Angel Next Door Spoils me Rotten': 3600000,
-  'Mechanical Marie': 977000,
-  'Solo Leveling': 730000,
   "BOFURI: I Don't Want to Get Hurt, so I'll Max Out My Defense.": 2300000,
-  "A Gatherer's Adventure in Isekai": 267000,
-  'Jujutsu Kaisen': 8700000,
-  'My Dress-Up Darling': 6200000,
-  'Reborn to Master the Blade: From Hero-King to Extraordinary Squire': 1800000,
 };
 
-const formatViews = (v: number) => v >= 1_000_000 ? `${(v/1_000_000).toFixed(1)}M` : `${(v/1000).toFixed(0)}K`;
+const resolveViews = (title: string, dbViews: number | null | undefined) => {
+  const key = Object.keys(EXTRA_VIEW_COUNTS).find(k => k.toLowerCase() === (title || '').toLowerCase());
+  if (key) return EXTRA_VIEW_COUNTS[key];
+  return getViewCount(title, dbViews);
+};
 
 export const MostPopular = memo(function MostPopular() {
   const [animeList, setAnimeList] = useState<PopularAnime[]>([]);
