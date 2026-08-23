@@ -17,6 +17,8 @@ import { SubtitleEditor } from '@/components/upload/SubtitleEditor';
 import { extractEmbedSrc } from '@/components/video/PureEmbedPlayer';
 import { extractEmbeddedCaptionsToVTT } from '@/lib/extractEmbeddedCaptions';
 import { buildEmbedUrl } from '@/lib/embedLink';
+import { autoEnsureEmbed } from '@/lib/embedTokens';
+import { EmbedManagerPanel } from '@/components/admin/EmbedManagerPanel';
 
 const AUDIO_LANGUAGES = [
   { value: 'original', label: 'Original (Japanese)' },
