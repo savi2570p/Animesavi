@@ -128,7 +128,10 @@ Deno.serve(async (req) => {
       const status = processing ? 'PROCESSING' : 'FAILED';
       const reason = processing
         ? 'Video is still processing.'
-        : conversion?.error_message || 'No playback source is available for this video yet.';
+        : allSources.length > 0
+          ? 'The video file for this episode is missing or was not uploaded completely. Please re-upload it.'
+          : conversion?.error_message || 'No playback source is available for this video yet.';
+
 
       if (embed.status !== status) {
         await supabase.from('video_embeds').update({ status, error_message: reason }).eq('id', embed.id);
