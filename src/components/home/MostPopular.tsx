@@ -168,7 +168,7 @@ export const MostPopular = memo(function MostPopular() {
           </div>
         ) : (
           <div className="flex gap-4 md:gap-5 overflow-x-auto pb-4 -mx-4 px-4 snap-row scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
-            {filteredList.slice(0, 10).map((anime, index) => {
+            {filteredList.slice(0, 14).map((anime, index) => {
               const rank = index + 1;
               const isTop3 = rank <= 3;
               return (
