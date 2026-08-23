@@ -547,6 +547,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     realProgress: uploadProgress,
     uploadSpeed,
     formattedSpeed: formatSpeed(uploadSpeed),
+    formatSpeed,
+    stats,
     SIZE_LIMITS,
     abortUpload,
   };
