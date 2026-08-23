@@ -237,7 +237,23 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
                   style={{ width: `${progress}%` }}
                 />
               </div>
+              {accept === 'video' && (
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] text-muted-foreground">
+                  <span>ETA {formatEta(stats.etaSeconds)}</span>
+                  <span>avg {formatSpeed(stats.averageSpeed)}</span>
+                  <span>
+                    chunk {(stats.chunkSize / (1024 * 1024)).toFixed(0)}MB · {stats.chunksDone}/{stats.chunksTotal}
+                  </span>
+                  <span>
+                    {(stats.bytesUploaded / (1024 * 1024)).toFixed(0)}/
+                    {(stats.bytesTotal / (1024 * 1024)).toFixed(0)} MB
+                  </span>
+                  <span className="capitalize">{stats.connection}</span>
+                  {stats.retries > 0 && <span className="text-amber-500">retries {stats.retries}</span>}
+                </div>
+              )}
             </div>
+
             <Button
               type="button"
               variant="ghost"
