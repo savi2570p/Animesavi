@@ -28,7 +28,11 @@ interface AudioTrack { id: number; label: string }
 
 export default function TokenEmbedPlayer() {
   const params = useParams();
-  const token = params.token ?? params.slug ?? '';
+  const rawToken = params.token ?? params.slug ?? '';
+  // Guard: never call the resolver with an unresolved route placeholder
+  // (e.g. a literal ":token" from a crawler/prefetch hitting the pattern URL).
+  const token = /^[A-Za-z0-9_-]{4,64}$/.test(rawToken) ? rawToken : '';
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const shellRef = useRef<HTMLDivElement>(null);
   const hlsRef = useRef<Hls | null>(null);
