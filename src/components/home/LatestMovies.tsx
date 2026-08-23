@@ -174,7 +174,12 @@ export const LatestMovies = memo(function LatestMovies() {
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
                       4K
                     </span>
-                    <span className="badge-glass-hdub">H-DUB</span>
+                    {movie.is_eng_dub ? (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow">E-DUB</span>
+                    ) : (
+                      <span className="badge-glass-hdub">H-DUB</span>
+                    )}
+
                   </div>
 
                   {movie.status === 'upcoming' && (
