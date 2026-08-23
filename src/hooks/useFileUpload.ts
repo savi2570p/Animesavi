@@ -274,14 +274,16 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
         };
 
         // The normal onSuccess path completes immediately. A one-second grace
-        // check covers a missed callback, while the 30-second watchdog retries
-        // only the final offset verification—never the file upload itself.
+        // check covers a missed callback, and a 5-second watchdog keeps
+        // re-verifying the committed offset (never re-uploading the file), so
+        // the bar can never sit at 99% while storage already holds the object.
         const scheduleFinalizeChecks = (upload: tus.Upload) => {
           if (finalized || completionGraceTimer !== null || completionWatchdog !== null) return;
+          patchStats({ connection: 'finalizing' });
           completionGraceTimer = window.setTimeout(async () => {
             completionGraceTimer = null;
             await verifyFinalOffset(upload);
-          }, 1_000);
+          }, 800);
 
           completionWatchdog = window.setTimeout(async () => {
             completionWatchdog = null;
@@ -291,8 +293,9 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
               console.warn('[Upload] Finalize verification pending; retrying finalize check only');
               scheduleFinalizeChecks(upload);
             }
-          }, 30_000);
+          }, 5_000);
         };
+
 
         const upload = new tus.Upload(file, {
           endpoint: RESUMABLE_UPLOAD_ENDPOINT,
