@@ -251,13 +251,13 @@ export function SocialShare({ className = '' }: SocialShareProps) {
                     value={animeTitle}
                     onChange={e => setAnimeTitle(e.target.value.slice(0, 30))}
                     placeholder="Anime title"
-                    className="bg-background/40 border-border/40 rounded-xl h-10 text-sm"
+                    className="bg-background/40 border-border/40 rounded-lg h-9 text-xs"
                   />
                   <Input
                     value={seasonLabel}
                     onChange={e => setSeasonLabel(e.target.value.slice(0, 24))}
                     placeholder="Season / tagline"
-                    className="bg-background/40 border-border/40 rounded-xl h-10 text-sm"
+                    className="bg-background/40 border-border/40 rounded-lg h-9 text-xs"
                   />
                 </div>
               </div>
