@@ -60,7 +60,13 @@ export function Header() {
   const hasPremium = !!user && (isAdmin || hasValidTokenAccess(user?.email));
   const desktopSearchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
-  const [isMobileOS, setIsMobileOS] = useState(false);
+  // Resolve synchronously on first render — deriving this in an effect made the
+  // navbar render a desktop layout first and then stretch on mobile.
+  const [isMobileOS, setIsMobileOS] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return /iPad|iPhone|iPod|Android/.test(navigator.userAgent) ||
+      window.matchMedia('(max-width: 767px)').matches;
+  });
 
   useEffect(() => {
     const ua = navigator.userAgent;
