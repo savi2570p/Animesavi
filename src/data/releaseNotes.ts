@@ -14,17 +14,33 @@ export interface VersionGroup {
   items: ChangelogItem[];
 }
 
-export const APP_VERSION = 'V 30.1';
-export const RELEASE_DATE = 'August 7, 2026';
-export const DOWNLOAD_SIZE_MB = 20;
+export const APP_VERSION = 'V31';
+export const RELEASE_DATE = 'August 23, 2026';
+export const DOWNLOAD_SIZE_MB = 30;
 
 export const BETA_NOTE =
   'Use Embed Player is still in BETA — currently running BETA 2.1. Playback sources, fallbacks, and mobile compatibility are actively being improved.';
 
 export const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'V 30.1',
+    version: 'V31',
     date: RELEASE_DATE,
+    highlight:
+      'A faster, smoother update focused on the new Schedule experience, Clone Platforms, and download reliability.',
+    items: [
+      { icon: '📅', badge: 'NEW', title: 'Schedule Tab', desc: 'A dedicated, timezone-aware Schedule page with weekly countdowns and a cleaner release calendar interface.' },
+      { icon: '🌐', badge: 'NEW', title: 'Timezone Support', desc: 'Pick your timezone so release days, airing times, and live countdowns match your local clock.' },
+      { icon: '🔗', badge: 'NEW', title: 'Clone Platforms', desc: 'New admin-managed clone embeds with a smoother, ad-unlockable viewing experience across mobile and desktop.' },
+      { icon: '⏯️', badge: 'IMPROVED', title: 'Resume Downloads', desc: 'Interrupted downloads now remember progress and send a background notification when they finish.' },
+      { icon: '🎬', badge: 'IMPROVED', title: 'Player Stability', desc: 'Faster load times, smaller loading spinner, and more reliable fallback switching on the watch page.' },
+      { icon: '🏠', badge: 'IMPROVED', title: 'Home Polish', desc: 'Refreshed dark-purple home theme, fixed Trending banner artwork, and improved card legibility.' },
+      { icon: '🔧', badge: 'FIX', title: 'Navigation Fixes', desc: 'Resolved search redirect issues and stabilized the iOS navbar during token checks.' },
+      { icon: '🐞', badge: 'FIX', title: 'General Bug Fixes', desc: 'Various stability, layout, and interaction fixes across the app.' },
+    ],
+  },
+  {
+    version: 'V 30.1',
+    date: 'August 7, 2026',
     highlight:
       'A brand new page joins the app, plus important bug fixes for batch downloads and playback.',
     items: [
