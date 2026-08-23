@@ -429,6 +429,10 @@ export default function EpisodeEdit() {
             </p>
           </div>
 
+          {/* Public custom-domain embed (token → episode → playback source) */}
+          <EmbedManagerPanel episodeId={episodeId!} />
+
+
           <FileUploadInput
             label="Thumbnail"
             accept="image"
