@@ -393,6 +393,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
             if (finalized) return;
             if (allBytesUploaded) {
               console.warn('[Upload] Completion response failed after all bytes uploaded; preserving file and retrying finalize only', err);
+              setStats((prev) => ({ ...prev, retries: prev.retries + 1, connection: 'retrying' }));
               scheduleFinalizeChecks(upload);
               return;
             }
@@ -403,6 +404,13 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
               fileSize: file.size,
               filePath,
             });
+            setStats((prev) => ({
+              ...prev,
+              retries: prev.retries + 1,
+              connection: navigator.onLine ? 'retrying' : 'offline',
+              error: err.message,
+            }));
+
             activeUploadRef.current = null;
             pendingFileRef.current = null;
             setUploadProgress(0);
