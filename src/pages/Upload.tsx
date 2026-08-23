@@ -1458,7 +1458,7 @@ export default function Upload() {
                     
                     // Create the movie episode with uploaded video
                     if (episodeVideoUrl) {
-                      const { error: episodeError } = await supabase
+                      const { data: movieEpisode, error: episodeError } = await supabase
                         .from('episodes')
                         .insert({
                           season_id: seasonData.id,
@@ -1469,14 +1469,12 @@ export default function Upload() {
                           thumbnail: coverImage.trim() || null,
                         })
                         .select('id')
-                        .single()
-                        .then(async ({ data: movieEp, error }) => {
-                          if (movieEp?.id) await autoEnsureEmbed(movieEp.id);
-                          return { error };
-                        });
-                      
+                        .single();
+
                       if (episodeError) {
                         toast.error('Movie created but video upload failed');
+                      } else if (movieEpisode?.id) {
+                        void autoEnsureEmbed(movieEpisode.id);
                       }
                     }
                     
