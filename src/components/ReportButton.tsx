@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Flag, Send, X, Sparkles, Bug, PlayCircle, Volume2, Palette, Zap, Lightbulb,
   Lock, Server, Download, Bell, FileWarning, MoreHorizontal,
@@ -50,12 +51,17 @@ export function ReportButton() {
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const location = useLocation();
 
-  // Hide on embed routes
-  const isEmbed = typeof window !== 'undefined' && (
-    window.location.pathname.startsWith('/embed/') ||
-    new URLSearchParams(window.location.search).get('embed') === 'true'
-  );
+  // Hide on all embed routes (legacy /embed, new /e/:token, and embed mode)
+  const isEmbed = useMemo(() => {
+    const search = new URLSearchParams(window.location.search);
+    return (
+      location.pathname.startsWith('/embed/') ||
+      location.pathname.startsWith('/e/') ||
+      search.get('embed') === 'true'
+    );
+  }, [location.pathname]);
 
   // Generate / cleanup preview URL
   useEffect(() => {
