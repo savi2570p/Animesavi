@@ -67,11 +67,17 @@ export default function TokenEmbedPlayer() {
   const load = useCallback(async () => {
     setLoading(true);
     setPlaybackError(null);
+    if (!token) {
+      setResolution({ status: 'NOT_FOUND', reason: 'Invalid embed link.', sources: [] } as unknown as EmbedResolution);
+      setLoading(false);
+      return;
+    }
     const data = await resolveEmbedToken(token);
     setResolution(data);
     setSourceIndex(0);
     setLoading(false);
   }, [token]);
+
 
   useEffect(() => { void load(); }, [load]);
 
