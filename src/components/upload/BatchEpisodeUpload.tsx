@@ -10,6 +10,7 @@ import { VideoFormatConverter } from '@/components/upload/VideoFormatConverter';
 import { supabase } from '@/integrations/supabase/client';
 import { extractEmbedSrc } from '@/components/video/PureEmbedPlayer';
 import { buildEmbedUrl } from '@/lib/embedLink';
+import { autoEnsureEmbed } from '@/lib/embedTokens';
 
 interface BatchEpisode {
   id: string;
