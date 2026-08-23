@@ -241,6 +241,14 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
           setDisplayedProgress(100);
           reportUpload(file.size, measuredSpeedRef.current);
           speedSamplesRef.current = [];
+          patchStats({
+            bytesUploaded: file.size,
+            bytesTotal: file.size,
+            currentSpeed: 0,
+            etaSeconds: 0,
+            chunksDone: Math.max(1, Math.ceil(file.size / chunkSize)),
+            connection: 'complete',
+          });
           endUpload();
           console.log('[Upload] Storage commit...');
           console.log('[Upload] Finalize completed');
