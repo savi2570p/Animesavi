@@ -230,7 +230,7 @@ export function Header() {
 
   return (
     <header
-      className={`sticky top-0 z-[100] w-full safe-area-top lg-nav-floating transition-transform duration-300 will-change-transform ${
+      className={`sticky top-0 z-[100] w-full lg-nav-floating transition-transform duration-300 will-change-transform ${
         navHidden ? '-translate-y-[120%]' : 'translate-y-0'
       }`}
     >
