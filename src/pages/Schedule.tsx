@@ -340,13 +340,21 @@ export default function Schedule() {
   const upcomingRows = useMemo(() => {
     return upcoming
       .map((u) => {
+        if (!u.release_date) return { ...u, target: null as Date | null };
         const [y, m, d] = u.release_date.split('-').map(Number);
         return { ...u, target: zonedWallClockToDate(y, m, d, 0, 0, timeZone) };
       })
-      .filter((u) => u.target.getTime() > now - 86400000)
+      .filter((u) => !u.target || u.target.getTime() > now - 86400000)
       .filter((u) => (search ? u.title.toLowerCase().includes(search.toLowerCase()) : true))
-      .sort((a, b) => a.target.getTime() - b.target.getTime());
+      .sort((a, b) => {
+        // Announced dates first (soonest → latest), unannounced titles last
+        if (!a.target && !b.target) return a.title.localeCompare(b.title);
+        if (!a.target) return 1;
+        if (!b.target) return -1;
+        return a.target.getTime() - b.target.getTime();
+      });
   }, [upcoming, search, timeZone, now]);
+
 
   const todayIdx = getZonedParts(new Date(now), timeZone).weekday;
 
