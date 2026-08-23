@@ -199,26 +199,31 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <PopupQueueProvider>
-              <AntiPiracyShield mode="soft" />
-              <TurnstileGate />
-              <PinLockGate />
-              <BanGuard />
-              <ScrollRecoveryInitializer />
-              <ScrollToTop />
-              <AccessBanner />
-              <TokenExpiredGlobalPopup />
-              <AdminTrialPopup />
-              <OfflineIndicator />
-              <WelcomePopup />
-              <FloatingTelegramButton />
-              <ReportButton />
-              <MiniPlayer />
-              <PWAInstallPrompt />
-              <NetworkSpeedInitializer />
-              <BackgroundSyncInitializer />
-              <AutoVideoScanInitializer />
-              <TokenAccessSyncInitializer />
-              <RoutePrefetchInitializer />
+              {/* Global overlays/initializers are non-essential: if any of them
+                  crash, they disappear silently instead of blanking the app. */}
+              <ErrorBoundary silent label="global-overlays">
+                <AntiPiracyShield mode="soft" />
+                <TurnstileGate />
+                <PinLockGate />
+                <BanGuard />
+                <ScrollRecoveryInitializer />
+                <ScrollToTop />
+                <AccessBanner />
+                <TokenExpiredGlobalPopup />
+                <AdminTrialPopup />
+                <OfflineIndicator />
+                <WelcomePopup />
+                <FloatingTelegramButton />
+                <ReportButton />
+                <MiniPlayer />
+                <PWAInstallPrompt />
+                <NetworkSpeedInitializer />
+                <BackgroundSyncInitializer />
+                <AutoVideoScanInitializer />
+                <TokenAccessSyncInitializer />
+                <RoutePrefetchInitializer />
+              </ErrorBoundary>
+              <RouteBoundary>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/auth" element={<Auth />} />
