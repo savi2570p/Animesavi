@@ -94,7 +94,24 @@ Deno.serve(async (req) => {
       poster = anime?.banner_image ?? anime?.cover_image ?? null;
     }
 
-    const sources = buildSources(episode, conversion ?? null);
+    const allSources = buildSources(episode, conversion ?? null);
+
+    // Drop sources whose file no longer exists (failed/partial uploads leave
+    // dead storage URLs behind) so the player never shows a false error.
+    const reachable = await Promise.all(
+      allSources.map(async (s) => {
+        try {
+          const probe = await fetch(s.url, { method: 'GET', headers: { Range: 'bytes=0-1' } });
+          try { await probe.body?.cancel(); } catch { /* ignore */ }
+          return probe.ok || probe.status === 206 || probe.status === 405 ? s : null;
+        } catch {
+          return null;
+        }
+      }),
+    );
+    const liveSources = reachable.filter((s): s is NonNullable<typeof s> => s !== null);
+    const sources = liveSources.length > 0 ? liveSources : [];
+
     const meta = {
       token: embed.token,
       title: episode.title,
