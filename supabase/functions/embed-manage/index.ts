@@ -151,6 +151,7 @@ Deno.serve(async (req) => {
         error_message: sources.length ? null : (conversion?.error_message ?? 'No playback source yet.'),
         last_verified_at: new Date().toISOString(),
       }).eq('id', existing.id);
+      await syncExternalUrl(existing.token);
       return json({ created: false, token: existing.token, url: publicUrl(existing.token), status });
     }
 
@@ -158,6 +159,7 @@ Deno.serve(async (req) => {
       await admin.from('video_embeds').update({ status: 'DISABLED' }).eq('id', existing.id);
     }
     if (action === 'generate' && existing) {
+      await syncExternalUrl(existing.token);
       return json({ created: false, token: existing.token, url: publicUrl(existing.token), status: existing.status });
     }
 
@@ -212,6 +214,8 @@ Deno.serve(async (req) => {
       return json({ created: true, verified: false, token: inserted.token,
         url: publicUrl(inserted.token), status: 'FAILED', error: verifyReason }, 200);
     }
+
+    await syncExternalUrl(inserted.token);
 
     return json({
       created: true,
