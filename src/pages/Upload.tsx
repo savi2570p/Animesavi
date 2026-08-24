@@ -28,6 +28,7 @@ import {
   Eye,
   Wrench,
   Key,
+  Link2,
   CalendarClock,
   Tv,
   Layers,
