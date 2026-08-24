@@ -215,6 +215,7 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
       <DialogContent
         className="relative max-w-sm p-0 overflow-hidden border-white/15 text-foreground shadow-2xl"
         style={{
+          zIndex: 2147483200,
           background:
             'linear-gradient(160deg, hsla(0,0%,100%,0.08) 0%, hsla(0,0%,100%,0.02) 45%, hsla(0,0%,0%,0.35) 100%)',
           backdropFilter: 'blur(28px) saturate(180%)',
