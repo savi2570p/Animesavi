@@ -111,6 +111,30 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
             });
             if (typeof hours === 'number' && hours > 0) setDurationHours(hours);
           }
+
+          // Fetch rich metadata (issuer, created time, last used) for the end-token confirmation
+          try {
+            const { data: meta, error: metaError } = await supabase.rpc('get_token_metadata');
+            if (!metaError && meta && Array.isArray(meta) && meta.length > 0) {
+              const row = meta[0] as {
+                issuer_email: string | null;
+                token_created_at: string | null;
+                token_used_at: string | null;
+                token_expires_at: number | null;
+                duration_hours: number | null;
+              };
+              setMetadata({
+                issuerEmail: row.issuer_email ?? null,
+                createdAt: row.token_created_at ? new Date(row.token_created_at) : null,
+                usedAt: row.token_used_at ? new Date(row.token_used_at) : null,
+                expiresAt: row.token_expires_at ?? null,
+                durationHours: row.duration_hours ?? null,
+              });
+            }
+          } catch {
+            // Non-critical: keep existing UI if metadata fails
+          }
+
         }
 
         if (!isAdmin && !superAdmin) {
