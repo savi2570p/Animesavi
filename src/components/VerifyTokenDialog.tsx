@@ -295,10 +295,10 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
                 }`}
               />
 
-              <div className="relative px-5 pt-6 pb-4 flex flex-col items-center">
+              <div className="relative px-4 pt-4 pb-3 sm:px-5 sm:pt-6 sm:pb-4 flex flex-col items-center">
                 {/* Progress ring with status icon */}
-                <div className="relative w-24 h-24">
-                  <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
+                <div className="relative w-16 h-16 sm:w-24 sm:h-24">
+                  <svg className="w-16 h-16 sm:w-24 sm:h-24 -rotate-90" viewBox="0 0 100 100">
                     <circle
                       cx="50"
                       cy="50"
