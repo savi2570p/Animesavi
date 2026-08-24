@@ -9,7 +9,16 @@ interface UseFileUploadOptions {
   bucket: 'anime-videos' | 'anime-thumbnails' | 'movies';
   folder?: string;
   maxSizeGB?: number;
+  /**
+   * Use a deterministic storage path derived from the file itself so a failed
+   * upload can be resumed (instead of restarting) when the same file is picked
+   * again. Enables upsert so the partial object can be completed in place.
+   */
+  stablePath?: boolean;
+  /** Cap chunk size (in 6MB units). Smaller chunks survive flaky mobile links. */
+  maxChunkUnits?: number;
 }
+
 
 interface UploadResult {
   url: string;
