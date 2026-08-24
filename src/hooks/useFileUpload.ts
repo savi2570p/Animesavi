@@ -66,6 +66,63 @@ function getVideoMimeType(file: File): string {
   return VIDEO_MIME_MAP[ext] || 'video/mp4';
 }
 
+// ---------------------------------------------------------------------------
+// Resume pointers
+// A tiny, explicit store (keyed by storage path) holding the TUS upload URL of
+// an interrupted transfer. It is verified against the server with a HEAD probe
+// before it is ever trusted, so a stale pointer can never fail an upload.
+// ---------------------------------------------------------------------------
+const RESUME_PREFIX = 'upload-resume:';
+
+function resumeKey(filePath: string) {
+  return `${RESUME_PREFIX}${filePath}`;
+}
+
+function readResumePointer(filePath: string): string | null {
+  try {
+    return localStorage.getItem(resumeKey(filePath));
+  } catch {
+    return null;
+  }
+}
+
+function writeResumePointer(filePath: string, url: string) {
+  try {
+    localStorage.setItem(resumeKey(filePath), url);
+  } catch {
+    /* storage full / private mode — resume is best-effort */
+  }
+}
+
+function clearResumePointer(filePath: string) {
+  try {
+    localStorage.removeItem(resumeKey(filePath));
+  } catch {
+    /* noop */
+  }
+}
+
+/** Ask the server how many bytes it actually holds for an upload URL. */
+async function probeOffset(uploadUrl: string, accessToken: string): Promise<number | null> {
+  try {
+    const response = await fetch(uploadUrl, {
+      method: 'HEAD',
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        apikey: SUPABASE_PUBLISHABLE_KEY,
+        'Tus-Resumable': '1.0.0',
+      },
+    });
+    if (!response.ok) return null;
+    const offset = Number(response.headers.get('Upload-Offset'));
+    return Number.isFinite(offset) ? offset : null;
+  } catch {
+    return null;
+  }
+}
+
+
+
 // Hook to track online/offline status
 function useOnlineStatus() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
