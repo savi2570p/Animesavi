@@ -113,15 +113,9 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
 
           // Fetch rich metadata (issuer, created time, last used) for the end-token confirmation
           try {
-            const { data: meta, error: metaError } = await supabase.rpc('get_token_metadata');
-            if (!metaError && meta && Array.isArray(meta) && meta.length > 0) {
-              const row = meta[0] as {
-                issuer_email: string | null;
-                token_created_at: string | null;
-                token_used_at: string | null;
-                token_expires_at: number | null;
-                duration_hours: number | null;
-              };
+            const { data: metaRows, error: metaError } = await supabase.rpc('get_token_metadata');
+            if (!metaError && metaRows && metaRows.length > 0) {
+              const row = metaRows[0];
               setMetadata({
                 issuerEmail: row.issuer_email ?? null,
                 createdAt: row.token_created_at ? new Date(row.token_created_at) : null,
@@ -133,6 +127,7 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
           } catch {
             // Non-critical: keep existing UI if metadata fails
           }
+
 
         }
 
