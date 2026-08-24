@@ -561,7 +561,9 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
                   size: file.size,
                   metadata: {},
                   creationTime: new Date().toISOString(),
-                });
+                  urlStorageKey: resumeKey(filePath),
+                  parallelUploadUrls: null,
+                } as unknown as tus.PreviousUpload);
                 setUploadProgress(Math.floor((offset / file.size) * 100));
                 setDisplayedProgress(Math.floor((offset / file.size) * 100));
                 patchStats({ resumed: true, resumedFromBytes: offset, bytesUploaded: offset });
