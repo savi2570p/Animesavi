@@ -620,6 +620,46 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
                         This will immediately remove your active premium session. You can only get it back by activating a new token link.
                       </p>
                     </div>
+
+                    {/* Token metadata */}
+                    <div className="mt-4 rounded-xl bg-muted/40 border border-border/40 p-3 space-y-2">
+                      <div className="flex items-center gap-1.5">
+                        <BadgeCheck className="h-3 w-3 text-primary" />
+                        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                          Token Details
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                            <User className="h-3 w-3" />
+                            Issuer
+                          </div>
+                          <span className="text-[10px] font-semibold text-foreground truncate max-w-[140px]">
+                            {metadata.issuerEmail ?? 'Unknown'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            Created
+                          </div>
+                          <span className="text-[10px] font-semibold text-foreground">
+                            {metadata.createdAt ? formatDate(metadata.createdAt) : '—'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                            <History className="h-3 w-3" />
+                            Last used
+                          </div>
+                          <span className="text-[10px] font-semibold text-foreground">
+                            {metadata.usedAt ? formatDate(metadata.usedAt) : '—'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="mt-4 grid grid-cols-2 gap-2">
                       <button
                         onClick={handleCancelEnd}
@@ -638,6 +678,7 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
                   </div>
                 </div>
               )}
+
 
               <button
                 onClick={handleClose}
