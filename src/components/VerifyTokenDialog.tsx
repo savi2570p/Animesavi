@@ -42,6 +42,7 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
   const [now, setNow] = useState(Date.now());
   const [copied, setCopied] = useState(false);
   const [ending, setEnding] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const isCasting = useCastDetection();
 
   const superAdmin = isSuperAdmin(user?.email);
@@ -160,9 +161,13 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
     } catch {}
   };
 
-  const handleEndToken = async () => {
+  const handleEndToken = () => {
+    setShowConfirm(true);
+  };
+
+  const handleConfirmEnd = async () => {
     if (!user?.id) return;
-    if (!confirm('End your token now? You will need to activate a new token link to regain premium access.')) return;
+    setShowConfirm(false);
     setEnding(true);
     const { error } = await supabase.from('token_usage').delete().eq('user_id', user.id);
     setEnding(false);
@@ -180,6 +185,10 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
     setActivatedAt(null);
     toast.success('Token ended', { description: 'Activate a new token link to restore access.' });
     setTimeout(() => window.location.reload(), 900);
+  };
+
+  const handleCancelEnd = () => {
+    setShowConfirm(false);
   };
 
   const handleClose = () => {
@@ -204,7 +213,7 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-sm p-0 overflow-hidden border-white/15 text-foreground shadow-2xl"
+        className="relative max-w-sm p-0 overflow-hidden border-white/15 text-foreground shadow-2xl"
         style={{
           background:
             'linear-gradient(160deg, hsla(0,0%,100%,0.08) 0%, hsla(0,0%,100%,0.02) 45%, hsla(0,0%,0%,0.35) 100%)',
@@ -506,6 +515,25 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
                 </a>
               )}
 
+              {/* Token info note */}
+              {isActive && (
+                <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-2.5">
+                  <div className="flex items-start gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                      <Shield className="h-3 w-3 text-amber-400" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-foreground uppercase tracking-wide">
+                        What happens next?
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">
+                        Ending your token will instantly revoke premium access on this device. You will need to activate a new token link from Telegram to restore 4K, ad-free streaming and all premium perks.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* End token */}
               {isActive && (
                 <button
@@ -518,7 +546,54 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
                 </button>
               )}
 
-
+              {/* Liquid-glass confirmation overlay */}
+              {showConfirm && (
+                <div
+                  className="absolute inset-0 z-50 flex items-center justify-center p-4"
+                  style={{
+                    background: 'hsla(0,0%,0%,0.45)',
+                    backdropFilter: 'blur(18px) saturate(160%)',
+                    WebkitBackdropFilter: 'blur(18px) saturate(160%)',
+                  }}
+                >
+                  <div
+                    className="w-full max-w-xs rounded-2xl border border-white/15 p-4 shadow-2xl"
+                    style={{
+                      background:
+                        'linear-gradient(160deg, hsla(0,0%,100%,0.12) 0%, hsla(0,0%,100%,0.04) 45%, hsla(0,0%,0%,0.45) 100%)',
+                      backdropFilter: 'blur(32px) saturate(180%)',
+                      WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+                      boxShadow:
+                        '0 30px 70px hsla(0,0%,0%,0.55), inset 0 1px 0 hsla(0,0%,100%,0.18), inset 0 -1px 0 hsla(0,0%,0%,0.35)',
+                    }}
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-destructive/30 to-rose-500/20 flex items-center justify-center border border-destructive/30">
+                        <PowerOff className="h-5 w-5 text-destructive" />
+                      </div>
+                      <h3 className="mt-3 text-sm font-black text-foreground">End Token?</h3>
+                      <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">
+                        This will immediately remove your active premium session. You can only get it back by activating a new token link.
+                      </p>
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <button
+                        onClick={handleCancelEnd}
+                        className="w-full py-2.5 rounded-xl font-bold text-xs bg-muted/60 text-foreground hover:bg-muted transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleConfirmEnd}
+                        disabled={ending}
+                        className="w-full py-2.5 rounded-xl font-black text-xs text-white bg-gradient-to-r from-destructive to-rose-600 hover:opacity-90 disabled:opacity-60 shadow-lg shadow-destructive/30 transition-opacity"
+                      >
+                        {ending ? 'Ending…' : 'Yes, End'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <button
                 onClick={handleClose}
