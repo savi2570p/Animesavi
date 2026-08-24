@@ -63,8 +63,8 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
   });
   const isCasting = useCastDetection();
 
-
   const superAdmin = isSuperAdmin(user?.email);
+
 
   useEffect(() => {
     if (!open) return;
