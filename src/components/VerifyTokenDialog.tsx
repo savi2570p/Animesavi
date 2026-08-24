@@ -482,6 +482,20 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
                 </a>
               )}
 
+              {/* End token */}
+              {isActive && !superAdmin && (
+                <button
+                  onClick={handleEndToken}
+                  disabled={ending}
+                  className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-xs font-black text-destructive bg-destructive/10 border border-destructive/30 hover:bg-destructive/20 disabled:opacity-60 transition-colors"
+                >
+                  <PowerOff className="h-3.5 w-3.5" />
+                  {ending ? 'Ending…' : 'End Token'}
+                </button>
+              )}
+
+
+
               <button
                 onClick={handleClose}
                 className={`w-full py-2.5 rounded-xl font-bold text-xs transition-all ${
