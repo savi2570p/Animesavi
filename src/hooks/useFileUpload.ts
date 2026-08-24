@@ -106,6 +106,10 @@ export interface UploadStats {
   connection: 'idle' | 'stable' | 'retrying' | 'offline' | 'finalizing' | 'complete';
   storagePath: string;
   error: string | null;
+  /** Bytes the server confirmed it already holds when the upload was resumed. */
+  resumedFromBytes: number;
+  /** True when this run continued a previously interrupted transfer. */
+  resumed: boolean;
 }
 
 const emptyStats: UploadStats = {
@@ -122,7 +126,10 @@ const emptyStats: UploadStats = {
   connection: 'idle',
   storagePath: '',
   error: null,
+  resumedFromBytes: 0,
+  resumed: false,
 };
+
 
 export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = false, maxChunkUnits = 8 }: UseFileUploadOptions) {
   const [isUploading, setIsUploading] = useState(false);
