@@ -631,7 +631,22 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       const fileName = stablePath
         ? `${slug}-${file.size}-${file.lastModified}${fileExt ? `.${fileExt}` : ''}`
         : `${Date.now()}-${Math.random().toString(36).substring(2)}${fileExt ? `.${fileExt}` : ''}`;
-      const filePath = folder ? `${folder}/${fileName}` : fileName;
+      let filePath = folder ? `${folder}/${fileName}` : fileName;
+
+      // A stable path collides with a completed object from an earlier run.
+      // Without a resume pointer that collision makes creation fail instantly,
+      // so fall back to a unique path in that case.
+      if (stablePath && !readResumePointer(filePath)) {
+        const { data: existing } = await supabase.storage
+          .from(bucket)
+          .list(folder || undefined, { search: fileName, limit: 1 });
+        if (existing?.some((entry) => entry.name === fileName)) {
+          const unique = `${slug}-${Date.now()}${fileExt ? `.${fileExt}` : ''}`;
+          filePath = folder ? `${folder}/${unique}` : unique;
+        }
+      }
+
+
 
       // Videos: use resumable/chunked upload to support large files reliably
       if (bucket === 'anime-videos' || bucket === 'movies') {
