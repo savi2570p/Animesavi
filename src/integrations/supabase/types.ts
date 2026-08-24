@@ -1897,6 +1897,16 @@ export type Database = {
       }
       end_watch_party: { Args: { party_uuid: string }; Returns: boolean }
       get_token_duration: { Args: { _token_id: string }; Returns: number }
+      get_token_metadata: {
+        Args: never
+        Returns: {
+          duration_hours: number
+          issuer_email: string
+          token_created_at: string
+          token_expires_at: number
+          token_used_at: string
+        }[]
+      }
       get_token_system_status: { Args: never; Returns: boolean }
       has_role: {
         Args: {

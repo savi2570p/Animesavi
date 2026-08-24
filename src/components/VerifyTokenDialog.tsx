@@ -17,6 +17,9 @@ import {
   Copy,
   Check,
   PowerOff,
+  User,
+  History,
+  BadgeCheck,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,7 +34,15 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
+interface TokenMetadata {
+  issuerEmail: string | null;
+  createdAt: Date | null;
+  usedAt: Date | null;
+  expiresAt: number | null;
+  durationHours: number | null;
+}
 export function VerifyTokenDialog({ open, onOpenChange }: Props) {
+
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'active' | 'expired'>('loading');
@@ -43,9 +54,17 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
   const [copied, setCopied] = useState(false);
   const [ending, setEnding] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [metadata, setMetadata] = useState<TokenMetadata>({
+    issuerEmail: null,
+    createdAt: null,
+    usedAt: null,
+    expiresAt: null,
+    durationHours: null,
+  });
   const isCasting = useCastDetection();
 
   const superAdmin = isSuperAdmin(user?.email);
+
 
   useEffect(() => {
     if (!open) return;
@@ -91,6 +110,25 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
             });
             if (typeof hours === 'number' && hours > 0) setDurationHours(hours);
           }
+
+          // Fetch rich metadata (issuer, created time, last used) for the end-token confirmation
+          try {
+            const { data: metaRows, error: metaError } = await supabase.rpc('get_token_metadata');
+            if (!metaError && metaRows && metaRows.length > 0) {
+              const row = metaRows[0];
+              setMetadata({
+                issuerEmail: row.issuer_email ?? null,
+                createdAt: row.token_created_at ? new Date(row.token_created_at) : null,
+                usedAt: row.token_used_at ? new Date(row.token_used_at) : null,
+                expiresAt: row.token_expires_at ?? null,
+                durationHours: row.duration_hours ?? null,
+              });
+            }
+          } catch {
+            // Non-critical: keep existing UI if metadata fails
+          }
+
+
         }
 
         if (!isAdmin && !superAdmin) {
@@ -577,6 +615,46 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
                         This will immediately remove your active premium session. You can only get it back by activating a new token link.
                       </p>
                     </div>
+
+                    {/* Token metadata */}
+                    <div className="mt-4 rounded-xl bg-muted/40 border border-border/40 p-3 space-y-2">
+                      <div className="flex items-center gap-1.5">
+                        <BadgeCheck className="h-3 w-3 text-primary" />
+                        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                          Token Details
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                            <User className="h-3 w-3" />
+                            Issuer
+                          </div>
+                          <span className="text-[10px] font-semibold text-foreground truncate max-w-[140px]">
+                            {metadata.issuerEmail ?? 'Unknown'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            Created
+                          </div>
+                          <span className="text-[10px] font-semibold text-foreground">
+                            {metadata.createdAt ? formatDate(metadata.createdAt) : '—'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                            <History className="h-3 w-3" />
+                            Last used
+                          </div>
+                          <span className="text-[10px] font-semibold text-foreground">
+                            {metadata.usedAt ? formatDate(metadata.usedAt) : '—'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="mt-4 grid grid-cols-2 gap-2">
                       <button
                         onClick={handleCancelEnd}
@@ -595,6 +673,7 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
                   </div>
                 </div>
               )}
+
 
               <button
                 onClick={handleClose}
