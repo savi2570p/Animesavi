@@ -393,6 +393,10 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
           retryDelays: [0, 1000, 3000, 5000, 10000, 15000, 20000, 30000, 30000, 60000],
           storeFingerprintForResuming: true,
           removeFingerprintOnSuccess: true,
+          onUploadUrlAvailable: () => {
+            const url = activeUploadRef.current?.url;
+            if (url) writeResumePointer(filePath, url);
+          },
           // Retry on transport errors and transient server responses; only give
           // up on genuine client errors (auth/validation), never on 5xx/timeouts.
           onShouldRetry: (err) => {
