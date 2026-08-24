@@ -124,7 +124,7 @@ const emptyStats: UploadStats = {
   error: null,
 };
 
-export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadOptions) {
+export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = false, maxChunkUnits = 8 }: UseFileUploadOptions) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [displayedProgress, setDisplayedProgress] = useState(0);
