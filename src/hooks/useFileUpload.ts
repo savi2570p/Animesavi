@@ -310,6 +310,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
           console.log('[Upload] Finalize called');
           clearCompletionTimers();
           finalized = true;
+          clearResumePointer(filePath);
           activeUploadRef.current = null;
           pendingFileRef.current = null;
           setUploadProgress(100);
