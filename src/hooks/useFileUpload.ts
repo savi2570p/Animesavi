@@ -198,7 +198,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
     console.log(`[Upload] Upload started: ${file.name}, size: ${(file.size / (1024 * 1024 * 1024)).toFixed(2)} GB (${file.size} bytes), type: ${getVideoMimeType(file)}`);
     console.log('[Upload] Uploading...');
 
-    const chunkSize = pickChunkSize(file.size);
+    const chunkSize = pickChunkSize(file.size, maxChunkUnits);
 
     try {
       setUploadProgress(0);
