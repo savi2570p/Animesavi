@@ -17,6 +17,9 @@ import {
   Copy,
   Check,
   PowerOff,
+  User,
+  History,
+  BadgeCheck,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +33,15 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+interface TokenMetadata {
+  issuerEmail: string | null;
+  createdAt: Date | null;
+  usedAt: Date | null;
+  expiresAt: number | null;
+  durationHours: number | null;
+}
+
 
 export function VerifyTokenDialog({ open, onOpenChange }: Props) {
   const { user, isAdmin } = useAuth();
