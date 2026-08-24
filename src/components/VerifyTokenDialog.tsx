@@ -213,7 +213,7 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-sm p-0 overflow-hidden border-white/15 text-foreground shadow-2xl"
+        className="relative max-w-sm p-0 overflow-hidden border-white/15 text-foreground shadow-2xl"
         style={{
           background:
             'linear-gradient(160deg, hsla(0,0%,100%,0.08) 0%, hsla(0,0%,100%,0.02) 45%, hsla(0,0%,0%,0.35) 100%)',
