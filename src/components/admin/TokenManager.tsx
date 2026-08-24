@@ -113,6 +113,7 @@ export function TokenManager() {
                   <SelectItem value="6">6 Hours</SelectItem>
                   <SelectItem value="12">12 Hours</SelectItem>
                   <SelectItem value="24">24 Hours</SelectItem>
+                  <SelectItem value="30">30 Hours</SelectItem>
                 </SelectContent>
               </Select>
             </div>
