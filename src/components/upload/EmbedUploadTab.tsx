@@ -107,7 +107,19 @@ export function EmbedUploadTab() {
                 Cancel
               </button>
             </div>
+            {stats.resumed && stats.resumedFromBytes > 0 && (
+              <p className="mt-2 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2 py-1 text-[11px] text-emerald-400">
+                Resumed from verified offset {mb(stats.resumedFromBytes)} of {mb(stats.bytesTotal)} (
+                {Math.floor((stats.resumedFromBytes / Math.max(stats.bytesTotal, 1)) * 100)}%) — no restart.
+              </p>
+            )}
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Uploaded {mb(stats.bytesUploaded)} / {mb(stats.bytesTotal)} · chunk {mb(stats.chunkSize)} · state{' '}
+              {stats.connection}
+              {stats.retries > 0 ? ` · retries ${stats.retries}` : ''}
+            </p>
           </div>
+
         ) : (
           <button
             type="button"
