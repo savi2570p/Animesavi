@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Lock, Ban, Globe, ExternalLink, RefreshCw, Tv, Download, Zap, Crown, Sparkles, BookOpen, Home } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -181,10 +182,11 @@ export function TokenExpiredPopup() {
     { icon: Sparkles, label: t.feature6, tone: 'text-pink-400 bg-pink-500/10' },
   ];
 
-  return (
+  const overlay = (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300"
+      className="fixed inset-0 flex items-center justify-center p-4 animate-in fade-in duration-300"
       style={{
+        zIndex: 2147483000,
         paddingTop: 'max(1rem, env(safe-area-inset-top))',
         paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
         background:
@@ -392,4 +394,7 @@ export function TokenExpiredPopup() {
       </div>
     </div>
   );
+
+  if (typeof document === 'undefined') return overlay;
+  return createPortal(overlay, document.body);
 }
