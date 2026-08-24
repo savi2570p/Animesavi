@@ -426,18 +426,46 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
               scheduleFinalizeChecks(upload);
               return;
             }
+            const status = (err as tus.DetailedError)?.originalResponse?.getStatus?.() ?? 0;
+            const body = (err as tus.DetailedError)?.originalResponse?.getBody?.() ?? '';
+
+            // A stale resume pointer (upload URL expired or the object was
+            // removed) must not surface as a failure — drop the pointer and
+            // start a clean transfer once.
+            if (resumedThisRun && !staleResumeHandled && (status === 404 || status === 410 || status === 403 || status === 409)) {
+              staleResumeHandled = true;
+              resumedThisRun = false;
+              console.warn('[Upload] Stale resume pointer; restarting a fresh upload', { status });
+              clearCompletionTimers();
+              clearResumePointer(filePath);
+              patchStats({ resumed: false, resumedFromBytes: 0, connection: 'retrying' });
+              window.setTimeout(() => {
+                try {
+                  upload.start();
+                } catch (e) {
+                  reject(e instanceof Error ? e : new Error(String(e)));
+                }
+              }, 300);
+              return;
+            }
+
             clearCompletionTimers();
             console.error('[Upload] TUS error details:', {
               message: err.message,
+              status,
+              body: String(body).slice(0, 300),
               fileName: file.name,
               fileSize: file.size,
               filePath,
             });
+            const detail = status
+              ? `${err.message} (HTTP ${status}${body ? `: ${String(body).slice(0, 120)}` : ''})`
+              : err.message;
             setStats((prev) => ({
               ...prev,
               retries: prev.retries + 1,
               connection: navigator.onLine ? 'retrying' : 'offline',
-              error: err.message,
+              error: detail,
             }));
 
             activeUploadRef.current = null;
@@ -447,7 +475,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
             setUploadSpeed(0);
             speedSamplesRef.current = [];
             endUpload();
-            reject(err);
+            reject(new Error(detail));
           },
           onSuccess: () => {
             console.log('[Upload] Upload finished');
@@ -459,17 +487,37 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
         activeUploadRef.current = upload;
         pendingFileRef.current = { file, filePath };
 
-        upload
-          .findPreviousUploads()
-          .then((previousUploads) => {
-            if (previousUploads.length > 0) {
-              upload.resumeFromPreviousUpload(previousUploads[0]);
+        // Resume path: only trust a stored pointer after the server confirms
+        // the committed offset with a HEAD request. The confirmed offset is
+        // published in stats so the UI can display it.
+        void (async () => {
+          try {
+            const pointer = readResumePointer(filePath);
+            if (pointer) {
+              const offset = await probeOffset(pointer, accessToken);
+              if (offset !== null && offset > 0 && offset < file.size) {
+                resumedThisRun = true;
+                upload.resumeFromPreviousUpload({
+                  uploadUrl: pointer,
+                  size: file.size,
+                  metadata: {},
+                  creationTime: new Date().toISOString(),
+                });
+                setUploadProgress(Math.floor((offset / file.size) * 100));
+                setDisplayedProgress(Math.floor((offset / file.size) * 100));
+                patchStats({ resumed: true, resumedFromBytes: offset, bytesUploaded: offset });
+                console.log(`[Upload] Resuming from verified offset ${offset} / ${file.size}`);
+                toast.info(`Resuming upload from ${(offset / (1024 * 1024)).toFixed(1)} MB`);
+              } else {
+                clearResumePointer(filePath);
+              }
             }
-            upload.start();
-          })
-          .catch(() => {
-            upload.start();
-          });
+          } catch (e) {
+            console.warn('[Upload] Resume probe failed; starting fresh', e);
+            clearResumePointer(filePath);
+          }
+          upload.start();
+        })();
       });
 
       const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(filePath);
