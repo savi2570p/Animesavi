@@ -5,7 +5,7 @@ import { fetchTokenAccessFromDB, fetchTokenSystemStatus, isSuperAdmin } from '@/
 
 type PopupType = 'expired' | 'whatsNew' | 'welcome';
 
-const NOTICE_VERSION = 'v29';
+const NOTICE_VERSION = 'v31';
 
 interface PopupQueueContextType {
   activePopup: PopupType | null;
