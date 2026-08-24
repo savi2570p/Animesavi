@@ -322,13 +322,26 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
           // partway through, causing the upload to restart.
           parallelUploads: 1,
           uploadDataDuringCreation: true,
-          retryDelays: [0, 3000, 5000, 10000, 20000],
+          // Long, patient backoff: flaky mobile links commonly drop a chunk in
+          // the first minute. Retrying instead of failing keeps the transfer alive.
+          retryDelays: [0, 1000, 3000, 5000, 10000, 15000, 20000, 30000, 30000, 60000],
+          storeFingerprintForResuming: true,
           removeFingerprintOnSuccess: true,
+          // Retry on transport errors and transient server responses; only give
+          // up on genuine client errors (auth/validation), never on 5xx/timeouts.
+          onShouldRetry: (err) => {
+            const status = (err as tus.DetailedError)?.originalResponse?.getStatus?.() ?? 0;
+            if (!status) return true; // network drop / timeout
+            if (status === 409 || status === 423 || status === 429) return true;
+            if (status >= 500) return true;
+            return false;
+          },
           headers: {
             authorization: `Bearer ${accessToken}`,
             apikey: SUPABASE_PUBLISHABLE_KEY,
-            'x-upsert': 'false',
+            'x-upsert': stablePath ? 'true' : 'false',
           },
+
           metadata: {
             bucketName: bucket,
             objectName: filePath,
