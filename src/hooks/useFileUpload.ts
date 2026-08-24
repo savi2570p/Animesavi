@@ -290,6 +290,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
         let allBytesUploaded = false;
         let completionGraceTimer: number | null = null;
         let completionWatchdog: number | null = null;
+        let resumedThisRun = false;
+        let staleResumeHandled = false;
 
         const clearCompletionTimers = () => {
           if (completionGraceTimer !== null) {
