@@ -16,6 +16,7 @@ import {
   KeyRound,
   Copy,
   Check,
+  PowerOff,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,6 +41,7 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
   const [role, setRole] = useState<string>('Member');
   const [now, setNow] = useState(Date.now());
   const [copied, setCopied] = useState(false);
+  const [ending, setEnding] = useState(false);
   const isCasting = useCastDetection();
 
   const superAdmin = isSuperAdmin(user?.email);
@@ -156,6 +158,28 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
       toast.success('Email copied');
       setTimeout(() => setCopied(false), 1500);
     } catch {}
+  };
+
+  const handleEndToken = async () => {
+    if (!user?.id) return;
+    if (!confirm('End your token now? You will need to activate a new token link to regain premium access.')) return;
+    setEnding(true);
+    const { error } = await supabase.from('token_usage').delete().eq('user_id', user.id);
+    setEnding(false);
+    if (error) {
+      toast.error('Could not end token', { description: error.message });
+      return;
+    }
+    try {
+      localStorage.removeItem('unlock_token_expires');
+      localStorage.removeItem('unlock_token_id');
+      localStorage.removeItem('token_access_synced');
+    } catch { /* ignore */ }
+    setStatus('expired');
+    setExpiresAt(null);
+    setActivatedAt(null);
+    toast.success('Token ended', { description: 'Activate a new token link to restore access.' });
+    setTimeout(() => window.location.reload(), 900);
   };
 
   const handleClose = () => {
@@ -481,6 +505,20 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
                   Get New Token
                 </a>
               )}
+
+              {/* End token */}
+              {isActive && !superAdmin && (
+                <button
+                  onClick={handleEndToken}
+                  disabled={ending}
+                  className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-xs font-black text-destructive bg-destructive/10 border border-destructive/30 hover:bg-destructive/20 disabled:opacity-60 transition-colors"
+                >
+                  <PowerOff className="h-3.5 w-3.5" />
+                  {ending ? 'Ending…' : 'End Token'}
+                </button>
+              )}
+
+
 
               <button
                 onClick={handleClose}
