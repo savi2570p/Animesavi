@@ -251,7 +251,8 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-sm p-0 overflow-hidden border-white/15 text-foreground shadow-2xl"
+        className="w-[calc(100vw-2.5rem)] max-w-[20rem] sm:max-w-sm p-0 overflow-hidden border-white/15 text-foreground shadow-2xl max-h-[85vh] overflow-y-auto text-[13px]"
+
         style={{
           zIndex: 2147483200,
           background:

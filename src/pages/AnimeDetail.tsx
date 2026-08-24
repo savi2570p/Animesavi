@@ -497,25 +497,28 @@ export default function AnimeDetail() {
       <div className="relative h-[42vh] md:h-[85vh] overflow-hidden">
         {/* Back button — top left */}
         <button
+          type="button"
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
           aria-label="Go back"
-          className="absolute top-4 left-4 z-30 flex items-center gap-2 px-3 py-2 rounded-full bg-background/60 backdrop-blur-md border border-white/10 text-foreground hover:bg-background/80 transition-colors shadow-lg"
+          style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+          className="absolute top-4 left-4 z-[70] pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-full bg-background/60 backdrop-blur-md border border-white/10 text-foreground hover:bg-background/80 active:scale-95 transition-colors shadow-lg"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-sm font-medium hidden sm:inline">Back</span>
         </button>
         <div
-          className="absolute inset-0 bg-cover bg-center scale-110 animate-[float_24s_ease-in-out_infinite]"
+          className="absolute inset-0 bg-cover bg-center scale-110 animate-[float_24s_ease-in-out_infinite] pointer-events-none"
           style={{
             backgroundImage: `url(${anime.banner_image || anime.cover_image || '/placeholder.svg'})`,
             filter: 'saturate(1.05) contrast(1.05)',
           }}
         />
         {/* Dark vignette + radial accent */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_30%,hsl(var(--primary)/0.18),transparent_60%)]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/55 to-transparent" />
-        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-background/80 to-transparent" />
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_30%_30%,hsl(var(--primary)/0.18),transparent_60%)]" />
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-background via-background/70 to-background/10" />
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-background via-background/55 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-40 pointer-events-none bg-gradient-to-b from-background/80 to-transparent" />
+
 
         {/* Floating particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">

@@ -28,6 +28,7 @@ import {
   Eye,
   Wrench,
   Key,
+  Link2,
   CalendarClock,
   Tv,
   Layers,
@@ -45,6 +46,8 @@ import {
   Mic,
 } from 'lucide-react';
 import { UpcomingCountdownDialog } from '@/components/home/UpcomingCountdownDialog';
+import { EmbedUploadTab } from '@/components/upload/EmbedUploadTab';
+
 
 const genres = ['Action', 'Adventure', 'Animation', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Mysterious', 'Anime', 'Anime Series', 'Hindi', 'English', 'Tamil', 'Telugu', 'Japanese', 'Crunchyroll', 'Muse India', 'Sony YAY', 'Amazon Prime'];
 
@@ -553,7 +556,11 @@ export default function Upload() {
               <TabsTrigger value="upcoming" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-amber-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
                 <CalendarClock className="h-3.5 w-3.5" /> Upcoming
               </TabsTrigger>
+              <TabsTrigger value="embed-upload" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
+                <Link2 className="h-3.5 w-3.5" /> Embed Upload
+              </TabsTrigger>
             </TabsList>
+
           </div>
 
           <TabsContent value="my-anime" className="space-y-4">
@@ -1544,6 +1551,11 @@ export default function Upload() {
         {/* Upcoming Tab */}
         <TabsContent value="upcoming">
           <UpcomingTabContent anime={myAnime} allAnime={allAnime} isAdmin={isAdmin} onDelete={handleDeleteAnime} />
+        </TabsContent>
+
+        {/* Embed Upload Tab */}
+        <TabsContent value="embed-upload">
+          <EmbedUploadTab />
         </TabsContent>
 
         </Tabs>
