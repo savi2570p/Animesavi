@@ -330,16 +330,16 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div
-                      className={`w-14 h-14 rounded-full flex items-center justify-center shadow-xl ${
+                      className={`w-10 h-10 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-xl ${
                         isActive
                           ? 'bg-gradient-to-br from-emerald-500 to-emerald-600'
                           : 'bg-gradient-to-br from-destructive to-rose-600'
                       }`}
                     >
                       {isActive ? (
-                        <CheckCircle2 className="h-7 w-7 text-white" strokeWidth={2.5} />
+                        <CheckCircle2 className="h-5 w-5 sm:h-7 sm:w-7 text-white" strokeWidth={2.5} />
                       ) : (
-                        <XCircle className="h-7 w-7 text-white" strokeWidth={2.5} />
+                        <XCircle className="h-5 w-5 sm:h-7 sm:w-7 text-white" strokeWidth={2.5} />
                       )}
                     </div>
                   </div>
