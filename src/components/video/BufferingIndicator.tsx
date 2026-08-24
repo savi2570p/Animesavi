@@ -1,6 +1,4 @@
-import { useState, useEffect } from 'react';
-import { Loader2, Wifi, WifiOff } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface BufferingIndicatorProps {
@@ -9,140 +7,188 @@ interface BufferingIndicatorProps {
   className?: string;
 }
 
+/**
+ * Liquid-glass buffering indicator.
+ * A single compact glass orb with an aurora halo and a live buffer-health arc.
+ * No boxy panel, no percentage spam — it reads as part of the player, not on top of it.
+ */
 export function BufferingIndicator({ videoRef, isVisible, className }: BufferingIndicatorProps) {
   const [isBuffering, setIsBuffering] = useState(false);
   const [bufferProgress, setBufferProgress] = useState(0);
-  const [networkType, setNetworkType] = useState<string>('unknown');
+  const [isSlowNetwork, setIsSlowNetwork] = useState(false);
   const [showIndicator, setShowIndicator] = useState(false);
-  
+  const hideTimer = useRef<ReturnType<typeof setTimeout>>();
+
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    
-    let bufferingTimeout: NodeJS.Timeout;
+
+    let bufferingTimeout: ReturnType<typeof setTimeout>;
     let wasPlaying = false;
-    
+
     const handleWaiting = () => {
       wasPlaying = !video.paused;
-      // Only show buffering indicator after a short delay to avoid flashing
       bufferingTimeout = setTimeout(() => {
         if (wasPlaying) {
           setIsBuffering(true);
           setShowIndicator(true);
         }
-      }, 500);
+      }, 450);
     };
-    
-    const handlePlaying = () => {
+
+    const settle = () => {
       clearTimeout(bufferingTimeout);
       setIsBuffering(false);
-      // Keep indicator visible briefly to show recovery
-      setTimeout(() => setShowIndicator(false), 300);
+      clearTimeout(hideTimer.current);
+      hideTimer.current = setTimeout(() => setShowIndicator(false), 320);
     };
-    
-    const handleCanPlay = () => {
-      clearTimeout(bufferingTimeout);
-      setIsBuffering(false);
-    };
-    
+
     const handleProgress = () => {
       if (video.buffered.length > 0 && video.duration > 0) {
-        const currentTime = video.currentTime;
+        const t = video.currentTime;
         let bufferedEnd = 0;
-        
-        // Find the buffered range that contains current time
         for (let i = 0; i < video.buffered.length; i++) {
-          if (video.buffered.start(i) <= currentTime && video.buffered.end(i) >= currentTime) {
+          if (video.buffered.start(i) <= t && video.buffered.end(i) >= t) {
             bufferedEnd = video.buffered.end(i);
             break;
           }
         }
-        
-        // Calculate how much is buffered ahead of current time
-        const bufferedAhead = bufferedEnd - currentTime;
-        const bufferTarget = 30; // Target 30 seconds of buffer
-        const progress = Math.min(100, (bufferedAhead / bufferTarget) * 100);
-        setBufferProgress(progress);
+        setBufferProgress(Math.min(100, ((bufferedEnd - t) / 30) * 100));
       }
     };
-    
-    // Detect network type
+
     const updateNetworkType = () => {
-      const connection = (navigator as any).connection || 
-                        (navigator as any).mozConnection || 
-                        (navigator as any).webkitConnection;
-      if (connection) {
-        const type = connection.effectiveType || connection.type || 'unknown';
-        setNetworkType(type);
-      }
+      const connection =
+        (navigator as any).connection ||
+        (navigator as any).mozConnection ||
+        (navigator as any).webkitConnection;
+      const type = connection?.effectiveType || connection?.type || 'unknown';
+      setIsSlowNetwork(['slow-2g', '2g'].includes(type));
     };
-    
+
     video.addEventListener('waiting', handleWaiting);
-    video.addEventListener('playing', handlePlaying);
-    video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener('playing', settle);
+    video.addEventListener('canplay', settle);
     video.addEventListener('progress', handleProgress);
-    
+
     updateNetworkType();
     const connection = (navigator as any).connection;
-    if (connection) {
-      connection.addEventListener('change', updateNetworkType);
-    }
-    
+    connection?.addEventListener?.('change', updateNetworkType);
+
     return () => {
       clearTimeout(bufferingTimeout);
+      clearTimeout(hideTimer.current);
       video.removeEventListener('waiting', handleWaiting);
-      video.removeEventListener('playing', handlePlaying);
-      video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('playing', settle);
+      video.removeEventListener('canplay', settle);
       video.removeEventListener('progress', handleProgress);
-      if (connection) {
-        connection.removeEventListener('change', updateNetworkType);
-      }
+      connection?.removeEventListener?.('change', updateNetworkType);
     };
   }, [videoRef]);
-  
-  // Don't render if not visible or not buffering
+
   if (!isVisible && !showIndicator) return null;
-  
-  const isSlowNetwork = ['slow-2g', '2g'].includes(networkType);
-  
+
+  const active = showIndicator && isBuffering;
+  const R = 26;
+  const CIRC = 2 * Math.PI * R;
+
   return (
-    <div 
+    <div
+      role="status"
+      aria-live="polite"
+      aria-label={active ? 'Buffering' : undefined}
       className={cn(
-        "absolute inset-0 flex items-center justify-center pointer-events-none z-30 transition-opacity duration-300",
-        showIndicator && isBuffering ? "opacity-100" : "opacity-0",
+        'absolute inset-0 z-30 flex items-center justify-center pointer-events-none transition-opacity duration-300',
+        active ? 'opacity-100' : 'opacity-0',
         className
       )}
+      style={{ contain: 'layout paint' }}
     >
-      <div className="flex flex-col items-center gap-3 p-4 rounded-xl bg-black/70 backdrop-blur-sm">
+      <div className="relative flex flex-col items-center gap-2.5" style={{ transform: 'translateZ(0)' }}>
         <div className="relative">
-          <Loader2 className="h-12 w-12 text-primary animate-spin" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            {isSlowNetwork ? (
-              <WifiOff className="h-5 w-5 text-yellow-400" />
-            ) : (
-              <Wifi className="h-5 w-5 text-white/80" />
-            )}
+          {/* aurora halo */}
+          <div
+            className="absolute inset-0 -m-4 rounded-full blur-xl opacity-70"
+            style={{
+              background:
+                'conic-gradient(from 0deg, hsl(var(--primary) / 0.6), hsl(280 90% 65% / 0.45), hsl(200 90% 62% / 0.4), hsl(var(--primary) / 0.6))',
+              animation: 'bi-spin 5.5s linear infinite',
+            }}
+          />
+
+          {/* glass orb */}
+          <div
+            className="relative w-14 h-14 rounded-full flex items-center justify-center"
+            style={{
+              background:
+                'radial-gradient(circle at 32% 26%, hsl(0 0% 100% / 0.5), hsl(0 0% 100% / 0.05) 58%, hsl(var(--primary) / 0.24))',
+              border: '1px solid hsl(0 0% 100% / 0.22)',
+              backdropFilter: 'blur(14px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(14px) saturate(180%)',
+              boxShadow:
+                'inset 0 1px 6px hsl(0 0% 100% / 0.45), inset 0 -10px 20px hsl(var(--primary) / 0.28), 0 10px 30px hsl(0 0% 0% / 0.45)',
+            }}
+          >
+            {/* buffer health ring */}
+            <svg viewBox="0 0 64 64" className="absolute inset-0 w-full h-full -rotate-90">
+              <circle cx="32" cy="32" r={R} fill="none" stroke="hsl(0 0% 100% / 0.1)" strokeWidth="2.5" />
+              <circle
+                cx="32"
+                cy="32"
+                r={R}
+                fill="none"
+                stroke={isSlowNetwork ? 'hsl(38 95% 60%)' : 'hsl(var(--primary))'}
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeDasharray={CIRC}
+                strokeDashoffset={CIRC - (bufferProgress / 100) * CIRC}
+                style={{
+                  transition: 'stroke-dashoffset 400ms ease-out',
+                  filter: 'drop-shadow(0 0 6px hsl(var(--primary) / 0.7))',
+                }}
+              />
+            </svg>
+
+            {/* sweeping arc */}
+            <svg
+              viewBox="0 0 64 64"
+              className="absolute inset-0 w-full h-full"
+              style={{ animation: 'bi-spin 1.05s linear infinite' }}
+            >
+              <circle
+                cx="32"
+                cy="32"
+                r="19"
+                fill="none"
+                stroke="hsl(0 0% 100% / 0.85)"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeDasharray="26 94"
+              />
+            </svg>
+
+            {/* pulsing core */}
+            <span
+              className="block w-1.5 h-1.5 rounded-full bg-white/90"
+              style={{ animation: 'bi-pulse 1.4s ease-in-out infinite' }}
+            />
           </div>
         </div>
-        
-        <div className="text-center space-y-2">
-          <p className="text-sm font-medium text-white">Buffering...</p>
-          
-          <div className="w-32">
-            <Progress value={bufferProgress} className="h-1.5 bg-white/20" />
-          </div>
-          
-          <p className="text-xs text-white/70">
-            {Math.round(bufferProgress)}% buffered
-          </p>
-          
-          {isSlowNetwork && (
-            <p className="text-xs text-yellow-400">
-              Slow network detected
-            </p>
-          )}
-        </div>
+
+        {isSlowNetwork && (
+          <span className="text-[10px] font-medium tracking-[0.16em] uppercase text-amber-300/90 drop-shadow">
+            Slow network
+          </span>
+        )}
       </div>
+
+      <style>{`
+        @keyframes bi-spin { to { transform: rotate(360deg); } }
+        @keyframes bi-pulse {
+          0%, 100% { opacity: .35; transform: scale(.8); }
+          50% { opacity: 1; transform: scale(1.25); }
+        }
+      `}</style>
     </div>
   );
 }
