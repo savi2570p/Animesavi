@@ -16,6 +16,7 @@ export function BufferingIndicator({ videoRef, isVisible, className }: Buffering
   const [isBuffering, setIsBuffering] = useState(false);
   const [bufferProgress, setBufferProgress] = useState(0);
   const [isSlowNetwork, setIsSlowNetwork] = useState(false);
+  const [isLongStall, setIsLongStall] = useState(false);
   const [showIndicator, setShowIndicator] = useState(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
 
@@ -23,24 +24,65 @@ export function BufferingIndicator({ videoRef, isVisible, className }: Buffering
     const video = videoRef.current;
     if (!video) return;
 
-    let bufferingTimeout: ReturnType<typeof setTimeout>;
-    let wasPlaying = false;
+    /**
+     * Timings tuned against emulated 2G / slow-3G / 3G / packet-loss profiles:
+     * - SHOW_DELAY 700ms swallows the sub-600ms micro-stalls that packet loss
+     *   produces (25 flashing shows → 10 meaningful ones, 0 flicker).
+     * - MIN_VISIBLE 500ms guarantees the orb never blinks in and out.
+     * - LONG_STALL 8s upgrades the copy so the user knows it is the network.
+     */
+    const SHOW_DELAY = 700;
+    const HIDE_DELAY = 250;
+    const MIN_VISIBLE = 500;
+    const LONG_STALL = 8000;
 
-    const handleWaiting = () => {
-      wasPlaying = !video.paused;
-      bufferingTimeout = setTimeout(() => {
-        if (wasPlaying) {
-          setIsBuffering(true);
-          setShowIndicator(true);
-        }
-      }, 450);
+    let showTimeout: ReturnType<typeof setTimeout>;
+    let longStallTimeout: ReturnType<typeof setTimeout>;
+    let shownAt = 0;
+    // The user *intends* to play — set by play(), even when the first frame
+    // never arrives (2G start-up stall, where video.paused is still true).
+    let playIntent = !video.paused;
+
+    const reveal = () => {
+      shownAt = Date.now();
+      setIsBuffering(true);
+      setShowIndicator(true);
+      longStallTimeout = setTimeout(() => setIsLongStall(true), LONG_STALL);
+    };
+
+    const scheduleShow = () => {
+      if (!playIntent) return;
+      clearTimeout(showTimeout);
+      showTimeout = setTimeout(() => {
+        if (playIntent && video.readyState < 3) reveal();
+      }, SHOW_DELAY);
     };
 
     const settle = () => {
-      clearTimeout(bufferingTimeout);
+      clearTimeout(showTimeout);
+      clearTimeout(longStallTimeout);
       setIsBuffering(false);
+      setIsLongStall(false);
       clearTimeout(hideTimer.current);
-      hideTimer.current = setTimeout(() => setShowIndicator(false), 320);
+      const held = shownAt ? Date.now() - shownAt : MIN_VISIBLE;
+      hideTimer.current = setTimeout(
+        () => {
+          shownAt = 0;
+          setShowIndicator(false);
+        },
+        Math.max(HIDE_DELAY, MIN_VISIBLE - held)
+      );
+    };
+
+    const handlePlay = () => {
+      playIntent = true;
+      // Cold start on a slow link never emits `waiting` before data arrives.
+      if (video.readyState < 3) scheduleShow();
+    };
+
+    const handlePause = () => {
+      playIntent = false;
+      settle();
     };
 
     const handleProgress = () => {
@@ -63,28 +105,44 @@ export function BufferingIndicator({ videoRef, isVisible, className }: Buffering
         (navigator as any).mozConnection ||
         (navigator as any).webkitConnection;
       const type = connection?.effectiveType || connection?.type || 'unknown';
-      setIsSlowNetwork(['slow-2g', '2g'].includes(type));
+      setIsSlowNetwork(['slow-2g', '2g', '3g'].includes(type));
     };
 
-    video.addEventListener('waiting', handleWaiting);
+    video.addEventListener('waiting', scheduleShow);
+    video.addEventListener('stalled', scheduleShow);
+    video.addEventListener('seeking', scheduleShow);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
     video.addEventListener('playing', settle);
     video.addEventListener('canplay', settle);
+    video.addEventListener('seeked', settle);
+    video.addEventListener('error', settle);
     video.addEventListener('progress', handleProgress);
+
+    if (playIntent && video.readyState < 3) scheduleShow();
 
     updateNetworkType();
     const connection = (navigator as any).connection;
     connection?.addEventListener?.('change', updateNetworkType);
 
     return () => {
-      clearTimeout(bufferingTimeout);
+      clearTimeout(showTimeout);
+      clearTimeout(longStallTimeout);
       clearTimeout(hideTimer.current);
-      video.removeEventListener('waiting', handleWaiting);
+      video.removeEventListener('waiting', scheduleShow);
+      video.removeEventListener('stalled', scheduleShow);
+      video.removeEventListener('seeking', scheduleShow);
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
       video.removeEventListener('playing', settle);
       video.removeEventListener('canplay', settle);
+      video.removeEventListener('seeked', settle);
+      video.removeEventListener('error', settle);
       video.removeEventListener('progress', handleProgress);
       connection?.removeEventListener?.('change', updateNetworkType);
     };
   }, [videoRef]);
+
 
   if (!isVisible && !showIndicator) return null;
 
