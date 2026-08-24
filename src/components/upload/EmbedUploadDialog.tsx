@@ -30,6 +30,8 @@ export function EmbedUploadDialog({ open, onOpenChange, onUploaded, initialFile 
     bucket: 'anime-videos',
     folder: 'embeds',
     maxSizeGB: MAX_GB,
+    stablePath: true,
+    maxChunkUnits: 2,
   });
 
   const run = async (file: File) => {
@@ -38,9 +40,10 @@ export function EmbedUploadDialog({ open, onOpenChange, onUploaded, initialFile 
     setDone(null);
     const result = await uploadFile(file);
     if (!result) {
-      setError('Embed upload failed. Please try a smaller file or retry.');
+      setError('Upload interrupted. Pick the same file again — it resumes from where it stopped.');
       return;
     }
+
     setDone(result.url);
     onUploaded(result.url);
     toast.success('Embed upload complete — embed link will be generated automatically.');
