@@ -556,7 +556,7 @@ export default function Upload() {
                 <CalendarClock className="h-3.5 w-3.5" /> Upcoming
               </TabsTrigger>
               <TabsTrigger value="embed-upload" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
-                <Upload className="h-3.5 w-3.5" /> Embed Upload
+                <Link2 className="h-3.5 w-3.5" /> Embed Upload
               </TabsTrigger>
             </TabsList>
 
@@ -1550,6 +1550,11 @@ export default function Upload() {
         {/* Upcoming Tab */}
         <TabsContent value="upcoming">
           <UpcomingTabContent anime={myAnime} allAnime={allAnime} isAdmin={isAdmin} onDelete={handleDeleteAnime} />
+        </TabsContent>
+
+        {/* Embed Upload Tab */}
+        <TabsContent value="embed-upload">
+          <EmbedUploadTab />
         </TabsContent>
 
         </Tabs>
