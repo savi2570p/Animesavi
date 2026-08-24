@@ -25,7 +25,7 @@ export function EmbedUploadTab() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
-  const { uploadFile, isUploading, progress, formattedSpeed, abortUpload } = useFileUpload({
+  const { uploadFile, isUploading, progress, formattedSpeed, abortUpload, stats } = useFileUpload({
     bucket: 'anime-videos',
     folder: 'embeds',
     maxSizeGB: MAX_GB,
@@ -35,17 +35,22 @@ export function EmbedUploadTab() {
     maxChunkUnits: 2,
   });
 
+  const mb = (bytes: number) => `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+
   const run = async (file: File) => {
     setFileName(file.name);
     setError(null);
     const result = await uploadFile(file);
     if (!result) {
-      setError('Upload interrupted. Select the same file again — it resumes from where it stopped.');
+      setError(
+        `Upload interrupted${stats.error ? ` — ${stats.error}` : ''}. Select the same file again to resume from the last confirmed chunk.`
+      );
       return;
     }
     setItems((prev) => [{ name: file.name, url: result.url }, ...prev]);
     toast.success('Embed link generated — copy it into the upload form.');
   };
+
 
 
   const copy = async (url: string) => {
