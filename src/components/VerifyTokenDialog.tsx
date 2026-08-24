@@ -507,7 +507,7 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
               )}
 
               {/* End token */}
-              {isActive && !superAdmin && (
+              {isActive && (
                 <button
                   onClick={handleEndToken}
                   disabled={ending}
