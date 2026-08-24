@@ -83,22 +83,37 @@ export function Header() {
   useEffect(() => {
     let lastY = window.scrollY;
     let ticking = false;
+    let idle: ReturnType<typeof setTimeout>;
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
         const y = window.scrollY;
         const delta = y - lastY;
-        if (y < 80) setNavHidden(false);
-        else if (delta > 6) setNavHidden(true);
+        const atBottom = window.innerHeight + y >= document.documentElement.scrollHeight - 40;
+        if (y < 120 || atBottom) setNavHidden(false);
+        else if (delta > 12) setNavHidden(true);
         else if (delta < -6) setNavHidden(false);
         lastY = y;
         ticking = false;
       });
+      // Android momentum scrolling can leave the bar stuck off-screen — always
+      // bring it back once scrolling stops.
+      clearTimeout(idle);
+      idle = setTimeout(() => setNavHidden(false), 900);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      clearTimeout(idle);
+      window.removeEventListener('scroll', onScroll);
+    };
   }, []);
+
+  // Never keep the navbar hidden across navigations.
+  useEffect(() => {
+    setNavHidden(false);
+  }, [location.pathname]);
+
 
 
 
