@@ -41,9 +41,8 @@ interface TokenMetadata {
   expiresAt: number | null;
   durationHours: number | null;
 }
-
-
 export function VerifyTokenDialog({ open, onOpenChange }: Props) {
+
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'active' | 'expired'>('loading');
