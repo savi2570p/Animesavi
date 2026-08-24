@@ -53,7 +53,7 @@ export function subscribeTuning(listener: Listener): () => void {
  * browser's reported link speed. Larger chunks reduce per-request overhead
  * on fast links; small files stay on small chunks so progress stays granular.
  */
-export function pickChunkSize(fileSize: number): number {
+export function pickChunkSize(fileSize: number, maxUnits = 8): number {
   const units = (() => {
     if (fileSize <= 60 * MB) return 1; // 6 MB
     if (fileSize <= 400 * MB) return 2; // 12 MB
@@ -70,5 +70,6 @@ export function pickChunkSize(fileSize: number): number {
 
   if (state.turbo) scaled = Math.min(scaled * 2, 8); // cap 48 MB
 
-  return Math.max(1, scaled) * CHUNK_UNIT;
+  return Math.max(1, Math.min(scaled, Math.max(1, maxUnits))) * CHUNK_UNIT;
 }
+

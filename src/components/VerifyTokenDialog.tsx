@@ -251,7 +251,7 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-[calc(100vw-2.5rem)] max-w-[20rem] sm:max-w-sm p-0 overflow-hidden border-white/15 text-foreground shadow-2xl max-h-[85vh] overflow-y-auto text-[13px]"
+        className="w-[calc(100vw-3rem)] max-w-[18rem] sm:max-w-sm p-0 overflow-hidden border-white/15 text-foreground shadow-2xl max-h-[80vh] overflow-y-auto text-[12px] sm:text-[13px]"
 
         style={{
           zIndex: 2147483200,
@@ -295,10 +295,10 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
                 }`}
               />
 
-              <div className="relative px-5 pt-6 pb-4 flex flex-col items-center">
+              <div className="relative px-4 pt-4 pb-3 sm:px-5 sm:pt-6 sm:pb-4 flex flex-col items-center">
                 {/* Progress ring with status icon */}
-                <div className="relative w-24 h-24">
-                  <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
+                <div className="relative w-16 h-16 sm:w-24 sm:h-24">
+                  <svg className="w-16 h-16 sm:w-24 sm:h-24 -rotate-90" viewBox="0 0 100 100">
                     <circle
                       cx="50"
                       cy="50"
@@ -330,16 +330,16 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div
-                      className={`w-14 h-14 rounded-full flex items-center justify-center shadow-xl ${
+                      className={`w-10 h-10 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-xl ${
                         isActive
                           ? 'bg-gradient-to-br from-emerald-500 to-emerald-600'
                           : 'bg-gradient-to-br from-destructive to-rose-600'
                       }`}
                     >
                       {isActive ? (
-                        <CheckCircle2 className="h-7 w-7 text-white" strokeWidth={2.5} />
+                        <CheckCircle2 className="h-5 w-5 sm:h-7 sm:w-7 text-white" strokeWidth={2.5} />
                       ) : (
-                        <XCircle className="h-7 w-7 text-white" strokeWidth={2.5} />
+                        <XCircle className="h-5 w-5 sm:h-7 sm:w-7 text-white" strokeWidth={2.5} />
                       )}
                     </div>
                   </div>

@@ -9,7 +9,16 @@ interface UseFileUploadOptions {
   bucket: 'anime-videos' | 'anime-thumbnails' | 'movies';
   folder?: string;
   maxSizeGB?: number;
+  /**
+   * Use a deterministic storage path derived from the file itself so a failed
+   * upload can be resumed (instead of restarting) when the same file is picked
+   * again. Enables upsert so the partial object can be completed in place.
+   */
+  stablePath?: boolean;
+  /** Cap chunk size (in 6MB units). Smaller chunks survive flaky mobile links. */
+  maxChunkUnits?: number;
 }
+
 
 interface UploadResult {
   url: string;
@@ -115,7 +124,7 @@ const emptyStats: UploadStats = {
   error: null,
 };
 
-export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadOptions) {
+export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = false, maxChunkUnits = 8 }: UseFileUploadOptions) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [displayedProgress, setDisplayedProgress] = useState(0);
@@ -189,7 +198,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     console.log(`[Upload] Upload started: ${file.name}, size: ${(file.size / (1024 * 1024 * 1024)).toFixed(2)} GB (${file.size} bytes), type: ${getVideoMimeType(file)}`);
     console.log('[Upload] Uploading...');
 
-    const chunkSize = pickChunkSize(file.size);
+    const chunkSize = pickChunkSize(file.size, maxChunkUnits);
 
     try {
       setUploadProgress(0);
@@ -313,13 +322,26 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
           // partway through, causing the upload to restart.
           parallelUploads: 1,
           uploadDataDuringCreation: true,
-          retryDelays: [0, 3000, 5000, 10000, 20000],
+          // Long, patient backoff: flaky mobile links commonly drop a chunk in
+          // the first minute. Retrying instead of failing keeps the transfer alive.
+          retryDelays: [0, 1000, 3000, 5000, 10000, 15000, 20000, 30000, 30000, 60000],
+          storeFingerprintForResuming: true,
           removeFingerprintOnSuccess: true,
+          // Retry on transport errors and transient server responses; only give
+          // up on genuine client errors (auth/validation), never on 5xx/timeouts.
+          onShouldRetry: (err) => {
+            const status = (err as tus.DetailedError)?.originalResponse?.getStatus?.() ?? 0;
+            if (!status) return true; // network drop / timeout
+            if (status === 409 || status === 423 || status === 429) return true;
+            if (status >= 500) return true;
+            return false;
+          },
           headers: {
             authorization: `Bearer ${accessToken}`,
             apikey: SUPABASE_PUBLISHABLE_KEY,
-            'x-upsert': 'false',
+            'x-upsert': stablePath ? 'true' : 'false',
           },
+
           metadata: {
             bucketName: bucket,
             objectName: filePath,
@@ -475,9 +497,19 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB }: UseFileUploadO
     setIsUploading(true);
 
     try {
-      // Generate unique filename
+      // Generate filename. With stablePath the name is derived from the file
+      // itself, so re-selecting the same file after a failure resumes the
+      // existing partial object instead of starting a fresh upload.
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}${fileExt ? `.${fileExt}` : ''}`;
+      const slug = file.name
+        .replace(/\.[^.]+$/, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 60) || 'video';
+      const fileName = stablePath
+        ? `${slug}-${file.size}-${file.lastModified}${fileExt ? `.${fileExt}` : ''}`
+        : `${Date.now()}-${Math.random().toString(36).substring(2)}${fileExt ? `.${fileExt}` : ''}`;
       const filePath = folder ? `${folder}/${fileName}` : fileName;
 
       // Videos: use resumable/chunked upload to support large files reliably
