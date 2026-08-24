@@ -161,9 +161,13 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
     } catch {}
   };
 
-  const handleEndToken = async () => {
+  const handleEndToken = () => {
+    setShowConfirm(true);
+  };
+
+  const handleConfirmEnd = async () => {
     if (!user?.id) return;
-    if (!confirm('End your token now? You will need to activate a new token link to regain premium access.')) return;
+    setShowConfirm(false);
     setEnding(true);
     const { error } = await supabase.from('token_usage').delete().eq('user_id', user.id);
     setEnding(false);
@@ -181,6 +185,10 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
     setActivatedAt(null);
     toast.success('Token ended', { description: 'Activate a new token link to restore access.' });
     setTimeout(() => window.location.reload(), 900);
+  };
+
+  const handleCancelEnd = () => {
+    setShowConfirm(false);
   };
 
   const handleClose = () => {
