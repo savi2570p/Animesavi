@@ -42,6 +42,7 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
   const [now, setNow] = useState(Date.now());
   const [copied, setCopied] = useState(false);
   const [ending, setEnding] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const isCasting = useCastDetection();
 
   const superAdmin = isSuperAdmin(user?.email);
