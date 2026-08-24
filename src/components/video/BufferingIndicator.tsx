@@ -233,11 +233,17 @@ export function BufferingIndicator({ videoRef, isVisible, className }: Buffering
           </div>
         </div>
 
-        {isSlowNetwork && (
-          <span className="text-[10px] font-medium tracking-[0.16em] uppercase text-amber-300/90 drop-shadow">
-            Slow network
+        {(isLongStall || isSlowNetwork) && (
+          <span
+            className={cn(
+              'text-[10px] font-medium tracking-[0.16em] uppercase drop-shadow transition-opacity duration-300',
+              isLongStall ? 'text-amber-300/95' : 'text-white/70'
+            )}
+          >
+            {isLongStall ? 'Still loading — weak connection' : 'Slow network'}
           </span>
         )}
+
       </div>
 
       <style>{`
