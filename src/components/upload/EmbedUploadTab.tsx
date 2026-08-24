@@ -29,6 +29,10 @@ export function EmbedUploadTab() {
     bucket: 'anime-videos',
     folder: 'embeds',
     maxSizeGB: MAX_GB,
+    // Deterministic path + smaller chunks: a dropped connection resumes from
+    // where it stopped when the same file is picked again.
+    stablePath: true,
+    maxChunkUnits: 2,
   });
 
   const run = async (file: File) => {
@@ -36,12 +40,13 @@ export function EmbedUploadTab() {
     setError(null);
     const result = await uploadFile(file);
     if (!result) {
-      setError('Embed upload failed. Please retry with a stable connection.');
+      setError('Upload interrupted. Select the same file again — it resumes from where it stopped.');
       return;
     }
     setItems((prev) => [{ name: file.name, url: result.url }, ...prev]);
     toast.success('Embed link generated — copy it into the upload form.');
   };
+
 
   const copy = async (url: string) => {
     try {
