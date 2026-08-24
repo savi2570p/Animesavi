@@ -55,7 +55,15 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
   const [copied, setCopied] = useState(false);
   const [ending, setEnding] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [metadata, setMetadata] = useState<TokenMetadata>({
+    issuerEmail: null,
+    createdAt: null,
+    usedAt: null,
+    expiresAt: null,
+    durationHours: null,
+  });
   const isCasting = useCastDetection();
+
 
   const superAdmin = isSuperAdmin(user?.email);
 
