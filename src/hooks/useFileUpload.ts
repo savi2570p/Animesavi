@@ -497,9 +497,19 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
     setIsUploading(true);
 
     try {
-      // Generate unique filename
+      // Generate filename. With stablePath the name is derived from the file
+      // itself, so re-selecting the same file after a failure resumes the
+      // existing partial object instead of starting a fresh upload.
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}${fileExt ? `.${fileExt}` : ''}`;
+      const slug = file.name
+        .replace(/\.[^.]+$/, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 60) || 'video';
+      const fileName = stablePath
+        ? `${slug}-${file.size}-${file.lastModified}${fileExt ? `.${fileExt}` : ''}`
+        : `${Date.now()}-${Math.random().toString(36).substring(2)}${fileExt ? `.${fileExt}` : ''}`;
       const filePath = folder ? `${folder}/${fileName}` : fileName;
 
       // Videos: use resumable/chunked upload to support large files reliably
