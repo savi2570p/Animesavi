@@ -65,7 +65,7 @@ export function EmbedUploadDialog({ open, onOpenChange, onUploaded, initialFile 
           type="file"
           accept="video/mp4,video/webm,video/x-matroska,video/quicktime"
           className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) void run(f); }}
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) void run(f); e.target.value = ''; }}
         />
 
         {isUploading ? (
