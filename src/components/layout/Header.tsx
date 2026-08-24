@@ -127,7 +127,9 @@ export function Header() {
 
   const closeMenuThen = (callback: () => void) => {
     setMobileMenuOpen(false);
-    window.setTimeout(callback, 120);
+    // Wait for the sheet exit animation to finish so the next dialog
+    // isn't swallowed by the closing overlay / focus lock.
+    window.setTimeout(callback, 360);
   };
 
   const handleHardRefresh = async () => {
