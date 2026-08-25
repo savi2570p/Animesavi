@@ -103,11 +103,34 @@ export default function Settings() {
     }
     setIsDeleting(true);
     try {
-      const { data, error } = await supabase.functions.invoke('delete-account');
-      if (error || (data && (data as { error?: string }).error)) {
-        throw new Error(error?.message || (data as { error?: string })?.error || 'Failed to delete account');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Your session expired. Please sign in again.');
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      const payload = (await response.json().catch(() => null)) as
+        | { success?: boolean; error?: { message?: string } | string }
+        | null;
+
+      if (!response.ok || payload?.success === false) {
+        const message =
+          typeof payload?.error === 'string'
+            ? payload.error
+            : payload?.error?.message || `Delete failed (${response.status})`;
+        throw new Error(message);
       }
-      toast.success('Account deleted. All data will be removed within 24 hours.');
+
+      toast.success('Account deleted. You have been signed out.');
       await signOut();
       navigate('/auth?mode=signup', { replace: true });
     } catch (err) {

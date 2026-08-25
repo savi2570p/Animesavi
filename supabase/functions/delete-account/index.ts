@@ -37,40 +37,81 @@ serve(async (req) => {
     }
 
     const admin = createClient(supabaseUrl, serviceRoleKey);
-
-    // Cleanup of user-owned rows before removing the auth user.
-    // NOTE: the previous version targeted "favorites" and "notifications",
-    // which do not exist in this schema — those deletes always failed silently
-    // and left orphaned rows behind.
     const uid = user.id;
-    const cleanups: Array<[string, PromiseLike<{ error: unknown }>]> = [
-      ["watch_history", admin.from("watch_history").delete().eq("user_id", uid)],
-      ["watch_later", admin.from("watch_later").delete().eq("user_id", uid)],
-      ["user_favorites", admin.from("user_favorites").delete().eq("user_id", uid)],
-      ["notification_queue", admin.from("notification_queue").delete().eq("user_id", uid)],
-      ["push_subscriptions", admin.from("push_subscriptions").delete().eq("user_id", uid)],
-      ["user_genre_preferences", admin.from("user_genre_preferences").delete().eq("user_id", uid)],
-      ["comment_notifications", admin.from("comment_notifications").delete().eq("user_id", uid)],
-      ["anime_reviews", admin.from("anime_reviews").delete().eq("user_id", uid)],
-      ["shared_collections", admin.from("shared_collections").delete().eq("user_id", uid)],
-      ["user_roles", admin.from("user_roles").delete().eq("user_id", uid)],
-      ["profiles", admin.from("profiles").delete().eq("id", uid)],
+
+    // Every table that references the user, in dependency-safe order.
+    // Child rows (likes/replies/messages) are removed before their parents so
+    // no foreign key can block the final auth user deletion.
+    const deletes: Array<[string, string]> = [
+      ["comment_likes", "user_id"],
+      ["comment_reports", "reporter_id"],
+      ["comment_notifications", "user_id"],
+      ["comment_notifications", "replier_id"],
+      ["comments", "user_id"],
+      ["shorts_likes", "user_id"],
+      ["shorts_comments", "user_id"],
+      ["shorts", "uploader_id"],
+      ["watch_party_messages", "user_id"],
+      ["watch_party_members", "user_id"],
+      ["watch_parties", "host_id"],
+      ["shared_collection_likes", "user_id"],
+      ["shared_collections", "user_id"],
+      ["shadow_flix_continue_watching", "user_id"],
+      ["shadow_flix_player_preferences", "user_id"],
+      ["recap_analytics", "user_id"],
+      ["watch_history", "user_id"],
+      ["watch_later", "user_id"],
+      ["user_favorites", "user_id"],
+      ["user_genre_preferences", "user_id"],
+      ["anime_reviews", "user_id"],
+      ["notification_queue", "user_id"],
+      ["push_subscriptions", "user_id"],
+      ["sent_push_log", "user_id"],
+      ["token_usage", "user_id"],
+      ["admin_token_grants", "user_id"],
+      ["admin_token_grants", "granted_by"],
+      ["uploader_applications", "user_id"],
+      ["user_bans", "user_id"],
+      ["user_roles", "user_id"],
+      ["profiles", "id"],
     ];
 
-    const failedCleanups: string[] = [];
-    for (const [table, op] of cleanups) {
+    // Tables where the row must survive but must no longer point at the user.
+    const detach: Array<[string, string]> = [
+      ["anime", "uploader_id"],
+      ["unlock_tokens", "created_by"],
+      ["upload_codes", "used_by"],
+      ["flox_content", "uploaded_by"],
+      ["shadow_flix_content", "uploaded_by"],
+    ];
+
+    const failures: string[] = [];
+
+    for (const [table, column] of deletes) {
       try {
-        const { error } = await op;
-        if (error) failedCleanups.push(table);
-      } catch {
-        failedCleanups.push(table);
+        const { error } = await admin.from(table).delete().eq(column, uid);
+        // Missing table / missing column in this environment is not fatal.
+        if (error && !/does not exist|schema cache/i.test(error.message)) {
+          failures.push(`${table}.${column}: ${error.message}`);
+        }
+      } catch (e) {
+        failures.push(`${table}.${column}: ${(e as Error).message}`);
       }
     }
 
-    if (failedCleanups.length > 0) {
-      // Do NOT delete the auth user when its data could not be cleaned up —
-      // that would leave permanently orphaned rows with no owner.
-      console.error(JSON.stringify({ operation: "delete-account", user_id: uid, failed: failedCleanups }));
+    for (const [table, column] of detach) {
+      try {
+        const { error } = await admin.from(table).update({ [column]: null }).eq(column, uid);
+        if (error && !/does not exist|schema cache/i.test(error.message)) {
+          failures.push(`${table}.${column}: ${error.message}`);
+        }
+      } catch (e) {
+        failures.push(`${table}.${column}: ${(e as Error).message}`);
+      }
+    }
+
+    if (failures.length > 0) {
+      console.error(JSON.stringify({ operation: "delete-account", user_id: uid, failures }));
       return new Response(
         JSON.stringify({
           success: false,
@@ -84,17 +125,20 @@ serve(async (req) => {
     if (error) {
       console.error(JSON.stringify({ operation: "delete-account", user_id: uid, error: error.message }));
       return new Response(
-        JSON.stringify({ success: false, error: { code: "INTERNAL_ERROR", message: "Account could not be deleted." } }),
+        JSON.stringify({
+          success: false,
+          error: { code: "INTERNAL_ERROR", message: `Account could not be deleted: ${error.message}` },
+        }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
-
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
+    console.error("delete-account fatal", (err as Error).message);
+    return new Response(JSON.stringify({ success: false, error: { message: (err as Error).message } }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
