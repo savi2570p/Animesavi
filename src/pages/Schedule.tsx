@@ -34,6 +34,7 @@ interface ScheduleAnime {
   cover_image: string | null;
   genres: string[] | null;
   schedule_day: number | null;
+  is_daily: boolean;
   latest_episode_date: string;
   season_number: number;
   next_episode: number;
@@ -110,6 +111,14 @@ function getNextRelease(
   const slotToday = nextZonedSlot(now, 0, anime.release_hour, anime.release_minute, timeZone);
   if (daysUntil === 0 && now.getTime() >= slotToday.getTime()) daysUntil = 7;
   return nextZonedSlot(now, daysUntil, anime.release_hour, anime.release_minute, timeZone);
+}
+
+/** Next daily slot (24-hour cycle) in the viewer's timezone. */
+function getNextDailyRelease(hour: number, minute: number, timeZone: string) {
+  const now = new Date();
+  const slotToday = nextZonedSlot(now, 0, hour, minute, timeZone);
+  if (slotToday.getTime() > now.getTime()) return slotToday;
+  return nextZonedSlot(now, 1, hour, minute, timeZone);
 }
 
 function Countdown({ target, now, label = 'Next Episode' }: { target: Date; now: number; label?: string }) {
@@ -234,6 +243,7 @@ export default function Schedule() {
                 a.schedule_day !== null && a.schedule_day !== undefined && a.schedule_day !== 7
                   ? a.schedule_day
                   : null,
+              is_daily: a.schedule_day === 7,
               season_number: info.season,
               next_episode: (info.ep || 0) + 1,
               latest_episode_date: info.latest,
@@ -291,10 +301,13 @@ export default function Schedule() {
       const release_minute = lastParts.minute - (lastParts.minute % 15);
       const release_day = a.schedule_day ?? lastParts.weekday;
       const base = { ...a, release_day, release_hour, release_minute };
+      const next = a.is_daily
+        ? getNextDailyRelease(release_hour, release_minute, timeZone)
+        : getNextRelease(base, timeZone);
       return {
         ...base,
         languages: getLanguages(a.genres),
-        next: getNextRelease(base, timeZone),
+        next,
       };
     });
   }, [animeList, timeZone]);
@@ -314,8 +327,9 @@ export default function Schedule() {
         if (current <= now) {
           let d = new Date(current);
           let guard = 0;
-          while (d.getTime() <= now && guard++ < 60) {
-            d = nextZonedSlot(d, 7, r.release_hour, r.release_minute, timeZone);
+          const step = r.is_daily ? 1 : 7;
+          while (d.getTime() <= now && guard++ < 400) {
+            d = nextZonedSlot(d, step, r.release_hour, r.release_minute, timeZone);
           }
           updated[r.id] = d.getTime();
           changed = true;
@@ -332,7 +346,7 @@ export default function Schedule() {
         // The weekday label always matches the actual next airing in the viewer's timezone.
         return { ...r, next, release_day: getZonedParts(next, timeZone).weekday };
       })
-      .filter((a) => (dayFilter === 'all' ? true : a.release_day === dayFilter))
+      .filter((a) => (dayFilter === 'all' || a.is_daily ? true : a.release_day === dayFilter))
       .filter((a) => (search ? a.title.toLowerCase().includes(search.toLowerCase()) : true))
       .sort((a, b) => a.next.getTime() - b.next.getTime());
   }, [baseRows, rollovers, dayFilter, search, timeZone]);
@@ -533,7 +547,7 @@ export default function Schedule() {
                     <div className="flex flex-wrap items-center gap-1.5 mt-2">
                       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-semibold">
                         <CalendarDays className="h-3 w-3 text-primary" />
-                        {DAYS_FULL[anime.release_day]}
+                        {anime.is_daily ? 'Daily' : DAYS_FULL[anime.release_day]}
                       </span>
                       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-semibold">
                         <Clock className="h-3 w-3 text-primary" />
@@ -543,7 +557,11 @@ export default function Schedule() {
                   </div>
                 </Link>
 
-                <Countdown target={anime.next} now={now} />
+                <Countdown
+                  target={anime.next}
+                  now={now}
+                  label={anime.is_daily ? 'Next Episode (Daily)' : 'Next Episode'}
+                />
               </div>
             </div>
           ))}
