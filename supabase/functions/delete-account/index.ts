@@ -51,6 +51,7 @@ serve(async (req) => {
       ["shorts_likes", "user_id"],
       ["shorts_comments", "user_id"],
       ["shorts", "uploader_id"],
+      ["shadow_flix_content", "uploaded_by"],
       ["watch_party_messages", "user_id"],
       ["watch_party_members", "user_id"],
       ["watch_parties", "host_id"],
@@ -82,7 +83,6 @@ serve(async (req) => {
       ["unlock_tokens", "created_by"],
       ["upload_codes", "used_by"],
       ["flox_content", "uploaded_by"],
-      ["shadow_flix_content", "uploaded_by"],
     ];
 
     const failures: string[] = [];

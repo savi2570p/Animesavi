@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   CheckCircle2,
   XCircle,
@@ -587,10 +588,11 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
               )}
 
               {/* Liquid-glass confirmation overlay */}
-              {showConfirm && (
+              {showConfirm && typeof document !== 'undefined' && createPortal(
                 <div
-                  className="absolute inset-0 z-50 flex items-center justify-center p-4"
+                  className="fixed inset-0 flex items-center justify-center p-4"
                   style={{
+                    zIndex: 2147483300,
                     background: 'hsla(0,0%,0%,0.45)',
                     backdropFilter: 'blur(18px) saturate(160%)',
                     WebkitBackdropFilter: 'blur(18px) saturate(160%)',
@@ -672,7 +674,8 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
                       </button>
                     </div>
                   </div>
-                </div>
+                </div>,
+                document.body,
               )}
 
 
