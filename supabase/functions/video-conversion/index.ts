@@ -327,11 +327,16 @@ Deno.serve(async (req) => {
             }
           }
 
-          // Bulk insert new records
+          // Ignore rows concurrently queued by another scan instead of
+          // rejecting the entire batch on the unique episode_id constraint.
           if (toInsert.length > 0) {
             const { error: insertError, count } = await supabaseClient
               .from('video_conversions')
-              .insert(toInsert, { count: 'exact' });
+              .upsert(toInsert, {
+                onConflict: 'episode_id',
+                ignoreDuplicates: true,
+                count: 'exact',
+              });
             if (!insertError) created = count ?? toInsert.length;
             else console.error('Bulk insert error:', insertError);
           }
