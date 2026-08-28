@@ -34,6 +34,7 @@ import { useCastDetection } from '@/hooks/useCastDetection';
 import {
   ChevronLeft,
   ChevronRight,
+  Link2,
   MessageSquare,
   Send,
   
@@ -1589,6 +1590,41 @@ export default function Watch() {
                 />
               );
             })()}
+
+            {/* Shadow link v2 (BETA 1) — copies the standalone branding-free watch URL */}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 md:h-10 text-xs md:text-sm"
+              onClick={async () => {
+                const url = `${window.location.origin}/s2/${episode.id}`;
+                try {
+                  if (navigator.clipboard?.writeText) {
+                    await navigator.clipboard.writeText(url);
+                  } else {
+                    throw new Error('Clipboard API unavailable');
+                  }
+                } catch {
+                  const el = document.createElement('textarea');
+                  el.value = url;
+                  el.setAttribute('readonly', '');
+                  el.style.position = 'fixed';
+                  el.style.opacity = '0';
+                  document.body.appendChild(el);
+                  el.focus();
+                  el.select();
+                  document.execCommand('copy');
+                  document.body.removeChild(el);
+                }
+                toast.success('Link copied');
+              }}
+            >
+              <Link2 className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5" />
+              Shadow link v2
+              <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-primary/15 text-primary text-[9px] font-bold uppercase tracking-wider">
+                BETA 1
+              </span>
+            </Button>
           </div>
             </div>
           </div>
