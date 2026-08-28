@@ -94,6 +94,8 @@ export const TurnstileGate = () => {
   const [phase, setPhase] = useState<Phase>("idle");
 
   useEffect(() => {
+    // Shadow link v2 (/s2/...) is a branding-free standalone player — no gate.
+    if (window.location.pathname.startsWith('/s2/')) return;
     const mountedAt = performance.now();
     if (isVerifiedNow()) {
       recordAnalytics({ ts: Date.now(), type: "skipped" });
