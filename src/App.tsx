@@ -80,6 +80,7 @@ const AdminFeaturedLineup = lazy(() => import("./pages/AdminFeaturedLineup"));
 const ClonePlatform = lazy(() => import("./pages/ClonePlatform"));
 const RootSlugRouter = lazy(() => import("./pages/RootSlugRouter"));
 const TokenEmbedPlayer = lazy(() => import("./pages/TokenEmbedPlayer"));
+const ShadowPlayerV2 = lazy(() => import("./pages/ShadowPlayerV2"));
 const SharePage = lazy(() => import("./pages/SharePage"));
 const ContinueWatchingAll = lazy(() => import("./pages/ContinueWatchingAll"));
 
@@ -250,6 +251,7 @@ const App = () => (
                   <Route path="/qa-check" element={<QaCheck />} />
                   <Route path="/Shadow-Arise" element={<ShadowArise />} />
                   <Route path="/e/:token" element={<TokenEmbedPlayer />} />
+                  <Route path="/s2/:episodeId" element={<ShadowPlayerV2 />} />
                   <Route path="/:slug" element={<RootSlugRouter />} />
                   <Route element={<MainLayout />}>
                     <Route path="/" element={<Index />} />
