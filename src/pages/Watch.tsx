@@ -34,6 +34,7 @@ import { useCastDetection } from '@/hooks/useCastDetection';
 import {
   ChevronLeft,
   ChevronRight,
+  Link2,
   MessageSquare,
   Send,
   
