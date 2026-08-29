@@ -16,6 +16,7 @@ export function FloatingTelegramButton() {
     return (
       location.pathname.startsWith('/embed/') ||
       location.pathname.startsWith('/e/') ||
+      location.pathname.startsWith('/s2/') ||
       search.get('embed') === 'true'
     );
   }, [location.pathname]);
