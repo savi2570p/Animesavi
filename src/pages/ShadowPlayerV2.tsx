@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { VideoPlayer } from '@/components/video/VideoPlayer';
-import { Loader2, ListVideo, ChevronDown } from 'lucide-react';
+import { ShadowMinimalPlayer } from '@/components/video/ShadowMinimalPlayer';
+import { Loader2, ChevronDown } from 'lucide-react';
 import type { ServerType } from '@/hooks/useServerAutoSelect';
 
 /**
- * Shadow link v2 (BETA 1) — a standalone, branding-free watch page.
+ * Shadow link v2 (BETA 2) — a standalone, branding-free watch page.
  *
- * Performance-first: no glass, no heavy overlays, single query round for the
- * episode payload. All servers + the full episode list work exactly like the
- * main watch page, so a copied link plays every episode on every server.
+ * Minimal player (timeline, play/pause, ±10s, fullscreen only), Embed server
+ * listed first, Seasons dropdown + always-visible episode grid.
  */
 
 interface ShadowEpisode {
@@ -21,12 +20,6 @@ interface ShadowEpisode {
   video_url: string | null;
   external_url: string | null;
   thumbnail: string | null;
-  captions_url: string | null;
-  audio_language: string | null;
-  intro_start_time: number | null;
-  intro_end_time: number | null;
-  outro_start_time: number | null;
-  outro_end_time: number | null;
 }
 
 interface ShadowSeason {
@@ -35,12 +28,12 @@ interface ShadowSeason {
   anime: { id: string; title: string; cover_image: string | null } | null;
 }
 
-// Neutral server labels — no brand names on shadow links.
+// Neutral server labels — no brand names on shadow links. Embed first.
 const SHADOW_SERVERS: { id: ServerType; label: string }[] = [
+  { id: 'EMBED', label: 'Embed' },
   { id: 'XPLUS', label: 'Server 1' },
   { id: 'PLAY', label: 'Server 2' },
   { id: 'Zex', label: 'Server 3' },
-  { id: 'EMBED', label: 'Embed' },
 ];
 
 export default function ShadowPlayerV2() {
@@ -49,9 +42,10 @@ export default function ShadowPlayerV2() {
   const [season, setSeason] = useState<ShadowSeason | null>(null);
   const [seasons, setSeasons] = useState<ShadowSeason[]>([]);
   const [episodes, setEpisodes] = useState<ShadowEpisode[]>([]);
-  const [server, setServer] = useState<ServerType>('XPLUS');
+  const [server, setServer] = useState<ServerType>('EMBED');
   const [loading, setLoading] = useState(true);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [seasonOpen, setSeasonOpen] = useState(false);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,8 +62,8 @@ export default function ShadowPlayerV2() {
         return;
       }
       setEpisode(ep as ShadowEpisode);
-      // Default server: embed-only episodes start on Embed, files on Server 1.
-      setServer(ep.video_url ? 'XPLUS' : 'EMBED');
+      // Default: Embed when available, otherwise Server 1.
+      setServer(ep.external_url ? 'EMBED' : 'XPLUS');
 
       const { data: seasonData } = await supabase
         .from('seasons')
@@ -79,6 +73,7 @@ export default function ShadowPlayerV2() {
       if (cancelled) return;
       const s = seasonData as ShadowSeason | null;
       setSeason(s);
+      setSelectedSeasonId(s?.id ?? null);
 
       if (s?.anime?.id) {
         const { data: allSeasons } = await supabase
@@ -109,33 +104,26 @@ export default function ShadowPlayerV2() {
 
   const switchEpisode = useCallback((id: string) => {
     if (id === episodeId) return;
-    // Client-side swap keeps the SPA snappy — reuse already-loaded lists.
     window.history.replaceState(null, '', `/s2/${id}`);
-    const target = episodes.find((e) => e.id === id);
-    if (target) {
-      // Full record needed for player fields — quick single fetch.
-      supabase
-        .from('episodes')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data) {
-            setEpisode(data as ShadowEpisode);
-            setServer(data.video_url ? 'XPLUS' : 'EMBED');
-            setPickerOpen(false);
-          }
-        });
-    }
-  }, [episodeId, episodes]);
-
-  const nextEpisode = useMemo(() => {
-    if (!episode) return null;
-    const idx = episodes.findIndex((e) => e.id === episode.id);
-    return idx >= 0 && idx < episodes.length - 1 ? episodes[idx + 1] : null;
-  }, [episode, episodes]);
+    supabase
+      .from('episodes')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setEpisode(data as ShadowEpisode);
+          setServer(data.external_url ? 'EMBED' : 'XPLUS');
+        }
+      });
+  }, [episodeId]);
 
   const animeTitle = season?.anime?.title || '';
+  const selectedSeason = seasons.find((s) => s.id === selectedSeasonId) || season;
+  const visibleEpisodes = useMemo(
+    () => episodes.filter((e) => e.season_id === (selectedSeason?.id || episode?.season_id)),
+    [episodes, selectedSeason, episode],
+  );
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -151,30 +139,15 @@ export default function ShadowPlayerV2() {
         ) : (
           <>
             <div className="rounded-2xl overflow-hidden">
-              <VideoPlayer
+              <ShadowMinimalPlayer
                 key={`${episode.id}-${server}`}
-                videoUrl={episode.video_url}
-                externalUrl={episode.external_url}
-                title={episode.title}
-                animeTitle={animeTitle}
-                episodeNumber={episode.episode_number}
-                seasonNumber={season?.season_number || 1}
-                episodeId={episode.id}
-                poster={season?.anime?.cover_image || undefined}
-                bannerImage={episode.thumbnail || season?.anime?.cover_image || null}
-                activeServer={server}
-                captionsUrl={episode.captions_url}
-                audioLanguage={episode.audio_language || undefined}
-                introStartTime={episode.intro_start_time}
-                introEndTime={episode.intro_end_time}
-                outroStartTime={episode.outro_start_time}
-                outroEndTime={episode.outro_end_time}
-                hasNextEpisode={!!nextEpisode}
-                onNextEpisode={nextEpisode ? () => switchEpisode(nextEpisode.id) : undefined}
+                videoUrl={server === 'EMBED' ? null : episode.video_url || episode.external_url}
+                embedUrl={server === 'EMBED' ? episode.external_url || episode.video_url : null}
+                poster={episode.thumbnail || season?.anime?.cover_image || undefined}
               />
             </div>
 
-            {/* Server switcher — flat, fast */}
+            {/* Server switcher — Embed first */}
             <div className="flex items-center gap-2 flex-wrap">
               {SHADOW_SERVERS.map((s) => (
                 <button
@@ -188,7 +161,7 @@ export default function ShadowPlayerV2() {
               ))}
             </div>
 
-            {/* Title row */}
+            {/* Title row + Seasons dropdown */}
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <h1 className="text-base sm:text-lg font-semibold truncate">
@@ -198,48 +171,51 @@ export default function ShadowPlayerV2() {
                   Season {season?.season_number || 1} · Episode {episode.episode_number}
                 </p>
               </div>
-              {episodes.length > 1 && (
-                <button
-                  onClick={() => setPickerOpen((o) => !o)}
-                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-900 border border-white/10 text-xs text-white/80 hover:text-white transition-colors"
-                >
-                  <ListVideo className="h-3.5 w-3.5" />
-                  Episodes
-                  <ChevronDown
-                    className={`h-3.5 w-3.5 transition-transform ${pickerOpen ? 'rotate-180' : ''}`}
-                  />
-                </button>
+              {seasons.length > 0 && (
+                <div className="relative shrink-0">
+                  <button
+                    onClick={() => setSeasonOpen((o) => !o)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-900 border border-white/10 text-xs text-white/80 hover:text-white transition-colors"
+                  >
+                    Season {selectedSeason?.season_number ?? season?.season_number ?? 1}
+                    <ChevronDown
+                      className={`h-3.5 w-3.5 transition-transform ${seasonOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  {seasonOpen && (
+                    <div className="absolute right-0 top-full mt-1.5 z-20 min-w-[120px] rounded-xl bg-neutral-900 border border-white/10 py-1 shadow-xl">
+                      {seasons.map((s) => (
+                        <button
+                          key={s.id}
+                          onClick={() => {
+                            setSelectedSeasonId(s.id);
+                            setSeasonOpen(false);
+                          }}
+                          data-active={s.id === selectedSeason?.id}
+                          className="w-full text-left px-3.5 py-2 text-xs text-white/70 hover:bg-white/5 hover:text-white transition-colors data-[active=true]:text-white data-[active=true]:font-semibold"
+                        >
+                          Season {s.season_number}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
-            {/* Episode picker — every episode works on the shadow link */}
-            {pickerOpen && episodes.length > 1 && (
-              <div className="rounded-2xl bg-neutral-900 border border-white/10 p-3 space-y-3">
-                {seasons.map((s) => {
-                  const eps = episodes.filter((e) => e.season_id === s.id);
-                  if (!eps.length) return null;
-                  return (
-                    <div key={s.id} className="space-y-2">
-                      {seasons.length > 1 && (
-                        <p className="text-[10px] uppercase tracking-widest text-white/40">
-                          Season {s.season_number}
-                        </p>
-                      )}
-                      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-1.5">
-                        {eps.map((e) => (
-                          <button
-                            key={e.id}
-                            onClick={() => switchEpisode(e.id)}
-                            data-active={e.id === episode.id}
-                            className="py-2 rounded-lg text-xs font-semibold bg-black/40 text-white/70 border border-white/10 transition-colors hover:text-white data-[active=true]:bg-white data-[active=true]:text-black data-[active=true]:border-white"
-                          >
-                            {e.episode_number}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
+            {/* Episodes — always visible for the selected season */}
+            {visibleEpisodes.length > 0 && (
+              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-1.5">
+                {visibleEpisodes.map((e) => (
+                  <button
+                    key={e.id}
+                    onClick={() => switchEpisode(e.id)}
+                    data-active={e.id === episode.id}
+                    className="py-2 rounded-lg text-xs font-semibold bg-neutral-900 text-white/70 border border-white/10 transition-colors hover:text-white data-[active=true]:bg-white data-[active=true]:text-black data-[active=true]:border-white"
+                  >
+                    {e.episode_number}
+                  </button>
+                ))}
               </div>
             )}
           </>
