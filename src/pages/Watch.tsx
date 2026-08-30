@@ -1591,7 +1591,7 @@ export default function Watch() {
               );
             })()}
 
-            {/* Shadow link v2 (BETA 1) — copies the standalone branding-free watch URL */}
+            {/* Shadow link v2 (BETA 2) — copies the standalone branding-free watch URL */}
             <Button
               size="sm"
               variant="outline"
@@ -1622,7 +1622,7 @@ export default function Watch() {
               <Link2 className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5" />
               Shadow link v2
               <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-primary/15 text-primary text-[9px] font-bold uppercase tracking-wider">
-                BETA 1
+                BETA 2
               </span>
             </Button>
           </div>
