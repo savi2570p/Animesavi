@@ -8,11 +8,13 @@ import { isHlsUrl, detectDeviceKind } from '@/lib/streamSource';
  */
 
 interface ShadowMinimalPlayerProps {
-  /** Direct file/manifest URL (mp4/m3u8) or null when using an iframe */
   videoUrl: string | null;
-  /** Embed URL rendered as a bare iframe */
   embedUrl?: string | null;
   poster?: string;
+  /** Shown top-left only while controls are visible */
+  overlayTitle?: string;
+  overlaySeason?: number;
+  overlayEpisode?: number;
 }
 
 function formatTime(t: number): string {
@@ -25,7 +27,14 @@ function formatTime(t: number): string {
     : `${m}:${String(s).padStart(2, '0')}`;
 }
 
-export function ShadowMinimalPlayer({ videoUrl, embedUrl, poster }: ShadowMinimalPlayerProps) {
+export function ShadowMinimalPlayer({
+  videoUrl,
+  embedUrl,
+  poster,
+  overlayTitle,
+  overlaySeason,
+  overlayEpisode,
+}: ShadowMinimalPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hideTimerRef = useRef<number | null>(null);
@@ -105,7 +114,6 @@ export function ShadowMinimalPlayer({ videoUrl, embedUrl, poster }: ShadowMinima
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
     } else {
-      // iOS Safari: fullscreen the video element itself
       const v = videoRef.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
       if (detectDeviceKind() === 'ios' && v?.webkitEnterFullscreen) {
         v.webkitEnterFullscreen();
@@ -123,7 +131,6 @@ export function ShadowMinimalPlayer({ videoUrl, embedUrl, poster }: ShadowMinima
     setCurrentTime(value);
   }, []);
 
-  // ── Embed mode: bare iframe, no custom controls possible ──
   if (!videoUrl && embedUrl) {
     return (
       <div className="relative w-full aspect-video bg-black">
@@ -147,6 +154,7 @@ export function ShadowMinimalPlayer({ videoUrl, embedUrl, poster }: ShadowMinima
   }
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const showOverlay = Boolean(overlayTitle) && overlaySeason != null && overlayEpisode != null;
 
   return (
     <div
@@ -173,10 +181,22 @@ export function ShadowMinimalPlayer({ videoUrl, embedUrl, poster }: ShadowMinima
         onError={() => setFailed(true)}
       />
 
+      {/* Title + S/E — top-left, follows control visibility */}
+      {showOverlay && (
+        <div
+          className={`absolute top-0 inset-x-0 z-20 px-3 pt-3 pb-6 bg-gradient-to-b from-black/70 to-transparent pointer-events-none transition-opacity duration-200 ${
+            controlsVisible ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <p className="text-[11px] sm:text-xs font-semibold text-white truncate">{overlayTitle}</p>
+          <p className="text-[10px] text-white/60">S{overlaySeason} · E{overlayEpisode}</p>
+        </div>
+      )}
+
       {/* Center buffering spinner */}
       {buffering && !failed && (
         <div className="absolute inset-0 grid place-items-center pointer-events-none">
-          <Loader2 className="h-8 w-8 animate-spin text-white/70" />
+          <Loader2 className="h-6 w-6 animate-spin text-white/70" />
         </div>
       )}
 
@@ -194,19 +214,18 @@ export function ShadowMinimalPlayer({ videoUrl, embedUrl, poster }: ShadowMinima
           aria-label="Play"
           className="absolute inset-0 grid place-items-center"
         >
-          <span className="h-14 w-14 rounded-full bg-black/60 border border-white/20 grid place-items-center">
-            <Play className="h-6 w-6 text-white ml-0.5" fill="currentColor" />
+          <span className="h-12 w-12 rounded-full bg-black/60 border border-white/20 grid place-items-center">
+            <Play className="h-5 w-5 text-white ml-0.5" fill="currentColor" />
           </span>
         </button>
       )}
 
       {/* Control bar: timeline + play/pause + ±10s + fullscreen only */}
       <div
-        className={`absolute inset-x-0 bottom-0 px-3 pb-2 pt-8 bg-gradient-to-t from-black/85 to-transparent transition-opacity duration-200 ${
+        className={`absolute inset-x-0 bottom-0 px-2.5 pb-1.5 pt-6 bg-gradient-to-t from-black/85 to-transparent transition-opacity duration-200 ${
           controlsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
-        {/* Timeline */}
         <input
           type="range"
           min={0}
@@ -221,22 +240,22 @@ export function ShadowMinimalPlayer({ videoUrl, embedUrl, poster }: ShadowMinima
           }}
         />
 
-        <div className="mt-1 flex items-center gap-3">
-          <button onClick={togglePlay} aria-label={isPlaying ? 'Pause' : 'Play'} className="p-1.5 text-white">
-            {isPlaying ? <Pause className="h-5 w-5" fill="currentColor" /> : <Play className="h-5 w-5" fill="currentColor" />}
+        <div className="mt-0.5 flex items-center gap-2">
+          <button onClick={togglePlay} aria-label={isPlaying ? 'Pause' : 'Play'} className="p-1 text-white">
+            {isPlaying ? <Pause className="h-4 w-4" fill="currentColor" /> : <Play className="h-4 w-4" fill="currentColor" />}
           </button>
-          <button onClick={() => skip(-10)} aria-label="Back 10 seconds" className="p-1.5 text-white/85">
-            <RotateCcw className="h-4.5 w-4.5 h-[18px] w-[18px]" />
+          <button onClick={() => skip(-10)} aria-label="Back 10 seconds" className="p-1 text-white/85">
+            <RotateCcw className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => skip(10)} aria-label="Forward 10 seconds" className="p-1.5 text-white/85">
-            <RotateCw className="h-[18px] w-[18px]" />
+          <button onClick={() => skip(10)} aria-label="Forward 10 seconds" className="p-1 text-white/85">
+            <RotateCw className="h-3.5 w-3.5" />
           </button>
-          <span className="text-[11px] text-white/70 tabular-nums">
+          <span className="text-[10px] text-white/70 tabular-nums">
             {formatTime(currentTime)} / {formatTime(duration)}
           </span>
           <div className="flex-1" />
-          <button onClick={toggleFullscreen} aria-label="Fullscreen" className="p-1.5 text-white">
-            <Maximize className="h-[18px] w-[18px]" />
+          <button onClick={toggleFullscreen} aria-label="Fullscreen" className="p-1 text-white">
+            <Maximize className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
