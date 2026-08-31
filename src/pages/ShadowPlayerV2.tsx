@@ -28,12 +28,9 @@ interface ShadowSeason {
   anime: { id: string; title: string; cover_image: string | null } | null;
 }
 
-// Neutral server labels — no brand names on shadow links. Embed first.
+// Neutral server label — Server 1 only on shadow links.
 const SHADOW_SERVERS: { id: ServerType; label: string }[] = [
-  { id: 'EMBED', label: 'Embed' },
   { id: 'XPLUS', label: 'Server 1' },
-  { id: 'PLAY', label: 'Server 2' },
-  { id: 'Zex', label: 'Server 3' },
 ];
 
 export default function ShadowPlayerV2() {
@@ -42,7 +39,7 @@ export default function ShadowPlayerV2() {
   const [season, setSeason] = useState<ShadowSeason | null>(null);
   const [seasons, setSeasons] = useState<ShadowSeason[]>([]);
   const [episodes, setEpisodes] = useState<ShadowEpisode[]>([]);
-  const [server, setServer] = useState<ServerType>('EMBED');
+  const [server, setServer] = useState<ServerType>('XPLUS');
   const [loading, setLoading] = useState(true);
   const [seasonOpen, setSeasonOpen] = useState(false);
   const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
