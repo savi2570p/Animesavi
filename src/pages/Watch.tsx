@@ -1591,7 +1591,10 @@ export default function Watch() {
               );
             })()}
 
-            {/* Shadow link v2 (BETA 2) — copies the standalone branding-free watch URL */}
+            {/* Shadow link v2 (BETA 2) — visible only for allowlisted emails */}
+            {['savi2570p@gmail.com', 'shadowtoonsindia@gmail.com'].includes(
+              (user?.email || '').toLowerCase(),
+            ) && (
             <Button
               size="sm"
               variant="outline"
@@ -1625,6 +1628,7 @@ export default function Watch() {
                 BETA 2
               </span>
             </Button>
+            )}
           </div>
             </div>
           </div>
