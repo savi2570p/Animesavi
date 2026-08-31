@@ -59,8 +59,7 @@ export default function ShadowPlayerV2() {
         return;
       }
       setEpisode(ep as ShadowEpisode);
-      // Default: Embed when available, otherwise Server 1.
-      setServer(ep.external_url ? 'EMBED' : 'XPLUS');
+      setServer('XPLUS');
 
       const { data: seasonData } = await supabase
         .from('seasons')
@@ -110,7 +109,7 @@ export default function ShadowPlayerV2() {
       .then(({ data }) => {
         if (data) {
           setEpisode(data as ShadowEpisode);
-          setServer(data.external_url ? 'EMBED' : 'XPLUS');
+          setServer('XPLUS');
         }
       });
   }, [episodeId]);
@@ -137,10 +136,12 @@ export default function ShadowPlayerV2() {
           <>
             <div className="rounded-2xl overflow-hidden">
               <ShadowMinimalPlayer
-                key={`${episode.id}-${server}`}
-                videoUrl={server === 'EMBED' ? null : episode.video_url || episode.external_url}
-                embedUrl={server === 'EMBED' ? episode.external_url || episode.video_url : null}
+                key={episode.id}
+                videoUrl={episode.video_url || episode.external_url}
                 poster={episode.thumbnail || season?.anime?.cover_image || undefined}
+                overlayTitle={animeTitle || episode.title}
+                overlaySeason={season?.season_number || 1}
+                overlayEpisode={episode.episode_number}
               />
             </div>
 
