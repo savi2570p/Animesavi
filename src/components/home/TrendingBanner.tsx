@@ -143,8 +143,8 @@ export const TrendingBanner = memo(function TrendingBanner() {
           style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)', isolation: 'isolate' }}
         >
           {/* Animated ambient glow */}
-          <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 bg-primary/15 rounded-full blur-3xl animate-pulse" />
-          <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 bg-rose-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="perf-decor pointer-events-none absolute -top-24 -right-24 w-72 h-72 bg-primary/15 rounded-full blur-3xl animate-pulse" />
+          <div className="perf-decor pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 bg-rose-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
           <Link to={`/anime/${current.id}`} className="group absolute inset-0 block">
             {/* 16:9 banner thumbnail fills the card on desktop and mobile */}
@@ -154,7 +154,7 @@ export const TrendingBanner = memo(function TrendingBanner() {
                 src={current.banner_image || current.cover_image || '/placeholder.svg'}
                 alt=""
                 aria-hidden
-                className="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl opacity-60"
+                className="perf-blur-fill absolute inset-0 w-full h-full object-cover scale-125 blur-2xl opacity-60"
               />
               <img
                 src={current.banner_image || current.cover_image || '/placeholder.svg'}
