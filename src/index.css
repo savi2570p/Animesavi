@@ -3204,3 +3204,96 @@ body.clone-mode {
   background: #fff;
   border: none;
 }
+
+/* ==========================================================================
+   PERFORMANCE TIERS
+   `initPerfTier()` puts perf-high / perf-medium / perf-low on <html>.
+
+   Nothing here changes layout, colour identity or typography — it only
+   reduces the *cost* of decorative effects (backdrop blur, full-screen
+   animated gradients, pulsing blurred orbs) on devices that cannot paint
+   them at 60fps. High-tier devices are completely unaffected.
+   ========================================================================== */
+
+/* Countdown bar for the trending banner — pure CSS, replaces a
+   requestAnimationFrame loop that re-rendered React 60x/second. */
+@keyframes trending-progress-fill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+.trending-progress {
+  width: 100%;
+  transform-origin: left center;
+  will-change: transform;
+  animation-name: trending-progress-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+/* ---------- MEDIUM: mid-range phones ---------- */
+html.perf-medium .lg-section,
+html.perf-medium .lg-chip {
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+}
+/* The drifting aurora blobs repaint a full-screen 30px blur forever. */
+html.perf-medium .home-aurora::after {
+  animation: none;
+  filter: blur(18px);
+}
+html.perf-medium .home-aurora::before {
+  transition: none;
+}
+html.perf-medium .perf-decor {
+  animation: none;
+}
+
+/* ---------- LOW: budget / older phones, save-data, slow networks ---------- */
+/* backdrop-filter is the single most expensive effect on low-end GPUs:
+   it forces a readback of everything painted underneath, every frame. */
+html.perf-low .lg-section,
+html.perf-low .lg-chip,
+html.perf-low [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+/* Keep the panels readable now that the blur is gone. */
+html.perf-low .lg-section {
+  background: linear-gradient(180deg, hsl(270 40% 12% / 0.92), hsl(265 50% 7% / 0.94));
+}
+html.perf-low .home-aurora::before,
+html.perf-low .home-aurora::after {
+  display: none;
+}
+html.perf-low .perf-decor {
+  display: none;
+}
+/* A scaled-up, heavily blurred copy of the banner behind the banner is pure
+   decoration — drop it and let the real image carry the card. */
+html.perf-low .perf-blur-fill {
+  filter: none;
+  transform: none;
+  opacity: 0.35;
+}
+/* Long decorative transitions turn every scroll into a repaint storm. */
+html.perf-low .animate-ping,
+html.perf-low .animate-pulse {
+  animation: none;
+}
+html.perf-low .hover-scale,
+html.perf-low .story-link::after {
+  transition: none;
+}
+
+/* ---------- Users who explicitly asked for less motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .trending-progress,
+  .home-aurora::after,
+  .perf-decor {
+    animation: none !important;
+  }
+  html .animate-ping,
+  html .animate-pulse {
+    animation: none !important;
+  }
+}
