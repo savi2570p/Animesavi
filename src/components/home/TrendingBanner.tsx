@@ -1,4 +1,5 @@
-import { memo, useState, useEffect, useCallback, useRef } from 'react';
+import { memo, useState, useEffect } from 'react';
+import { useActiveOnScreen } from '@/hooks/usePerfTier';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { TrendingUp, Play, Eye, Flame, ChevronRight, Trophy, Zap } from 'lucide-react';
@@ -114,7 +115,7 @@ export const TrendingBanner = memo(function TrendingBanner() {
   const current = trending[activeIndex];
 
   return (
-    <section className="py-5 md:py-6">
+    <section ref={sectionRef} className="py-5 md:py-6">
       <div className="container">
         {/* Header */}
         <div className="flex items-center gap-2.5 mb-4">
@@ -172,8 +173,12 @@ export const TrendingBanner = memo(function TrendingBanner() {
             {/* Top progress bar */}
             <div className="absolute top-0 left-0 right-0 z-20 h-1 bg-white/5">
               <div
-                className="h-full bg-gradient-to-r from-primary to-rose-500 shadow-[0_0_12px_hsl(var(--primary)/0.8)] transition-all duration-75 ease-linear"
-                style={{ width: `${progress * 100}%` }}
+                key={activeIndex}
+                className="trending-progress h-full bg-gradient-to-r from-primary to-rose-500 shadow-[0_0_12px_hsl(var(--primary)/0.8)]"
+                style={{
+                  animationDuration: `${ROTATE_INTERVAL}ms`,
+                  animationPlayState: isActive ? 'running' : 'paused',
+                }}
               />
             </div>
 
