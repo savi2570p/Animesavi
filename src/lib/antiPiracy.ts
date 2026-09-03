@@ -214,8 +214,35 @@ export function installAntiPiracy(opts: InstallOptions = {}) {
     detectCapture();
   };
 
-  const devInterval = window.setInterval(detectDevtools, 1500);
-  const capInterval = window.setInterval(detectCapture, 1000);
+  // Polling is visibility-gated: `detectDevtools` reads window.outerWidth /
+  // innerWidth, which forces a layout on every tick. Running that twice a
+  // second forever (including in background tabs) was a constant main-thread
+  // tax on low-end phones for zero protection benefit.
+  let devInterval = 0;
+  let capInterval = 0;
+
+  const startPolling = () => {
+    if (devInterval || capInterval) return;
+    devInterval = window.setInterval(detectDevtools, 3000);
+    capInterval = window.setInterval(detectCapture, 2500);
+  };
+  const stopPolling = () => {
+    if (devInterval) window.clearInterval(devInterval);
+    if (capInterval) window.clearInterval(capInterval);
+    devInterval = 0;
+    capInterval = 0;
+  };
+  const onVisibility = () => {
+    if (document.visibilityState === 'visible') {
+      // Re-check immediately on return, then resume the slow cadence.
+      detectCapture();
+      startPolling();
+    } else {
+      stopPolling();
+    }
+  };
+  document.addEventListener('visibilitychange', onVisibility);
+  if (document.visibilityState === 'visible') startPolling();
 
   // 9. Android long-press "Download video" suppression.
   //    Chrome/Samsung/Firefox Android fire `contextmenu` on long-press of a
@@ -291,8 +318,8 @@ export function installAntiPiracy(opts: InstallOptions = {}) {
     document.removeEventListener('touchmove', onTouchEnd, true);
     try { navigator.mediaDevices?.removeEventListener('devicechange', onDeviceChange); } catch {}
     try { mo.disconnect(); } catch {}
-    window.clearInterval(devInterval);
-    window.clearInterval(capInterval);
+    document.removeEventListener('visibilitychange', onVisibility);
+    stopPolling();
     if (originalGDM && navigator.mediaDevices) {
       (navigator.mediaDevices as any).getDisplayMedia = originalGDM;
     }

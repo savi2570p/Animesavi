@@ -1,4 +1,5 @@
-import { memo, useState, useEffect, useCallback, useRef } from 'react';
+import { memo, useState, useEffect } from 'react';
+import { useActiveOnScreen } from '@/hooks/usePerfTier';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { TrendingUp, Play, Eye, Flame, ChevronRight, Trophy, Zap } from 'lucide-react';
@@ -37,44 +38,26 @@ export const TrendingBanner = memo(function TrendingBanner() {
   const [trending, setTrending] = useState<TrendingAnime[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [progress, setProgress] = useState(0);
-  const progressRef = useRef<number>(0);
-  const rafRef = useRef<number | null>(null);
-  const lastTickRef = useRef<number>(0);
+
+  // Rotation only runs while the banner is on screen AND the tab is visible.
+  const [sectionRef, isActive] = useActiveOnScreen<HTMLElement>('200px');
 
   useEffect(() => {
     fetchTrending();
   }, []);
 
-  const rotateNext = useCallback(() => {
-    setActiveIndex((prev) => (prev + 1) % trending.length);
-    progressRef.current = 0;
-    lastTickRef.current = performance.now();
-  }, [trending.length]);
-
+  // Rotation is a single timer, and the countdown bar is a pure CSS
+  // animation — previously this ran a requestAnimationFrame loop that called
+  // setState 60x/second, re-rendering the whole banner even off screen.
   useEffect(() => {
-    if (trending.length === 0) return;
-    progressRef.current = 0;
-    lastTickRef.current = performance.now();
+    if (trending.length < 2 || !isActive) return;
+    const id = window.setTimeout(() => {
+      setActiveIndex((prev) => (prev + 1) % trending.length);
+    }, ROTATE_INTERVAL);
+    return () => window.clearTimeout(id);
+  }, [trending.length, activeIndex, isActive]);
 
-    const tick = (now: number) => {
-      const delta = now - lastTickRef.current;
-      lastTickRef.current = now;
-      progressRef.current = Math.min(ROTATE_INTERVAL, progressRef.current + delta);
-      setProgress(progressRef.current / ROTATE_INTERVAL);
 
-      if (progressRef.current >= ROTATE_INTERVAL) {
-        rotateNext();
-      } else {
-        rafRef.current = requestAnimationFrame(tick);
-      }
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [trending.length, activeIndex, rotateNext]);
 
   const fetchTrending = async () => {
     try {
@@ -132,7 +115,7 @@ export const TrendingBanner = memo(function TrendingBanner() {
   const current = trending[activeIndex];
 
   return (
-    <section className="py-5 md:py-6">
+    <section ref={sectionRef} className="py-5 md:py-6">
       <div className="container">
         {/* Header */}
         <div className="flex items-center gap-2.5 mb-4">
@@ -160,8 +143,8 @@ export const TrendingBanner = memo(function TrendingBanner() {
           style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)', isolation: 'isolate' }}
         >
           {/* Animated ambient glow */}
-          <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 bg-primary/15 rounded-full blur-3xl animate-pulse" />
-          <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 bg-rose-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="perf-decor pointer-events-none absolute -top-24 -right-24 w-72 h-72 bg-primary/15 rounded-full blur-3xl animate-pulse" />
+          <div className="perf-decor pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 bg-rose-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
           <Link to={`/anime/${current.id}`} className="group absolute inset-0 block">
             {/* 16:9 banner thumbnail fills the card on desktop and mobile */}
@@ -171,7 +154,7 @@ export const TrendingBanner = memo(function TrendingBanner() {
                 src={current.banner_image || current.cover_image || '/placeholder.svg'}
                 alt=""
                 aria-hidden
-                className="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl opacity-60"
+                className="perf-blur-fill absolute inset-0 w-full h-full object-cover scale-125 blur-2xl opacity-60"
               />
               <img
                 src={current.banner_image || current.cover_image || '/placeholder.svg'}
@@ -190,8 +173,12 @@ export const TrendingBanner = memo(function TrendingBanner() {
             {/* Top progress bar */}
             <div className="absolute top-0 left-0 right-0 z-20 h-1 bg-white/5">
               <div
-                className="h-full bg-gradient-to-r from-primary to-rose-500 shadow-[0_0_12px_hsl(var(--primary)/0.8)] transition-all duration-75 ease-linear"
-                style={{ width: `${progress * 100}%` }}
+                key={activeIndex}
+                className="trending-progress h-full bg-gradient-to-r from-primary to-rose-500 shadow-[0_0_12px_hsl(var(--primary)/0.8)]"
+                style={{
+                  animationDuration: `${ROTATE_INTERVAL}ms`,
+                  animationPlayState: isActive ? 'running' : 'paused',
+                }}
               />
             </div>
 

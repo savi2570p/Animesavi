@@ -1,4 +1,5 @@
 import { memo, useState, useEffect, useCallback } from 'react';
+import { useActiveOnScreen } from '@/hooks/usePerfTier';
 import { preloadImages } from '@/lib/imageOptimization';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -64,6 +65,7 @@ const getViewCount = (title: string, dbViewCount: number | null): number => {
 };
 
 export const FeaturedSlider = memo(function FeaturedSlider() {
+  const [sliderRef, isActive] = useActiveOnScreen<HTMLElement>('100px');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState<'next' | 'prev'>('next');
   const [animKey, setAnimKey] = useState(0);
@@ -190,16 +192,18 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
     goTo((currentIndex - 1 + featuredAnime.length) % featuredAnime.length, 'prev');
   }, [currentIndex, featuredAnime.length, goTo]);
 
-  // Auto-loop every 3 seconds — restarts on manual change
+  // Auto-loop every 3 seconds — restarts on manual change.
+  // Paused whenever the hero is off screen or the tab is backgrounded so we
+  // never burn frames animating something nobody is looking at.
   useEffect(() => {
-    if (featuredAnime.length === 0) return;
+    if (featuredAnime.length === 0 || !isActive) return;
     const interval = setInterval(() => {
       setDirection('next');
       setCurrentIndex(prev => (prev + 1) % featuredAnime.length);
       setAnimKey(k => k + 1);
     }, 3000);
     return () => clearInterval(interval);
-  }, [currentIndex, featuredAnime.length]);
+  }, [currentIndex, featuredAnime.length, isActive]);
 
   if (loading) {
     return (
@@ -343,7 +347,7 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
 
   // ─── MOBILE: Taller cinematic slider ───
   return (
-    <section className="relative w-full overflow-x-hidden overflow-y-visible">
+    <section ref={sliderRef} className="relative w-full overflow-x-hidden overflow-y-visible">
       <div className="relative w-full aspect-[16/9] overflow-hidden">
         {featuredAnime.map((anime, idx) => (
           <div

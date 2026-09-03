@@ -29,61 +29,60 @@ export const LatestSeries = memo(function LatestSeries() {
 
   const fetchLatestSeries = async () => {
     try {
+      // Only the most recently touched series can appear in a "latest" row, so
+      // we scan a small window instead of the entire catalogue. The previous
+      // version pulled 500 anime, every season, and *every episode in the
+      // database* (paged 1000 at a time) just to render 12 cards.
+      const CANDIDATES = 60;
+
       const { data: animeData, error: animeError } = await supabase
         .from('anime')
         .select(`id, title, cover_image, created_at, updated_at, type, status, is_eng_dub`)
         .eq('type', 'series')
         .order('updated_at', { ascending: false })
-        .limit(500);
+        .limit(CANDIDATES);
 
       if (animeError) throw animeError;
 
       const animeIds = (animeData || []).map(a => a.id);
+      if (animeIds.length === 0) {
+        setSeries([]);
+        return;
+      }
+
       const { data: allSeasons } = await supabase
         .from('seasons')
         .select('id, anime_id')
         .in('anime_id', animeIds);
 
-      const seasonsByAnime = new Map<string, string[]>();
+      // season_id -> anime_id, so episode attribution is O(1) per episode
+      // instead of the old O(anime x seasons) nested scan.
+      const animeBySeason = new Map<string, string>();
       (allSeasons || []).forEach(season => {
-        const existing = seasonsByAnime.get(season.anime_id) || [];
-        existing.push(season.id);
-        seasonsByAnime.set(season.anime_id, existing);
+        animeBySeason.set(season.id, season.anime_id);
       });
 
-      const allSeasonIds = (allSeasons || []).map(s => s.id);
-      const allEpisodes: { id: string; season_id: string; created_at: string }[] = [];
-      if (allSeasonIds.length > 0) {
-        let offset = 0;
-        const pageSize = 1000;
-        let hasMore = true;
-        while (hasMore) {
-          const { data: batch } = await supabase
-            .from('episodes')
-            .select('id, season_id, created_at')
-            .in('season_id', allSeasonIds)
-            .order('created_at', { ascending: false })
-            .range(offset, offset + pageSize - 1);
-          if (batch) allEpisodes.push(...batch);
-          hasMore = (batch?.length || 0) === pageSize;
-          offset += pageSize;
-        }
-      }
-
+      const allSeasonIds = Array.from(animeBySeason.keys());
       const episodesByAnime = new Map<string, { count: number; latestDate: string | null }>();
-      allEpisodes.forEach(episode => {
-        for (const [animeId, seasonIds] of seasonsByAnime.entries()) {
-          if (seasonIds.includes(episode.season_id)) {
-            const existing = episodesByAnime.get(animeId) || { count: 0, latestDate: null };
-            existing.count++;
-            if (!existing.latestDate || new Date(episode.created_at) > new Date(existing.latestDate)) {
-              existing.latestDate = episode.created_at;
-            }
-            episodesByAnime.set(animeId, existing);
-            break;
-          }
-        }
-      });
+
+      if (allSeasonIds.length > 0) {
+        const { data: episodeRows } = await supabase
+          .from('episodes')
+          .select('season_id, created_at')
+          .in('season_id', allSeasonIds)
+          .order('created_at', { ascending: false })
+          .limit(2000);
+
+        (episodeRows || []).forEach(episode => {
+          const animeId = animeBySeason.get(episode.season_id);
+          if (!animeId) return;
+          const existing = episodesByAnime.get(animeId) || { count: 0, latestDate: null };
+          existing.count++;
+          // Rows arrive newest-first, so the first one we see is the latest.
+          if (!existing.latestDate) existing.latestDate = episode.created_at;
+          episodesByAnime.set(animeId, existing);
+        });
+      }
 
       const seriesWithData: AnimeSeries[] = (animeData || [])
         .map((anime) => {
@@ -105,6 +104,7 @@ export const LatestSeries = memo(function LatestSeries() {
       setLoading(false);
     }
   };
+
 
   const isNew = (anime: AnimeSeries) => {
     const dateToCheck = anime.latest_episode_date || anime.updated_at || anime.created_at;
