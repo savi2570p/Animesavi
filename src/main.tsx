@@ -7,6 +7,7 @@ import "@fontsource/plus-jakarta-sans/500.css";
 import "@fontsource/plus-jakarta-sans/600.css";
 import "@fontsource/plus-jakarta-sans/700.css";
 import { installIframeSandboxGuard } from "./lib/iframeSandboxGuard";
+import { initPerfTier } from "./lib/performance/deviceTier";
 
 
 // Initialize theme from localStorage before render to prevent flash
@@ -18,6 +19,10 @@ const initTheme = () => {
 };
 
 initTheme();
+
+// Resolve the device performance tier before first paint so CSS can drop
+// expensive effects on low-end hardware without a visual flash.
+initPerfTier();
 
 // Globally strip any `sandbox` attribute from every iframe (now and future).
 installIframeSandboxGuard();
