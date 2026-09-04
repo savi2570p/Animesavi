@@ -112,8 +112,11 @@ function sampleFrameRate() {
       return;
     }
     const fps = (frames / elapsed) * 1000;
-    if (fps < 32) setTier('low');
-    else if (fps < 50 && currentTier === 'high') setTier('medium');
+    // Deliberately conservative: a single unlucky sample must not permanently
+    // strip effects from a capable device, so we only react to clearly bad
+    // frame rates.
+    if (fps < 24) setTier('low');
+    else if (fps < 45 && currentTier === 'high') setTier('medium');
   };
 
   const stop = () => {
@@ -146,8 +149,8 @@ export function initPerfTier(): PerfTier {
   applyClass(tier);
 
   if (tier !== 'low' && document.visibilityState === 'visible') {
-    // Measure after first paint so boot work does not skew the sample.
-    setTimeout(sampleFrameRate, 2500);
+    // Measure well after first paint so boot work does not skew the sample.
+    setTimeout(sampleFrameRate, 6000);
   }
   return tier;
 }
