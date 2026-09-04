@@ -14,7 +14,7 @@ interface NetworkSpeedResult {
 }
 
 const SPEED_TEST_CACHE_KEY = 'network_speed_test_result';
-const SPEED_TEST_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const SPEED_TEST_CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
 
 // Test file URL - using a small public file for speed testing
 const TEST_FILE_SIZE = 100000; // bytes
@@ -152,20 +152,62 @@ export function useNetworkSpeed(): NetworkSpeedResult & { runSpeedTest: () => Pr
       }
     }
 
-    // Run initial test
-    runSpeedTest();
-  }, [runSpeedTest]);
+    const info = getNetworkInfo();
+
+    // Never spend the user's data on a benchmark when they asked us not to,
+    // or when the browser already reports a usable downlink estimate.
+    if (info.saveData || info.downlink > 0) {
+      const speed = info.saveData ? Math.min(info.downlink || 1, 1) : info.downlink;
+      setResult({
+        downloadSpeed: Math.round(speed * 100) / 100,
+        latency: info.rtt || 0,
+        connectionType: info.connectionType,
+        effectiveType: info.effectiveType,
+        recommendedQuality: getRecommendedQuality(speed),
+        isSlowNetwork: speed < 2 || info.saveData || ['slow-2g', '2g'].includes(info.effectiveType),
+        isCellular: info.connectionType === 'cellular',
+        lastTestTime: Date.now(),
+        isTesting: false,
+        error: null,
+      });
+      return;
+    }
+
+    // Otherwise measure — but only once the browser is idle, so the benchmark
+    // never competes with first paint or the initial data fetches.
+    let cancelled = false;
+    const run = () => { if (!cancelled) void runSpeedTest(); };
+    const ric = (window as unknown as {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    }).requestIdleCallback;
+    const handle = ric ? ric(run, { timeout: 4000 }) : window.setTimeout(run, 2500);
+
+    return () => {
+      cancelled = true;
+      const cic = (window as unknown as {
+        cancelIdleCallback?: (h: number) => void;
+      }).cancelIdleCallback;
+      if (ric && cic) cic(handle as number);
+      else window.clearTimeout(handle as number);
+    };
+  }, [runSpeedTest, getNetworkInfo, getRecommendedQuality]);
 
   // Listen for network changes
   useEffect(() => {
     const connection = (navigator as any).connection;
     if (connection) {
+      // Network change events can fire in rapid bursts (e.g. moving between
+      // cells); debounce so we do not launch a benchmark per event.
+      let timer = 0;
       const handleChange = () => {
-        // Re-run test when network changes
-        runSpeedTest();
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => { void runSpeedTest(); }, 3000);
       };
       connection.addEventListener('change', handleChange);
-      return () => connection.removeEventListener('change', handleChange);
+      return () => {
+        window.clearTimeout(timer);
+        connection.removeEventListener('change', handleChange);
+      };
     }
   }, [runSpeedTest]);
 

@@ -20,10 +20,12 @@ export function useBackgroundSync() {
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [newEpisodes, setNewEpisodes] = useState<NewEpisode[]>([]);
   const hasJustCameOnline = useRef(false);
+  const isSyncingRef = useRef(false);
 
   const checkForNewEpisodes = useCallback(async () => {
-    if (!user || isSyncing) return;
+    if (!user || isSyncingRef.current) return;
 
+    isSyncingRef.current = true;
     setIsSyncing(true);
     try {
       // Get user's favorites
