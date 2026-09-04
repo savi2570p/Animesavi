@@ -124,9 +124,9 @@ export function useBackgroundSync() {
       console.error('Background sync error:', error);
     } finally {
       isSyncingRef.current = false;
-        setIsSyncing(false);
+      setIsSyncing(false);
     }
-  }, [user, isSyncing]);
+  }, [user]);
 
   // Handle online/offline events
   useEffect(() => {
