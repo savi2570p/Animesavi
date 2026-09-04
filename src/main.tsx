@@ -24,6 +24,13 @@ initTheme();
 // expensive effects on low-end hardware without a visual flash.
 initPerfTier();
 
+// Long-task / layout-shift warnings while developing. Stripped from prod.
+if (import.meta.env.DEV) {
+  void import("./lib/performance/monitor").then(({ installPerfMonitor }) =>
+    installPerfMonitor()
+  );
+}
+
 // Globally strip any `sandbox` attribute from every iframe (now and future).
 installIframeSandboxGuard();
 
