@@ -35,6 +35,7 @@ export function useBackgroundSync() {
         .eq('user_id', user.id);
 
       if (!favorites || favorites.length === 0) {
+        isSyncingRef.current = false;
         setIsSyncing(false);
         return;
       }
@@ -52,6 +53,7 @@ export function useBackgroundSync() {
         .in('anime_id', favoriteIds);
 
       if (!seasons || seasons.length === 0) {
+        isSyncingRef.current = false;
         setIsSyncing(false);
         return;
       }
@@ -121,7 +123,8 @@ export function useBackgroundSync() {
     } catch (error) {
       console.error('Background sync error:', error);
     } finally {
-      setIsSyncing(false);
+      isSyncingRef.current = false;
+        setIsSyncing(false);
     }
   }, [user, isSyncing]);
 
