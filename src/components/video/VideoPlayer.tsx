@@ -303,6 +303,8 @@ export function VideoPlayer({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
+  // Mirror of showControls readable from event handlers without re-subscribing.
+  const showControlsRef = useRef(true);
   const [videoError, setVideoError] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   // Auto-use iframe/embed for external URL uploads (no video_url, only external_url)
@@ -1523,17 +1525,24 @@ export function VideoPlayer({
       const current = videoRef.current.currentTime;
       const dur = videoRef.current.duration;
       if (!dur || isNaN(dur)) return;
-      const prog = (current / dur) * 100;
-      setProgress(prog);
-      setCurrentTime(current);
       setDuration(dur);
       onTimeUpdate?.(current, dur);
-      
-      // Update buffered progress
-      if (videoRef.current.buffered.length > 0) {
-        const bufferedEnd = videoRef.current.buffered.end(videoRef.current.buffered.length - 1);
-        const bufferedProgress = (bufferedEnd / dur) * 100;
-        setBuffered(bufferedProgress);
+
+      // The scrubber and clock are only on screen while the controls are up.
+      // Updating their state with the controls hidden re-rendered this entire
+      // (very large) component ~4x/second for pixels nobody could see, which
+      // was the main cause of dropped frames during fullscreen playback.
+      if (showControlsRef.current) {
+        const prog = (current / dur) * 100;
+        setProgress(prog);
+        setCurrentTime(current);
+
+        // Update buffered progress
+        if (videoRef.current.buffered.length > 0) {
+          const bufferedEnd = videoRef.current.buffered.end(videoRef.current.buffered.length - 1);
+          const bufferedProgress = (bufferedEnd / dur) * 100;
+          setBuffered(bufferedProgress);
+        }
       }
       
       // Show skip intro button during intro (only if intro times are set)
@@ -1573,6 +1582,20 @@ export function VideoPlayer({
     }
   };
   
+  // Keep the handler-readable mirror in sync, and immediately refresh the
+  // scrubber when the controls come back so it never shows a stale position.
+  useEffect(() => {
+    showControlsRef.current = showControls;
+    if (!showControls) return;
+    const v = videoRef.current;
+    if (!v || !v.duration || isNaN(v.duration)) return;
+    setProgress((v.currentTime / v.duration) * 100);
+    setCurrentTime(v.currentTime);
+    if (v.buffered.length > 0) {
+      setBuffered((v.buffered.end(v.buffered.length - 1) / v.duration) * 100);
+    }
+  }, [showControls]);
+
   // Watch Next countdown effect
   useEffect(() => {
     if (showWatchNextOverlay && hasNextEpisode && onNextEpisode) {

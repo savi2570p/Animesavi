@@ -21,6 +21,8 @@ import { MostPopular } from "@/components/home/MostPopular";
 import { TrendingBanner } from "@/components/home/TrendingBanner";
 import { SEO } from "@/components/SEO";
 import { SectionBoundary } from "@/components/common/SectionBoundary";
+import { DeferredSection } from "@/components/common/DeferredSection";
+import { getPerfTier } from "@/lib/performance/deviceTier";
 
 
 export default function Index() {
@@ -43,6 +45,9 @@ export default function Index() {
     const el = rootRef.current;
     if (!el || typeof window === "undefined") return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // The cursor aurora repaints two full-screen radial gradients. It is a
+    // desktop-class nicety only — mid and low tier devices skip it entirely.
+    if (getPerfTier() !== "high") return;
 
     let raf = 0;
     let last = 0;
@@ -122,32 +127,32 @@ export default function Index() {
 
       <hr className="lg-divider" />
 
-      <SectionBoundary label="home:clones"><CloneSection /></SectionBoundary>
+      <DeferredSection minHeight={320}><SectionBoundary label="home:clones"><CloneSection /></SectionBoundary></DeferredSection>
 
-      <SectionBoundary label="home:recommended"><RecommendedAnime /></SectionBoundary>
-      <SectionBoundary label="home:most-popular"><MostPopular /></SectionBoundary>
+      <DeferredSection minHeight={320}><SectionBoundary label="home:recommended"><RecommendedAnime /></SectionBoundary></DeferredSection>
+      <DeferredSection minHeight={340}><SectionBoundary label="home:most-popular"><MostPopular /></SectionBoundary></DeferredSection>
 
       <hr className="lg-divider" />
 
-      <SectionBoundary label="home:latest-series"><LatestSeries /></SectionBoundary>
-      <SectionBoundary label="home:latest-episodes"><LatestEpisodes /></SectionBoundary>
+      <DeferredSection minHeight={320}><SectionBoundary label="home:latest-series"><LatestSeries /></SectionBoundary></DeferredSection>
+      <DeferredSection minHeight={320}><SectionBoundary label="home:latest-episodes"><LatestEpisodes /></SectionBoundary></DeferredSection>
 
       <hr className="lg-divider" />
 
       {/* Coming Soon lives on the /schedule tab only */}
-      <SectionBoundary label="home:episode-progress"><EpisodeProgress /></SectionBoundary>
+      <DeferredSection minHeight={260}><SectionBoundary label="home:episode-progress"><EpisodeProgress /></SectionBoundary></DeferredSection>
 
       <hr className="lg-divider" />
 
-      <SectionBoundary label="home:latest-movies"><LatestMovies /></SectionBoundary>
-      <SectionBoundary label="home:latest-eng-dub"><LatestEngDub /></SectionBoundary>
-      <SectionBoundary label="home:recently-completed"><RecentlyCompleted /></SectionBoundary>
+      <DeferredSection minHeight={320}><SectionBoundary label="home:latest-movies"><LatestMovies /></SectionBoundary></DeferredSection>
+      <DeferredSection minHeight={320}><SectionBoundary label="home:latest-eng-dub"><LatestEngDub /></SectionBoundary></DeferredSection>
+      <DeferredSection minHeight={320}><SectionBoundary label="home:recently-completed"><RecentlyCompleted /></SectionBoundary></DeferredSection>
 
       {/* Social Share */}
       <section className="py-3 md:py-6">
         <div className="container">
           <div className="lg-section p-3 md:p-4 max-w-3xl mx-auto">
-            <SectionBoundary label="home:social-share"><SocialShare /></SectionBoundary>
+            <DeferredSection minHeight={180}><SectionBoundary label="home:social-share"><SocialShare /></SectionBoundary></DeferredSection>
           </div>
         </div>
       </section>
