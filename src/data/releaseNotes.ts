@@ -14,17 +14,35 @@ export interface VersionGroup {
   items: ChangelogItem[];
 }
 
-export const APP_VERSION = 'V31';
-export const RELEASE_DATE = 'August 23, 2026';
-export const DOWNLOAD_SIZE_MB = 30;
+export const APP_VERSION = 'V32';
+export const RELEASE_DATE = 'September 5, 2026';
+export const DOWNLOAD_SIZE_MB = 10;
 
 export const BETA_NOTE =
-  'Use Embed Player is now running BETA V2.5 — a rebuilt token-based embed system with faster resolution, direct source fallback, and a dedicated liquid-glass player.';
+  'Shadow link v2 is now running BETA 2 — a minimal, branding-free standalone player with season switching and auto-hiding title overlay.';
 
 export const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'V31',
+    version: 'V32',
     date: RELEASE_DATE,
+    highlight:
+      'A major performance and stability update with a smoother 60 FPS experience, Shadow link v2 refinements, and polished player controls.',
+    items: [
+      { icon: '⚡', badge: 'IMPROVED', title: '60 FPS Performance Pass', desc: 'Adaptive device-tier detection, deferred home sections, and visibility-gated animations for buttery smoothness on every device.' },
+      { icon: '🎬', badge: 'IMPROVED', title: 'Shadow Link v2 BETA 2', desc: 'Minimal branding-free player with season dropdown, always-visible episodes, smaller controls, and a smart title overlay.' },
+      { icon: '🌀', badge: 'IMPROVED', title: 'Liquid-Glass Buffering', desc: 'Redesigned buffering indicator with a glassy orb aesthetic and smarter stall detection for slow networks.' },
+      { icon: '🔐', badge: 'NEW', title: 'End Token Option', desc: 'Verify Token dialog now lets you safely end an active session after a confirmation with issuer and timestamp details.' },
+      { icon: '📅', badge: 'FIX', title: 'Schedule Reliability', desc: 'Fixed weekday ordering, 24-hour countdown for Everyday releases, and "Release date not announced" handling.' },
+      { icon: '🍎', badge: 'FIX', title: 'iOS Navbar Polish', desc: 'Restored correct iOS vertical positioning and removed unwanted empty space without affecting other platforms.' },
+      { icon: '🎞️', badge: 'FIX', title: 'Embed Player Cleanup', desc: 'Embed routes now hide Telegram and Report popups for a simple, distraction-free player.' },
+      { icon: '⬆️', badge: 'FIX', title: 'Embed Upload Resuming', desc: 'Fixed early failures at 1-5% and made reselecting the same file resume from where it left off.' },
+      { icon: '🗑️', badge: 'FIX', title: 'Account Deletion', desc: 'Delete Account now properly cleans up all linked backend records and completes successfully.' },
+      { icon: '🐞', badge: 'FIX', title: 'General Bug Fixes', desc: 'Various stability, layout, and interaction fixes across the app.' },
+    ],
+  },
+  {
+    version: 'V31',
+    date: 'August 23, 2026',
     highlight:
       'A faster, smoother update focused on the new Schedule experience, Clone Platforms, and download reliability.',
     items: [
