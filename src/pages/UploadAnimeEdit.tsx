@@ -107,6 +107,8 @@ export default function UploadAnimeEdit() {
   const [newEpisodeExternalUrl, setNewEpisodeExternalUrl] = useState('');
   const [newEpisodeThumbnail, setNewEpisodeThumbnail] = useState('');
   const [newEpisodeDuration, setNewEpisodeDuration] = useState('');
+  const [isAddingEpisode, setIsAddingEpisode] = useState(false);
+
 
   useEffect(() => {
     // Wait for auth + roles to be fully loaded before enforcing redirects
