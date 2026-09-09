@@ -107,6 +107,8 @@ export default function UploadAnimeEdit() {
   const [newEpisodeExternalUrl, setNewEpisodeExternalUrl] = useState('');
   const [newEpisodeThumbnail, setNewEpisodeThumbnail] = useState('');
   const [newEpisodeDuration, setNewEpisodeDuration] = useState('');
+  const [isAddingEpisode, setIsAddingEpisode] = useState(false);
+
 
   useEffect(() => {
     // Wait for auth + roles to be fully loaded before enforcing redirects
@@ -316,33 +318,40 @@ export default function UploadAnimeEdit() {
   };
 
   const handleAddEpisode = async () => {
+    if (isAddingEpisode) return;
     if (!selectedSeason || !newEpisodeTitle.trim()) {
       toast.error('Title is required');
       return;
     }
 
+    setIsAddingEpisode(true);
     const nextEpisodeNumber = episodes.length > 0 ? Math.max(...episodes.map((e) => e.episode_number)) + 1 : 1;
+    const savingToast = toast.loading(`Saving episode ${nextEpisodeNumber}...`);
 
-    const { data, error } = await supabase
-      .from('episodes')
-      .insert({
-        season_id: selectedSeason,
-        episode_number: nextEpisodeNumber,
-        title: newEpisodeTitle.trim(),
-        description: newEpisodeDescription.trim() || null,
-        video_url: newEpisodeVideoUrl.trim() || null,
-        external_url: extractEmbedSrc(newEpisodeExternalUrl) || null,
-        thumbnail: newEpisodeThumbnail.trim() || null,
-        duration: newEpisodeDuration ? parseInt(newEpisodeDuration) : null,
-      })
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('episodes')
+        .insert({
+          season_id: selectedSeason,
+          episode_number: nextEpisodeNumber,
+          title: newEpisodeTitle.trim(),
+          description: newEpisodeDescription.trim() || null,
+          video_url: newEpisodeVideoUrl.trim() || null,
+          external_url: extractEmbedSrc(newEpisodeExternalUrl) || null,
+          thumbnail: newEpisodeThumbnail.trim() || null,
+          duration: newEpisodeDuration ? parseInt(newEpisodeDuration) : null,
+        })
+        .select()
+        .single();
 
-    if (error) {
-      toast.error('Failed to add episode');
-    } else {
-      toast.success('Episode added');
-      if (data?.id && newEpisodeVideoUrl.trim()) void autoEnsureEmbed(data.id);
+      if (error) throw error;
+
+      toast.success('Episode added', { id: savingToast });
+      // Embed token generation is intentionally NOT awaited — it used to make
+      // the button feel frozen for several seconds after a large upload.
+      if (data?.id && newEpisodeVideoUrl.trim()) {
+        void autoEnsureEmbed(data.id).catch(() => undefined);
+      }
       // Reset form
       setNewEpisodeTitle('');
       setNewEpisodeDescription('');
@@ -351,9 +360,15 @@ export default function UploadAnimeEdit() {
       setNewEpisodeThumbnail('');
       setNewEpisodeDuration('');
       // Add to list
-      setEpisodes([...episodes, data]);
+      setEpisodes((prev) => [...prev, data]);
+    } catch (err) {
+      console.error('Error adding episode:', err);
+      toast.error('Failed to add episode', { id: savingToast });
+    } finally {
+      setIsAddingEpisode(false);
     }
   };
+
 
   const handleDeleteEpisode = async (episodeId: string) => {
     if (!confirm('Delete this episode?')) return;
@@ -1108,10 +1123,11 @@ export default function UploadAnimeEdit() {
                   </div>
                 </div>
 
-                <Button onClick={handleAddEpisode} className="anime-button w-full">
+                <Button onClick={handleAddEpisode} disabled={isAddingEpisode} className="anime-button w-full">
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Episode
+                  {isAddingEpisode ? 'Adding Episode...' : 'Add Episode'}
                 </Button>
+
               </CardContent>
             </Card>
           </div>
