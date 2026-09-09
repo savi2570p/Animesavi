@@ -1123,10 +1123,11 @@ export default function UploadAnimeEdit() {
                   </div>
                 </div>
 
-                <Button onClick={handleAddEpisode} className="anime-button w-full">
+                <Button onClick={handleAddEpisode} disabled={isAddingEpisode} className="anime-button w-full">
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Episode
+                  {isAddingEpisode ? 'Adding Episode...' : 'Add Episode'}
                 </Button>
+
               </CardContent>
             </Card>
           </div>
