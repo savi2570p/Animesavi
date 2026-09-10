@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search, Play, ChevronRight, Radio, Tv, Film, Shield, Zap, Bell,
-  Globe, Download, Monitor, Smartphone, Users, ArrowRight, Signal,
+  Globe, Download, Monitor, Smartphone, Users, ArrowRight,
   PlayCircle, Flame, TrendingUp, Sparkles,
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
