@@ -439,6 +439,84 @@ export default function MinimalEmbedPage() {
     );
   }
 
+  // ── Shadow link: identical experience to Shadow link v2 + Episodes button ──
+  if (isShadowTheme) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <style>{`html,body,#root{margin:0;padding:0;background:#000;}`}</style>
+        <div className="mx-auto w-full max-w-5xl px-3 py-3 sm:px-4 sm:py-5 space-y-3">
+          {loading ? (
+            <div className="aspect-video w-full rounded-2xl bg-neutral-900 grid place-items-center">
+              <div className="h-6 w-6 rounded-full border-2 border-white/20 border-t-white/70 animate-spin" />
+            </div>
+          ) : error || !videoUrl ? (
+            <div className="aspect-video w-full rounded-2xl bg-neutral-900 grid place-items-center">
+              <p className="text-sm text-white/60">Episode not available.</p>
+            </div>
+          ) : (
+            <>
+              <div className="rounded-2xl overflow-hidden">
+                <ShadowMinimalPlayer
+                  key={`${seasonNum}-${currentEpisodeNum}`}
+                  videoUrl={useIframe ? null : videoUrl}
+                  embedUrl={useIframe ? iframeSrc : null}
+                  overlayTitle={animeTitle || title}
+                  overlaySeason={seasonNum}
+                  overlayEpisode={currentEpisodeNum}
+                />
+              </div>
+
+              {/* Title row + Episodes button */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <h1 className="text-base sm:text-lg font-semibold truncate">
+                    {animeTitle || title}
+                  </h1>
+                  <p className="text-xs text-white/50">
+                    Season {seasonNum} · Episode {currentEpisodeNum}
+                  </p>
+                </div>
+                {episodeList.length > 1 && (
+                  <button
+                    onClick={() => setShowEpisodes((v) => !v)}
+                    aria-expanded={showEpisodes}
+                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-900 border border-white/10 text-xs text-white/80 hover:text-white transition-colors"
+                  >
+                    <List className="h-3.5 w-3.5" />
+                    Episodes
+                  </button>
+                )}
+              </div>
+
+              {/* Episode grid */}
+              {showEpisodes && episodeList.length > 1 && (
+                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-1.5">
+                  {episodeList.map((e) => (
+                    <button
+                      key={e.episode_number}
+                      onClick={() => {
+                        if (e.episode_number === currentEpisodeNum) return;
+                        navigate(
+                          `/embed/${animeSlug}/${seasonSlug}/episode-${e.episode_number}?theme=shadow`,
+                          { replace: true },
+                        );
+                        setShowEpisodes(false);
+                      }}
+                      data-active={e.episode_number === currentEpisodeNum}
+                      className="py-2 rounded-lg text-xs font-semibold bg-neutral-900 text-white/70 border border-white/10 transition-colors hover:text-white data-[active=true]:bg-white data-[active=true]:text-black data-[active=true]:border-white"
+                    >
+                      {e.episode_number}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       ref={containerRef}
