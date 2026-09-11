@@ -223,7 +223,7 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
   // ─── DESKTOP: Full-width cinematic hero ───
   if (!isMobile) {
     return (
-      <section className="relative w-full overflow-x-hidden overflow-y-visible">
+      <section ref={sliderRef} className="relative w-full overflow-x-hidden overflow-y-visible">
         {/* Background hero image */}
         <div className="relative w-full aspect-[16/9] overflow-hidden">
           {featuredAnime.map((anime, idx) => (

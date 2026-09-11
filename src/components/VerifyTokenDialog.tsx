@@ -593,6 +593,9 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
                   className="fixed inset-0 flex items-center justify-center p-4"
                   style={{
                     zIndex: 2147483300,
+                    // Radix modal dialog sets pointer-events:none on <body>;
+                    // re-enable it for this portaled overlay.
+                    pointerEvents: 'auto',
                     background: 'hsla(0,0%,0%,0.45)',
                     backdropFilter: 'blur(18px) saturate(160%)',
                     WebkitBackdropFilter: 'blur(18px) saturate(160%)',

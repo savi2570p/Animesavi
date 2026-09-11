@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ShadowMinimalPlayer } from '@/components/video/ShadowMinimalPlayer';
 import { Loader2, ChevronDown } from 'lucide-react';
 import type { ServerType } from '@/hooks/useServerAutoSelect';
+import { isHlsUrl, isDashUrl, isMp4LikeUrl, isMkvUrl } from '@/lib/streamSource';
 
 /**
  * Shadow link v2 (BETA 2) — a standalone, branding-free watch page.
@@ -99,7 +100,7 @@ export default function ShadowPlayerV2() {
   }, [episodeId]);
 
   const switchEpisode = useCallback((id: string) => {
-    if (id === episodeId) return;
+    if (id === episode?.id) return;
     window.history.replaceState(null, '', `/s2/${id}`);
     supabase
       .from('episodes')
@@ -108,14 +109,39 @@ export default function ShadowPlayerV2() {
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          setEpisode(data as ShadowEpisode);
+          const next = data as ShadowEpisode;
+          setEpisode(next);
           setServer('XPLUS');
+          // Keep the displayed season in sync when jumping across seasons.
+          setSeasons((list) => {
+            const match = list.find((s) => s.id === next.season_id);
+            if (match) {
+              setSeason(match);
+              setSelectedSeasonId(match.id);
+            }
+            return list;
+          });
         }
       });
-  }, [episodeId]);
+  }, [episode?.id]);
 
   const animeTitle = season?.anime?.title || '';
   const selectedSeason = seasons.find((s) => s.id === selectedSeasonId) || season;
+  const currentSeasonNumber =
+    seasons.find((s) => s.id === episode?.season_id)?.season_number ??
+    season?.season_number ??
+    1;
+  // An external_url that isn't a direct media file is an embed page → iframe it.
+  const rawSource = episode?.video_url || episode?.external_url || null;
+  const isDirectMedia =
+    !!rawSource &&
+    (isHlsUrl(rawSource) ||
+      isDashUrl(rawSource) ||
+      isMp4LikeUrl(rawSource) ||
+      isMkvUrl(rawSource) ||
+      !!episode?.video_url);
+  const playerVideoUrl = isDirectMedia ? rawSource : null;
+  const playerEmbedUrl = isDirectMedia ? null : rawSource;
   const visibleEpisodes = useMemo(
     () => episodes.filter((e) => e.season_id === (selectedSeason?.id || episode?.season_id)),
     [episodes, selectedSeason, episode],
@@ -137,10 +163,11 @@ export default function ShadowPlayerV2() {
             <div className="rounded-2xl overflow-hidden">
               <ShadowMinimalPlayer
                 key={episode.id}
-                videoUrl={episode.video_url || episode.external_url}
+                videoUrl={playerVideoUrl}
+                embedUrl={playerEmbedUrl}
                 poster={episode.thumbnail || season?.anime?.cover_image || undefined}
                 overlayTitle={animeTitle || episode.title}
-                overlaySeason={season?.season_number || 1}
+                overlaySeason={currentSeasonNumber}
                 overlayEpisode={episode.episode_number}
               />
             </div>
@@ -166,7 +193,7 @@ export default function ShadowPlayerV2() {
                   {animeTitle || episode.title}
                 </h1>
                 <p className="text-xs text-white/50">
-                  Season {season?.season_number || 1} · Episode {episode.episode_number}
+                  Season {currentSeasonNumber} · Episode {episode.episode_number}
                 </p>
               </div>
               {seasons.length > 0 && (
