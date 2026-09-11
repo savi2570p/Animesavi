@@ -91,6 +91,7 @@ export default function MinimalEmbedPage() {
     seasonSlug: string;
     episodeSlug: string;
   }>();
+  const navigate = useNavigate();
 
   // Shadow theme = stripped-down embed (no download button).
   const isShadowTheme = typeof window !== 'undefined' &&
