@@ -163,10 +163,11 @@ export default function ShadowPlayerV2() {
             <div className="rounded-2xl overflow-hidden">
               <ShadowMinimalPlayer
                 key={episode.id}
-                videoUrl={episode.video_url || episode.external_url}
+                videoUrl={playerVideoUrl}
+                embedUrl={playerEmbedUrl}
                 poster={episode.thumbnail || season?.anime?.cover_image || undefined}
                 overlayTitle={animeTitle || episode.title}
-                overlaySeason={season?.season_number || 1}
+                overlaySeason={currentSeasonNumber}
                 overlayEpisode={episode.episode_number}
               />
             </div>
@@ -192,7 +193,7 @@ export default function ShadowPlayerV2() {
                   {animeTitle || episode.title}
                 </h1>
                 <p className="text-xs text-white/50">
-                  Season {season?.season_number || 1} · Episode {episode.episode_number}
+                  Season {currentSeasonNumber} · Episode {episode.episode_number}
                 </p>
               </div>
               {seasons.length > 0 && (
