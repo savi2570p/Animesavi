@@ -254,31 +254,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Handles iOS Safari / PWA suspending the tab and Android Chrome backgrounding.
     const tryRecover = (reason: string) => {
       supabase.auth.getSession().then(({ data }) => {
-        if (data.session) return; // still good
-        // Try refresh only if a stored refresh token exists.
-        let hasStored = false;
-        try {
-          for (let i = 0; i < localStorage.length; i++) {
-            const k = localStorage.key(i);
-            if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
-              const raw = localStorage.getItem(k);
-              if (raw && raw.includes('refresh_token')) { hasStored = true; break; }
-            }
-          }
-        } catch {}
-        if (!hasStored) return;
+        if (data.session) return; // still good — no network call needed
+        if (!hasStoredRefreshToken()) return;
         console.log('[auth] recovery attempt (', reason, ')');
-        supabase.auth.refreshSession().then(({ data: d, error }) => {
-          if (d?.session) {
+        void throttledRefresh(reason).then(({ session: recovered }) => {
+          if (recovered) {
             console.log('[auth] session recovered after', reason);
-            setSession(d.session);
-            setUser(d.session.user);
+            setSession(recovered);
+            setUser(recovered.user);
             setRolesLoaded(false);
-            void fetchUserRoles(d.session.user.id);
-          } else if (error) {
-            console.warn('[auth] recovery failed (', reason, '):', error.message);
+            void fetchUserRoles(recovered.user.id);
           }
-        }).catch(() => {});
+        });
       }).catch(() => {});
     };
     const onVisible = () => { if (document.visibilityState === 'visible') tryRecover('visibility'); };
