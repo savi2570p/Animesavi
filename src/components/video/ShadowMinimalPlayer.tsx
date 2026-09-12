@@ -183,9 +183,17 @@ export function ShadowMinimalPlayer({
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
         onDurationChange={(e) => setDuration(e.currentTarget.duration)}
         onWaiting={() => setBuffering(true)}
-        onPlaying={() => setBuffering(false)}
-        onCanPlay={() => setBuffering(false)}
-        onError={() => setFailed(true)}
+        onPlaying={() => { setBuffering(false); setFailed(false); }}
+        onCanPlay={() => { setBuffering(false); setFailed(false); }}
+        onLoadedData={() => setFailed(false)}
+        onError={(e) => {
+          // hls.js drives its own recovery — ignore the element's transient errors.
+          if (hlsActiveRef.current) return;
+          const v = e.currentTarget;
+          // Only a genuine, unplayable source counts: no decoded data at all.
+          if (v.readyState >= 2 || v.currentTime > 0) return;
+          setFailed(true);
+        }}
       />
 
       {/* Title + S/E — top-left, follows control visibility */}
