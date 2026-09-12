@@ -103,7 +103,10 @@ export function ShadowMinimalPlayer({
   const togglePlay = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
-    if (v.paused) v.play().catch(() => setFailed(true));
+    if (v.paused) {
+      // A rejected play() is usually just an autoplay/gesture block, not a bad source.
+      v.play().catch(() => {});
+    }
     else v.pause();
     pokeControls();
   }, [pokeControls]);
