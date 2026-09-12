@@ -57,6 +57,7 @@ export function ShadowMinimalPlayer({
 
     let hls: import('hls.js').default | null = null;
     let cancelled = false;
+    hlsActiveRef.current = false;
 
     const attach = async () => {
       if (isHlsUrl(videoUrl) && !video.canPlayType('application/vnd.apple.mpegurl')) {
