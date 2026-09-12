@@ -303,10 +303,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     const normalizedEmail = email.trim().toLowerCase();
 
+    // A sign-in attempt must never race a background refresh — that pairing is
+    // what pushed the auth endpoint into its rate limit.
+    blockedUntil = Math.max(blockedUntil, Date.now() + 30_000);
+
     const { error } = await supabase.auth.signInWithPassword({
       email: normalizedEmail,
       password,
     });
+
+    if (error && isRateLimited(error.message)) {
+      blockedUntil = Date.now() + RATE_LIMIT_BACKOFF_MS;
+      return {
+        error: new Error(
+          'Too many sign-in attempts were made. Please wait about a minute and try again — no need to restart your device.'
+        ),
+      };
+    }
+
+    if (!error) blockedUntil = 0;
 
     return { error: error as Error | null };
   };
