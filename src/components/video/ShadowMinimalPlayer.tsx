@@ -65,6 +65,11 @@ export function ShadowMinimalPlayer({
         if (cancelled) return;
         if (Hls.isSupported()) {
           hls = new Hls({ enableWorker: true });
+          hlsActiveRef.current = true;
+          hls.on(Hls.Events.ERROR, (_e, data) => {
+            // Only surface a failure for unrecoverable, fatal errors.
+            if (data?.fatal) setFailed(true);
+          });
           hls.loadSource(videoUrl);
           hls.attachMedia(video);
           return;
