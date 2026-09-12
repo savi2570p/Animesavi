@@ -38,6 +38,7 @@ export function ShadowMinimalPlayer({
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hideTimerRef = useRef<number | null>(null);
+  const hlsActiveRef = useRef(false);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -57,6 +58,7 @@ export function ShadowMinimalPlayer({
 
     let hls: import('hls.js').default | null = null;
     let cancelled = false;
+    hlsActiveRef.current = false;
 
     const attach = async () => {
       if (isHlsUrl(videoUrl) && !video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -64,6 +66,11 @@ export function ShadowMinimalPlayer({
         if (cancelled) return;
         if (Hls.isSupported()) {
           hls = new Hls({ enableWorker: true });
+          hlsActiveRef.current = true;
+          hls.on(Hls.Events.ERROR, (_e, data) => {
+            // Only surface a failure for unrecoverable, fatal errors.
+            if (data?.fatal) setFailed(true);
+          });
           hls.loadSource(videoUrl);
           hls.attachMedia(video);
           return;
@@ -96,7 +103,10 @@ export function ShadowMinimalPlayer({
   const togglePlay = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
-    if (v.paused) v.play().catch(() => setFailed(true));
+    if (v.paused) {
+      // A rejected play() is usually just an autoplay/gesture block, not a bad source.
+      v.play().catch(() => {});
+    }
     else v.pause();
     pokeControls();
   }, [pokeControls]);
@@ -176,9 +186,17 @@ export function ShadowMinimalPlayer({
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
         onDurationChange={(e) => setDuration(e.currentTarget.duration)}
         onWaiting={() => setBuffering(true)}
-        onPlaying={() => setBuffering(false)}
-        onCanPlay={() => setBuffering(false)}
-        onError={() => setFailed(true)}
+        onPlaying={() => { setBuffering(false); setFailed(false); }}
+        onCanPlay={() => { setBuffering(false); setFailed(false); }}
+        onLoadedData={() => setFailed(false)}
+        onError={(e) => {
+          // hls.js drives its own recovery — ignore the element's transient errors.
+          if (hlsActiveRef.current) return;
+          const v = e.currentTarget;
+          // Only a genuine, unplayable source counts: no decoded data at all.
+          if (v.readyState >= 2 || v.currentTime > 0) return;
+          setFailed(true);
+        }}
       />
 
       {/* Title + S/E — top-left, follows control visibility */}
