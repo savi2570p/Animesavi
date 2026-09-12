@@ -186,33 +186,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // e.g. transient network blips, tab-visibility resume, midnight JWT roll).
       // Attempt a silent refresh before clobbering user state. NEVER force logout.
       if (!nextSession && event !== 'INITIAL_SESSION') {
-        const hasStoredSession = (() => {
-          try {
-            for (let i = 0; i < localStorage.length; i++) {
-              const k = localStorage.key(i);
-              if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
-                const raw = localStorage.getItem(k);
-                if (raw && raw.includes('refresh_token')) return true;
-              }
-            }
-          } catch {}
-          return false;
-        })();
-
-        if (hasStoredSession) {
+        if (hasStoredRefreshToken()) {
           console.log('[auth] null session with stored refresh token — attempting silent refresh');
           setTimeout(() => {
-            supabase.auth.refreshSession().then(({ data, error }) => {
-              if (data?.session) {
+            void throttledRefresh('auth-event').then(({ session: refreshed }) => {
+              if (refreshed) {
                 console.log('[auth] token refreshed silently');
-                setSession(data.session);
-                setUser(data.session.user);
+                setSession(refreshed);
+                setUser(refreshed.user);
                 setRolesLoaded(false);
-                void fetchUserRoles(data.session.user.id);
-              } else if (error) {
-                console.warn('[auth] silent refresh failed, retaining session:', error.message);
+                void fetchUserRoles(refreshed.user.id);
               }
-            }).catch((e) => console.warn('[auth] refresh threw, retaining session:', e));
+            });
           }, 0);
           return; // don't clobber user state yet
         }
