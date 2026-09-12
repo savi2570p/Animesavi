@@ -43,6 +43,95 @@ async function syncLocalTokenToUser(userId: string) {
 
 type UserRole = 'viewer' | 'uploader' | 'admin';
 
+/**
+ * Refresh throttle.
+ *
+ * Tab visibility / focus / online events can fire many times a minute (iOS
+ * Safari fires them on every app switch). Calling refreshSession on each one
+ * hammers the auth endpoint and trips its "Max rate limit reached" guard,
+ * which then blocks legitimate sign-ins until the window resets — the exact
+ * symptom of "I must restart my device to log in".
+ *
+ * These helpers make sure at most one refresh is in flight, refreshes are
+ * spaced out, and a rate-limit response backs off instead of retrying.
+ */
+const MIN_REFRESH_GAP_MS = 60_000;
+const RATE_LIMIT_BACKOFF_MS = 5 * 60_000;
+
+let refreshInFlight: Promise<boolean> | null = null;
+let lastRefreshAttempt = 0;
+let blockedUntil = 0;
+
+function isRateLimited(message?: string) {
+  const m = (message || '').toLowerCase();
+  return m.includes('rate limit') || m.includes('too many requests') || m.includes('429');
+}
+
+/**
+ * Single, throttled session refresh. Resolves true when a session was
+ * obtained. Never clears local auth state.
+ */
+async function throttledRefresh(reason: string): Promise<{ ok: boolean; session: Session | null }> {
+  const now = Date.now();
+  if (now < blockedUntil) {
+    console.warn('[auth] refresh suppressed (rate-limit backoff active), reason:', reason);
+    return { ok: false, session: null };
+  }
+  if (refreshInFlight) {
+    await refreshInFlight;
+    const { data } = await supabase.auth.getSession();
+    return { ok: !!data.session, session: data.session ?? null };
+  }
+  if (now - lastRefreshAttempt < MIN_REFRESH_GAP_MS) {
+    const { data } = await supabase.auth.getSession();
+    return { ok: !!data.session, session: data.session ?? null };
+  }
+
+  lastRefreshAttempt = now;
+  let result: Session | null = null;
+  refreshInFlight = supabase.auth
+    .refreshSession()
+    .then(({ data, error }) => {
+      if (data?.session) {
+        result = data.session;
+        return true;
+      }
+      if (error) {
+        if (isRateLimited(error.message)) {
+          blockedUntil = Date.now() + RATE_LIMIT_BACKOFF_MS;
+          console.warn('[auth] auth endpoint rate limited — backing off 5 min');
+        } else {
+          console.warn('[auth] refresh failed, retaining session:', error.message);
+        }
+      }
+      return false;
+    })
+    .catch((e) => {
+      console.warn('[auth] refresh threw, retaining session:', e);
+      return false;
+    })
+    .finally(() => {
+      refreshInFlight = null;
+    });
+
+  const ok = await refreshInFlight;
+  return { ok, session: result };
+}
+
+/** True when Supabase storage still holds a refresh token. */
+function hasStoredRefreshToken() {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
+        const raw = localStorage.getItem(k);
+        if (raw && raw.includes('refresh_token')) return true;
+      }
+    }
+  } catch { /* ignore */ }
+  return false;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -97,33 +186,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // e.g. transient network blips, tab-visibility resume, midnight JWT roll).
       // Attempt a silent refresh before clobbering user state. NEVER force logout.
       if (!nextSession && event !== 'INITIAL_SESSION') {
-        const hasStoredSession = (() => {
-          try {
-            for (let i = 0; i < localStorage.length; i++) {
-              const k = localStorage.key(i);
-              if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
-                const raw = localStorage.getItem(k);
-                if (raw && raw.includes('refresh_token')) return true;
-              }
-            }
-          } catch {}
-          return false;
-        })();
-
-        if (hasStoredSession) {
+        if (hasStoredRefreshToken()) {
           console.log('[auth] null session with stored refresh token — attempting silent refresh');
           setTimeout(() => {
-            supabase.auth.refreshSession().then(({ data, error }) => {
-              if (data?.session) {
+            void throttledRefresh('auth-event').then(({ session: refreshed }) => {
+              if (refreshed) {
                 console.log('[auth] token refreshed silently');
-                setSession(data.session);
-                setUser(data.session.user);
+                setSession(refreshed);
+                setUser(refreshed.user);
                 setRolesLoaded(false);
-                void fetchUserRoles(data.session.user.id);
-              } else if (error) {
-                console.warn('[auth] silent refresh failed, retaining session:', error.message);
+                void fetchUserRoles(refreshed.user.id);
               }
-            }).catch((e) => console.warn('[auth] refresh threw, retaining session:', e));
+            });
           }, 0);
           return; // don't clobber user state yet
         }
@@ -180,31 +254,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Handles iOS Safari / PWA suspending the tab and Android Chrome backgrounding.
     const tryRecover = (reason: string) => {
       supabase.auth.getSession().then(({ data }) => {
-        if (data.session) return; // still good
-        // Try refresh only if a stored refresh token exists.
-        let hasStored = false;
-        try {
-          for (let i = 0; i < localStorage.length; i++) {
-            const k = localStorage.key(i);
-            if (k && k.startsWith('sb-') && k.endsWith('-auth-token')) {
-              const raw = localStorage.getItem(k);
-              if (raw && raw.includes('refresh_token')) { hasStored = true; break; }
-            }
-          }
-        } catch {}
-        if (!hasStored) return;
+        if (data.session) return; // still good — no network call needed
+        if (!hasStoredRefreshToken()) return;
         console.log('[auth] recovery attempt (', reason, ')');
-        supabase.auth.refreshSession().then(({ data: d, error }) => {
-          if (d?.session) {
+        void throttledRefresh(reason).then(({ session: recovered }) => {
+          if (recovered) {
             console.log('[auth] session recovered after', reason);
-            setSession(d.session);
-            setUser(d.session.user);
+            setSession(recovered);
+            setUser(recovered.user);
             setRolesLoaded(false);
-            void fetchUserRoles(d.session.user.id);
-          } else if (error) {
-            console.warn('[auth] recovery failed (', reason, '):', error.message);
+            void fetchUserRoles(recovered.user.id);
           }
-        }).catch(() => {});
+        });
       }).catch(() => {});
     };
     const onVisible = () => { if (document.visibilityState === 'visible') tryRecover('visibility'); };
@@ -242,10 +303,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     const normalizedEmail = email.trim().toLowerCase();
 
+    // A sign-in attempt must never race a background refresh — that pairing is
+    // what pushed the auth endpoint into its rate limit.
+    blockedUntil = Math.max(blockedUntil, Date.now() + 30_000);
+
     const { error } = await supabase.auth.signInWithPassword({
       email: normalizedEmail,
       password,
     });
+
+    if (error && isRateLimited(error.message)) {
+      blockedUntil = Date.now() + RATE_LIMIT_BACKOFF_MS;
+      return {
+        error: new Error(
+          'Too many sign-in attempts were made. Please wait about a minute and try again — no need to restart your device.'
+        ),
+      };
+    }
+
+    if (!error) blockedUntil = 0;
 
     return { error: error as Error | null };
   };
