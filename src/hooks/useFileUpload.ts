@@ -492,7 +492,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
           headers: {
             authorization: `Bearer ${accessToken}`,
             apikey: SUPABASE_PUBLISHABLE_KEY,
-            'x-upsert': stablePath ? 'true' : 'false',
+            'x-upsert': stableRef.current ? 'true' : 'false',
           },
 
           metadata: {
