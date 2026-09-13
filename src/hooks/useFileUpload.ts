@@ -102,6 +102,49 @@ function clearResumePointer(filePath: string) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Progress snapshot
+// The last known progress of an interrupted transfer, so a page refresh or a
+// tab switch that unmounts the upload UI shows the real percentage again
+// instead of falling back to 0%.
+// ---------------------------------------------------------------------------
+const SNAPSHOT_KEY = 'upload-progress-snapshot';
+const SNAPSHOT_TTL_MS = 24 * 60 * 60 * 1000;
+
+interface ProgressSnapshot {
+  filePath: string;
+  fileName: string;
+  bytesUploaded: number;
+  bytesTotal: number;
+  at: number;
+}
+
+function writeSnapshot(snap: ProgressSnapshot) {
+  try {
+    localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snap));
+  } catch { /* best effort */ }
+}
+
+function readSnapshot(): ProgressSnapshot | null {
+  try {
+    const raw = localStorage.getItem(SNAPSHOT_KEY);
+    if (!raw) return null;
+    const snap = JSON.parse(raw) as ProgressSnapshot;
+    if (!snap?.filePath || !snap.bytesTotal) return null;
+    if (Date.now() - snap.at > SNAPSHOT_TTL_MS) return null;
+    if (!readResumePointer(snap.filePath)) return null;
+    return snap;
+  } catch {
+    return null;
+  }
+}
+
+function clearSnapshot() {
+  try {
+    localStorage.removeItem(SNAPSHOT_KEY);
+  } catch { /* noop */ }
+}
+
 /** Ask the server how many bytes it actually holds for an upload URL. */
 async function probeOffset(uploadUrl: string, accessToken: string): Promise<number | null> {
   try {
@@ -201,10 +244,47 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
   const speedSamplesRef = useRef<Array<{ bytes: number; time: number }>>([]);
   const measuredSpeedRef = useRef<number>(0);
   const startedAtRef = useRef<number>(0);
+  // Video uploads always use a deterministic path so an interrupted transfer
+  // can be continued; this ref carries that decision into the TUS headers.
+  const stableRef = useRef<boolean>(stablePath);
 
   const patchStats = useCallback((patch: Partial<UploadStats>) => {
     setStats((prev) => ({ ...prev, ...patch }));
   }, []);
+
+  // Restore the last known progress of an interrupted transfer (page refresh,
+  // tab switch, app backgrounded) so the UI resumes where it left off instead
+  // of showing 0%.
+  useEffect(() => {
+    if (bucket !== 'anime-videos' && bucket !== 'movies') return;
+    const snap = readSnapshot();
+    if (!snap) return;
+    const pct = Math.min(99, Math.floor((snap.bytesUploaded / snap.bytesTotal) * 100));
+    setUploadProgress(pct);
+    setDisplayedProgress(pct);
+    setStats({
+      ...emptyStats,
+      fileName: snap.fileName,
+      bytesUploaded: snap.bytesUploaded,
+      bytesTotal: snap.bytesTotal,
+      storagePath: snap.filePath,
+      resumed: true,
+      resumedFromBytes: snap.bytesUploaded,
+      connection: 'idle',
+    });
+  }, [bucket]);
+
+  // Warn before a refresh/close would interrupt an in-flight upload.
+  useEffect(() => {
+    if (!isUploading) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [isUploading]);
+
 
   // Auto-resume upload when coming back online
   useEffect(() => {
@@ -311,6 +391,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
           clearCompletionTimers();
           finalized = true;
           clearResumePointer(filePath);
+          clearSnapshot();
+
           activeUploadRef.current = null;
           pendingFileRef.current = null;
           setUploadProgress(100);
@@ -410,7 +492,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
           headers: {
             authorization: `Bearer ${accessToken}`,
             apikey: SUPABASE_PUBLISHABLE_KEY,
-            'x-upsert': stablePath ? 'true' : 'false',
+            'x-upsert': stableRef.current ? 'true' : 'false',
           },
 
           metadata: {
@@ -469,7 +551,17 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
                 ),
                 connection: 'stable',
               });
+
+              // Persist progress so a refresh / tab switch can pick up here.
+              writeSnapshot({
+                filePath,
+                fileName: file.name,
+                bytesUploaded,
+                bytesTotal: totalBytes,
+                at: Date.now(),
+              });
             }
+
 
             if (uploadComplete) {
 
@@ -628,7 +720,13 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '')
         .slice(0, 60) || 'video';
-      const fileName = stablePath
+      // Videos always use a deterministic path: if the transfer is interrupted
+      // (refresh, tab change, network drop) re-selecting the same file lands on
+      // the same object and continues from the bytes storage already holds.
+      const isVideoBucket = bucket === 'anime-videos' || bucket === 'movies';
+      const useStable = stablePath || isVideoBucket;
+      stableRef.current = useStable;
+      const fileName = useStable
         ? `${slug}-${file.size}-${file.lastModified}${fileExt ? `.${fileExt}` : ''}`
         : `${Date.now()}-${Math.random().toString(36).substring(2)}${fileExt ? `.${fileExt}` : ''}`;
       let filePath = folder ? `${folder}/${fileName}` : fileName;
@@ -636,7 +734,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       // A stable path collides with a completed object from an earlier run.
       // Without a resume pointer that collision makes creation fail instantly,
       // so fall back to a unique path in that case.
-      if (stablePath && !readResumePointer(filePath)) {
+      if (useStable && !readResumePointer(filePath)) {
         const { data: existing } = await supabase.storage
           .from(bucket)
           .list(folder || undefined, { search: fileName, limit: 1 });
