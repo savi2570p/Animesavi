@@ -244,10 +244,47 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
   const speedSamplesRef = useRef<Array<{ bytes: number; time: number }>>([]);
   const measuredSpeedRef = useRef<number>(0);
   const startedAtRef = useRef<number>(0);
+  // Video uploads always use a deterministic path so an interrupted transfer
+  // can be continued; this ref carries that decision into the TUS headers.
+  const stableRef = useRef<boolean>(stablePath);
 
   const patchStats = useCallback((patch: Partial<UploadStats>) => {
     setStats((prev) => ({ ...prev, ...patch }));
   }, []);
+
+  // Restore the last known progress of an interrupted transfer (page refresh,
+  // tab switch, app backgrounded) so the UI resumes where it left off instead
+  // of showing 0%.
+  useEffect(() => {
+    if (bucket !== 'anime-videos' && bucket !== 'movies') return;
+    const snap = readSnapshot();
+    if (!snap) return;
+    const pct = Math.min(99, Math.floor((snap.bytesUploaded / snap.bytesTotal) * 100));
+    setUploadProgress(pct);
+    setDisplayedProgress(pct);
+    setStats({
+      ...emptyStats,
+      fileName: snap.fileName,
+      bytesUploaded: snap.bytesUploaded,
+      bytesTotal: snap.bytesTotal,
+      storagePath: snap.filePath,
+      resumed: true,
+      resumedFromBytes: snap.bytesUploaded,
+      connection: 'idle',
+    });
+  }, [bucket]);
+
+  // Warn before a refresh/close would interrupt an in-flight upload.
+  useEffect(() => {
+    if (!isUploading) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [isUploading]);
+
 
   // Auto-resume upload when coming back online
   useEffect(() => {
