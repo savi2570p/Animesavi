@@ -102,6 +102,49 @@ function clearResumePointer(filePath: string) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Progress snapshot
+// The last known progress of an interrupted transfer, so a page refresh or a
+// tab switch that unmounts the upload UI shows the real percentage again
+// instead of falling back to 0%.
+// ---------------------------------------------------------------------------
+const SNAPSHOT_KEY = 'upload-progress-snapshot';
+const SNAPSHOT_TTL_MS = 24 * 60 * 60 * 1000;
+
+interface ProgressSnapshot {
+  filePath: string;
+  fileName: string;
+  bytesUploaded: number;
+  bytesTotal: number;
+  at: number;
+}
+
+function writeSnapshot(snap: ProgressSnapshot) {
+  try {
+    localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snap));
+  } catch { /* best effort */ }
+}
+
+function readSnapshot(): ProgressSnapshot | null {
+  try {
+    const raw = localStorage.getItem(SNAPSHOT_KEY);
+    if (!raw) return null;
+    const snap = JSON.parse(raw) as ProgressSnapshot;
+    if (!snap?.filePath || !snap.bytesTotal) return null;
+    if (Date.now() - snap.at > SNAPSHOT_TTL_MS) return null;
+    if (!readResumePointer(snap.filePath)) return null;
+    return snap;
+  } catch {
+    return null;
+  }
+}
+
+function clearSnapshot() {
+  try {
+    localStorage.removeItem(SNAPSHOT_KEY);
+  } catch { /* noop */ }
+}
+
 /** Ask the server how many bytes it actually holds for an upload URL. */
 async function probeOffset(uploadUrl: string, accessToken: string): Promise<number | null> {
   try {
