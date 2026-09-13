@@ -551,7 +551,17 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
                 ),
                 connection: 'stable',
               });
+
+              // Persist progress so a refresh / tab switch can pick up here.
+              writeSnapshot({
+                filePath,
+                fileName: file.name,
+                bytesUploaded,
+                bytesTotal: totalBytes,
+                at: Date.now(),
+              });
             }
+
 
             if (uploadComplete) {
 
