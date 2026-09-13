@@ -720,7 +720,13 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '')
         .slice(0, 60) || 'video';
-      const fileName = stablePath
+      // Videos always use a deterministic path: if the transfer is interrupted
+      // (refresh, tab change, network drop) re-selecting the same file lands on
+      // the same object and continues from the bytes storage already holds.
+      const isVideoBucket = bucket === 'anime-videos' || bucket === 'movies';
+      const useStable = stablePath || isVideoBucket;
+      stableRef.current = useStable;
+      const fileName = useStable
         ? `${slug}-${file.size}-${file.lastModified}${fileExt ? `.${fileExt}` : ''}`
         : `${Date.now()}-${Math.random().toString(36).substring(2)}${fileExt ? `.${fileExt}` : ''}`;
       let filePath = folder ? `${folder}/${fileName}` : fileName;
@@ -728,7 +734,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       // A stable path collides with a completed object from an earlier run.
       // Without a resume pointer that collision makes creation fail instantly,
       // so fall back to a unique path in that case.
-      if (stablePath && !readResumePointer(filePath)) {
+      if (useStable && !readResumePointer(filePath)) {
         const { data: existing } = await supabase.storage
           .from(bucket)
           .list(folder || undefined, { search: fileName, limit: 1 });
