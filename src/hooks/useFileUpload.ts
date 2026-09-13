@@ -391,6 +391,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
           clearCompletionTimers();
           finalized = true;
           clearResumePointer(filePath);
+          clearSnapshot();
+
           activeUploadRef.current = null;
           pendingFileRef.current = null;
           setUploadProgress(100);
