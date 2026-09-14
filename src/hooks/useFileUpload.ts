@@ -36,10 +36,8 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/upload/resumable` : '';
 
-// Lovable Cloud resumable storage requires chunk sizes that are multiples of
-// 6 MB. The chunk size is chosen per-file at runtime (see uploadTuning.ts) so
-// large files on fast links use fewer, larger round trips — a real throughput
-// gain, not a cosmetic one.
+// Lovable Cloud resumable storage currently requires an exact 6 MB chunk.
+// Larger multiples fail after creation when the first PATCH request is sent.
 // IMPORTANT: parallelUploads MUST stay at 1. tus-js-client's parallelUploads
 // relies on the TUS `concatenation` extension, which the resumable storage
 // endpoint does not support, causing uploads to restart mid-stream after a
@@ -626,8 +624,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
 
             activeUploadRef.current = null;
             pendingFileRef.current = null;
-            setUploadProgress(0);
-            setDisplayedProgress(0);
+            // Keep the last server-confirmed percentage visible. The explicit
+            // resume pointer lets Try again continue this same upload.
             setUploadSpeed(0);
             speedSamplesRef.current = [];
             endUpload();
