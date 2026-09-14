@@ -47,11 +47,7 @@ export function subscribeTuning(listener: Listener): () => void {
   };
 }
 
-/**
- * Pick a real chunk size (multiple of 6 MB) from the file size and the
- * browser's reported link speed. Larger chunks reduce per-request overhead
- * on fast links; small files stay on small chunks so progress stays granular.
- */
+/** Return the exact chunk size required by resumable storage. */
 export function pickChunkSize(_fileSize: number, _maxUnits = 1): number {
   return CHUNK_UNIT;
 }

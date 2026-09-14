@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import * as tus from 'tus-js-client';
-import { pickChunkSize } from '@/lib/uploadTuning';
+import { CHUNK_UNIT, pickChunkSize } from '@/lib/uploadTuning';
 import { beginUpload, reportUpload, endUpload } from '@/lib/uploadSpeedTracker';
 
 interface UseFileUploadOptions {
@@ -649,7 +649,10 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
             const pointer = readResumePointer(filePath);
             if (pointer) {
               const offset = await probeOffset(pointer, accessToken);
-              if (offset !== null && offset > 0 && offset < file.size) {
+              // Uploads created before the 6 MB fix may hold a partial offset
+              // that storage cannot continue. Discard those stale sessions
+              // instead of repeatedly failing the first resumed PATCH.
+              if (offset !== null && offset > 0 && offset < file.size && offset % CHUNK_UNIT === 0) {
                 resumedThisRun = true;
                 upload.resumeFromPreviousUpload({
                   uploadUrl: pointer,
@@ -666,6 +669,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
                 toast.info(`Resuming upload from ${(offset / (1024 * 1024)).toFixed(1)} MB`);
               } else {
                 clearResumePointer(filePath);
+                clearSnapshot();
               }
             }
           } catch (e) {
