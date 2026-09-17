@@ -117,8 +117,7 @@ function clearResumePointer(filePath: string) {
 // tab switch that unmounts the upload UI shows the real percentage again
 // instead of falling back to 0%.
 // ---------------------------------------------------------------------------
-const SNAPSHOT_KEY = 'upload-progress-snapshot';
-const SNAPSHOT_TTL_MS = 24 * 60 * 60 * 1000;
+const SNAPSHOT_PREFIX = 'upload-progress-snapshot:';
 
 interface ProgressSnapshot {
   filePath: string;
@@ -128,29 +127,19 @@ interface ProgressSnapshot {
   at: number;
 }
 
+function snapshotKey(filePath: string) {
+  return `${SNAPSHOT_PREFIX}${filePath}`;
+}
+
 function writeSnapshot(snap: ProgressSnapshot) {
   try {
-    localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snap));
+    localStorage.setItem(snapshotKey(snap.filePath), JSON.stringify(snap));
   } catch { /* best effort */ }
 }
 
-function readSnapshot(): ProgressSnapshot | null {
+function clearSnapshot(filePath: string) {
   try {
-    const raw = localStorage.getItem(SNAPSHOT_KEY);
-    if (!raw) return null;
-    const snap = JSON.parse(raw) as ProgressSnapshot;
-    if (!snap?.filePath || !snap.bytesTotal) return null;
-    if (Date.now() - snap.at > SNAPSHOT_TTL_MS) return null;
-    if (!readResumePointer(snap.filePath)) return null;
-    return snap;
-  } catch {
-    return null;
-  }
-}
-
-function clearSnapshot() {
-  try {
-    localStorage.removeItem(SNAPSHOT_KEY);
+    localStorage.removeItem(snapshotKey(filePath));
   } catch { /* noop */ }
 }
 
@@ -258,32 +247,11 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
   const stableRef = useRef<boolean>(stablePath);
   const lastErrorRef = useRef<string | null>(null);
   const confirmedBytesRef = useRef(0);
+  const cancelledRef = useRef(false);
 
   const patchStats = useCallback((patch: Partial<UploadStats>) => {
     setStats((prev) => ({ ...prev, ...patch }));
   }, []);
-
-  // Restore the last known progress of an interrupted transfer (page refresh,
-  // tab switch, app backgrounded) so the UI resumes where it left off instead
-  // of showing 0%.
-  useEffect(() => {
-    if (bucket !== 'anime-videos' && bucket !== 'movies') return;
-    const snap = readSnapshot();
-    if (!snap) return;
-    const pct = Math.min(99, Math.floor((snap.bytesUploaded / snap.bytesTotal) * 100));
-    setUploadProgress(pct);
-    setDisplayedProgress(pct);
-    setStats({
-      ...emptyStats,
-      fileName: snap.fileName,
-      bytesUploaded: snap.bytesUploaded,
-      bytesTotal: snap.bytesTotal,
-      storagePath: snap.filePath,
-      resumed: true,
-      resumedFromBytes: snap.bytesUploaded,
-      connection: 'idle',
-    });
-  }, [bucket]);
 
   // Warn before a refresh/close would interrupt an in-flight upload.
   useEffect(() => {
@@ -453,7 +421,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
           clearCompletionTimers();
           finalized = true;
           clearResumePointer(filePath);
-          clearSnapshot();
+          clearSnapshot(filePath);
           clearUploadSession(fingerprint);
 
           activeUploadRef.current = null;
@@ -790,7 +758,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
                 toast.info(`Resuming upload from ${(offset / (1024 * 1024)).toFixed(1)} MB`);
               } else {
                 clearResumePointer(filePath);
-                clearSnapshot();
+                clearSnapshot(filePath);
               }
             }
           } catch (e) {
@@ -830,6 +798,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       return null;
     }
 
+    cancelledRef.current = false;
     setIsUploading(true);
 
     try {
@@ -849,8 +818,17 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       const isVideoBucket = bucket === 'anime-videos' || bucket === 'movies';
       const useStable = stablePath || isVideoBucket;
       stableRef.current = useStable;
+      const originalSafeName = file.name
+        .normalize('NFKC')
+        .replace(/[\\/\u0000-\u001f\u007f]+/g, '-')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(-180) || `${slug}${fileExt ? `.${fileExt}` : ''}`;
+      const legacyStableName = `${slug}-${file.size}-${file.lastModified}${fileExt ? `.${fileExt}` : ''}`;
+      const preferredStableName = `${file.lastModified}-${originalSafeName}`;
+      const legacyPath = folder ? `${folder}/${legacyStableName}` : legacyStableName;
       const fileName = useStable
-        ? `${slug}-${file.size}-${file.lastModified}${fileExt ? `.${fileExt}` : ''}`
+        ? (readResumePointer(legacyPath) ? legacyStableName : preferredStableName)
         : `${Date.now()}-${Math.random().toString(36).substring(2)}${fileExt ? `.${fileExt}` : ''}`;
       let filePath = folder ? `${folder}/${fileName}` : fileName;
 
@@ -872,7 +850,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       // Videos: use resumable/chunked upload to support large files reliably
       if (bucket === 'anime-videos' || bucket === 'movies') {
         patchStats({ connection: 'queued' });
-        return await enqueueVideoUpload(() => uploadVideoResumable(file, filePath));
+        return await enqueueVideoUpload(() => cancelledRef.current ? Promise.resolve(null) : uploadVideoResumable(file, filePath));
       }
 
       // Images: simple upload is fastest
@@ -909,6 +887,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
   };
 
   const abortUpload = useCallback(() => {
+    cancelledRef.current = true;
     if (activeUploadRef.current) {
       try {
         // Preserve resumable server state so cancelling/retrying never deletes
@@ -924,11 +903,12 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
     setUploadProgress(0);
     setDisplayedProgress(0);
     setUploadSpeed(0);
+    patchStats({ connection: 'cancelled' });
     measuredSpeedRef.current = 0;
     endUpload();
 
     toast.info('Upload cancelled');
-  }, []);
+  }, [patchStats]);
 
   return {
     uploadFile,
