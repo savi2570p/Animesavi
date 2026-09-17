@@ -143,10 +143,18 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
       // idempotent without one failed row corrupting the rest of the batch.
       for (let i = 0; i < episodesToInsert.length; i += 1) {
         const episode = episodesToInsert[i];
-        const { data: inserted, error } = await supabase
+        const { data: existing } = await supabase
           .from('episodes')
-          .upsert(episode, { onConflict: 'season_id,episode_number' })
-          .select('id, video_url, external_url');
+          .select('id')
+          .eq('season_id', episode.season_id)
+          .eq('episode_number', episode.episode_number)
+          .limit(1)
+          .maybeSingle();
+
+        const request = existing?.id
+          ? supabase.from('episodes').update(episode).eq('id', existing.id)
+          : supabase.from('episodes').insert(episode);
+        const { data: inserted, error } = await request.select('id, video_url, external_url');
 
         if (error) {
           console.error('Batch episode finalize error:', { episodeNumber: episode.episode_number, message: error.message });
