@@ -449,6 +449,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
           finalized = true;
           clearResumePointer(filePath);
           clearSnapshot();
+          clearUploadSession(fingerprint);
 
           activeUploadRef.current = null;
           pendingFileRef.current = null;
@@ -465,17 +466,17 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
             connection: 'complete',
           });
           endUpload();
-          console.log('[Upload] Storage commit...');
-          console.log('[Upload] Finalize completed');
-          console.log('[Upload] Progress reached 100%');
-          console.log(`[Upload] Upload Complete: ${file.name}`);
+          uploadLog('complete');
           resolve();
         };
 
         const verifyFinalOffset = async (upload: tus.Upload): Promise<boolean> => {
           if (finalized || finalizing || !upload.url) return false;
-          console.log('[Upload] Verifying...');
+          patchStats({ connection: 'verifying' });
+          persist({ status: 'verifying' });
+          uploadLog('verify-start');
           try {
+            accessToken = (await getFreshAccessToken()) ?? accessToken;
             const response = await fetch(upload.url, {
               method: 'HEAD',
               headers: {
@@ -486,9 +487,20 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
             });
             const committedOffset = Number(response.headers.get('Upload-Offset') || 0);
             if (response.ok && committedOffset >= file.size) {
-              console.log('[Upload] Upload finished');
-              finalizeUpload();
-              return true;
+              const objectName = filePath.split('/').pop() ?? filePath;
+              const parent = filePath.includes('/') ? filePath.slice(0, filePath.lastIndexOf('/')) : '';
+              const { data: objects, error: verifyError } = await supabase.storage.from(bucket).list(parent || undefined, {
+                search: objectName,
+                limit: 10,
+              });
+              const object = objects?.find((entry) => entry.name === objectName);
+              const storedSize = Number(object?.metadata?.size ?? 0);
+              if (!verifyError && object && (!storedSize || storedSize === file.size)) {
+                uploadLog('verify-success', { committedOffset, storedSize });
+                finalizeUpload();
+                return true;
+              }
+              uploadLog('verify-object-pending', { committedOffset, storedSize, error: verifyError?.message });
             }
           } catch (error) {
             console.warn('[Upload] Finalize verification failed', error);
@@ -502,7 +514,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
         // the bar can never sit at 99% while storage already holds the object.
         const scheduleFinalizeChecks = (upload: tus.Upload) => {
           if (finalized || completionGraceTimer !== null || completionWatchdog !== null) return;
-          patchStats({ connection: 'finalizing' });
+          patchStats({ connection: 'verifying' });
           completionGraceTimer = window.setTimeout(async () => {
             completionGraceTimer = null;
             await verifyFinalOffset(upload);
@@ -530,26 +542,44 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
           uploadDataDuringCreation: true,
           // Long, patient backoff: flaky mobile links commonly drop a chunk in
           // the first minute. Retrying instead of failing keeps the transfer alive.
-          retryDelays: [0, 1000, 3000, 5000, 10000, 15000, 20000, 30000, 30000, 60000],
+          retryDelays: Array.from({ length: 10 }, (_, attempt) => retryDelay(attempt)),
           storeFingerprintForResuming: true,
           removeFingerprintOnSuccess: true,
           onUploadUrlAvailable: () => {
             const url = activeUploadRef.current?.url;
-            if (url) writeResumePointer(filePath, url);
+            if (url) {
+              writeResumePointer(filePath, url);
+              persist({ uploadUrl: url, status: 'uploading' });
+              uploadLog('session-created');
+            }
           },
           // Retry on transport errors and transient server responses; only give
           // up on genuine client errors (auth/validation), never on 5xx/timeouts.
-          onShouldRetry: (err) => {
+          onShouldRetry: (err, retryAttempt) => {
             const status = (err as tus.DetailedError)?.originalResponse?.getStatus?.() ?? 0;
-            if (!status) return true; // network drop / timeout
-            if (status === 409 || status === 423 || status === 429) return true;
-            if (status >= 500) return true;
-            return false;
+            const shouldRetry = isRetryableUploadStatus(status);
+            if (shouldRetry) {
+              const failedChunk = Math.floor(confirmedBytesRef.current / chunkSize);
+              persist({
+                status: 'paused',
+                retries: persisted.retries + 1,
+                failedChunks: Array.from(new Set([...persisted.failedChunks, failedChunk])),
+              });
+              patchStats({
+                connection: navigator.onLine ? 'retrying' : 'offline',
+                retries: persisted.retries,
+              });
+              uploadLog('chunk-retry', { status, chunk: failedChunk, attempt: retryAttempt + 1 });
+            }
+            return shouldRetry;
           },
-          headers: {
-            authorization: `Bearer ${accessToken}`,
-            apikey: SUPABASE_PUBLISHABLE_KEY,
-            'x-upsert': stableRef.current ? 'true' : 'false',
+          headers: { apikey: SUPABASE_PUBLISHABLE_KEY, 'x-upsert': stableRef.current ? 'true' : 'false' },
+          onBeforeRequest: async (request) => {
+            const freshToken = await getFreshAccessToken();
+            if (!freshToken) throw new Error('Authentication required to continue upload');
+            accessToken = freshToken;
+            request.setHeader('authorization', `Bearer ${freshToken}`);
+            request.setHeader('apikey', SUPABASE_PUBLISHABLE_KEY);
           },
 
           metadata: {
@@ -566,7 +596,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
             // Reserve 100 for the storage completion callback or watchdog.
             const visibleProgress = uploadComplete ? 99 : Math.min(99, Math.floor(percentage));
             setUploadProgress(visibleProgress);
-            setDisplayedProgress(visibleProgress);
+            setDisplayedProgress((previous) => Math.max(previous, visibleProgress));
+            confirmedBytesRef.current = Math.max(confirmedBytesRef.current, bytesUploaded);
 
             const now = performance.now();
             const lastProgress = lastProgressRef.current;
@@ -608,6 +639,14 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
                 ),
                 connection: 'stable',
               });
+              const completedChunks = Math.min(Math.floor(bytesUploaded / chunkSize), Math.ceil(totalBytes / chunkSize));
+              persist({
+                confirmedBytes: Math.max(persisted.confirmedBytes, bytesUploaded),
+                completedChunks: Math.max(persisted.completedChunks, completedChunks),
+                failedChunks: persisted.failedChunks.filter((chunk) => chunk >= completedChunks),
+                status: 'uploading',
+                lastError: null,
+              });
 
               // Persist progress so a refresh / tab switch can pick up here.
               writeSnapshot({
@@ -625,8 +664,6 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
               allBytesUploaded = true;
               measuredSpeedRef.current = Math.max(measuredSpeedRef.current, 0);
               reportUpload(totalBytes, measuredSpeedRef.current);
-              console.log('[Upload] Upload finished');
-              console.log('[Upload] Verifying...');
               scheduleFinalizeChecks(upload);
             }
           },
@@ -671,13 +708,13 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
               fileSize: file.size,
               filePath,
             });
-            const detail = status
-              ? `${err.message} (HTTP ${status}${body ? `: ${String(body).slice(0, 120)}` : ''})`
-              : err.message;
+            const detail = safeUploadError(err.message, status, String(body));
+            lastErrorRef.current = detail;
+            persist({ status: 'failed', lastError: detail, confirmedBytes: confirmedBytesRef.current });
             setStats((prev) => ({
               ...prev,
               retries: prev.retries + 1,
-              connection: navigator.onLine ? 'retrying' : 'offline',
+              connection: navigator.onLine ? 'failed' : 'offline',
               error: detail,
             }));
 
@@ -691,8 +728,9 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
             reject(new Error(detail));
           },
           onSuccess: () => {
-            console.log('[Upload] Upload finished');
-            finalizeUpload();
+            void verifyFinalOffset(upload).then((verified) => {
+              if (!verified) scheduleFinalizeChecks(upload);
+            });
           },
 
         });
@@ -705,7 +743,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
         // published in stats so the UI can display it.
         void (async () => {
           try {
-            const pointer = readResumePointer(filePath);
+            const pointer = readUploadSession(fingerprint)?.uploadUrl ?? readResumePointer(filePath);
             if (pointer) {
               const offset = await probeOffset(pointer, accessToken);
               // Uploads created before the 6 MB fix may hold a partial offset
@@ -722,9 +760,11 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
                   parallelUploadUrls: null,
                 } as unknown as tus.PreviousUpload);
                 setUploadProgress(Math.floor((offset / file.size) * 100));
-                setDisplayedProgress(Math.floor((offset / file.size) * 100));
-                patchStats({ resumed: true, resumedFromBytes: offset, bytesUploaded: offset });
-                console.log(`[Upload] Resuming from verified offset ${offset} / ${file.size}`);
+                setDisplayedProgress((previous) => Math.max(previous, Math.floor((offset / file.size) * 100)));
+                confirmedBytesRef.current = offset;
+                persist({ confirmedBytes: offset, completedChunks: Math.floor(offset / chunkSize), status: 'uploading' });
+                patchStats({ resumed: true, resumedFromBytes: offset, bytesUploaded: offset, connection: 'resuming' });
+                uploadLog('resume', { offset });
                 toast.info(`Resuming upload from ${(offset / (1024 * 1024)).toFixed(1)} MB`);
               } else {
                 clearResumePointer(filePath);
@@ -740,7 +780,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       });
 
       const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(filePath);
-      toast.success('File uploaded successfully!');
+      toast.success('Upload complete ✓');
       setIsUploading(false);
       return { url: urlData.publicUrl, path: filePath };
     } catch (err: unknown) {
@@ -750,7 +790,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       if (errMsg.includes('413') || errMsg.includes('Maximum size exceeded')) {
         toast.error(`File too large for storage (${(file.size / (1024 * 1024 * 1024)).toFixed(1)} GB). Contact admin to increase the bucket limit.`);
       } else {
-        toast.error(`Upload failed: ${errMsg.substring(0, 100)}`);
+        toast.error(`Upload failed after automatic retries. ${errMsg.substring(0, 140)}`);
       }
       setIsUploading(false);
       return null;
