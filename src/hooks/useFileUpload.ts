@@ -4,6 +4,17 @@ import { toast } from 'sonner';
 import * as tus from 'tus-js-client';
 import { CHUNK_UNIT, pickChunkSize } from '@/lib/uploadTuning';
 import { beginUpload, reportUpload, endUpload } from '@/lib/uploadSpeedTracker';
+import {
+  clearUploadSession,
+  enqueueVideoUpload,
+  fileFingerprint,
+  isRetryableUploadStatus,
+  type PersistedUploadSession,
+  readUploadSession,
+  retryDelay,
+  safeUploadError,
+  writeUploadSession,
+} from '@/lib/resumableUpload';
 
 interface UseFileUploadOptions {
   bucket: 'anime-videos' | 'anime-thumbnails' | 'movies';
@@ -201,7 +212,7 @@ export interface UploadStats {
   chunksDone: number;
   chunksTotal: number;
   retries: number;
-  connection: 'idle' | 'stable' | 'retrying' | 'offline' | 'finalizing' | 'complete';
+  connection: 'idle' | 'queued' | 'stable' | 'retrying' | 'offline' | 'resuming' | 'verifying' | 'complete' | 'failed' | 'cancelled';
   storagePath: string;
   error: string | null;
   /** Bytes the server confirmed it already holds when the upload was resumed. */
@@ -245,6 +256,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
   // Video uploads always use a deterministic path so an interrupted transfer
   // can be continued; this ref carries that decision into the TUS headers.
   const stableRef = useRef<boolean>(stablePath);
+  const lastErrorRef = useRef<string | null>(null);
+  const confirmedBytesRef = useRef(0);
 
   const patchStats = useCallback((patch: Partial<UploadStats>) => {
     setStats((prev) => ({ ...prev, ...patch }));
@@ -321,8 +334,17 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       return null;
     }
 
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData.session?.access_token;
+    const getFreshAccessToken = async () => {
+      let { data } = await supabase.auth.getSession();
+      const expiresSoon = !data.session?.expires_at || data.session.expires_at * 1000 < Date.now() + 120_000;
+      if (data.session && expiresSoon) {
+        const refreshed = await supabase.auth.refreshSession();
+        if (refreshed.data.session) data = refreshed.data;
+      }
+      return data.session?.access_token ?? null;
+    };
+
+    let accessToken = await getFreshAccessToken();
 
     if (!accessToken) {
       toast.error('Please sign in to upload');
@@ -337,28 +359,65 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       return null;
     }
 
-    console.log(`[Upload] Upload started: ${file.name}, size: ${(file.size / (1024 * 1024 * 1024)).toFixed(2)} GB (${file.size} bytes), type: ${getVideoMimeType(file)}`);
-    console.log('[Upload] Uploading...');
-
     const chunkSize = pickChunkSize(file.size, maxChunkUnits);
+    const fingerprint = fileFingerprint(file, bucket, filePath);
+    const savedSession = readUploadSession(fingerprint);
+    const uploadId = savedSession?.uploadId ?? crypto.randomUUID();
+    let persisted: PersistedUploadSession = savedSession ?? {
+      version: 2,
+      uploadId,
+      fingerprint,
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: getVideoMimeType(file),
+      bucket,
+      destinationPath: filePath,
+      uploadUrl: null,
+      chunkSize,
+      totalChunks: Math.max(1, Math.ceil(file.size / chunkSize)),
+      completedChunks: 0,
+      failedChunks: [],
+      confirmedBytes: 0,
+      status: 'pending',
+      retries: 0,
+      lastError: null,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+    const persist = (patch: Partial<PersistedUploadSession>) => {
+      persisted = { ...persisted, ...patch, updatedAt: Date.now() };
+      writeUploadSession(persisted);
+    };
+    const uploadLog = (stage: string, details: Record<string, unknown> = {}) => {
+      console.info('[Upload]', { uploadId, stage, fileSize: file.size, chunkSize, path: filePath, ...details });
+    };
+    uploadLog('start', { resumed: Boolean(savedSession) });
 
     try {
-      setUploadProgress(0);
-      setDisplayedProgress(0);
+      const restoredBytes = Math.min(savedSession?.confirmedBytes ?? 0, file.size);
+      const restoredProgress = Math.min(99, Math.floor((restoredBytes / Math.max(file.size, 1)) * 100));
+      confirmedBytesRef.current = restoredBytes;
+      setUploadProgress(restoredProgress);
+      setDisplayedProgress((previous) => Math.max(previous, restoredProgress));
       setUploadSpeed(0);
       measuredSpeedRef.current = 0;
       startedAtRef.current = performance.now();
-      lastProgressRef.current = { bytes: 0, time: performance.now() };
-      speedSamplesRef.current = [{ bytes: 0, time: performance.now() }];
+      lastProgressRef.current = { bytes: restoredBytes, time: performance.now() };
+      speedSamplesRef.current = [{ bytes: restoredBytes, time: performance.now() }];
       setStats({
         ...emptyStats,
         fileName: file.name,
         bytesTotal: file.size,
         chunkSize,
         chunksTotal: Math.max(1, Math.ceil(file.size / chunkSize)),
-        connection: 'stable',
+        bytesUploaded: restoredBytes,
+        chunksDone: Math.floor(restoredBytes / chunkSize),
+        connection: restoredBytes > 0 ? 'resuming' : 'stable',
         storagePath: filePath,
+        resumed: restoredBytes > 0,
+        resumedFromBytes: restoredBytes,
       });
+      persist({ status: 'uploading', lastError: null });
       beginUpload(file.size);
 
 
