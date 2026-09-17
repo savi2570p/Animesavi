@@ -849,7 +849,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
 
       // Videos: use resumable/chunked upload to support large files reliably
       if (bucket === 'anime-videos' || bucket === 'movies') {
-        return await uploadVideoResumable(file, filePath);
+        patchStats({ connection: 'queued' });
+        return await enqueueVideoUpload(() => uploadVideoResumable(file, filePath));
       }
 
       // Images: simple upload is fastest
@@ -916,6 +917,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
     formattedSpeed: formatSpeed(uploadSpeed),
     formatSpeed,
     stats,
+    uploadError: lastErrorRef.current ?? stats.error,
     SIZE_LIMITS,
     abortUpload,
   };

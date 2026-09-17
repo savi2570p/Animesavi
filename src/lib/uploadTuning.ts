@@ -2,7 +2,8 @@
 //
 // This replaces the old "Boost Speed" simulation. Nothing here fabricates
 // throughput or progress — it only selects legitimate transfer parameters
-// (chunk size) that the upload transport actually uses.
+// (chunk size) that the upload transport actually uses. TUS slices the File
+// lazily, so the complete video is never loaded into browser memory.
 //
 // Lovable Cloud resumable (TUS) storage currently requires every PATCH chunk
 // to be exactly 6 MB. Larger multiples may be accepted when the upload is
