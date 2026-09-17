@@ -334,12 +334,16 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       return null;
     }
 
+    let forceTokenRefresh = false;
     const getFreshAccessToken = async () => {
       let { data } = await supabase.auth.getSession();
       const expiresSoon = !data.session?.expires_at || data.session.expires_at * 1000 < Date.now() + 120_000;
-      if (data.session && expiresSoon) {
+      if (data.session && (expiresSoon || forceTokenRefresh)) {
         const refreshed = await supabase.auth.refreshSession();
-        if (refreshed.data.session) data = refreshed.data;
+        if (refreshed.data.session) {
+          data = refreshed.data;
+          forceTokenRefresh = false;
+        }
       }
       return data.session?.access_token ?? null;
     };
@@ -429,6 +433,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
         let completionWatchdog: number | null = null;
         let resumedThisRun = false;
         let staleResumeHandled = false;
+        let verificationAttempts = 0;
 
         const clearCompletionTimers = () => {
           if (completionGraceTimer !== null) {
@@ -474,6 +479,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
           if (finalized || finalizing || !upload.url) return false;
           patchStats({ connection: 'verifying' });
           persist({ status: 'verifying' });
+          verificationAttempts += 1;
           uploadLog('verify-start');
           try {
             accessToken = (await getFreshAccessToken()) ?? accessToken;
@@ -495,7 +501,14 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
               });
               const object = objects?.find((entry) => entry.name === objectName);
               const storedSize = Number(object?.metadata?.size ?? 0);
-              if (!verifyError && object && (!storedSize || storedSize === file.size)) {
+              let objectVerified = !verifyError && Boolean(object) && (!storedSize || storedSize === file.size);
+              if (!objectVerified) {
+                const { data: publicUrl } = supabase.storage.from(bucket).getPublicUrl(filePath);
+                const objectResponse = await fetch(publicUrl.publicUrl, { method: 'HEAD', cache: 'no-store' });
+                const publicSize = Number(objectResponse.headers.get('content-length') ?? 0);
+                objectVerified = objectResponse.ok && (!publicSize || publicSize === file.size);
+              }
+              if (objectVerified) {
                 uploadLog('verify-success', { committedOffset, storedSize });
                 finalizeUpload();
                 return true;
@@ -524,9 +537,15 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
             completionWatchdog = null;
             if (finalized || finalizing) return;
             const complete = await verifyFinalOffset(upload);
-            if (!complete) {
+            if (!complete && verificationAttempts < 12) {
               console.warn('[Upload] Finalize verification pending; retrying finalize check only');
               scheduleFinalizeChecks(upload);
+            } else if (!complete) {
+              const message = 'Upload bytes were received, but storage verification did not complete. Resume to verify again.';
+              lastErrorRef.current = message;
+              persist({ status: 'failed', lastError: message, confirmedBytes: file.size });
+              patchStats({ connection: 'failed', error: message });
+              reject(new Error(message));
             }
           }, 5_000);
         };
@@ -580,6 +599,9 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
             accessToken = freshToken;
             request.setHeader('authorization', `Bearer ${freshToken}`);
             request.setHeader('apikey', SUPABASE_PUBLISHABLE_KEY);
+          },
+          onAfterResponse: (_request, response) => {
+            if (response.getStatus() === 401) forceTokenRefresh = true;
           },
 
           metadata: {
@@ -918,6 +940,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
     formatSpeed,
     stats,
     uploadError: lastErrorRef.current ?? stats.error,
+    getUploadError: () => lastErrorRef.current,
     SIZE_LIMITS,
     abortUpload,
   };

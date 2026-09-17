@@ -47,7 +47,7 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
   const effectiveMaxSize =
     maxSizeGB ?? (contentType === 'movie' ? 100 : contentType === 'episode' ? 50 : accept === 'image' ? 1 : 50);
 
-  const { uploadFile, isUploading, progress, formattedSpeed, formatSpeed, stats, abortUpload, uploadError: pipelineError } = useFileUpload({
+  const { uploadFile, isUploading, progress, formattedSpeed, formatSpeed, stats, abortUpload, getUploadError } = useFileUpload({
     bucket,
     folder,
     maxSizeGB: effectiveMaxSize,
@@ -90,10 +90,10 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
         onChange(result.url);
         setUploadError(null);
       } else {
-        setUploadError(pipelineError || 'Upload failed after automatic retries. Your confirmed progress is saved.');
+        setUploadError(getUploadError() || 'Upload failed after automatic retries. Your confirmed progress is saved.');
       }
     },
-    [onChange, pipelineError, uploadFile]
+    [getUploadError, onChange, uploadFile]
   );
 
   const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
