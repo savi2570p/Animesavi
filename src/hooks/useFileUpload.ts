@@ -45,7 +45,9 @@ const SIZE_LIMITS = {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/upload/resumable` : '';
+const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL
+  ? `${new URL(SUPABASE_URL).origin.replace('.supabase.co', '.storage.supabase.co')}/storage/v1/upload/resumable`
+  : '';
 
 // Lovable Cloud resumable storage currently requires an exact 6 MB chunk.
 // Larger multiples fail after creation when the first PATCH request is sent.
@@ -577,6 +579,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
             objectName: filePath,
             contentType: getVideoMimeType(file),
             cacheControl: '3600',
+            metadata: JSON.stringify({ originalFileName: file.name }),
           },
           onProgress: (bytesUploaded, bytesTotal) => {
             const totalBytes = bytesTotal || file.size || 1;
@@ -818,17 +821,13 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       const isVideoBucket = bucket === 'anime-videos' || bucket === 'movies';
       const useStable = stablePath || isVideoBucket;
       stableRef.current = useStable;
-      const originalSafeName = file.name
-        .normalize('NFKC')
-        .replace(/[\\/\u0000-\u001f\u007f]+/g, '-')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .slice(-180) || `${slug}${fileExt ? `.${fileExt}` : ''}`;
+      // Storage object keys must stay URL-safe. Preserve the user's complete
+      // original name in TUS metadata instead of putting spaces/brackets and
+      // other display characters into the resumable upload creation request.
       const legacyStableName = `${slug}-${file.size}-${file.lastModified}${fileExt ? `.${fileExt}` : ''}`;
-      const preferredStableName = `${file.lastModified}-${originalSafeName}`;
       const legacyPath = folder ? `${folder}/${legacyStableName}` : legacyStableName;
       const fileName = useStable
-        ? (readResumePointer(legacyPath) ? legacyStableName : preferredStableName)
+        ? legacyStableName
         : `${Date.now()}-${Math.random().toString(36).substring(2)}${fileExt ? `.${fileExt}` : ''}`;
       let filePath = folder ? `${folder}/${fileName}` : fileName;
 

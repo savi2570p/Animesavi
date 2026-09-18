@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { fileFingerprint, isRetryableUploadStatus, retryDelay } from '@/lib/resumableUpload';
 
 describe('resumable upload helpers', () => {
-  it('keeps .mkv.mp4 names distinct and stable', () => {
+  it('keeps .mkv.mp4 fingerprints distinct and stable', () => {
     const file = { name: 'Anime S03E12 Hindi-Eng-Jap.mkv.mp4', size: 2_100_000_000, lastModified: 123 };
     const first = fileFingerprint(file, 'anime-videos', 'anime/id/episodes/file.mkv.mp4');
     const second = fileFingerprint(file, 'anime-videos', 'anime/id/episodes/file.mkv.mp4');
