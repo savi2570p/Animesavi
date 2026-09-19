@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fileFingerprint, isRetryableUploadStatus, retryDelay } from '@/lib/resumableUpload';
+import { fileFingerprint, isRetryableUploadStatus, retryDelay, safeUploadError } from '@/lib/resumableUpload';
 
 describe('resumable upload helpers', () => {
   it('keeps .mkv.mp4 fingerprints distinct and stable', () => {
@@ -22,5 +22,9 @@ describe('resumable upload helpers', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.5);
     expect([0, 1, 2, 3, 4].map(retryDelay)).toEqual([1_000, 2_000, 4_000, 8_000, 15_000]);
     vi.restoreAllMocks();
+  });
+
+  it('shows the storage reason when session creation is rejected', () => {
+    expect(safeUploadError('unexpected response', 400, 'Invalid object name')).toContain('Invalid object name');
   });
 });

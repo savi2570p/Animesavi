@@ -528,7 +528,10 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
           // TUS concatenation extension, which Lovable Cloud storage rejects
           // partway through, causing the upload to restart.
           parallelUploads: 1,
-          uploadDataDuringCreation: true,
+          // Keep session creation metadata-only. The gateway was returning
+          // HTTP 400 when the optional creation-with-upload request embedded
+          // the first 6 MB in this POST. Bytes follow as resumable PATCHes.
+          uploadDataDuringCreation: false,
           // Long, patient backoff: flaky mobile links commonly drop a chunk in
           // the first minute. Retrying instead of failing keeps the transfer alive.
           retryDelays: Array.from({ length: 10 }, (_, attempt) => retryDelay(attempt)),
