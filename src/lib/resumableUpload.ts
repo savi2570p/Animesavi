@@ -79,8 +79,10 @@ export function isRetryableUploadStatus(status: number) {
 export function safeUploadError(message: string, status: number, body = '') {
   const cleanBody = body.replace(/[\r\n]+/g, ' ').slice(0, 140);
   if (!navigator.onLine || status === 0) return 'Connection interrupted. Your confirmed progress is saved.';
+  if (status === 400) return `Storage rejected the upload session${cleanBody ? `: ${cleanBody}` : '.'}`;
   if (status === 401) return 'Your session expired during upload. Sign in again, then resume this file.';
   if (status === 403) return 'Storage permission denied. Your confirmed progress is saved.';
+  if (status === 404) return 'The upload destination was not found or its storage policy rejected the path.';
   if (status === 413) return 'The file exceeds the current storage size limit.';
   if (status === 429) return 'Storage is temporarily rate limited. Your confirmed progress is saved.';
   if (status >= 500) return `Storage is temporarily unavailable (HTTP ${status}). Your progress is saved.`;
