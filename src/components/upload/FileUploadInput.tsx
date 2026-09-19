@@ -47,7 +47,7 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
   const effectiveMaxSize =
     maxSizeGB ?? (contentType === 'movie' ? 100 : contentType === 'episode' ? 50 : accept === 'image' ? 1 : 50);
 
-  const { uploadFile, isUploading, progress, formattedSpeed, formatSpeed, stats, abortUpload, getUploadError } = useFileUpload({
+  const { uploadFile, isUploading, progress, formattedSpeed, formatSpeed, stats, abortUpload } = useFileUpload({
     bucket,
     folder,
     maxSizeGB: effectiveMaxSize,
@@ -90,10 +90,10 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
         onChange(result.url);
         setUploadError(null);
       } else {
-        setUploadError(getUploadError() || 'Upload failed after automatic retries. Your confirmed progress is saved.');
+        setUploadError('Upload failed. Please retry.');
       }
     },
-    [getUploadError, onChange, uploadFile]
+    [onChange, uploadFile]
   );
 
   const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -250,15 +250,7 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
                     {(stats.bytesUploaded / (1024 * 1024)).toFixed(0)}/
                     {(stats.bytesTotal / (1024 * 1024)).toFixed(0)} MB
                   </span>
-                  <span className="capitalize">
-                    {stats.connection === 'retrying'
-                      ? 'Retrying chunk…'
-                      : stats.connection === 'resuming'
-                        ? 'Resuming upload…'
-                        : stats.connection === 'verifying'
-                          ? 'Verifying upload…'
-                          : stats.connection}
-                  </span>
+                  <span className="capitalize">{stats.connection}</span>
                   {stats.retries > 0 && <span className="text-amber-500">retries {stats.retries}</span>}
                 </div>
               )}
@@ -286,7 +278,7 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             <Button type="button" variant="outline" size="sm" onClick={handleRetry}>
               <RotateCw className="h-4 w-4 mr-2" />
-              Resume Upload
+              Try again
             </Button>
             {accept === 'video' && (
               <Button type="button" size="sm" onClick={() => setEmbedUploadOpen(true)}>

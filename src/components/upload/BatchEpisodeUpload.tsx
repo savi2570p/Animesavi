@@ -135,31 +135,24 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
         duration: ep.duration ? parseInt(ep.duration) : null,
       }));
 
+      // Upload in parallel chunks of 5 for speed
+      const CHUNK_SIZE = 5;
       let completed = 0;
-      const failed: number[] = [];
+      let hasError = false;
 
-      // Finalize episode records one at a time. Video files have already been
-      // verified by FileUploadInput, and the unique episode key makes retries
-      // idempotent without one failed row corrupting the rest of the batch.
-      for (let i = 0; i < episodesToInsert.length; i += 1) {
-        const episode = episodesToInsert[i];
-        const { data: existing } = await supabase
+      for (let i = 0; i < episodesToInsert.length; i += CHUNK_SIZE) {
+        const chunk = episodesToInsert.slice(i, i + CHUNK_SIZE);
+        
+        const { data: inserted, error } = await supabase
           .from('episodes')
-          .select('id')
-          .eq('season_id', episode.season_id)
-          .eq('episode_number', episode.episode_number)
-          .limit(1)
-          .maybeSingle();
-
-        const request = existing?.id
-          ? supabase.from('episodes').update(episode).eq('id', existing.id)
-          : supabase.from('episodes').insert(episode);
-        const { data: inserted, error } = await request.select('id, video_url, external_url');
+          .insert(chunk)
+          .select('id, video_url, external_url');
 
         if (error) {
-          console.error('Batch episode finalize error:', { episodeNumber: episode.episode_number, message: error.message });
-          failed.push(episode.episode_number);
-          continue;
+          console.error('Batch upload chunk error:', error);
+          hasError = true;
+          toast.error(`Failed to upload episodes ${i + 1}-${i + chunk.length}`);
+          break;
         }
 
         // Auto-generate a working embed link for any inserted episode that
@@ -181,17 +174,18 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
 
         // Create the public custom-domain embed token for every uploaded
         // episode that already has a playback source.
-        void Promise.all(
+        await Promise.all(
           (inserted || [])
             .filter((row: any) => row.video_url)
             .map((row: any) => autoEnsureEmbed(row.id)),
-        ).catch((error) => console.warn('Batch embed generation deferred:', error));
+        );
 
-        completed += 1;
+
+        completed += chunk.length;
         setUploadProgress({ completed, total: validEpisodes.length });
       }
 
-      if (failed.length === 0) {
+      if (!hasError) {
         toast.success(`${validEpisodes.length} episode(s) added successfully!`);
         
         // Clear sessionStorage after successful upload
@@ -200,9 +194,6 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
         // Reset form
         setEpisodes([createEmptyEpisode()]);
         
-        onEpisodesAdded();
-      } else {
-        toast.error(`Episodes ${failed.join(', ')} could not be finalized. Their verified video uploads are preserved.`);
         onEpisodesAdded();
       }
     } catch (error) {

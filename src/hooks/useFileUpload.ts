@@ -2,19 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import * as tus from 'tus-js-client';
-import { CHUNK_UNIT, pickChunkSize } from '@/lib/uploadTuning';
+import { pickChunkSize } from '@/lib/uploadTuning';
 import { beginUpload, reportUpload, endUpload } from '@/lib/uploadSpeedTracker';
-import {
-  clearUploadSession,
-  enqueueVideoUpload,
-  fileFingerprint,
-  isRetryableUploadStatus,
-  type PersistedUploadSession,
-  readUploadSession,
-  retryDelay,
-  safeUploadError,
-  writeUploadSession,
-} from '@/lib/resumableUpload';
 
 interface UseFileUploadOptions {
   bucket: 'anime-videos' | 'anime-thumbnails' | 'movies';
@@ -45,12 +34,12 @@ const SIZE_LIMITS = {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL
-  ? `${new URL(SUPABASE_URL).origin.replace('.supabase.co', '.storage.supabase.co')}/storage/v1/upload/resumable`
-  : '';
+const RESUMABLE_UPLOAD_ENDPOINT = SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/upload/resumable` : '';
 
-// Lovable Cloud resumable storage currently requires an exact 6 MB chunk.
-// Larger multiples fail after creation when the first PATCH request is sent.
+// Lovable Cloud resumable storage requires chunk sizes that are multiples of
+// 6 MB. The chunk size is chosen per-file at runtime (see uploadTuning.ts) so
+// large files on fast links use fewer, larger round trips — a real throughput
+// gain, not a cosmetic one.
 // IMPORTANT: parallelUploads MUST stay at 1. tus-js-client's parallelUploads
 // relies on the TUS `concatenation` extension, which the resumable storage
 // endpoint does not support, causing uploads to restart mid-stream after a
@@ -113,38 +102,6 @@ function clearResumePointer(filePath: string) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Progress snapshot
-// The last known progress of an interrupted transfer, so a page refresh or a
-// tab switch that unmounts the upload UI shows the real percentage again
-// instead of falling back to 0%.
-// ---------------------------------------------------------------------------
-const SNAPSHOT_PREFIX = 'upload-progress-snapshot:';
-
-interface ProgressSnapshot {
-  filePath: string;
-  fileName: string;
-  bytesUploaded: number;
-  bytesTotal: number;
-  at: number;
-}
-
-function snapshotKey(filePath: string) {
-  return `${SNAPSHOT_PREFIX}${filePath}`;
-}
-
-function writeSnapshot(snap: ProgressSnapshot) {
-  try {
-    localStorage.setItem(snapshotKey(snap.filePath), JSON.stringify(snap));
-  } catch { /* best effort */ }
-}
-
-function clearSnapshot(filePath: string) {
-  try {
-    localStorage.removeItem(snapshotKey(filePath));
-  } catch { /* noop */ }
-}
-
 /** Ask the server how many bytes it actually holds for an upload URL. */
 async function probeOffset(uploadUrl: string, accessToken: string): Promise<number | null> {
   try {
@@ -203,7 +160,7 @@ export interface UploadStats {
   chunksDone: number;
   chunksTotal: number;
   retries: number;
-  connection: 'idle' | 'queued' | 'stable' | 'retrying' | 'offline' | 'resuming' | 'verifying' | 'complete' | 'failed' | 'cancelled';
+  connection: 'idle' | 'stable' | 'retrying' | 'offline' | 'finalizing' | 'complete';
   storagePath: string;
   error: string | null;
   /** Bytes the server confirmed it already holds when the upload was resumed. */
@@ -244,28 +201,10 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
   const speedSamplesRef = useRef<Array<{ bytes: number; time: number }>>([]);
   const measuredSpeedRef = useRef<number>(0);
   const startedAtRef = useRef<number>(0);
-  // Video uploads always use a deterministic path so an interrupted transfer
-  // can be continued; this ref carries that decision into the TUS headers.
-  const stableRef = useRef<boolean>(stablePath);
-  const lastErrorRef = useRef<string | null>(null);
-  const confirmedBytesRef = useRef(0);
-  const cancelledRef = useRef(false);
 
   const patchStats = useCallback((patch: Partial<UploadStats>) => {
     setStats((prev) => ({ ...prev, ...patch }));
   }, []);
-
-  // Warn before a refresh/close would interrupt an in-flight upload.
-  useEffect(() => {
-    if (!isUploading) return;
-    const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = '';
-    };
-    window.addEventListener('beforeunload', onBeforeUnload);
-    return () => window.removeEventListener('beforeunload', onBeforeUnload);
-  }, [isUploading]);
-
 
   // Auto-resume upload when coming back online
   useEffect(() => {
@@ -304,21 +243,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       return null;
     }
 
-    let forceTokenRefresh = false;
-    const getFreshAccessToken = async () => {
-      let { data } = await supabase.auth.getSession();
-      const expiresSoon = !data.session?.expires_at || data.session.expires_at * 1000 < Date.now() + 120_000;
-      if (data.session && (expiresSoon || forceTokenRefresh)) {
-        const refreshed = await supabase.auth.refreshSession();
-        if (refreshed.data.session) {
-          data = refreshed.data;
-          forceTokenRefresh = false;
-        }
-      }
-      return data.session?.access_token ?? null;
-    };
-
-    let accessToken = await getFreshAccessToken();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
 
     if (!accessToken) {
       toast.error('Please sign in to upload');
@@ -333,65 +259,28 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       return null;
     }
 
+    console.log(`[Upload] Upload started: ${file.name}, size: ${(file.size / (1024 * 1024 * 1024)).toFixed(2)} GB (${file.size} bytes), type: ${getVideoMimeType(file)}`);
+    console.log('[Upload] Uploading...');
+
     const chunkSize = pickChunkSize(file.size, maxChunkUnits);
-    const fingerprint = fileFingerprint(file, bucket, filePath);
-    const savedSession = readUploadSession(fingerprint);
-    const uploadId = savedSession?.uploadId ?? crypto.randomUUID();
-    let persisted: PersistedUploadSession = savedSession ?? {
-      version: 2,
-      uploadId,
-      fingerprint,
-      fileName: file.name,
-      fileSize: file.size,
-      fileType: getVideoMimeType(file),
-      bucket,
-      destinationPath: filePath,
-      uploadUrl: null,
-      chunkSize,
-      totalChunks: Math.max(1, Math.ceil(file.size / chunkSize)),
-      completedChunks: 0,
-      failedChunks: [],
-      confirmedBytes: 0,
-      status: 'pending',
-      retries: 0,
-      lastError: null,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    const persist = (patch: Partial<PersistedUploadSession>) => {
-      persisted = { ...persisted, ...patch, updatedAt: Date.now() };
-      writeUploadSession(persisted);
-    };
-    const uploadLog = (stage: string, details: Record<string, unknown> = {}) => {
-      console.info('[Upload]', { uploadId, stage, fileSize: file.size, chunkSize, path: filePath, ...details });
-    };
-    uploadLog('start', { resumed: Boolean(savedSession) });
 
     try {
-      const restoredBytes = Math.min(savedSession?.confirmedBytes ?? 0, file.size);
-      const restoredProgress = Math.min(99, Math.floor((restoredBytes / Math.max(file.size, 1)) * 100));
-      confirmedBytesRef.current = restoredBytes;
-      setUploadProgress(restoredProgress);
-      setDisplayedProgress((previous) => Math.max(previous, restoredProgress));
+      setUploadProgress(0);
+      setDisplayedProgress(0);
       setUploadSpeed(0);
       measuredSpeedRef.current = 0;
       startedAtRef.current = performance.now();
-      lastProgressRef.current = { bytes: restoredBytes, time: performance.now() };
-      speedSamplesRef.current = [{ bytes: restoredBytes, time: performance.now() }];
+      lastProgressRef.current = { bytes: 0, time: performance.now() };
+      speedSamplesRef.current = [{ bytes: 0, time: performance.now() }];
       setStats({
         ...emptyStats,
         fileName: file.name,
         bytesTotal: file.size,
         chunkSize,
         chunksTotal: Math.max(1, Math.ceil(file.size / chunkSize)),
-        bytesUploaded: restoredBytes,
-        chunksDone: Math.floor(restoredBytes / chunkSize),
-        connection: restoredBytes > 0 ? 'resuming' : 'stable',
+        connection: 'stable',
         storagePath: filePath,
-        resumed: restoredBytes > 0,
-        resumedFromBytes: restoredBytes,
       });
-      persist({ status: 'uploading', lastError: null });
       beginUpload(file.size);
 
 
@@ -403,7 +292,6 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
         let completionWatchdog: number | null = null;
         let resumedThisRun = false;
         let staleResumeHandled = false;
-        let verificationAttempts = 0;
 
         const clearCompletionTimers = () => {
           if (completionGraceTimer !== null) {
@@ -423,9 +311,6 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
           clearCompletionTimers();
           finalized = true;
           clearResumePointer(filePath);
-          clearSnapshot(filePath);
-          clearUploadSession(fingerprint);
-
           activeUploadRef.current = null;
           pendingFileRef.current = null;
           setUploadProgress(100);
@@ -441,18 +326,17 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
             connection: 'complete',
           });
           endUpload();
-          uploadLog('complete');
+          console.log('[Upload] Storage commit...');
+          console.log('[Upload] Finalize completed');
+          console.log('[Upload] Progress reached 100%');
+          console.log(`[Upload] Upload Complete: ${file.name}`);
           resolve();
         };
 
         const verifyFinalOffset = async (upload: tus.Upload): Promise<boolean> => {
           if (finalized || finalizing || !upload.url) return false;
-          patchStats({ connection: 'verifying' });
-          persist({ status: 'verifying' });
-          verificationAttempts += 1;
-          uploadLog('verify-start');
+          console.log('[Upload] Verifying...');
           try {
-            accessToken = (await getFreshAccessToken()) ?? accessToken;
             const response = await fetch(upload.url, {
               method: 'HEAD',
               headers: {
@@ -463,27 +347,9 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
             });
             const committedOffset = Number(response.headers.get('Upload-Offset') || 0);
             if (response.ok && committedOffset >= file.size) {
-              const objectName = filePath.split('/').pop() ?? filePath;
-              const parent = filePath.includes('/') ? filePath.slice(0, filePath.lastIndexOf('/')) : '';
-              const { data: objects, error: verifyError } = await supabase.storage.from(bucket).list(parent || undefined, {
-                search: objectName,
-                limit: 10,
-              });
-              const object = objects?.find((entry) => entry.name === objectName);
-              const storedSize = Number(object?.metadata?.size ?? 0);
-              let objectVerified = !verifyError && Boolean(object) && (!storedSize || storedSize === file.size);
-              if (!objectVerified) {
-                const { data: publicUrl } = supabase.storage.from(bucket).getPublicUrl(filePath);
-                const objectResponse = await fetch(publicUrl.publicUrl, { method: 'HEAD', cache: 'no-store' });
-                const publicSize = Number(objectResponse.headers.get('content-length') ?? 0);
-                objectVerified = objectResponse.ok && (!publicSize || publicSize === file.size);
-              }
-              if (objectVerified) {
-                uploadLog('verify-success', { committedOffset, storedSize });
-                finalizeUpload();
-                return true;
-              }
-              uploadLog('verify-object-pending', { committedOffset, storedSize, error: verifyError?.message });
+              console.log('[Upload] Upload finished');
+              finalizeUpload();
+              return true;
             }
           } catch (error) {
             console.warn('[Upload] Finalize verification failed', error);
@@ -497,7 +363,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
         // the bar can never sit at 99% while storage already holds the object.
         const scheduleFinalizeChecks = (upload: tus.Upload) => {
           if (finalized || completionGraceTimer !== null || completionWatchdog !== null) return;
-          patchStats({ connection: 'verifying' });
+          patchStats({ connection: 'finalizing' });
           completionGraceTimer = window.setTimeout(async () => {
             completionGraceTimer = null;
             await verifyFinalOffset(upload);
@@ -507,15 +373,9 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
             completionWatchdog = null;
             if (finalized || finalizing) return;
             const complete = await verifyFinalOffset(upload);
-            if (!complete && verificationAttempts < 12) {
+            if (!complete) {
               console.warn('[Upload] Finalize verification pending; retrying finalize check only');
               scheduleFinalizeChecks(upload);
-            } else if (!complete) {
-              const message = 'Upload bytes were received, but storage verification did not complete. Resume to verify again.';
-              lastErrorRef.current = message;
-              persist({ status: 'failed', lastError: message, confirmedBytes: file.size });
-              patchStats({ connection: 'failed', error: message });
-              reject(new Error(message));
             }
           }, 5_000);
         };
@@ -528,53 +388,29 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
           // TUS concatenation extension, which Lovable Cloud storage rejects
           // partway through, causing the upload to restart.
           parallelUploads: 1,
-          // Keep session creation metadata-only. The gateway was returning
-          // HTTP 400 when the optional creation-with-upload request embedded
-          // the first 6 MB in this POST. Bytes follow as resumable PATCHes.
-          uploadDataDuringCreation: false,
+          uploadDataDuringCreation: true,
           // Long, patient backoff: flaky mobile links commonly drop a chunk in
           // the first minute. Retrying instead of failing keeps the transfer alive.
-          retryDelays: Array.from({ length: 10 }, (_, attempt) => retryDelay(attempt)),
+          retryDelays: [0, 1000, 3000, 5000, 10000, 15000, 20000, 30000, 30000, 60000],
           storeFingerprintForResuming: true,
           removeFingerprintOnSuccess: true,
           onUploadUrlAvailable: () => {
             const url = activeUploadRef.current?.url;
-            if (url) {
-              writeResumePointer(filePath, url);
-              persist({ uploadUrl: url, status: 'uploading' });
-              uploadLog('session-created');
-            }
+            if (url) writeResumePointer(filePath, url);
           },
           // Retry on transport errors and transient server responses; only give
           // up on genuine client errors (auth/validation), never on 5xx/timeouts.
-          onShouldRetry: (err, retryAttempt) => {
+          onShouldRetry: (err) => {
             const status = (err as tus.DetailedError)?.originalResponse?.getStatus?.() ?? 0;
-            const shouldRetry = isRetryableUploadStatus(status);
-            if (shouldRetry) {
-              const failedChunk = Math.floor(confirmedBytesRef.current / chunkSize);
-              persist({
-                status: 'paused',
-                retries: persisted.retries + 1,
-                failedChunks: Array.from(new Set([...persisted.failedChunks, failedChunk])),
-              });
-              patchStats({
-                connection: navigator.onLine ? 'retrying' : 'offline',
-                retries: persisted.retries,
-              });
-              uploadLog('chunk-retry', { status, chunk: failedChunk, attempt: retryAttempt + 1 });
-            }
-            return shouldRetry;
+            if (!status) return true; // network drop / timeout
+            if (status === 409 || status === 423 || status === 429) return true;
+            if (status >= 500) return true;
+            return false;
           },
-          headers: { apikey: SUPABASE_PUBLISHABLE_KEY, 'x-upsert': stableRef.current ? 'true' : 'false' },
-          onBeforeRequest: async (request) => {
-            const freshToken = await getFreshAccessToken();
-            if (!freshToken) throw new Error('Authentication required to continue upload');
-            accessToken = freshToken;
-            request.setHeader('authorization', `Bearer ${freshToken}`);
-            request.setHeader('apikey', SUPABASE_PUBLISHABLE_KEY);
-          },
-          onAfterResponse: (_request, response) => {
-            if (response.getStatus() === 401) forceTokenRefresh = true;
+          headers: {
+            authorization: `Bearer ${accessToken}`,
+            apikey: SUPABASE_PUBLISHABLE_KEY,
+            'x-upsert': stablePath ? 'true' : 'false',
           },
 
           metadata: {
@@ -582,7 +418,6 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
             objectName: filePath,
             contentType: getVideoMimeType(file),
             cacheControl: '3600',
-            metadata: JSON.stringify({ originalFileName: file.name }),
           },
           onProgress: (bytesUploaded, bytesTotal) => {
             const totalBytes = bytesTotal || file.size || 1;
@@ -592,8 +427,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
             // Reserve 100 for the storage completion callback or watchdog.
             const visibleProgress = uploadComplete ? 99 : Math.min(99, Math.floor(percentage));
             setUploadProgress(visibleProgress);
-            setDisplayedProgress((previous) => Math.max(previous, visibleProgress));
-            confirmedBytesRef.current = Math.max(confirmedBytesRef.current, bytesUploaded);
+            setDisplayedProgress(visibleProgress);
 
             const now = performance.now();
             const lastProgress = lastProgressRef.current;
@@ -635,31 +469,15 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
                 ),
                 connection: 'stable',
               });
-              const completedChunks = Math.min(Math.floor(bytesUploaded / chunkSize), Math.ceil(totalBytes / chunkSize));
-              persist({
-                confirmedBytes: Math.max(persisted.confirmedBytes, bytesUploaded),
-                completedChunks: Math.max(persisted.completedChunks, completedChunks),
-                failedChunks: persisted.failedChunks.filter((chunk) => chunk >= completedChunks),
-                status: 'uploading',
-                lastError: null,
-              });
-
-              // Persist progress so a refresh / tab switch can pick up here.
-              writeSnapshot({
-                filePath,
-                fileName: file.name,
-                bytesUploaded,
-                bytesTotal: totalBytes,
-                at: Date.now(),
-              });
             }
-
 
             if (uploadComplete) {
 
               allBytesUploaded = true;
               measuredSpeedRef.current = Math.max(measuredSpeedRef.current, 0);
               reportUpload(totalBytes, measuredSpeedRef.current);
+              console.log('[Upload] Upload finished');
+              console.log('[Upload] Verifying...');
               scheduleFinalizeChecks(upload);
             }
           },
@@ -704,29 +522,28 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
               fileSize: file.size,
               filePath,
             });
-            const detail = safeUploadError(err.message, status, String(body));
-            lastErrorRef.current = detail;
-            persist({ status: 'failed', lastError: detail, confirmedBytes: confirmedBytesRef.current });
+            const detail = status
+              ? `${err.message} (HTTP ${status}${body ? `: ${String(body).slice(0, 120)}` : ''})`
+              : err.message;
             setStats((prev) => ({
               ...prev,
               retries: prev.retries + 1,
-              connection: navigator.onLine ? 'failed' : 'offline',
+              connection: navigator.onLine ? 'retrying' : 'offline',
               error: detail,
             }));
 
             activeUploadRef.current = null;
             pendingFileRef.current = null;
-            // Keep the last server-confirmed percentage visible. The explicit
-            // resume pointer lets Try again continue this same upload.
+            setUploadProgress(0);
+            setDisplayedProgress(0);
             setUploadSpeed(0);
             speedSamplesRef.current = [];
             endUpload();
             reject(new Error(detail));
           },
           onSuccess: () => {
-            void verifyFinalOffset(upload).then((verified) => {
-              if (!verified) scheduleFinalizeChecks(upload);
-            });
+            console.log('[Upload] Upload finished');
+            finalizeUpload();
           },
 
         });
@@ -739,13 +556,10 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
         // published in stats so the UI can display it.
         void (async () => {
           try {
-            const pointer = readUploadSession(fingerprint)?.uploadUrl ?? readResumePointer(filePath);
+            const pointer = readResumePointer(filePath);
             if (pointer) {
               const offset = await probeOffset(pointer, accessToken);
-              // Uploads created before the 6 MB fix may hold a partial offset
-              // that storage cannot continue. Discard those stale sessions
-              // instead of repeatedly failing the first resumed PATCH.
-              if (offset !== null && offset > 0 && offset < file.size && offset % CHUNK_UNIT === 0) {
+              if (offset !== null && offset > 0 && offset < file.size) {
                 resumedThisRun = true;
                 upload.resumeFromPreviousUpload({
                   uploadUrl: pointer,
@@ -756,15 +570,12 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
                   parallelUploadUrls: null,
                 } as unknown as tus.PreviousUpload);
                 setUploadProgress(Math.floor((offset / file.size) * 100));
-                setDisplayedProgress((previous) => Math.max(previous, Math.floor((offset / file.size) * 100)));
-                confirmedBytesRef.current = offset;
-                persist({ confirmedBytes: offset, completedChunks: Math.floor(offset / chunkSize), status: 'uploading' });
-                patchStats({ resumed: true, resumedFromBytes: offset, bytesUploaded: offset, connection: 'resuming' });
-                uploadLog('resume', { offset });
+                setDisplayedProgress(Math.floor((offset / file.size) * 100));
+                patchStats({ resumed: true, resumedFromBytes: offset, bytesUploaded: offset });
+                console.log(`[Upload] Resuming from verified offset ${offset} / ${file.size}`);
                 toast.info(`Resuming upload from ${(offset / (1024 * 1024)).toFixed(1)} MB`);
               } else {
                 clearResumePointer(filePath);
-                clearSnapshot(filePath);
               }
             }
           } catch (e) {
@@ -776,7 +587,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       });
 
       const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(filePath);
-      toast.success('Upload complete ✓');
+      toast.success('File uploaded successfully!');
       setIsUploading(false);
       return { url: urlData.publicUrl, path: filePath };
     } catch (err: unknown) {
@@ -786,7 +597,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       if (errMsg.includes('413') || errMsg.includes('Maximum size exceeded')) {
         toast.error(`File too large for storage (${(file.size / (1024 * 1024 * 1024)).toFixed(1)} GB). Contact admin to increase the bucket limit.`);
       } else {
-        toast.error(`Upload failed after automatic retries. ${errMsg.substring(0, 140)}`);
+        toast.error(`Upload failed: ${errMsg.substring(0, 100)}`);
       }
       setIsUploading(false);
       return null;
@@ -804,7 +615,6 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       return null;
     }
 
-    cancelledRef.current = false;
     setIsUploading(true);
 
     try {
@@ -818,26 +628,15 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '')
         .slice(0, 60) || 'video';
-      // Videos always use a deterministic path: if the transfer is interrupted
-      // (refresh, tab change, network drop) re-selecting the same file lands on
-      // the same object and continues from the bytes storage already holds.
-      const isVideoBucket = bucket === 'anime-videos' || bucket === 'movies';
-      const useStable = stablePath || isVideoBucket;
-      stableRef.current = useStable;
-      // Storage object keys must stay URL-safe. Preserve the user's complete
-      // original name in TUS metadata instead of putting spaces/brackets and
-      // other display characters into the resumable upload creation request.
-      const legacyStableName = `${slug}-${file.size}-${file.lastModified}${fileExt ? `.${fileExt}` : ''}`;
-      const legacyPath = folder ? `${folder}/${legacyStableName}` : legacyStableName;
-      const fileName = useStable
-        ? legacyStableName
+      const fileName = stablePath
+        ? `${slug}-${file.size}-${file.lastModified}${fileExt ? `.${fileExt}` : ''}`
         : `${Date.now()}-${Math.random().toString(36).substring(2)}${fileExt ? `.${fileExt}` : ''}`;
       let filePath = folder ? `${folder}/${fileName}` : fileName;
 
       // A stable path collides with a completed object from an earlier run.
       // Without a resume pointer that collision makes creation fail instantly,
       // so fall back to a unique path in that case.
-      if (useStable && !readResumePointer(filePath)) {
+      if (stablePath && !readResumePointer(filePath)) {
         const { data: existing } = await supabase.storage
           .from(bucket)
           .list(folder || undefined, { search: fileName, limit: 1 });
@@ -851,8 +650,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
 
       // Videos: use resumable/chunked upload to support large files reliably
       if (bucket === 'anime-videos' || bucket === 'movies') {
-        patchStats({ connection: 'queued' });
-        return await enqueueVideoUpload(() => cancelledRef.current ? Promise.resolve(null) : uploadVideoResumable(file, filePath));
+        return await uploadVideoResumable(file, filePath);
       }
 
       // Images: simple upload is fastest
@@ -889,7 +687,6 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
   };
 
   const abortUpload = useCallback(() => {
-    cancelledRef.current = true;
     if (activeUploadRef.current) {
       try {
         // Preserve resumable server state so cancelling/retrying never deletes
@@ -905,12 +702,11 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
     setUploadProgress(0);
     setDisplayedProgress(0);
     setUploadSpeed(0);
-    patchStats({ connection: 'cancelled' });
     measuredSpeedRef.current = 0;
     endUpload();
 
     toast.info('Upload cancelled');
-  }, [patchStats]);
+  }, []);
 
   return {
     uploadFile,
@@ -921,8 +717,6 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
     formattedSpeed: formatSpeed(uploadSpeed),
     formatSpeed,
     stats,
-    uploadError: lastErrorRef.current ?? stats.error,
-    getUploadError: () => lastErrorRef.current,
     SIZE_LIMITS,
     abortUpload,
   };
