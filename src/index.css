@@ -3370,3 +3370,205 @@ html.perf-low .story-link::after {
     animation: none !important;
   }
 }
+
+/* ==========================================================================
+   LIQUID GLASS v3 — site-wide depth + smoothness pass
+   Deepens the existing glass language (intensity 4/5) on every tab while
+   keeping the dark-purple + red identity, and trims paint cost so mobile
+   still scrolls at 60fps. Purely presentational.
+   ========================================================================== */
+
+:root {
+  --lg3-stroke: rgba(255, 255, 255, 0.14);
+  --lg3-stroke-soft: rgba(255, 255, 255, 0.09);
+  --lg3-sheen: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0.04) 26%,
+    rgba(255, 255, 255, 0) 55%
+  );
+  --lg3-ring: 0 0 0 4px rgba(167, 139, 250, 0.16);
+  --lg3-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ---------- 1. Smoothness foundations ---------- */
+html {
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+}
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
+}
+/* Kill the grey flash / long-press callout on touch UI */
+a, button, [role="button"], [role="tab"], [role="menuitem"], [role="option"] {
+  -webkit-tap-highlight-color: transparent;
+}
+/* Horizontal poster rows: momentum + isolated paint so the rest of the page
+   is not re-rasterised while swiping. */
+.snap-row,
+[class*="overflow-x-auto"] {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  contain: paint;
+}
+/* Tell the compositor what actually moves, and nothing else. */
+.snap-row > * {
+  will-change: auto;
+}
+
+/* ---------- 2. Deeper glass on shared surfaces ---------- */
+.glass-surface,
+.glass-surface-strong,
+.glass-pill {
+  position: relative;
+  isolation: isolate;
+}
+.glass-surface::after,
+.glass-surface-strong::after,
+.glass-pill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--lg3-sheen);
+  opacity: 0.75;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Dialogs / sheets / drawers — the surfaces every tab shares */
+:where([role="dialog"], [role="alertdialog"])[data-state]:not(.video-player *):not([data-no-glass]) {
+  border: 1px solid var(--lg3-stroke) !important;
+  box-shadow:
+    var(--lg-shadow-lg),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+/* Cards gain a hairline specular edge instead of a flat border */
+:where(.bg-card, [class*="bg-card/"]):not(.video-player *):not([data-no-glass]) {
+  border-color: var(--lg3-stroke-soft) !important;
+}
+
+/* Tab bars → one continuous glass rail, active pill floats above it */
+:where([role="tablist"]):not(.video-player *):not([data-no-glass]) {
+  background: rgba(255, 255, 255, 0.045) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(165%);
+  backdrop-filter: blur(16px) saturate(165%);
+  border: 1px solid var(--lg3-stroke-soft) !important;
+  border-radius: 999px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  gap: 2px;
+}
+:where([role="tab"]):not(.video-player *):not([data-no-glass]) {
+  border-radius: 999px !important;
+  transition: background 0.2s var(--lg3-ease), color 0.2s var(--lg3-ease);
+}
+:where([role="tab"][data-state="active"]):not(.video-player *):not([data-no-glass]) {
+  background: rgba(255, 255, 255, 0.11) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 6px 18px -8px rgba(10, 6, 24, 0.7) !important;
+}
+
+/* Toasts / sonner → floating glass slabs */
+:where([data-sonner-toast], [data-radix-toast-root], li[role="status"]):not(.video-player *) {
+  background: var(--lg-fill-strong) !important;
+  -webkit-backdrop-filter: blur(var(--lg-blur-strong)) saturate(175%) !important;
+  backdrop-filter: blur(var(--lg-blur-strong)) saturate(175%) !important;
+  border: 1px solid var(--lg3-stroke) !important;
+  border-radius: 18px !important;
+  box-shadow: var(--lg-shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+}
+
+/* Switches, sliders, progress bars, separators, tables, accordions */
+:where([role="switch"]):not(.video-player *) {
+  border: 1px solid var(--lg3-stroke-soft) !important;
+  box-shadow: inset 0 1px 2px rgba(10, 6, 24, 0.5);
+}
+:where([role="progressbar"]):not(.video-player *) {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-radius: 999px !important;
+  overflow: hidden;
+}
+:where(table thead tr, [role="row"][data-header]):not(.video-player *) {
+  background: rgba(255, 255, 255, 0.04);
+}
+:where(tbody tr):not(.video-player *) {
+  transition: background 0.18s var(--lg3-ease);
+}
+:where(tbody tr:hover):not(.video-player *) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Skeletons shimmer like frosted glass rather than flashing grey */
+:where(.animate-pulse[class*="bg-muted"], [data-skeleton]):not(.video-player *) {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-radius: 14px;
+}
+
+/* ---------- 3. Unified interaction feel (cheap: transform + opacity only) ---------- */
+button:not(.video-player *):not([data-no-glass]),
+a[class*="rounded"]:not(.video-player *):not([data-no-glass]),
+[role="button"]:not(.video-player *):not([data-no-glass]) {
+  transition: transform 0.14s var(--lg3-ease), background-color 0.2s var(--lg3-ease),
+    border-color 0.2s var(--lg3-ease), box-shadow 0.2s var(--lg3-ease), opacity 0.2s var(--lg3-ease);
+}
+button:not(:disabled):not(.video-player *):active,
+[role="button"]:not([aria-disabled="true"]):not(.video-player *):active {
+  transform: scale(0.972);
+}
+button:disabled {
+  opacity: 0.55;
+}
+/* One consistent, visible keyboard focus ring everywhere */
+:where(button, a, input, textarea, select, [role="button"], [role="tab"], [role="switch"], [role="menuitem"]):focus-visible {
+  outline: none;
+  box-shadow: var(--lg3-ring), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ---------- 4. Cost control so the depth stays smooth ---------- */
+/* Phones: fewer blur layers, slightly more opaque fills to compensate. */
+@media (max-width: 767px) {
+  :where([role="tablist"]):not(.video-player *) {
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    backdrop-filter: blur(12px) saturate(150%);
+  }
+  :where(.bg-card, [class*="bg-card/"]):not(.video-player *):not([data-no-glass]) {
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    backdrop-filter: blur(14px) saturate(150%);
+  }
+}
+
+html.perf-medium :where([role="tablist"], [data-sonner-toast]):not(.video-player *) {
+  -webkit-backdrop-filter: blur(10px) saturate(125%) !important;
+  backdrop-filter: blur(10px) saturate(125%) !important;
+}
+
+html.perf-low :where([role="tablist"], [data-sonner-toast], [role="dialog"], .glass-surface, .glass-surface-strong, .glass-pill, .bg-card, [class*="bg-card/"], input, textarea, select):not(.video-player *) {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+html.perf-low :where([role="tablist"]):not(.video-player *) {
+  background: hsl(270 40% 12% / 0.92) !important;
+}
+html.perf-low .glass-surface::after,
+html.perf-low .glass-surface-strong::after,
+html.perf-low .glass-pill::after {
+  display: none;
+}
+html.perf-low button:active,
+html.perf-low [role="button"]:active {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  button:active,
+  [role="button"]:active {
+    transform: none !important;
+  }
+}
