@@ -178,21 +178,52 @@ function ScrollRecoveryInitializer() {
   const location = useLocation();
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const hasActiveOverlay = Boolean(
-        document.querySelector('[role="dialog"][data-state="open"], [data-scroll-lock="active"]')
+    const releaseStuckLocks = () => {
+      const hasVisibleOverlay = Boolean(
+        document.querySelector(
+          '[role="dialog"][data-state="open"], [data-scroll-lock="active"], .app-global-overlay'
+        )
       );
 
-      if (!hasActiveOverlay) {
+      // Release page scroll lock when no overlay is actually on screen.
+      if (!hasVisibleOverlay) {
         document.documentElement.classList.remove('scroll-locked');
         document.body.classList.remove('scroll-locked');
         document.body.style.overflow = '';
         document.documentElement.style.overflow = '';
         document.body.style.position = '';
       }
-    });
 
-    return () => window.cancelAnimationFrame(frame);
+      // Release clone-mode lock if the clone page unmounted without cleanup.
+      if (
+        document.body.classList.contains('clone-mode') &&
+        !document.querySelector('.clone-shell')
+      ) {
+        document.body.classList.remove('clone-mode');
+      }
+    };
+
+    const frame = window.requestAnimationFrame(releaseStuckLocks);
+
+    // Safety net: if a wheel event arrives while scroll is locked but no
+    // overlay is visible, unlock immediately so the mouse wheel always works.
+    const onWheel = () => {
+      if (
+        (document.documentElement.classList.contains('scroll-locked') ||
+          document.body.classList.contains('scroll-locked')) &&
+        !document.querySelector(
+          '[role="dialog"][data-state="open"], [data-scroll-lock="active"], .app-global-overlay'
+        )
+      ) {
+        releaseStuckLocks();
+      }
+    };
+    window.addEventListener('wheel', onWheel, { capture: true, passive: true });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('wheel', onWheel, { capture: true } as EventListenerOptions);
+    };
   }, [location.pathname]);
 
   return null;
