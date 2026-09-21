@@ -184,13 +184,13 @@ export default function Upload() {
   const fetchAnimeData = async () => {
     setIsLoading(true);
     try {
-      // Fetch user's anime if logged in
+      // Uploaders and admins see the full library here; everyone else only their own
       if (user) {
-        const { data, error } = await supabase
-          .from('anime')
-          .select('*')
-          .eq('uploader_id', user.id)
-          .order('created_at', { ascending: false }); // Always show newest first
+        let query = supabase.from('anime').select('*');
+        if (!isUploader && !isAdmin) {
+          query = query.eq('uploader_id', user.id);
+        }
+        const { data, error } = await query.order('created_at', { ascending: false }); // Always show newest first
 
         if (error) {
           console.error('Error fetching my anime:', error);
@@ -199,6 +199,7 @@ export default function Upload() {
           setMyAnime(data);
         }
       }
+
 
       // Fetch all anime for "Existing Upload" option
       const { data: allData, error: allError } = await supabase
