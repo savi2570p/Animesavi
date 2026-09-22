@@ -206,50 +206,79 @@ export function getMobileVideoAttributes(): Record<string, string | boolean> {
 }
 
 /**
- * Gets optimized HLS.js config for the current device/network
+ * Video codecs in order of preference. Modern codecs (AV1 / HEVC) deliver the
+ * same true 4K at a fraction of the bytes; H.264 stays as universal fallback.
+ */
+export function getPreferredVideoCodecs(): string[] {
+  const supports = (mime: string) => {
+    try {
+      const MS: any = (window as any).ManagedMediaSource || (window as any).MediaSource;
+      return !!MS?.isTypeSupported?.(mime);
+    } catch {
+      return false;
+    }
+  };
+  const codecs: string[] = [];
+  if (supports('video/mp4; codecs="av01.0.08M.08"')) codecs.push('av01');
+  if (supports('video/mp4; codecs="hvc1.1.6.L153.B0"') || supports('video/mp4; codecs="hev1.1.6.L153.B0"')) {
+    codecs.push('hvc1', 'hev1');
+  }
+  codecs.push('avc1');
+  return codecs;
+}
+
+/**
+ * Gets data-efficient HLS.js config for the current device/network.
+ * Keeps full 4K renditions available while only fetching segments playback needs.
  */
 export function getHLSConfig() {
-  const { isSlowNetwork, isCellular } = getNetworkInfo();
+  const { isSlowNetwork, isCellular, saveData } = getNetworkInfo() as any;
   const isMobile = isMobileDevice();
-  
+  const slow = isSlowNetwork || saveData;
+
   return {
     enableWorker: true,
-    lowLatencyMode: false, // Disable for better mobile compatibility
-    
-    // Buffer settings - more conservative on mobile
-    maxBufferLength: isMobile ? 15 : 30,
-    maxMaxBufferLength: isMobile ? 60 : 120,
-    maxBufferSize: isMobile ? 60 * 1000 * 1000 : 120 * 1000 * 1000,
+    lowLatencyMode: false, // VoD: avoids partial-segment/duplicate requests
+
+    // Buffer only what playback needs (prevents downloading far-ahead 4K segments)
+    maxBufferLength: slow ? 8 : isMobile ? 10 : 16,
+    maxMaxBufferLength: slow ? 20 : isMobile ? 24 : 40,
+    maxBufferSize: slow ? 16 * 1000 * 1000 : isMobile ? 24 * 1000 * 1000 : 48 * 1000 * 1000,
     maxBufferHole: 0.5,
-    
-    // Start with lower quality for faster startup on mobile
-    startLevel: isMobile || isSlowNetwork ? 0 : -1,
+
+    // Start low for fast first frame; ABR ramps up to 4K
+    startLevel: 0,
     autoStartLoad: true,
-    
-    // ABR (Adaptive Bitrate) settings
-    abrEwmaDefaultEstimate: isSlowNetwork ? 500000 : (isCellular ? 1500000 : 3000000),
-    abrBandWidthFactor: isMobile ? 0.7 : 0.8,
-    abrBandWidthUpFactor: isMobile ? 0.5 : 0.6,
-    
-    // Back buffer for seeking
-    backBufferLength: isMobile ? 15 : 30,
-    
-    // Fragment loading - more tolerant timeouts for mobile
+
+    // ABR tuned to avoid overshoot (overshoot = discarded downloads)
+    abrEwmaDefaultEstimate: slow ? 500000 : (isCellular ? 4000000 : 10000000),
+    abrEwmaFastVoD: 3,
+    abrEwmaSlowVoD: 9,
+    abrBandWidthFactor: isMobile ? 0.8 : 0.9,
+    abrBandWidthUpFactor: isMobile ? 0.6 : 0.75,
+    abrMaxWithRealBitrate: true,
+
+    // Discard already-played data
+    backBufferLength: isMobile ? 10 : 20,
+
+    // 4K segments are large: generous timeouts prevent wasteful re-downloads
     fragLoadingTimeOut: isMobile ? 30000 : 20000,
-    fragLoadingMaxRetry: isMobile ? 8 : 6,
-    fragLoadingRetryDelay: isMobile ? 1500 : 1000,
-    
-    // Level loading
+    fragLoadingMaxRetry: 4,
+    fragLoadingRetryDelay: 600,
+
     levelLoadingTimeOut: isMobile ? 15000 : 10000,
-    levelLoadingMaxRetry: isMobile ? 6 : 4,
-    levelLoadingRetryDelay: isMobile ? 1500 : 1000,
-    
-    // Manifest loading
+    levelLoadingMaxRetry: 4,
+    levelLoadingRetryDelay: 800,
+
     manifestLoadingTimeOut: isMobile ? 15000 : 10000,
-    manifestLoadingMaxRetry: isMobile ? 6 : 4,
-    manifestLoadingRetryDelay: isMobile ? 1500 : 1000,
-    
-    // XHR setup - important for CORS and mobile compatibility
+    manifestLoadingMaxRetry: 3,
+    manifestLoadingRetryDelay: 800,
+
+    progressive: false,
+    capLevelToPlayerSize: false,
+    ignoreDevicePixelRatio: true,
+    videoPreference: { allowedVideoCodecs: getPreferredVideoCodecs() } as any,
+
     xhrSetup: (xhr: XMLHttpRequest) => {
       xhr.withCredentials = false;
     },
