@@ -699,45 +699,67 @@ export function VideoPlayer({
           const isCellular = connection && connection.type === 'cellular';
           
           console.log('Network info:', { isMobile, isSlowNetwork, isCellular, effectiveType: connection?.effectiveType });
-          
+
+          // Codec preference: modern codecs deliver the same 4K at far fewer bytes.
+          // Order = preference; unsupported entries are ignored, so H.264 stays as fallback.
+          const canPlayCodec = (mime: string) => {
+            try {
+              const MS = (window as any).ManagedMediaSource || window.MediaSource;
+              return !!MS?.isTypeSupported?.(mime);
+            } catch { return false; }
+          };
+          const allowedVideoCodecs: string[] = [];
+          if (canPlayCodec('video/mp4; codecs="av01.0.08M.08"')) allowedVideoCodecs.push('av01');
+          if (canPlayCodec('video/mp4; codecs="hvc1.1.6.L153.B0"') || canPlayCodec('video/mp4; codecs="hev1.1.6.L153.B0"')) {
+            allowedVideoCodecs.push('hvc1', 'hev1');
+          }
+          allowedVideoCodecs.push('avc1');
+
           const hls = new Hls({
             enableWorker: true,
-            lowLatencyMode: true,
-            // INSTANT START: ship lowest level first for fast first frame, ABR ramps up in seconds
-            maxBufferLength: 2,
-            maxMaxBufferLength: isMobile ? 60 : 180,
-            maxBufferSize: isMobile ? 60 * 1000 * 1000 : 150 * 1000 * 1000,
+            // VoD content: low-latency mode causes partial-segment requests and duplicate loads
+            lowLatencyMode: false,
+            // DATA SAVING: buffer only what playback actually needs (was 60-180s ahead of 4K)
+            maxBufferLength: isMobile ? 10 : 16,
+            maxMaxBufferLength: isMobile ? 24 : 40,
+            maxBufferSize: isMobile ? 24 * 1000 * 1000 : 48 * 1000 * 1000,
             maxBufferHole: 0.2,
-            // Always start at lowest level — fastest possible first frame, ABR ramps to 4K quickly
+            // Start at lowest level for a fast first frame; ABR ramps to 4K right after
             startLevel: 0,
             autoStartLoad: true,
-            // ABR: prefer the highest sustainable bitrate quickly
+            // ABR: ramp to the highest sustainable bitrate without overshooting
+            // (overshoot = segments downloaded then discarded = wasted data)
             abrEwmaDefaultEstimate: isSlowNetwork ? 500000 : (isCellular ? 4000000 : 12000000),
             abrEwmaFastLive: 1.2,
             abrEwmaSlowLive: 3,
-            abrEwmaFastVoD: 1.2,
-            abrEwmaSlowVoD: 3,
-            abrBandWidthFactor: 0.98,
-            abrBandWidthUpFactor: 0.98,
+            abrEwmaFastVoD: 3,
+            abrEwmaSlowVoD: 9,
+            abrBandWidthFactor: 0.9,
+            abrBandWidthUpFactor: 0.75,
             abrMaxWithRealBitrate: true,
-            backBufferLength: isMobile ? 10 : 30,
-            // Aggressive fragment loading — tighter timeouts, faster retries
-            fragLoadingTimeOut: 4000,
-            fragLoadingMaxRetry: 6,
-            fragLoadingRetryDelay: 80,
-            levelLoadingTimeOut: 2500,
+            // Drop already-played data quickly
+            backBufferLength: isMobile ? 10 : 20,
+            // Fragment loading: 4K segments are large — short timeouts caused
+            // repeated re-downloads of the same segment
+            fragLoadingTimeOut: isMobile ? 30000 : 20000,
+            fragLoadingMaxRetry: 4,
+            fragLoadingRetryDelay: 600,
+            levelLoadingTimeOut: 10000,
             levelLoadingMaxRetry: 4,
-            levelLoadingRetryDelay: 80,
-            manifestLoadingTimeOut: 2500,
+            levelLoadingRetryDelay: 500,
+            manifestLoadingTimeOut: 10000,
             manifestLoadingMaxRetry: 3,
-            manifestLoadingRetryDelay: 60,
+            manifestLoadingRetryDelay: 500,
             xhrSetup: (xhr, url) => {
               xhr.withCredentials = false;
             },
-            progressive: true,
+            // progressive streaming issues extra partial fetches — off avoids duplicates
+            progressive: false,
+            // Keep real 4K available on every device
             capLevelToPlayerSize: false,
+            ignoreDevicePixelRatio: true,
             testBandwidth: false,
-            // Prefetch first fragment for instant playback
+            videoPreference: { allowedVideoCodecs } as any,
             startFragPrefetch: true,
             initialLiveManifestSize: 1,
             nudgeOffset: 0.1,
@@ -2853,7 +2875,7 @@ export function VideoPlayer({
         x5-video-player-fullscreen="true"
         x5-video-orientation="landscape"
         x5-playsinline={isCasting ? "false" : "true"}
-        preload="auto"
+        preload="metadata"
         muted={isMobile && !isCasting}
         controlsList={isCasting ? "nodownload" : "nodownload noremoteplayback"}
         disablePictureInPicture={false}
