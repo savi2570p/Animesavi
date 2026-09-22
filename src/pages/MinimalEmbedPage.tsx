@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ShadowMinimalPlayer } from '@/components/video/ShadowMinimalPlayer';
 import Hls from 'hls.js';
+import { getHLSConfig } from '@/lib/videoUtils';
 import { Play, Pause, Maximize, Minimize, Download, X, List, RotateCcw, RotateCw, Subtitles, Headphones, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { extractEmbedSrc, isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
@@ -219,7 +220,7 @@ export default function MinimalEmbedPage() {
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = videoUrl;
       } else if (Hls.isSupported()) {
-        const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+        const hls = new Hls(getHLSConfig() as any);
         hlsRef.current = hls;
         hls.loadSource(videoUrl);
         hls.attachMedia(video);

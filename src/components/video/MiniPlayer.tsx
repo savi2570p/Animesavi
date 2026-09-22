@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Play, Pause, X, Maximize2, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Hls from 'hls.js';
+import { getHLSConfig } from '@/lib/videoUtils';
 
 export function MiniPlayer() {
   const navigate = useNavigate();
@@ -32,10 +33,9 @@ export function MiniPlayer() {
       }
       
       const hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: false,
-        maxBufferLength: 15,
-        startLevel: 0,
+        ...(getHLSConfig() as any),
+        maxBufferLength: 8,
+        maxMaxBufferLength: 16,
       });
       
       hls.loadSource(video.videoUrl);

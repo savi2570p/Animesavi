@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Play, Pause, RotateCcw, RotateCw, Maximize, Loader2 } from 'lucide-react';
 import { isHlsUrl, detectDeviceKind } from '@/lib/streamSource';
+import { getHLSConfig } from '@/lib/videoUtils';
 
 /**
  * Shadow link v2 minimal player — ONLY: timeline, play/pause, ±10s skip,
@@ -63,7 +64,7 @@ export function ShadowMinimalPlayer({
         const { default: Hls } = await import('hls.js');
         if (cancelled) return;
         if (Hls.isSupported()) {
-          hls = new Hls({ enableWorker: true });
+          hls = new Hls(getHLSConfig() as any);
           hls.loadSource(videoUrl);
           hls.attachMedia(video);
           return;
