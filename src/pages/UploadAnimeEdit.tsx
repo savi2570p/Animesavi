@@ -152,7 +152,7 @@ export default function UploadAnimeEdit() {
 
     // Check ownership or code verification
     const isCodeVerified = sessionStorage.getItem('upload_code_verified') === 'true';
-    if (!isCodeVerified && animeData.uploader_id !== user?.id && !isAdmin) {
+    if (!isCodeVerified && animeData.uploader_id !== user?.id && !isAdmin && !isUploader) {
       toast.error('You do not have permission to edit this anime');
       navigate('/upload');
       return;

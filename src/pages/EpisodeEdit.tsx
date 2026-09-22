@@ -120,7 +120,7 @@ export default function EpisodeEdit() {
     }
 
     // Check permission
-    if (!isAdmin && animeData.uploader_id !== user?.id) {
+    if (!isAdmin && !isUploader && animeData.uploader_id !== user?.id) {
       toast.error('You do not have permission to edit this episode');
       navigate('/');
       return;
