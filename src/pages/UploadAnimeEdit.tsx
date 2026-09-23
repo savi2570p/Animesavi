@@ -418,7 +418,7 @@ export default function UploadAnimeEdit() {
               <h3 className="text-sm font-bold text-foreground">Series Settings</h3>
               <p className="text-xs text-muted-foreground mt-0.5">Status, tab visibility and release calendar</p>
             </div>
-            {(isSavingStatus || isSavingCrunchy || isSavingMuse || isSavingEngDub || isSavingSchedule) && (
+            {(isSavingStatus || isSavingCrunchy || isSavingMuse || isSavingEngDub || isSavingSubOnly || isSavingSchedule) && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
                 Saving…
@@ -559,6 +559,31 @@ export default function UploadAnimeEdit() {
                 <div className="flex-1">
                   <span className="text-sm font-medium block">Add to ENG DUB Tab</span>
                   <span className="text-[10px] text-muted-foreground">Show under the English Dub collection</span>
+                </div>
+              </label>
+
+              <label htmlFor="edit_is_sub_only" className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-muted/30 border border-border/40 hover:border-emerald-400/50 transition-colors">
+                <input
+                  type="checkbox"
+                  id="edit_is_sub_only"
+                  checked={isSubOnly}
+                  onChange={async (e) => {
+                    const val = e.target.checked;
+                    setIsSubOnly(val);
+                    setIsSavingSubOnly(true);
+                    const { error } = await (supabase as any)
+                      .from('anime')
+                      .update({ is_sub_only: val })
+                      .eq('id', animeId);
+                    if (error) { toast.error('Failed to update SUB status'); setIsSubOnly(!val); }
+                    else { toast.success(val ? 'Added to SUB-ONLY tab' : 'Removed from SUB-ONLY tab'); }
+                    setIsSavingSubOnly(false);
+                  }}
+                  className="w-5 h-5 rounded border-border accent-primary"
+                />
+                <div className="flex-1">
+                  <span className="text-sm font-medium block">Add to SUB</span>
+                  <span className="text-[10px] text-muted-foreground">Show under the SUB-ONLY collection with the SUB tag</span>
                 </div>
               </label>
             </div>
