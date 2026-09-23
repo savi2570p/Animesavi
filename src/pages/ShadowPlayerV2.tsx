@@ -60,7 +60,6 @@ export default function ShadowPlayerV2() {
       if (cancelled) return;
       const s = seasonData as ShadowSeason | null;
       setSeason(s);
-      setSelectedSeasonId(s?.id ?? null);
 
       if (s?.anime?.id) {
         const { data: allSeasons } = await supabase
@@ -101,14 +100,10 @@ export default function ShadowPlayerV2() {
         if (data) {
           const next = data as ShadowEpisode;
           setEpisode(next);
-          setServer('XPLUS');
           // Keep the displayed season in sync when jumping across seasons.
           setSeasons((list) => {
             const match = list.find((s) => s.id === next.season_id);
-            if (match) {
-              setSeason(match);
-              setSelectedSeasonId(match.id);
-            }
+            if (match) setSeason(match);
             return list;
           });
         }
