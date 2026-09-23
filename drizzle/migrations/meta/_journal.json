@@ -8,6 +8,13 @@
       "when": 1790051380813,
       "tag": "0000_grant_user_roles_read",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790128477727,
+      "tag": "0001_add_anime_is_sub_only",
+      "breakpoints": true
     }
   ]
 }

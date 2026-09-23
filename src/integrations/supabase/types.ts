@@ -96,6 +96,7 @@ export type Database = {
           is_eng_dub: boolean
           is_featured: boolean | null
           is_muse: boolean
+          is_sub_only: boolean
           like_count: number | null
           release_year: number | null
           schedule_day: number | null
@@ -122,6 +123,7 @@ export type Database = {
           is_eng_dub?: boolean
           is_featured?: boolean | null
           is_muse?: boolean
+          is_sub_only?: boolean
           like_count?: number | null
           release_year?: number | null
           schedule_day?: number | null
@@ -148,6 +150,7 @@ export type Database = {
           is_eng_dub?: boolean
           is_featured?: boolean | null
           is_muse?: boolean
+          is_sub_only?: boolean
           like_count?: number | null
           release_year?: number | null
           schedule_day?: number | null
