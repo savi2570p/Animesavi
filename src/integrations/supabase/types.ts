@@ -1807,7 +1807,9 @@ export type Database = {
           description: string | null
           genres: string[] | null
           id: string | null
+          is_eng_dub: boolean | null
           is_featured: boolean | null
+          is_sub_only: boolean | null
           like_count: number | null
           release_year: number | null
           status: string | null
@@ -1823,7 +1825,9 @@ export type Database = {
           description?: string | null
           genres?: string[] | null
           id?: string | null
+          is_eng_dub?: boolean | null
           is_featured?: boolean | null
+          is_sub_only?: boolean | null
           like_count?: number | null
           release_year?: number | null
           status?: string | null
@@ -1839,7 +1843,9 @@ export type Database = {
           description?: string | null
           genres?: string[] | null
           id?: string | null
+          is_eng_dub?: boolean | null
           is_featured?: boolean | null
+          is_sub_only?: boolean | null
           like_count?: number | null
           release_year?: number | null
           status?: string | null

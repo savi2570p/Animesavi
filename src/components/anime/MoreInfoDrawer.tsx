@@ -51,7 +51,7 @@ export function MoreInfoDrawer({
   totalAvailableEpisodes,
   className,
 }: MoreInfoDrawerProps) {
-  const dub = anime.is_sub_only ? 'Sub only' : anime.is_eng_dub ? 'English Dub' : 'Hindi Dub';
+  const dub = anime.is_sub_only ? 'Japanese' : anime.is_eng_dub ? 'English Dub' : 'Hindi Dub';
   const formatCount = (n: number | null | undefined) => {
     if (!n) return '—';
     if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
