@@ -194,7 +194,7 @@ function TermsOfServiceButton() {
           </div>
 
           <ScrollArea className="max-h-[65vh] px-6 py-5">
-            <div className="space-y-1.5">
+            <div className="space-y-3">
               <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/25">
                 <BookCheck className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
                 <p className="text-sm text-foreground font-medium">
@@ -216,7 +216,7 @@ function TermsOfServiceButton() {
                       {s.body && <p className="text-xs text-muted-foreground leading-relaxed">{s.body}</p>}
                       {s.intro && <p className="text-xs text-muted-foreground leading-relaxed mb-2">{s.intro}</p>}
                       {s.list && (
-                        <ul className="space-y-1.5 mt-1">
+                        <ul className="space-y-2 mt-1">
                           {s.list.map((item) => (
                             <li key={item} className="flex items-start gap-2 text-xs text-muted-foreground">
                               <span className={`shrink-0 mt-1.5 h-1 w-1 rounded-full ${s.tone.replace('text-', 'bg-')}`} />
