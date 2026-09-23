@@ -14,17 +14,38 @@ export interface VersionGroup {
   items: ChangelogItem[];
 }
 
-export const APP_VERSION = 'V32';
-export const RELEASE_DATE = 'September 5, 2026';
-export const DOWNLOAD_SIZE_MB = 10;
+export const APP_VERSION = 'S2-V1';
+export const RELEASE_DATE = 'September 23, 2026';
+export const DOWNLOAD_SIZE_MB = 50;
 
 export const BETA_NOTE =
-  'Shadow link v2 is now running BETA 2 — a minimal, branding-free standalone player with season switching and auto-hiding title overlay.';
+  'Shadow link v2 is now running BETA 2 — a minimal, branding-free standalone player with in-player episode switching and an auto-hiding title overlay.';
 
 export const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'V32',
+    version: 'S2-V1',
     date: RELEASE_DATE,
+    highlight:
+      'Season 2 begins — the fastest AnimeSavi yet. Faster startup on iOS, Android and PC, lighter 4K streaming, a new SUB-ONLY tab and a long list of fixes.',
+    items: [
+      { icon: '🚀', badge: 'IMPROVED', title: 'Much Faster App Startup', desc: 'The first screen now appears far sooner on iOS, Android and PC — background checks, popups and extras load only after the app is on screen.' },
+      { icon: '📦', badge: 'IMPROVED', title: 'Lighter Downloads', desc: 'The app is split into smaller pieces, so each visit downloads less and repeat visits open almost instantly from cache.' },
+      { icon: '🪶', badge: 'IMPROVED', title: 'Smoother Everywhere', desc: 'Home rows, carousels, episode grids and page transitions glide at a steady 60 FPS, with lighter effects on older phones.' },
+      { icon: '📶', badge: 'IMPROVED', title: 'Real 4K, Less Data', desc: 'True 3840×2160 playback keeps its quality while loading only what you are about to watch — faster start, fewer stalls, smaller mobile bills.' },
+      { icon: '🎬', badge: 'IMPROVED', title: 'Faster Player Loading', desc: 'Quicker startup, a smaller loading spinner and a redesigned glassy buffering indicator with smarter stall detection.' },
+      { icon: '🈁', badge: 'NEW', title: 'SUB-ONLY Tab', desc: 'A dedicated SUB-ONLY section on home with its own page — subbed titles now show a single green SUB tag everywhere.' },
+      { icon: '🏷️', badge: 'FIX', title: 'Correct Audio Tags', desc: 'Wrong H-DUB tags no longer appear on SUB and English-dub titles across home, Latest, Browse and detail pages.' },
+      { icon: '🔗', badge: 'IMPROVED', title: 'Shadow Link v2 (BETA 2)', desc: 'Episode switching now lives inside the player, servers are hidden, and the copied link opens the exact same clean player.' },
+      { icon: '⬆️', badge: 'IMPROVED', title: 'Upload Reliability', desc: 'Faster large uploads with resume support, instant button response, and embed links generated automatically in the background.' },
+      { icon: '📺', badge: 'FIX', title: 'Playback Fixes', desc: 'Fixed unplayable files, embed link errors, blocked sources and the occasional "could not be played" message.' },
+      { icon: '🍎', badge: 'FIX', title: 'iOS Polish', desc: 'Correct navbar position, stable safe areas, fixed trending artwork and reliable sheet close buttons.' },
+      { icon: '🔄', badge: 'FIX', title: 'Continue Watching', desc: 'No more old episodes resurfacing — progress auto-advances at 90% and series mark complete after the final episode.' },
+      { icon: '🐞', badge: 'FIX', title: 'General Bug Fixes', desc: 'Dozens of stability, layout and interaction fixes across the whole app.' },
+    ],
+  },
+  {
+    version: 'V32',
+    date: 'September 5, 2026',
     highlight:
       'A major performance and stability update with a smoother 60 FPS experience, Shadow link v2 refinements, and polished player controls.',
     items: [
@@ -37,6 +58,7 @@ export const VERSION_GROUPS: VersionGroup[] = [
       { icon: '🐞', badge: 'FIX', title: 'General Bug Fixes', desc: 'Various stability, layout, and interaction fixes across the app.' },
     ],
   },
+
   {
     version: 'V31',
     date: 'August 23, 2026',

@@ -31,6 +31,8 @@ import { installRoutePrefetch } from "@/lib/routePrefetch";
 import { AntiPiracyShield } from "@/components/security/AntiPiracyShield";
 import { TurnstileGate } from "@/components/security/TurnstileGate";
 import { PinLockGate } from "@/components/security/PinLockGate";
+import { IdleMount } from "@/components/common/IdleMount";
+
 
 // Critical pages loaded eagerly for instant navigation
 import Index from "./pages/Index";
@@ -211,10 +213,8 @@ const App = () => (
               {/* Global overlays/initializers are non-essential: if any of them
                   crash, they disappear silently instead of blanking the app. */}
               <ErrorBoundary silent label="global-overlays">
-                <AntiPiracyShield mode="soft" />
                 <TurnstileGate />
                 <PinLockGate />
-                <BanGuard />
                 <ScrollRecoveryInitializer />
                 <ScrollToTop />
                 {/* Stable top slot: always present so the navbar geometry can
@@ -222,20 +222,28 @@ const App = () => (
                 <div className="app-top-slot">
                   <AccessBanner />
                 </div>
-                <TokenExpiredGlobalPopup />
-                <AdminTrialPopup />
-                <OfflineIndicator />
-                <WelcomePopup />
-                <FloatingTelegramButton />
-                <ReportButton />
-                <MiniPlayer />
-                <PWAInstallPrompt />
-                <NetworkSpeedInitializer />
-                <BackgroundSyncInitializer />
-                <AutoVideoScanInitializer />
-                <TokenAccessSyncInitializer />
-                <RoutePrefetchInitializer />
+                {/* Everything below is non-critical for first paint — it mounts
+                    once the browser goes idle, so the first screen renders
+                    noticeably faster on iOS, Android and desktop. */}
+                <IdleMount>
+                  <AntiPiracyShield mode="soft" />
+                  <BanGuard />
+                  <TokenExpiredGlobalPopup />
+                  <AdminTrialPopup />
+                  <OfflineIndicator />
+                  <WelcomePopup />
+                  <FloatingTelegramButton />
+                  <ReportButton />
+                  <MiniPlayer />
+                  <PWAInstallPrompt />
+                  <NetworkSpeedInitializer />
+                  <BackgroundSyncInitializer />
+                  <AutoVideoScanInitializer />
+                  <TokenAccessSyncInitializer />
+                  <RoutePrefetchInitializer />
+                </IdleMount>
               </ErrorBoundary>
+
               <RouteBoundary>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
