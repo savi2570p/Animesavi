@@ -216,7 +216,7 @@ function TermsOfServiceButton() {
                       {s.body && <p className="text-xs text-muted-foreground leading-relaxed">{s.body}</p>}
                       {s.intro && <p className="text-xs text-muted-foreground leading-relaxed mb-2">{s.intro}</p>}
                       {s.list && (
-                        <ul className="space-y-1.5 mt-1">
+                        <ul className="space-y-2 mt-1">
                           {s.list.map((item) => (
                             <li key={item} className="flex items-start gap-2 text-xs text-muted-foreground">
                               <span className={`shrink-0 mt-1.5 h-1 w-1 rounded-full ${s.tone.replace('text-', 'bg-')}`} />
@@ -250,21 +250,21 @@ function TermsOfServiceButton() {
 export function Footer() {
   return (
     <footer className="border-t border-border/30 bg-card/30 backdrop-blur-sm mt-auto">
-      <div className="container py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="container py-5 md:py-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-5 md:gap-6">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link to="/" className="flex items-center gap-3 mb-4 group">
+            <Link to="/" className="flex items-center gap-2 mb-2 group">
               <img 
                 src={logo} 
                 alt="Anime Savi" 
-                className="h-12 w-12 rounded-xl object-contain transition-transform duration-300 group-hover:scale-110" 
+                className="h-8 w-8 rounded-lg object-contain transition-transform duration-300 group-hover:scale-110" 
               />
-              <span className="text-xl font-heading font-bold anime-gradient-text">
+              <span className="text-base font-heading font-bold anime-gradient-text">
                 Anime Savi
               </span>
             </Link>
-            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+            <p className="text-xs text-muted-foreground mb-3 leading-snug">
               Anime in 4K — official Hindi dubs, same-day drops, zero ads.
             </p>
             <div className="flex items-center gap-2">
@@ -283,8 +283,8 @@ export function Footer() {
 
           {/* Browse */}
           <div>
-            <h3 className="font-heading font-semibold mb-4 text-foreground">Browse</h3>
-            <ul className="space-y-2.5">
+            <h3 className="font-heading font-semibold text-sm mb-2 text-foreground">Browse</h3>
+            <ul className="space-y-1.5">
               {footerLinks.browse.map((link) => (
                 <li key={link.href}>
                   <Link
@@ -300,8 +300,8 @@ export function Footer() {
 
           {/* Genres */}
           <div>
-            <h3 className="font-heading font-semibold mb-4 text-foreground">Genres</h3>
-            <ul className="space-y-2.5">
+            <h3 className="font-heading font-semibold text-sm mb-2 text-foreground">Genres</h3>
+            <ul className="space-y-1.5">
               {footerLinks.genres.map((link) => (
                 <li key={link.href}>
                   <Link
@@ -317,8 +317,8 @@ export function Footer() {
 
           {/* Support */}
           <div>
-            <h3 className="font-heading font-semibold mb-4 text-foreground">Legal & Support</h3>
-            <ul className="space-y-2.5">
+            <h3 className="font-heading font-semibold text-sm mb-2 text-foreground">Legal & Support</h3>
+            <ul className="space-y-1.5">
               {footerLinks.support.map((link) => (
                 <li key={link.label}>
                   {link.external ? (
@@ -350,8 +350,8 @@ export function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="border-t border-border/30 mt-10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground">
+        <div className="border-t border-border/30 mt-4 pt-3 flex flex-col sm:flex-row justify-between items-center gap-2">
+          <p className="text-[11px] text-muted-foreground">
             ©{new Date().getFullYear()} Anime Savi all rights reserved
           </p>
         </div>
