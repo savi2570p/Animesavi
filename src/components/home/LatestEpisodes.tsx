@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Play, ChevronRight, Zap, Clock } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
+import { DubBadge } from '@/components/anime/DubBadge';
 
 interface LatestEpisode {
   id: string;
@@ -24,6 +25,7 @@ interface LatestEpisode {
       type: string | null;
       status: string | null;
       is_eng_dub?: boolean | null;
+      is_sub_only?: boolean | null;
     };
   };
 }
@@ -41,6 +43,7 @@ interface GroupedEpisode {
   latestCreatedAt: string;
   status: string | null;
   isEngDub?: boolean | null;
+  isSubOnly?: boolean | null;
 }
 
 export const LatestEpisodes = memo(function LatestEpisodes() {
@@ -59,7 +62,7 @@ export const LatestEpisodes = memo(function LatestEpisodes() {
           id, title, episode_number, thumbnail, created_at, duration,
           season:season_id (
             season_number,
-            anime:anime_id ( id, title, cover_image, type, status, updated_at, is_eng_dub )
+            anime:anime_id ( id, title, cover_image, type, status, updated_at, is_eng_dub, is_sub_only )
           )
         `)
         .order('created_at', { ascending: false })
@@ -112,6 +115,7 @@ export const LatestEpisodes = memo(function LatestEpisodes() {
           latestCreatedAt: ep.created_at,
           status: ep.season.anime.status,
           isEngDub: (ep.season.anime as any).is_eng_dub ?? false,
+          isSubOnly: (ep.season.anime as any).is_sub_only ?? false,
         });
       }
     }
@@ -269,15 +273,7 @@ export const LatestEpisodes = memo(function LatestEpisodes() {
                       <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
                         4K
                       </span>
-                      {group.isEngDub ? (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow">
-                          E-DUB
-                        </span>
-                      ) : (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/90 text-black shadow">
-                          H-DUB
-                        </span>
-                      )}
+                      <DubBadge isEngDub={group.isEngDub} isSubOnly={group.isSubOnly} />
                     </div>
 
                     {/* Crown */}

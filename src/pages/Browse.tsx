@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { MostPopularSection } from '@/components/browse/MostPopularSection';
 import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
+import { DubBadge } from '@/components/anime/DubBadge';
 
 const ALLOWED_GENRES = ['Action', 'Adventure', 'Animation', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Mysterious', 'Hentai', 'Anime', 'Anime Series', 'Hindi', 'English', 'Tamil', 'Telugu', 'Japanese', 'Crunchyroll', 'Muse India', 'Sony YAY', 'Amazon Prime', 'Netflix', 'Zee 5'] as const;
 const MAX_SEARCH_LENGTH = 100;
@@ -805,7 +806,7 @@ export default function Browse() {
                     {isNew(anime.created_at) && (
                       <div className="badge-glass-new animate-pulse">NEW</div>
                     )}
-                    <div className="badge-glass-hdub">H-DUB</div>
+                    <DubBadge isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} />
                   </div>
 
                   {/* BOTTOM-LEFT: episode count chip */}

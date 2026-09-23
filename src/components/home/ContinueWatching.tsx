@@ -16,6 +16,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
+import { DubBadge } from '@/components/anime/DubBadge';
 
 interface Anime {
   id: string;
@@ -116,11 +117,7 @@ const ContinueWatchingCard = memo(function ContinueWatchingCard({
               <span className="px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-semibold text-white tabular-nums">
                 {Math.round(progressPct)}%
               </span>
-              {(item.anime as Anime & { is_eng_dub?: boolean }).is_eng_dub ? (
-                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-md">E-DUB</span>
-              ) : (
-                <span className="badge-glass-hdub">H-DUB</span>
-              )}
+              <DubBadge isEngDub={(item.anime as any).is_eng_dub} isSubOnly={(item.anime as any).is_sub_only} />
             </div>
           </div>
           <div className="pointer-events-none absolute inset-0 hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -194,7 +191,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       // 1. Resumable rows (in-progress) — keep the existing behaviour.
       const { data, error } = await supabase
         .from('watch_history')
-        .select('id, progress, completed, completed_at, last_position, duration, watched_at, anime:anime_id(id,title,cover_image,status,is_eng_dub), episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
+        .select('id, progress, completed, completed_at, last_position, duration, watched_at, anime:anime_id(id,title,cover_image,status,is_eng_dub,is_sub_only), episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
         .eq('user_id', user.id)
         .or('completed.is.null,completed.eq.false')
         .order('watched_at', { ascending: false })
@@ -280,7 +277,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
 
           const animeMeta = await supabase
             .from('anime')
-            .select('id, title, cover_image, status, is_eng_dub')
+            .select('id, title, cover_image, status, is_eng_dub, is_sub_only')
             .in('id', [...newestPerAnime.keys()]);
           const animeMap = new Map((animeMeta.data ?? []).map((a: any) => [a.id, a]));
 

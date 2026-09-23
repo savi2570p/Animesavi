@@ -36,6 +36,7 @@ import {
   CalendarClock,
   ArrowLeft,
 } from 'lucide-react';
+import { DubBadge } from '@/components/anime/DubBadge';
 
 // Helper to create slug from title
 const createSlug = (title: string): string => {
@@ -181,7 +182,7 @@ export default function AnimeDetail() {
     
     const [animeRes, extrasRes] = await Promise.all([
       supabase.from('anime_public').select('*').eq('id', id).single(),
-      supabase.from('anime').select('studio, total_episodes, is_eng_dub').eq('id', id).maybeSingle(),
+      supabase.from('anime').select('studio, total_episodes, is_eng_dub, is_sub_only').eq('id', id).maybeSingle(),
     ]);
     const animeData = animeRes.data;
     const animeError = animeRes.error;
@@ -197,6 +198,7 @@ export default function AnimeDetail() {
       studio: extrasRes.data?.studio ?? null,
       total_episodes: extrasRes.data?.total_episodes ?? null,
       is_eng_dub: (extrasRes.data as any)?.is_eng_dub ?? false,
+      is_sub_only: (extrasRes.data as any)?.is_sub_only ?? false,
     } as any;
     setAnime(merged);
     // Preload cover and banner for instant display
@@ -645,11 +647,7 @@ export default function AnimeDetail() {
                   {anime.studio}
                 </span>
               )}
-              {(anime as any).is_eng_dub ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-md">E-DUB</span>
-              ) : (
-                <span className="badge-glass-hdub">H-DUB</span>
-              )}
+              <DubBadge size="md" isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} />
             </div>
 
             {/* Description — accent border card */}

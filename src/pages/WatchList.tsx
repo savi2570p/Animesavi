@@ -9,6 +9,7 @@ import {
   Play, Trash2, ListVideo, Search, SortAsc, SortDesc,
   Layers, Sparkles, ArrowRight, Clock,
 } from 'lucide-react';
+import { DubBadge } from '@/components/anime/DubBadge';
 
 interface WatchListItem {
   id: string;
@@ -50,7 +51,7 @@ export default function WatchList() {
           id,
           seasons!episodes_season_id_fkey (
             season_number,
-            anime!seasons_anime_id_fkey ( id, title, cover_image )
+            anime!seasons_anime_id_fkey ( id, title, cover_image, is_eng_dub, is_sub_only )
           )
         )
       `)
@@ -74,6 +75,8 @@ export default function WatchList() {
           animeTitle: anime.title,
           coverImage: anime.cover_image,
           totalSeasons: count || 1,
+          isEngDub: !!anime.is_eng_dub,
+          isSubOnly: !!anime.is_sub_only,
         });
       }
       setItems(Array.from(map.values()));
@@ -221,7 +224,7 @@ export default function WatchList() {
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                      <span className="absolute top-2 right-2 badge-glass-hdub">H-DUB</span>
+                      <span className="absolute top-2 right-2"><DubBadge isEngDub={(item as any).isEngDub} isSubOnly={(item as any).isSubOnly} /></span>
                       <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-background/70 backdrop-blur text-[9px] font-bold uppercase tracking-wider">
                         <Layers className="h-2.5 w-2.5 text-primary" />
                         {item.totalSeasons}S

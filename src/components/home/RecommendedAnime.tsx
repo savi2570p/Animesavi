@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
+import { DubBadge } from '@/components/anime/DubBadge';
 
 interface Anime {
   id: string;
@@ -19,6 +20,7 @@ interface Anime {
   view_count: number | null;
   release_year: number | null;
   is_eng_dub?: boolean | null;
+  is_sub_only?: boolean | null;
 }
 
 type MoodId = 'auto' | 'chill' | 'thrill' | 'feels' | 'epic' | 'funny' | 'dark' | 'wholesome';
@@ -63,9 +65,9 @@ export function RecommendedAnime() {
     if (!list.length) return list;
     try {
       const ids = list.map((a) => a.id);
-      const { data } = await supabase.from('anime').select('id, is_eng_dub').in('id', ids);
-      const map = new Map((data ?? []).map((r: any) => [r.id, !!r.is_eng_dub]));
-      return list.map((a) => ({ ...a, is_eng_dub: map.get(a.id) ?? false }));
+      const { data } = await supabase.from('anime').select('id, is_eng_dub, is_sub_only').in('id', ids);
+      const map = new Map((data ?? []).map((r: any) => [r.id, { eng: !!r.is_eng_dub, sub: !!r.is_sub_only }]));
+      return list.map((a) => ({ ...a, is_eng_dub: map.get(a.id)?.eng ?? false, is_sub_only: map.get(a.id)?.sub ?? false }));
     } catch {
       return list;
     }
@@ -346,15 +348,7 @@ export function RecommendedAnime() {
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
                       4K
                     </span>
-                    {anime.is_eng_dub ? (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/90 text-white shadow backdrop-blur-md">
-                        E-DUB
-                      </span>
-                    ) : (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/90 text-white shadow backdrop-blur-md">
-                        H-DUB
-                      </span>
-                    )}
+                    <DubBadge isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} />
                   </div>
 
                   <div className="pointer-events-none">

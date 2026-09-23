@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, TrendingUp } from 'lucide-react';
+import { DubBadge } from '@/components/anime/DubBadge';
 
 
 interface SuggestionAnime {
@@ -45,7 +46,7 @@ export function SearchSuggestions({ query, isVisible, onSelect, className }: Sea
       setIsLoading(true);
       const { data } = await supabase
         .from('anime')
-        .select('id, title, cover_image, type, genres')
+        .select('id, title, cover_image, type, genres, is_eng_dub, is_sub_only')
         .ilike('title', `%${query.trim()}%`)
         .limit(6);
 
@@ -102,7 +103,7 @@ export function SearchSuggestions({ query, isVisible, onSelect, className }: Sea
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
                   <p className="text-sm font-medium text-foreground line-clamp-1">{anime.title}</p>
-                  <span className="badge-glass-hdub shrink-0">H-DUB</span>
+                  <DubBadge isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} className="shrink-0" />
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   {anime.type && (
