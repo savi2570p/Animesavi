@@ -241,25 +241,32 @@ export function getHLSConfig() {
     lowLatencyMode: false, // VoD: avoids partial-segment/duplicate requests
 
     // Buffer only what playback needs (prevents downloading far-ahead 4K segments)
-    maxBufferLength: slow ? 8 : isMobile ? 10 : 16,
-    maxMaxBufferLength: slow ? 20 : isMobile ? 24 : 40,
-    maxBufferSize: slow ? 16 * 1000 * 1000 : isMobile ? 24 * 1000 * 1000 : 48 * 1000 * 1000,
+    maxBufferLength: slow ? 4 : isMobile ? 6 : 12,
+    maxMaxBufferLength: slow ? 10 : isMobile ? 14 : 30,
+    maxBufferSize: slow ? 8 * 1000 * 1000 : isMobile ? 14 * 1000 * 1000 : 36 * 1000 * 1000,
     maxBufferHole: 0.5,
+    // Never pre-download the next fragment before it is needed
+    startFragPrefetch: false,
+    // Skip the extra bandwidth probe request on startup (faster first frame, less data)
+    testBandwidth: false,
 
     // Start low for fast first frame; ABR ramps up to 4K
     startLevel: 0,
     autoStartLoad: true,
 
     // ABR tuned to avoid overshoot (overshoot = discarded downloads)
-    abrEwmaDefaultEstimate: slow ? 500000 : (isCellular ? 4000000 : 10000000),
+    abrEwmaDefaultEstimate: slow ? 400000 : (isCellular ? 2500000 : 8000000),
     abrEwmaFastVoD: 3,
     abrEwmaSlowVoD: 9,
-    abrBandWidthFactor: isMobile ? 0.8 : 0.9,
-    abrBandWidthUpFactor: isMobile ? 0.6 : 0.75,
+    abrBandWidthFactor: isMobile ? 0.7 : 0.85,
+    abrBandWidthUpFactor: isMobile ? 0.5 : 0.7,
     abrMaxWithRealBitrate: true,
+    maxStarvationDelay: 4,
+    maxLoadingDelay: 4,
 
-    // Discard already-played data
-    backBufferLength: isMobile ? 10 : 20,
+    // Discard already-played data aggressively to cut memory + re-fetch waste
+    backBufferLength: isMobile ? 6 : 15,
+    liveBackBufferLength: 0,
 
     // 4K segments are large: generous timeouts prevent wasteful re-downloads
     fragLoadingTimeOut: isMobile ? 30000 : 20000,
@@ -270,12 +277,13 @@ export function getHLSConfig() {
     levelLoadingMaxRetry: 4,
     levelLoadingRetryDelay: 800,
 
-    manifestLoadingTimeOut: isMobile ? 15000 : 10000,
+    manifestLoadingTimeOut: isMobile ? 12000 : 8000,
     manifestLoadingMaxRetry: 3,
-    manifestLoadingRetryDelay: 800,
+    manifestLoadingRetryDelay: 600,
 
     progressive: false,
     capLevelToPlayerSize: false,
+    capLevelOnFPSDrop: true,
     ignoreDevicePixelRatio: true,
     videoPreference: { allowedVideoCodecs: getPreferredVideoCodecs() } as any,
 
