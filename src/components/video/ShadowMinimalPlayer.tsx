@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Play, Pause, RotateCcw, RotateCw, Maximize, Loader2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, RotateCw, Maximize, Loader2, List } from 'lucide-react';
 import { isHlsUrl, detectDeviceKind } from '@/lib/streamSource';
 import { getHLSConfig } from '@/lib/videoUtils';
 
@@ -16,6 +16,9 @@ interface ShadowMinimalPlayerProps {
   overlayTitle?: string;
   overlaySeason?: number;
   overlayEpisode?: number;
+  /** In-player episode picker (rendered inside the player, never outside). */
+  episodes?: Array<{ key: string; number: number; seasonNumber?: number; active?: boolean }>;
+  onSelectEpisode?: (key: string) => void;
 }
 
 function formatTime(t: number): string {
@@ -35,6 +38,8 @@ export function ShadowMinimalPlayer({
   overlayTitle,
   overlaySeason,
   overlayEpisode,
+  episodes,
+  onSelectEpisode,
 }: ShadowMinimalPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -46,6 +51,22 @@ export function ShadowMinimalPlayer({
   const [buffering, setBuffering] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [showEps, setShowEps] = useState(false);
+
+  const hasEpisodes = !!episodes && episodes.length > 1 && !!onSelectEpisode;
+  const epSeasons = Array.from(new Set((episodes || []).map((e) => e.seasonNumber ?? 1))).sort((a, b) => a - b);
+  const activeSeason = episodes?.find((e) => e.active)?.seasonNumber ?? epSeasons[0] ?? 1;
+  const [epsSeason, setEpsSeason] = useState<number>(activeSeason);
+  const panelEpisodes = (episodes || []).filter((e) => (e.seasonNumber ?? 1) === epsSeason);
+
+  const toggleEps = useCallback(() => {
+    setShowEps((v) => {
+      if (!v) setEpsSeason(activeSeason);
+      return !v;
+    });
+    pokeControls();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSeason]);
 
   // ── Source wiring (HLS via hls.js where needed, native otherwise) ──
   useEffect(() => {
@@ -132,6 +153,37 @@ export function ShadowMinimalPlayer({
     setCurrentTime(value);
   }, []);
 
+  const episodePanel = hasEpisodes && showEps ? (
+    <div className="absolute right-2 bottom-12 z-30 w-52 sm:w-60 max-h-[75%] flex flex-col rounded-xl border border-white/10 bg-black/85 backdrop-blur-xl overflow-hidden shadow-2xl">
+      {epSeasons.length > 1 && (
+        <div className="flex items-center gap-1 px-2 pt-2 pb-1.5 overflow-x-auto">
+          {epSeasons.map((sn) => (
+            <button
+              key={sn}
+              onClick={() => setEpsSeason(sn)}
+              data-active={sn === epsSeason}
+              className="shrink-0 px-2 py-1 rounded-md text-[10px] font-semibold text-white/60 hover:text-white data-[active=true]:bg-white data-[active=true]:text-black transition-colors"
+            >
+              S{sn}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="overflow-y-auto p-2 grid grid-cols-5 gap-1.5">
+        {panelEpisodes.map((e) => (
+          <button
+            key={e.key}
+            onClick={() => { onSelectEpisode?.(e.key); setShowEps(false); }}
+            data-active={!!e.active}
+            className="py-1.5 rounded-md text-[11px] font-semibold bg-white/5 text-white/70 border border-white/10 hover:text-white data-[active=true]:bg-white data-[active=true]:text-black data-[active=true]:border-white transition-colors"
+          >
+            {e.number}
+          </button>
+        ))}
+      </div>
+    </div>
+  ) : null;
+
   if (!videoUrl && embedUrl) {
     return (
       <div className="relative w-full aspect-video bg-black">
@@ -142,6 +194,17 @@ export function ShadowMinimalPlayer({
           allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
           title="Video player"
         />
+        {hasEpisodes && (
+          <button
+            onClick={toggleEps}
+            aria-label="Episodes"
+            className="absolute top-2 right-2 z-30 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-black/60 border border-white/15 text-[10px] text-white/85 hover:text-white backdrop-blur-md"
+          >
+            <List className="h-3 w-3" />
+            Episodes
+          </button>
+        )}
+        {episodePanel}
       </div>
     );
   }
@@ -204,7 +267,7 @@ export function ShadowMinimalPlayer({
       {/* Failure state */}
       {failed && (
         <div className="absolute inset-0 grid place-items-center bg-black/80">
-          <p className="text-sm text-white/70">This source can't play here — try another server.</p>
+          <p className="text-sm text-white/70">This source can't play here.</p>
         </div>
       )}
 
@@ -255,11 +318,22 @@ export function ShadowMinimalPlayer({
             {formatTime(currentTime)} / {formatTime(duration)}
           </span>
           <div className="flex-1" />
+          {hasEpisodes && (
+            <button
+              onClick={toggleEps}
+              aria-label="Episodes"
+              aria-expanded={showEps}
+              className={`p-1 transition-colors ${showEps ? 'text-white' : 'text-white/85 hover:text-white'}`}
+            >
+              <List className="h-3.5 w-3.5" />
+            </button>
+          )}
           <button onClick={toggleFullscreen} aria-label="Fullscreen" className="p-1 text-white">
             <Maximize className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
+      {episodePanel}
     </div>
   );
 }

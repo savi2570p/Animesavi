@@ -2,15 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { ShadowMinimalPlayer } from '@/components/video/ShadowMinimalPlayer';
-import { Loader2, ChevronDown } from 'lucide-react';
-import type { ServerType } from '@/hooks/useServerAutoSelect';
+import { Loader2 } from 'lucide-react';
 import { isHlsUrl, isDashUrl, isMp4LikeUrl, isMkvUrl } from '@/lib/streamSource';
 
 /**
  * Shadow link v2 (BETA 2) — a standalone, branding-free watch page.
  *
- * Minimal player (timeline, play/pause, ±10s, fullscreen only), Embed server
- * listed first, Seasons dropdown + always-visible episode grid.
+ * Minimal player (timeline, play/pause, ±10s, fullscreen only). No server
+ * switcher — episodes are picked from inside the player itself.
  */
 
 interface ShadowEpisode {
@@ -29,21 +28,13 @@ interface ShadowSeason {
   anime: { id: string; title: string; cover_image: string | null } | null;
 }
 
-// Neutral server label — Server 1 only on shadow links.
-const SHADOW_SERVERS: { id: ServerType; label: string }[] = [
-  { id: 'XPLUS', label: 'Server 1' },
-];
-
 export default function ShadowPlayerV2() {
   const { episodeId } = useParams<{ episodeId: string }>();
   const [episode, setEpisode] = useState<ShadowEpisode | null>(null);
   const [season, setSeason] = useState<ShadowSeason | null>(null);
   const [seasons, setSeasons] = useState<ShadowSeason[]>([]);
   const [episodes, setEpisodes] = useState<ShadowEpisode[]>([]);
-  const [server, setServer] = useState<ServerType>('XPLUS');
   const [loading, setLoading] = useState(true);
-  const [seasonOpen, setSeasonOpen] = useState(false);
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,7 +51,6 @@ export default function ShadowPlayerV2() {
         return;
       }
       setEpisode(ep as ShadowEpisode);
-      setServer('XPLUS');
 
       const { data: seasonData } = await supabase
         .from('seasons')
@@ -70,7 +60,6 @@ export default function ShadowPlayerV2() {
       if (cancelled) return;
       const s = seasonData as ShadowSeason | null;
       setSeason(s);
-      setSelectedSeasonId(s?.id ?? null);
 
       if (s?.anime?.id) {
         const { data: allSeasons } = await supabase
@@ -111,14 +100,10 @@ export default function ShadowPlayerV2() {
         if (data) {
           const next = data as ShadowEpisode;
           setEpisode(next);
-          setServer('XPLUS');
           // Keep the displayed season in sync when jumping across seasons.
           setSeasons((list) => {
             const match = list.find((s) => s.id === next.season_id);
-            if (match) {
-              setSeason(match);
-              setSelectedSeasonId(match.id);
-            }
+            if (match) setSeason(match);
             return list;
           });
         }
@@ -126,7 +111,6 @@ export default function ShadowPlayerV2() {
   }, [episode?.id]);
 
   const animeTitle = season?.anime?.title || '';
-  const selectedSeason = seasons.find((s) => s.id === selectedSeasonId) || season;
   const currentSeasonNumber =
     seasons.find((s) => s.id === episode?.season_id)?.season_number ??
     season?.season_number ??
@@ -142,10 +126,22 @@ export default function ShadowPlayerV2() {
       !!episode?.video_url);
   const playerVideoUrl = isDirectMedia ? rawSource : null;
   const playerEmbedUrl = isDirectMedia ? null : rawSource;
-  const visibleEpisodes = useMemo(
-    () => episodes.filter((e) => e.season_id === (selectedSeason?.id || episode?.season_id)),
-    [episodes, selectedSeason, episode],
-  );
+  // Flat episode list for the in-player picker, tagged with season numbers.
+  const seasonNumberById = useMemo(() => {
+    const m = new Map<string, number>();
+    seasons.forEach((s) => m.set(s.id, s.season_number));
+    return m;
+  }, [seasons]);
+  const pickerEpisodes = useMemo(
+    () =>
+      episodes.map((e) => ({
+        key: e.id,
+        number: e.episode_number,
+        seasonNumber: seasonNumberById.get(e.season_id) ?? season?.season_number ?? 1,
+        active: e.id === episode?.id,
+      })),
+    [episodes, seasonNumberById, season, episode],
+  ).sort((a, b) => a.seasonNumber - b.seasonNumber || a.number - b.number);
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -169,80 +165,20 @@ export default function ShadowPlayerV2() {
                 overlayTitle={animeTitle || episode.title}
                 overlaySeason={currentSeasonNumber}
                 overlayEpisode={episode.episode_number}
+                episodes={pickerEpisodes}
+                onSelectEpisode={switchEpisode}
               />
             </div>
 
-            {/* Server switcher — Embed first */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {SHADOW_SERVERS.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setServer(s.id)}
-                  data-active={server === s.id}
-                  className="px-3.5 py-1.5 rounded-full text-xs font-medium bg-neutral-900 text-white/70 border border-white/10 transition-colors hover:text-white data-[active=true]:bg-white data-[active=true]:text-black data-[active=true]:border-white"
-                >
-                  {s.label}
-                </button>
-              ))}
+            {/* Title row — episode switching lives inside the player */}
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-semibold truncate">
+                {animeTitle || episode.title}
+              </h1>
+              <p className="text-xs text-white/50">
+                Season {currentSeasonNumber} · Episode {episode.episode_number}
+              </p>
             </div>
-
-            {/* Title row + Seasons dropdown */}
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <h1 className="text-base sm:text-lg font-semibold truncate">
-                  {animeTitle || episode.title}
-                </h1>
-                <p className="text-xs text-white/50">
-                  Season {currentSeasonNumber} · Episode {episode.episode_number}
-                </p>
-              </div>
-              {seasons.length > 0 && (
-                <div className="relative shrink-0">
-                  <button
-                    onClick={() => setSeasonOpen((o) => !o)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-900 border border-white/10 text-xs text-white/80 hover:text-white transition-colors"
-                  >
-                    Season {selectedSeason?.season_number ?? season?.season_number ?? 1}
-                    <ChevronDown
-                      className={`h-3.5 w-3.5 transition-transform ${seasonOpen ? 'rotate-180' : ''}`}
-                    />
-                  </button>
-                  {seasonOpen && (
-                    <div className="absolute right-0 top-full mt-1.5 z-20 min-w-[120px] rounded-xl bg-neutral-900 border border-white/10 py-1 shadow-xl">
-                      {seasons.map((s) => (
-                        <button
-                          key={s.id}
-                          onClick={() => {
-                            setSelectedSeasonId(s.id);
-                            setSeasonOpen(false);
-                          }}
-                          data-active={s.id === selectedSeason?.id}
-                          className="w-full text-left px-3.5 py-2 text-xs text-white/70 hover:bg-white/5 hover:text-white transition-colors data-[active=true]:text-white data-[active=true]:font-semibold"
-                        >
-                          Season {s.season_number}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Episodes — always visible for the selected season */}
-            {visibleEpisodes.length > 0 && (
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-1.5">
-                {visibleEpisodes.map((e) => (
-                  <button
-                    key={e.id}
-                    onClick={() => switchEpisode(e.id)}
-                    data-active={e.id === episode.id}
-                    className="py-2 rounded-lg text-xs font-semibold bg-neutral-900 text-white/70 border border-white/10 transition-colors hover:text-white data-[active=true]:bg-white data-[active=true]:text-black data-[active=true]:border-white"
-                  >
-                    {e.episode_number}
-                  </button>
-                ))}
-              </div>
-            )}
           </>
         )}
       </div>
