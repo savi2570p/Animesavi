@@ -2,15 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { ShadowMinimalPlayer } from '@/components/video/ShadowMinimalPlayer';
-import { Loader2, ChevronDown } from 'lucide-react';
-import type { ServerType } from '@/hooks/useServerAutoSelect';
+import { Loader2 } from 'lucide-react';
 import { isHlsUrl, isDashUrl, isMp4LikeUrl, isMkvUrl } from '@/lib/streamSource';
 
 /**
  * Shadow link v2 (BETA 2) — a standalone, branding-free watch page.
  *
- * Minimal player (timeline, play/pause, ±10s, fullscreen only), Embed server
- * listed first, Seasons dropdown + always-visible episode grid.
+ * Minimal player (timeline, play/pause, ±10s, fullscreen only). No server
+ * switcher — episodes are picked from inside the player itself.
  */
 
 interface ShadowEpisode {
@@ -28,11 +27,6 @@ interface ShadowSeason {
   season_number: number;
   anime: { id: string; title: string; cover_image: string | null } | null;
 }
-
-// Neutral server label — Server 1 only on shadow links.
-const SHADOW_SERVERS: { id: ServerType; label: string }[] = [
-  { id: 'XPLUS', label: 'Server 1' },
-];
 
 export default function ShadowPlayerV2() {
   const { episodeId } = useParams<{ episodeId: string }>();
