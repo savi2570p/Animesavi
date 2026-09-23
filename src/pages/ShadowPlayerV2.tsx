@@ -111,7 +111,6 @@ export default function ShadowPlayerV2() {
   }, [episode?.id]);
 
   const animeTitle = season?.anime?.title || '';
-  const selectedSeason = seasons.find((s) => s.id === selectedSeasonId) || season;
   const currentSeasonNumber =
     seasons.find((s) => s.id === episode?.season_id)?.season_number ??
     season?.season_number ??
@@ -127,9 +126,21 @@ export default function ShadowPlayerV2() {
       !!episode?.video_url);
   const playerVideoUrl = isDirectMedia ? rawSource : null;
   const playerEmbedUrl = isDirectMedia ? null : rawSource;
-  const visibleEpisodes = useMemo(
-    () => episodes.filter((e) => e.season_id === (selectedSeason?.id || episode?.season_id)),
-    [episodes, selectedSeason, episode],
+  // Flat episode list for the in-player picker, tagged with season numbers.
+  const seasonNumberById = useMemo(() => {
+    const m = new Map<string, number>();
+    seasons.forEach((s) => m.set(s.id, s.season_number));
+    return m;
+  }, [seasons]);
+  const pickerEpisodes = useMemo(
+    () =>
+      episodes.map((e) => ({
+        key: e.id,
+        number: e.episode_number,
+        seasonNumber: seasonNumberById.get(e.season_id) ?? season?.season_number ?? 1,
+        active: e.id === episode?.id,
+      })),
+    [episodes, seasonNumberById, season, episode],
   );
 
   return (
