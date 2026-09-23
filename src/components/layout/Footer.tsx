@@ -250,21 +250,21 @@ function TermsOfServiceButton() {
 export function Footer() {
   return (
     <footer className="border-t border-border/30 bg-card/30 backdrop-blur-sm mt-auto">
-      <div className="container py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="container py-5 md:py-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-5 md:gap-6">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link to="/" className="flex items-center gap-3 mb-4 group">
+            <Link to="/" className="flex items-center gap-2 mb-2 group">
               <img 
                 src={logo} 
                 alt="Anime Savi" 
-                className="h-12 w-12 rounded-xl object-contain transition-transform duration-300 group-hover:scale-110" 
+                className="h-8 w-8 rounded-lg object-contain transition-transform duration-300 group-hover:scale-110" 
               />
-              <span className="text-xl font-heading font-bold anime-gradient-text">
+              <span className="text-base font-heading font-bold anime-gradient-text">
                 Anime Savi
               </span>
             </Link>
-            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+            <p className="text-xs text-muted-foreground mb-3 leading-snug">
               Anime in 4K — official Hindi dubs, same-day drops, zero ads.
             </p>
             <div className="flex items-center gap-2">
@@ -350,11 +350,10 @@ export function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="border-t border-border/30 mt-10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground">
+        <div className="border-t border-border/30 mt-4 pt-3 flex flex-col sm:flex-row justify-between items-center gap-2">
+          <p className="text-[11px] text-muted-foreground">
             ©{new Date().getFullYear()} Anime Savi all rights reserved
           </p>
-        </div>
       </div>
     </footer>
   );
