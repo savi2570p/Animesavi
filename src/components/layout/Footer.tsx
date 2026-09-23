@@ -194,7 +194,7 @@ function TermsOfServiceButton() {
           </div>
 
           <ScrollArea className="max-h-[65vh] px-6 py-5">
-            <div className="space-y-3">
+            <div className="space-y-1.5">
               <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/25">
                 <BookCheck className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
                 <p className="text-sm text-foreground font-medium">
@@ -283,7 +283,7 @@ export function Footer() {
 
           {/* Browse */}
           <div>
-            <h3 className="font-heading font-semibold mb-4 text-foreground">Browse</h3>
+            <h3 className="font-heading font-semibold text-sm mb-2 text-foreground">Browse</h3>
             <ul className="space-y-2.5">
               {footerLinks.browse.map((link) => (
                 <li key={link.href}>
@@ -300,7 +300,7 @@ export function Footer() {
 
           {/* Genres */}
           <div>
-            <h3 className="font-heading font-semibold mb-4 text-foreground">Genres</h3>
+            <h3 className="font-heading font-semibold text-sm mb-2 text-foreground">Genres</h3>
             <ul className="space-y-2.5">
               {footerLinks.genres.map((link) => (
                 <li key={link.href}>
@@ -317,7 +317,7 @@ export function Footer() {
 
           {/* Support */}
           <div>
-            <h3 className="font-heading font-semibold mb-4 text-foreground">Legal & Support</h3>
+            <h3 className="font-heading font-semibold text-sm mb-2 text-foreground">Legal & Support</h3>
             <ul className="space-y-2.5">
               {footerLinks.support.map((link) => (
                 <li key={link.label}>
