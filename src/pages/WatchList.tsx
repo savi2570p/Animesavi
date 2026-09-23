@@ -19,6 +19,8 @@ interface WatchListItem {
   animeTitle?: string;
   coverImage?: string | null;
   totalSeasons?: number;
+  isEngDub?: boolean;
+  isSubOnly?: boolean;
 }
 
 type SortMode = 'recent' | 'oldest' | 'title';

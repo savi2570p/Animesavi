@@ -39,6 +39,8 @@ interface GroupedEpisode {
   latestEpisodeId: string;
   latestCreatedAt: string;
   status: string | null;
+  isEngDub?: boolean | null;
+  isSubOnly?: boolean | null;
 }
 
 export default function LatestEpisodesPage() {
