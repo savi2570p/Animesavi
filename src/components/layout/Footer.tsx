@@ -354,6 +354,7 @@ export function Footer() {
           <p className="text-[11px] text-muted-foreground">
             ©{new Date().getFullYear()} Anime Savi all rights reserved
           </p>
+        </div>
       </div>
     </footer>
   );
