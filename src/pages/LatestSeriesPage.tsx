@@ -6,6 +6,7 @@ import { Tv, Play, CalendarClock, Sparkles, Film, Flame } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
 import { SeeAllHeader } from '@/components/layout/SeeAllHeader';
+import { DubBadge } from '@/components/anime/DubBadge';
 
 interface AnimeSeries {
   id: string;
@@ -30,7 +31,7 @@ export default function LatestSeriesPage() {
     try {
       const { data: animeData, error: animeError } = await supabase
         .from('anime')
-        .select('id, title, cover_image, created_at, updated_at, type, status')
+        .select('id, title, cover_image, created_at, updated_at, type, status, is_eng_dub, is_sub_only')
         .eq('type', 'series')
         .order('updated_at', { ascending: false })
         .limit(500);
@@ -220,9 +221,7 @@ export default function LatestSeriesPage() {
                           NEW
                         </div>
                       )}
-                      <div className="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-lg shadow-md">
-                        H-DUB
-                      </div>
+                      <DubBadge isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} />
                     </div>
 
                     {getStatusBadge(anime)}

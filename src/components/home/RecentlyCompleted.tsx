@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CheckCircle, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DubBadge } from '@/components/anime/DubBadge';
 
 interface CompletedAnime {
   id: string;
@@ -12,6 +13,7 @@ interface CompletedAnime {
   cover_image: string | null;
   watched_at: string;
   is_eng_dub?: boolean | null;
+  is_sub_only?: boolean | null;
 }
 
 export function RecentlyCompleted() {
@@ -48,7 +50,8 @@ export function RecentlyCompleted() {
           id,
           title,
           cover_image,
-          is_eng_dub
+          is_eng_dub,
+          is_sub_only
         )
       `)
       .eq('user_id', user.id)
@@ -131,6 +134,7 @@ export function RecentlyCompleted() {
             cover_image: data.anime.cover_image,
             watched_at: data.latestWatch,
             is_eng_dub: data.anime.is_eng_dub ?? false,
+            is_sub_only: (data.anime as any).is_sub_only ?? false,
           });
         }
       }
@@ -209,9 +213,7 @@ export function RecentlyCompleted() {
                   </div>
 
                   {/* Dub badge */}
-                  <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded text-[10px] font-bold text-white shadow backdrop-blur-md ${anime.is_eng_dub ? 'bg-emerald-500/90' : 'bg-amber-500/90'}`}>
-                    {anime.is_eng_dub ? 'E-DUB' : 'H-DUB'}
-                  </div>
+                  <div className="absolute top-2 right-2"><DubBadge isEngDub={anime.is_eng_dub} isSubOnly={anime.is_sub_only} /></div>
 
                   {/* Bottom gradient overlay always subtle, intensifies on hover */}
                   <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/85 via-black/30 to-transparent opacity-70 group-hover:opacity-100 transition-opacity" />

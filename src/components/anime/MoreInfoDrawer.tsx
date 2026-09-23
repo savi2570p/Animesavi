@@ -14,6 +14,7 @@ import {
   Tv,
 } from 'lucide-react';
 import { getViewCount, formatViews, getLikeCount, formatLikes } from '@/lib/viewCount';
+import { DubBadge } from '@/components/anime/DubBadge';
 
 interface MoreInfoAnime {
   id: string;
@@ -30,6 +31,7 @@ interface MoreInfoAnime {
   studio?: string | null;
   total_episodes?: number | null;
   is_eng_dub?: boolean | null;
+  is_sub_only?: boolean | null;
 }
 
 interface MoreInfoDrawerProps {
@@ -49,7 +51,7 @@ export function MoreInfoDrawer({
   totalAvailableEpisodes,
   className,
 }: MoreInfoDrawerProps) {
-  const dub = anime.is_eng_dub ? 'English Dub' : 'Hindi Dub';
+  const dub = anime.is_sub_only ? 'Sub only' : anime.is_eng_dub ? 'English Dub' : 'Hindi Dub';
   const formatCount = (n: number | null | undefined) => {
     if (!n) return '—';
     if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -140,15 +142,7 @@ export function MoreInfoDrawer({
                       {anime.status}
                     </span>
                   )}
-                  <span
-                    className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                      anime.is_eng_dub
-                        ? 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white'
-                        : 'bg-amber-500/15 border border-amber-400/30 text-amber-300'
-                    }`}
-                  >
-                    {anime.is_eng_dub ? 'E-DUB' : 'H-DUB'}
-                  </span>
+                  <DubBadge size="md" isEngDub={anime.is_eng_dub} isSubOnly={anime.is_sub_only} />
                 </div>
               </div>
             </div>

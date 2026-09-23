@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tv, ChevronRight, Play, CalendarClock, Flame } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
+import { DubBadge } from '@/components/anime/DubBadge';
 
 interface AnimeSeries {
   id: string;
@@ -17,6 +18,7 @@ interface AnimeSeries {
   status: string | null;
   latest_episode_date: string | null;
   is_eng_dub?: boolean | null;
+  is_sub_only?: boolean | null;
 }
 
 export const LatestSeries = memo(function LatestSeries() {
@@ -71,7 +73,7 @@ export const LatestSeries = memo(function LatestSeries() {
 
       const { data: animeData, error: animeError } = await supabase
         .from('anime')
-        .select(`id, title, cover_image, created_at, updated_at, type, status, is_eng_dub`)
+        .select(`id, title, cover_image, created_at, updated_at, type, status, is_eng_dub, is_sub_only`)
         .in('id', candidateIds)
         .eq('type', 'series');
 
@@ -259,11 +261,7 @@ export const LatestSeries = memo(function LatestSeries() {
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
                       4K
                     </span>
-                    {anime.is_eng_dub ? (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow">E-DUB</span>
-                    ) : (
-                      <span className="badge-glass-hdub">H-DUB</span>
-                    )}
+                    <DubBadge isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} />
                   </div>
 
                   {/* Top-left status */}

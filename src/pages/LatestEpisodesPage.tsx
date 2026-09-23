@@ -6,6 +6,7 @@ import { Play, Tv, Sparkles, Layers } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
 import { SeeAllHeader } from '@/components/layout/SeeAllHeader';
+import { DubBadge } from '@/components/anime/DubBadge';
 
 interface LatestEpisode {
   id: string;
@@ -38,6 +39,8 @@ interface GroupedEpisode {
   latestEpisodeId: string;
   latestCreatedAt: string;
   status: string | null;
+  isEngDub?: boolean | null;
+  isSubOnly?: boolean | null;
 }
 
 export default function LatestEpisodesPage() {
@@ -67,7 +70,9 @@ export default function LatestEpisodesPage() {
               cover_image,
               type,
               status,
-              updated_at
+              updated_at,
+              is_eng_dub,
+              is_sub_only
             )
           )
         `)
@@ -120,6 +125,8 @@ export default function LatestEpisodesPage() {
           latestEpisodeId: ep.id,
           latestCreatedAt: ep.created_at,
           status: ep.season.anime.status,
+          isEngDub: (ep.season.anime as any).is_eng_dub ?? false,
+          isSubOnly: (ep.season.anime as any).is_sub_only ?? false,
         });
       }
     }
@@ -232,9 +239,7 @@ export default function LatestEpisodesPage() {
                             NEW
                           </div>
                         )}
-                        <div className="px-2 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-lg shadow-md">
-                          H-DUB
-                        </div>
+                        <DubBadge isEngDub={(group as any).isEngDub} isSubOnly={(group as any).isSubOnly} />
                       </div>
 
                       <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent">

@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { DubBadge } from '@/components/anime/DubBadge';
 
 interface PopularAnime {
   id: string;
@@ -56,7 +57,7 @@ export const MostPopular = memo(function MostPopular() {
 
   const fetchPopularAnime = async () => {
     try {
-      const COLS = 'id, title, cover_image, view_count, status, genres';
+      const COLS = 'id, title, cover_image, view_count, status, genres, is_eng_dub, is_sub_only';
       // Pull the all-time leaders AND the newest additions so freshly added
       // anime (which still have 0 DB views) can enter the popular row too.
       const [topRes, newRes] = await Promise.all([
@@ -259,7 +260,7 @@ export const MostPopular = memo(function MostPopular() {
                               {formatViews(anime.view_count)}
                             </span>
                           )}
-                          <span className="badge-glass-hdub">H-DUB</span>
+                          <DubBadge isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} />
                         </div>
                       </div>
                     </div>

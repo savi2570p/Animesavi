@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Film, Clapperboard, Play, ChevronRight, CalendarClock, Star } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
+import { DubBadge } from '@/components/anime/DubBadge';
 
 interface Movie {
   id: string;
@@ -18,6 +19,7 @@ interface Movie {
   view_count: number | null;
   status: string | null;
   is_eng_dub?: boolean | null;
+  is_sub_only?: boolean | null;
   firstEpisodeId?: string | null;
 }
 
@@ -175,11 +177,7 @@ export const LatestMovies = memo(function LatestMovies() {
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
                       4K
                     </span>
-                    {movie.is_eng_dub ? (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow">E-DUB</span>
-                    ) : (
-                      <span className="badge-glass-hdub">H-DUB</span>
-                    )}
+                    <DubBadge isEngDub={(movie as any).is_eng_dub} isSubOnly={(movie as any).is_sub_only} />
 
                   </div>
 
