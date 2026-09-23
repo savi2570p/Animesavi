@@ -141,7 +141,7 @@ export default function ShadowPlayerV2() {
         active: e.id === episode?.id,
       })),
     [episodes, seasonNumberById, season, episode],
-  );
+  ).sort((a, b) => a.seasonNumber - b.seasonNumber || a.number - b.number);
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -165,80 +165,20 @@ export default function ShadowPlayerV2() {
                 overlayTitle={animeTitle || episode.title}
                 overlaySeason={currentSeasonNumber}
                 overlayEpisode={episode.episode_number}
+                episodes={pickerEpisodes}
+                onSelectEpisode={switchEpisode}
               />
             </div>
 
-            {/* Server switcher — Embed first */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {SHADOW_SERVERS.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setServer(s.id)}
-                  data-active={server === s.id}
-                  className="px-3.5 py-1.5 rounded-full text-xs font-medium bg-neutral-900 text-white/70 border border-white/10 transition-colors hover:text-white data-[active=true]:bg-white data-[active=true]:text-black data-[active=true]:border-white"
-                >
-                  {s.label}
-                </button>
-              ))}
+            {/* Title row — episode switching lives inside the player */}
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-semibold truncate">
+                {animeTitle || episode.title}
+              </h1>
+              <p className="text-xs text-white/50">
+                Season {currentSeasonNumber} · Episode {episode.episode_number}
+              </p>
             </div>
-
-            {/* Title row + Seasons dropdown */}
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <h1 className="text-base sm:text-lg font-semibold truncate">
-                  {animeTitle || episode.title}
-                </h1>
-                <p className="text-xs text-white/50">
-                  Season {currentSeasonNumber} · Episode {episode.episode_number}
-                </p>
-              </div>
-              {seasons.length > 0 && (
-                <div className="relative shrink-0">
-                  <button
-                    onClick={() => setSeasonOpen((o) => !o)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-900 border border-white/10 text-xs text-white/80 hover:text-white transition-colors"
-                  >
-                    Season {selectedSeason?.season_number ?? season?.season_number ?? 1}
-                    <ChevronDown
-                      className={`h-3.5 w-3.5 transition-transform ${seasonOpen ? 'rotate-180' : ''}`}
-                    />
-                  </button>
-                  {seasonOpen && (
-                    <div className="absolute right-0 top-full mt-1.5 z-20 min-w-[120px] rounded-xl bg-neutral-900 border border-white/10 py-1 shadow-xl">
-                      {seasons.map((s) => (
-                        <button
-                          key={s.id}
-                          onClick={() => {
-                            setSelectedSeasonId(s.id);
-                            setSeasonOpen(false);
-                          }}
-                          data-active={s.id === selectedSeason?.id}
-                          className="w-full text-left px-3.5 py-2 text-xs text-white/70 hover:bg-white/5 hover:text-white transition-colors data-[active=true]:text-white data-[active=true]:font-semibold"
-                        >
-                          Season {s.season_number}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Episodes — always visible for the selected season */}
-            {visibleEpisodes.length > 0 && (
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-1.5">
-                {visibleEpisodes.map((e) => (
-                  <button
-                    key={e.id}
-                    onClick={() => switchEpisode(e.id)}
-                    data-active={e.id === episode.id}
-                    className="py-2 rounded-lg text-xs font-semibold bg-neutral-900 text-white/70 border border-white/10 transition-colors hover:text-white data-[active=true]:bg-white data-[active=true]:text-black data-[active=true]:border-white"
-                  >
-                    {e.episode_number}
-                  </button>
-                ))}
-              </div>
-            )}
           </>
         )}
       </div>
