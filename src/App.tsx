@@ -62,6 +62,7 @@ const PendingUploadPage = lazy(() => import("./pages/PendingUploadPage"));
 const CrunchyPage = lazy(() => import("./pages/CrunchyPage"));
 const MuseINPage = lazy(() => import("./pages/MuseINPage"));
 const EngDubPage = lazy(() => import("./pages/EngDubPage"));
+const SubOnlyPage = lazy(() => import("./pages/SubOnlyPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Schedule = lazy(() => import("./pages/Schedule"));
 const UpcomingPage = lazy(() => import("./pages/UpcomingPage"));
@@ -263,6 +264,7 @@ const App = () => (
                     <Route path="/crunchy" element={<CrunchyPage />} />
                     <Route path="/musein" element={<MuseINPage />} />
                     <Route path="/eng-dub" element={<EngDubPage />} />
+                    <Route path="/sub-only" element={<SubOnlyPage />} />
                     <Route path="/schedule" element={<Schedule />} />
                     <Route path="/upcoming" element={<UpcomingPage />} />
                     <Route path="/release-notes" element={<ReleaseNotes />} />

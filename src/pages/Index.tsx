@@ -12,6 +12,7 @@ import { CloneSection } from "@/components/home/CloneSection";
 import { LatestEpisodes } from "@/components/home/LatestEpisodes";
 import { LatestMovies } from "@/components/home/LatestMovies";
 import { LatestEngDub } from "@/components/home/LatestEngDub";
+import { LatestSubOnly } from "@/components/home/LatestSubOnly";
 import { LatestSeries } from "@/components/home/LatestSeries";
 import { RecentlyCompleted } from "@/components/home/RecentlyCompleted";
 import { EpisodeProgress } from "@/components/home/EpisodeProgress";
@@ -146,6 +147,7 @@ export default function Index() {
 
       <DeferredSection minHeight={320}><SectionBoundary label="home:latest-movies"><LatestMovies /></SectionBoundary></DeferredSection>
       <DeferredSection minHeight={320}><SectionBoundary label="home:latest-eng-dub"><LatestEngDub /></SectionBoundary></DeferredSection>
+      <DeferredSection minHeight={320}><SectionBoundary label="home:sub-only"><LatestSubOnly /></SectionBoundary></DeferredSection>
       <DeferredSection minHeight={320}><SectionBoundary label="home:recently-completed"><RecentlyCompleted /></SectionBoundary></DeferredSection>
 
       {/* Social Share */}
