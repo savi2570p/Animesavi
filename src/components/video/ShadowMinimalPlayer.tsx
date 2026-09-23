@@ -38,6 +38,8 @@ export function ShadowMinimalPlayer({
   overlayTitle,
   overlaySeason,
   overlayEpisode,
+  episodes,
+  onSelectEpisode,
 }: ShadowMinimalPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -49,6 +51,22 @@ export function ShadowMinimalPlayer({
   const [buffering, setBuffering] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [showEps, setShowEps] = useState(false);
+
+  const hasEpisodes = !!episodes && episodes.length > 1 && !!onSelectEpisode;
+  const epSeasons = Array.from(new Set((episodes || []).map((e) => e.seasonNumber ?? 1))).sort((a, b) => a - b);
+  const activeSeason = episodes?.find((e) => e.active)?.seasonNumber ?? epSeasons[0] ?? 1;
+  const [epsSeason, setEpsSeason] = useState<number>(activeSeason);
+  const panelEpisodes = (episodes || []).filter((e) => (e.seasonNumber ?? 1) === epsSeason);
+
+  const toggleEps = useCallback(() => {
+    setShowEps((v) => {
+      if (!v) setEpsSeason(activeSeason);
+      return !v;
+    });
+    pokeControls();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSeason]);
 
   // ── Source wiring (HLS via hls.js where needed, native otherwise) ──
   useEffect(() => {
