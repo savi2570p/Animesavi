@@ -23,7 +23,7 @@ const DOWNLOAD_COMPLETED_KEY = `update_downloaded_${APP_VERSION}`;
 
 // Shared dark-purple glass overlay backdrop
 const OVERLAY =
-  'fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-3 animate-in fade-in duration-300 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(91,33,182,0.45),rgba(20,5,40,0.65)_55%,rgba(8,2,20,0.85))] backdrop-blur-2xl';
+  'fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-3 animate-in fade-in duration-300 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(91,33,182,0.55),rgba(20,5,40,0.8)_55%,rgba(8,2,20,0.92))] backdrop-blur-2xl';
 
 export function UpdatePopup() {
   const { activePopup, dismissPopup, isManualWhatsNew } = usePopupQueue();
@@ -230,7 +230,7 @@ export function UpdatePopup() {
         e.stopPropagation();
         onClick?.(e);
       }}
-      className={`relative w-full max-w-[280px] sm:max-w-[300px] mx-auto overflow-hidden bg-purple-950/25 backdrop-blur-3xl border border-violet-300/15 rounded-[32px] shadow-[0_28px_80px_-14px_rgba(76,29,149,0.7),inset_0_1px_1px_rgba(216,180,254,0.18)] font-popup ${className}`}
+      className={`relative w-full max-w-[280px] sm:max-w-[300px] mx-auto overflow-hidden bg-[#170a2f]/95 backdrop-blur-3xl border border-violet-300/20 rounded-[32px] shadow-[0_28px_80px_-14px_rgba(76,29,149,0.7),inset_0_1px_1px_rgba(216,180,254,0.18)] font-popup ${className}`}
     >
       {/* Purple ambient glow */}
       <div className="absolute -inset-1 bg-gradient-to-b from-violet-400/15 via-purple-500/5 to-transparent rounded-[44px] blur-xl opacity-40 pointer-events-none" />
@@ -269,7 +269,7 @@ export function UpdatePopup() {
                 {BADGE_LABELS[item.badge]}
               </span>
             </div>
-            <p className="text-[9px] sm:text-[10px] leading-snug text-violet-200/55 mt-0">
+            <p className="text-[9px] sm:text-[10px] leading-snug text-violet-200/85 mt-0">
               {item.desc}
             </p>
           </div>
@@ -344,7 +344,7 @@ export function UpdatePopup() {
       <VersionPill label={pillLabel} />
       <div className="space-y-0">
         <h2 className="text-sm sm:text-base font-bold text-white tracking-tight font-popup">{title}</h2>
-        <p className="text-violet-200/60 text-[9px] sm:text-[10px] leading-relaxed px-1 sm:px-2 line-clamp-2">{subtitle}</p>
+        <p className="text-violet-200/85 text-[9px] sm:text-[10px] leading-relaxed px-1 sm:px-2 line-clamp-2">{subtitle}</p>
       </div>
     </div>
   );
