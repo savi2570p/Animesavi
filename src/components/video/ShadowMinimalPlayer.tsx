@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Play, Pause, RotateCcw, RotateCw, Maximize, Loader2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, RotateCw, Maximize, Loader2, List } from 'lucide-react';
 import { isHlsUrl, detectDeviceKind } from '@/lib/streamSource';
 import { getHLSConfig } from '@/lib/videoUtils';
 
@@ -16,6 +16,9 @@ interface ShadowMinimalPlayerProps {
   overlayTitle?: string;
   overlaySeason?: number;
   overlayEpisode?: number;
+  /** In-player episode picker (rendered inside the player, never outside). */
+  episodes?: Array<{ key: string; number: number; seasonNumber?: number; active?: boolean }>;
+  onSelectEpisode?: (key: string) => void;
 }
 
 function formatTime(t: number): string {
