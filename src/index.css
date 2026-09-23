@@ -2042,10 +2042,16 @@ nav[class*="fixed"][class*="bottom-"] {
 
 /* Promote scrollers to their own layer — smoother swipes */
 .snap-row,
-[data-scroll-container],
-main {
+[data-scroll-container] {
   -webkit-overflow-scrolling: touch;
   transform: translateZ(0);
+}
+
+/* Never promote the route's <main> element itself. A transformed ancestor
+   becomes the containing block for fixed children on Safari and Chrome,
+   which trapped full-screen detail loaders above the footer on phones. */
+main {
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Virtualize offscreen sections so they don't paint on every scroll */
