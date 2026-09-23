@@ -318,11 +318,22 @@ export function ShadowMinimalPlayer({
             {formatTime(currentTime)} / {formatTime(duration)}
           </span>
           <div className="flex-1" />
+          {hasEpisodes && (
+            <button
+              onClick={toggleEps}
+              aria-label="Episodes"
+              aria-expanded={showEps}
+              className={`p-1 transition-colors ${showEps ? 'text-white' : 'text-white/85 hover:text-white'}`}
+            >
+              <List className="h-3.5 w-3.5" />
+            </button>
+          )}
           <button onClick={toggleFullscreen} aria-label="Fullscreen" className="p-1 text-white">
             <Maximize className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
+      {episodePanel}
     </div>
   );
 }
