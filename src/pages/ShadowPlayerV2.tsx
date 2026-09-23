@@ -34,10 +34,7 @@ export default function ShadowPlayerV2() {
   const [season, setSeason] = useState<ShadowSeason | null>(null);
   const [seasons, setSeasons] = useState<ShadowSeason[]>([]);
   const [episodes, setEpisodes] = useState<ShadowEpisode[]>([]);
-  const [server, setServer] = useState<ServerType>('XPLUS');
   const [loading, setLoading] = useState(true);
-  const [seasonOpen, setSeasonOpen] = useState(false);
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,7 +51,6 @@ export default function ShadowPlayerV2() {
         return;
       }
       setEpisode(ep as ShadowEpisode);
-      setServer('XPLUS');
 
       const { data: seasonData } = await supabase
         .from('seasons')
