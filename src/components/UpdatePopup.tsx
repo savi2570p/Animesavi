@@ -587,7 +587,7 @@ export function UpdatePopup() {
 
             <div className="space-y-0.5 mb-4">
               <h2 className="text-sm sm:text-base font-bold text-white">Installing Updates</h2>
-              <p className="text-[10px] text-violet-200/60">Setting up fixes and polish…</p>
+              <p className="text-[10px] text-violet-200/85">Setting up fixes and polish…</p>
             </div>
 
             <div className="space-y-1 text-left">
@@ -657,7 +657,7 @@ export function UpdatePopup() {
             <h2 className="bg-gradient-to-r from-white via-violet-100 to-white bg-clip-text text-sm sm:text-base font-bold text-transparent tracking-tight">
               Entering latest version
             </h2>
-            <p className="text-[10px] text-violet-200/65 mt-0.5 leading-relaxed transition-all duration-300 min-h-[1.1rem]">
+            <p className="text-[10px] text-violet-200/85 mt-0.5 leading-relaxed transition-all duration-300 min-h-[1.1rem]">
               {stages[enterStage]?.desc}
             </p>
 
