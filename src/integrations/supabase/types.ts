@@ -651,6 +651,36 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_api_keys: {
+        Row: {
+          allowed_domain: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          key_hash: string
+          last_used_at: string | null
+          name: string
+        }
+        Insert: {
+          allowed_domain?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key_hash: string
+          last_used_at?: string | null
+          name: string
+        }
+        Update: {
+          allowed_domain?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key_hash?: string
+          last_used_at?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

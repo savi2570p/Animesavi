@@ -22,6 +22,13 @@
       "when": 1790225922681,
       "tag": "0002_uploaders_edit_all_series",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790226594401,
+      "tag": "0003_partner_api_keys",
+      "breakpoints": true
     }
   ]
 }
