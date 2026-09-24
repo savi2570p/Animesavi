@@ -1,0 +1,3 @@
+CREATE POLICY "Uploader role can update any anime" ON public.anime FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'uploader'::app_role)) WITH CHECK (public.has_role(auth.uid(), 'uploader'::app_role));
+CREATE POLICY "Uploader role can manage any seasons" ON public.seasons FOR ALL TO authenticated USING (public.has_role(auth.uid(), 'uploader'::app_role)) WITH CHECK (public.has_role(auth.uid(), 'uploader'::app_role));
+CREATE POLICY "Uploader role can manage any episodes" ON public.episodes FOR ALL TO authenticated USING (public.has_role(auth.uid(), 'uploader'::app_role)) WITH CHECK (public.has_role(auth.uid(), 'uploader'::app_role));
