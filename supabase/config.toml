@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.download-proxy]
 verify_jwt = false
+
+[functions.partner-feed]
+verify_jwt = false
