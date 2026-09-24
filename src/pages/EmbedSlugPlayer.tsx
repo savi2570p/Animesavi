@@ -40,6 +40,7 @@ const ALLOWED_DOMAINS = [
   'animesavi.lovable.app',
   'animesavi.com',
   'www.animesavi.com',
+  'floxanimeindia.in.net',
 ];
 
 const ADMIN_EMAILS = [

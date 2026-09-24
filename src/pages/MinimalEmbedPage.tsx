@@ -31,6 +31,7 @@ const ALLOWED_EMBED_HOSTS = [
   'shadowflix.lovable.app',
   'animesavi.com',
   'www.animesavi.com',
+  'floxanimeindia.in.net',
 ];
 
 function isHostAllowed(host: string | null | undefined): boolean {
