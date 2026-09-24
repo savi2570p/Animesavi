@@ -448,6 +448,19 @@ export default function Admin() {
           </button>
 
           <button
+            onClick={() => navigate('/admin/partners')}
+            className="lg-panel group rounded-2xl p-5 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold mb-1">Partners</div>
+                <div className="text-xs text-muted-foreground">Partner sites, their keys, and which series they've fetched.</div>
+              </div>
+              <div className="text-primary text-lg">→</div>
+            </div>
+          </button>
+
+          <button
             onClick={() => navigate('/admin/featured')}
             className="lg-panel group rounded-2xl p-5 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30"
           >
