@@ -38,8 +38,38 @@ Deno.serve(async (req) => {
       episodes(id,episode_number,title,description,thumbnail,duration,audio_language,captions_url,external_url,created_at))`)
     .eq('is_muse', false).order('updated_at', { ascending: false }).limit(limit)
   if (since) q = q.gte('updated_at', since)
-  const { data, error } = await q
+  const { data: base, error } = await q
   if (error) return json({ error: error.message }, 500)
+  let data: any[] = base || []
+
+  // Always include series the owner resubmitted, even if older than `since`
+  const { data: resub } = await db.from('partner_resubmissions').select('anime_id')
+    .eq('partner_key_id', pk.id).is('delivered_at', null)
+  const have = new Set(data.map((a: any) => a.id))
+  const missing = (resub || []).map((r: any) => r.anime_id).filter((id: string) => !have.has(id))
+  if (missing.length) {
+    const { data: extra } = await db.from('anime').select(`id,title,description,cover_image,banner_image,genres,release_year,status,type,
+      studio,total_episodes,content_rating,is_eng_dub,is_sub_only,trailer_url,created_at,updated_at,
+      seasons(id,season_number,title,release_date,is_upcoming,
+        episodes(id,episode_number,title,description,thumbnail,duration,audio_language,captions_url,external_url,created_at))`)
+      .in('id', missing)
+    data = [...data, ...(extra || [])]
+  }
+
+  // Record what this partner received
+  const now = new Date().toISOString()
+  const ids = data.map((a: any) => a.id)
+  if (ids.length) {
+    const { data: prev } = await db.from('partner_fetch_log').select('anime_id,fetch_count')
+      .eq('partner_key_id', pk.id).in('anime_id', ids)
+    const prevMap = new Map((prev || []).map((p: any) => [p.anime_id, p.fetch_count]))
+    await db.from('partner_fetch_log').upsert(ids.map((id: string) => ({
+      partner_key_id: pk.id, anime_id: id, last_fetched_at: now,
+      fetch_count: (prevMap.get(id) || 0) + 1,
+    })), { onConflict: 'partner_key_id,anime_id' })
+    await db.from('partner_resubmissions').update({ delivered_at: now })
+      .eq('partner_key_id', pk.id).is('delivered_at', null).in('anime_id', ids)
+  }
 
   const anime = (data || []).map((a: any) => {
     const s = slug(a.title)

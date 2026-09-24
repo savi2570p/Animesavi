@@ -80,6 +80,7 @@ const FloxAnimePage = lazy(() => import("./pages/FloxAnimePage"));
 const FloxWatch = lazy(() => import("./pages/FloxWatch"));
 const SiteHealth = lazy(() => import("./pages/SiteHealth"));
 const AdminFeaturedLineup = lazy(() => import("./pages/AdminFeaturedLineup"));
+const AdminPartners = lazy(() => import("./pages/AdminPartners"));
 const ClonePlatform = lazy(() => import("./pages/ClonePlatform"));
 const RootSlugRouter = lazy(() => import("./pages/RootSlugRouter"));
 const TokenEmbedPlayer = lazy(() => import("./pages/TokenEmbedPlayer"));
@@ -288,6 +289,7 @@ const App = () => (
                     <Route path="/admin" element={<Admin />} />
                     <Route path="/admin/site-health" element={<SiteHealth />} />
                     <Route path="/admin/featured" element={<AdminFeaturedLineup />} />
+                    <Route path="/admin/partners" element={<AdminPartners />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/stats" element={<UserStats />} />
