@@ -29,6 +29,13 @@
       "when": 1790226594401,
       "tag": "0003_partner_api_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790227689121,
+      "tag": "0004_partner_fetch_tracking",
+      "breakpoints": true
     }
   ]
 }

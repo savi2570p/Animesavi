@@ -655,6 +655,7 @@ export type Database = {
         Row: {
           allowed_domain: string | null
           created_at: string
+          domain: string | null
           id: string
           is_active: boolean
           key_hash: string
@@ -664,6 +665,7 @@ export type Database = {
         Insert: {
           allowed_domain?: string | null
           created_at?: string
+          domain?: string | null
           id?: string
           is_active?: boolean
           key_hash: string
@@ -673,6 +675,7 @@ export type Database = {
         Update: {
           allowed_domain?: string | null
           created_at?: string
+          domain?: string | null
           id?: string
           is_active?: boolean
           key_hash?: string
@@ -680,6 +683,101 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      partner_fetch_log: {
+        Row: {
+          anime_id: string
+          fetch_count: number
+          first_fetched_at: string
+          id: string
+          last_fetched_at: string
+          partner_key_id: string
+        }
+        Insert: {
+          anime_id: string
+          fetch_count?: number
+          first_fetched_at?: string
+          id?: string
+          last_fetched_at?: string
+          partner_key_id: string
+        }
+        Update: {
+          anime_id?: string
+          fetch_count?: number
+          first_fetched_at?: string
+          id?: string
+          last_fetched_at?: string
+          partner_key_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_fetch_log_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "anime"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_fetch_log_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "anime_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_fetch_log_partner_key_id_fkey"
+            columns: ["partner_key_id"]
+            isOneToOne: false
+            referencedRelation: "partner_api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_resubmissions: {
+        Row: {
+          anime_id: string
+          delivered_at: string | null
+          id: string
+          partner_key_id: string
+          requested_at: string
+        }
+        Insert: {
+          anime_id: string
+          delivered_at?: string | null
+          id?: string
+          partner_key_id: string
+          requested_at?: string
+        }
+        Update: {
+          anime_id?: string
+          delivered_at?: string | null
+          id?: string
+          partner_key_id?: string
+          requested_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_resubmissions_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "anime"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_resubmissions_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "anime_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_resubmissions_partner_key_id_fkey"
+            columns: ["partner_key_id"]
+            isOneToOne: false
+            referencedRelation: "partner_api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
