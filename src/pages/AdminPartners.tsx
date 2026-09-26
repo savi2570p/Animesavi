@@ -18,7 +18,7 @@ interface Resub { anime_id: string; delivered_at: string | null; }
 const fmt = (d: string | null) => (d ? new Date(d).toLocaleString() : 'Never');
 
 export default function AdminPartners() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isLoading, isRolesLoaded } = useAuth();
   const navigate = useNavigate();
   const [partners, setPartners] = useState<Partner[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -29,6 +29,7 @@ export default function AdminPartners() {
   const [q, setQ] = useState('');
 
   useEffect(() => {
+    if (isLoading || (user && !isRolesLoaded)) return;
     if (!user) { navigate('/auth'); return; }
     if (!isAdmin) { toast.error('Admin only'); navigate('/'); return; }
     loadPartners();
@@ -39,7 +40,7 @@ export default function AdminPartners() {
       .subscribe();
     const t = setInterval(loadPartners, 30000);
     return () => { supabase.removeChannel(ch); clearInterval(t); };
-  }, [user, isAdmin]);
+  }, [user, isAdmin, isLoading, isRolesLoaded]);
 
   useEffect(() => { if (selected) loadPartnerData(selected); }, [selected]);
 

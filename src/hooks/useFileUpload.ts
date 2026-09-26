@@ -188,7 +188,25 @@ const emptyStats: UploadStats = {
 };
 
 
+const SNAPSHOT_KEY = 'upload_progress_snapshot_v1';
+type UploadSnapshot = { bucket: string; fileName: string; progress: number; bytesUploaded: number; bytesTotal: number; at: number };
+const readSnapshot = (bucket: string): UploadSnapshot | null => {
+  try {
+    const s = JSON.parse(localStorage.getItem(SNAPSHOT_KEY) || 'null') as UploadSnapshot | null;
+    if (!s || s.bucket !== bucket || Date.now() - s.at > 24 * 3600_000) return null;
+    return s;
+  } catch { return null; }
+};
+const writeSnapshot = (s: UploadSnapshot) => { try { localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(s)); } catch {} };
+const clearSnapshot = () => { try { localStorage.removeItem(SNAPSHOT_KEY); } catch {} };
+
 export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = false, maxChunkUnits = 8 }: UseFileUploadOptions) {
+  // Video uploads always use a file-derived path so a retry after a refresh
+  // or dropped connection resumes the same partial object.
+  const isVideoBucket = bucket === 'anime-videos' || bucket === 'movies';
+  const useStable = stablePath || isVideoBucket;
+  const [interrupted, setInterrupted] = useState<UploadSnapshot | null>(() => (isVideoBucket ? readSnapshot(bucket) : null));
+  const currentFileNameRef = useRef<string>('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [displayedProgress, setDisplayedProgress] = useState(0);
@@ -410,7 +428,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
           headers: {
             authorization: `Bearer ${accessToken}`,
             apikey: SUPABASE_PUBLISHABLE_KEY,
-            'x-upsert': stablePath ? 'true' : 'false',
+            'x-upsert': useStable ? 'true' : 'false',
           },
 
           metadata: {
@@ -457,6 +475,11 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
               const averageSpeed = bytesUploaded / elapsedSec;
               const remaining = Math.max(totalBytes - bytesUploaded, 0);
               const rate = measuredSpeed > 0 ? measuredSpeed : averageSpeed;
+              writeSnapshot({
+                bucket, fileName: currentFileNameRef.current,
+                progress: Math.round((bytesUploaded / Math.max(totalBytes, 1)) * 100),
+                bytesUploaded, bytesTotal: totalBytes, at: now,
+              });
               patchStats({
                 bytesUploaded,
                 bytesTotal: totalBytes,
@@ -588,6 +611,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
 
       const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(filePath);
       toast.success('File uploaded successfully!');
+      clearSnapshot();
+      setInterrupted(null);
       setIsUploading(false);
       return { url: urlData.publicUrl, path: filePath };
     } catch (err: unknown) {
@@ -616,6 +641,8 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
     }
 
     setIsUploading(true);
+    currentFileNameRef.current = file.name;
+    setInterrupted(null);
 
     try {
       // Generate filename. With stablePath the name is derived from the file
@@ -628,7 +655,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '')
         .slice(0, 60) || 'video';
-      const fileName = stablePath
+      const fileName = useStable
         ? `${slug}-${file.size}-${file.lastModified}${fileExt ? `.${fileExt}` : ''}`
         : `${Date.now()}-${Math.random().toString(36).substring(2)}${fileExt ? `.${fileExt}` : ''}`;
       let filePath = folder ? `${folder}/${fileName}` : fileName;
@@ -636,7 +663,7 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
       // A stable path collides with a completed object from an earlier run.
       // Without a resume pointer that collision makes creation fail instantly,
       // so fall back to a unique path in that case.
-      if (stablePath && !readResumePointer(filePath)) {
+      if (useStable && !readResumePointer(filePath)) {
         const { data: existing } = await supabase.storage
           .from(bucket)
           .list(folder || undefined, { search: fileName, limit: 1 });
@@ -708,9 +735,18 @@ export function useFileUpload({ bucket, folder = '', maxSizeGB, stablePath = fal
     toast.info('Upload cancelled');
   }, []);
 
+  // Warn before closing the tab mid-upload.
+  useEffect(() => {
+    if (!isUploading) return;
+    const h = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', h);
+    return () => window.removeEventListener('beforeunload', h);
+  }, [isUploading]);
+
   return {
     uploadFile,
     isUploading,
+    interrupted,
     progress: displayedProgress,
     realProgress: uploadProgress,
     uploadSpeed,
