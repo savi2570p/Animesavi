@@ -27,18 +27,22 @@ async function syncLocalTokenToUser(userId: string) {
 
     if (existing) return; // already synced
 
-    // Only link tokens that are still active; stale/revoked ids would be
-    // rejected by row security and just spam errors.
-    const { data: valid } = await supabase.rpc('get_token_duration', { _token_id: tokenId });
-    if (valid == null) return;
-    const { data: status } = await supabase.rpc('verify_unlock_token' as any, { _token: '' }).then(() => ({ data: null }), () => ({ data: null }));
-    void status;
-    await supabase.from('token_usage').insert({
+    // Admin grants ("admin-grant-…") live in their own table and never belong
+    // in token_usage; only real unlock-token ids can be linked.
+    if (!/^[0-9a-f-]{36}$/i.test(tokenId)) return;
+    if (localStorage.getItem('token_sync_skip') === tokenId) return;
+
+    const { error } = await supabase.from('token_usage').insert({
       token_id: tokenId,
       user_id: userId,
       expires_at: expiresAt,
       user_agent: navigator.userAgent,
     });
+    if (error) {
+      // Token was revoked/deactivated — don't keep retrying on every sign-in.
+      localStorage.setItem('token_sync_skip', tokenId);
+      return;
+    }
 
     localStorage.setItem('token_access_synced', 'true');
   } catch (e) {
