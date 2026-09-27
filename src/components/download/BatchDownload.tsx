@@ -13,7 +13,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Download, CheckCircle2, Loader2, X, FileVideo, Ban, FolderDown, RotateCcw, AlertTriangle, Bell, BellOff } from 'lucide-react';
 import { toast } from 'sonner';
-import { streamDownload, saveBlob, fmtSpeed, fmtEta, fmtSize, getResumeBytes, clearResume } from '@/lib/downloadUtils';
+import { streamDownload, saveBlob, saveBlobToDevice, isMobileDevice, fmtSpeed, fmtEta, fmtSize, getResumeBytes, clearResume } from '@/lib/downloadUtils';
 import { ensureDownloadNotifyPermission, notifyDownload } from '@/lib/downloadNotify';
 
 interface Episode {
@@ -59,6 +59,9 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
   const [downloadQueue, setDownloadQueue] = useState<DownloadItem[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
   const [completedCount, setCompletedCount] = useState(0);
+  const mobile = isMobileDevice();
+  const [readyFiles, setReadyFiles] = useState<Record<string, { blob: Blob; name: string }>>({});
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [quality, setQuality] = useState<typeof QUALITY_OPTIONS[number]>('2160p');
   const [zipProgress, setZipProgress] = useState<number | null>(null);
   const [notifyOn, setNotifyOn] = useState(
@@ -196,9 +199,21 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
   const saveEpisode = (ep: Episode, result: { chunks: BlobPart[]; mime: string; ext: string }) => {
     const safeTitle = (ep.title || '').replace(/[\\/:*?"<>|]/g, '-').slice(0, 80);
     const fileName = `${animeTitle} - Episode ${String(ep.episode_number).padStart(2, '0')}${safeTitle ? ' - ' + safeTitle : ''} [${quality}].${result.ext}`;
-    // Save each episode straight to the device's Downloads folder as a real
-    // .mp4/.mkv (no zip).
-    saveBlob(result.chunks, result.mime, fileName);
+    const blob = new Blob(result.chunks, { type: result.mime || 'video/mp4' });
+    if (mobile) {
+      // Phones block automatic saves after a long download; keep the file and
+      // let the user tap "Save to device" (a real gesture) for each episode.
+      setReadyFiles(prev => ({ ...prev, [ep.id]: { blob, name: fileName } }));
+      return;
+    }
+    saveBlob([blob], blob.type, fileName);
+  };
+
+  const saveReady = async (epId: string) => {
+    const f = readyFiles[epId];
+    if (!f) return;
+    const ok = await saveBlobToDevice(f.blob, f.name);
+    if (ok) setSavedIds(prev => new Set(prev).add(epId));
   };
 
   const retryEpisode = useCallback(async (index: number) => {
@@ -266,7 +281,11 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
       toast.warning(`${failCount} episode${failCount !== 1 ? 's' : ''} could not be downloaded`);
     }
 
-    toast.success(`Saved ${successCount} episode${successCount !== 1 ? 's' : ''} to your Downloads folder`);
+    if (mobile) {
+      toast.success(`${successCount} episode${successCount !== 1 ? 's' : ''} ready — tap "Save to device" on each one to store it on your phone`);
+    } else {
+      toast.success(`Saved ${successCount} episode${successCount !== 1 ? 's' : ''} to your Downloads folder`);
+    }
     notifyDownload(
       'Batch download complete',
       `${animeTitle} — ${successCount} saved${failCount > 0 ? `, ${failCount} failed` : ''}`,
@@ -424,6 +443,16 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
                         )}
                         {item.status === 'pending' && <span className="text-xs text-muted-foreground">Waiting…</span>}
                         {item.status === 'downloading' && <Loader2 className="h-4 w-4 text-primary animate-spin" />}
+                        {item.status === 'completed' && readyFiles[item.episode.id] && (
+                          <Button
+                            size="sm"
+                            variant={savedIds.has(item.episode.id) ? 'outline' : 'default'}
+                            onClick={() => saveReady(item.episode.id)}
+                            className="h-7 text-[11px] rounded-lg"
+                          >
+                            {savedIds.has(item.episode.id) ? 'Saved · Save again' : 'Save to device'}
+                          </Button>
+                        )}
                         {item.status === 'completed' && <CheckCircle2 className="h-4 w-4 text-primary" />}
                         {item.status === 'failed' && <X className="h-4 w-4 text-destructive" />}
                         {item.status === 'cancelled' && <Ban className="h-4 w-4 text-muted-foreground" />}
