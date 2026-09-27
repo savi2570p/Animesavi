@@ -88,15 +88,6 @@ export function ShadowMinimalPlayer({
           hls = new Hls(getHLSConfig() as any);
           hls.loadSource(videoUrl);
           hls.attachMedia(video);
-          let recovered = 0;
-          hls.on(Hls.Events.ERROR, (_e, data) => {
-            if (!data.fatal || !hls) return;
-            if (recovered++ < 3) {
-              if (data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
-              else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
-              else setFailed(true);
-            } else setFailed(true);
-          });
           return;
         }
       }
@@ -127,7 +118,7 @@ export function ShadowMinimalPlayer({
   const togglePlay = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
-    if (v.paused) v.play().catch(() => {});
+    if (v.paused) v.play().catch(() => setFailed(true));
     else v.pause();
     pokeControls();
   }, [pokeControls]);
@@ -249,16 +240,9 @@ export function ShadowMinimalPlayer({
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
         onDurationChange={(e) => setDuration(e.currentTarget.duration)}
         onWaiting={() => setBuffering(true)}
-        onPlaying={() => { setBuffering(false); setFailed(false); }}
-        onCanPlay={() => { setBuffering(false); setFailed(false); }}
-        onLoadedData={() => setFailed(false)}
-        onError={(e) => {
-          const v = e.currentTarget;
-          // hls.js handles its own errors; ignore transient hiccups once playing.
-          if (isHlsUrl(videoUrl) && !v.canPlayType('application/vnd.apple.mpegurl')) return;
-          if (v.readyState >= 2 || v.currentTime > 0) return;
-          setFailed(true);
-        }}
+        onPlaying={() => setBuffering(false)}
+        onCanPlay={() => setBuffering(false)}
+        onError={() => setFailed(true)}
       />
 
       {/* Title + S/E — top-left, follows control visibility */}

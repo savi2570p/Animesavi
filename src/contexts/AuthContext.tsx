@@ -27,50 +27,18 @@ async function syncLocalTokenToUser(userId: string) {
 
     if (existing) return; // already synced
 
-    // Admin grants ("admin-grant-…") live in their own table and never belong
-    // in token_usage; only real unlock-token ids can be linked.
-    if (!/^[0-9a-f-]{36}$/i.test(tokenId)) return;
-    if (localStorage.getItem('token_sync_skip') === tokenId) return;
-
-    const { error } = await supabase.from('token_usage').insert({
+    // Insert a new record linking this token to the user
+    await supabase.from('token_usage').insert({
       token_id: tokenId,
       user_id: userId,
       expires_at: expiresAt,
       user_agent: navigator.userAgent,
     });
-    if (error) {
-      // Token was revoked/deactivated — don't keep retrying on every sign-in.
-      localStorage.setItem('token_sync_skip', tokenId);
-      return;
-    }
 
     localStorage.setItem('token_access_synced', 'true');
   } catch (e) {
     console.error('Failed to sync local token to user:', e);
   }
-}
-
-const MIN_REFRESH_GAP_MS = 60_000;
-const RATE_LIMIT_BACKOFF_MS = 5 * 60_000;
-let lastRefreshAt = 0;
-let backoffUntil = 0;
-let refreshInFlight: ReturnType<typeof supabase.auth.refreshSession> | null = null;
-const isRateLimited = (e: any) =>
-  !!e && (e.status === 429 || /rate limit|too many/i.test(String(e.message || '')));
-
-/** De-duplicated, gap-limited refresh with backoff after rate limiting. */
-function throttledRefresh(): ReturnType<typeof supabase.auth.refreshSession> {
-  const now = Date.now();
-  if (refreshInFlight) return refreshInFlight;
-  if (now < backoffUntil || now - lastRefreshAt < MIN_REFRESH_GAP_MS) {
-    return Promise.resolve({ data: { session: null, user: null }, error: null }) as any;
-  }
-  lastRefreshAt = now;
-  refreshInFlight = throttledRefresh().then((r) => {
-    if (isRateLimited(r.error)) backoffUntil = Date.now() + RATE_LIMIT_BACKOFF_MS;
-    return r;
-  }).finally(() => { refreshInFlight = null; }) as any;
-  return refreshInFlight!;
 }
 
 type UserRole = 'viewer' | 'uploader' | 'admin';
@@ -145,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (hasStoredSession) {
           console.log('[auth] null session with stored refresh token — attempting silent refresh');
           setTimeout(() => {
-            throttledRefresh().then(({ data, error }) => {
+            supabase.auth.refreshSession().then(({ data, error }) => {
               if (data?.session) {
                 console.log('[auth] token refreshed silently');
                 setSession(data.session);
@@ -226,7 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch {}
         if (!hasStored) return;
         console.log('[auth] recovery attempt (', reason, ')');
-        throttledRefresh().then(({ data: d, error }) => {
+        supabase.auth.refreshSession().then(({ data: d, error }) => {
           if (d?.session) {
             console.log('[auth] session recovered after', reason);
             setSession(d.session);
@@ -274,18 +242,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     const normalizedEmail = email.trim().toLowerCase();
 
-    if (Date.now() < backoffUntil) {
-      const mins = Math.ceil((backoffUntil - Date.now()) / 60000);
-      return { error: new Error(`Too many sign-in attempts. Please wait about ${mins} minute${mins > 1 ? 's' : ''} and try again.`) };
-    }
     const { error } = await supabase.auth.signInWithPassword({
       email: normalizedEmail,
       password,
     });
-    if (isRateLimited(error)) {
-      backoffUntil = Date.now() + RATE_LIMIT_BACKOFF_MS;
-      return { error: new Error('Too many sign-in attempts. Please wait a few minutes and try again.') };
-    }
 
     return { error: error as Error | null };
   };

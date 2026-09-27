@@ -43,16 +43,7 @@ interface DownloadItem {
   attempts: number;
   /** Bytes already on hand from a previous cancelled attempt (resume). */
   resumedFrom: number;
-  /** Mobile: file is ready and waits for the user's tap to be saved. */
-  needsSave?: boolean;
-  saved?: boolean;
 }
-
-// Phones block downloads that don't come straight from a tap, so on mobile we
-// hold each finished file and let the user tap "Save to phone".
-const IS_MOBILE = typeof navigator !== 'undefined' &&
-  (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
 
 const newItem = (episode: Episode): DownloadItem => ({
   episode, status: 'pending', progress: 0, speed: 0, etaSec: 0, received: 0, total: 0,
@@ -202,38 +193,11 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
     return null;
   };
 
-  const readyFilesRef = useRef<Map<string, File>>(new Map());
-
-  const saveToPhone = async (index: number) => {
-    const item = downloadQueue[index];
-    const file = item && readyFilesRef.current.get(item.episode.id);
-    if (!file) { toast.error('File no longer available — please download again'); return; }
-    try {
-      const nav: any = navigator;
-      if (nav.canShare && nav.canShare({ files: [file] })) {
-        await nav.share({ files: [file], title: file.name });
-      } else {
-        saveBlob([file], file.type, file.name);
-      }
-      updateItem(index, { needsSave: false, saved: true });
-    } catch (e: any) {
-      if (e?.name === 'AbortError') return;
-      saveBlob([file], file.type, file.name);
-      updateItem(index, { needsSave: false, saved: true });
-    }
-  };
-
-  const saveEpisode = (ep: Episode, result: { chunks: BlobPart[]; mime: string; ext: string }, index?: number) => {
+  const saveEpisode = (ep: Episode, result: { chunks: BlobPart[]; mime: string; ext: string }) => {
     const safeTitle = (ep.title || '').replace(/[\\/:*?"<>|]/g, '-').slice(0, 80);
     const fileName = `${animeTitle} - Episode ${String(ep.episode_number).padStart(2, '0')}${safeTitle ? ' - ' + safeTitle : ''} [${quality}].${result.ext}`;
     // Save each episode straight to the device's Downloads folder as a real
     // .mp4/.mkv (no zip).
-    if (IS_MOBILE && index !== undefined) {
-      const mime = result.mime && result.mime !== 'application/octet-stream' ? result.mime : 'video/mp4';
-      readyFilesRef.current.set(ep.id, new File(result.chunks, fileName, { type: mime }));
-      updateItem(index, { needsSave: true });
-      return;
-    }
     saveBlob(result.chunks, result.mime, fileName);
   };
 
@@ -244,7 +208,7 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
     setIsDownloading(true);
     const result = await fetchEpisodeChunks(item.episode, index);
     if (result) {
-      saveEpisode(item.episode, result, index);
+      saveEpisode(item.episode, result);
       setCompletedCount(c => c + 1);
       toast.success(`Episode ${item.episode.episode_number} saved`);
     }
@@ -271,7 +235,7 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
       const ep = episodesToDownload[i];
       const result = await fetchEpisodeChunks(ep, i);
       if (result) {
-        saveEpisode(ep, result, i);
+        saveEpisode(ep, result);
         successCount++;
         setCompletedCount(successCount);
         // Small delay between saves prevents mobile browsers from silently
@@ -302,9 +266,7 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
       toast.warning(`${failCount} episode${failCount !== 1 ? 's' : ''} could not be downloaded`);
     }
 
-    toast.success(IS_MOBILE
-      ? `${successCount} episode${successCount !== 1 ? 's' : ''} ready — tap "Save to phone" on each`
-      : `Saved ${successCount} episode${successCount !== 1 ? 's' : ''} to your Downloads folder`);
+    toast.success(`Saved ${successCount} episode${successCount !== 1 ? 's' : ''} to your Downloads folder`);
     notifyDownload(
       'Batch download complete',
       `${animeTitle} — ${successCount} saved${failCount > 0 ? `, ${failCount} failed` : ''}`,
@@ -473,17 +435,6 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
                         <span>{fmtSize(item.received)} / {fmtSize(item.total)}</span>
                         <span>{fmtSpeed(item.speed)} · ETA {fmtEta(item.etaSec)}</span>
                       </div>
-                    )}
-                    {item.status === 'completed' && IS_MOBILE && (
-                      <Button
-                        size="sm"
-                        variant={item.needsSave ? 'default' : 'outline'}
-                        onClick={() => saveToPhone(index)}
-                        className="mt-2 h-8 w-full gap-1.5 text-xs"
-                      >
-                        <FolderDown className="h-3.5 w-3.5" />
-                        {item.saved ? 'Saved — save again' : 'Save to phone'}
-                      </Button>
                     )}
                     {(item.status === 'failed' || item.status === 'cancelled') && (
                       <div className="mt-2 flex items-start justify-between gap-2">

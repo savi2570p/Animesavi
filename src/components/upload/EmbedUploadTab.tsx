@@ -25,7 +25,7 @@ export function EmbedUploadTab() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
-  const { uploadFile, isUploading, interrupted, progress, formattedSpeed, abortUpload, stats } = useFileUpload({
+  const { uploadFile, isUploading, progress, formattedSpeed, abortUpload, stats } = useFileUpload({
     bucket: 'anime-videos',
     folder: 'embeds',
     maxSizeGB: MAX_GB,
@@ -89,11 +89,6 @@ export function EmbedUploadTab() {
           }}
         />
 
-{interrupted && !isUploading && (
-          <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-xs">
-            Previous upload of <span className="font-medium">{interrupted.fileName}</span> stopped at {interrupted.progress}%. Select the same file to resume from there.
-          </div>
-        )}
         {isUploading ? (
           <div className="rounded-xl border border-primary/40 bg-primary/5 p-4">
             <div className="flex items-center justify-between text-sm">

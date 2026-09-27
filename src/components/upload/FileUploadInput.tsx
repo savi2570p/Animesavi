@@ -47,7 +47,7 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
   const effectiveMaxSize =
     maxSizeGB ?? (contentType === 'movie' ? 100 : contentType === 'episode' ? 50 : accept === 'image' ? 1 : 50);
 
-  const { uploadFile, isUploading, interrupted, progress, formattedSpeed, formatSpeed, stats, abortUpload } = useFileUpload({
+  const { uploadFile, isUploading, progress, formattedSpeed, formatSpeed, stats, abortUpload } = useFileUpload({
     bucket,
     folder,
     maxSizeGB: effectiveMaxSize,
@@ -311,11 +311,6 @@ export const FileUploadInput = forwardRef<HTMLInputElement, FileUploadInputProps
             <span className="text-xs text-muted-foreground">Max: {maxSizeLabel}</span>
           </div>
 
-{interrupted && !isUploading && (
-            <div className="rounded-lg border border-primary/40 bg-primary/5 p-3 text-xs">
-              Previous upload of <span className="font-medium">{interrupted.fileName}</span> stopped at {interrupted.progress}%. Select the same file to resume from there.
-            </div>
-          )}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
