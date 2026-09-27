@@ -380,15 +380,43 @@ export async function streamDownload(opts: StreamDownloadOptions): Promise<{ chu
   return { chunks, total: total || received, received, mime: ctype || mimeGuess };
 }
 
-/** Save assembled chunks as a downloaded file via blob URL. */
-export function saveBlob(chunks: BlobPart[], mime: string, filename: string) {
-  const blob = new Blob(chunks, { type: mime });
+export const isMobileDevice = () =>
+  typeof navigator !== 'undefined' &&
+  (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && (navigator as any).maxTouchPoints > 1));
+
+/** Trigger a download of a Blob via anchor. Keeps the URL alive long enough
+ *  for mobile browsers to finish writing large files. */
+export function downloadBlobFile(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
+  a.rel = 'noopener';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  setTimeout(() => URL.revokeObjectURL(url), 5 * 60_000);
+}
+
+/** Save a Blob to the device. Must be called from a user tap on phones.
+ *  Uses the native share sheet (Save to Files / Photos) when supported. */
+export async function saveBlobToDevice(blob: Blob, filename: string): Promise<boolean> {
+  try {
+    const file = new File([blob], filename, { type: blob.type || 'video/mp4' });
+    const nav = navigator as any;
+    if (isMobileDevice() && nav.canShare && nav.canShare({ files: [file] })) {
+      await nav.share({ files: [file], title: filename });
+      return true;
+    }
+  } catch (e) {
+    if ((e as Error)?.name === 'AbortError') return false;
+  }
+  downloadBlobFile(blob, filename);
+  return true;
+}
+
+/** Save assembled chunks as a downloaded file via blob URL. */
+export function saveBlob(chunks: BlobPart[], mime: string, filename: string) {
+  downloadBlobFile(new Blob(chunks, { type: mime }), filename);
 }
