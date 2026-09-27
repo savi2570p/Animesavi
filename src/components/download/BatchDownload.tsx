@@ -59,6 +59,9 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
   const [downloadQueue, setDownloadQueue] = useState<DownloadItem[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
   const [completedCount, setCompletedCount] = useState(0);
+  const mobile = isMobileDevice();
+  const [readyFiles, setReadyFiles] = useState<Record<string, { blob: Blob; name: string }>>({});
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [quality, setQuality] = useState<typeof QUALITY_OPTIONS[number]>('2160p');
   const [zipProgress, setZipProgress] = useState<number | null>(null);
   const [notifyOn, setNotifyOn] = useState(
@@ -278,7 +281,11 @@ export function BatchDownload({ episodes, animeTitle }: BatchDownloadProps) {
       toast.warning(`${failCount} episode${failCount !== 1 ? 's' : ''} could not be downloaded`);
     }
 
-    toast.success(`Saved ${successCount} episode${successCount !== 1 ? 's' : ''} to your Downloads folder`);
+    if (mobile) {
+      toast.success(`${successCount} episode${successCount !== 1 ? 's' : ''} ready — tap "Save to device" on each one to store it on your phone`);
+    } else {
+      toast.success(`Saved ${successCount} episode${successCount !== 1 ? 's' : ''} to your Downloads folder`);
+    }
     notifyDownload(
       'Batch download complete',
       `${animeTitle} — ${successCount} saved${failCount > 0 ? `, ${failCount} failed` : ''}`,
