@@ -40,7 +40,7 @@ export const VERSION_GROUPS: VersionGroup[] = [
   },
   {
     version: 'S2-V1',
-    date: RELEASE_DATE,
+    date: 'September 23, 2026',
     highlight:
       'Season 2 begins — the fastest AnimeSavi yet. Faster startup on iOS, Android and PC, lighter 4K streaming, a new SUB-ONLY tab and a long list of fixes.',
     items: [
