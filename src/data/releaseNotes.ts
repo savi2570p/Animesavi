@@ -14,17 +14,33 @@ export interface VersionGroup {
   items: ChangelogItem[];
 }
 
-export const APP_VERSION = 'S2-V1';
-export const RELEASE_DATE = 'September 23, 2026';
-export const DOWNLOAD_SIZE_MB = 50;
+export const APP_VERSION = 'S2-V1.1';
+export const RELEASE_DATE = 'September 28, 2026';
+export const DOWNLOAD_SIZE_MB = 10;
 
 export const BETA_NOTE =
   'Shadow link v2 is now running BETA 2 — a minimal, branding-free standalone player with in-player episode switching and an auto-hiding title overlay.';
 
 export const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'S2-V1',
+    version: 'S2-V1.1',
     date: RELEASE_DATE,
+    highlight:
+      'A quick polish update — reliable phone downloads, a clearer What\'s New popup, correct SUB tags everywhere, partner sharing and smoother mobile pages.',
+    items: [
+      { icon: '📲', badge: 'FIX', title: 'Phone Downloads Save Properly', desc: 'Download All now gives each finished episode a "Save to device" button so videos actually land on iPhone and Android.' },
+      { icon: '🈁', badge: 'FIX', title: 'Correct SUB Tags', desc: 'SUB titles no longer show H-DUB on detail, Latest Series, Latest Episodes or Browse — and More Info shows "Japanese" audio.' },
+      { icon: '📱', badge: 'FIX', title: 'Mobile Detail Page', desc: 'The loading screen now fills the whole screen and the bottom bar stays at the bottom on iOS and Android.' },
+      { icon: '🔗', badge: 'IMPROVED', title: 'Cleaner Shadow Link', desc: 'Episode switching moved inside the player and servers were removed for a simpler viewing experience.' },
+      { icon: '👁️', badge: 'IMPROVED', title: 'Readable What\'s New', desc: 'The update popup now uses a solid card with brighter text so everything is easy to read.' },
+      { icon: '🤝', badge: 'NEW', title: 'Partner Sites', desc: 'Partner sites like Flox Anime India can now automatically receive new anime and play embed links.' },
+      { icon: '⬆️', badge: 'FIX', title: 'Uploader Editing', desc: 'Uploaders can now open and save edits to any series without being sent back to Upload.' },
+      { icon: '🐞', badge: 'FIX', title: 'General Bug Fixes', desc: 'Various stability and layout fixes across the app.' },
+    ],
+  },
+  {
+    version: 'S2-V1',
+    date: 'September 23, 2026',
     highlight:
       'Season 2 begins — the fastest AnimeSavi yet. Faster startup on iOS, Android and PC, lighter 4K streaming, a new SUB-ONLY tab and a long list of fixes.',
     items: [
