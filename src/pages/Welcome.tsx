@@ -100,13 +100,13 @@ export default function Welcome() {
       ];
       const { data: curated } = await supabase
         .from('anime')
-        .select('id, title, cover_image, genres, view_count')
+        .select('id, title, cover_image, banner_image, genres, view_count')
         .or(FEATURED_TITLES.map(t => `title.ilike.%${t.slice(0, 40)}%`).join(','))
         .limit(8);
       let list = curated || [];
       if (list.length < 4) {
         const { data: fb } = await supabase
-          .from('anime').select('id, title, cover_image, genres, view_count')
+          .from('anime').select('id, title, cover_image, banner_image, genres, view_count')
           .eq('is_featured', true).neq('title', 'Jujutsu Kaisen').limit(8);
         const seen = new Set(list.map(a => a.id));
         list = [...list, ...((fb || []).filter(a => !seen.has(a.id)))];
@@ -381,7 +381,7 @@ export default function Welcome() {
                   >
                     {a.cover_image ? (
                       <img
-                        src={a.cover_image}
+                        src={(a as any).banner_image || a.cover_image}
                         alt={a.title}
                         className="absolute inset-0 h-full w-full object-cover"
                         loading="lazy"
