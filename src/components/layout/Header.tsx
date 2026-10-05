@@ -893,6 +893,18 @@ export function Header() {
                         <span className="text-[9px] text-muted-foreground font-medium">Force latest update</span>
                       </div>
                     </button>
+                    {['savi2570p@gmail.com', 'shadowtoonsindia@gmail.com'].includes((user?.email || '').toLowerCase()) && (
+                      <Link
+                        to="/s2-home"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-2.5 text-[12px] font-semibold py-2 px-2.5 rounded-lg bg-card/50 hover:bg-card border border-border/40 transition-all w-full text-left"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center">
+                          <Sparkles className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <span>Home V2</span>
+                      </Link>
+                    )}
                   </div>
 
                   {canUpload() && (
