@@ -18,15 +18,23 @@ export default function ShadowHome() {
   const [query, setQuery] = useState('');
   const [hits, setHits] = useState<AnimeHit[]>([]);
   const [busy, setBusy] = useState(false);
+  const [series, setSeries] = useState<AnimeHit[]>([]);
 
   useEffect(() => {
     document.title = 'Watch';
+    const load = () => {
+    supabase.from('anime').select('id, title, cover_image').order('created_at', { ascending: false }).limit(30)
+      .then(({ data }) => setSeries(data || []));
     supabase
       .from('episodes')
       .select('id, episode_number, thumbnail, season:season_id ( season_number, anime:anime_id ( title, cover_image, type ) )')
       .order('created_at', { ascending: false })
       .limit(24)
       .then(({ data }) => setEpisodes(((data as any) || []).filter((e: Ep) => e.season?.anime)));
+    };
+    load();
+    const t = setInterval(() => { if (document.visibilityState === 'visible') load(); }, 120000);
+    return () => clearInterval(t);
   }, []);
 
   useEffect(() => {
@@ -75,6 +83,19 @@ export default function ShadowHome() {
               ))}
             </div>
           )}
+        </div>
+
+        <h2 className="mt-12 mb-4 text-lg font-semibold">Latest Series</h2>
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 md:gap-4">
+          {series.map((a) => (
+            <button key={a.id} disabled={busy} onClick={() => openAnime(a.id)} className="group text-left">
+              <div className="aspect-[2/3] overflow-hidden rounded-xl bg-muted ring-1 ring-border group-hover:ring-primary/60 transition">
+                <img src={a.cover_image || '/placeholder.svg'} alt={a.title} loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              </div>
+              <p className="mt-1.5 text-xs md:text-sm font-semibold line-clamp-2">{a.title}</p>
+            </button>
+          ))}
         </div>
 
         <h2 className="mt-12 mb-4 text-lg font-semibold">New Episodes</h2>
