@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Play, Pause, RotateCcw, RotateCw, Maximize, Loader2, List } from 'lucide-react';
+import { Play, Pause, RotateCcw, RotateCw, Maximize, Loader2, List, Captions } from 'lucide-react';
 import { isHlsUrl, detectDeviceKind } from '@/lib/streamSource';
 import { getHLSConfig } from '@/lib/videoUtils';
 
@@ -19,6 +19,8 @@ interface ShadowMinimalPlayerProps {
   /** In-player episode picker (rendered inside the player, never outside). */
   episodes?: Array<{ key: string; number: number; seasonNumber?: number; active?: boolean }>;
   onSelectEpisode?: (key: string) => void;
+  /** Optional subtitle file (VTT or SRT). Shows a CC button when set. */
+  captionsUrl?: string | null;
 }
 
 function formatTime(t: number): string {
@@ -40,7 +42,33 @@ export function ShadowMinimalPlayer({
   overlayEpisode,
   episodes,
   onSelectEpisode,
+  captionsUrl,
 }: ShadowMinimalPlayerProps) {
+  const [ccSrc, setCcSrc] = useState<string | null>(null);
+  const [ccOn, setCcOn] = useState(true);
+  useEffect(() => {
+    if (!captionsUrl) { setCcSrc(null); return; }
+    let url: string | null = null;
+    let cancelled = false;
+    fetch(captionsUrl).then((r) => (r.ok ? r.text() : Promise.reject(r.status))).then((txt) => {
+      if (cancelled) return;
+      let vtt = txt.replace(/^\uFEFF/, '').replace(/\r/g, '');
+      if (!vtt.trimStart().startsWith('WEBVTT')) {
+        vtt = 'WEBVTT\n\n' + vtt.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2');
+      }
+      url = URL.createObjectURL(new Blob([vtt], { type: 'text/vtt' }));
+      setCcSrc(url);
+    }).catch(() => setCcSrc(null));
+    return () => { cancelled = true; if (url) URL.revokeObjectURL(url); };
+  }, [captionsUrl]);
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !ccSrc) return;
+    const apply = () => { for (const t of Array.from(v.textTracks)) t.mode = ccOn ? 'showing' : 'hidden'; };
+    apply();
+    const id = window.setTimeout(apply, 300);
+    return () => window.clearTimeout(id);
+  }, [ccOn, ccSrc]);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hideTimerRef = useRef<number | null>(null);
@@ -243,7 +271,9 @@ export function ShadowMinimalPlayer({
         onPlaying={() => setBuffering(false)}
         onCanPlay={() => setBuffering(false)}
         onError={() => setFailed(true)}
-      />
+      >
+        {ccSrc && <track kind="subtitles" src={ccSrc} srcLang="en" label="CC" default />}
+      </video>
 
       {/* Title + S/E — top-left, follows control visibility */}
       {showOverlay && (
@@ -318,6 +348,16 @@ export function ShadowMinimalPlayer({
             {formatTime(currentTime)} / {formatTime(duration)}
           </span>
           <div className="flex-1" />
+          {ccSrc && (
+            <button
+              onClick={() => setCcOn((v) => !v)}
+              aria-label="Subtitles"
+              aria-pressed={ccOn}
+              className={`p-1 transition-colors ${ccOn ? 'text-white' : 'text-white/45 hover:text-white'}`}
+            >
+              <Captions className="h-3.5 w-3.5" />
+            </button>
+          )}
           {hasEpisodes && (
             <button
               onClick={toggleEps}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { ShadowMinimalPlayer } from '@/components/video/ShadowMinimalPlayer';
 import { Loader2 } from 'lucide-react';
@@ -20,12 +20,13 @@ interface ShadowEpisode {
   video_url: string | null;
   external_url: string | null;
   thumbnail: string | null;
+  captions_url?: string | null;
 }
 
 interface ShadowSeason {
   id: string;
   season_number: number;
-  anime: { id: string; title: string; cover_image: string | null } | null;
+  anime: { id: string; title: string; cover_image: string | null; is_eng_dub?: boolean; is_sub_only?: boolean } | null;
 }
 
 export default function ShadowPlayerV2() {
@@ -35,6 +36,8 @@ export default function ShadowPlayerV2() {
   const [seasons, setSeasons] = useState<ShadowSeason[]>([]);
   const [episodes, setEpisodes] = useState<ShadowEpisode[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
+  const fromHomeV2 = searchParams.get('from') === 'home-v2';
 
   useEffect(() => {
     let cancelled = false;
@@ -54,7 +57,7 @@ export default function ShadowPlayerV2() {
 
       const { data: seasonData } = await supabase
         .from('seasons')
-        .select('id, season_number, anime:anime_id(id, title, cover_image)')
+        .select('id, season_number, anime:anime_id(id, title, cover_image, is_eng_dub, is_sub_only)')
         .eq('id', ep.season_id)
         .maybeSingle();
       if (cancelled) return;
@@ -64,7 +67,7 @@ export default function ShadowPlayerV2() {
       if (s?.anime?.id) {
         const { data: allSeasons } = await supabase
           .from('seasons')
-          .select('id, season_number, anime:anime_id(id, title, cover_image)')
+          .select('id, season_number, anime:anime_id(id, title, cover_image, is_eng_dub, is_sub_only)')
           .eq('anime_id', s.anime.id)
           .order('season_number', { ascending: true });
         if (cancelled) return;
@@ -90,7 +93,7 @@ export default function ShadowPlayerV2() {
 
   const switchEpisode = useCallback((id: string) => {
     if (id === episode?.id) return;
-    window.history.replaceState(null, '', `/s2/${id}`);
+    window.history.replaceState(null, '', `/s2/${id}${window.location.search}`);
     supabase
       .from('episodes')
       .select('*')
@@ -167,6 +170,7 @@ export default function ShadowPlayerV2() {
                 overlayEpisode={episode.episode_number}
                 episodes={pickerEpisodes}
                 onSelectEpisode={switchEpisode}
+                captionsUrl={fromHomeV2 && (season?.anime?.is_sub_only || season?.anime?.is_eng_dub) ? episode.captions_url : null}
               />
             </div>
 
