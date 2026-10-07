@@ -2,15 +2,16 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, Play } from 'lucide-react';
+import { DubBadge } from '@/components/anime/DubBadge';
 
 interface Ep {
   id: string;
   episode_number: number;
   thumbnail: string | null;
-  season: { season_number: number; anime: { title: string; cover_image: string | null; type: string | null } | null } | null;
+  season: { season_number: number; anime: { title: string; cover_image: string | null; type: string | null; is_eng_dub?: boolean; is_sub_only?: boolean } | null } | null;
 }
 
-interface AnimeHit { id: string; title: string; cover_image: string | null }
+interface AnimeHit { id: string; title: string; cover_image: string | null; type?: string | null; is_eng_dub?: boolean; is_sub_only?: boolean }
 
 export default function ShadowHome() {
   const navigate = useNavigate();
@@ -19,15 +20,16 @@ export default function ShadowHome() {
   const [hits, setHits] = useState<AnimeHit[]>([]);
   const [busy, setBusy] = useState(false);
   const [series, setSeries] = useState<AnimeHit[]>([]);
+  const [tab, setTab] = useState<'series' | 'movies'>('series');
 
   useEffect(() => {
     document.title = 'Watch';
     const load = () => {
-    supabase.from('anime').select('id, title, cover_image').order('created_at', { ascending: false }).limit(30)
+    supabase.from('anime').select('id, title, cover_image, type, is_eng_dub, is_sub_only').order('created_at', { ascending: false }).limit(60)
       .then(({ data }) => setSeries(data || []));
     supabase
       .from('episodes')
-      .select('id, episode_number, thumbnail, season:season_id ( season_number, anime:anime_id ( title, cover_image, type ) )')
+      .select('id, episode_number, thumbnail, season:season_id ( season_number, anime:anime_id ( title, cover_image, type, is_eng_dub, is_sub_only ) )')
       .order('created_at', { ascending: false })
       .limit(24)
       .then(({ data }) => setEpisodes(((data as any) || []).filter((e: Ep) => e.season?.anime)));
@@ -53,7 +55,7 @@ export default function ShadowHome() {
     const seasonId = seasons?.[0]?.id;
     if (seasonId) {
       const { data: eps } = await supabase.from('episodes').select('id').eq('season_id', seasonId).order('episode_number').limit(1);
-      if (eps?.[0]) { navigate(`/s2/${eps[0].id}`); return; }
+      if (eps?.[0]) { navigate(`/s2/${eps[0].id}?from=home-v2`); return; }
     }
     setBusy(false);
   };
@@ -85,13 +87,21 @@ export default function ShadowHome() {
           )}
         </div>
 
-        <h2 className="mt-12 mb-4 text-lg font-semibold">Latest Series</h2>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 md:gap-4">
-          {series.map((a) => (
-            <button key={a.id} disabled={busy} onClick={() => openAnime(a.id)} className="group text-left">
-              <div className="aspect-[2/3] overflow-hidden rounded-xl bg-muted ring-1 ring-border group-hover:ring-primary/60 transition">
+        <div className="mt-12 mb-4 flex gap-2">
+          {([['series', 'Latest Series'], ['movies', 'Latest Movies']] as const).map(([k, label]) => (
+            <button key={k} onClick={() => setTab(k)}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold border transition ${tab === k ? 'bg-primary text-primary-foreground border-primary' : 'bg-card/60 border-border text-muted-foreground hover:text-foreground'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 snap-row">
+          {series.filter((a) => (tab === 'movies' ? a.type === 'movie' : a.type !== 'movie')).slice(0, 30).map((a) => (
+            <button key={a.id} disabled={busy} onClick={() => openAnime(a.id)} className="group w-[120px] md:w-[160px] shrink-0 text-left">
+              <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-muted ring-1 ring-border group-hover:ring-primary/60 transition">
                 <img src={a.cover_image || '/placeholder.svg'} alt={a.title} loading="lazy"
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <div className="absolute top-1.5 right-1.5"><DubBadge isEngDub={a.is_eng_dub} isSubOnly={a.is_sub_only} /></div>
               </div>
               <p className="mt-1.5 text-xs md:text-sm font-semibold line-clamp-2">{a.title}</p>
             </button>
@@ -101,11 +111,12 @@ export default function ShadowHome() {
         <h2 className="mt-12 mb-4 text-lg font-semibold">New Episodes</h2>
         <div className="flex gap-4 overflow-x-auto pb-4 snap-row">
           {episodes.map((ep) => (
-            <button key={ep.id} onClick={() => navigate(`/s2/${ep.id}`)}
+            <button key={ep.id} onClick={() => navigate(`/s2/${ep.id}?from=home-v2`)}
               className="group w-[220px] md:w-[280px] shrink-0 text-left">
               <div className="relative aspect-video overflow-hidden rounded-xl bg-muted ring-1 ring-border group-hover:ring-primary/60 transition">
                 <img src={ep.thumbnail || ep.season?.anime?.cover_image || '/placeholder.svg'} alt={ep.season?.anime?.title}
                   loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <div className="absolute top-1.5 right-1.5"><DubBadge isEngDub={ep.season?.anime?.is_eng_dub} isSubOnly={ep.season?.anime?.is_sub_only} /></div>
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
                   <span className="rounded-full bg-primary p-3"><Play className="h-5 w-5 fill-current text-primary-foreground" /></span>
                 </div>
