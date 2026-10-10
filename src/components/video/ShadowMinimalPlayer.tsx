@@ -21,6 +21,25 @@ interface ShadowMinimalPlayerProps {
   onSelectEpisode?: (key: string) => void;
   /** Optional subtitle file (VTT or SRT). Shows a CC button when set. */
   captionsUrl?: string | null;
+  /** Used if the direct video can't play in this browser. */
+  fallbackEmbedUrl?: string | null;
+}
+
+/** Index of the Hindi audio track, or -1 when there isn't one. */
+function pickHindi(tracks: Array<{ label: string; lang: string }>): number {
+  return tracks.findIndex((t) => /^(hi|hin)(-|$)/i.test(t.lang) || /hindi|हिन्दी|हिंदी/i.test(t.label));
+}
+
+/** Enable the Hindi track on browsers exposing native audioTracks (Safari/iOS). */
+function applyNativeHindi(video: HTMLVideoElement) {
+  const list = (video as any).audioTracks;
+  if (!list || list.length < 2) return;
+  const arr = Array.from({ length: list.length }, (_, i) => list[i]);
+  const idx = pickHindi(arr.map((t: any) => ({ label: t.label || '', lang: t.language || '' })));
+  if (idx < 0 || arr[idx].enabled) return;
+  arr.forEach((t: any, i: number) => { t.enabled = i === idx; });
+  // iOS needs a tiny seek to apply the switch
+  try { video.currentTime = video.currentTime + 0.001; } catch { /* ignore */ }
 }
 
 function formatTime(t: number): string {
@@ -43,6 +62,7 @@ export function ShadowMinimalPlayer({
   episodes,
   onSelectEpisode,
   captionsUrl,
+  fallbackEmbedUrl,
 }: ShadowMinimalPlayerProps) {
   const [ccSrc, setCcSrc] = useState<string | null>(null);
   const [ccOn, setCcOn] = useState(true);
@@ -114,6 +134,11 @@ export function ShadowMinimalPlayer({
         if (cancelled) return;
         if (Hls.isSupported()) {
           hls = new Hls(getHLSConfig() as any);
+          hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
+            const idx = pickHindi((data.audioTracks || []).map((t: any) => ({ label: t.name || '', lang: t.lang || '' })));
+            if (idx >= 0 && hls) hls.audioTrack = idx;
+          });
+          hls.on(Hls.Events.ERROR, (_e, d: any) => { if (d?.fatal) setFailed(true); });
           hls.loadSource(videoUrl);
           hls.attachMedia(video);
           return;
@@ -146,7 +171,7 @@ export function ShadowMinimalPlayer({
   const togglePlay = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
-    if (v.paused) v.play().catch(() => setFailed(true));
+    if (v.paused) v.play().catch((err) => { if (err?.name === 'NotSupportedError') setFailed(true); });
     else v.pause();
     pokeControls();
   }, [pokeControls]);
@@ -212,11 +237,13 @@ export function ShadowMinimalPlayer({
     </div>
   ) : null;
 
-  if (!videoUrl && embedUrl) {
+  const useEmbed = (!videoUrl && embedUrl) || (failed && fallbackEmbedUrl);
+  const activeEmbed = (!videoUrl && embedUrl) ? embedUrl : fallbackEmbedUrl;
+  if (useEmbed && activeEmbed) {
     return (
       <div className="relative w-full aspect-video bg-black">
         <iframe
-          src={embedUrl}
+          src={activeEmbed}
           className="absolute inset-0 w-full h-full"
           allowFullScreen
           allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
@@ -265,10 +292,10 @@ export function ShadowMinimalPlayer({
         onPlay={() => { setIsPlaying(true); pokeControls(); }}
         onPause={() => { setIsPlaying(false); setControlsVisible(true); }}
         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+        onLoadedMetadata={(e) => { setDuration(e.currentTarget.duration); applyNativeHindi(e.currentTarget); }}
         onDurationChange={(e) => setDuration(e.currentTarget.duration)}
         onWaiting={() => setBuffering(true)}
-        onPlaying={() => setBuffering(false)}
+        onPlaying={(e) => { setBuffering(false); applyNativeHindi(e.currentTarget); }}
         onCanPlay={() => setBuffering(false)}
         onError={() => setFailed(true)}
       >
