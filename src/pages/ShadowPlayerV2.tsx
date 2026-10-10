@@ -170,6 +170,7 @@ export default function ShadowPlayerV2() {
                 overlayEpisode={episode.episode_number}
                 episodes={pickerEpisodes}
                 onSelectEpisode={switchEpisode}
+                fallbackEmbedUrl={isDirectMedia && episode.external_url && !isHlsUrl(episode.external_url) && !isMp4LikeUrl(episode.external_url) ? episode.external_url : null}
                 captionsUrl={fromHomeV2 && (season?.anime?.is_sub_only || season?.anime?.is_eng_dub) ? episode.captions_url : null}
               />
             </div>
