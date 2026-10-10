@@ -25,8 +25,30 @@ export default function ShadowHome() {
   useEffect(() => {
     document.title = 'Watch';
     const load = () => {
-    supabase.from('anime').select('id, title, cover_image, type, is_eng_dub, is_sub_only').order('created_at', { ascending: false }).limit(60)
-      .then(({ data }) => setSeries(data || []));
+    (async () => {
+      // Series order = most recent episode upload first, then newest series.
+      const [{ data: recentEps }, { data: newest }] = await Promise.all([
+        supabase.from('episodes').select('created_at, season:season_id ( anime_id )')
+          .order('created_at', { ascending: false }).limit(400),
+        supabase.from('anime').select('id, title, cover_image, type, is_eng_dub, is_sub_only')
+          .order('created_at', { ascending: false }).limit(60),
+      ]);
+      const order: string[] = [];
+      for (const e of (recentEps as any[]) || []) {
+        const id = e.season?.anime_id;
+        if (id && !order.includes(id)) order.push(id);
+      }
+      const known = new Map((newest || []).map((a) => [a.id, a]));
+      const missing = order.filter((id) => !known.has(id));
+      if (missing.length) {
+        const { data: extra } = await supabase.from('anime')
+          .select('id, title, cover_image, type, is_eng_dub, is_sub_only').in('id', missing);
+        (extra || []).forEach((a) => known.set(a.id, a));
+      }
+      const ordered = order.map((id) => known.get(id)).filter(Boolean) as AnimeHit[];
+      (newest || []).forEach((a) => { if (!order.includes(a.id)) ordered.push(a); });
+      setSeries(ordered);
+    })();
     supabase
       .from('episodes')
       .select('id, episode_number, thumbnail, season:season_id ( season_number, anime:anime_id ( title, cover_image, type, is_eng_dub, is_sub_only ) )')
@@ -35,7 +57,7 @@ export default function ShadowHome() {
       .then(({ data }) => setEpisodes(((data as any) || []).filter((e: Ep) => e.season?.anime)));
     };
     load();
-    const t = setInterval(() => { if (document.visibilityState === 'visible') load(); }, 120000);
+    const t = setInterval(() => { if (document.visibilityState === 'visible') load(); }, 60000);
     return () => clearInterval(t);
   }, []);
 
