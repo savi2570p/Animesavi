@@ -10,7 +10,7 @@ export function TokenExpiredGlobalPopup() {
   if (isCasting) return null;
   if (typeof window !== 'undefined') {
     const p = window.location.pathname;
-    if (p.startsWith('/embed/') || p.startsWith('/embed-')) return null;
+    if (p.startsWith('/embed/') || p.startsWith('/embed-') || p.startsWith('/s2')) return null;
   }
   if (activePopup !== 'expired') return null;
 

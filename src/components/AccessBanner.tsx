@@ -155,7 +155,7 @@ export function AccessBanner() {
   // Skip entirely on embed routes
   const isEmbedRoute = typeof window !== 'undefined' && (
     window.location.pathname.startsWith('/embed/') ||
-    window.location.pathname.startsWith('/s2/') ||
+    window.location.pathname.startsWith('/s2') ||
     new URLSearchParams(window.location.search).get('embed') === 'true'
   );
 
