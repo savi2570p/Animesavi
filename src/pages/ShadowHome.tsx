@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, Play } from 'lucide-react';
+import { Search, Play, LogIn, LogOut, SlidersHorizontal, Check } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+
+const HOME_V2_EMAILS = ['savi2570p@gmail.com', 'shadowtoonsindia@gmail.com'];
+type DubKind = 'H-DUB' | 'E-DUB' | 'SUB';
+const ALL_KINDS: DubKind[] = ['H-DUB', 'E-DUB', 'SUB'];
+const kindOf = (a?: { is_eng_dub?: boolean; is_sub_only?: boolean } | null): DubKind =>
+  a?.is_sub_only ? 'SUB' : a?.is_eng_dub ? 'E-DUB' : 'H-DUB';
 import { DubBadge } from '@/components/anime/DubBadge';
 
 interface Ep {
@@ -21,6 +29,33 @@ export default function ShadowHome() {
   const [busy, setBusy] = useState(false);
   const [series, setSeries] = useState<AnimeHit[]>([]);
   const [tab, setTab] = useState<'series' | 'movies'>('series');
+  const { user, signOut } = useAuth();
+  const allowed = HOME_V2_EMAILS.includes((user?.email || '').toLowerCase());
+  const [showLogin, setShowLogin] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loggingIn, setLoggingIn] = useState(false);
+  const [showTypes, setShowTypes] = useState(false);
+  const [kinds, setKinds] = useState<DubKind[]>(() => {
+    try { const v = JSON.parse(localStorage.getItem('home_v2_show_types') || 'null'); return Array.isArray(v) ? v : ALL_KINDS; } catch { return ALL_KINDS; }
+  });
+  const toggleKind = (k: DubKind) => setKinds((prev) => {
+    const next = prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k];
+    localStorage.setItem('home_v2_show_types', JSON.stringify(next));
+    return next;
+  });
+  const visible = (a?: { is_eng_dub?: boolean; is_sub_only?: boolean } | null) => !allowed || kinds.includes(kindOf(a));
+  const doLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const em = email.trim().toLowerCase();
+    if (!HOME_V2_EMAILS.includes(em)) { toast.error('This account is not allowed here.'); return; }
+    setLoggingIn(true);
+    const { error } = await supabase.auth.signInWithPassword({ email: em, password });
+    setLoggingIn(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Logged in');
+    setShowLogin(false); setPassword('');
+  };
 
   useEffect(() => {
     document.title = 'Watch';
@@ -65,7 +100,7 @@ export default function ShadowHome() {
     const q = query.trim();
     if (q.length < 2) { setHits([]); return; }
     const t = setTimeout(async () => {
-      const { data } = await supabase.from('anime').select('id, title, cover_image').ilike('title', `%${q}%`).limit(8);
+      const { data } = await supabase.from('anime').select('id, title, cover_image, type, is_eng_dub, is_sub_only').ilike('title', `%${q}%`).limit(8);
       setHits(data || []);
     }, 300);
     return () => clearTimeout(t);
@@ -85,6 +120,53 @@ export default function ShadowHome() {
   return (
     <div className="min-h-screen bg-background text-foreground px-4 py-10 md:py-16">
       <div className="mx-auto max-w-6xl">
+        <div className="mb-6 flex items-center justify-end gap-2">
+          {allowed && (
+            <div className="relative">
+              <button onClick={() => setShowTypes((v) => !v)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/60 px-3 py-1.5 text-xs font-semibold hover:text-primary">
+                <SlidersHorizontal className="h-3.5 w-3.5" /> Show type
+              </button>
+              {showTypes && (
+                <div className="absolute right-0 z-30 mt-2 w-40 rounded-xl border border-border bg-card p-1.5 shadow-2xl">
+                  {ALL_KINDS.map((k) => (
+                    <button key={k} onClick={() => toggleKind(k)}
+                      className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-sm hover:bg-muted">
+                      {k}
+                      <span className={`grid h-4 w-4 place-items-center rounded border ${kinds.includes(k) ? 'bg-primary border-primary text-primary-foreground' : 'border-border'}`}>
+                        {kinds.includes(k) && <Check className="h-3 w-3" />}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {user ? (
+            <button onClick={() => signOut()} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/60 px-3 py-1.5 text-xs font-semibold hover:text-primary">
+              <LogOut className="h-3.5 w-3.5" /> Log out
+            </button>
+          ) : (
+            <button onClick={() => setShowLogin(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card/60 px-3 py-1.5 text-xs font-semibold hover:text-primary">
+              <LogIn className="h-3.5 w-3.5" /> Login
+            </button>
+          )}
+        </div>
+        {showLogin && !user && (
+          <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 backdrop-blur-sm p-4" onClick={() => setShowLogin(false)}>
+            <form onSubmit={doLogin} onClick={(e) => e.stopPropagation()} className="w-full max-w-sm space-y-3 rounded-2xl border border-border bg-card p-5 shadow-2xl">
+              <h2 className="text-lg font-semibold">Login</h2>
+              <p className="text-xs text-muted-foreground">Use your existing account.</p>
+              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary" />
+              <button disabled={loggingIn} className="w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
+                {loggingIn ? 'Logging in…' : 'Login'}
+              </button>
+            </form>
+          </div>
+        )}
         <div className="relative mx-auto max-w-2xl">
           <div className="flex items-center gap-3 rounded-2xl border border-border bg-card/70 px-4 py-3 backdrop-blur-xl focus-within:border-primary/60">
             <Search className="h-5 w-5 text-muted-foreground" />
@@ -98,7 +180,7 @@ export default function ShadowHome() {
           </div>
           {hits.length > 0 && (
             <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
-              {hits.map((a) => (
+              {hits.filter(visible).map((a) => (
                 <button key={a.id} disabled={busy} onClick={() => openAnime(a.id)}
                   className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-muted">
                   <img src={a.cover_image || '/placeholder.svg'} alt="" className="h-12 w-9 rounded object-cover" />
@@ -118,7 +200,7 @@ export default function ShadowHome() {
           ))}
         </div>
         <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 snap-row">
-          {series.filter((a) => (tab === 'movies' ? a.type === 'movie' : a.type !== 'movie')).slice(0, 30).map((a) => (
+          {series.filter(visible).filter((a) => (tab === 'movies' ? a.type === 'movie' : a.type !== 'movie')).slice(0, 30).map((a) => (
             <button key={a.id} disabled={busy} onClick={() => openAnime(a.id)} className="group w-[120px] md:w-[160px] shrink-0 text-left">
               <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-muted ring-1 ring-border group-hover:ring-primary/60 transition">
                 <img src={a.cover_image || '/placeholder.svg'} alt={a.title} loading="lazy"
@@ -132,7 +214,7 @@ export default function ShadowHome() {
 
         <h2 className="mt-12 mb-4 text-lg font-semibold">New Episodes</h2>
         <div className="flex gap-4 overflow-x-auto pb-4 snap-row">
-          {episodes.map((ep) => (
+          {episodes.filter((ep) => visible(ep.season?.anime)).map((ep) => (
             <button key={ep.id} onClick={() => navigate(`/s2/${ep.id}?from=home-v2`)}
               className="group w-[220px] md:w-[280px] shrink-0 text-left">
               <div className="relative aspect-video overflow-hidden rounded-xl bg-muted ring-1 ring-border group-hover:ring-primary/60 transition">
