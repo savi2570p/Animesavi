@@ -36,6 +36,13 @@
       "when": 1790227689121,
       "tag": "0004_partner_fetch_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791680904118,
+      "tag": "0005_home_v2_show_types_policies",
+      "breakpoints": true
     }
   ]
 }
