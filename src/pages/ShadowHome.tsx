@@ -36,15 +36,18 @@ export default function ShadowHome() {
   const [password, setPassword] = useState('');
   const [loggingIn, setLoggingIn] = useState(false);
   const [showTypes, setShowTypes] = useState(false);
-  const [kinds, setKinds] = useState<DubKind[]>(() => {
-    try { const v = JSON.parse(localStorage.getItem('home_v2_show_types') || 'null'); return Array.isArray(v) ? v : ALL_KINDS; } catch { return ALL_KINDS; }
-  });
-  const toggleKind = (k: DubKind) => setKinds((prev) => {
-    const next = prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k];
-    localStorage.setItem('home_v2_show_types', JSON.stringify(next));
-    return next;
-  });
-  const visible = (a?: { is_eng_dub?: boolean; is_sub_only?: boolean } | null) => !allowed || kinds.includes(kindOf(a));
+  const [kinds, setKinds] = useState<DubKind[]>(ALL_KINDS);
+  useEffect(() => {
+    supabase.from('site_settings').select('value').eq('key', 'home_v2_show_types').maybeSingle()
+      .then(({ data }) => { if (Array.isArray(data?.value)) setKinds(data!.value as DubKind[]); });
+  }, []);
+  const toggleKind = (k: DubKind) => {
+    const next = kinds.includes(k) ? kinds.filter((x) => x !== k) : [...kinds, k];
+    setKinds(next);
+    supabase.from('site_settings').upsert({ key: 'home_v2_show_types', value: next as any }, { onConflict: 'key' })
+      .then(({ error }) => { if (error) toast.error('Could not save: ' + error.message); });
+  };
+  const visible = (a?: { is_eng_dub?: boolean; is_sub_only?: boolean } | null) => kinds.includes(kindOf(a));
   const doLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const em = email.trim().toLowerCase();
