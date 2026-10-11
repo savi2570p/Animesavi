@@ -38,6 +38,7 @@ export default function ShadowPlayerV2() {
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
   const fromHomeV2 = searchParams.get('from') === 'home-v2';
+  const [viewSeasonId, setViewSeasonId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -168,8 +169,8 @@ export default function ShadowPlayerV2() {
                 overlayTitle={animeTitle || episode.title}
                 overlaySeason={currentSeasonNumber}
                 overlayEpisode={episode.episode_number}
-                episodes={pickerEpisodes}
-                onSelectEpisode={switchEpisode}
+                episodes={fromHomeV2 ? undefined : pickerEpisodes}
+                onSelectEpisode={fromHomeV2 ? undefined : switchEpisode}
                 fallbackEmbedUrl={isDirectMedia && episode.external_url && !isHlsUrl(episode.external_url) && !isMp4LikeUrl(episode.external_url) ? episode.external_url : null}
                 captionsUrl={fromHomeV2 && (season?.anime?.is_sub_only || season?.anime?.is_eng_dub) ? episode.captions_url : null}
               />
@@ -184,6 +185,33 @@ export default function ShadowPlayerV2() {
                 Season {currentSeasonNumber} · Episode {episode.episode_number}
               </p>
             </div>
+
+            {fromHomeV2 && seasons.length > 0 && (
+              <div className="space-y-3 pt-1">
+                <select
+                  value={viewSeasonId || episode.season_id}
+                  onChange={(e) => setViewSeasonId(e.target.value)}
+                  className="rounded-lg border border-white/15 bg-neutral-900 px-3 py-2 text-sm text-white outline-none"
+                >
+                  {seasons.map((s) => (
+                    <option key={s.id} value={s.id}>Season {s.season_number}</option>
+                  ))}
+                </select>
+                <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
+                  {episodes
+                    .filter((e) => e.season_id === (viewSeasonId || episode.season_id))
+                    .map((e) => (
+                      <button
+                        key={e.id}
+                        onClick={() => { switchEpisode(e.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        className={`rounded-md border py-2 text-xs font-semibold transition-colors ${e.id === episode.id ? 'bg-white text-black border-white' : 'bg-white/5 text-white/75 border-white/10 hover:text-white'}`}
+                      >
+                        {e.episode_number}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
