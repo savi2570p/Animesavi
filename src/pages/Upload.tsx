@@ -70,7 +70,7 @@ interface Season {
   anime_id: string;
 }
 
-export default function Upload() {
+function UploadInner() {
   const { user, isUploader, isAdmin, isRolesLoaded, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
   const [myAnime, setMyAnime] = useState<Anime[]>([]);
@@ -1714,4 +1714,41 @@ function UpcomingTabContent({ anime, allAnime, isAdmin, onDelete }: { anime: Ani
       />
     </>
   );
+}
+
+function UploadLockScreen({ onUnlocked }: { onUnlocked: () => void }) {
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const { data, error } = await supabase.rpc('unlock_my_upload', { _code: code });
+    setBusy(false);
+    if (error || !data) { toast.error('Wrong password. Please try again.'); return; }
+    toast.success('Upload permanently unlocked');
+    onUnlocked();
+  };
+  return (
+    <div className="container max-w-md py-24">
+      <form onSubmit={submit} className="lg-panel rounded-2xl p-6 space-y-4">
+        <h1 className="text-xl font-bold">Upload locked</h1>
+        <p className="text-sm text-muted-foreground">Your Upload is locked. Please enter the 16 digit password to permanently unlocked</p>
+        <Input inputMode="numeric" maxLength={19} placeholder="16 digit password" value={code}
+          onChange={(e) => setCode(e.target.value)} />
+        <Button type="submit" className="w-full rounded-lg" disabled={busy || code.replace(/\D/g, '').length !== 16}>Unlock</Button>
+      </form>
+    </div>
+  );
+}
+
+export default function Upload() {
+  const { user } = useAuth();
+  const [locked, setLocked] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!user) { setLocked(false); return; }
+    supabase.rpc('is_upload_locked').then(({ data }) => setLocked(!!data));
+  }, [user?.id]);
+  if (locked === null) return null;
+  if (locked) return <UploadLockScreen onUnlocked={() => setLocked(false)} />;
+  return <UploadInner />;
 }

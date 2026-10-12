@@ -38,6 +38,7 @@ import { EmbedAllowlistManager } from '@/components/admin/EmbedAllowlistManager'
 import { EmbedAudioDebugPanel } from '@/components/admin/EmbedAudioDebugPanel';
 import { RecapAnalyticsDashboard } from '@/components/admin/RecapAnalyticsDashboard';
 import { ClonePlatformsPanel } from '@/components/admin/ClonePlatformsPanel';
+import { UploadUnlockCodes } from '@/components/admin/UploadUnlockCodes';
 
 interface Application {
   id: string;
@@ -424,6 +425,7 @@ export default function Admin() {
           <TabsContent value="clone-page" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><ClonePlatformsPanel /></div></TabsContent>
         </Tabs>
 
+        <UploadUnlockCodes />
         {/* Audio debug panel */}
         <div className="mt-8 lg-panel rounded-2xl p-4 md:p-6">
           <EmbedAudioDebugPanel />
