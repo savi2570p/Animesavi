@@ -40,12 +40,12 @@ export default function ShadowHome() {
   const [kinds, setKinds] = useState<DubKind[]>(ALL_KINDS);
   useEffect(() => {
     supabase.from('site_settings').select('value').eq('key', 'home_v2_show_types').maybeSingle()
-      .then(({ data }) => { if (Array.isArray(data?.value)) setKinds(data!.value as DubKind[]); });
+      .then(({ data }) => { if (Array.isArray(data?.value)) { const v = data!.value as string[]; setKinds((v.includes('v2') ? v : [...v, '18+']).filter((x) => x !== 'v2') as DubKind[]); } });
   }, []);
   const toggleKind = (k: DubKind) => {
     const next = kinds.includes(k) ? kinds.filter((x) => x !== k) : [...kinds, k];
     setKinds(next);
-    supabase.from('site_settings').upsert({ key: 'home_v2_show_types', value: next as any }, { onConflict: 'key' })
+    supabase.from('site_settings').upsert({ key: 'home_v2_show_types', value: [...next, 'v2'] as any }, { onConflict: 'key' })
       .then(({ error }) => { if (error) toast.error('Could not save: ' + error.message); });
   };
   const visible = (a?: any) => (isAdult(a) ? kinds.includes('18+') : true) && kinds.includes(kindOf(a));
