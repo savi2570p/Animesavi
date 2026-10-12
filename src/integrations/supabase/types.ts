@@ -1370,6 +1370,27 @@ export type Database = {
         }
         Relationships: []
       }
+      upload_locks: {
+        Row: {
+          code: string
+          created_at: string
+          email: string
+          unlocked_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          email: string
+          unlocked_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          email?: string
+          unlocked_at?: string | null
+        }
+        Relationships: []
+      }
       uploader_applications: {
         Row: {
           admin_notes: string | null
@@ -2057,6 +2078,7 @@ export type Database = {
         Returns: boolean
       }
       is_flox_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_upload_locked: { Args: never; Returns: boolean }
       mark_continue_watching_done: {
         Args: {
           _anime_id: string
@@ -2089,6 +2111,7 @@ export type Database = {
           id: string
         }[]
       }
+      unlock_my_upload: { Args: { _code: string }; Returns: boolean }
       upsert_watch_progress: {
         Args: {
           _anime_id: string
