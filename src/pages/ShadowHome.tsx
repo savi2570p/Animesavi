@@ -6,9 +6,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 const HOME_V2_EMAILS = ['savi2570p@gmail.com', 'shadowtoonsindia@gmail.com'];
-type DubKind = 'H-DUB' | 'E-DUB' | 'SUB';
-const ALL_KINDS: DubKind[] = ['H-DUB', 'E-DUB', 'SUB'];
-const kindOf = (a?: { is_eng_dub?: boolean; is_sub_only?: boolean } | null): DubKind =>
+type DubKind = 'H-DUB' | 'E-DUB' | 'SUB' | '18+';
+const ALL_KINDS: DubKind[] = ['H-DUB', 'E-DUB', 'SUB', '18+'];
+const isAdult = (a?: { genres?: string[] | null } | null) => !!a?.genres?.some((g) => g.toLowerCase() === 'hentai');
+const kindOf = (a?: { is_eng_dub?: boolean; is_sub_only?: boolean; genres?: string[] | null } | null): DubKind =>
   a?.is_sub_only ? 'SUB' : a?.is_eng_dub ? 'E-DUB' : 'H-DUB';
 import { DubBadge } from '@/components/anime/DubBadge';
 
@@ -16,10 +17,10 @@ interface Ep {
   id: string;
   episode_number: number;
   thumbnail: string | null;
-  season: { season_number: number; anime: { title: string; cover_image: string | null; type: string | null; is_eng_dub?: boolean; is_sub_only?: boolean } | null } | null;
+  season: { season_number: number; anime: { title: string; cover_image: string | null; type: string | null; is_eng_dub?: boolean; is_sub_only?: boolean; genres?: string[] | null } | null } | null;
 }
 
-interface AnimeHit { id: string; title: string; cover_image: string | null; type?: string | null; is_eng_dub?: boolean; is_sub_only?: boolean }
+interface AnimeHit { id: string; title: string; cover_image: string | null; type?: string | null; is_eng_dub?: boolean; is_sub_only?: boolean; genres?: string[] | null }
 
 export default function ShadowHome() {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ export default function ShadowHome() {
     supabase.from('site_settings').upsert({ key: 'home_v2_show_types', value: next as any }, { onConflict: 'key' })
       .then(({ error }) => { if (error) toast.error('Could not save: ' + error.message); });
   };
-  const visible = (a?: { is_eng_dub?: boolean; is_sub_only?: boolean } | null) => kinds.includes(kindOf(a));
+  const visible = (a?: any) => (isAdult(a) ? kinds.includes('18+') : true) && kinds.includes(kindOf(a));
   const doLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const em = email.trim().toLowerCase();
@@ -68,7 +69,7 @@ export default function ShadowHome() {
       const [{ data: recentEps }, { data: newest }] = await Promise.all([
         supabase.from('episodes').select('created_at, season:season_id ( anime_id )')
           .order('created_at', { ascending: false }).limit(400),
-        supabase.from('anime').select('id, title, cover_image, type, is_eng_dub, is_sub_only')
+        supabase.from('anime').select('id, title, cover_image, type, is_eng_dub, is_sub_only, genres')
           .order('created_at', { ascending: false }).limit(60),
       ]);
       const order: string[] = [];
@@ -80,7 +81,7 @@ export default function ShadowHome() {
       const missing = order.filter((id) => !known.has(id));
       if (missing.length) {
         const { data: extra } = await supabase.from('anime')
-          .select('id, title, cover_image, type, is_eng_dub, is_sub_only').in('id', missing);
+          .select('id, title, cover_image, type, is_eng_dub, is_sub_only, genres').in('id', missing);
         (extra || []).forEach((a) => known.set(a.id, a));
       }
       const ordered = order.map((id) => known.get(id)).filter(Boolean) as AnimeHit[];
@@ -89,7 +90,7 @@ export default function ShadowHome() {
     })();
     supabase
       .from('episodes')
-      .select('id, episode_number, thumbnail, season:season_id ( season_number, anime:anime_id ( title, cover_image, type, is_eng_dub, is_sub_only ) )')
+      .select('id, episode_number, thumbnail, season:season_id ( season_number, anime:anime_id ( title, cover_image, type, is_eng_dub, is_sub_only, genres ) )')
       .order('created_at', { ascending: false })
       .limit(24)
       .then(({ data }) => setEpisodes(((data as any) || []).filter((e: Ep) => e.season?.anime)));
@@ -103,7 +104,7 @@ export default function ShadowHome() {
     const q = query.trim();
     if (q.length < 2) { setHits([]); return; }
     const t = setTimeout(async () => {
-      const { data } = await supabase.from('anime').select('id, title, cover_image, type, is_eng_dub, is_sub_only').ilike('title', `%${q}%`).limit(8);
+      const { data } = await supabase.from('anime').select('id, title, cover_image, type, is_eng_dub, is_sub_only, genres').ilike('title', `%${q}%`).limit(8);
       setHits(data || []);
     }, 300);
     return () => clearTimeout(t);
@@ -208,7 +209,7 @@ export default function ShadowHome() {
               <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-muted ring-1 ring-border group-hover:ring-primary/60 transition">
                 <img src={a.cover_image || '/placeholder.svg'} alt={a.title} loading="lazy"
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                <div className="absolute top-1.5 right-1.5"><DubBadge isEngDub={a.is_eng_dub} isSubOnly={a.is_sub_only} /></div>
+                <div className="absolute top-1.5 right-1.5"><DubBadge isEngDub={a.is_eng_dub} isSubOnly={a.is_sub_only} /></div>{isAdult(a) && <span className="absolute top-1.5 left-1.5 rounded-md bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">18+</span>}
               </div>
               <p className="mt-1.5 text-xs md:text-sm font-semibold line-clamp-2">{a.title}</p>
             </button>
@@ -223,7 +224,7 @@ export default function ShadowHome() {
               <div className="relative aspect-video overflow-hidden rounded-xl bg-muted ring-1 ring-border group-hover:ring-primary/60 transition">
                 <img src={ep.thumbnail || ep.season?.anime?.cover_image || '/placeholder.svg'} alt={ep.season?.anime?.title}
                   loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                <div className="absolute top-1.5 right-1.5"><DubBadge isEngDub={ep.season?.anime?.is_eng_dub} isSubOnly={ep.season?.anime?.is_sub_only} /></div>
+                <div className="absolute top-1.5 right-1.5"><DubBadge isEngDub={ep.season?.anime?.is_eng_dub} isSubOnly={ep.season?.anime?.is_sub_only} /></div>{isAdult(ep.season?.anime) && <span className="absolute top-1.5 left-1.5 rounded-md bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">18+</span>}
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
                   <span className="rounded-full bg-primary p-3"><Play className="h-5 w-5 fill-current text-primary-foreground" /></span>
                 </div>

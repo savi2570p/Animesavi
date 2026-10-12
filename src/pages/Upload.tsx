@@ -70,7 +70,7 @@ interface Season {
   anime_id: string;
 }
 
-export default function Upload() {
+function UploadInner() {
   const { user, isUploader, isAdmin, isRolesLoaded, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
   const [myAnime, setMyAnime] = useState<Anime[]>([]);
