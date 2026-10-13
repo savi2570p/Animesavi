@@ -51,7 +51,8 @@ export function RecentlyCompleted() {
           title,
           cover_image,
           is_eng_dub,
-          is_sub_only
+          is_sub_only,
+          genres
         )
       `)
       .eq('user_id', user.id)
