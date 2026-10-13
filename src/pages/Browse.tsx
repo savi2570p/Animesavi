@@ -806,7 +806,7 @@ export default function Browse() {
                     {isNew(anime.created_at) && (
                       <div className="badge-glass-new animate-pulse">NEW</div>
                     )}
-                    <DubBadge isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} />
+                    <DubBadge isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} genres={(anime as any).genres} />
                   </div>
 
                   {/* BOTTOM-LEFT: episode count chip */}

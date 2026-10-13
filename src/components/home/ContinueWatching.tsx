@@ -117,7 +117,7 @@ const ContinueWatchingCard = memo(function ContinueWatchingCard({
               <span className="px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-semibold text-white tabular-nums">
                 {Math.round(progressPct)}%
               </span>
-              <DubBadge isEngDub={(item.anime as any).is_eng_dub} isSubOnly={(item.anime as any).is_sub_only} />
+              <DubBadge isEngDub={(item.anime as any).is_eng_dub} isSubOnly={(item.anime as any).is_sub_only} genres={(item.anime as any).genres} />
             </div>
           </div>
           <div className="pointer-events-none absolute inset-0 hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -191,7 +191,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       // 1. Resumable rows (in-progress) — keep the existing behaviour.
       const { data, error } = await supabase
         .from('watch_history')
-        .select('id, progress, completed, completed_at, last_position, duration, watched_at, anime:anime_id(id,title,cover_image,status,is_eng_dub,is_sub_only), episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
+        .select('id, progress, completed, completed_at, last_position, duration, watched_at, anime:anime_id(id,title,cover_image,status,is_eng_dub,is_sub_only,genres), episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
         .eq('user_id', user.id)
         .or('completed.is.null,completed.eq.false')
         .order('watched_at', { ascending: false })

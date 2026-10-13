@@ -206,179 +206,120 @@ export function RecommendedAnime() {
     ? Array.from(new Set([...topGenres, ...ratedTopGenres])).slice(0, 4)
     : moodGenres.slice(0, 4);
 
+  const [hero, ...rest] = recommendations;
   return (
-    <section className="py-12 relative overflow-hidden">
-      {/* Layered backdrop accents */}
-      <div aria-hidden className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-24 -left-16 w-80 h-80 rounded-full bg-primary/12 blur-3xl" />
-        <div className="absolute top-10 right-0 w-80 h-80 rounded-full bg-purple-500/10 blur-3xl" />
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-      </div>
-
+    <section className="py-10 md:py-14 relative">
       <div className="container relative">
-        {/* Editorial header */}
-        <div className="flex items-end justify-between mb-6 gap-4 flex-wrap">
-          <div className="flex items-stretch gap-3.5 min-w-0">
-            <div className="w-[3px] rounded-full bg-gradient-to-b from-purple-400 via-primary to-transparent shadow-[0_0_14px_hsl(var(--primary))]" />
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
-                  <Brain className="h-3 w-3" />
-                  AI Curated
-                </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">
-                  <Flame className="h-2.5 w-2.5" />
-                  v2.0
-                </span>
-              </div>
-              <h2 className="text-2xl md:text-3xl lg:text-[2rem] font-heading font-bold leading-tight tracking-tight">
+        <div className="lg-panel relative overflow-hidden rounded-3xl p-4 md:p-7">
+          <div aria-hidden className="pointer-events-none absolute -top-28 -right-20 h-72 w-72 rounded-full bg-primary/25 blur-[90px] animate-pulse" />
+          <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-20 h-72 w-72 rounded-full bg-accent/20 blur-[90px]" />
+
+          {/* Header */}
+          <div className="relative flex items-end justify-between gap-4 flex-wrap mb-5">
+            <div>
+              <span className="lg-chip inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+                <Sparkles className="h-3 w-3" /> Picked for you
+              </span>
+              <h2 className="mt-2 text-2xl md:text-4xl font-heading font-bold tracking-tight">
                 Smart <span className="anime-gradient-text">Recommendations</span>
               </h2>
-              <p className="text-xs md:text-sm text-muted-foreground/90 mt-1 flex items-center gap-1.5">
-                <ActiveMoodIcon className="h-3 w-3 text-primary" />
-                <span>{activeMood.description}</span>
+              <p key={mood} className="mt-1 text-xs md:text-sm text-muted-foreground flex items-center gap-1.5 animate-fade-in">
+                <ActiveMoodIcon className="h-3.5 w-3.5 text-primary" /> {activeMood.description}
               </p>
             </div>
-          </div>
-          <Button variant="ghost" size="sm" asChild className="group shrink-0 rounded-full border border-white/5 hover:border-primary/30 hover:bg-primary/10">
-            <Link to="/browse" className="flex items-center gap-1">
-              Explore all
-              <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            <Link to="/browse" className="lg-chip group inline-flex items-center gap-1 rounded-full px-4 py-2 text-xs font-semibold hover:text-primary">
+              Explore all <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
-          </Button>
-        </div>
+          </div>
 
-        {/* Mood selector — segmented glass control */}
-        <div className="relative mb-4 -mx-4 px-4">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none p-1 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 inline-flex w-full md:w-auto">
+          {/* Mood pills */}
+          <div className="relative flex gap-2 overflow-x-auto snap-row pb-2 mb-4">
             {MOODS.map((m) => {
               const Icon = m.icon;
               const active = mood === m.id;
               return (
-                <button
-                  key={m.id}
-                  onClick={() => setMood(m.id)}
-                  className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11.5px] font-semibold transition-all ${
-                    active
-                      ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_6px_20px_-6px_hsl(var(--primary)/0.8)] scale-[1.02]'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
-                  }`}
-                  aria-pressed={active}
-                >
-                  <Icon className={`h-3.5 w-3.5 ${active ? '' : 'opacity-70'}`} />
-                  {m.label}
+                <button key={m.id} onClick={() => setMood(m.id)} aria-pressed={active}
+                  className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all duration-300 ${
+                    active ? 'bg-primary text-primary-foreground shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.8)] scale-105' : 'lg-chip text-muted-foreground hover:text-foreground'}`}>
+                  <Icon className="h-3.5 w-3.5" /> {m.label}
                 </button>
               );
             })}
           </div>
-        </div>
+          {driverChips.length > 0 && (
+            <div className="relative flex gap-1.5 overflow-x-auto snap-row mb-5">
+              {driverChips.map((g) => (
+                <span key={g} className="shrink-0 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-0.5 text-[11px] text-foreground/90">#{g}</span>
+              ))}
+              {mood === 'auto' && ratedTopGenres.length > 0 && (
+                <span className="shrink-0 inline-flex items-center gap-1 rounded-full border border-primary/25 px-2.5 py-0.5 text-[10px] font-bold uppercase text-primary">
+                  <Compass className="h-2.5 w-2.5" /> Ratings boost
+                </span>
+              )}
+            </div>
+          )}
 
-        {/* Driver signal chips */}
-        {driverChips.length > 0 && (
-          <div className="flex items-center gap-2 mb-5 overflow-x-auto scrollbar-none -mx-4 px-4">
-            <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80">
-              {mood === 'auto' ? 'Tuned by' : 'Mood'}
-            </span>
-            <span className="shrink-0 text-muted-foreground/40">›</span>
-            {driverChips.map((g) => (
-              <span
-                key={g}
-                className="shrink-0 px-2.5 py-0.5 text-[11px] font-medium rounded-full bg-primary/8 text-foreground/90 border border-primary/20 backdrop-blur-sm hover:border-primary/40 transition-colors"
-              >
-                #{g}
-              </span>
-            ))}
-            {mood === 'auto' && ratedTopGenres.length > 0 && (
-              <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                <Compass className="h-2.5 w-2.5" />
-                Ratings boost
-              </span>
-            )}
-          </div>
-        )}
-
-
-        {/* Poster row */}
-        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-row scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
-          {recommendations.map((anime, index) => (
-            <AnimeCardContextMenu
-              key={anime.id}
-              animeTitle={anime.title || ''}
-              animeUrl={`/anime/${anime.id}`}
-              coverImage={anime.cover_image}
-            >
-              <Link
-                to={`/anime/${anime.id}`}
-                className={`group relative block stagger-${Math.min(index + 1, 8)} animate-fade-in w-[150px] md:w-[170px] lg:w-[190px] shrink-0`}
-              >
-                <div className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl group-hover:-translate-y-1 transition-all duration-500 ring-1 ring-white/5 group-hover:ring-primary/40">
-                  {anime.cover_image && (
-                    <img
-                      src={anime.cover_image}
-                      alt=""
-                      aria-hidden="true"
-                      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                      style={{ filter: 'blur(24px) brightness(0.4)' }}
-                    />
-                  )}
-                  <img
-                    src={anime.cover_image || '/placeholder.svg'}
-                    alt={anime.title || ''}
-                    className="relative z-[2] w-full h-full object-contain transition-transform duration-700 group-hover:scale-105 pointer-events-none"
-                    loading="lazy"
-                  />
-
-                  <div className="absolute inset-x-0 bottom-0 h-2/3 z-[3] bg-gradient-to-t from-black via-black/55 to-transparent pointer-events-none" />
-                  <div className="absolute inset-0 z-[3] bg-gradient-to-tr from-primary/35 via-transparent to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-                  {anime.status === 'ongoing' && (
-                    <span className="absolute top-2 left-2 z-[5] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-primary/90 text-primary-foreground shadow">
-                      On Air
+          <div key={mood} className="relative flex gap-3 md:gap-4 overflow-x-auto snap-row pb-3">
+            {/* Spotlight card */}
+            {hero && (
+              <Link to={`/anime/${hero.id}`}
+                className="group relative shrink-0 w-[280px] md:w-[420px] aspect-[16/10] md:aspect-auto rounded-2xl overflow-hidden ring-1 ring-border animate-fade-in">
+                <img src={hero.cover_image || '/placeholder.svg'} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover scale-110 blur-2xl opacity-60" />
+                <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
+                <div className="relative flex h-full gap-4 p-4">
+                  <img src={hero.cover_image || '/placeholder.svg'} alt={hero.title}
+                    className="h-full max-h-[220px] aspect-[2/3] rounded-xl object-cover shadow-2xl transition-transform duration-500 group-hover:scale-105 group-hover:-rotate-1" />
+                  <div className="flex min-w-0 flex-col justify-end">
+                    <div className="mb-2 flex flex-wrap gap-1"><DubBadge isEngDub={hero.is_eng_dub} isSubOnly={hero.is_sub_only} genres={hero.genres} /></div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">#1 Match</span>
+                    <h3 className="mt-1 text-base md:text-xl font-bold leading-tight line-clamp-3">{hero.title}</h3>
+                    <p className="mt-1 text-[11px] text-muted-foreground line-clamp-1">{[hero.release_year, ...(hero.genres || []).slice(0, 2)].filter(Boolean).join(' · ')}</p>
+                    <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition-transform group-hover:scale-105">
+                      <Play className="h-3.5 w-3.5 fill-current" /> Watch
                     </span>
-                  )}
-                  {anime.status === 'upcoming' && (
-                    <span className="absolute top-2 left-2 z-[5] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-orange-500/90 text-white shadow flex items-center gap-1 animate-pulse">
-                      <CalendarClock className="h-2.5 w-2.5" />
-                      Soon
-                    </span>
-                  )}
-
-                  <div className="absolute top-2 right-2 z-[5] flex flex-col gap-1 items-end pointer-events-none">
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
-                      4K
-                    </span>
-                    <DubBadge isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} />
-                  </div>
-
-                  <div className="pointer-events-none">
-                    <TokenCrownBadge />
-                  </div>
-
-                  <div className="absolute inset-0 z-[4] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
-                    <div className="p-3 rounded-full bg-primary/95 shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-300">
-                      <Play className="h-5 w-5 text-primary-foreground fill-current" />
-                    </div>
-                  </div>
-
-                  <div className="absolute bottom-0 left-0 right-0 z-[5] p-2.5 pointer-events-none">
-                    <h3 className="text-[13px] md:text-sm font-semibold text-white line-clamp-2 leading-tight drop-shadow-lg">
-                      {anime.title}
-                    </h3>
-                    <div className="flex items-center gap-1.5 mt-1 text-[10px] text-white/75">
-                      {anime.release_year && <span>{anime.release_year}</span>}
-                      {anime.release_year && anime.genres?.[0] && <span className="opacity-50">•</span>}
-                      {anime.genres?.[0] && (
-                        <span className="text-primary-foreground/90 font-medium truncate">
-                          {anime.genres[0]}
-                        </span>
-                      )}
-                    </div>
                   </div>
                 </div>
               </Link>
-            </AnimeCardContextMenu>
-          ))}
+            )}
+
+            {rest.map((anime, index) => (
+              <AnimeCardContextMenu key={anime.id} animeTitle={anime.title || ''} animeUrl={`/anime/${anime.id}`} coverImage={anime.cover_image}>
+                <Link to={`/anime/${anime.id}`}
+                  style={{ animationDelay: `${Math.min(index, 10) * 50}ms`, animationFillMode: 'both' }}
+                  className="group relative block w-[140px] md:w-[165px] shrink-0 animate-fade-in">
+                  <div className="lg-panel relative aspect-[2/3] overflow-hidden rounded-2xl transition-all duration-500 group-hover:-translate-y-1.5 group-hover:shadow-[0_18px_40px_-12px_hsl(var(--primary)/0.55)]">
+                    {anime.cover_image && (
+                      <img src={anime.cover_image} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover blur-xl opacity-50 pointer-events-none" />
+                    )}
+                    <img src={anime.cover_image || '/placeholder.svg'} alt={anime.title || ''} loading="lazy"
+                      className="relative z-[2] h-full w-full object-contain transition-transform duration-700 group-hover:scale-105 pointer-events-none" />
+                    <div className="absolute inset-x-0 bottom-0 z-[3] h-1/2 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+                    {anime.status === 'ongoing' && (
+                      <span className="absolute top-2 left-2 z-[5] rounded-md bg-primary px-1.5 py-0.5 text-[9px] font-bold uppercase text-primary-foreground">On Air</span>
+                    )}
+                    {anime.status === 'upcoming' && (
+                      <span className="absolute top-2 left-2 z-[5] inline-flex items-center gap-1 rounded-md bg-secondary px-1.5 py-0.5 text-[9px] font-bold uppercase">
+                        <CalendarClock className="h-2.5 w-2.5" /> Soon
+                      </span>
+                    )}
+                    <div className="absolute top-2 right-2 z-[5] flex flex-col items-end gap-1 pointer-events-none">
+                      <DubBadge isEngDub={anime.is_eng_dub} isSubOnly={anime.is_sub_only} genres={anime.genres} />
+                    </div>
+                    <div className="pointer-events-none"><TokenCrownBadge /></div>
+                    <div className="absolute inset-0 z-[4] grid place-items-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none">
+                      <span className="rounded-full bg-primary p-3 shadow-2xl scale-75 transition-transform duration-300 group-hover:scale-100">
+                        <Play className="h-5 w-5 fill-current text-primary-foreground" />
+                      </span>
+                    </div>
+                    <div className="absolute bottom-0 inset-x-0 z-[5] p-2.5 pointer-events-none">
+                      <h3 className="text-[13px] font-semibold leading-tight line-clamp-2">{anime.title}</h3>
+                      <p className="mt-0.5 text-[10px] text-muted-foreground truncate">{[anime.release_year, anime.genres?.[0]].filter(Boolean).join(' · ')}</p>
+                    </div>
+                  </div>
+                </Link>
+              </AnimeCardContextMenu>
+            ))}
+          </div>
         </div>
       </div>
     </section>

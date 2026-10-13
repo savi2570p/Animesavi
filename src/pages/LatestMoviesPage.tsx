@@ -164,7 +164,7 @@ export default function LatestMoviesPage() {
                           NEW
                         </div>
                       )}
-                      <DubBadge isEngDub={(movie as any).is_eng_dub} isSubOnly={(movie as any).is_sub_only} />
+                      <DubBadge isEngDub={(movie as any).is_eng_dub} isSubOnly={(movie as any).is_sub_only} genres={(movie as any).genres} />
 
                     </div>
 

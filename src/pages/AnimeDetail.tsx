@@ -647,7 +647,7 @@ export default function AnimeDetail() {
                   {anime.studio}
                 </span>
               )}
-              <DubBadge size="md" isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} />
+              <DubBadge size="md" isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} genres={(anime as any).genres} />
             </div>
 
             {/* Description — accent border card */}
