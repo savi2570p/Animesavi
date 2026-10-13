@@ -260,7 +260,7 @@ export const MostPopular = memo(function MostPopular() {
                               {formatViews(anime.view_count)}
                             </span>
                           )}
-                          <DubBadge isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} />
+                          <DubBadge isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} genres={(anime as any).genres} />
                         </div>
                       </div>
                     </div>

@@ -213,7 +213,7 @@ export function RecentlyCompleted() {
                   </div>
 
                   {/* Dub badge */}
-                  <div className="absolute top-2 right-2"><DubBadge isEngDub={anime.is_eng_dub} isSubOnly={anime.is_sub_only} /></div>
+                  <div className="absolute top-2 right-2"><DubBadge isEngDub={anime.is_eng_dub} isSubOnly={anime.is_sub_only} genres={(anime as any).genres} /></div>
 
                   {/* Bottom gradient overlay always subtle, intensifies on hover */}
                   <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/85 via-black/30 to-transparent opacity-70 group-hover:opacity-100 transition-opacity" />

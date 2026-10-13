@@ -221,7 +221,7 @@ export default function LatestSeriesPage() {
                           NEW
                         </div>
                       )}
-                      <DubBadge isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} />
+                      <DubBadge isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} genres={(anime as any).genres} />
                     </div>
 
                     {getStatusBadge(anime)}

@@ -177,7 +177,7 @@ export const LatestMovies = memo(function LatestMovies() {
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow">
                       4K
                     </span>
-                    <DubBadge isEngDub={(movie as any).is_eng_dub} isSubOnly={(movie as any).is_sub_only} />
+                    <DubBadge isEngDub={(movie as any).is_eng_dub} isSubOnly={(movie as any).is_sub_only} genres={(movie as any).genres} />
 
                   </div>
 

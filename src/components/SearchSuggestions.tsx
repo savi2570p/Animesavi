@@ -103,7 +103,7 @@ export function SearchSuggestions({ query, isVisible, onSelect, className }: Sea
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
                   <p className="text-sm font-medium text-foreground line-clamp-1">{anime.title}</p>
-                  <DubBadge isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} className="shrink-0" />
+                  <DubBadge isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} genres={(anime as any).genres} className="shrink-0" />
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   {anime.type && (

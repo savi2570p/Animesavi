@@ -142,7 +142,7 @@ export function MoreInfoDrawer({
                       {anime.status}
                     </span>
                   )}
-                  <DubBadge size="md" isEngDub={anime.is_eng_dub} isSubOnly={anime.is_sub_only} />
+                  <DubBadge size="md" isEngDub={anime.is_eng_dub} isSubOnly={anime.is_sub_only} genres={(anime as any).genres} />
                 </div>
               </div>
             </div>
