@@ -73,7 +73,7 @@ export const LatestSeries = memo(function LatestSeries() {
 
       const { data: animeData, error: animeError } = await supabase
         .from('anime')
-        .select(`id, title, cover_image, created_at, updated_at, type, status, is_eng_dub, is_sub_only`)
+        .select(`id, title, cover_image, created_at, updated_at, type, status, is_eng_dub, is_sub_only, genres`)
         .in('id', candidateIds)
         .eq('type', 'series');
 
