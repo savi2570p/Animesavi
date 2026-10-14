@@ -95,7 +95,12 @@ export const TurnstileGate = () => {
 
   useEffect(() => {
     // Shadow link v2 (/s2/...) is a branding-free standalone player — no gate.
-    if (window.location.pathname.startsWith('/s2')) return;
+    const p = window.location.pathname;
+    let framed = false;
+    try { framed = window.self !== window.top; } catch { framed = true; }
+    // Embed players (any embed link, or anything loaded inside another site) never show the gate.
+    if (p.startsWith('/s2') || p.startsWith('/embed') || p.startsWith('/e/') || framed ||
+        /^\/[A-Za-z0-9]{6,12}$/.test(p) && /[A-Z]/.test(p)) return;
     const mountedAt = performance.now();
     if (isVerifiedNow()) {
       recordAnalytics({ ts: Date.now(), type: "skipped" });
