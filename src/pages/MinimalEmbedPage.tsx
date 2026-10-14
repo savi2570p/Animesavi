@@ -32,6 +32,7 @@ const ALLOWED_EMBED_HOSTS = [
   'animesavi.com',
   'www.animesavi.com',
   'floxanimeindia.in.net',
+  'kairoanime.base44.app',
 ];
 
 function isHostAllowed(host: string | null | undefined): boolean {
