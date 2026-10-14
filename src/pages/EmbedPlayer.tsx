@@ -44,6 +44,7 @@ const ALLOWED_DOMAINS = [
   'animesavi.com',
   'www.animesavi.com',
   'floxanimeindia.in.net',
+  'kairoanime.base44.app',
 ];
 
 const ADMIN_EMAILS = [
