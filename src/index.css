@@ -1971,11 +1971,15 @@ nav[class*="fixed"][class*="bottom-"] {
 .video-player :where([class*="controls"], [class*="control-bar"], [class*="bottom-bar"], [class*="top-bar"]) {
   background: linear-gradient(180deg, rgba(10,6,24,0) 0%, rgba(10,6,24,0.55) 60%, rgba(10,6,24,0.85) 100%) !important;
 }
-.video-player button:where([class*="rounded-full"], [aria-label]) {
-  background: rgba(20, 12, 36, 0.55) !important;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.14);
+/* Super-flat control buttons: no circle, no fill, no ring */
+.video-player button:where([class*="rounded-full"], [aria-label], [title]),
+.player-shell button:where([class*="rounded-full"], [aria-label], [title]) {
+  background: transparent !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 6px !important;
 }
 
 /* Extra-rounded player corners on mobile landscape.
