@@ -278,7 +278,7 @@ export function ShadowMinimalPlayer({
   return (
     <div
       ref={containerRef}
-      className="relative w-full aspect-video bg-black select-none overflow-hidden"
+      className="player-shell relative w-full aspect-video bg-black select-none overflow-hidden"
       onMouseMove={pokeControls}
       onTouchStart={pokeControls}
     >

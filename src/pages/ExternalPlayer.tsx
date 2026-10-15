@@ -350,7 +350,7 @@ export default function ExternalPlayer() {
       {/* Video Player */}
       <div 
         ref={containerRef}
-        className={`flex-1 relative bg-black ${isFullscreen ? 'fixed inset-0 z-[9999]' : ''}`}
+        className={`player-shell flex-1 relative bg-black ${isFullscreen ? 'fixed inset-0 z-[9999]' : ''}`}
         onMouseMove={handleMouseMove}
         onTouchStart={(e) => {
           setShowControls(true);
