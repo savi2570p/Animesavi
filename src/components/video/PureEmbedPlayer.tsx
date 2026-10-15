@@ -109,7 +109,7 @@ export function PureEmbedPlayer({ url, title, onSwitchServer }: PureEmbedPlayerP
 
   return (
     <div
-      className="embed-player relative w-full bg-black overflow-hidden"
+      className="player-shell embed-player relative w-full bg-black overflow-hidden"
       style={{ aspectRatio: '16 / 9' }}
       onContextMenu={(e) => e.preventDefault()}
     >
