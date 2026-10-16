@@ -737,6 +737,9 @@ export default function EmbedPlayer() {
       )}
 
       <video
+ disablePictureInPicture
+ disableRemotePlayback
+ {...({ 'x-webkit-airplay': 'deny' } as any)}
         ref={videoRef}
         className="w-full h-full object-contain"
         autoPlay playsInline muted preload="auto"
@@ -858,7 +861,7 @@ export default function EmbedPlayer() {
 
           {/* Control buttons - flat */}
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <div className={`flex items-center ${gapSize} shrink-0`}>
+            <div className={`embed-pill flex items-center ${gapSize} shrink-0`}>
               <button className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`} onClick={skipBackward}>
                 <SkipBack className={iconSize} />
               </button>
@@ -873,7 +876,7 @@ export default function EmbedPlayer() {
               </button>
             </div>
 
-            <div className={`flex items-center ${gapSize} flex-wrap justify-end`}>
+            <div className={`embed-pill flex items-center ${gapSize} flex-wrap justify-end`}>
               {/* CC subtitles */}
               {false && (captionsUrl || subtitleTracks.length > 0) && (
                 <div className="relative">

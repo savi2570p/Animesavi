@@ -604,6 +604,9 @@ export default function MinimalEmbedPage() {
         {!error && videoUrl && !useIframe && (
           <>
             <video
+ disablePictureInPicture
+ disableRemotePlayback
+ {...({ 'x-webkit-airplay': 'deny' } as any)}
               ref={videoRef}
               playsInline
               autoPlay

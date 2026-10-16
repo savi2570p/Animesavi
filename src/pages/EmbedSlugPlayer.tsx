@@ -756,6 +756,9 @@ export default function EmbedSlugPlayer() {
       })()}
 
       <video
+ disablePictureInPicture
+ disableRemotePlayback
+ {...({ 'x-webkit-airplay': 'deny' } as any)}
         ref={videoRef}
         className="w-full h-full object-contain"
         autoPlay playsInline muted preload="auto"
@@ -863,7 +866,7 @@ export default function EmbedSlugPlayer() {
 
           {/* Time + Controls */}
           <div className={`flex items-center justify-between gap-2 flex-wrap`}>
-            <div className={`flex items-center ${gapSize} shrink-0`}>
+            <div className={`embed-pill flex items-center ${gapSize} shrink-0`}>
               <button onClick={togglePlay} className={controlButtonClass}>
                 {isPlaying ? <Pause className={iconSize} /> : <Play className={`${iconSize} ml-0.5`} />}
               </button>
@@ -876,7 +879,7 @@ export default function EmbedSlugPlayer() {
               <span className="text-white/80 text-[10px] sm:text-xs ml-1">{formatTime(currentTime)} / {formatTime(duration)}</span>
             </div>
 
-            <div className={`flex items-center ${gapSize} flex-wrap justify-end`}>
+            <div className={`embed-pill flex items-center ${gapSize} flex-wrap justify-end`}>
               {/* CC subtitles */}
               {false && (captionsUrl || subtitleTracks.length > 0) && (
                 <div className="relative">

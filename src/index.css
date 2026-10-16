@@ -3396,3 +3396,15 @@ html.perf-low .story-link::after {
 .flat-controls button.rounded-full:hover {
   background: hsl(0 0% 100% / 0.08) !important;
 }
+
+/* Embed control pills (reference style) */
+.embed-pill{border:1px solid hsl(0 0% 100% / .14);border-radius:9999px;padding:2px 8px;background:hsl(0 0% 0% / .35)}
+.embed-pill button{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important}
+@media (max-width:767px){
+  .embed-pill{padding:1px 5px}
+  .embed-pill svg{width:11px!important;height:11px!important}
+  .embed-pill button{width:18px!important;height:18px!important}
+  .embed-ctrl-btn{width:22px!important;height:22px!important;padding:0!important}
+  .embed-ctrl-btn svg{width:13px!important;height:13px!important}
+}
+video::-webkit-media-controls-picture-in-picture-button{display:none!important}
