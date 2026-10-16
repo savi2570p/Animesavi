@@ -3408,3 +3408,7 @@ html.perf-low .story-link::after {
   .embed-ctrl-btn svg{width:13px!important;height:13px!important}
 }
 video::-webkit-media-controls-picture-in-picture-button{display:none!important}
+.vp-pill{border:1px solid hsl(0 0% 100% / .14);border-radius:9999px;padding:2px 8px;background:hsl(0 0% 0% / .35)}
+.vp-pill button{background:transparent!important;border:0!important;box-shadow:none!important}
+button[title="Picture-in-Picture"],button[title="Screen Mirroring"]{display:none!important}
+@media (max-width:767px){.vp-pill{padding:1px 5px;gap:4px!important}.vp-pill button{width:18px!important;height:18px!important}.vp-pill svg{width:11px!important;height:11px!important}}

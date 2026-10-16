@@ -287,7 +287,9 @@ export function ShadowMinimalPlayer({
         poster={poster}
         className="absolute inset-0 w-full h-full object-contain"
         playsInline
-        preload="metadata"
+        preload="auto"
+        disablePictureInPicture
+        disableRemotePlayback
         onClick={togglePlay}
         onPlay={() => { setIsPlaying(true); pokeControls(); }}
         onPause={() => { setIsPlaying(false); setControlsVisible(true); }}
@@ -362,6 +364,7 @@ export function ShadowMinimalPlayer({
         />
 
         <div className="mt-0.5 flex items-center gap-2">
+          <div className="embed-pill flex items-center gap-1">
           <button onClick={togglePlay} aria-label={isPlaying ? 'Pause' : 'Play'} className="p-1 text-white">
             {isPlaying ? <Pause className="h-4 w-4" fill="currentColor" /> : <Play className="h-4 w-4" fill="currentColor" />}
           </button>
@@ -374,7 +377,9 @@ export function ShadowMinimalPlayer({
           <span className="text-[10px] text-white/70 tabular-nums">
             {formatTime(currentTime)} / {formatTime(duration)}
           </span>
+          </div>
           <div className="flex-1" />
+          <div className="embed-pill flex items-center gap-1">
           {ccSrc && (
             <button
               onClick={() => setCcOn((v) => !v)}
@@ -398,6 +403,7 @@ export function ShadowMinimalPlayer({
           <button onClick={toggleFullscreen} aria-label="Fullscreen" className="p-1 text-white">
             <Maximize className="h-3.5 w-3.5" />
           </button>
+          </div>
         </div>
       </div>
       {episodePanel}
