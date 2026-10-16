@@ -604,6 +604,9 @@ export default function MinimalEmbedPage() {
         {!error && videoUrl && !useIframe && (
           <>
             <video
+ disablePictureInPicture
+ disableRemotePlayback
+ {...({ 'x-webkit-airplay': 'deny' } as any)}
               ref={videoRef}
               playsInline
               autoPlay
@@ -732,7 +735,7 @@ export default function MinimalEmbedPage() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
                   {/* Audio track switcher — always visible (works for HLS + native multi-audio) */}
-                  <div style={{ position: 'relative' }}>
+                  <div style={{ position: 'relative', display: 'none' }}>
                     <button
                       onClick={(e) => { e.stopPropagation(); setShowAudioMenu((v) => !v); }}
                       aria-label="Audio track"
@@ -836,7 +839,7 @@ export default function MinimalEmbedPage() {
                       </div>
                     )}
                   </div>
-                  {captionsUrl && (
+                  {false && captionsUrl && (
                     <button
                       onClick={() => {
                         setCcEnabled((v) => {

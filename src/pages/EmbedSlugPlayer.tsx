@@ -657,8 +657,8 @@ export default function EmbedSlugPlayer() {
   };
 
   // Mobile compact sizes
-  const btnSize = deviceInfo.isMobile ? 'w-6 h-6' : 'w-8 h-8';
-  const iconSize = deviceInfo.isMobile ? 'w-[13px] h-[13px]' : 'w-[18px] h-[18px]';
+  const btnSize = deviceInfo.isMobile ? 'w-5 h-5' : 'w-8 h-8';
+  const iconSize = deviceInfo.isMobile ? 'w-[11px] h-[11px]' : 'w-[18px] h-[18px]';
   const gapSize = deviceInfo.isMobile ? 'gap-1' : 'gap-2';
   // Flat icon-only buttons (no circles, no glassy chip), works for both themes.
   const controlButtonClass = `${btnSize} flex items-center justify-center transition-colors text-white/90 hover:text-white`;
@@ -756,6 +756,9 @@ export default function EmbedSlugPlayer() {
       })()}
 
       <video
+ disablePictureInPicture
+ disableRemotePlayback
+ {...({ 'x-webkit-airplay': 'deny' } as any)}
         ref={videoRef}
         className="w-full h-full object-contain"
         autoPlay playsInline muted preload="auto"
@@ -863,7 +866,7 @@ export default function EmbedSlugPlayer() {
 
           {/* Time + Controls */}
           <div className={`flex items-center justify-between gap-2 flex-wrap`}>
-            <div className={`flex items-center ${gapSize} shrink-0`}>
+            <div className={`embed-pill flex items-center ${gapSize} shrink-0`}>
               <button onClick={togglePlay} className={controlButtonClass}>
                 {isPlaying ? <Pause className={iconSize} /> : <Play className={`${iconSize} ml-0.5`} />}
               </button>
@@ -876,9 +879,9 @@ export default function EmbedSlugPlayer() {
               <span className="text-white/80 text-[10px] sm:text-xs ml-1">{formatTime(currentTime)} / {formatTime(duration)}</span>
             </div>
 
-            <div className={`flex items-center ${gapSize} flex-wrap justify-end`}>
+            <div className={`embed-pill flex items-center ${gapSize} flex-wrap justify-end`}>
               {/* CC subtitles */}
-              {(captionsUrl || subtitleTracks.length > 0) && (
+              {false && (captionsUrl || subtitleTracks.length > 0) && (
                 <div className="relative">
                   <button onClick={(e) => {
                     e.stopPropagation();
@@ -906,8 +909,8 @@ export default function EmbedSlugPlayer() {
                 </div>
               )}
 
-              {/* Audio switch — always visible so users can see/change track */}
-              <div className="relative">
+              {/* Audio switch hidden on embeds */}
+              <div className="relative hidden">
                 <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowAudioMenu(!showAudioMenu); }}
                   className={controlButtonClass} title="Audio Track">
                   <Headphones className={iconSize} />
