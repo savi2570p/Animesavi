@@ -133,7 +133,7 @@ interface VideoPlayerProps {
 const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
   PLAY: { 
     name: 'H.Savi', 
-    features: ['watch'],
+    features: ['watch', 'download', 'cc'],
     playerStyle: 'basic'
   },
   SHORT: { 
@@ -143,7 +143,7 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
   },
   Zex: { 
     name: 'Multi.Savi', 
-    features: ['watch', 'quality', 'download'],
+    features: ['watch', 'quality', 'download', 'cc'],
     playerStyle: 'advanced'
   },
   XPLUS: {
@@ -3195,7 +3195,7 @@ export function VideoPlayer({
               ) : (
                 /* Default fullscreen controls */
                 <>
-              <div className="flex items-center gap-2.5 md:gap-3">
+              <div className="vp-pill flex items-center gap-2.5 md:gap-3">
                 <button 
                   className={`w-[20px] h-[20px] md:w-10 md:h-10 ${playerControlButtonClass}`} 
                   onClick={(e) => { e.stopPropagation(); togglePlay(); }}
@@ -3228,8 +3228,17 @@ export function VideoPlayer({
                   {isMuted ? <VolumeX className={mobileVolumeIconClass} /> : <Volume2 className={mobileVolumeIconClass} />}
                 </button>
               </div>
-              <div className="flex items-center gap-2 md:gap-2.5">
-                {features.includes('download') && (
+              <div className="vp-pill flex items-center gap-2 md:gap-2.5">
+                {subtitleTracks.length > 0 && (
+                <button
+                  className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass} ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`}
+                  onClick={(e) => { e.stopPropagation(); switchSubtitleTrack(currentSubtitleTrack >= 0 ? -1 : (subtitleTracks[0] as any).id ?? 0); }}
+                  title="Captions"
+                >
+                  <Subtitles className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
+                </button>
+              )}
+              {features.includes('download') && (
                   <button 
                     className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`} 
                     onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
@@ -3411,7 +3420,7 @@ export function VideoPlayer({
             {activeServer === 'XPLUS' ? (
               /* X-PLUS: Flat minimal controls like a cinema player */
               <>
-                <div className="flex items-center gap-3 md:gap-3.5">
+                <div className="vp-pill flex items-center gap-3 md:gap-3.5">
                   <button 
                     className={flatPlayerControlButtonClass} 
                     onClick={(e) => { e.stopPropagation(); togglePlay(); }}
@@ -3441,7 +3450,7 @@ export function VideoPlayer({
                     {isMuted ? <VolumeX className={isIOS ? "w-4 h-4" : "w-4.5 h-4.5 md:w-5 md:h-5"} /> : <Volume2 className={isIOS ? "w-4 h-4" : "w-4.5 h-4.5 md:w-5 md:h-5"} />}
                   </button>
                 </div>
-                <div className="flex items-center gap-3 md:gap-3.5">
+                <div className="vp-pill flex items-center gap-3 md:gap-3.5">
 
                   <button 
                     className={flatPlayerControlButtonClass} 
@@ -3513,7 +3522,7 @@ export function VideoPlayer({
             ) : (
               /* Default controls for other servers */
               <>
-             <div className="flex items-center gap-2.5 md:gap-3">
+             <div className="vp-pill flex items-center gap-2.5 md:gap-3">
               {/* Play/Pause */}
               <button 
                 className={`w-[20px] h-[20px] md:w-10 md:h-10 ${playerControlButtonClass}`} 
@@ -3560,8 +3569,17 @@ export function VideoPlayer({
               </button>
             </div>
 
-            <div className="flex items-center gap-2 md:gap-2.5">
+            <div className="vp-pill flex items-center gap-2 md:gap-2.5">
               {/* Download - for RIP X and SAVI.IN */}
+              {subtitleTracks.length > 0 && (
+                <button
+                  className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass} ${currentSubtitleTrack >= 0 ? 'text-primary' : ''}`}
+                  onClick={(e) => { e.stopPropagation(); switchSubtitleTrack(currentSubtitleTrack >= 0 ? -1 : (subtitleTracks[0] as any).id ?? 0); }}
+                  title="Captions"
+                >
+                  <Subtitles className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
+                </button>
+              )}
               {features.includes('download') && (
                 <button 
                   className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`} 
