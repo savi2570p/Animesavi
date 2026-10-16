@@ -657,8 +657,8 @@ export default function EmbedSlugPlayer() {
   };
 
   // Mobile compact sizes
-  const btnSize = deviceInfo.isMobile ? 'w-6 h-6' : 'w-8 h-8';
-  const iconSize = deviceInfo.isMobile ? 'w-[13px] h-[13px]' : 'w-[18px] h-[18px]';
+  const btnSize = deviceInfo.isMobile ? 'w-5 h-5' : 'w-8 h-8';
+  const iconSize = deviceInfo.isMobile ? 'w-[11px] h-[11px]' : 'w-[18px] h-[18px]';
   const gapSize = deviceInfo.isMobile ? 'gap-1' : 'gap-2';
   // Flat icon-only buttons (no circles, no glassy chip), works for both themes.
   const controlButtonClass = `${btnSize} flex items-center justify-center transition-colors text-white/90 hover:text-white`;
@@ -878,7 +878,7 @@ export default function EmbedSlugPlayer() {
 
             <div className={`flex items-center ${gapSize} flex-wrap justify-end`}>
               {/* CC subtitles */}
-              {(captionsUrl || subtitleTracks.length > 0) && (
+              {false && (captionsUrl || subtitleTracks.length > 0) && (
                 <div className="relative">
                   <button onClick={(e) => {
                     e.stopPropagation();
@@ -906,8 +906,8 @@ export default function EmbedSlugPlayer() {
                 </div>
               )}
 
-              {/* Audio switch — always visible so users can see/change track */}
-              <div className="relative">
+              {/* Audio switch hidden on embeds */}
+              <div className="relative hidden">
                 <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowAudioMenu(!showAudioMenu); }}
                   className={controlButtonClass} title="Audio Track">
                   <Headphones className={iconSize} />
