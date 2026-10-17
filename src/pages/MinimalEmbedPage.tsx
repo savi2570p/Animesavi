@@ -700,7 +700,7 @@ export default function MinimalEmbedPage() {
 
               {/* Buttons row — flat icons, purple hover, no circle bg. */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                <div className="embed-pill" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <button
                     onClick={() => {
                       const v = videoRef.current;
@@ -711,14 +711,14 @@ export default function MinimalEmbedPage() {
                     title="Back 10s"
                     className="embed-ctrl-btn"
                   >
-                    <RotateCcw size={20} />
+                    <RotateCcw size={17} />
                   </button>
                   <button
                     onClick={togglePlay}
                     aria-label={isPlaying ? 'Pause' : 'Play'}
                     className="embed-ctrl-btn"
                   >
-                    {isPlaying ? <Pause size={22} /> : <Play size={22} fill="currentColor" />}
+                    {isPlaying ? <Pause size={19} /> : <Play size={19} fill="currentColor" />}
                   </button>
                   <button
                     onClick={() => {
@@ -730,10 +730,10 @@ export default function MinimalEmbedPage() {
                     title="Forward 10s"
                     className="embed-ctrl-btn"
                   >
-                    <RotateCw size={20} />
+                    <RotateCw size={17} />
                   </button>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                <div className="embed-pill" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   {/* Audio track switcher — always visible (works for HLS + native multi-audio) */}
                   <div style={{ position: 'relative', display: 'none' }}>
                     <button
@@ -863,7 +863,7 @@ export default function MinimalEmbedPage() {
                       aria-label="Download"
                       className="embed-ctrl-btn"
                     >
-                      <Download size={20} />
+                      <Download size={17} />
                     </button>
                   )}
                   <button
@@ -871,7 +871,7 @@ export default function MinimalEmbedPage() {
                     aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
                     className="embed-ctrl-btn"
                   >
-                    {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+                    {isFullscreen ? <Minimize size={17} /> : <Maximize size={17} />}
                   </button>
                 </div>
               </div>
@@ -879,24 +879,28 @@ export default function MinimalEmbedPage() {
 
             <style>{`
               .embed-ctrl-btn {
-                background: rgba(0,0,0,0.35);
-                border: 1px solid rgba(255,255,255,0.12);
-                border-radius: 999px;
-                min-width: 44px;
-                min-height: 44px;
-                padding: 8px;
-                color: #fff;
+                background: transparent;
+                border: 0;
+                border-radius: 0;
+                min-width: 30px;
+                min-height: 30px;
+                padding: 2px;
+                color: rgba(255,255,255,0.92);
                 cursor: pointer;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                transition: color 150ms ease, transform 150ms ease, background 150ms ease;
-                filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.5));
+                transition: color 150ms ease, transform 150ms ease;
+                filter: none;
                 -webkit-tap-highlight-color: transparent;
                 touch-action: manipulation;
               }
-              .embed-ctrl-btn:hover { color: hsl(var(--primary)); background: rgba(0,0,0,0.55); }
+              .embed-ctrl-btn:hover { color: hsl(var(--primary)); background: transparent; }
               .embed-ctrl-btn:active { transform: scale(0.92); }
+              @media (max-width: 768px) {
+                .embed-ctrl-btn { min-width: 20px !important; min-height: 20px !important; width: 20px !important; height: 20px !important; padding: 0 !important; }
+                .embed-ctrl-btn svg { width: 12px !important; height: 12px !important; }
+              }
               .embed-range::-webkit-slider-thumb {
                 -webkit-appearance: none;
                 appearance: none;
