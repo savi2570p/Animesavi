@@ -700,7 +700,7 @@ export default function MinimalEmbedPage() {
 
               {/* Buttons row — flat icons, purple hover, no circle bg. */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                <div className="embed-pill" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <button
                     onClick={() => {
                       const v = videoRef.current;
@@ -733,7 +733,7 @@ export default function MinimalEmbedPage() {
                     <RotateCw size={20} />
                   </button>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                <div className="embed-pill" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   {/* Audio track switcher — always visible (works for HLS + native multi-audio) */}
                   <div style={{ position: 'relative', display: 'none' }}>
                     <button
