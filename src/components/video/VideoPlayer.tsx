@@ -133,7 +133,7 @@ interface VideoPlayerProps {
 const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
   PLAY: { 
     name: 'H.Savi', 
-    features: ['watch', 'download', 'cc'],
+    features: ['watch'],
     playerStyle: 'basic'
   },
   SHORT: { 
