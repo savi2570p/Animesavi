@@ -3123,7 +3123,6 @@ export function VideoPlayer({
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
-                <span className="text-white/90 text-[10px] md:text-xs font-mono min-w-[36px] md:min-w-[44px]">{formatTime(duration)}</span>
               </div>
             </div>
 
