@@ -3084,14 +3084,13 @@ export function VideoPlayer({
             style={{ pointerEvents: 'auto', zIndex: 2147483647 }}
           >
             {/* Progress bar with buffer indicator */}
-            <div className="mb-3 md:mb-4 relative">
-              <div className="flex items-center gap-2 md:gap-3">
-                 <span className="text-white/90 text-[10px] md:text-xs font-mono min-w-[36px] md:min-w-[44px]">{formatTime(currentTime)}</span>
-                <div 
-                  className="flex-1 relative h-[2px] md:h-1.5"
-                  onMouseMove={handleTimelineHover}
-                  onMouseLeave={handleTimelineLeave}
-                >
+            <div className="mb-2.5 md:mb-3 relative">
+              <div 
+                className="relative py-2 -my-1"
+                onMouseMove={handleTimelineHover}
+                onMouseLeave={handleTimelineLeave}
+              >
+                <div className="relative h-[3px] md:h-1">
                   {/* Hover time tooltip */}
                   {hoverTime !== null && (
                     <div 
