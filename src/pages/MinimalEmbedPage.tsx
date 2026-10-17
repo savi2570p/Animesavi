@@ -711,14 +711,14 @@ export default function MinimalEmbedPage() {
                     title="Back 10s"
                     className="embed-ctrl-btn"
                   >
-                    <RotateCcw size={20} />
+                    <RotateCcw size={17} />
                   </button>
                   <button
                     onClick={togglePlay}
                     aria-label={isPlaying ? 'Pause' : 'Play'}
                     className="embed-ctrl-btn"
                   >
-                    {isPlaying ? <Pause size={22} /> : <Play size={22} fill="currentColor" />}
+                    {isPlaying ? <Pause size={19} /> : <Play size={19} fill="currentColor" />}
                   </button>
                   <button
                     onClick={() => {
@@ -730,7 +730,7 @@ export default function MinimalEmbedPage() {
                     title="Forward 10s"
                     className="embed-ctrl-btn"
                   >
-                    <RotateCw size={20} />
+                    <RotateCw size={17} />
                   </button>
                 </div>
                 <div className="embed-pill" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -863,7 +863,7 @@ export default function MinimalEmbedPage() {
                       aria-label="Download"
                       className="embed-ctrl-btn"
                     >
-                      <Download size={20} />
+                      <Download size={17} />
                     </button>
                   )}
                   <button
@@ -871,7 +871,7 @@ export default function MinimalEmbedPage() {
                     aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
                     className="embed-ctrl-btn"
                   >
-                    {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+                    {isFullscreen ? <Minimize size={17} /> : <Maximize size={17} />}
                   </button>
                 </div>
               </div>
