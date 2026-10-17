@@ -133,7 +133,7 @@ interface VideoPlayerProps {
 const serverConfigs: Record<ServerType, { name: string; features: string[]; playerStyle: string }> = {
   PLAY: { 
     name: 'H.Savi', 
-    features: ['watch', 'download', 'cc'],
+    features: ['watch'],
     playerStyle: 'basic'
   },
   SHORT: { 
@@ -3084,14 +3084,13 @@ export function VideoPlayer({
             style={{ pointerEvents: 'auto', zIndex: 2147483647 }}
           >
             {/* Progress bar with buffer indicator */}
-            <div className="mb-3 md:mb-4 relative">
-              <div className="flex items-center gap-2 md:gap-3">
-                 <span className="text-white/90 text-[10px] md:text-xs font-mono min-w-[36px] md:min-w-[44px]">{formatTime(currentTime)}</span>
-                <div 
-                  className="flex-1 relative h-[2px] md:h-1.5"
-                  onMouseMove={handleTimelineHover}
-                  onMouseLeave={handleTimelineLeave}
-                >
+            <div className="mb-2.5 md:mb-3 relative">
+              <div 
+                className="relative py-2 -my-1"
+                onMouseMove={handleTimelineHover}
+                onMouseLeave={handleTimelineLeave}
+              >
+                <div className="relative h-[3px] md:h-1">
                   {/* Hover time tooltip */}
                   {hoverTime !== null && (
                     <div 
@@ -3124,13 +3123,60 @@ export function VideoPlayer({
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
-                <span className="text-white/90 text-[10px] md:text-xs font-mono min-w-[36px] md:min-w-[44px]">{formatTime(duration)}</span>
               </div>
             </div>
 
             {/* Control buttons - Fullscreen */}
             <div className="flex items-center justify-between">
-              {activeServer === 'XPLUS' ? (
+              {activeServer === 'PLAY' ? (
+                /* H.Savi: minimal flat controls — play, ±10s, volume, time | settings, fullscreen */
+                <>
+                  <div className="vp-pill flex items-center gap-2.5 md:gap-3">
+                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); togglePlay(); }} title={isPlaying ? 'Pause' : 'Play'}>
+                      {isPlaying ? <Pause className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} /> : <Play className={isIOS ? "w-5 h-5 fill-current" : "w-5 h-5 md:w-6 md:h-6 fill-current"} />}
+                    </button>
+                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); skipBackward(); }} title="Skip back 10s">
+                      <SkipBack className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />
+                    </button>
+                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); skipForward(); }} title="Skip forward 10s">
+                      <SkipForward className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />
+                    </button>
+                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); toggleMute(); }} title={isMuted ? 'Unmute' : 'Mute'}>
+                      {isMuted ? <VolumeX className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} /> : <Volume2 className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />}
+                    </button>
+                    <span className="text-white/80 text-[10px] md:text-xs font-mono tabular-nums whitespace-nowrap select-none">{formatTime(currentTime)} / {formatTime(duration)}</span>
+                  </div>
+                  <div className="vp-pill flex items-center gap-2.5 md:gap-3">
+                    <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className={flatPlayerControlButtonClass}
+                          onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); setSettingsOpen(prev => !prev); }}
+                          title="Settings"
+                          style={{ touchAction: 'manipulation' }}
+                        >
+                          <Settings className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end" side="top"
+                        className="bg-black/70 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl min-w-[210px] md:min-w-[230px] max-h-[360px] overflow-y-auto text-white p-1.5"
+                        sideOffset={12}
+                        style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
+                        onCloseAutoFocus={(e) => e.preventDefault()}
+                        onPointerDownOutside={() => { setSettingsOpen(false); setSettingsMenu('main'); }}
+                        forceMount={settingsOpen ? true : undefined}
+                        container={containerRef.current || undefined}
+                      >
+                        {renderSettingsContent()}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} title="Exit Fullscreen">
+                      <Minimize className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />
+                    </button>
+                  </div>
+                </>
+              ) : activeServer === 'XPLUS' ? (
                 /* X-PLUS: Flat minimal controls - Fullscreen */
                 <>
                   <div className={`flex items-center ${isIOS ? "gap-2" : "gap-3 md:gap-3.5"}`}>
@@ -3371,14 +3417,13 @@ export function VideoPlayer({
             style={{ pointerEvents: 'auto', zIndex: 60 }}
           >
           {/* Progress bar with buffer indicator */}
-          <div className="mb-2 md:mb-3 relative">
-            <div className="flex items-center gap-2">
-              <span className="text-white/90 text-[10px] md:text-xs font-mono min-w-[36px] md:min-w-[44px]">{formatTime(currentTime)}</span>
-              <div 
-                className="flex-1 relative h-[2px] md:h-1.5"
-                onMouseMove={handleTimelineHover}
-                onMouseLeave={handleTimelineLeave}
-              >
+          <div className="mb-2 md:mb-2.5 relative">
+            <div 
+              className="relative py-2 -my-1"
+              onMouseMove={handleTimelineHover}
+              onMouseLeave={handleTimelineLeave}
+            >
+              <div className="relative h-[3px] md:h-1">
                 {/* Hover time tooltip */}
                 {hoverTime !== null && (
                   <div 
@@ -3411,13 +3456,60 @@ export function VideoPlayer({
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
-              <span className="text-white/90 text-[10px] md:text-xs font-mono min-w-[36px] md:min-w-[44px]">{formatTime(duration)}</span>
             </div>
           </div>
 
           {/* Control buttons */}
           <div className="flex items-center justify-between">
-            {activeServer === 'XPLUS' ? (
+            {activeServer === 'PLAY' ? (
+              /* H.Savi: minimal flat controls — play, ±10s, volume, time | settings, fullscreen */
+              <>
+                <div className="vp-pill flex items-center gap-2.5 md:gap-3">
+                  <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); togglePlay(); }} title={isPlaying ? 'Pause' : 'Play'}>
+                    {isPlaying ? <Pause className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} /> : <Play className={isIOS ? "w-5 h-5 fill-current" : "w-5 h-5 md:w-6 md:h-6 fill-current"} />}
+                  </button>
+                  <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); skipBackward(); }} title="Skip back 10s">
+                    <SkipBack className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />
+                  </button>
+                  <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); skipForward(); }} title="Skip forward 10s">
+                    <SkipForward className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />
+                  </button>
+                  <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); toggleMute(); }} title={isMuted ? 'Unmute' : 'Mute'}>
+                    {isMuted ? <VolumeX className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} /> : <Volume2 className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />}
+                  </button>
+                  <span className="text-white/80 text-[10px] md:text-xs font-mono tabular-nums whitespace-nowrap select-none">{formatTime(currentTime)} / {formatTime(duration)}</span>
+                </div>
+                <div className="vp-pill flex items-center gap-2.5 md:gap-3">
+                  <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className={flatPlayerControlButtonClass}
+                        onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); setSettingsOpen(prev => !prev); }}
+                        title="Settings"
+                        style={{ touchAction: 'manipulation' }}
+                      >
+                        <Settings className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end" side="top"
+                      className="bg-black/70 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl min-w-[210px] md:min-w-[230px] max-h-[360px] overflow-y-auto text-white p-1.5"
+                      sideOffset={12}
+                      style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
+                      onCloseAutoFocus={(e) => e.preventDefault()}
+                      onPointerDownOutside={() => { setSettingsOpen(false); setSettingsMenu('main'); }}
+                      forceMount={settingsOpen ? true : undefined}
+                      container={containerRef.current || undefined}
+                    >
+                      {renderSettingsContent()}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}>
+                    {isFullscreen ? <Minimize className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} /> : <Maximize className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />}
+                  </button>
+                </div>
+              </>
+            ) : activeServer === 'XPLUS' ? (
               /* X-PLUS: Flat minimal controls like a cinema player */
               <>
                 <div className="vp-pill flex items-center gap-3 md:gap-3.5">
