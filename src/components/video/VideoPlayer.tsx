@@ -3128,7 +3128,55 @@ export function VideoPlayer({
 
             {/* Control buttons - Fullscreen */}
             <div className="flex items-center justify-between">
-              {activeServer === 'XPLUS' ? (
+              {activeServer === 'PLAY' ? (
+                /* H.Savi: minimal flat controls — play, ±10s, volume, time | settings, fullscreen */
+                <>
+                  <div className="vp-pill flex items-center gap-2.5 md:gap-3">
+                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); togglePlay(); }} title={isPlaying ? 'Pause' : 'Play'}>
+                      {isPlaying ? <Pause className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} /> : <Play className={isIOS ? "w-5 h-5 fill-current" : "w-5 h-5 md:w-6 md:h-6 fill-current"} />}
+                    </button>
+                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); skipBackward(); }} title="Skip back 10s">
+                      <SkipBack className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />
+                    </button>
+                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); skipForward(); }} title="Skip forward 10s">
+                      <SkipForward className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />
+                    </button>
+                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); toggleMute(); }} title={isMuted ? 'Unmute' : 'Mute'}>
+                      {isMuted ? <VolumeX className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} /> : <Volume2 className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />}
+                    </button>
+                    <span className="text-white/80 text-[10px] md:text-xs font-mono tabular-nums whitespace-nowrap select-none">{formatTime(currentTime)} / {formatTime(duration)}</span>
+                  </div>
+                  <div className="vp-pill flex items-center gap-2.5 md:gap-3">
+                    <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className={flatPlayerControlButtonClass}
+                          onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); setSettingsOpen(prev => !prev); }}
+                          title="Settings"
+                          style={{ touchAction: 'manipulation' }}
+                        >
+                          <Settings className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end" side="top"
+                        className="bg-black/70 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl min-w-[210px] md:min-w-[230px] max-h-[360px] overflow-y-auto text-white p-1.5"
+                        sideOffset={12}
+                        style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
+                        onCloseAutoFocus={(e) => e.preventDefault()}
+                        onPointerDownOutside={() => { setSettingsOpen(false); setSettingsMenu('main'); }}
+                        forceMount={settingsOpen ? true : undefined}
+                        container={containerRef.current || undefined}
+                      >
+                        {renderSettingsContent()}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }} title="Exit Fullscreen">
+                      <Minimize className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />
+                    </button>
+                  </div>
+                </>
+              ) : activeServer === 'XPLUS' ? (
                 /* X-PLUS: Flat minimal controls - Fullscreen */
                 <>
                   <div className={`flex items-center ${isIOS ? "gap-2" : "gap-3 md:gap-3.5"}`}>
