@@ -879,24 +879,28 @@ export default function MinimalEmbedPage() {
 
             <style>{`
               .embed-ctrl-btn {
-                background: rgba(0,0,0,0.35);
-                border: 1px solid rgba(255,255,255,0.12);
-                border-radius: 999px;
-                min-width: 44px;
-                min-height: 44px;
-                padding: 8px;
-                color: #fff;
+                background: transparent;
+                border: 0;
+                border-radius: 0;
+                min-width: 30px;
+                min-height: 30px;
+                padding: 2px;
+                color: rgba(255,255,255,0.92);
                 cursor: pointer;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                transition: color 150ms ease, transform 150ms ease, background 150ms ease;
-                filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.5));
+                transition: color 150ms ease, transform 150ms ease;
+                filter: none;
                 -webkit-tap-highlight-color: transparent;
                 touch-action: manipulation;
               }
-              .embed-ctrl-btn:hover { color: hsl(var(--primary)); background: rgba(0,0,0,0.55); }
+              .embed-ctrl-btn:hover { color: hsl(var(--primary)); background: transparent; }
               .embed-ctrl-btn:active { transform: scale(0.92); }
+              @media (max-width: 768px) {
+                .embed-ctrl-btn { min-width: 20px !important; min-height: 20px !important; width: 20px !important; height: 20px !important; padding: 0 !important; }
+                .embed-ctrl-btn svg { width: 12px !important; height: 12px !important; }
+              }
               .embed-range::-webkit-slider-thumb {
                 -webkit-appearance: none;
                 appearance: none;
