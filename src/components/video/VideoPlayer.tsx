@@ -3192,6 +3192,7 @@ export function VideoPlayer({
                     <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); toggleMute(); }}>
                       {isMuted ? <VolumeX className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} /> : <Volume2 className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} />}
                     </button>
+                    <span className="text-white/80 text-[10px] md:text-xs font-mono tabular-nums whitespace-nowrap select-none">{formatTime(currentTime)} / {formatTime(duration)}</span>
                   </div>
                   <div className={`flex items-center ${isIOS ? "gap-2" : "gap-3 md:gap-3.5"}`}>
 
@@ -3541,6 +3542,7 @@ export function VideoPlayer({
                   >
                     {isMuted ? <VolumeX className={isIOS ? "w-4 h-4" : "w-4.5 h-4.5 md:w-5 md:h-5"} /> : <Volume2 className={isIOS ? "w-4 h-4" : "w-4.5 h-4.5 md:w-5 md:h-5"} />}
                   </button>
+                  <span className="text-white/80 text-[10px] md:text-xs font-mono tabular-nums whitespace-nowrap select-none">{formatTime(currentTime)} / {formatTime(duration)}</span>
                 </div>
                 <div className="vp-pill flex items-center gap-3 md:gap-3.5">
 
