@@ -12,6 +12,8 @@ export default function ShadowArise() {
   const animeName = searchParams.get('anime') || 'Unknown';
   const episodeCount = searchParams.get('ep') || '01';
   const videoUrl = searchParams.get('url') || '';
+  const audioIndex = searchParams.get('audio');
+  const audioLang = searchParams.get('audioLang') || '';
 
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<'processing' | 'ready'>('processing');
