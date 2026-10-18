@@ -3773,6 +3773,8 @@ export function VideoPlayer({
           fileName={isMovie ? `${animeTitle} - AnimeSavi.mp4` : `${animeTitle} - S${String(seasonNumber).padStart(2, '0')}E${String(episodeNumber).padStart(2, '0')} - AnimeSavi.mp4`}
           animeTitle={animeTitle}
           episodeLabel={isMovie ? 'Movie' : `Season ${seasonNumber} - Episode ${episodeNumber}`}
+          audioTracks={audioTracks}
+          currentAudioTrack={currentAudioTrack}
         />,
         document.body
       )}
