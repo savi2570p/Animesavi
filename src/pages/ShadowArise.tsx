@@ -12,6 +12,8 @@ export default function ShadowArise() {
   const animeName = searchParams.get('anime') || 'Unknown';
   const episodeCount = searchParams.get('ep') || '01';
   const videoUrl = searchParams.get('url') || '';
+  const audioIndex = searchParams.get('audio');
+  const audioLang = searchParams.get('audioLang') || '';
 
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<'processing' | 'ready'>('processing');
@@ -38,7 +40,8 @@ export default function ShadowArise() {
 
   const statusText = 'Preparing your video file…';
   const safeAnime = animeName.replace(/[^a-zA-Z0-9]+/g, '');
-  const fileName = `[AnimeSavi]_${quality}_${safeAnime}_Ep-${episodeCount}.mp4`;
+  const safeLang = audioLang ? `_${audioLang.toUpperCase()}` : '';
+  const fileName = `[AnimeSavi]_${quality}_${safeAnime}_Ep-${episodeCount}${safeLang}.mp4`;
 
   const fmtSize = fmtBytes;
 
@@ -397,7 +400,15 @@ export default function ShadowArise() {
                     onPlay={() => setIsPlaying(true)}
                     onPause={() => setIsPlaying(false)}
                     onTimeUpdate={(e) => setCurTime(e.currentTarget.currentTime)}
-                    onLoadedMetadata={(e) => setDur(e.currentTarget.duration || 0)}
+                    onLoadedMetadata={(e) => {
+                      setDur(e.currentTarget.duration || 0);
+                      // Enable only the audio language the user picked for download
+                      const tracks = (e.currentTarget as any).audioTracks;
+                      if (tracks && tracks.length > 1 && audioIndex !== null) {
+                        const idx = Math.min(Number(audioIndex), tracks.length - 1);
+                        for (let i = 0; i < tracks.length; i++) tracks[i].enabled = i === idx;
+                      }
+                    }}
                     onContextMenu={(e) => e.preventDefault()}
                     onDoubleClick={(e) => e.preventDefault()}
                     style={{ width: '100%', display: 'block', maxHeight: 220, background: '#000', pointerEvents: 'none' }}
