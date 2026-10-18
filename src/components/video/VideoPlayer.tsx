@@ -3274,6 +3274,7 @@ export function VideoPlayer({
                 >
                   {isMuted ? <VolumeX className={mobileVolumeIconClass} /> : <Volume2 className={mobileVolumeIconClass} />}
                 </button>
+                <span className="text-white/80 text-[10px] md:text-xs font-mono tabular-nums whitespace-nowrap select-none">{formatTime(currentTime)} / {formatTime(duration)}</span>
               </div>
               <div className="vp-pill flex items-center gap-2 md:gap-2.5">
                 {subtitleTracks.length > 0 && (
@@ -3661,6 +3662,7 @@ export function VideoPlayer({
               >
                 {isMuted ? <VolumeX className={mobileVolumeIconClass} /> : <Volume2 className={mobileVolumeIconClass} />}
               </button>
+              <span className="text-white/80 text-[10px] md:text-xs font-mono tabular-nums whitespace-nowrap select-none">{formatTime(currentTime)} / {formatTime(duration)}</span>
             </div>
 
             <div className="vp-pill flex items-center gap-2 md:gap-2.5">
