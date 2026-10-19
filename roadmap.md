@@ -1,0 +1,4 @@
+- [ ] Restore real audio choices in download confirmation and pause playback while it is open.
+- [ ] Apply compact dark-purple glass styling to download confirmation.
+- [ ] Recreate Most Popular with smooth glass cards, preserving tags and navigation.
+- [ ] Verify tests and preview.
