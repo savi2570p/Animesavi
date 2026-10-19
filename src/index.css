@@ -3412,3 +3412,56 @@ video::-webkit-media-controls-picture-in-picture-button{display:none!important}
 .vp-pill button{background:transparent!important;border:0!important;box-shadow:none!important}
 button[title="Picture-in-Picture"],button[title="Screen Mirroring"]{display:none!important}
 @media (max-width:767px){.vp-pill{padding:1px 5px;gap:4px!important}.vp-pill button{width:18px!important;height:18px!important}.vp-pill svg{width:11px!important;height:11px!important}}
+
+/* Download confirmation: scoped dark-purple glass tokens, never global pink accents. */
+:root {
+  --download-surface: 266 42% 9%;
+  --download-highlight: 267 65% 62%;
+  --download-ink: 265 35% 96%;
+  --download-border: 267 24% 28%;
+  --download-gradient: linear-gradient(150deg, hsl(266 35% 15% / .98), hsl(var(--download-surface) / .97));
+  --download-shadow: 0 20px 70px hsl(266 65% 3% / .7), inset 0 1px 0 hsl(var(--download-ink) / .09);
+  --popular-glass: linear-gradient(145deg, hsl(var(--card) / .95), hsl(var(--muted) / .65));
+  --popular-shadow: inset 0 1px 0 hsl(var(--foreground) / .1), 0 4px 16px hsl(var(--background) / .4);
+}
+.download-glass {
+  --primary: var(--download-highlight);
+  --primary-foreground: var(--download-ink);
+  --foreground: var(--download-ink);
+  --border: var(--download-border);
+  --accent: 266 30% 20%;
+  --muted: 266 25% 17%;
+  --muted-foreground: 266 16% 72%;
+  background: var(--download-gradient);
+  border-color: hsl(var(--download-border));
+  box-shadow: var(--download-shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+}
+.download-glass .download-choice-selected {
+  background: hsl(var(--download-highlight) / .18);
+  border-color: hsl(var(--download-highlight) / .7);
+  color: hsl(var(--download-ink));
+}
+.download-glass .download-confirm-action {
+  background: hsl(267 48% 38%);
+  color: hsl(var(--download-ink));
+}
+.download-glass .download-confirm-action:hover { background: hsl(267 48% 44%); }
+.popular-section { border-top: 1px solid hsl(var(--border) / .4); }
+.popular-glass-card {
+  background: var(--popular-glass);
+  border: 1px solid hsl(var(--border) / .65);
+  box-shadow: var(--popular-shadow);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: transform 180ms ease, border-color 180ms ease;
+}
+.popular-poster-fill { filter: blur(12px) brightness(.5); }
+.popular-rank { background: hsl(var(--background) / .9); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border) / .7); }
+@media (hover: hover) { .popular-glass-card:hover { transform: translateY(-3px); border-color: hsl(var(--primary) / .6); } }
+.perf-low .popular-glass-card, .perf-low .download-glass { backdrop-filter: none; -webkit-backdrop-filter: none; }
+@media (max-width: 767px) { .download-glass { width: min(300px, calc(100vw - 2rem)); } }
+@media (prefers-reduced-motion: reduce) { .popular-glass-card { transition: none; } .popular-glass-card:hover { transform: none; } }
