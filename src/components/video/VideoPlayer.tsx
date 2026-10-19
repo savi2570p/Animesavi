@@ -49,6 +49,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { DownloadVerificationDialog } from './DownloadVerificationDialog';
+import { pauseForDownload } from '@/lib/downloadAudio';
 import { ThemePickerButton, buildThemeStyle, type PlayerThemeKey } from './PlayerThemePicker';
 import { QualityOverlay } from './QualityOverlay';
 import { BufferingIndicator } from './BufferingIndicator';
@@ -1709,6 +1710,7 @@ export function VideoPlayer({
   }, []);
 
   const togglePlay = useCallback(() => {
+    if (showDownloadDialog) return;
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
@@ -1739,7 +1741,7 @@ export function VideoPlayer({
       }
       setIsPlaying(!isPlaying);
     }
-  }, [isPlaying, isMobile, wasMutedForAutoplay]);
+  }, [isPlaying, isMobile, wasMutedForAutoplay, showDownloadDialog]);
 
   // Handler for mobile unmute indicator tap
   const handleMobileUnmute = useCallback(() => {
@@ -1977,6 +1979,8 @@ export function VideoPlayer({
       toast.error('No video available for download');
       return;
     }
+    pauseForDownload(videoRef.current);
+    setIsPlaying(false);
     setShowDownloadDialog(true);
   };
 
@@ -2758,6 +2762,7 @@ export function VideoPlayer({
         className={`w-full h-full object-contain transition-all duration-300 ${videoError ? 'hidden' : ''}`}
         onTimeUpdate={handleTimeUpdate}
         onPlay={() => {
+          if (showDownloadDialog) { pauseForDownload(videoRef.current); return; }
           setIsPlaying(true);
           setHasEnded(false);
           setHasUserInteracted(true);

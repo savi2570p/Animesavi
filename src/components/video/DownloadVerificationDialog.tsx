@@ -14,10 +14,8 @@ import { Download, Loader2, Check, Volume2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getAudioTrackLabel, normalizeLanguageCode } from '@/lib/audioLanguageUtils';
 
-export interface DownloadAudioTrack {
-  label: string;
-  language: string;
-}
+import { discoverDownloadAudio, type DownloadAudioTrack } from '@/lib/downloadAudio';
+export type { DownloadAudioTrack } from '@/lib/downloadAudio';
 
 interface DownloadVerificationDialogProps {
   open: boolean;
@@ -57,7 +55,21 @@ export function DownloadVerificationDialog({
     if (open) setSelectedAudio(currentAudioTrack);
   }, [open, currentAudioTrack]);
 
-  const hasMultipleAudio = audioTracks.length > 1;
+  const [discoveredTracks, setDiscoveredTracks] = useState<DownloadAudioTrack[]>([]);
+  const [detectingAudio, setDetectingAudio] = useState(false);
+  const availableTracks = audioTracks.length ? audioTracks : discoveredTracks;
+
+  useEffect(() => {
+    if (!open || audioTracks.length || !videoUrl) return;
+    const controller = new AbortController();
+    setDiscoveredTracks([]);
+    setDetectingAudio(true);
+    discoverDownloadAudio(videoUrl, controller.signal)
+      .then((tracks) => { if (!controller.signal.aborted) setDiscoveredTracks(tracks); })
+      .catch(() => {})
+      .finally(() => { if (!controller.signal.aborted) setDetectingAudio(false); });
+    return () => controller.abort();
+  }, [open, videoUrl, audioTracks.length]);
 
   const audioLabel = (t: DownloadAudioTrack, i: number) =>
     getAudioTrackLabel(t.label, t.language, i, animeTitle);
@@ -75,7 +87,7 @@ export function DownloadVerificationDialog({
     setIsPreparing(true);
 
     // Save the chosen audio language as the user's preference
-    const track = audioTracks[selectedAudio];
+    const track = availableTracks[selectedAudio];
     if (track) {
       const code = normalizeLanguageCode(track.language);
       if (code && code !== 'und') {
@@ -113,22 +125,16 @@ export function DownloadVerificationDialog({
   return (
     <AlertDialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) setSelectedQuality(null); }}>
       <AlertDialogContent
-        className="max-w-[calc(100vw-2rem)] sm:max-w-xs rounded-2xl p-4 sm:p-5 gap-3 border-white/10"
-        style={{
-          background: 'linear-gradient(160deg, rgba(30, 16, 50, 0.82), rgba(12, 7, 22, 0.9))',
-          backdropFilter: 'blur(28px) saturate(1.4)',
-          WebkitBackdropFilter: 'blur(28px) saturate(1.4)',
-          boxShadow: '0 8px 40px hsl(270 80% 40% / 0.35), inset 0 1px 0 rgba(255,255,255,0.08)',
-        }}
+        className="download-glass max-w-[calc(100vw-2rem)] sm:max-w-xs rounded-xl p-3 sm:p-4 gap-3"
       >
         <AlertDialogHeader className="space-y-1">
           <AlertDialogTitle className="flex items-center gap-1.5 text-sm sm:text-base">
-            <Download className="w-4 h-4 text-destructive" />
+            <Download className="w-4 h-4 text-foreground" />
             Download
           </AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-2.5 pt-1">
-              <div className="rounded-lg bg-white/5 border border-white/10 px-2.5 py-2 space-y-0.5">
+              <div className="rounded-lg bg-muted/40 border border-border/60 px-2.5 py-2 space-y-0.5">
                 {animeTitle && (
                   <p className="text-xs sm:text-sm font-semibold text-foreground leading-tight">{animeTitle}</p>
                 )}
@@ -138,25 +144,27 @@ export function DownloadVerificationDialog({
               </div>
 
               {/* Audio Language Selection */}
-              {hasMultipleAudio && (
+              {(
                 <div className="space-y-1.5">
                   <p className="text-[11px] sm:text-xs font-medium text-foreground flex items-center gap-1">
                     <Volume2 className="w-3 h-3" /> Audio Language
                   </p>
+                  {detectingAudio && <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />Reading audio tracks…</p>}
+                  {!detectingAudio && !availableTracks.length && <p className="text-xs text-muted-foreground">Audio languages unavailable for this source.</p>}
                   <div className="flex flex-wrap gap-1.5">
-                    {audioTracks.map((t, i) => (
-                      <button
+                    {availableTracks.map((t, i) => (
+                      <Button type="button" variant="outline"
                         key={i}
                         onClick={() => setSelectedAudio(i)}
-                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full border text-[11px] sm:text-xs font-medium transition-all ${
+                        className={`flex items-center gap-1 px-2.5 py-1.5 h-auto rounded-md border text-[11px] sm:text-xs font-medium transition-all ${
                           selectedAudio === i
-                            ? 'border-primary bg-primary/15 text-primary'
-                            : 'border-white/10 bg-white/5 text-foreground/80 hover:border-primary/40'
+                            ? 'download-choice-selected'
+                            : 'border-border/60 bg-muted/30 text-foreground/80 hover:bg-accent'
                         }`}
                       >
                         {selectedAudio === i && <Check className="w-3 h-3" />}
                         {audioLabel(t, i)}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
@@ -167,18 +175,18 @@ export function DownloadVerificationDialog({
                 <p className="text-[11px] sm:text-xs font-medium text-foreground">Quality</p>
                 <div className="grid grid-cols-4 gap-1.5">
                   {QUALITY_OPTIONS.map((q) => (
-                    <button
+                    <Button type="button" variant="outline"
                       key={q.label}
                       onClick={() => setSelectedQuality(q.label)}
-                      className={`relative flex flex-col items-center px-1 py-1.5 rounded-lg border text-[11px] sm:text-xs font-medium transition-all ${
+                      className={`h-auto relative flex flex-col items-center px-1 py-1.5 rounded-lg border text-[11px] sm:text-xs font-medium transition-all ${
                         selectedQuality === q.label
-                          ? 'border-primary bg-primary/15 text-primary'
-                          : 'border-white/10 bg-white/5 text-foreground/80 hover:border-primary/40'
+                          ? 'download-choice-selected'
+                          : 'border-border/60 bg-muted/30 text-foreground/80 hover:bg-accent'
                       }`}
                     >
                       <span>{q.label}</span>
-                      <span className={`text-[8px] font-bold ${selectedQuality === q.label ? 'text-primary' : 'text-muted-foreground'}`}>{q.tag}</span>
-                    </button>
+                      <span className={`text-[8px] font-bold ${selectedQuality === q.label ? 'text-foreground' : 'text-muted-foreground'}`}>{q.tag}</span>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -186,13 +194,13 @@ export function DownloadVerificationDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex-row gap-2 sm:gap-2">
-          <AlertDialogCancel className="flex-1 h-8 text-xs border-white/15 bg-white/5 text-foreground/80 hover:bg-white/10 hover:text-foreground mt-0">
+          <AlertDialogCancel className="flex-1 h-8 text-xs border-border/60 bg-muted/30 text-foreground/80 hover:bg-accent hover:text-foreground mt-0">
             Cancel
           </AlertDialogCancel>
           <Button
             onClick={handlePrepare}
-            disabled={isPreparing || !selectedQuality}
-            className="flex-1 h-8 text-xs bg-destructive hover:bg-destructive/90 text-destructive-foreground gap-1.5"
+            disabled={isPreparing || !selectedQuality || detectingAudio}
+            className="flex-1 h-8 text-xs download-confirm-action gap-1.5"
           >
             {isPreparing ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
