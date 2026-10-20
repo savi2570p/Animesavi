@@ -14,17 +14,31 @@ export interface VersionGroup {
   items: ChangelogItem[];
 }
 
-export const APP_VERSION = 'S2-V1.1';
-export const RELEASE_DATE = 'September 28, 2026';
-export const DOWNLOAD_SIZE_MB = 10;
+export const APP_VERSION = 'S2-V2';
+export const RELEASE_DATE = 'October 20, 2026';
+export const DOWNLOAD_SIZE_MB = 12;
 
 export const BETA_NOTE =
   'Shadow link v2 is now running BETA 2 — a minimal, branding-free standalone player with in-player episode switching and an auto-hiding title overlay.';
 
 export const VERSION_GROUPS: VersionGroup[] = [
   {
-    version: 'S2-V1.1',
+    version: APP_VERSION,
     date: RELEASE_DATE,
+    highlight: 'A refreshed home experience, lighter server playback and more efficient catalogue loading.',
+    items: [
+      { icon: '🎬', badge: 'IMPROVED', title: 'Smoother Server Playback', desc: 'H.Savi, Multi.Savi and X-PLUS now share bounded buffering and more cautious network adaptation, keeping 4K available.' },
+      { icon: '✨', badge: 'NEW', title: 'Trending Now Reimagined', desc: 'Cinematic artwork, liquid-glass details and a new spotlight layout with readable audio tags.' },
+      { icon: '📺', badge: 'NEW', title: 'New Latest Series Cards', desc: 'Fresh glass cards, complete posters and compact episode details with easy swiping.' },
+      { icon: '⚡', badge: 'NEW', title: 'Latest Episodes Refreshed', desc: 'Wide episode artwork and clear release details in lightweight glass cards.' },
+      { icon: '🚀', badge: 'IMPROVED', title: 'Lighter Catalogue Loading', desc: 'Shared recent-release requests, cached results and indexed lookups reduce repeated work.' },
+      { icon: '🪶', badge: 'IMPROVED', title: 'Phone-Friendly Effects', desc: 'Lighter glass on older devices and reduced-motion support keep scrolling comfortable.' },
+      { icon: '🔧', badge: 'FIX', title: 'Playback Cleanup', desc: 'Old player retries no longer interfere after changing an episode or server.' },
+    ],
+  },
+  {
+    version: 'S2-V1.1',
+    date: 'September 28, 2026',
     highlight:
       'A quick polish update — reliable phone downloads, a clearer What\'s New popup, faster loading and smoother mobile pages.',
     items: [
