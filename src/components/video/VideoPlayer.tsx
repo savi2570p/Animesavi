@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import Hls from 'hls.js';
+import { getHLSConfig } from '@/lib/videoUtils';
 import { ANIME_QUALITY_OVERRIDES } from '@/lib/audioLanguageUtils';
 import {
   Play,
@@ -693,81 +694,9 @@ export function VideoPlayer({
         if (Hls.isSupported()) {
           console.log('Using HLS.js for multi-audio and subtitle support');
           
-          // Detect mobile and connection type for optimized settings
-          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-          const connection = (navigator as any).connection;
-          const isSlowNetwork = connection && (connection.effectiveType === '2g' || connection.effectiveType === 'slow-2g' || connection.saveData);
-          const isCellular = connection && connection.type === 'cellular';
-          
-          console.log('Network info:', { isMobile, isSlowNetwork, isCellular, effectiveType: connection?.effectiveType });
+          // All servers share the same bounded playback budget.
+          const hls = new Hls({ ...getHLSConfig(), nudgeOffset: 0.1, nudgeMaxRetry: 5 });
 
-          // Codec preference: modern codecs deliver the same 4K at far fewer bytes.
-          // Order = preference; unsupported entries are ignored, so H.264 stays as fallback.
-          const canPlayCodec = (mime: string) => {
-            try {
-              const MS = (window as any).ManagedMediaSource || window.MediaSource;
-              return !!MS?.isTypeSupported?.(mime);
-            } catch { return false; }
-          };
-          const allowedVideoCodecs: string[] = [];
-          if (canPlayCodec('video/mp4; codecs="av01.0.08M.08"')) allowedVideoCodecs.push('av01');
-          if (canPlayCodec('video/mp4; codecs="hvc1.1.6.L153.B0"') || canPlayCodec('video/mp4; codecs="hev1.1.6.L153.B0"')) {
-            allowedVideoCodecs.push('hvc1', 'hev1');
-          }
-          allowedVideoCodecs.push('avc1');
-
-          const hls = new Hls({
-            enableWorker: true,
-            // VoD content: low-latency mode causes partial-segment requests and duplicate loads
-            lowLatencyMode: false,
-            // DATA SAVING: buffer only what playback actually needs (was 60-180s ahead of 4K)
-            maxBufferLength: isMobile ? 10 : 16,
-            maxMaxBufferLength: isMobile ? 24 : 40,
-            maxBufferSize: isMobile ? 24 * 1000 * 1000 : 48 * 1000 * 1000,
-            maxBufferHole: 0.2,
-            // Start at lowest level for a fast first frame; ABR ramps to 4K right after
-            startLevel: 0,
-            autoStartLoad: true,
-            // ABR: ramp to the highest sustainable bitrate without overshooting
-            // (overshoot = segments downloaded then discarded = wasted data)
-            abrEwmaDefaultEstimate: isSlowNetwork ? 500000 : (isCellular ? 4000000 : 12000000),
-            abrEwmaFastLive: 1.2,
-            abrEwmaSlowLive: 3,
-            abrEwmaFastVoD: 3,
-            abrEwmaSlowVoD: 9,
-            abrBandWidthFactor: 0.9,
-            abrBandWidthUpFactor: 0.75,
-            abrMaxWithRealBitrate: true,
-            // Drop already-played data quickly
-            backBufferLength: isMobile ? 10 : 20,
-            // Fragment loading: 4K segments are large — short timeouts caused
-            // repeated re-downloads of the same segment
-            fragLoadingTimeOut: isMobile ? 30000 : 20000,
-            fragLoadingMaxRetry: 4,
-            fragLoadingRetryDelay: 600,
-            levelLoadingTimeOut: 10000,
-            levelLoadingMaxRetry: 4,
-            levelLoadingRetryDelay: 500,
-            manifestLoadingTimeOut: 10000,
-            manifestLoadingMaxRetry: 3,
-            manifestLoadingRetryDelay: 500,
-            xhrSetup: (xhr, url) => {
-              xhr.withCredentials = false;
-            },
-            // progressive streaming issues extra partial fetches — off avoids duplicates
-            progressive: false,
-            // Keep real 4K available on every device
-            capLevelToPlayerSize: false,
-            ignoreDevicePixelRatio: true,
-            testBandwidth: false,
-            videoPreference: { allowedVideoCodecs } as any,
-            startFragPrefetch: true,
-            initialLiveManifestSize: 1,
-            nudgeOffset: 0.1,
-            nudgeMaxRetry: 5,
-          });
-
-          
           hlsRef.current = hls;
           hls.loadSource(effectiveVideoUrl);
           hls.attachMedia(video);
@@ -943,7 +872,7 @@ export function VideoPlayer({
                     // Progressive backoff for mobile networks
                     const delay = Math.min(1000 * networkRetryCount, 5000);
                     setTimeout(() => {
-                      if (hlsRef.current) {
+                      if (hlsRef.current === hls) {
                         hls.startLoad();
                       }
                     }, delay);
@@ -960,7 +889,7 @@ export function VideoPlayer({
                   console.error('Unrecoverable error');
                   // Only set error after delay
                   setTimeout(() => {
-                    if (hlsRef.current) {
+                    if (hlsRef.current === hls) {
                       setVideoError(true);
                     }
                   }, 3000);
