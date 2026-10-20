@@ -241,9 +241,10 @@ export function getHLSConfig() {
     lowLatencyMode: false, // VoD: avoids partial-segment/duplicate requests
 
     // Buffer only what playback needs (prevents downloading far-ahead 4K segments)
-    maxBufferLength: slow ? 4 : isMobile ? 6 : 12,
-    maxMaxBufferLength: slow ? 10 : isMobile ? 14 : 30,
-    maxBufferSize: slow ? 8 * 1000 * 1000 : isMobile ? 14 * 1000 * 1000 : 36 * 1000 * 1000,
+    // Keep two or more typical VoD segments ahead to survive brief mobile dips.
+    maxBufferLength: slow ? 8 : isMobile ? 12 : 16,
+    maxMaxBufferLength: slow ? 16 : isMobile ? 24 : 32,
+    maxBufferSize: slow ? 16 * 1000 * 1000 : isMobile ? 24 * 1000 * 1000 : 40 * 1000 * 1000,
     maxBufferHole: 0.5,
     // Never pre-download the next fragment before it is needed
     startFragPrefetch: false,
