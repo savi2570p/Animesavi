@@ -3465,3 +3465,43 @@ button[title="Picture-in-Picture"],button[title="Screen Mirroring"]{display:none
 .perf-low .popular-glass-card, .perf-low .download-glass { backdrop-filter: none; -webkit-backdrop-filter: none; }
 @media (max-width: 767px) { .download-glass { width: min(300px, calc(100vw - 2rem)); } }
 @media (prefers-reduced-motion: reduce) { .popular-glass-card { transition: none; } .popular-glass-card:hover { transform: none; } }
+
+/* S2-V2 catalogue: restrained glass, readable artwork, no animated blur layers. */
+:root {
+  --catalogue-surface: linear-gradient(150deg, hsl(var(--foreground) / .09), hsl(var(--card) / .94) 65%);
+  --catalogue-shadow: inset 0 1px 0 hsl(var(--foreground) / .13), 0 5px 18px hsl(var(--background) / .22);
+  --catalogue-scrim: linear-gradient(0deg, hsl(var(--background) / .75), transparent 55%);
+  --trending-scrim: linear-gradient(90deg, hsl(var(--background) / .86), hsl(var(--background) / .2) 85%), linear-gradient(0deg, hsl(var(--background) / .85), transparent 80%);
+}
+.catalogue-section { border-top: 1px solid hsl(var(--border) / .4); }
+.catalogue-glass {
+  background: var(--catalogue-surface);
+  border: 1px solid hsl(var(--foreground) / .12);
+  box-shadow: var(--catalogue-shadow);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: transform 180ms ease, border-color 180ms ease;
+}
+.catalogue-fill { filter: blur(10px) brightness(.5); }
+.catalogue-chip {
+  background: hsl(var(--background) / .86);
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--foreground) / .18);
+}
+.catalogue-image-scrim { background: var(--catalogue-scrim); }
+.trending-v2 { width: 100%; aspect-ratio: 16 / 7; min-height: 340px; max-height: 500px; border-bottom: 1px solid hsl(var(--border)); }
+.trending-v2-scrim { background: var(--trending-scrim); }
+.trending-poster { transform: rotate(3deg); }
+@media (hover: hover) {
+  .catalogue-glass:hover { transform: translateY(-2px); border-color: hsl(var(--primary) / .6); }
+}
+@media (max-width: 767px) {
+  .trending-v2 { aspect-ratio: 16 / 9; min-height: 290px; }
+  .catalogue-glass { backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+}
+html.perf-low .catalogue-glass { backdrop-filter: none; -webkit-backdrop-filter: none; background: hsl(var(--card)); }
+html.perf-low .catalogue-fill { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .catalogue-glass { transition: none; }
+  .catalogue-glass:hover { transform: none; }
+}

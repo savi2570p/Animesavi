@@ -50,6 +50,13 @@
       "when": 1791791510798,
       "tag": "0006_upload_locks",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792470549673,
+      "tag": "0007_home_catalogue_performance",
+      "breakpoints": true
     }
   ]
 }

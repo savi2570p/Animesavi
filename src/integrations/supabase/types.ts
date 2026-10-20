@@ -2073,6 +2073,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      home_latest_catalogue: { Args: never; Returns: Json }
       is_allowed_short_uploader: {
         Args: { _user_id: string }
         Returns: boolean
