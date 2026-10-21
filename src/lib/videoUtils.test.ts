@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getHLSConfig } from './videoUtils';
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 describe('shared server streaming budget', () => {
   it('keeps 4K available without speculative fragment downloads', () => {
     const config = getHLSConfig();
@@ -17,8 +17,7 @@ describe('shared server streaming budget', () => {
     expect(config.backBufferLength).toBe(6);
   });
   it('limits ahead data on save-data connections while preserving renditions', () => {
-    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('iPhone');
-    vi.spyOn(navigator, 'connection', 'get').mockReturnValue({ saveData: true } as never);
+    vi.stubGlobal('navigator', { userAgent: 'iPhone', connection: { saveData: true } });
     const config = getHLSConfig();
     expect(config.maxBufferLength).toBe(8);
     expect(config.maxBufferSize).toBe(16_000_000);
