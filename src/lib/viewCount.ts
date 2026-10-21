@@ -1,6 +1,7 @@
 // Shared curated view count helper so hero banner and detail pages match.
 
 export const VIEW_COUNT_MAP: Record<string, number> = {
+  'Your Name': 9500000,
   'Your lie in April': 3400000,
   'Hanaori-san Still Wants to Fight in the Next Life': 3600000,
   'The angel next door spoils me rotten': 3600000,

@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DubBadge } from '@/components/anime/DubBadge';
+import { getViewCount, formatViews } from '@/lib/viewCount';
 import { ArrowLeft, ArrowRight, Play, TrendingUp, Eye, Pause } from 'lucide-react';
 
 interface TrendingAnime {
@@ -72,7 +73,7 @@ export const TrendingBanner = memo(function TrendingBanner() {
           <div className="min-w-0 max-w-xl">
             <div className="flex flex-wrap items-center gap-2 mb-2"><DubBadge isEngDub={current.is_eng_dub} isSubOnly={current.is_sub_only} genres={current.genres} /><span className="catalogue-chip rounded text-[9px] px-1.5 py-0.5">4K</span></div>
             <h3 className="font-heading text-xl md:text-4xl font-bold leading-tight line-clamp-2 text-foreground">{current.title}</h3>
-            <div className="flex gap-3 items-center mt-2 text-xs text-foreground/80"><span>{current.genres?.filter(g => !['Hindi', 'English'].includes(g)).slice(0, 2).join(' · ')}</span>{!!current.view_count && <span className="hidden sm:flex items-center gap-1"><Eye className="h-3 w-3" />{Intl.NumberFormat('en', { notation: 'compact' }).format(current.view_count)}</span>}</div>
+            <div className="flex gap-3 items-center mt-2 text-xs text-foreground/80"><span>{current.genres?.filter(g => !['Hindi', 'English'].includes(g)).slice(0, 2).join(' · ')}</span><span className="hidden sm:flex items-center gap-1"><Eye className="h-3 w-3" />{formatViews(getViewCount(current.title, current.view_count))}</span></div>
             <Button asChild size="sm" className="mt-4"><Link to={`/anime/${current.id}`}><Play className="h-3.5 w-3.5 fill-current mr-1.5" />Watch Now</Link></Button>
           </div>
           <Link to={`/anime/${current.id}`} className="trending-poster catalogue-glass hidden lg:block shrink-0 rounded-xl overflow-hidden w-[120px] h-[180px]"><img src={current.cover_image || '/placeholder.svg'} alt={`${current.title} poster`} loading="lazy" className="w-full h-full object-contain" /></Link>
