@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Play, Pause, RotateCcw, RotateCw, Maximize, Loader2, List, Captions } from 'lucide-react';
 import { isHlsUrl, detectDeviceKind } from '@/lib/streamSource';
 import { getHLSConfig } from '@/lib/videoUtils';
+import { useEmbedResume } from '@/hooks/useEmbedResume';
 
 /**
  * Shadow link v2 minimal player — ONLY: timeline, play/pause, ±10s skip,
@@ -9,6 +10,7 @@ import { getHLSConfig } from '@/lib/videoUtils';
  */
 
 interface ShadowMinimalPlayerProps {
+  resumeEpisodeId?: string | null;
   videoUrl: string | null;
   embedUrl?: string | null;
   poster?: string;
@@ -63,6 +65,7 @@ export function ShadowMinimalPlayer({
   onSelectEpisode,
   captionsUrl,
   fallbackEmbedUrl,
+  resumeEpisodeId,
 }: ShadowMinimalPlayerProps) {
   const [ccSrc, setCcSrc] = useState<string | null>(null);
   const [ccOn, setCcOn] = useState(true);
@@ -91,6 +94,7 @@ export function ShadowMinimalPlayer({
   }, [ccOn, ccSrc]);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  useEmbedResume(videoRef, resumeEpisodeId, videoUrl);
   const hideTimerRef = useRef<number | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
