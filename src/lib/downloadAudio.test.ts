@@ -17,4 +17,13 @@ describe('download confirmation', () => {
       expect(cancel).toHaveBeenCalledOnce();
     } finally { vi.unstubAllGlobals(); }
   });
+  it('finishes audio discovery even if the CDN never responds', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {})));
+    try {
+      const result = discoverDownloadAudio('https://example.test/movie.mp4', new AbortController().signal);
+      await vi.advanceTimersByTimeAsync(6000);
+      expect(await result).toEqual([]);
+    } finally { vi.useRealTimers(); vi.unstubAllGlobals(); }
+  });
 });

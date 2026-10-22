@@ -6,6 +6,7 @@ import { getHLSConfig } from '@/lib/videoUtils';
 import { Play, Pause, Maximize, Minimize, Download, X, List, RotateCcw, RotateCw, Subtitles, Headphones, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { extractEmbedSrc, isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
+import { useEmbedResume } from '@/hooks/useEmbedResume';
 
 const QUALITY_TIERS: Array<{ label: string; tag: string }> = [
   { label: '480p', tag: 'SD' },
@@ -104,6 +105,7 @@ export default function MinimalEmbedPage() {
   // Regular /embed/ links remain limited to the allowlisted hosts.
   const [accessAllowed] = useState<boolean>(() => isShadowTheme || checkEmbedAccess());
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [resolvedEpisodeId, setResolvedEpisodeId] = useState<string | null>(null);
   const [captionsUrl, setCaptionsUrl] = useState<string | null>(null);
   const [audioLanguage, setAudioLanguage] = useState<string>('original');
   const [ccEnabled, setCcEnabled] = useState(false);
@@ -160,7 +162,7 @@ export default function MinimalEmbedPage() {
 
         const { data: ep } = await supabase
           .from('episodes')
-          .select('title, video_url, external_url, captions_url, audio_language')
+          .select('id, title, video_url, external_url, captions_url, audio_language')
           .eq('season_id', season.id)
           .eq('episode_number', episodeNumber)
           .maybeSingle();
@@ -187,6 +189,7 @@ export default function MinimalEmbedPage() {
         setCurrentEpisodeNum(episodeNumber);
         setEpisodeList(siblings);
         setVideoUrl(url);
+        setResolvedEpisodeId(ep.id);
         setCaptionsUrl(ep.captions_url || null);
         const lang = (ep.audio_language || 'original').toLowerCase();
         setAudioLanguage(lang);
@@ -296,6 +299,8 @@ export default function MinimalEmbedPage() {
       v.removeEventListener('durationchange', onLoaded);
     };
   }, [useIframe, videoUrl]);
+
+  useEmbedResume(videoRef, resolvedEpisodeId, videoUrl, undefined, !useIframe && !isShadowTheme);
 
   // Track fullscreen state + force layout recalc on orientation change so
   // touch coordinates stay aligned with the visual controls in landscape.
@@ -463,6 +468,7 @@ export default function MinimalEmbedPage() {
               <div className="rounded-2xl overflow-hidden">
                 <ShadowMinimalPlayer
                   key={`${seasonNum}-${currentEpisodeNum}`}
+                  resumeEpisodeId={resolvedEpisodeId}
                   videoUrl={useIframe ? null : videoUrl}
                   embedUrl={useIframe ? iframeSrc : null}
                   overlayTitle={animeTitle || title}

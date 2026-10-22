@@ -1,5 +1,8 @@
 # Project rules
 - Download audio discovery uses a lazy, bounded MP4 metadata reader only when native track metadata is unavailable; never fetch the entire video to populate the selector.
+- Download metadata probes have bounded deadlines and never gate confirmation indefinitely, because CDN metadata can hang or be unavailable.
+- Copied embed players store exact native-media checkpoints by resolved episode ID through a shared resume hook; do not fabricate third-party iframe positions.
+- Homepage collection rows share GlassCatalogueRow to preserve audio/content badge priority, artwork dimensions and performance-tier glass fallbacks.
 - Download confirmation pauses playback and does not automatically resume it on dismissal, so users control playback explicitly.
 - Popular catalogue cards retain shared audio/content badges and native scroll snapping; animations must respect reduced motion and device performance tiers.
 - All HLS server players use getHLSConfig as the single buffering/network policy, preserving native Safari playback and manual quality/server choices to prevent tuning drift.

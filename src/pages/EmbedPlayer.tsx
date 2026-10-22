@@ -10,6 +10,7 @@ import {
 import { Captions, CaptionsOff } from 'lucide-react';
 import Hls from 'hls.js';
 import { useEmbedPlayerBridge } from '@/hooks/useEmbedPlayerBridge';
+import { useEmbedResume } from '@/hooks/useEmbedResume';
 import { getNetworkInfo } from '@/lib/videoUtils';
 import { isHlsUrl as isHls, isDashUrl, selectCompatibleSources, detectDeviceKind } from '@/lib/streamSource';
 import { isUuid, isSelfEmbedUrl } from '@/lib/embedLink';
@@ -254,19 +255,11 @@ export default function EmbedPlayer() {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || cancelled) return;
-      // Initial upsert (one row per user+episode)
-      await supabase.from('watch_history').upsert({
-        user_id: user.id,
-        anime_id: resolvedAnimeId,
-        episode_id: realEpisodeId,
-        progress: 0,
-        completed: false,
-        watched_at: new Date().toISOString(),
-      }, { onConflict: 'user_id,episode_id', ignoreDuplicates: false });
+      // Keep existing checkpoints until actual playback advances.
       // Periodic progress sync (every 10s)
       intervalId = setInterval(async () => {
         const v = videoRef.current;
-        if (!v || !v.duration) return;
+        if (!v || !v.duration || v.paused || v.currentTime <= 0) return;
         const pct = (v.currentTime / v.duration) * 100;
         const completed = pct >= 90;
         await supabase.from('watch_history').upsert({
@@ -380,7 +373,7 @@ export default function EmbedPlayer() {
 
 
     
-    const handleCanPlay = () => { setIsLoading(false); if (startTime > 0) video.currentTime = startTime; video.play().catch(() => {}); };
+    const handleCanPlay = () => { setIsLoading(false); video.play().catch(() => {}); };
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
     const handleWaiting = () => setIsBuffering(true);
@@ -470,6 +463,8 @@ export default function EmbedPlayer() {
 
     };
   }, [episodeData?.videoUrl, startTime]);
+
+  useEmbedResume(videoRef, realEpisodeId, episodeData?.videoUrl, searchParams.has('t') ? startTime : undefined);
 
   // Apply CC enable state to whichever subtitle layer is active
   useEffect(() => {
