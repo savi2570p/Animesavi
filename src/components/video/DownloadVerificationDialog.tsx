@@ -60,7 +60,10 @@ export function DownloadVerificationDialog({
   const availableTracks = audioTracks.length ? audioTracks : discoveredTracks;
 
   useEffect(() => {
-    if (!open || audioTracks.length || !videoUrl) return;
+    if (!open || audioTracks.length || !videoUrl) {
+      setDetectingAudio(false);
+      return;
+    }
     const controller = new AbortController();
     setDiscoveredTracks([]);
     setDetectingAudio(true);
@@ -84,17 +87,17 @@ export function DownloadVerificationDialog({
       return;
     }
 
-    setIsPreparing(true);
-
     // Save the chosen audio language as the user's preference
     const track = availableTracks[selectedAudio];
     if (track) {
       const code = normalizeLanguageCode(track.language);
+      try {
       if (code && code !== 'und') {
         localStorage.setItem('preferred_audio_language', code);
       } else {
         localStorage.setItem('preferred_audio_language', audioLabel(track, selectedAudio));
       }
+      } catch { /* Storage can be unavailable in embedded/private browsers. */ }
     }
 
     // Parse episode number from label, e.g. "Season 1 - Episode 5" → "05"
@@ -199,7 +202,7 @@ export function DownloadVerificationDialog({
           </AlertDialogCancel>
           <Button
             onClick={handlePrepare}
-            disabled={isPreparing || !selectedQuality || detectingAudio}
+            disabled={isPreparing || !selectedQuality}
             className="flex-1 h-8 text-xs download-confirm-action gap-1.5"
           >
             {isPreparing ? (

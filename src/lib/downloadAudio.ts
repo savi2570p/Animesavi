@@ -5,6 +5,28 @@ export interface DownloadAudioTrack {
 
 /** Read container metadata only; never fetch the entire movie to list languages. */
 export async function discoverDownloadAudio(url: string, signal: AbortSignal): Promise<DownloadAudioTrack[]> {
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  signal.addEventListener('abort', abort, { once: true });
+  if (signal.aborted) controller.abort();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    // Bound both headers and body reads; some hosts leave Range requests pending.
+    return await Promise.race([
+      readDownloadAudio(url, controller.signal).catch(() => []),
+      new Promise<DownloadAudioTrack[]>((resolve) => {
+        timer = setTimeout(() => { controller.abort(); resolve([]); }, 6000);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+    controller.abort();
+    signal.removeEventListener('abort', abort);
+  }
+}
+
+async function readDownloadAudio(url: string, signal: AbortSignal): Promise<DownloadAudioTrack[]> {
+  if (signal.aborted) return [];
   const { createFile, MP4BoxBuffer } = await import('mp4box');
   const file = createFile(false);
   let tracks: DownloadAudioTrack[] | undefined;
@@ -29,7 +51,7 @@ export async function discoverDownloadAudio(url: string, signal: AbortSignal): P
     if (data.byteLength > chunkSize || !data.byteLength) break;
     const next = file.appendBuffer(MP4BoxBuffer.fromArrayBuffer(data, offset));
     if (tracks) break;
-    offset = Math.max(next, offset + data.byteLength);
+    offset = Number.isFinite(next) ? Math.max(next, offset + data.byteLength) : offset + data.byteLength;
   }
   return tracks || [];
 }
