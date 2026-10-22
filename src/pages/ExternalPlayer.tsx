@@ -256,6 +256,7 @@ export default function ExternalPlayer() {
       toast.error('No video available for download');
       return;
     }
+    videoRef.current?.pause();
     setShowDownloadDialog(true);
   };
 

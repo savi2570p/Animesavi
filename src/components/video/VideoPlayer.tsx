@@ -3708,7 +3708,7 @@ export function VideoPlayer({
           animeTitle={animeTitle}
           episodeLabel={isMovie ? 'Movie' : `Season ${seasonNumber} - Episode ${episodeNumber}`}
           audioTracks={audioTracks}
-          currentAudioTrack={currentAudioTrack}
+          currentAudioTrack={Math.max(0, audioTracks.findIndex(track => track.id === currentAudioTrack))}
         />,
         document.body
       )}

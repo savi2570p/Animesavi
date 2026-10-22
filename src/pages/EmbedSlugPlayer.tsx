@@ -10,6 +10,7 @@ import {
 import { Captions, CaptionsOff } from 'lucide-react';
 import Hls from 'hls.js';
 import { useEmbedPlayerBridge } from '@/hooks/useEmbedPlayerBridge';
+import { useEmbedResume } from '@/hooks/useEmbedResume';
 import { getNetworkInfo } from '@/lib/videoUtils';
 
 function getLowBandwidthHlsConfig() {
@@ -310,17 +311,9 @@ export default function EmbedSlugPlayer() {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || cancelled) return;
-      await supabase.from('watch_history').upsert({
-        user_id: user.id,
-        anime_id: resolvedAnimeId,
-        episode_id: currentEpisodeId,
-        progress: 0,
-        completed: false,
-        watched_at: new Date().toISOString(),
-      }, { onConflict: 'user_id,episode_id', ignoreDuplicates: false });
       intervalId = setInterval(async () => {
         const v = videoRef.current;
-        if (!v || !v.duration) return;
+        if (!v || !v.duration || v.paused || v.currentTime <= 0) return;
         const pct = (v.currentTime / v.duration) * 100;
         const completed = pct >= 90;
         await supabase.from('watch_history').upsert({
@@ -498,6 +491,8 @@ export default function EmbedSlugPlayer() {
       if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
     };
   }, [episodeData?.videoUrl]);
+
+  useEmbedResume(videoRef, currentEpisodeId, episodeData?.videoUrl);
 
   // Apply CC enable state
   useEffect(() => {
