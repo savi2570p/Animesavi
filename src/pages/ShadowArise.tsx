@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Cloud, Download, Shield, CheckCircle, Play, Pause, ArrowLeft, AlertTriangle, Ban, RotateCw } from 'lucide-react';
 import { streamDownload, saveBlob, fmtSpeed, fmtEta, fmtSize as fmtBytes } from '@/lib/downloadUtils';
+import { readDownloadSize } from '@/lib/downloadMetadata';
 
 
 export default function ShadowArise() {
@@ -49,22 +50,14 @@ export default function ShadowArise() {
   // Fetch real file size via HEAD (fallback to ranged GET)
   useEffect(() => {
     if (!videoUrl) { setSizeResolved(true); return; }
-    let cancelled = false;
-    (async () => {
-      try {
-        const head = await fetch(videoUrl, { method: 'HEAD', mode: 'cors' });
-        const len = Number(head.headers.get('content-length') || '0');
-        if (!cancelled && len > 0) { setFileSizeBytes(len); setSizeResolved(true); return; }
-      } catch {}
-      try {
-        const r = await fetch(videoUrl, { headers: { Range: 'bytes=0-0' }, mode: 'cors' });
-        const cr = r.headers.get('content-range');
-        const m = cr && cr.match(/\/(\d+)$/);
-        if (!cancelled && m) setFileSizeBytes(Number(m[1]));
-      } catch {}
-      if (!cancelled) setSizeResolved(true);
-    })();
-    return () => { cancelled = true; };
+    const controller = new AbortController();
+    setSizeResolved(false);
+    readDownloadSize(videoUrl, controller.signal).then((size) => {
+      if (controller.signal.aborted) return;
+      setFileSizeBytes(size);
+      setSizeResolved(true);
+    });
+    return () => controller.abort();
   }, [videoUrl]);
 
   // Real preparation progress: walk through stages and gate ready on size resolved
