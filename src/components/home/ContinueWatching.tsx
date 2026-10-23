@@ -71,7 +71,7 @@ const ContinueWatchingCard = memo(function ContinueWatchingCard({
   const timeLeft = formatTimeLeft(item.progress, item.episode.duration);
   const raw = item.episode.thumbnail || item.anime.banner_image || item.anime.cover_image || '/placeholder.svg';
 
-  return <div className={`catalogue-glass cw-card rounded-xl overflow-hidden w-[300px] md:w-[340px] shrink-0 group ${isFading ? 'cw-tile-fading' : ''}`}>
+  return <div className={`catalogue-glass cw-card rounded-xl overflow-hidden w-[340px] max-w-[calc(100vw-2rem)] shrink-0 group ${isFading ? 'cw-tile-fading' : ''}`}>
     <Link to={`/watch/${item.episode.id}`} aria-label={`Resume ${item.anime.title} episode ${item.episode.episode_number}`} className="block">
       <div className="cw-artwork relative aspect-video bg-muted overflow-hidden">
         <img src={optimizedImageUrl(raw, { width: 640, quality: 78 })} onError={fhdFallback(raw)} alt={item.anime.title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" draggable={false} />

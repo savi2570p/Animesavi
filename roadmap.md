@@ -1,3 +1,7 @@
+- [ ] Move the Watch episode selector left and widen mobile Continue Watching artwork.
+- [ ] Refresh hamburger options, Profile and Settings with lightweight liquid glass.
+- [ ] Replace anime detail loading presentation with a glass loading screen.
+- [ ] Verify signed-in menu, profiles, navigation and mobile layouts.
 - [x] Make Continue Watching slightly wider with compact metadata while preserving 16:9 artwork.
 - [x] Redesign Watch and Upload presentation without changing playback, uploads or permissions.
 - [x] Correct Hindi-dub fallback audio labels and test concrete language rules.
