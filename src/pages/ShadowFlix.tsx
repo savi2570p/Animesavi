@@ -372,7 +372,7 @@ function ShadowFlixPlayer({
                 {allEpisodes.map(ep => (
                   <button key={ep.id} onClick={() => { onChangeEpisode?.(ep); setShowEpisodes(false); }}
                     className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${ep.id === item.id ? 'text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
-                    style={ep.id === item.id ? { background: `${theme.accent}22`, color: theme.accent } : {}}>
+                    style={ep.id === item.id ? { background: 'hsl(var(--primary) / .13)', color: theme.accent } : {}}>
                     {ep.thumbnail_url && <img src={ep.thumbnail_url} className="w-12 h-8 rounded object-cover shrink-0" />}
                     <div className="min-w-0">
                       <p className="truncate font-medium">{ep.episode_number ? `E${ep.episode_number}` : ''} {ep.title}</p>
@@ -473,7 +473,7 @@ function ShadowFlixPlayer({
             <h2 className="text-white text-xl sm:text-2xl font-black">{item.title}</h2>
             <div className="flex flex-wrap items-center gap-2 mt-2">
               {(seriesGroup?.genre || item.genre) && (
-                <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: `${theme.accent}22`, color: theme.accent }}>
+                <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: 'hsl(var(--primary) / .13)', color: theme.accent }}>
                   {seriesGroup?.genre || item.genre}
                 </span>
               )}
@@ -516,7 +516,7 @@ function ShadowFlixPlayer({
               {seasonEpisodes.map((ep, idx) => (
                 <div key={ep.id}
                   className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors group ${ep.id === item.id ? 'bg-white/10' : 'hover:bg-white/5'}`}
-                  style={{ border: ep.id === item.id ? `1px solid ${theme.accent}44` : '1px solid rgba(255,255,255,0.05)' }}
+                  style={{ border: ep.id === item.id ? '1px solid hsl(var(--primary) / .27)' : '1px solid rgba(255,255,255,0.05)' }}
                   onClick={() => ep.video_url && onChangeEpisode?.(ep)}>
                   <span className="text-white/20 text-sm font-bold w-6 text-center shrink-0">{idx + 1}</span>
                   <div className="w-20 sm:w-28 aspect-video rounded-lg overflow-hidden bg-white/5 shrink-0 relative">
