@@ -46,6 +46,7 @@ const MAX_LENGTH = 500;
 
 export function ReportButton() {
   const [open, setOpen] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [message, setMessage] = useState('');
   const [category, setCategory] = useState('');
   const [screenshot, setScreenshot] = useState<File | null>(null);
@@ -114,8 +115,6 @@ export function ReportButton() {
   };
 
   const removeScreenshot = () => setScreenshot(null);
-
-  const [isSending, setIsSending] = useState(false);
 
   const handleSend = async () => {
     if (!category) {
