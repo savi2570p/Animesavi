@@ -27,7 +27,11 @@ export function CloneSection() {
         .order('sort_order', { ascending: true });
       if (!cancelled) setCards((data as CloneCard[]) ?? []);
     })();
-    return <section className="catalogue-section py-6 md:py-9" aria-label="Clones">
+    return () => { cancelled = true; };
+  }, []);
+
+  if (!cards.length) return null;
+  return <section className="catalogue-section py-6 md:py-9" aria-label="Clones">
     <div className="container">
       <CatalogueHeading title="Clones" eyebrow="Explore collections" icon={Copy} rowRef={rowRef} />
       <div ref={rowRef} className="snap-row flex gap-3 overflow-x-auto pb-4 pt-1">
