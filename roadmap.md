@@ -1,6 +1,6 @@
-- [x] Fix bounded download audio discovery and download confirmation handoff.
-- [x] Add per-episode native-media resume to copied embed players.
-- [x] Redesign Latest Movies, ENG DUB, SUB-ONLY and Recently Completed with shared lightweight glass cards.
-- [x] Run focused regression tests and attempt live browser checks.
-
-Verification: 11 regression tests cover stalled metadata, ignored ranges, selected audio/quality under blocked storage, and saving/restoring native playback. Preview compilation passes. Live download/player and homepage visual checks remain unverified: Chromium rejected the test media, and homepage sections were not reachable in the browser session. Third-party iframe resume depends on the provider; no estimated positions are claimed. Downloads retain the source's audio streams and quality unless separate renditions are supplied; these changes do not remux or transcode files.
+- [ ] Redesign Browse Top 10 Most Popular from the supplied reference.
+- [ ] Redesign Continue Watching while preserving resume and Done actions.
+- [ ] Remove player theme controls and saved theme overrides.
+- [ ] Correct SUB audio labels and defaults to Japanese on desktop and Android.
+- [ ] Redesign Clones and Platforms with lightweight glass and smooth scrolling.
+- [ ] Run focused tests and check the updated views.
