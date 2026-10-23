@@ -1,3 +1,6 @@
+- [ ] Refresh login, notification bell and Continue Watching popups without changing existing account or resume behavior.
+- [ ] Show AnimeSavi Team for missing token issuers and contain the iOS navbar logo.
+- [ ] Hide Report and Telegram buttons on clone pages and verify affected screens.
 - [x] Refresh What's New and Release Notes without changing version or release content.
 - [x] Refresh Report, Telegram contact/promotion, navigation and footer presentation.
 - [x] Simplify homepage sharing and verify desktop/mobile interactions.
