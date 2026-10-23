@@ -194,48 +194,16 @@ export function ReportButton() {
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        aria-label="Report an issue"
-        className="group fixed bottom-[8.25rem] right-3 md:bottom-6 md:right-[5.25rem] z-50 w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center shadow-lg shadow-destructive/40 transition-all duration-300 hover:scale-110 active:scale-95"
-        style={{
-          background: 'linear-gradient(135deg, hsl(var(--destructive) / 0.95) 0%, hsl(var(--destructive)) 60%, hsl(var(--destructive) / 0.85) 100%)',
-        }}
-      >
-        <span className="absolute inset-0 rounded-full ring-1 ring-white/20" />
-        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-400 ring-2 ring-background animate-pulse" />
-        <Flag className="relative h-4 w-4 md:h-[18px] md:w-[18px] text-destructive-foreground drop-shadow" />
-      </button>
+      <Button variant="glass" size="icon" onClick={() => setOpen(true)} aria-label="Report an issue" title="Report an issue" className="utility-fab-v6 fixed bottom-[8.25rem] right-3 md:bottom-6 md:right-[5.25rem] z-50 w-10 h-10 md:w-11 md:h-11 rounded-lg text-destructive"><Flag className="h-4 w-4" /></Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
-          className="sm:max-w-md p-0 gap-0 overflow-hidden border-border/50 bg-card/95 backdrop-blur-xl"
+          className="utility-glass-v6 report-v6 sm:max-w-lg p-0 gap-0 overflow-hidden"
         >
-          {/* Cinematic header with destructive gradient */}
-          <div
-            className="relative px-5 pt-5 pb-4 border-b border-border/40"
-            style={{
-              background:
-                'linear-gradient(135deg, hsl(var(--destructive) / 0.18) 0%, hsl(var(--destructive) / 0.04) 50%, transparent 100%)',
-            }}
-          >
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -top-12 -right-10 w-40 h-40 rounded-full opacity-30 blur-3xl"
-              style={{ background: 'hsl(var(--destructive))' }}
-            />
-
+          <div className="utility-header-v6 px-5 pt-5 pb-4 border-b border-border">
             <DialogHeader className="space-y-1 text-left">
               <div className="flex items-center gap-2.5">
-                <div
-                  className="flex h-9 w-9 items-center justify-center rounded-xl ring-1 ring-destructive/30 shadow-lg shadow-destructive/20"
-                  style={{
-                    background:
-                      'linear-gradient(135deg, hsl(var(--destructive) / 0.95), hsl(var(--destructive) / 0.7))',
-                  }}
-                >
-                  <Flag className="h-4 w-4 text-destructive-foreground" />
-                </div>
+                <div className="utility-icon-v6 flex h-9 w-9 items-center justify-center rounded-lg"><Flag className="h-4 w-4 text-destructive" /></div>
                 <div className="flex-1 min-w-0">
                   <DialogTitle className="text-base font-semibold leading-tight text-foreground">
                     Report an Issue
@@ -266,10 +234,11 @@ export function ReportButton() {
                   const Icon = cat.icon;
                   const active = category === cat.value;
                   return (
-                    <button
+                    <Button variant="ghost"
                       key={cat.value}
+                      aria-pressed={active}
                       onClick={() => setCategory(cat.value)}
-                      className={`group/cat relative flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-[11px] font-medium transition-all border text-left ${
+                      className={`h-auto whitespace-normal group/cat relative flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-[11px] font-medium transition-all border text-left ${
                         active
                           ? 'bg-destructive/10 text-foreground border-destructive/60 shadow-sm shadow-destructive/20'
                           : 'bg-muted/40 text-muted-foreground border-border/40 hover:bg-muted hover:text-foreground hover:border-border'
@@ -280,8 +249,8 @@ export function ReportButton() {
                           active ? 'text-destructive' : 'text-muted-foreground group-hover/cat:text-foreground'
                         }`}
                       />
-                      <span className="truncate">{cat.label}</span>
-                    </button>
+                      <span className="leading-snug">{cat.label}</span>
+                    </Button>
                   );
                 })}
               </div>
@@ -332,7 +301,7 @@ export function ReportButton() {
               />
 
               {!screenshotPreview ? (
-                <button
+                <Button variant="ghost"
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   className="w-full flex items-center justify-center gap-2 px-3 py-3 rounded-lg border border-dashed border-border/60 bg-muted/30 hover:bg-muted/60 hover:border-destructive/50 text-muted-foreground hover:text-foreground transition-all"
@@ -341,31 +310,31 @@ export function ReportButton() {
                   <span className="text-[11.5px] font-medium">
                     Click to upload <span className="text-muted-foreground/70">or paste an image</span>
                   </span>
-                </button>
+                </Button>
               ) : (
-                <div className="relative group/img rounded-lg overflow-hidden border border-border/60 bg-black/40">
+                <div className="relative group/img rounded-lg overflow-hidden border border-border/60 bg-background/40">
                   <img
                     src={screenshotPreview}
                     alt="Report screenshot preview"
                     className="w-full max-h-48 object-contain"
                   />
-                  <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 px-2.5 py-1.5 bg-gradient-to-t from-black/80 to-transparent">
-                    <button
+                  <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 px-2.5 py-1.5 bg-gradient-to-t from-background/80 to-transparent">
+                    <Button variant="ghost"
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="text-[10.5px] font-medium text-white/90 hover:text-white inline-flex items-center gap-1"
+                      className="text-[10.5px] font-medium text-foreground/90 hover:text-foreground inline-flex items-center gap-1"
                     >
                       <ImagePlus className="h-3 w-3" />
                       Replace
-                    </button>
-                    <button
+                    </Button>
+                    <Button variant="ghost"
                       type="button"
                       onClick={removeScreenshot}
                       className="text-[10.5px] font-medium text-destructive-foreground bg-destructive/80 hover:bg-destructive px-2 py-0.5 rounded-lg inline-flex items-center gap-1"
                     >
                       <Trash2 className="h-3 w-3" />
                       Remove
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}

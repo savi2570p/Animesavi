@@ -253,7 +253,7 @@ export function Header() {
 
   return (
     <header
-      className={`sticky top-0 z-[100] w-full lg-nav-floating transition-transform duration-300 will-change-transform ${
+      className={`sticky top-0 z-[100] w-full lg-nav-floating nav-v6 transition-transform duration-300 will-change-transform ${
         navHidden ? '-translate-y-[120%]' : 'translate-y-0'
       }`}
     >
@@ -288,7 +288,7 @@ export function Header() {
               </Link>
             </Button>
             <Link to="/" className="hidden sm:flex items-baseline gap-1 leading-none hover:opacity-90 transition-opacity">
-              <span className="text-lg font-black tracking-tight bg-gradient-to-br from-primary via-primary to-pink-500 bg-clip-text text-transparent">
+              <span className="text-lg font-bold text-primary">
                 Anime
               </span>
               <span className="text-lg font-black tracking-tight text-foreground">Savi</span>
@@ -299,7 +299,7 @@ export function Header() {
           </div>
 
           {/* Navigation - Desktop pill bar */}
-          <nav className="hidden lg:flex items-center gap-0.5 p-1 rounded-full bg-card/70 border border-border/40">
+          <nav className="nav-v6-links hidden lg:flex items-center gap-0.5">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const active = isActivePath(link.to);
@@ -307,9 +307,10 @@ export function Header() {
                 <Link
                   key={link.label}
                   to={link.to}
-                  className={`relative inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-semibold transition-all duration-200 ${
+                  aria-current={active ? 'page' : undefined}
+                  className={`nav-v6-link relative inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
                     active
-                      ? 'text-primary-foreground bg-gradient-to-br from-primary to-pink-500 shadow-md shadow-primary/30'
+                      ? 'text-primary bg-primary/10'
                       : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
                   }`}
                 >
@@ -320,23 +321,20 @@ export function Header() {
             })}
 
             {canUpload() && (
-              <button
+              <Button variant="glass" size="sm"
                 onClick={handleUploadClick}
                 className="ml-1 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-bold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30 transition-all"
               >
                 <Upload className="h-3.5 w-3.5" />
                 Upload
-              </button>
+              </Button>
             )}
           </nav>
 
           {/* Search — Crimson obsidian glass */}
           <form onSubmit={handleSearch} className="flex-1 max-w-md hidden md:flex">
             <div className="group relative w-full">
-              {/* Outer crimson glow on focus */}
-              <div className={`pointer-events-none absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary to-rose-900 blur opacity-0 transition-opacity duration-500 ${isSearchFocused ? 'opacity-40' : 'group-hover:opacity-20'}`} />
-
-              <div className={`relative w-full flex items-center bg-card/80 backdrop-blur-xl border rounded-2xl p-1 shadow-2xl transition-colors ${isSearchFocused ? 'border-primary/40' : 'border-border/40'}`}>
+              <div className={`nav-v6-search relative w-full flex items-center border rounded-lg p-1 transition-colors ${isSearchFocused ? 'border-primary/40' : 'border-border/40'}`}>
                 <div className="pl-3 pr-2 flex items-center">
                   <Search className="h-4 w-4 text-muted-foreground" />
                 </div>
@@ -365,7 +363,7 @@ export function Header() {
                   </kbd>
                   <Button
                     type="submit"
-                    className="h-7 px-3 rounded-lg bg-gradient-to-br from-primary to-rose-700 hover:from-primary/90 hover:to-rose-600 text-primary-foreground text-[11px] font-bold shadow-[0_4px_20px_-5px_hsl(var(--primary)/0.5)] transition-all active:scale-95"
+                    className="h-7 px-3 rounded-md text-[11px] font-semibold"
                   >
                     <Search className="h-3.5 w-3.5 lg:hidden" />
                     <span className="hidden lg:inline">Search</span>

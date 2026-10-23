@@ -1174,34 +1174,17 @@ export default function Watch() {
         const tgCopy = resolveTelegramCopy(episode?.audio_language);
         return (
           <div
-            className="fixed z-[60] left-1/2 -translate-x-1/2 bottom-[max(4.5rem,calc(env(safe-area-inset-bottom)+4rem))] sm:bottom-[max(1rem,calc(env(safe-area-inset-bottom)+0.5rem))] w-[min(calc(100vw-2rem),17rem)] sm:w-[min(calc(100vw-1.5rem),26rem)] pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-500"
+            className="fixed z-[60] left-1/2 -translate-x-1/2 bottom-[max(4.5rem,calc(env(safe-area-inset-bottom)+4rem))] sm:bottom-[max(1rem,calc(env(safe-area-inset-bottom)+0.5rem))] w-[min(calc(100vw-2rem),23rem)] sm:w-[min(calc(100vw-1.5rem),28rem)] pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-500"
             role="status"
             aria-live="polite"
             aria-label={tgCopy.aria}
             dir={resolveTelegramCopy(episode?.audio_language) === TELEGRAM_COPY.ar ? 'rtl' : 'ltr'}
           >
-            <div className="pointer-events-auto relative flex items-center gap-2 sm:gap-3 rounded-xl sm:rounded-2xl border border-[#0088cc]/40 bg-card/95 backdrop-blur-xl shadow-[0_12px_30px_-10px_rgba(0,136,204,0.45)] pl-2 sm:pl-3.5 pr-1.5 sm:pr-2.5 py-1.5 sm:py-3">
-              <button
-                onClick={handleTelegramDismiss}
-                className="absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 h-3 w-3 sm:h-4 sm:w-4 rounded-full flex items-center justify-center bg-card border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-sm"
-                aria-label="Dismiss"
-              >
-                <X className="h-1.5 w-1.5 sm:h-2.5 sm:w-2.5" strokeWidth={2.5} />
-              </button>
-              <div className="flex-shrink-0 h-5 w-5 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-[#29b6f6] to-[#0077b5] flex items-center justify-center shadow-md ring-1 ring-white/10">
-                <Send className="h-2.5 w-2.5 sm:h-4 sm:w-4 text-white" />
-              </div>
-              <div className="flex-1 min-w-0 pr-0.5 sm:pr-1">
-                <p className="text-[10px] sm:text-[13px] font-semibold text-foreground leading-tight truncate">{tgCopy.title}</p>
-                <p className="text-[8px] sm:text-[11px] text-muted-foreground leading-tight mt-0.5 truncate">{tgCopy.subtitle}</p>
-              </div>
-              <Button
-                onClick={handleTelegramJoin}
-                size="sm"
-                className="flex-shrink-0 h-5 sm:h-8 px-2 sm:px-3.5 text-[9px] sm:text-xs font-semibold bg-[#0088cc] hover:bg-[#0077b5] text-white rounded-md sm:rounded-lg min-w-[2rem] sm:min-w-[3.5rem]"
-              >
-                {tgCopy.cta}
-              </Button>
+            <div className="utility-glass-v6 telegram-promo-v6 pointer-events-auto relative flex items-center gap-2 sm:gap-3 px-3 py-3">
+              <span className="utility-icon-v6 utility-telegram-icon-v6 shrink-0 h-8 w-8 sm:h-10 sm:w-10 rounded-lg grid place-items-center"><Send className="h-3.5 w-3.5 sm:h-4 sm:w-4" /></span>
+              <div className="flex-1 min-w-0"><p className="text-[11px] sm:text-sm font-semibold leading-snug">{tgCopy.title}</p><p className="text-[10px] sm:text-xs text-muted-foreground leading-snug mt-1">{tgCopy.subtitle}</p></div>
+              <Button onClick={handleTelegramJoin} variant="glass" size="sm" className="shrink-0 h-8 px-2.5 text-xs">{tgCopy.cta}</Button>
+              <Button onClick={handleTelegramDismiss} variant="ghost" size="icon" aria-label="Dismiss Telegram" className="shrink-0 h-7 w-7"><X className="h-3.5 w-3.5" /></Button>
             </div>
 
           </div>
