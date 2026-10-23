@@ -24,7 +24,7 @@ describe('download confirmation handoff', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Download 1080p' }));
     const url = new URL(mocks.navigate.mock.calls[0][0], 'https://example.test');
     expect(url.searchParams.get('audio')).toBe('1');
-    expect(url.searchParams.get('audioLang')).toBe('en');
+    expect(url.searchParams.get('audioLang')).toBe('eng');
     expect(url.searchParams.get('quality')).toBe('1080p');
   });
 });
