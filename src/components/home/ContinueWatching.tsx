@@ -70,11 +70,10 @@ const ContinueWatchingCard = memo(function ContinueWatchingCard({
   const timeLeft = formatTimeLeft(item.progress, item.episode.duration);
   const raw = item.episode.thumbnail || item.anime.cover_image || '/placeholder.svg';
 
-  return <div className={`catalogue-glass rounded-xl overflow-hidden w-[280px] md:w-[320px] shrink-0 group ${isFading ? 'cw-tile-fading' : ''}`}>
+  return <div className={`catalogue-glass cw-card rounded-xl overflow-hidden w-[280px] md:w-[320px] shrink-0 group ${isFading ? 'cw-tile-fading' : ''}`}>
     <Link to={`/watch/${item.episode.id}`} aria-label={`Resume ${item.anime.title} episode ${item.episode.episode_number}`} className="block">
-      <div className="relative aspect-video bg-muted overflow-hidden">
-        <img src={optimizedImageUrl(raw, { width: 640, quality: 78 })} onError={fhdFallback(raw)} alt={item.anime.title} className="w-full h-full object-cover" loading="lazy" decoding="async" draggable={false} />
-        <div className="catalogue-image-scrim absolute inset-0 pointer-events-none" />
+      <div className="cw-artwork relative aspect-video bg-muted overflow-hidden">
+        <img src={optimizedImageUrl(raw, { width: 640, quality: 78 })} onError={fhdFallback(raw)} alt={item.anime.title} className="absolute inset-0 w-full h-full object-contain" loading="lazy" decoding="async" draggable={false} />
         <span className="catalogue-chip absolute top-2 left-2 rounded px-2 py-1 text-[10px]">S{item.season?.season_number || 1} · E{item.episode.episode_number}</span>
         {item.hasNewEpisode && <span className="catalogue-chip absolute bottom-2 left-2 rounded px-2 py-1 text-[10px] text-primary">NEW</span>}
         <Play className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-7 w-7 text-primary-foreground fill-current" />

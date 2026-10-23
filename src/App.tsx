@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { MiniPlayerProvider } from "@/contexts/MiniPlayerContext";
 import { PopupQueueProvider } from "@/contexts/PopupQueueContext";
@@ -76,8 +76,6 @@ const QaCheck = lazy(() => import("./pages/QaCheck"));
 const Downloads = lazy(() => import("./pages/Downloads"));
 const WatchList = lazy(() => import("./pages/WatchList"));
 const ShadowArise = lazy(() => import("./pages/ShadowArise"));
-const FloxAnimePage = lazy(() => import("./pages/FloxAnimePage"));
-const FloxWatch = lazy(() => import("./pages/FloxWatch"));
 const SiteHealth = lazy(() => import("./pages/SiteHealth"));
 const AdminFeaturedLineup = lazy(() => import("./pages/AdminFeaturedLineup"));
 const AdminPartners = lazy(() => import("./pages/AdminPartners"));
@@ -297,8 +295,7 @@ const App = () => (
                     <Route path="/stats" element={<UserStats />} />
                     <Route path="/downloads" element={<Downloads />} />
                     <Route path="/watchlist" element={<WatchList />} />
-                    <Route path="/flox" element={<FloxAnimePage />} />
-                    <Route path="/flox/watch/:episodeId" element={<FloxWatch />} />
+                    <Route path="/flox/*" element={<Navigate to="/" replace />} />
                     <Route path="/:animeSlug/:episodeSlug" element={<AnimeSlugRedirect />} />
                     <Route path="/:animeSlug" element={<AnimeSlugRedirect />} />
                   </Route>

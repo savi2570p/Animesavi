@@ -1,3 +1,7 @@
+- [ ] Shrink Clones and Platforms to compact tiles.
+- [ ] Ensure Continue Watching artwork is fully visible at 16:9 with titles below.
+- [ ] Remove public Flox navigation and routes without touching partner integrations.
+- [ ] Redesign the main hero with lightweight liquid glass and verify layouts.
 - [x] Redesign Browse Top 10 Most Popular from the supplied reference.
 - [x] Redesign Continue Watching while preserving resume and Done actions.
 - [x] Remove player theme controls and saved theme overrides.

@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Tv, Play, Film, Clock, LayoutGrid, Cherry, ArrowLeft, Mic } from 'lucide-react';
 import museinLogo from '@/assets/musein-logo.jpg';
 import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
-import floxLogo from '@/assets/flox-anime-india-logo.jpg';
 import { Button } from '@/components/ui/button';
 
 interface NavTab {
@@ -26,10 +25,8 @@ export function ContentNavTabs() {
 
   const isOnCrunchy = location.pathname === '/crunchy';
   const isOnMuseIN = location.pathname === '/musein';
-  const isOnFlox = location.pathname === '/flox';
-
-  // On MuseIN, Crunchy, or Flox pages, show NO tabs — only back button
-  const hideAllTabs = isOnMuseIN || isOnCrunchy || isOnFlox;
+  // Collection pages show only the back button.
+  const hideAllTabs = isOnMuseIN || isOnCrunchy;
 
   const tabs: NavTab[] = hideAllTabs
     ? []
@@ -40,7 +37,6 @@ export function ContentNavTabs() {
         { to: '/latest-movies', label: 'Latest Movies', icon: Film },
         { to: '/eng-dub', label: 'ENG DUB', icon: Mic },
         { to: '/upcoming', label: 'Upcoming', icon: Cherry },
-        { to: '/flox', label: 'Flox +', customIcon: floxLogo },
         ...(isRolesLoaded && canAccessPending
           ? [{ to: '/pending-upload', label: 'Pending Upload', icon: Clock, requiresUploader: true }]
           : []),
@@ -76,7 +72,6 @@ export function ContentNavTabs() {
                 to={tab.to}
                 className={cn(
                   "snap-start flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-3 sm:py-2.5 text-[10px] sm:text-xs md:text-sm font-medium whitespace-nowrap border-b-2 leading-none shrink-0 transition-[color,border-color,background-color,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.97] will-change-transform",
-                  tab.to === '/flox' && "sm:px-2.5 md:px-3",
                   isActive
                     ? "border-primary text-primary"
                     : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
