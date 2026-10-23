@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { NotificationSettings } from '@/components/NotificationSettings';
@@ -197,68 +197,19 @@ export default function Settings() {
   ];
 
   return (
-    <div className="min-h-screen">
-      {/* Cinematic hero */}
-      <div className="relative h-[220px] md:h-[280px] overflow-hidden border-b border-border/40">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-rose-500/10" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.25),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,hsl(0_85%_50%/0.15),transparent_60%)]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background" />
-
-        <div className="relative container h-full flex items-end pb-8">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary to-rose-500 blur-xl opacity-60" />
-              <div className="relative h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-gradient-to-br from-primary to-rose-500 flex items-center justify-center shadow-2xl">
-                <SettingsIcon className="h-8 w-8 md:h-10 md:w-10 text-white" />
-              </div>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1">Preferences</p>
-              <h1 className="text-3xl md:text-5xl font-heading font-bold tracking-tight">
-                Settings
-              </h1>
-              <p className="text-sm md:text-base text-muted-foreground mt-1">
-                Personalize your experience
-              </p>
-            </div>
-          </div>
+    <div className="account-v4 min-h-screen">
+      <header className="account-v4-header border-b border-border">
+        <div className="container max-w-5xl py-8 md:py-12 flex flex-wrap items-center gap-4">
+          <div className="account-v4-icon h-14 w-14 rounded-lg flex items-center justify-center"><SettingsIcon className="h-6 w-6 text-primary" /></div>
+          <div className="flex-1 min-w-0"><p className="text-xs text-muted-foreground mb-2">My account</p><h1 className="text-3xl md:text-4xl font-bold">Settings</h1></div>
+          <Button variant="glass" onClick={() => navigate('/profile')}><UserIcon />My Profile</Button>
         </div>
-      </div>
+      </header>
+      <div className="container py-6 md:py-8 max-w-5xl">
+        <div className="account-v4-sections">
 
-      <div className="container py-8 md:py-10 max-w-4xl">
-        {/* Quick stats / chips */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-          {[
-            { icon: Moon, label: 'Theme', value: 'Dark' },
-            { icon: Bell, label: 'Alerts', value: 'On' },
-            { icon: Globe, label: 'Autoplay', value: autoplay ? 'On' : 'Off' },
-            { icon: Lock, label: 'Account', value: 'Secure' },
-          ].map((chip) => (
-            <div
-              key={chip.label}
-              className="group relative overflow-hidden rounded-xl border border-border/50 bg-card/40 backdrop-blur-md p-3 hover:border-primary/40 transition-all"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <chip.icon className="h-4 w-4 text-primary" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground truncate">
-                    {chip.label}
-                  </p>
-                  <p className="text-sm font-semibold truncate">{chip.value}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="space-y-5">
           {/* Appearance */}
-          <Card className="relative overflow-hidden border-border/50 bg-card/60 backdrop-blur-sm">
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+          <section className="account-v4-section">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -271,7 +222,7 @@ export default function Settings() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-primary/10 to-rose-500/5 border border-primary/20">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-primary/20">
                 <Sparkles className="h-5 w-5 text-primary" />
                 <span className="font-medium text-sm">Dark Mode</span>
                 <span className="ml-auto text-xs text-muted-foreground uppercase tracking-wider">
@@ -279,7 +230,7 @@ export default function Settings() {
                 </span>
               </div>
             </CardContent>
-          </Card>
+          </section>
 
           {/* Notifications */}
           <NotificationSettings />
@@ -288,8 +239,7 @@ export default function Settings() {
           <ReleaseReminderSettings />
 
           {/* Playback */}
-          <Card className="relative overflow-hidden border-border/50 bg-card/60 backdrop-blur-sm">
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+          <section className="account-v4-section">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -329,7 +279,7 @@ export default function Settings() {
                   </Label>
                   <div className="flex flex-wrap gap-1.5">
                     {['auto', '480p', '720p', '1080p', '4K'].map((q) => (
-                      <button
+                      <Button variant="ghost"
                         key={q}
                         type="button"
                         onClick={() => setDefaultQuality(q)}
@@ -340,7 +290,7 @@ export default function Settings() {
                         }`}
                       >
                         {q}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
@@ -356,7 +306,7 @@ export default function Settings() {
                       { v: 'hi', l: 'HI' },
                       { v: 'ja', l: 'JA' },
                     ].map((o) => (
-                      <button
+                      <Button variant="ghost"
                         key={o.v}
                         type="button"
                         onClick={() => setSubLang(o.v)}
@@ -367,20 +317,19 @@ export default function Settings() {
                         }`}
                       >
                         {o.l}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </section>
 
           {/* PIN Lock */}
           <PinLockSettings />
 
           {/* Data & Performance */}
-          <Card className="relative overflow-hidden border-border/50 bg-card/60 backdrop-blur-sm">
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+          <section className="account-v4-section">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -423,12 +372,11 @@ export default function Settings() {
                 Clear cached images & data
               </Button>
             </CardContent>
-          </Card>
+          </section>
 
 
           {/* Change Password */}
-          <Card className="relative overflow-hidden border-border/50 bg-card/60 backdrop-blur-sm">
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+          <section className="account-v4-section">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -456,13 +404,13 @@ export default function Settings() {
                       className="bg-muted/40 border-border/50 pr-10 h-11"
                       autoComplete="current-password"
                     />
-                    <button
+                    <Button variant="ghost"
                       type="button"
                       onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors rounded-lg"
+                      size="icon" aria-label="Toggle password visibility" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground rounded-lg"
                     >
                       {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -481,13 +429,13 @@ export default function Settings() {
                         className="bg-muted/40 border-border/50 pr-10 h-11"
                         autoComplete="new-password"
                       />
-                      <button
+                      <Button variant="ghost"
                         type="button"
                         onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors rounded-lg"
+                        size="icon" aria-label="Toggle password visibility" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground rounded-lg"
                       >
                         {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -511,17 +459,16 @@ export default function Settings() {
                   disabled={
                     isChangingPassword || !currentPassword || !newPassword || !confirmPassword
                   }
-                  className="w-full h-11 bg-gradient-to-r from-primary to-rose-500 hover:opacity-90 text-white font-semibold"
+                  className="w-full h-11 font-semibold"
                 >
                   {isChangingPassword ? 'Changing Password...' : 'Update Password'}
                 </Button>
               </form>
             </CardContent>
-          </Card>
+          </section>
 
           {/* Keyboard Shortcuts */}
-          <Card className="relative overflow-hidden border-border/50 bg-card/60 backdrop-blur-sm">
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+          <section className="account-v4-section">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -529,7 +476,7 @@ export default function Settings() {
                 </div>
                 Keyboard Shortcuts
               </CardTitle>
-              <CardDescription>Quick controls for the video player</CardDescription>
+              
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-2.5">
@@ -546,12 +493,10 @@ export default function Settings() {
                 ))}
               </div>
             </CardContent>
-          </Card>
+          </section>
 
           {/* Account & Session — Profile summary + Sign Out */}
-          <Card className="relative overflow-hidden border-border/50 bg-card/60 backdrop-blur-sm">
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-            <div className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 rounded-full bg-primary/15 blur-3xl" />
+          <section className="account-v4-section">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -562,7 +507,7 @@ export default function Settings() {
               <CardDescription>Your profile, security and session controls</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-primary/10 via-transparent to-rose-500/5 border border-border/50">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50">
                 <Avatar className="h-11 w-11 ring-2 ring-primary/40 shrink-0">
                   <AvatarImage src={user.user_metadata?.avatar_url} alt="Avatar" />
                   <AvatarFallback className="bg-primary text-primary-foreground font-bold">
@@ -572,15 +517,15 @@ export default function Settings() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold truncate flex items-center gap-1.5">
                     {user.user_metadata?.username || 'User'}
-                    {isAdmin && <Crown className="h-3.5 w-3.5 text-yellow-500" />}
+                    {isAdmin && <Crown className="h-3.5 w-3.5 text-primary" />}
                   </p>
                   <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                   <div className="mt-1 flex flex-wrap gap-1">
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[9px] font-black text-emerald-400 uppercase tracking-wider">
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-primary/10 border border-border text-[9px] font-black text-primary uppercase tracking-wider">
                       Signed in
                     </span>
                     {isAdmin ? (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-[9px] font-black text-yellow-400 uppercase tracking-wider">Admin</span>
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-primary/10 border border-border text-[9px] font-black text-primary uppercase tracking-wider">Admin</span>
                     ) : isUploader ? (
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-[9px] font-black text-primary uppercase tracking-wider">Uploader</span>
                     ) : (
@@ -622,7 +567,7 @@ export default function Settings() {
                 </Button>
               </div>
             </CardContent>
-          </Card>
+          </section>
         </div>
       </div>
 
@@ -630,8 +575,8 @@ export default function Settings() {
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent className="max-w-md border-destructive/40 bg-background/95 backdrop-blur-xl">
           <DialogHeader>
-            <div className="mx-auto mb-2 h-14 w-14 rounded-2xl bg-gradient-to-br from-destructive to-rose-600 flex items-center justify-center shadow-2xl">
-              <AlertTriangle className="h-7 w-7 text-white" />
+            <div className="mx-auto mb-2 h-14 w-14 rounded-2xl bg-destructive flex items-center justify-center shadow-2xl">
+              <AlertTriangle className="h-7 w-7 text-destructive-foreground" />
             </div>
             <DialogTitle className="text-center text-xl">Delete your account?</DialogTitle>
             <DialogDescription className="text-center leading-relaxed pt-1">
@@ -664,7 +609,7 @@ export default function Settings() {
             <Button
               onClick={handleDeleteAccount}
               disabled={isDeleting || deleteConfirm.trim().toUpperCase() !== 'DELETE'}
-              className="flex-1 bg-gradient-to-r from-destructive to-rose-600 hover:opacity-90 text-white font-semibold"
+              className="flex-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold"
             >
               {isDeleting ? 'Deleting…' : 'Delete Account'}
             </Button>

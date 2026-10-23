@@ -1230,7 +1230,7 @@ export default function Watch() {
       {/* Main Watch Area - Video + Episode List */}
       <div className="watch-v3-stage flex flex-col lg:flex-row">
         {/* Episode List - Desktop Left Sidebar - Ends at video player border */}
-        <div className="watch-v3-sidebar hidden lg:block w-64 shrink-0 border-r border-border bg-card/30 lg:order-2">
+        <div className="watch-v3-sidebar hidden lg:block w-64 shrink-0 border-r border-border bg-card/30 lg:order-1">
           <EpisodeList
             episodes={allEpisodes}
             currentEpisodeId={episodeId || ''}
@@ -1242,7 +1242,7 @@ export default function Watch() {
         </div>
 
         {/* Video Player */}
-        <div className="flex-1 min-w-0 lg:order-1">
+        <div className="flex-1 min-w-0 lg:order-2">
           <div className="relative">
             {/* Player crash isolation: a playback-engine error swaps in a
                 recovery card instead of taking the whole watch page down. */}

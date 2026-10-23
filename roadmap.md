@@ -1,3 +1,7 @@
+- [x] Move the Watch episode selector left and widen mobile Continue Watching artwork.
+- [x] Refresh hamburger options, Profile and Settings with lightweight liquid glass.
+- [x] Replace anime detail loading presentation with a glass loading screen.
+- [x] Verify signed-in menu, profiles, navigation and mobile layouts.
 - [x] Make Continue Watching slightly wider with compact metadata while preserving 16:9 artwork.
 - [x] Redesign Watch and Upload presentation without changing playback, uploads or permissions.
 - [x] Correct Hindi-dub fallback audio labels and test concrete language rules.
@@ -20,4 +24,4 @@
 - [x] Redesign Clones and Platforms with lightweight glass and native snap scrolling.
 - [x] Run focused tests and check the updated views.
 
-Verified: nine audio/playback regressions pass. Continue Watching is wider with shorter metadata and retains 16:9 artwork. Signed-in Watch and Upload render without mobile overflow or page errors; Upload search, Add Series inputs and Edit navigation work with real content. Hindi fallback is tested for unknown metadata and preserves real English and SUB Japanese. Live audio-menu playback remains unverified because Chromium rejects the real video with media error 4. Upload submission and playback policies are unchanged.
+Verified: nine audio/playback regressions pass. Signed-in Profile saves and reads back unchanged account data; Settings autoplay toggles and restores correctly. The glass menu opens above the header. A real Watch episode places its selector left. Mobile Continue Watching artwork measures 338 × 190.125 (16:9), with no profile overflow. The new detail loading screen appears and resolves into real anime details. No browser page errors. Physical iOS/Android devices and actual video playback remain unverified; account permissions and playback logic are unchanged.
