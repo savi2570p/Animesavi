@@ -3522,6 +3522,10 @@ html.perf-low .catalogue-fill { display: none; }
 .hero-v3-copy { animation: hero-content-up 220ms ease-out both; }
 .hero-v3-dot span { display: block; width: 100%; height: 3px; border-radius: 1px; background: hsl(var(--foreground) / .28); }
 .hero-v3-dot.is-current span { background: hsl(var(--primary)); }
+.pending-status-queued { color: hsl(var(--foreground) / .7); }
+.pending-status-processing { color: hsl(var(--primary)); }
+.pending-status-encoding { color: hsl(var(--accent-foreground)); }
+.pending-status-overdue { color: hsl(var(--destructive)); }
 @media (max-width: 767px) {
   .hero-v3 { height: auto; min-height: 0; aspect-ratio: auto; }
   .hero-v3-media { position: relative; inset: auto; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; }

@@ -4,7 +4,8 @@
 - Copied embed players store exact native-media checkpoints by resolved episode ID through a shared resume hook; do not fabricate third-party iframe positions.
 - Homepage collection rows share GlassCatalogueRow to preserve audio/content badge priority, artwork dimensions and performance-tier glass fallbacks.
 - Discovery, platform and continue-watching rows reuse catalogue glass tokens and native snap scrolling to avoid animation-loop and per-card blur overhead.
-- The main hero uses one responsive artwork layout with visibility-gated autoplay and tokenized glass controls; resume cards reserve a separate aspect-ratio artwork region to prevent text overlap.
+- The main hero uses visibility-gated autoplay and tokenized glass controls, with a separate aspect-ratio media region on mobile; resume cards reserve edge-to-edge aspect-ratio artwork independently from their text.
+- Pending Upload reuses catalogue glass and keeps presentation separate from existing role checks, queue heuristics, realtime updates and edit actions to avoid changing upload permissions during redesigns.
 - Pass anime SUB classification into the shared audio selector; known stream metadata takes precedence over content-language fallback labels.
 - Download confirmation pauses playback and does not automatically resume it on dismissal, so users control playback explicitly.
 - Popular catalogue cards retain shared audio/content badges and native scroll snapping; animations must respect reduced motion and device performance tiers.
