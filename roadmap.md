@@ -1,3 +1,7 @@
+- [ ] Fill Continue Watching artwork without side gutters.
+- [ ] Give mobile hero artwork a true 16:9 frame and remove hero counter numbers.
+- [ ] Shrink Trending Now and redesign Pending Upload without changing access or actions.
+- [ ] Verify signed-in desktop and mobile views.
 - [x] Shrink Clones and Platforms to compact tiles.
 - [x] Ensure Continue Watching artwork is fully visible at 16:9 with titles below.
 - [x] Remove public Flox navigation and routes without touching partner integrations.

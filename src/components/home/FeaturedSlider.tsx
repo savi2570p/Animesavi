@@ -206,6 +206,7 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
 
   return (
     <section ref={sliderRef} className="hero-v3 relative isolate overflow-hidden" aria-label="Featured anime">
+      <div className="hero-v3-media">
       {featuredAnime.map((anime, index) => (
         <img key={anime.id} src={anime.banner || anime.thumbnail || '/placeholder.svg'}
           alt={anime.title} width={1920} height={1080}
@@ -214,6 +215,7 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
           className={`hero-v3-image absolute inset-0 w-full h-full object-cover ${index === currentIndex ? 'opacity-100' : 'opacity-0'}`} />
       ))}
       <div className="hero-v3-scrim absolute inset-0 pointer-events-none" />
+      </div>
       <div className="container relative flex flex-col justify-end h-full pb-5 md:pb-8 pt-8">
         <div key={animKey} className="hero-v3-copy max-w-2xl">
           <div className="flex items-center gap-3 mb-3 text-xs">
@@ -239,7 +241,6 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
               className={`hero-v3-dot h-6 w-5 md:w-8 rounded-none ${index === currentIndex ? 'is-current' : ''}`}><span /></Button>)}
           </div>
           <div className="hero-v3-glass flex items-center rounded-full p-1 shrink-0 gap-0.5">
-            <span className="hidden md:block text-[11px] text-muted-foreground tabular-nums pl-3 pr-2">{String(currentIndex + 1).padStart(2, '0')} / {String(featuredAnime.length).padStart(2, '0')}</span>
             <Button variant="ghost" size="icon" className="h-7 w-7 md:h-8 md:w-8 rounded-full" onClick={handlePrev} aria-label="Previous featured anime"><ChevronLeft className="h-4 w-4" /></Button>
             <Button variant="ghost" size="icon" className="h-7 w-7 md:h-8 md:w-8 rounded-full" onClick={() => setIsPaused(value => !value)} aria-label={isPaused ? 'Resume featured slideshow' : 'Pause featured slideshow'}>{isPaused ? <Play className="h-3.5 w-3.5" /> : <Pause className="h-3.5 w-3.5" />}</Button>
             <Button variant="ghost" size="icon" className="h-7 w-7 md:h-8 md:w-8 rounded-full" onClick={handleNext} aria-label="Next featured anime"><ChevronRight className="h-4 w-4" /></Button>

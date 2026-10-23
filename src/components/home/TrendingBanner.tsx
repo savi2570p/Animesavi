@@ -55,7 +55,7 @@ export const TrendingBanner = memo(function TrendingBanner() {
   }, [activeIndex, isActive, paused, trending.length]);
   const current = trending[activeIndex % Math.max(1, trending.length)];
   if (!isPending && !current) return null;
-  return <section ref={sectionRef} className="py-6 md:py-9" aria-label="Trending Now">
+  return <section ref={sectionRef} className="py-4 md:py-5" aria-label="Trending Now">
     <div className="container">
       <div className="flex items-end justify-between gap-3 mb-4">
         <div><span className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground mb-1"><TrendingUp className="h-3 w-3 text-primary" />In the spotlight</span><h2 className="font-heading text-xl md:text-3xl font-bold">Trending Now</h2></div>
@@ -72,7 +72,7 @@ export const TrendingBanner = memo(function TrendingBanner() {
         <div className="absolute bottom-5 md:bottom-8 left-4 md:left-8 right-4 md:right-8 flex items-end justify-between gap-5">
           <div className="min-w-0 max-w-xl">
             <div className="flex flex-wrap items-center gap-2 mb-2"><DubBadge isEngDub={current.is_eng_dub} isSubOnly={current.is_sub_only} genres={current.genres} /><span className="catalogue-chip rounded text-[9px] px-1.5 py-0.5">4K</span></div>
-            <h3 className="font-heading text-xl md:text-4xl font-bold leading-tight line-clamp-2 text-foreground">{current.title}</h3>
+            <h3 className="font-heading text-lg md:text-2xl font-bold leading-tight line-clamp-2 text-foreground">{current.title}</h3>
             <div className="flex gap-3 items-center mt-2 text-xs text-foreground/80"><span>{current.genres?.filter(g => !['Hindi', 'English'].includes(g)).slice(0, 2).join(' · ')}</span><span className="hidden sm:flex items-center gap-1"><Eye className="h-3 w-3" />{formatViews(getViewCount(current.title, current.view_count))}</span></div>
             <Button asChild size="sm" className="mt-4"><Link to={`/anime/${current.id}`}><Play className="h-3.5 w-3.5 fill-current mr-1.5" />Watch Now</Link></Button>
           </div>

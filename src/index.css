@@ -3489,14 +3489,14 @@ button[title="Picture-in-Picture"],button[title="Screen Mirroring"]{display:none
   border: 1px solid hsl(var(--foreground) / .18);
 }
 .catalogue-image-scrim { background: var(--catalogue-scrim); }
-.trending-v2 { width: 100%; aspect-ratio: 16 / 7; min-height: 340px; max-height: 500px; border-bottom: 1px solid hsl(var(--border)); }
+.trending-v2 { width: 100%; height: 280px; border-bottom: 1px solid hsl(var(--border)); }
 .trending-v2-scrim { background: var(--trending-scrim); }
 .trending-poster { transform: rotate(3deg); }
 @media (hover: hover) {
   .catalogue-glass:hover { transform: translateY(-2px); border-color: hsl(var(--primary) / .6); }
 }
 @media (max-width: 767px) {
-  .trending-v2 { aspect-ratio: 16 / 9; min-height: 290px; }
+  .trending-v2 { height: 240px; }
   .catalogue-glass { backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
 }
 html.perf-low .catalogue-glass { backdrop-filter: none; -webkit-backdrop-filter: none; background: hsl(var(--card)); }
@@ -3516,15 +3516,19 @@ html.perf-low .catalogue-fill { display: none; }
 }
 .hero-v3 { width: 100%; aspect-ratio: 16 / 9; height: min(660px, 70vh); min-height: 420px; border-bottom: 1px solid hsl(var(--border) / .5); }
 .hero-v3-image { transition: opacity 550ms ease; }
+.hero-v3-media { position: absolute; inset: 0; }
 .hero-v3-scrim { background: var(--hero-v3-scrim); }
 .hero-v3-glass { background: var(--hero-v3-glass); border: 1px solid hsl(var(--foreground) / .18); box-shadow: var(--hero-v3-shadow); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 .hero-v3-copy { animation: hero-content-up 220ms ease-out both; }
 .hero-v3-dot span { display: block; width: 100%; height: 3px; border-radius: 1px; background: hsl(var(--foreground) / .28); }
 .hero-v3-dot.is-current span { background: hsl(var(--primary)); }
 @media (max-width: 767px) {
-  .hero-v3 { height: 440px; min-height: 440px; }
-  .hero-v3-image { object-position: center top; }
-  .hero-v3-scrim { background: linear-gradient(0deg, hsl(var(--background)), hsl(var(--background) / .8) 40%, hsl(var(--background) / .05) 80%); }
+  .hero-v3 { height: auto; min-height: 0; aspect-ratio: auto; }
+  .hero-v3-media { position: relative; inset: auto; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; }
+  .hero-v3-image { object-position: center; }
+  .hero-v3-scrim { background: linear-gradient(0deg, hsl(var(--background) / .4), transparent 35%); }
+  .hero-v3 > .container { height: auto; padding-top: 1rem; }
+  .hero-v3-copy h1 { font-size: 1.25rem; }
 }
 html.perf-medium .hero-v3-glass { backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
 html.perf-low .hero-v3-glass { backdrop-filter: none; -webkit-backdrop-filter: none; background: hsl(var(--card)); }
