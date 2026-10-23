@@ -60,6 +60,7 @@ export function Header() {
   const hasPremium = !!user && (isAdmin || hasValidTokenAccess(user?.email));
   const desktopSearchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
+  const menuContentRef = useRef<HTMLDivElement>(null);
   // Resolve synchronously on first render — deriving this in an effect made the
   // navbar render a desktop layout first and then stretch on mobile.
   const [isMobileOS, setIsMobileOS] = useState(() => {
@@ -517,7 +518,16 @@ export function Header() {
                 <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="menu-v4 w-[min(360px,calc(100vw-1rem))] sm:max-w-[360px] border-border px-5 overflow-y-auto z-[160]">
+            <SheetContent
+              ref={menuContentRef}
+              tabIndex={-1}
+              onOpenAutoFocus={(event) => {
+                // Focus the menu itself, not its search input, to avoid opening
+                // the iOS/Android keyboard before the user chooses to search.
+                event.preventDefault();
+                menuContentRef.current?.focus({ preventScroll: true });
+              }}
+              side="right" className="menu-v4 w-[min(360px,calc(100vw-1rem))] sm:max-w-[360px] border-border px-5 overflow-y-auto z-[160]">
               <div className="pt-5 pb-6">
                 <div className="flex items-center gap-3 mb-6"><img src={logo} alt="" className="w-9 h-9 object-contain" /><div><p className="text-lg font-bold">Anime Savi</p><p className="text-xs text-muted-foreground">Your library</p></div></div>
                 {user ? <div className="flex items-center gap-3">
