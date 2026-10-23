@@ -1,3 +1,7 @@
+- [x] Make Continue Watching slightly wider with compact metadata while preserving 16:9 artwork.
+- [x] Redesign Watch and Upload presentation without changing playback, uploads or permissions.
+- [x] Correct Hindi-dub fallback audio labels and test concrete language rules.
+- [x] Verify signed-in Watch, Upload and mobile layouts.
 - [x] Restore mobile hero overlay and immersive desktop sizing; remove navigation button group.
 - [x] Recreate anime details with glass styling while preserving existing actions.
 - [x] Verify banners and real anime detail interactions on desktop and mobile.
@@ -16,4 +20,4 @@
 - [x] Redesign Clones and Platforms with lightweight glass and native snap scrolling.
 - [x] Run focused tests and check the updated views.
 
-Verified: seven focused regressions pass. Mobile hero is exactly 16:9 with actions inside the artwork; the previous/pause/next group is absent. Desktop hero fills the viewport minus a small next-section hint. Signed-in real anime details render episodes and season selector, and More info opens correctly without mobile overflow or page errors. Favorite, Watch List, sharing, downloads, reviews and watched-state logic remain intact.
+Verified: nine audio/playback regressions pass. Continue Watching is wider with shorter metadata and retains 16:9 artwork. Signed-in Watch and Upload render without mobile overflow or page errors; Upload search, Add Series inputs and Edit navigation work with real content. Hindi fallback is tested for unknown metadata and preserves real English and SUB Japanese. Live audio-menu playback remains unverified because Chromium rejects the real video with media error 4. Upload submission and playback policies are unchanged.

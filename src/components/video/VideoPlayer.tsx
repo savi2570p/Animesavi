@@ -117,6 +117,7 @@ interface VideoPlayerProps {
   isLoading?: boolean;
   audioLanguage?: string;
   isSubOnly?: boolean;
+  isHindiDub?: boolean;
   captionsUrl?: string | null;
   isEncoding?: boolean;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
@@ -252,6 +253,7 @@ export function VideoPlayer({
   isLoading = false,
   audioLanguage = 'original',
   isSubOnly = false,
+  isHindiDub = false,
   captionsUrl,
   isEncoding = false,
   onTimeUpdate,
@@ -2013,7 +2015,7 @@ export function VideoPlayer({
 
   const getCurrentAudioLabel = () => {
     const track = audioTracks.find(t => t.id === currentAudioTrack);
-    return track?.label || getContentAudioLabel(isSubOnly, audioLanguage);
+    return track?.label || getContentAudioLabel(isSubOnly, audioLanguage, isHindiDub);
   };
 
   const getCurrentSubtitleLabel = () => {
@@ -2289,7 +2291,7 @@ export function VideoPlayer({
               })
             ) : (
               <div className="flex items-center justify-between gap-4 w-full px-2 py-2 bg-primary/20 rounded-sm">
-                <span className="text-sm">{getContentAudioLabel(isSubOnly, audioLanguage)}</span>
+                <span className="text-sm">{getContentAudioLabel(isSubOnly, audioLanguage, isHindiDub)}</span>
                 <Check className="w-4 h-4 text-primary" />
               </div>
             )}

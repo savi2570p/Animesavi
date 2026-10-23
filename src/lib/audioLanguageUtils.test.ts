@@ -12,3 +12,16 @@ describe('SUB audio on desktop and Android', () => {
     expect(getAudioTrackLabel('English', 'eng', 0)).toBe('🇬🇧 English');
   });
 });
+
+describe('Hindi-dub desktop fallback', () => {
+  it('shows Hindi instead of Audio when a Hindi-dub source has no metadata', () => {
+    expect(getContentAudioLabel(false, 'original', true)).toBe('🇮🇳 Hindi');
+    expect(getContentAudioLabel(false, undefined, true)).toBe('🇮🇳 Hindi');
+  });
+  it('preserves known English audio even for a Hindi-dub title', () => {
+    expect(getContentAudioLabel(false, 'eng', true)).toBe('🇬🇧 English');
+  });
+  it('keeps SUB Japanese above the Hindi content fallback', () => {
+    expect(getContentAudioLabel(true, undefined, true)).toBe('🇯🇵 Japanese');
+  });
+});

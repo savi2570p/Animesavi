@@ -433,131 +433,44 @@ function UploadInner() {
     : `${Math.floor(lastUploadAgoMs / 86_400_000)}d ago`;
 
   return (
-    <div className="min-h-screen upload-glass relative">
-      <div className="upload-aurora" aria-hidden />
-
-      {/* Cinematic dashboard hero */}
-      <div className="relative overflow-hidden border-b border-border/40">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-purple-500/5 to-transparent" />
-        <div className="absolute -top-24 right-1/4 w-[28rem] h-[28rem] bg-primary/20 rounded-full blur-[120px]" />
-        <div className="absolute -top-12 left-1/3 w-[20rem] h-[20rem] bg-pink-500/15 rounded-full blur-[100px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--background)),transparent_70%)]" />
-        {/* Subtle scan line */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage:
-              'repeating-linear-gradient(0deg, hsl(var(--foreground)) 0px, hsl(var(--foreground)) 1px, transparent 1px, transparent 4px)',
-          }}
-        />
-
-        <div className="container relative px-4 pt-7 pb-9">
-          <div className="flex flex-col md:flex-row md:items-end gap-5 md:gap-7">
-            <div className="relative shrink-0">
-              <div className="absolute inset-0 bg-primary/30 blur-2xl rounded-full animate-pulse" />
-              <div className="relative flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-primary via-pink-500 to-purple-500 shadow-2xl">
-                <UploadIcon className="h-7 w-7 md:h-9 md:w-9 text-white" />
-              </div>
-              {/* Live status dot */}
-              <span className="absolute -bottom-1 -right-1 flex h-4 w-4">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-                <span className="relative inline-flex h-4 w-4 rounded-full bg-emerald-500 ring-2 ring-background" />
-              </span>
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
-                  <Sparkles className="h-3 w-3 text-primary" />
-                  <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Creator Studio</span>
-                </div>
-                {isAdmin && (
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30">
-                    <span className="text-[9px] font-black text-amber-300 uppercase tracking-widest">Admin Mode</span>
-                  </div>
-                )}
-                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[9px] font-black text-emerald-300 uppercase tracking-widest">Pipeline Online</span>
-                </div>
-              </div>
-              <h1 className="text-3xl md:text-5xl font-heading font-black tracking-tight leading-none">
-                <span className="anime-gradient-text">Upload</span> Dashboard
-              </h1>
-              <p className="text-muted-foreground mt-2 max-w-2xl text-sm md:text-base">
-                Manage your library, publish new titles, and monitor encoding pipelines from one place.
-              </p>
-
-              {/* Stat tiles */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-5 max-w-2xl">
-                {[
-                  { icon: Tv, value: seriesCount, label: 'Series', tone: 'from-sky-500/15 to-sky-500/0 text-sky-400 border-sky-500/25' },
-                  { icon: Film, value: moviesCount, label: 'Movies', tone: 'from-violet-500/15 to-violet-500/0 text-violet-400 border-violet-500/25' },
-                  { icon: Activity, value: ongoingCount, label: 'Ongoing', tone: 'from-emerald-500/15 to-emerald-500/0 text-emerald-400 border-emerald-500/25' },
-                  { icon: CalendarClock, value: upcomingCount, label: 'Upcoming', tone: 'from-orange-500/15 to-orange-500/0 text-orange-400 border-orange-500/25' },
-                ].map((s) => (
-                  <div
-                    key={s.label}
-                    className={`relative overflow-hidden rounded-xl bg-gradient-to-br ${s.tone} border backdrop-blur-sm p-3 hover:scale-[1.02] transition-transform`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <s.icon className={`h-4 w-4 ${s.tone.split(' ').find(c => c.startsWith('text-'))}`} />
-                      <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-black">
-                        {s.label}
-                      </span>
-                    </div>
-                    <div className="mt-1.5 text-2xl font-black tabular-nums leading-none">
-                      {s.value}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Activity row */}
-              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <Activity className="h-3 w-3 text-emerald-400" />
-                  <span>Last upload: <span className="font-semibold text-foreground">{lastUploadLabel}</span></span>
-                </div>
-                {lastUpload && (
-                  <div className="flex items-center gap-1.5">
-                    <Tv className="h-3 w-3 text-primary" />
-                    <span className="truncate max-w-[200px]">{lastUpload.title}</span>
-                  </div>
-                )}
-              </div>
-            </div>
+    <div className="min-h-screen upload-v3 relative">
+      <section className="border-b border-border">
+        <div className="container py-6 md:py-8">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div><span className="text-xs text-primary inline-flex items-center gap-2 mb-2"><UploadIcon className="h-3.5 w-3.5" />Creator studio{isAdmin && <span className="catalogue-chip rounded px-1.5 py-0.5 text-[9px]">Admin</span>}</span><h1 className="font-heading text-2xl md:text-3xl font-bold">Upload Dashboard</h1><p className="text-[11px] text-muted-foreground mt-2">Last upload · {lastUploadLabel}{lastUpload && ` · ${lastUpload.title}`}</p></div>
+            <div className="flex gap-2"><Button onClick={() => setActiveTab('new')} size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" />Add Series</Button><Button onClick={() => setActiveTab('new-movie')} variant="outline" size="sm" className="catalogue-glass gap-1.5"><Film className="h-3.5 w-3.5" />Add Movie</Button></div>
           </div>
+          <div className="grid grid-cols-4 mt-6 border-t border-border pt-4 gap-3">{[{label:'Series',value:seriesCount},{label:'Movies',value:moviesCount},{label:'Ongoing',value:ongoingCount},{label:'Upcoming',value:upcomingCount}].map(stat => <div key={stat.label}><span className="text-[10px] text-muted-foreground uppercase">{stat.label}</span><p className="font-semibold text-2xl tabular-nums mt-1">{stat.value}</p></div>)}</div>
         </div>
-      </div>
+      </section>
 
       <div className="container px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Cinematic tab strip */}
           <div className="overflow-x-auto -mx-4 px-4 pb-1">
-            <TabsList className="bg-card/60 backdrop-blur-sm border border-border/40 p-1 rounded-2xl flex flex-nowrap gap-1 w-fit">
-              <TabsTrigger value="my-anime" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-sky-500 data-[state=active]:to-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
+            <TabsList className="catalogue-glass p-1 rounded-lg flex flex-nowrap gap-1 w-fit">
+              <TabsTrigger value="my-anime" className="rounded-lg gap-1.5 text-xs data-[state=active]:bg-secondary data-[state=active]:text-foreground">
                 <Tv className="h-3.5 w-3.5" /> My Series
               </TabsTrigger>
-              <TabsTrigger value="my-movies" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
+              <TabsTrigger value="my-movies" className="rounded-lg gap-1.5 text-xs data-[state=active]:bg-secondary data-[state=active]:text-foreground">
                 <Film className="h-3.5 w-3.5" /> My Movies
               </TabsTrigger>
-              <TabsTrigger value="new" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
+              <TabsTrigger value="new" className="rounded-lg gap-1.5 text-xs data-[state=active]:bg-secondary data-[state=active]:text-foreground">
                 <Plus className="h-3.5 w-3.5" /> Add Series
               </TabsTrigger>
-              <TabsTrigger value="new-movie" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
+              <TabsTrigger value="new-movie" className="rounded-lg gap-1.5 text-xs data-[state=active]:bg-secondary data-[state=active]:text-foreground">
                 <Film className="h-3.5 w-3.5" /> Add Movie
               </TabsTrigger>
-              <TabsTrigger value="tools" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
+              <TabsTrigger value="tools" className="rounded-lg gap-1.5 text-xs data-[state=active]:bg-secondary data-[state=active]:text-foreground">
                 <Wrench className="h-3.5 w-3.5" /> Tools
               </TabsTrigger>
-              <TabsTrigger value="token-savi" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
+              <TabsTrigger value="token-savi" className="rounded-lg gap-1.5 text-xs data-[state=active]:bg-secondary data-[state=active]:text-foreground">
                 <Key className="h-3.5 w-3.5" /> Token.Savi
               </TabsTrigger>
-              <TabsTrigger value="upcoming" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-amber-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
+              <TabsTrigger value="upcoming" className="rounded-lg gap-1.5 text-xs data-[state=active]:bg-secondary data-[state=active]:text-foreground">
                 <CalendarClock className="h-3.5 w-3.5" /> Upcoming
               </TabsTrigger>
-              <TabsTrigger value="embed-upload" className="rounded-xl gap-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg">
+              <TabsTrigger value="embed-upload" className="rounded-lg gap-1.5 text-xs data-[state=active]:bg-secondary data-[state=active]:text-foreground">
                 <Link2 className="h-3.5 w-3.5" /> Embed Upload
               </TabsTrigger>
             </TabsList>
@@ -568,7 +481,7 @@ function UploadInner() {
             {/* Section header + search */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="h-7 w-1 rounded-full bg-gradient-to-b from-sky-400 to-blue-500" />
+                <div className="h-7 w-1 rounded-full bg-gradient-to-b  " />
                 <div>
                   <h2 className="text-lg md:text-xl font-heading font-black flex items-center gap-2">
                     My Anime Series
@@ -590,16 +503,15 @@ function UploadInner() {
           {(() => {
             const filteredAnime = myAnime.filter(a => a.type !== 'movie' && a.status !== 'upcoming' && a.title.toLowerCase().includes(animeSearchQuery.toLowerCase()));
             return filteredAnime.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border/50 bg-card/30 py-14 text-center">
+              <div className="rounded-lg border border-dashed border-border/50 bg-card/30 py-14 text-center">
                 <div className="relative w-fit mx-auto mb-3">
-                  <div className="absolute inset-0 bg-sky-500/30 blur-2xl rounded-full" />
-                  <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-2xl">
-                    <Tv className="h-6 w-6 text-white" />
+                  <div className="relative w-14 h-14 rounded-lg bg-gradient-to-br   flex items-center justify-center shadow-2xl">
+                    <Tv className="h-6 w-6 text-foreground" />
                   </div>
                 </div>
                 <h3 className="text-lg font-bold mb-1">No anime series yet</h3>
                 <p className="text-muted-foreground text-sm mb-4">Start by adding your first anime series</p>
-                <Button onClick={() => setActiveTab('new')} className="bg-gradient-to-r from-sky-500 to-blue-500 text-white hover:opacity-90">
+                <Button onClick={() => setActiveTab('new')} className="bg-gradient-to-r   text-foreground hover:opacity-90">
                   <Plus className="h-4 w-4 mr-1.5" /> Add New Series
                 </Button>
               </div>
@@ -608,39 +520,28 @@ function UploadInner() {
                 {filteredAnime.map((anime) => (
                   <div
                     key={anime.id}
-                    className="group relative overflow-hidden rounded-2xl border border-border/40 bg-card/60 backdrop-blur-sm hover:border-sky-500/50 hover:shadow-2xl hover:shadow-sky-500/10 transition-all duration-300"
+                    className="upload-v3-tile catalogue-glass group relative overflow-hidden rounded-lg"
                   >
                     {/* Blurred backdrop */}
-                    {anime.cover_image && (
-                      <div
-                        className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity"
-                        style={{
-                          backgroundImage: `url(${anime.cover_image})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center',
-                          filter: 'blur(20px)',
-                        }}
-                      />
-                    )}
                     <div className="relative flex gap-3 p-3">
-                      <div className="relative w-20 h-28 shrink-0 rounded-xl overflow-hidden ring-1 ring-border/50 group-hover:ring-sky-500/50 transition-all">
+                      <div className="relative w-16 h-24 shrink-0 rounded-xl overflow-hidden ring-1 ring-border/50 group-hover:ring-primary/30 transition-all">
                         <img
                           src={anime.cover_image || '/placeholder.svg'}
                           alt={anime.title}
                           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                         {anime.type && (
-                          <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[8px] font-black uppercase text-white">
+                          <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-background/80 backdrop-blur-sm text-[8px] font-black uppercase text-foreground">
                             {anime.type}
                           </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0 flex flex-col">
-                        <h3 className="font-bold text-sm line-clamp-2 group-hover:text-sky-400 transition-colors">{anime.title}</h3>
+                        <h3 className="font-bold text-sm line-clamp-2 group-hover:text-primary transition-colors">{anime.title}</h3>
                         <div className="flex flex-wrap gap-1 mt-1.5">
                           <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
-                            anime.status === 'ongoing' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' :
-                            anime.status === 'completed' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' :
+                            anime.status === 'ongoing' ? 'bg-primary/10 text-primary border border-primary/30' :
+                            anime.status === 'completed' ? 'bg-primary/10 text-primary border border-primary/30' :
                             'bg-muted text-muted-foreground border border-border/50'
                           }`}>
                             {anime.status}
@@ -666,7 +567,7 @@ function UploadInner() {
                               <Eye className="h-3 w-3 mr-0.5" /> View
                             </a>
                           </Button>
-                          <Button variant="outline" size="sm" asChild className="h-7 text-[10px] flex-1 px-2 border-sky-500/40 text-sky-400 hover:bg-sky-500/10">
+                          <Button variant="outline" size="sm" asChild className="h-7 text-[10px] flex-1 px-2 border-primary/30 text-primary hover:bg-primary/10">
                             <a href={`/upload/anime/${anime.id}`}>
                               <Edit className="h-3 w-3 mr-0.5" /> Edit
                             </a>
@@ -692,7 +593,7 @@ function UploadInner() {
         {/* My Movies Tab */}
         <TabsContent value="my-movies" className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="h-7 w-1 rounded-full bg-gradient-to-b from-violet-400 to-purple-500" />
+            <div className="h-7 w-1 rounded-full bg-gradient-to-b  " />
             <div>
               <h2 className="text-lg md:text-xl font-heading font-black flex items-center gap-2">
                 My Movies
@@ -703,16 +604,15 @@ function UploadInner() {
           </div>
 
           {myAnime.filter(a => a.type === 'movie' && a.status !== 'upcoming').length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border/50 bg-card/30 py-14 text-center">
+            <div className="rounded-lg border border-dashed border-border/50 bg-card/30 py-14 text-center">
               <div className="relative w-fit mx-auto mb-3">
-                <div className="absolute inset-0 bg-violet-500/30 blur-2xl rounded-full" />
-                <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-2xl">
-                  <Film className="h-6 w-6 text-white" />
+                <div className="relative w-14 h-14 rounded-lg bg-gradient-to-br   flex items-center justify-center shadow-2xl">
+                  <Film className="h-6 w-6 text-foreground" />
                 </div>
               </div>
               <h3 className="text-lg font-bold mb-1">No movies yet</h3>
               <p className="text-muted-foreground text-sm mb-4">Upload your first feature film</p>
-              <Button onClick={() => setActiveTab('new-movie')} className="bg-gradient-to-r from-violet-500 to-purple-500 text-white hover:opacity-90">
+              <Button onClick={() => setActiveTab('new-movie')} className="bg-gradient-to-r   text-foreground hover:opacity-90">
                 <Plus className="h-4 w-4 mr-1.5" /> Add New Movie
               </Button>
             </div>
@@ -721,35 +621,24 @@ function UploadInner() {
               {myAnime.filter(a => a.type === 'movie' && a.status !== 'upcoming').map((anime) => (
                 <div
                   key={anime.id}
-                  className="group relative overflow-hidden rounded-2xl border border-border/40 bg-card/60 backdrop-blur-sm hover:border-violet-500/50 hover:shadow-2xl hover:shadow-violet-500/10 transition-all duration-300"
+                  className="upload-v3-tile catalogue-glass group relative overflow-hidden rounded-lg"
                 >
-                  {anime.cover_image && (
-                    <div
-                      className="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity"
-                      style={{
-                        backgroundImage: `url(${anime.cover_image})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        filter: 'blur(20px)',
-                      }}
-                    />
-                  )}
                   <div className="relative flex gap-3 p-3">
-                    <div className="relative w-20 h-28 shrink-0 rounded-xl overflow-hidden ring-1 ring-border/50 group-hover:ring-violet-500/50 transition-all">
+                    <div className="relative w-16 h-24 shrink-0 rounded-xl overflow-hidden ring-1 ring-border/50 group-hover:ring-primary/30 transition-all">
                       <img
                         src={anime.cover_image || '/placeholder.svg'}
                         alt={anime.title}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
-                      <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-[8px] font-black uppercase text-white shadow-md">
+                      <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-gradient-to-r   text-[8px] font-black uppercase text-foreground shadow-md">
                         Movie
                       </div>
                     </div>
                     <div className="flex-1 min-w-0 flex flex-col">
-                      <h3 className="font-bold text-sm line-clamp-2 group-hover:text-violet-400 transition-colors">{anime.title}</h3>
+                      <h3 className="font-bold text-sm line-clamp-2 group-hover:text-primary transition-colors">{anime.title}</h3>
                       <div className="flex flex-wrap gap-1 mt-1.5">
                         <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
-                          anime.status === 'completed' ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30' :
+                          anime.status === 'completed' ? 'bg-primary/10 text-primary border border-primary/30' :
                           'bg-muted text-muted-foreground border border-border/50'
                         }`}>
                           {anime.status}
@@ -770,7 +659,7 @@ function UploadInner() {
                             <Eye className="h-3 w-3 mr-0.5" /> View
                           </a>
                         </Button>
-                        <Button variant="outline" size="sm" asChild className="h-7 text-[10px] flex-1 px-2 border-violet-500/40 text-violet-400 hover:bg-violet-500/10">
+                        <Button variant="outline" size="sm" asChild className="h-7 text-[10px] flex-1 px-2 border-primary/30 text-primary hover:bg-primary/10">
                           <a href={`/upload/anime/${anime.id}`}>
                             <Edit className="h-3 w-3 mr-0.5" /> Edit
                           </a>
@@ -794,12 +683,10 @@ function UploadInner() {
 
         <TabsContent value="new" className="space-y-5">
           {/* Hero header */}
-          <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-primary/15 via-pink-500/10 to-purple-500/15 p-5 md:p-6">
-            <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-primary/30 blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full bg-pink-500/20 blur-3xl pointer-events-none" />
+          <div className="relative overflow-hidden rounded-lg border border-border/40 bg-gradient-to-br from-primary/15   p-5 md:p-6">
             <div className="relative flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
-                <Film className="h-6 w-6 text-white" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary  flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
+                <Film className="h-6 w-6 text-foreground" />
               </div>
               <div className="flex-1 min-w-0">
                 <h2 className="text-xl md:text-2xl font-heading font-black tracking-tight">Add New Anime Series</h2>
@@ -814,8 +701,8 @@ function UploadInner() {
             </div>
           </div>
 
-          <Card className="bg-card/60 backdrop-blur-sm border-border/40 rounded-2xl overflow-hidden">
-            <div className="h-[3px] bg-gradient-to-r from-primary via-pink-500 to-purple-500" />
+          <Card className="upload-v3-form border-border/40 rounded-lg overflow-hidden">
+            <div className="h-[3px] bg-gradient-to-r from-primary  " />
             <CardContent className="p-5 md:p-7">
               <form onSubmit={handleSubmitAnime} className="space-y-7">
 
@@ -904,8 +791,8 @@ function UploadInner() {
                 {/* SECTION 2 — ARTWORK */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-pink-500/15 border border-pink-500/25 flex items-center justify-center">
-                      <ImageIcon className="h-3.5 w-3.5 text-pink-400" />
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center">
+                      <ImageIcon className="h-3.5 w-3.5 text-primary" />
                     </div>
                     <div>
                       <h3 className="text-sm font-bold tracking-tight">Artwork</h3>
@@ -939,7 +826,7 @@ function UploadInner() {
 
                   <div className="space-y-1.5">
                     <Label htmlFor="trailerUrl" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                      <Youtube className="h-3.5 w-3.5 text-red-500" /> Trailer URL <span className="text-muted-foreground/60 normal-case font-normal">(optional)</span>
+                      <Youtube className="h-3.5 w-3.5 text-primary" /> Trailer URL <span className="text-muted-foreground/60 normal-case font-normal">(optional)</span>
                     </Label>
                     <Input
                       id="trailerUrl"
@@ -954,8 +841,8 @@ function UploadInner() {
                 {/* SECTION 3 — METADATA */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center">
-                      <Settings2 className="h-3.5 w-3.5 text-amber-400" />
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center">
+                      <Settings2 className="h-3.5 w-3.5 text-primary" />
                     </div>
                     <div>
                       <h3 className="text-sm font-bold tracking-tight">Metadata</h3>
@@ -965,15 +852,14 @@ function UploadInner() {
                   </div>
 
                   {/* Auto-fill banner — premium */}
-                  <div className="relative overflow-hidden rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent p-3.5">
-                    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-amber-500/15 blur-2xl pointer-events-none" />
+                  <div className="relative overflow-hidden rounded-xl border border-primary/30 bg-gradient-to-r   to-transparent p-3.5">
                     <div className="relative flex items-center justify-between gap-3 flex-wrap">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-md shadow-amber-500/30 shrink-0">
-                          <Sparkles className="h-4 w-4 text-white" />
+                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br   flex items-center justify-center shadow-md shadow-none shrink-0">
+                          <Sparkles className="h-4 w-4 text-foreground" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-amber-400">Auto-fill from MyAnimeList</p>
+                          <p className="text-sm font-bold text-primary">Auto-fill from MyAnimeList</p>
                           <p className="text-[11px] text-muted-foreground">Pull studio, episodes, source & rating from the title.</p>
                         </div>
                       </div>
@@ -982,7 +868,7 @@ function UploadInner() {
                         size="sm"
                         onClick={handleFetchMetadata}
                         disabled={isFetchingMeta}
-                        className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white border-0 shadow-md shadow-amber-500/20 gap-1.5"
+                        className="bg-gradient-to-r   hover: hover: text-foreground border-0 shadow-md shadow-none gap-1.5"
                       >
                         <Wrench className="h-3.5 w-3.5" />
                         {isFetchingMeta ? 'Fetching…' : 'Fetch metadata'}
@@ -1085,8 +971,8 @@ function UploadInner() {
                 {/* SECTION 4 — GENRES */}
                 <section className="space-y-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-purple-500/15 border border-purple-500/25 flex items-center justify-center">
-                      <Tag className="h-3.5 w-3.5 text-purple-400" />
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center">
+                      <Tag className="h-3.5 w-3.5 text-primary" />
                     </div>
                     <div>
                       <h3 className="text-sm font-bold tracking-tight">Genres & Tags</h3>
@@ -1107,7 +993,7 @@ function UploadInner() {
                             onClick={() => toggleGenre(genre)}
                             className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-all ${
                               active
-                                ? 'bg-gradient-to-r from-primary to-pink-500 text-white border border-primary/40 shadow-md shadow-primary/20 scale-105'
+                                ? 'bg-gradient-to-r from-primary  text-foreground border border-primary/40 shadow-md shadow-primary/20 scale-105'
                                 : 'bg-muted/60 text-muted-foreground border border-border/50 hover:border-primary/40 hover:text-foreground'
                             }`}
                           >
@@ -1122,8 +1008,8 @@ function UploadInner() {
                 {/* SECTION 5 — DISTRIBUTION */}
                 <section className="space-y-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center">
-                      <Layers className="h-3.5 w-3.5 text-emerald-400" />
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center">
+                      <Layers className="h-3.5 w-3.5 text-primary" />
                     </div>
                     <div>
                       <h3 className="text-sm font-bold tracking-tight">Distribution</h3>
@@ -1137,12 +1023,12 @@ function UploadInner() {
                       htmlFor="is_crunchyroll"
                       className={`group flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
                         isCrunchyroll
-                          ? 'border-orange-500/50 bg-orange-500/10 shadow-md shadow-orange-500/10'
-                          : 'border-border/40 bg-muted/20 hover:border-orange-500/30'
+                          ? 'border-primary/30 bg-primary/10 shadow-md shadow-none'
+                          : 'border-border/40 bg-muted/20 hover:border-primary/30'
                       }`}
                     >
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-all ${
-                        isCrunchyroll ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow' : 'bg-muted/60 text-muted-foreground'
+                        isCrunchyroll ? 'bg-gradient-to-br   text-foreground shadow' : 'bg-muted/60 text-muted-foreground'
                       }`}>
                         <Sparkles className="h-4 w-4" />
                       </div>
@@ -1157,19 +1043,19 @@ function UploadInner() {
                         onChange={(e) => setIsCrunchyroll(e.target.checked)}
                         className="sr-only"
                       />
-                      {isCrunchyroll && <CheckCircle2 className="h-5 w-5 text-orange-400 shrink-0" />}
+                      {isCrunchyroll && <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />}
                     </label>
 
                     <label
                       htmlFor="is_muse"
                       className={`group flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
                         isMuse
-                          ? 'border-cyan-500/50 bg-cyan-500/10 shadow-md shadow-cyan-500/10'
-                          : 'border-border/40 bg-muted/20 hover:border-cyan-500/30'
+                          ? 'border-primary/30 bg-primary/10 shadow-md shadow-none'
+                          : 'border-border/40 bg-muted/20 hover:border-primary/30'
                       }`}
                     >
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-all ${
-                        isMuse ? 'bg-gradient-to-br from-cyan-500 to-blue-500 text-white shadow' : 'bg-muted/60 text-muted-foreground'
+                        isMuse ? 'bg-gradient-to-br   text-foreground shadow' : 'bg-muted/60 text-muted-foreground'
                       }`}>
                         <Tv className="h-4 w-4" />
                       </div>
@@ -1184,19 +1070,19 @@ function UploadInner() {
                         onChange={(e) => setIsMuse(e.target.checked)}
                         className="sr-only"
                       />
-                      {isMuse && <CheckCircle2 className="h-5 w-5 text-cyan-400 shrink-0" />}
+                      {isMuse && <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />}
                     </label>
 
                     <label
                       htmlFor="is_eng_dub"
                       className={`group flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
                         isEngDub
-                          ? 'border-indigo-400/60 bg-indigo-500/10 shadow-md shadow-indigo-500/10'
-                          : 'border-border/40 bg-muted/20 hover:border-indigo-400/40'
+                          ? 'border-primary/30 bg-primary/10 shadow-md shadow-none'
+                          : 'border-border/40 bg-muted/20 hover:border-primary/30'
                       }`}
                     >
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-all ${
-                        isEngDub ? 'bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow' : 'bg-muted/60 text-muted-foreground'
+                        isEngDub ? 'bg-gradient-to-br   text-foreground shadow' : 'bg-muted/60 text-muted-foreground'
                       }`}>
                         <Mic className="h-4 w-4" />
                       </div>
@@ -1211,7 +1097,7 @@ function UploadInner() {
                         onChange={(e) => setIsEngDub(e.target.checked)}
                         className="sr-only"
                       />
-                      {isEngDub && <CheckCircle2 className="h-5 w-5 text-indigo-400 shrink-0" />}
+                      {isEngDub && <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />}
                     </label>
                   </div>
                 </section>
@@ -1221,7 +1107,7 @@ function UploadInner() {
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full h-12 text-sm font-bold bg-gradient-to-r from-primary via-pink-500 to-purple-500 hover:opacity-95 text-white shadow-lg shadow-primary/30 border-0 gap-2"
+                    className="w-full h-12 text-sm font-bold bg-gradient-to-r from-primary   hover:opacity-95 text-foreground shadow-lg shadow-primary/30 border-0 gap-2"
                   >
                     {isSubmitting ? (
                       <>Creating…</>
@@ -1243,35 +1129,33 @@ function UploadInner() {
         {/* Add New Movie Tab - Only Movie, Thumbnail, Banner, Description */}
         <TabsContent value="new-movie" className="space-y-5 pb-24">
           {/* Hero header */}
-          <div className="relative overflow-hidden rounded-2xl border border-purple-500/25 bg-gradient-to-br from-purple-600/15 via-indigo-600/8 to-violet-600/15 p-5">
-            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-purple-600/25 blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-indigo-600/25 blur-3xl pointer-events-none" />
+          <div className="relative overflow-hidden rounded-lg border border-primary/30 bg-gradient-to-br    p-5">
             <div className="relative flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-violet-600 flex items-center justify-center shadow-xl shadow-purple-600/40 ring-1 ring-white/20">
-                <Film className="h-6 w-6 text-white" />
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-br    flex items-center justify-center shadow-xl shadow-none ring-1 ring-border">
+                <Film className="h-6 w-6 text-foreground" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h2 className="text-xl md:text-2xl font-heading font-black bg-gradient-to-r from-purple-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent">Add New Movie</h2>
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 uppercase tracking-wider">Cinematic</span>
+                  <h2 className="text-xl md:text-2xl font-heading font-black bg-gradient-to-r    text-foreground">Add New Movie</h2>
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-primary/10 text-primary border border-primary/30 uppercase tracking-wider">Cinematic</span>
                 </div>
                 <p className="text-xs text-muted-foreground">Single feature film — no seasons or episodes required. One-shot upload.</p>
-                <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-purple-300/80">
+                <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-primary">
                   <Sparkles className="h-3 w-3" /> One step · Auto-published
                 </div>
               </div>
             </div>
           </div>
 
-          <Card className="bg-card/60 backdrop-blur-sm border-border/40 rounded-2xl overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600" />
+          <Card className="upload-v3-form border-border/40 rounded-lg overflow-hidden">
+            <div className="h-1 bg-gradient-to-r   " />
             <CardContent className="p-4 md:p-6">
               <form className="space-y-7">
                 {/* SECTION 1 — Identity */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center">
-                      <Film className="h-3.5 w-3.5 text-purple-400" />
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center">
+                      <Film className="h-3.5 w-3.5 text-primary" />
                     </div>
                     <h3 className="text-sm font-bold tracking-tight">Identity</h3>
                     <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
@@ -1323,13 +1207,13 @@ function UploadInner() {
                 {/* SECTION 2 — Video File */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center">
-                      <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center">
+                      <Sparkles className="h-3.5 w-3.5 text-primary" />
                     </div>
                     <h3 className="text-sm font-bold tracking-tight">Video File</h3>
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 uppercase tracking-wider">Required</span>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-primary/10 text-primary border border-primary/30 uppercase tracking-wider">Required</span>
                     {episodeVideoUrl && (
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider">✓ Ready</span>
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-primary/10 text-primary border border-primary/30 uppercase tracking-wider">✓ Ready</span>
                     )}
                     <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
                   </div>
@@ -1347,8 +1231,8 @@ function UploadInner() {
                 {/* SECTION 3 — Artwork */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-violet-500/15 border border-violet-500/30 flex items-center justify-center">
-                      <ImageIcon className="h-3.5 w-3.5 text-violet-400" />
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center">
+                      <ImageIcon className="h-3.5 w-3.5 text-primary" />
                     </div>
                     <h3 className="text-sm font-bold tracking-tight">Artwork</h3>
                     <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
@@ -1362,8 +1246,8 @@ function UploadInner() {
                 {/* SECTION 4 — Genres */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-fuchsia-500/15 border border-fuchsia-500/30 flex items-center justify-center">
-                      <Sparkles className="h-3.5 w-3.5 text-fuchsia-400" />
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center">
+                      <Sparkles className="h-3.5 w-3.5 text-primary" />
                     </div>
                     <h3 className="text-sm font-bold tracking-tight">Genres</h3>
                     <span className="text-[10px] text-muted-foreground font-medium">{selectedGenres.length} selected</span>
@@ -1379,7 +1263,7 @@ function UploadInner() {
                           onClick={() => toggleGenre(genre)}
                           className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
                             active
-                              ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-transparent shadow-md shadow-purple-600/30 scale-105'
+                              ? 'bg-gradient-to-r   text-foreground border-transparent shadow-md shadow-none scale-105'
                               : 'bg-muted/40 border-border/40 text-muted-foreground hover:bg-muted hover:text-foreground hover:border-border'
                           }`}
                         >
@@ -1395,28 +1279,28 @@ function UploadInner() {
 
           {/* Sticky CTA */}
           <div className="sticky bottom-0 -mx-2 px-2 pt-3 pb-3 bg-gradient-to-t from-card via-card/95 to-card/0 backdrop-blur-md z-10">
-            <div className="flex items-center gap-3 p-3 rounded-2xl border border-purple-500/25 bg-card/80 backdrop-blur-md shadow-xl shadow-purple-900/20">
+            <div className="flex items-center gap-3 p-3 rounded-lg border border-primary/30 bg-card/80 backdrop-blur-md shadow-xl shadow-none">
               <div className="hidden sm:flex flex-col flex-1 min-w-0">
                 <span className="text-xs font-bold truncate">{title || 'Untitled Movie'}</span>
                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
-                  <span className={`flex items-center gap-1 ${title.trim() ? 'text-emerald-400' : ''}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${title.trim() ? 'bg-emerald-400' : 'bg-muted-foreground/40'}`} /> Title
+                  <span className={`flex items-center gap-1 ${title.trim() ? 'text-primary' : ''}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${title.trim() ? 'bg-primary/10' : 'bg-muted-foreground/40'}`} /> Title
                   </span>
-                  <span className={`flex items-center gap-1 ${episodeVideoUrl ? 'text-emerald-400' : ''}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${episodeVideoUrl ? 'bg-emerald-400' : 'bg-muted-foreground/40'}`} /> Video
+                  <span className={`flex items-center gap-1 ${episodeVideoUrl ? 'text-primary' : ''}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${episodeVideoUrl ? 'bg-primary/10' : 'bg-muted-foreground/40'}`} /> Video
                   </span>
-                  <span className={`flex items-center gap-1 ${coverImage ? 'text-emerald-400' : ''}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${coverImage ? 'bg-emerald-400' : 'bg-muted-foreground/40'}`} /> Cover
+                  <span className={`flex items-center gap-1 ${coverImage ? 'text-primary' : ''}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${coverImage ? 'bg-primary/10' : 'bg-muted-foreground/40'}`} /> Cover
                   </span>
-                  <span className={`flex items-center gap-1 ${selectedGenres.length > 0 ? 'text-emerald-400' : ''}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${selectedGenres.length > 0 ? 'bg-emerald-400' : 'bg-muted-foreground/40'}`} /> {selectedGenres.length} genres
+                  <span className={`flex items-center gap-1 ${selectedGenres.length > 0 ? 'text-primary' : ''}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${selectedGenres.length > 0 ? 'bg-primary/10' : 'bg-muted-foreground/40'}`} /> {selectedGenres.length} genres
                   </span>
                 </div>
               </div>
               <Button
                 type="button"
                 disabled={isSubmitting}
-                className="flex-1 sm:flex-none bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600 text-white font-bold shadow-lg shadow-purple-600/30 hover:opacity-90 h-11 px-6"
+                className="flex-1 sm:flex-none bg-gradient-to-r    text-foreground font-bold shadow-lg shadow-none hover:opacity-90 h-11 px-6"
                   onClick={async (e) => {
                     e.preventDefault();
                     if (!title.trim()) {
@@ -1510,17 +1394,17 @@ function UploadInner() {
         {/* Tools Tab */}
         <TabsContent value="tools" className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="h-7 w-1 rounded-full bg-gradient-to-b from-emerald-400 to-teal-500" />
+            <div className="h-7 w-1 rounded-full bg-gradient-to-b  " />
             <div>
               <h2 className="text-lg md:text-xl font-heading font-black flex items-center gap-2">
                 Tools
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">Live</span>
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-primary/10 text-primary border border-primary/30 uppercase tracking-wider">Live</span>
               </h2>
               <p className="text-[11px] text-muted-foreground">Encoding pipeline status, conversion health & maintenance utilities</p>
             </div>
           </div>
-          <Card className="bg-card/60 backdrop-blur-sm border-border/40 rounded-2xl overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500" />
+          <Card className="upload-v3-form border-border/40 rounded-lg overflow-hidden">
+            <div className="h-1 bg-gradient-to-r   " />
             <CardContent className="p-4 md:p-6 space-y-6">
               <ConversionHealthDashboard />
             </CardContent>
@@ -1530,19 +1414,19 @@ function UploadInner() {
         {/* Token.Savi Tab */}
         <TabsContent value="token-savi" className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="h-7 w-1 rounded-full bg-gradient-to-b from-yellow-400 to-orange-500" />
+            <div className="h-7 w-1 rounded-full bg-gradient-to-b  " />
             <div>
               <h2 className="text-lg md:text-xl font-heading font-black flex items-center gap-2">
                 Token.Savi
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 uppercase tracking-wider inline-flex items-center gap-0.5">
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-primary/10 text-primary border border-primary/30 uppercase tracking-wider inline-flex items-center gap-0.5">
                   <Key className="h-2.5 w-2.5" /> Access
                 </span>
               </h2>
               <p className="text-[11px] text-muted-foreground">Generate, manage and revoke unlock tokens for premium access</p>
             </div>
           </div>
-          <Card className="bg-card/60 backdrop-blur-sm border-border/40 rounded-2xl overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-yellow-500 via-orange-500 to-amber-500" />
+          <Card className="upload-v3-form border-border/40 rounded-lg overflow-hidden">
+            <div className="h-1 bg-gradient-to-r   " />
             <CardContent className="p-4 md:p-6">
               <TokenSaviDashboard />
             </CardContent>
@@ -1605,11 +1489,11 @@ function UpcomingTabContent({ anime, allAnime, isAdmin, onDelete }: { anime: Ani
   return (
     <>
       <div className="flex items-center gap-3 mb-5">
-        <div className="h-7 w-1 rounded-full bg-gradient-to-b from-orange-400 to-amber-500" />
+        <div className="h-7 w-1 rounded-full bg-gradient-to-b  " />
         <div className="flex-1">
           <h2 className="text-lg md:text-xl font-heading font-black flex items-center gap-2">
             Upcoming Releases
-            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-orange-500/15 text-orange-400 border border-orange-500/30 uppercase tracking-wider">
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-primary/10 text-primary border border-primary/30 uppercase tracking-wider">
               {upcomingList.length} titles
             </span>
           </h2>
@@ -1618,11 +1502,10 @@ function UpcomingTabContent({ anime, allAnime, isAdmin, onDelete }: { anime: Ani
       </div>
 
       {upcomingList.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border/50 bg-card/30 py-14 text-center">
+        <div className="rounded-lg border border-dashed border-border/50 bg-card/30 py-14 text-center">
           <div className="relative w-fit mx-auto mb-3">
-            <div className="absolute inset-0 bg-orange-500/30 blur-2xl rounded-full" />
-            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-2xl">
-              <CalendarClock className="h-6 w-6 text-white" />
+            <div className="relative w-14 h-14 rounded-lg bg-gradient-to-br   flex items-center justify-center shadow-2xl">
+              <CalendarClock className="h-6 w-6 text-foreground" />
             </div>
           </div>
           <h3 className="text-lg font-bold mb-1">No upcoming anime</h3>
@@ -1633,21 +1516,10 @@ function UpcomingTabContent({ anime, allAnime, isAdmin, onDelete }: { anime: Ani
           {upcomingList.map((a) => (
             <div
               key={a.id}
-              className="group relative overflow-hidden rounded-2xl border border-border/40 bg-card/60 backdrop-blur-sm hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-300"
+              className="upload-v3-tile catalogue-glass group relative overflow-hidden rounded-lg"
             >
-              {a.cover_image && (
-                <div
-                  className="absolute inset-0 opacity-15 group-hover:opacity-25 transition-opacity"
-                  style={{
-                    backgroundImage: `url(${a.cover_image})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    filter: 'blur(20px)',
-                  }}
-                />
-              )}
               <div className="relative flex gap-3 p-3">
-                <div className="relative w-16 h-22 shrink-0 rounded-lg overflow-hidden ring-1 ring-orange-500/30 group-hover:ring-orange-500/60 transition-all">
+                <div className="relative w-16 h-22 shrink-0 rounded-lg overflow-hidden ring-1 ring-primary/30 group-hover:ring-primary/30 transition-all">
                   {a.cover_image ? (
                     <img src={a.cover_image} alt={a.title} className="w-full h-full object-cover" loading="lazy" />
                   ) : (
@@ -1655,12 +1527,12 @@ function UpcomingTabContent({ anime, allAnime, isAdmin, onDelete }: { anime: Ani
                       <Film className="h-6 w-6 text-muted-foreground" />
                     </div>
                   )}
-                  <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-gradient-to-r from-orange-500 to-amber-500 text-[8px] font-black uppercase text-white shadow-md">
+                  <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-gradient-to-r   text-[8px] font-black uppercase text-foreground shadow-md">
                     Soon
                   </div>
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col">
-                  <h3 className="font-bold text-sm truncate group-hover:text-orange-400 transition-colors">{a.title}</h3>
+                  <h3 className="font-bold text-sm truncate group-hover:text-primary transition-colors">{a.title}</h3>
                   <div className="flex items-center gap-1.5 mt-1">
                     {a.release_year && (
                       <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-muted text-muted-foreground border border-border/50">
@@ -1669,12 +1541,12 @@ function UpcomingTabContent({ anime, allAnime, isAdmin, onDelete }: { anime: Ani
                     )}
                   </div>
                   {/* Live countdown */}
-                  <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gradient-to-r from-orange-500/15 to-amber-500/15 border border-orange-500/30 w-fit">
+                  <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gradient-to-r   border border-primary/30 w-fit">
                     <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-orange-500" />
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/10 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary/10" />
                     </span>
-                    <span className="text-orange-300 text-[10px] font-mono font-black tracking-wide">
+                    <span className="text-primary text-[10px] font-mono font-black tracking-wide">
                       {countdowns[a.id] || '...'}
                     </span>
                   </div>
@@ -1682,7 +1554,7 @@ function UpcomingTabContent({ anime, allAnime, isAdmin, onDelete }: { anime: Ani
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-7 text-[10px] flex-1 px-2 border-orange-500/40 text-orange-400 hover:bg-orange-500/10"
+                      className="h-7 text-[10px] flex-1 px-2 border-primary/30 text-primary hover:bg-primary/10"
                       onClick={() => setSelectedAnime(a)}
                     >
                       <Eye className="h-3 w-3 mr-0.5" /> Countdown
@@ -1730,7 +1602,7 @@ function UploadLockScreen({ onUnlocked }: { onUnlocked: () => void }) {
   };
   return (
     <div className="container max-w-md py-24">
-      <form onSubmit={submit} className="lg-panel rounded-2xl p-6 space-y-4">
+      <form onSubmit={submit} className="lg-panel rounded-lg p-6 space-y-4">
         <h1 className="text-xl font-bold">Upload locked</h1>
         <p className="text-sm text-muted-foreground">Your Upload is locked. Please enter the 16 digit password to permanently unlocked</p>
         <Input inputMode="numeric" maxLength={19} placeholder="16 digit password" value={code}

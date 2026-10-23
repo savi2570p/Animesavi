@@ -400,10 +400,10 @@ export function getPreferredAudioTrack(
 }
 
 /** Content language when a browser exposes no native track metadata. */
-export function getContentAudioLabel(isSubOnly: boolean, language?: string): string {
+export function getContentAudioLabel(isSubOnly: boolean, language?: string, isHindiDub = false): string {
   if (isSubOnly) return '🇯🇵 Japanese';
   const code = normalizeLanguageCode(language);
-  return code !== 'und' ? getAudioTrackLabel('', code, 0) : 'Audio';
+  return code !== 'und' ? getAudioTrackLabel('', code, 0) : isHindiDub ? '🇮🇳 Hindi' : 'Audio';
 }
 
 /**
