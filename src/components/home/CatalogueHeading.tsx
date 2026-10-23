@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function CatalogueHeading({ title, eyebrow, icon: Icon, href, rowRef }: {
-  title: string; eyebrow: string; icon: LucideIcon; href: string;
+  title: string; eyebrow: string; icon: LucideIcon; href?: string;
   rowRef: RefObject<HTMLDivElement>;
 }) {
   const scroll = (direction: number) => {
@@ -21,7 +21,7 @@ export function CatalogueHeading({ title, eyebrow, icon: Icon, href, rowRef }: {
     <div className="flex items-center gap-1 shrink-0">
       <Button variant="ghost" size="icon" aria-label={`Previous ${title.toLowerCase()}`} onClick={() => scroll(-1)} className="hidden sm:inline-flex h-8 w-8"><ArrowLeft className="h-4 w-4" /></Button>
       <Button variant="ghost" size="icon" aria-label={`Next ${title.toLowerCase()}`} onClick={() => scroll(1)} className="h-8 w-8"><ArrowRight className="h-4 w-4" /></Button>
-      <Button asChild variant="ghost" size="sm"><Link to={href}>See all</Link></Button>
+      {href && <Button asChild variant="ghost" size="sm"><Link to={href}>See all</Link></Button>}
     </div>
   </div>;
 }
