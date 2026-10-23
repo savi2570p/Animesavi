@@ -1,7 +1,7 @@
-- [ ] Repair Settings layout and remove Settings from hamburger options.
-- [ ] Redesign Welcome with real catalogue artwork and lightweight glass.
-- [ ] Keep only Type, Sort and Genres in Browse filters; refresh the pictured catalogue pages.
-- [ ] Verify signed-in settings, catalogue filters and navigation.
+- [x] Repair Settings layout and remove Settings from hamburger options.
+- [x] Redesign Welcome with real catalogue artwork and lightweight glass.
+- [x] Keep only Type, Sort and Genres in Browse filters; refresh the pictured catalogue pages.
+- [x] Verify signed-in settings, catalogue filters and navigation.
 - [x] Move the Watch episode selector left and widen mobile Continue Watching artwork.
 - [x] Refresh hamburger options, Profile and Settings with lightweight liquid glass.
 - [x] Replace anime detail loading presentation with a glass loading screen.
@@ -28,4 +28,4 @@
 - [x] Redesign Clones and Platforms with lightweight glass and native snap scrolling.
 - [x] Run focused tests and check the updated views.
 
-Verified: nine audio/playback regressions pass. Signed-in Profile saves and reads back unchanged account data; Settings autoplay toggles and restores correctly. The glass menu opens above the header. A real Watch episode places its selector left. Mobile Continue Watching artwork measures 338 × 190.125 (16:9), with no profile overflow. The new detail loading screen appears and resolves into real anime details. No browser page errors. Physical iOS/Android devices and actual video playback remain unverified; account permissions and playback logic are unchanged.
+Verified: 13 audio/playback/view-count regressions pass and build OK. Signed-in Settings autoplay changes persist after reload and were restored; the hamburger contains no Settings link. Welcome and all four pictured listing pages load real catalogue images. Browse Movies updates the URL correctly. Desktop and 390px phone screenshots confirm a coherent Settings flow and readable page layouts without horizontal overflow. No browser page errors. Physical iOS/Android devices and actual video playback remain unverified; account permissions and playback logic are unchanged.
