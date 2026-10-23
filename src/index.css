@@ -3674,7 +3674,7 @@ html.perf-low .welcome-v5-search, html.perf-medium .welcome-v5-search { backdrop
 .utility-fab-v6 { background: var(--utility-glass-fill); border: 1px solid hsl(var(--border)); box-shadow: var(--utility-glass-shadow); }
 .update-v6 { max-width: 410px; max-height: min(780px, calc(100svh - 2rem)); display: flex; flex-direction: column; }
 .update-v6 > header, .update-v6 > footer { flex-shrink: 0; }
-.update-v6-list { overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
+.update-v6-list { overflow-y: auto; min-height: 0; overscroll-behavior: contain; padding-bottom: .75rem; scrollbar-width: thin; }
 .utility-progress-v6 { height: 5px; border-radius: 3px; background: hsl(var(--muted)); overflow: hidden; }
 .utility-progress-v6 > span { display: block; height: 100%; background: hsl(var(--primary)); transition: width .2s; }
 .release-new { --release-tone: var(--utility-new); }

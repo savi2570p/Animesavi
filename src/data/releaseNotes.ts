@@ -14,9 +14,9 @@ export interface VersionGroup {
   items: ChangelogItem[];
 }
 
-export const APP_VERSION = 'S2-V2';
-export const RELEASE_DATE = 'October 20, 2026';
-export const DOWNLOAD_SIZE_MB = 12;
+export const APP_VERSION = 'S2-V2.1';
+export const RELEASE_DATE = 'October 23, 2026';
+export const DOWNLOAD_SIZE_MB = 15;
 
 export const BETA_NOTE =
   'Shadow link v2 is now running BETA 2 — a minimal, branding-free standalone player with in-player episode switching and an auto-hiding title overlay.';
@@ -25,6 +25,21 @@ export const VERSION_GROUPS: VersionGroup[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    highlight:
+      'A performance and stability release — faster loading, smoother playback and a long list of bug fixes.',
+    items: [
+      { icon: '🚀', badge: 'IMPROVED', title: 'Faster Loading', desc: 'Pages, artwork and episode lists open sooner on iOS, Android and PC, with less waiting between screens.' },
+      { icon: '🎬', badge: 'FIX', title: 'Playback Stability', desc: 'Fewer stalls and quicker recovery when switching episodes, servers or resuming a video.' },
+      { icon: '🪶', badge: 'IMPROVED', title: 'Smoother Scrolling', desc: 'Home rows, carousels and episode grids glide at a steady 60 FPS, with lighter effects on older phones.' },
+      { icon: '📦', badge: 'IMPROVED', title: 'Lighter Updates', desc: 'Smaller update size and smarter caching mean repeat visits open almost instantly.' },
+      { icon: '🔧', badge: 'FIX', title: 'Bug Fixes', desc: 'Resolved layout, badge and navigation issues across home, browse and detail pages.' },
+      { icon: '📱', badge: 'FIX', title: 'Mobile Polish', desc: 'Cleaner popups, stable safe areas and steadier controls on iOS and Android.' },
+      { icon: '🐞', badge: 'FIX', title: 'General Bug Fixes', desc: 'Dozens of stability and interaction fixes across the whole app.' },
+    ],
+  },
+  {
+    version: 'S2-V2',
+    date: 'October 20, 2026',
     highlight: 'A refreshed home experience, lighter server playback and more efficient catalogue loading.',
     items: [
       { icon: '🎬', badge: 'IMPROVED', title: 'Smoother Server Playback', desc: 'H.Savi, Multi.Savi and X-PLUS now share bounded buffering and more cautious network adaptation, keeping 4K available.' },
