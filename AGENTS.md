@@ -14,6 +14,7 @@
 - Settings uses a single unframed vertical section flow; catalogue listing pages share lightweight optical-edge tokens and SeeAllHeader so page refreshes preserve existing links, badges and queries.
 - Welcome renders catalogue banner artwork behind its title and actions with visibility-gated rotation rather than animated ambient backdrops, keeping its first screen lightweight.
 - Utility popups, navigation and footer share bounded optical-glass tokens with performance fallbacks; presentation changes retain popup queues, route exclusions, contact destinations and update state transitions.
+- Login, notification and resume presentation reuse utility glass without changing authentication or watch-history handlers; clone floating utility exclusions key off the resolved clone shell/body mode to preserve normal anime-slug pages.
 - Token expiry and verification surfaces reuse utility glass and TokenPerks with bounded blur and unframed sections; keep access checks, popup frequency and token action handlers independent of presentation.
 - Homepage sharing uses native sharing with a copy-link fallback and direct social links, keeping the primary action independent of poster generation.
 - Download confirmation pauses playback and does not automatically resume it on dismissal, so users control playback explicitly.
