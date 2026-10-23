@@ -49,13 +49,13 @@ function PrivacyPolicyButton() {
 
   return (
     <>
-      <button
+      <Button variant="ghost"
         onClick={() => setOpen(true)}
-        className="text-sm text-muted-foreground hover:text-primary transition-colors text-left flex items-center gap-1"
+        className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground hover:bg-transparent transition-colors text-left flex items-center justify-start gap-1"
       >
         <Shield className="h-3 w-3" />
         Privacy Policy
-      </button>
+      </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl bg-card/95 backdrop-blur-xl border-border/50 p-0 overflow-hidden" aria-describedby="privacy-policy-description">
           {/* Cinematic Header */}
@@ -152,13 +152,13 @@ function TermsOfServiceButton() {
 
   return (
     <>
-      <button
+      <Button variant="ghost"
         onClick={() => setOpen(true)}
-        className="text-sm text-muted-foreground hover:text-primary transition-colors text-left flex items-center gap-1"
+        className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground hover:bg-transparent transition-colors text-left flex items-center justify-start gap-1"
       >
         <FileText className="h-3 w-3" />
         Terms of Service
-      </button>
+      </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-3xl bg-card/95 backdrop-blur-xl border-border/50 p-0 overflow-hidden" aria-describedby="terms-of-service-description">
           {/* Cinematic Header */}
@@ -248,114 +248,18 @@ function TermsOfServiceButton() {
 }
 
 export function Footer() {
-  return (
-    <footer className="border-t border-border/30 bg-card/30 backdrop-blur-sm mt-auto">
-      <div className="container py-5 md:py-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-5 md:gap-6">
-          {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-2 group">
-              <img 
-                src={logo} 
-                alt="Anime Savi" 
-                className="h-8 w-8 rounded-lg object-contain transition-transform duration-300 group-hover:scale-110" 
-              />
-              <span className="text-base font-heading font-bold anime-gradient-text">
-                Anime Savi
-              </span>
-            </Link>
-            <p className="text-xs text-muted-foreground mb-3 leading-snug">
-              Anime in 4K — official Hindi dubs, same-day drops, zero ads.
-            </p>
-            <div className="flex items-center gap-2">
-              <a
-                href="https://t.me/animesaviinhindidub"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Open Telegram group @animesaviinhindidub"
-                title="Message the group · @animesaviinhindidub"
-                className="p-2.5 rounded-xl bg-secondary/50 hover:bg-primary/20 hover:text-primary transition-all duration-300"
-              >
-                <MessageCircle className="h-4 w-4" />
-              </a>
-            </div>
-          </div>
-
-          {/* Browse */}
-          <div>
-            <h3 className="font-heading font-semibold text-sm mb-2 text-foreground">Browse</h3>
-            <ul className="space-y-1.5">
-              {footerLinks.browse.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200 flex items-center gap-1"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Genres */}
-          <div>
-            <h3 className="font-heading font-semibold text-sm mb-2 text-foreground">Genres</h3>
-            <ul className="space-y-1.5">
-              {footerLinks.genres.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div>
-            <h3 className="font-heading font-semibold text-sm mb-2 text-foreground">Legal & Support</h3>
-            <ul className="space-y-1.5">
-              {footerLinks.support.map((link) => (
-                <li key={link.label}>
-                  {link.external ? (
-                    <a
-                      href={link.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200 flex items-center gap-1"
-                    >
-                      {link.label}
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  ) : link.isPrivacy ? (
-                    <PrivacyPolicyButton />
-                  ) : link.isTerms ? (
-                    <TermsOfServiceButton />
-                  ) : (
-                    <Link
-                      to={link.href}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
-                    >
-                      {link.label}
-                    </Link>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        {/* Bottom */}
-        <div className="border-t border-border/30 mt-4 pt-3 flex flex-col sm:flex-row justify-between items-center gap-2">
-          <p className="text-[11px] text-muted-foreground">
-            ©{new Date().getFullYear()} Anime Savi all rights reserved
-          </p>
-        </div>
+  return <footer className="footer-v6 mt-auto border-t border-border">
+    <div className="container py-7 md:py-9">
+      <div className="flex flex-wrap items-center justify-between gap-5 pb-6 border-b border-border">
+        <div><Link to="/" className="inline-flex items-center gap-2.5"><img src={logo} alt="" className="h-9 w-9 object-contain" /><span className="text-xl font-bold"><span className="text-primary">Anime</span> Savi</span></Link><p className="text-xs text-muted-foreground mt-2">Hindi · English · Japanese</p></div>
+        <Button asChild variant="glass" size="sm"><a href="https://t.me/animesaviinhindidub" target="_blank" rel="noopener noreferrer"><MessageCircle className="h-4 w-4" />Join the community<ExternalLink className="h-3.5 w-3.5" /></a></Button>
       </div>
-    </footer>
-  );
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-6 py-6">
+        <nav aria-label="Footer browse"><h3 className="text-xs font-semibold mb-3">Browse</h3><ul className="space-y-2">{footerLinks.browse.map(link => <li key={link.href}><Link to={link.href} className="text-xs text-muted-foreground hover:text-foreground">{link.label}</Link></li>)}</ul></nav>
+        <nav aria-label="Footer genres"><h3 className="text-xs font-semibold mb-3">Genres</h3><ul className="space-y-2">{footerLinks.genres.map(link => <li key={link.href}><Link to={link.href} className="text-xs text-muted-foreground hover:text-foreground">{link.label}</Link></li>)}</ul></nav>
+        <nav aria-label="Footer support" className="col-span-2 md:col-span-1"><h3 className="text-xs font-semibold mb-3">Legal & support</h3><ul className="space-y-2">{footerLinks.support.map(link => <li key={link.label}>{link.external ? <a href={link.href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">{link.label}<ExternalLink className="h-3 w-3 shrink-0" /></a> : link.isPrivacy ? <PrivacyPolicyButton /> : link.isTerms ? <TermsOfServiceButton /> : <Link to={link.href}>{link.label}</Link>}</li>)}</ul></nav>
+      </div>
+      <div className="border-t border-border pt-4 flex flex-wrap items-center justify-between gap-3 text-[11px] text-muted-foreground"><span>©{new Date().getFullYear()} Anime Savi · All rights reserved</span><Link to="/release-notes" className="inline-flex items-center gap-1 hover:text-foreground"><Sparkles className="h-3 w-3" />Release notes<ExternalLink className="h-3 w-3" /></Link></div>
+    </div>
+  </footer>;
 }

@@ -13,6 +13,8 @@
 - Account pages use unframed section grids and the shared glass Button variant; the hamburger and detail loader share account glass tokens with reduced-motion and low-performance fallbacks, preserving account and menu action handlers.
 - Settings uses a single unframed vertical section flow; catalogue listing pages share lightweight optical-edge tokens and SeeAllHeader so page refreshes preserve existing links, badges and queries.
 - Welcome renders catalogue banner artwork behind its title and actions with visibility-gated rotation rather than animated ambient backdrops, keeping its first screen lightweight.
+- Utility popups, navigation and footer share bounded optical-glass tokens with performance fallbacks; presentation changes retain popup queues, route exclusions, contact destinations and update state transitions.
+- Homepage sharing uses native sharing with a copy-link fallback and direct social links, keeping the primary action independent of poster generation.
 - Download confirmation pauses playback and does not automatically resume it on dismissal, so users control playback explicitly.
 - Popular catalogue cards retain shared audio/content badges and native scroll snapping; animations must respect reduced motion and device performance tiers.
 - All HLS server players use getHLSConfig as the single buffering/network policy, preserving native Safari playback and manual quality/server choices to prevent tuning drift.

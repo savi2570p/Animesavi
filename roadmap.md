@@ -1,3 +1,6 @@
+- [x] Refresh What's New and Release Notes without changing version or release content.
+- [x] Refresh Report, Telegram contact/promotion, navigation and footer presentation.
+- [x] Simplify homepage sharing and verify desktop/mobile interactions.
 - [x] Repair Settings layout and remove Settings from hamburger options.
 - [x] Redesign Welcome with real catalogue artwork and lightweight glass.
 - [x] Keep only Type, Sort and Genres in Browse filters; refresh the pictured catalogue pages.
@@ -28,4 +31,4 @@
 - [x] Redesign Clones and Platforms with lightweight glass and native snap scrolling.
 - [x] Run focused tests and check the updated views.
 
-Verified: 13 audio/playback/view-count regressions pass and build OK. Signed-in Settings autoplay changes persist after reload and were restored; the hamburger contains no Settings link. Welcome and all four pictured listing pages load real catalogue images. Browse Movies updates the URL correctly. Desktop and 390px phone screenshots confirm a coherent Settings flow and readable page layouts without horizontal overflow. No browser page errors. Physical iOS/Android devices and actual video playback remain unverified; account permissions and playback logic are unchanged.
+Verified: build OK and 17 release/popup-exclusion/playback regressions pass. Signed-in What's New opens from the hamburger and links to Release Notes with S2-V2/12MB unchanged. Report input enables Send; no report was submitted. Telegram contact has both destinations; a real Watch episode shows the daily promotion and dismissal works. Footer Privacy and Terms dialogs open. Homepage Copy link reads back https://animesavi.com. Embed and S2-home retain zero Report/Telegram buttons. Desktop and 390px screenshots show readable popups, simple sharing and footer without overflow; no browser page errors. Physical devices, native OS share sheets and actual video playback remain unverified.
