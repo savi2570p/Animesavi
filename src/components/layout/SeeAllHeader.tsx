@@ -39,12 +39,8 @@ export function SeeAllHeader({
   backHref = '/',
 }: SeeAllHeaderProps) {
   return (
-    <div className="relative overflow-hidden">
+    <div className="catalogue-heading-v5 relative overflow-hidden">
       {/* Background gradient layers */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent" />
-      <div className={`absolute -top-24 right-1/4 w-[28rem] h-[28rem] ${glowTone} rounded-full blur-[120px]`} />
-      <div className={`absolute -top-12 left-1/3 w-[20rem] h-[20rem] ${glowTone} rounded-full blur-[100px] opacity-60`} />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--background)),transparent_70%)]" />
 
       <div className="container relative px-4 pt-4 pb-8 md:pt-6 md:pb-12">
         {/* Back link */}
@@ -59,11 +55,10 @@ export function SeeAllHeader({
         <div className="flex flex-col md:flex-row md:items-end gap-5 md:gap-7">
           {/* Icon block */}
           <div className="relative shrink-0">
-            <div className={`absolute inset-0 ${glowTone} blur-2xl rounded-full`} />
             <div
-              className={`relative flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br ${iconGradient} shadow-2xl`}
+              className="catalogue-heading-v5-icon relative flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-lg"
             >
-              <Icon className="h-7 w-7 md:h-9 md:w-9 text-white" />
+              <Icon className="h-6 w-6 md:h-8 md:w-8 text-primary" />
             </div>
           </div>
 
@@ -79,9 +74,9 @@ export function SeeAllHeader({
             <h1 className="text-3xl md:text-5xl font-heading font-black tracking-tight leading-none">
               {title}
             </h1>
-            <p className="text-muted-foreground mt-2 max-w-2xl text-sm md:text-base">
+            {subtitle && <p className="text-muted-foreground mt-2 max-w-2xl text-sm md:text-base">
               {subtitle}
-            </p>
+            </p>}
 
             {stats && stats.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-4">
@@ -90,7 +85,7 @@ export function SeeAllHeader({
                   return (
                     <div
                       key={s.label}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card/60 border border-border/40 backdrop-blur-sm"
+                      className="catalogue-heading-v5-stat flex items-center gap-1.5 px-3 py-2 rounded-md"
                     >
                       {SIcon && <SIcon className={`h-3.5 w-3.5 ${s.tone || 'text-primary'}`} />}
                       <span className="text-xs font-semibold tabular-nums">{s.value}</span>

@@ -154,7 +154,7 @@ export default function LatestEpisodesPage() {
   const totalEps = groupedEpisodes.reduce((sum, g) => sum + g.episodeCount, 0);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen catalogue-page-v5">
       <ContentNavTabs />
 
       <SeeAllHeader
@@ -166,8 +166,8 @@ export default function LatestEpisodesPage() {
         glowTone="bg-primary/20"
         stats={[
           { icon: Layers, value: groupedEpisodes.length, label: 'Seasons', tone: 'text-primary' },
-          { icon: Tv, value: totalEps, label: 'Episodes', tone: 'text-blue-400' },
-          { icon: Sparkles, value: newCount, label: 'New 24h', tone: 'text-emerald-400' },
+          { icon: Tv, value: totalEps, label: 'Episodes', tone: 'text-secondary-foreground' },
+          { icon: Sparkles, value: newCount, label: 'New 24h', tone: 'text-primary' },
         ]}
       />
 
@@ -204,8 +204,8 @@ export default function LatestEpisodesPage() {
                 >
                   <Link
                     to={`/watch/${group.latestEpisodeId}`}
-                    className="group relative block animate-fade-in"
-                    style={{ animationDelay: `${index * 50}ms` }}
+                    className="catalogue-tile-v5 group relative block"
+                    style={{ animationDelay: `${Math.min(index * 25, 200)}ms` }}
                   >
                     <div className="relative aspect-video rounded-xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl transition-all duration-500">
                       <img
@@ -215,7 +215,7 @@ export default function LatestEpisodesPage() {
                         loading="lazy"
                       />
                       
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
                       
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
                         <div className="p-4 rounded-full bg-primary/90 shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300">
@@ -235,18 +235,18 @@ export default function LatestEpisodesPage() {
 
                       <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
                         {isNew(group.latestCreatedAt) && (
-                          <div className="px-2 py-0.5 text-xs font-bold bg-green-500 text-white rounded-lg shadow-md animate-pulse">
+                          <div className="px-2 py-0.5 text-xs font-bold bg-secondary text-foreground rounded-lg shadow-md animate-pulse">
                             NEW
                           </div>
                         )}
                         <DubBadge isEngDub={(group as any).isEngDub} isSubOnly={(group as any).isSubOnly} />
                       </div>
 
-                      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent">
-                        <h3 className="text-sm font-semibold text-white line-clamp-1 drop-shadow-lg">
+                      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-background/90 to-transparent">
+                        <h3 className="text-sm font-semibold text-foreground line-clamp-1 drop-shadow-lg">
                           {group.animeTitle}
                         </h3>
-                        <p className="text-xs text-white/70 mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {episodeRangeText}
                         </p>
                       </div>

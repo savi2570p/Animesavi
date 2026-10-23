@@ -89,7 +89,7 @@ export default function LatestMoviesPage() {
   const upcomingCount = movies.filter(m => m.status === 'upcoming').length;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen catalogue-page-v5">
       <ContentNavTabs />
 
       <SeeAllHeader
@@ -100,9 +100,9 @@ export default function LatestMoviesPage() {
         iconGradient="from-amber-500 via-orange-500 to-rose-500"
         glowTone="bg-amber-500/20"
         stats={[
-          { icon: Film, value: movies.length, label: 'Movies', tone: 'text-amber-400' },
-          { icon: Sparkles, value: newCount, label: 'New 24h', tone: 'text-emerald-400' },
-          { icon: CalendarClock, value: upcomingCount, label: 'Upcoming', tone: 'text-orange-400' },
+          { icon: Film, value: movies.length, label: 'Movies', tone: 'text-accent-foreground' },
+          { icon: Sparkles, value: newCount, label: 'New 24h', tone: 'text-primary' },
+          { icon: CalendarClock, value: upcomingCount, label: 'Upcoming', tone: 'text-accent-foreground' },
         ]}
       />
 
@@ -134,8 +134,8 @@ export default function LatestMoviesPage() {
               >
                 <Link
                   to={movie.firstEpisodeId ? `/watch/${movie.firstEpisodeId}` : `/anime/${movie.id}`}
-                  className="group relative block animate-fade-in"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  className="catalogue-tile-v5 group relative block"
+                  style={{ animationDelay: `${Math.min(index * 25, 200)}ms` }}
                 >
                   <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted mb-3 shadow-lg transition-all duration-500 group-hover:shadow-2xl group-hover:scale-[1.03] group-hover:-translate-y-2">
                     <img
@@ -145,7 +145,7 @@ export default function LatestMoviesPage() {
                       loading="lazy"
                     />
                     
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
 
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
                       <div className="p-4 rounded-full bg-primary/90 shadow-lg transform scale-0 group-hover:scale-100 transition-transform duration-300 delay-100">
@@ -160,7 +160,7 @@ export default function LatestMoviesPage() {
 
                     <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
                       {isNew(movie.created_at) && (
-                        <div className="px-2 py-0.5 text-xs font-bold bg-green-500 text-white rounded-md animate-pulse shadow-md">
+                        <div className="px-2 py-0.5 text-xs font-bold bg-secondary text-foreground rounded-md animate-pulse shadow-md">
                           NEW
                         </div>
                       )}
@@ -169,18 +169,18 @@ export default function LatestMoviesPage() {
                     </div>
 
                     {movie.status === 'upcoming' && (
-                      <div className="absolute top-10 left-2 px-2 py-1 text-xs font-bold bg-orange-500 text-white rounded-md animate-pulse shadow-md flex items-center gap-1">
+                      <div className="absolute top-10 left-2 px-2 py-1 text-xs font-bold bg-accent text-foreground rounded-md animate-pulse shadow-md flex items-center gap-1">
                         <CalendarClock className="h-3 w-3" />
                         Coming Soon
                       </div>
                     )}
 
                     <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
-                      <p className="text-white/90 text-xs line-clamp-3 mb-2">
+                      <p className="text-foreground/90 text-xs line-clamp-3 mb-2">
                         {movie.description || 'No description available'}
                       </p>
                       
-                      <div className="flex items-center gap-2 text-white/80 text-xs">
+                      <div className="flex items-center gap-2 text-foreground/80 text-xs">
                         {movie.release_year && (
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
@@ -200,7 +200,7 @@ export default function LatestMoviesPage() {
                           {movie.genres.slice(0, 3).map(genre => (
                             <span 
                               key={genre}
-                              className="px-2 py-0.5 text-xs bg-white/20 rounded-full text-white/90"
+                              className="px-2 py-0.5 text-xs bg-foreground/20 rounded-full text-foreground/90"
                             >
                               {genre}
                             </span>
