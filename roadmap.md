@@ -32,5 +32,7 @@
 - [x] Run focused tests and check the updated views.
 - [x] Update What's New to S2-V2.1 with performance, stability and bug-fix news at 15MB.
 - [x] Verify the popup shows the new version and size to returning users.
+- [ ] Refresh homepage expiry, Watch expiry and hamburger Verify Token with shared liquid glass.
+- [ ] Verify signed-in token status, confirmation cancellation and compact layouts without ending a real token.
 
 Verified: build OK and 49 regressions pass. Signed-in What's New opens from the hamburger and links to Release Notes, now showing S2-V2.1 with a 15MB update size; the popup re-appears for returning users because its seen-marker follows the app version. Desktop check opened the popup with S2-V2.1 and 15MB, no 12MB remnant, and the item list clears the action button when scrolled. Report input enables Send; no report was submitted. Telegram contact has both destinations; a real Watch episode shows the daily promotion and dismissal works. Footer Privacy and Terms dialogs open. Homepage Copy link reads back https://animesavi.com. Embed and S2-home retain zero Report/Telegram buttons. Desktop and 390px screenshots show readable popups, simple sharing and footer without overflow; no browser page errors. Physical devices, native OS share sheets and actual video playback remain unverified.
