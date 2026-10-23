@@ -1,3 +1,8 @@
+- [x] Refresh login, notification bell and Continue Watching popups without changing existing account or resume behavior.
+- [x] Show AnimeSavi Team for missing token issuers and contain the iOS navbar logo.
+- [x] Hide Report and Telegram buttons on clone pages and verify affected screens.
+
+Verified this refresh: 49 tests pass; preview build OK. Desktop/mobile login branding, signup and reset form navigation checked. Signed-in notifications open; issuer shows AnimeSavi Team and End Token cancellation preserves access. At 390px the logo image is fully inside the navbar and no horizontal overflow appears. Actual ToonStream clone shell hides both floating buttons. No browser page errors. Continue Watching notification did not trigger with the current account history, so its refreshed appearance and resume action remain unverified live; physical iOS testing and credential-based sign-in were not performed.
 - [x] Refresh What's New and Release Notes without changing version or release content.
 - [x] Refresh Report, Telegram contact/promotion, navigation and footer presentation.
 - [x] Simplify homepage sharing and verify desktop/mobile interactions.

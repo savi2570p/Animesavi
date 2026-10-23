@@ -3693,6 +3693,9 @@ html.perf-low .welcome-v5-search, html.perf-medium .welcome-v5-search { backdrop
 .nav-v6 form > div > div:first-of-type { background: hsl(var(--background) / .4) !important; border-color: hsl(var(--border)) !important; border-radius: 6px !important; box-shadow: none !important; backdrop-filter: none; -webkit-backdrop-filter: none; }
 .nav-v6 form > div > div:first-of-type:focus-within { border-color: hsl(var(--primary) / .5) !important; background: hsl(var(--card)) !important; box-shadow: none !important; }
 .nav-v6-link[aria-current="page"] { box-shadow: inset 0 -2px 0 hsl(var(--primary)); }
+.nav-v6 .nav-logo-v8 { display: flex; align-items: center; justify-content: center; align-self: center; width: 44px; height: 44px; min-width: 44px; min-height: 44px; line-height: 0; }
+.nav-v6 .nav-logo-v8 img { flex: none; width: 24px; height: 24px; max-height: 24px; }
+@media (min-width: 640px) { .nav-v6 .nav-logo-v8 img { width: 32px; height: 32px; max-height: 32px; } }
 .footer-v6 { background: var(--catalogue-v5-surface); }
 .footer-v6 a { overflow-wrap: anywhere; }
 .footer-v6 > .container > div:last-child { padding-right: 9rem; }
@@ -3756,6 +3759,24 @@ html.perf-low .utility-glass-v6, html.perf-medium .utility-glass-v6, html.perf-l
 .token-metadata-v7 > div { display: grid; grid-template-columns: 65px minmax(0, 1fr); gap: 12px; }
 .token-metadata-v7 dd { font-size: 11px; text-align: right; overflow-wrap: anywhere; }
 .token-loading-v7 { min-height: 220px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px; font-size: 12px; color: hsl(var(--muted-foreground)); }
+/* Account entry and resume use the same bounded utility optical layer. */
+.auth-v8 { background: hsl(var(--background)); letter-spacing: 0; }
+.auth-panel-v8 { border-top: 2px solid hsl(var(--primary) / .55); }
+.auth-v8 input { height: 44px; border-radius: 6px; background: hsl(var(--background) / .6); }
+.auth-v8 label { font-size: 12px; }
+.auth-v8 [class*="tracking-"] { letter-spacing: 0; }
+.auth-tabs-v8[role="tablist"] { border-radius: 6px !important; padding: 4px; background: hsl(var(--background) / .55) !important; box-shadow: none; }
+.auth-tabs-v8 [role="tab"] { border-radius: 4px !important; min-width: 0; min-height: 36px; font-size: 12px; }
+.auth-tabs-v8 [role="tab"][data-state="active"] { background: hsl(var(--accent)) !important; color: hsl(var(--accent-foreground)); box-shadow: var(--catalogue-v5-edge); }
+.auth-token-v8 { color: hsl(var(--token-active)); background: hsl(var(--token-active) / .08); border: 1px solid hsl(var(--token-active) / .2); }
+.notification-bell-v8 { border-color: hsl(var(--border)); box-shadow: var(--catalogue-v5-edge); }
+.notification-count-v8 { font-variant-numeric: tabular-nums; border: 1px solid hsl(var(--background)); }
+.notification-panel-v8 [role="menuitem"] { border-bottom: 1px solid hsl(var(--border) / .45); border-radius: 0; }
+.resume-notice-v8 { width: min(320px, calc(100vw - 2rem)); right: max(1rem, env(safe-area-inset-right)); bottom: max(5rem, calc(env(safe-area-inset-bottom) + 1rem)); }
+.resume-art-v8 img { height: 100%; transform: none !important; animation: none !important; }
+.resume-player-v8 { border-top: 2px solid hsl(var(--primary) / .55); }
+body.clone-mode .clone-hidden-utility-v8, body:has(.clone-shell) .clone-hidden-utility-v8 { display: none !important; }
+@media (min-width: 640px) { .resume-notice-v8 { right: 5rem; bottom: 1.5rem; width: 340px; } }
 @media (max-width: 640px) {
   .token-panel-v7 { max-width: 360px; }
   .token-header-v7 { padding: 20px 18px 16px; }

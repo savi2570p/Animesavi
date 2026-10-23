@@ -148,7 +148,8 @@ export function NotificationBell() {
     await supabase.from('notification_queue').delete().eq('user_id', user.id);
     // Mark legacy episode notifications as cleared in localStorage
     const cleared: string[] = JSON.parse(localStorage.getItem(`cleared_notifications_${user.id}`) || '[]');
-    const all = [...new Set([...cleared, ...notifications.filter((n) => n.source === 'episode' && n.episode_id).map((n) => n.episode_id!)])];
+    const episodeIds = notifications.flatMap((n) => n.source === 'episode' && n.episode_id ? [n.episode_id] : []);
+    const all = [...new Set([...cleared, ...episodeIds])];
     localStorage.setItem(`cleared_notifications_${user.id}`, JSON.stringify(all));
     setNotifications([]);
     setUnreadCount(0);
@@ -160,17 +161,17 @@ export function NotificationBell() {
   return (
     <DropdownMenu open={isOpen} onOpenChange={handleOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative hover:bg-primary/10">
+        <Button variant="glass" size="icon" className="notification-bell-v8 relative rounded-lg" aria-label="Notifications" title="Notifications">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold animate-pulse">
+            <span className="notification-count-v8 absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[9px] flex items-center justify-center font-bold">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-y-auto bg-popover/95 backdrop-blur-xl border-border/50">
-        <div className="px-4 py-3 border-b border-border/50 flex items-center justify-between">
+      <DropdownMenuContent align="end" sideOffset={10} className="notification-panel-v8 utility-glass-v6 w-80 max-w-[calc(100vw-2rem)] max-h-[min(480px,70svh)] overflow-y-auto p-0">
+        <div className="utility-header-v6 px-4 py-4 border-b border-border flex items-center justify-between">
           <div>
             <h3 className="font-semibold text-sm">Notifications</h3>
             <p className="text-xs text-muted-foreground">New episodes from your favorites</p>
@@ -193,7 +194,7 @@ export function NotificationBell() {
             {notifications.map((notification) => (
               <DropdownMenuItem key={notification.id} asChild className="p-0">
                 <Link to={notification.link} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 cursor-pointer" onClick={() => setIsOpen(false)}>
-                  <div className="w-12 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                   <div className="w-12 h-16 rounded-md overflow-hidden bg-muted flex-shrink-0">
                     <img src={notification.cover_image || '/placeholder.svg'} alt={notification.anime_title} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">

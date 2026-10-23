@@ -193,7 +193,7 @@ export function ReportButton() {
 
   return (
     <>
-      <Button variant="glass" size="icon" onClick={() => setOpen(true)} aria-label="Report an issue" title="Report an issue" className="utility-fab-v6 fixed bottom-[8.25rem] right-3 md:bottom-6 md:right-[5.25rem] z-50 w-10 h-10 md:w-11 md:h-11 rounded-lg text-destructive"><Flag className="h-4 w-4" /></Button>
+      <Button variant="glass" size="icon" onClick={() => setOpen(true)} aria-label="Report an issue" title="Report an issue" className="clone-hidden-utility-v8 utility-fab-v6 fixed bottom-[8.25rem] right-3 md:bottom-6 md:right-[5.25rem] z-50 w-10 h-10 md:w-11 md:h-11 rounded-lg text-destructive"><Flag className="h-4 w-4" /></Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
