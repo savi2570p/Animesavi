@@ -6,12 +6,18 @@ import {
   PlayCircle, Flame, TrendingUp, Sparkles,
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { DubBadge } from '@/components/anime/DubBadge';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AnimePreview {
   id: string;
   title: string;
   cover_image: string | null;
+  banner_image?: string | null;
+  is_eng_dub?: boolean | null;
+  is_sub_only?: boolean | null;
   genres: string[] | null;
   view_count: number | null;
 }
@@ -100,14 +106,14 @@ export default function Welcome() {
       ];
       const { data: curated } = await supabase
         .from('anime')
-        .select('id, title, cover_image, banner_image, genres, view_count')
+        .select('id, title, cover_image, banner_image, genres, view_count, is_eng_dub, is_sub_only')
         .or(FEATURED_TITLES.map(t => `title.ilike.%${t.slice(0, 40)}%`).join(','))
         .limit(8);
       let list = curated || [];
       if (list.length < 4) {
         const { data: fb } = await supabase
-          .from('anime').select('id, title, cover_image, banner_image, genres, view_count')
-          .eq('is_featured', true).neq('title', 'Jujutsu Kaisen').limit(8);
+          .from('anime').select('id, title, cover_image, banner_image, genres, view_count, is_eng_dub, is_sub_only')
+          .eq('is_featured', true).neq('title', 'My Hero Academia').limit(8);
         const seen = new Set(list.map(a => a.id));
         list = [...list, ...((fb || []).filter(a => !seen.has(a.id)))];
       }
@@ -124,7 +130,11 @@ export default function Welcome() {
 
   useEffect(() => {
     if (featuredAnime.length <= 1) return;
-    const id = setInterval(() => setActiveIndex(p => (p + 1) % featuredAnime.length), 4600);
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        setActiveIndex(p => (p + 1) % featuredAnime.length);
+      }
+    }, 6000);
     return () => clearInterval(id);
   }, [featuredAnime.length]);
 
@@ -185,417 +195,64 @@ export default function Welcome() {
   const timeStr = clock.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
 
   return (
-    <div
-      className="wlc2-page relative w-full text-foreground"
-      style={{
-        paddingTop: 'env(safe-area-inset-top)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-        paddingLeft: 'env(safe-area-inset-left)',
-        paddingRight: 'env(safe-area-inset-right)',
-      }}
-    >
-      {/* ===================== AURORA BACKDROP ===================== */}
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
-        {hero?.cover_image && (
-          <img
-            key={hero.id}
-            src={hero.cover_image}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover object-top opacity-[0.22]"
-            style={{ transition: 'opacity 600ms ease' }}
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/85 to-background" />
-        <div className="absolute -left-32 top-[-10%] h-[70vw] w-[70vw] max-h-[560px] max-w-[560px] rounded-full opacity-50"
-             style={{ background: 'radial-gradient(circle, hsl(var(--primary)/0.5), transparent 65%)', filter: 'blur(70px)', animation: 'wlc2-orb 16s ease-in-out infinite' }} />
-        <div className="absolute -right-32 top-[30%] h-[60vw] w-[60vw] max-h-[480px] max-w-[480px] rounded-full opacity-40"
-             style={{ background: 'radial-gradient(circle, hsl(300 85% 55% / 0.5), transparent 65%)', filter: 'blur(80px)', animation: 'wlc2-orb 20s ease-in-out -5s infinite reverse' }} />
-        <div className="absolute bottom-[-20%] left-[25%] h-[50vw] w-[50vw] max-h-[420px] max-w-[420px] rounded-full opacity-30"
-             style={{ background: 'radial-gradient(circle, hsl(220 90% 55% / 0.5), transparent 65%)', filter: 'blur(90px)', animation: 'wlc2-orb 22s ease-in-out -10s infinite' }} />
-      </div>
-
-      {/* ===================== FLOATING GLASS NAV ===================== */}
-      <header className="sticky top-3 z-40 mx-auto max-w-5xl px-4 sm:px-6">
-        <div className="wlc2-glass flex items-center justify-between gap-3 rounded-2xl px-3.5 py-2.5 sm:px-5">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="wlc2-logo-ring flex h-9 w-9 items-center justify-center rounded-xl">
-              <img src={logo} alt="AnimeSavi" className="h-6 w-6 rounded-lg object-contain" />
-            </div>
-            <div className="min-w-0 leading-none">
-              <p className="truncate text-sm sm:text-base font-black tracking-tight">
-                <span className="text-primary">ANIME</span>SAVI
-              </p>
-              <p className="mt-1 text-[9px] uppercase tracking-[0.28em] text-muted-foreground/80 font-semibold">
-                Free anime broadcast · India
-              </p>
-            </div>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <span className="wlc2-chip hidden sm:inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-foreground/70">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-70" />
-                <span className="relative h-1.5 w-1.5 rounded-full bg-rose-500" />
-              </span>
-              Live · {timeStr} IST
-            </span>
-            <button
-              onClick={() => startWatching('/')}
-              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-primary px-4 py-2 text-xs sm:text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.04]"
-              style={{ boxShadow: '0 10px 30px hsl(var(--primary)/0.45), inset 0 1px 0 hsl(0 0% 100%/0.3)' }}
-            >
-              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-              <PlayCircle className="relative h-4 w-4 fill-current" />
-              <span className="relative hidden sm:inline">Start Watching</span>
-            </button>
-          </div>
+    <div className="welcome-v5 min-h-screen text-foreground">
+      <header className="welcome-v5-nav absolute inset-x-0 top-0 z-20">
+        <div className="container flex items-center justify-between gap-4 py-4 sm:py-5">
+          <div className="flex items-center gap-2.5"><img src={logo} alt="" className="h-9 w-9 object-contain" /><span className="font-bold text-lg"><span className="text-primary">Anime</span>Savi</span></div>
+          <Button variant="glass" onClick={() => startWatching('/')}><Play className="h-4 w-4" />Watch now</Button>
         </div>
       </header>
 
-      {/* ===================== HERO ===================== */}
-      <section className="relative mx-auto max-w-5xl px-4 sm:px-6 pt-12 sm:pt-20 pb-10 text-center">
-        <div className="wlc2-chip mx-auto mb-6 inline-flex items-center gap-2 rounded-full px-4 py-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-primary" />
-          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.24em] text-foreground/80">
-            Free forever · No signup · No ads
-          </span>
-        </div>
-
-        <h1 className="font-black leading-[0.95] tracking-tight text-[clamp(2.4rem,8vw,5.2rem)]">
-          <span className="block">Anime, the way</span>
-          <span className="block bg-gradient-to-r from-primary via-rose-400 to-fuchsia-500 bg-clip-text text-transparent">
-            it should air.
-          </span>
-        </h1>
-
-        <p className="mx-auto mt-5 max-w-xl text-sm sm:text-base leading-relaxed text-foreground/75">
-          Official Hindi dubs, true 4K UHD playback, multi-server streaming and real
-          offline downloads — wrapped in a player built for phones, tablets and the big screen.
-        </p>
-
-        {/* Search */}
-        <form onSubmit={handleSearch} className="mx-auto mt-8 max-w-xl">
-          <div className="wlc2-glass relative flex items-center rounded-2xl">
-            <Search className="pointer-events-none absolute left-4 h-5 w-5 text-muted-foreground" />
-            <input
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search a title, a genre, a vibe…"
-              aria-label="Search anime"
-              className="w-full rounded-2xl bg-transparent py-3.5 pl-12 pr-28 text-sm sm:text-base placeholder:text-muted-foreground/70 focus:outline-none"
-            />
-            <button
-              type="submit"
-              className="absolute right-2 rounded-xl bg-primary px-4 py-2 text-xs sm:text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.03]"
-            >
-              Search
-            </button>
-          </div>
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
-            <span className="mr-1 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground/80">
-              <TrendingUp className="h-3 w-3 text-primary" /> Trending
-            </span>
-            {TRENDING_SEARCHES.map(t => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => navigate(`/browse?q=${encodeURIComponent(t)}`)}
-                className="wlc2-chip rounded-lg px-2.5 py-1 text-[11px] font-semibold text-muted-foreground hover:text-primary"
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        </form>
-
-        {/* CTAs */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <button
-            onClick={() => startWatching('/')}
-            className="group relative inline-flex items-center gap-2.5 overflow-hidden rounded-2xl bg-primary px-8 py-3.5 text-sm sm:text-base font-black uppercase tracking-wider text-primary-foreground transition-transform hover:scale-[1.04]"
-            style={{ boxShadow: '0 16px 44px hsl(var(--primary)/0.5), inset 0 1px 0 hsl(0 0% 100%/0.3)' }}
-          >
-            <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-            <PlayCircle className="relative h-5 w-5 fill-current" />
-            <span className="relative">Start Watching</span>
-          </button>
-          <button
-            onClick={() => navigate('/browse')}
-            className="wlc2-chip group inline-flex items-center gap-2 rounded-2xl px-6 py-3.5 text-sm sm:text-base font-bold"
-          >
-            Browse Catalog
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </button>
-        </div>
-
-        {/* Stats strip */}
-        <div className="mx-auto mt-12 grid max-w-3xl grid-cols-2 gap-2.5 sm:grid-cols-4">
-          {[
-            { v: totalAnime || 500,      s: '+', l: 'Titles aired',   i: Film },
-            { v: totalEpisodes || 15000, s: '+', l: 'Episodes ready', i: Play },
-            { v: '24/7',                 s: '',  l: 'Free streaming', i: Radio },
-            { v: 0,                      s: '',  l: 'Ads. Ever.',     i: Shield },
-          ].map(({ v, s, l, i: I }) => (
-            <div key={l} className="wlc2-glass rounded-2xl px-3 py-4 text-center">
-              <I className="mx-auto mb-2 h-4 w-4 text-primary" />
-              <p className="text-xl sm:text-2xl font-black leading-none tabular-nums">
-                {typeof v === 'number' ? v.toLocaleString() : v}{s}
-              </p>
-              <p className="mt-1.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{l}</p>
+      <section className="welcome-v5-hero relative overflow-hidden">
+        {hero && <img src={hero.banner_image || hero.cover_image || '/placeholder.svg'} alt={hero.title} className="welcome-v5-art absolute inset-0 h-full w-full object-cover" fetchPriority="high" />}
+        <div className="welcome-v5-scrim absolute inset-0" aria-hidden="true" />
+        <div className="container relative z-10 welcome-v5-copy">
+          <div className="max-w-2xl">
+            <span className="welcome-v5-label inline-flex items-center gap-2 text-xs mb-4"><span className="h-1.5 w-1.5 rounded-full bg-primary" />Hindi · English · Japanese</span>
+            <h1 className="text-5xl sm:text-7xl font-bold leading-none"><span className="text-primary">Anime</span>Savi</h1>
+            <p className="text-sm sm:text-lg text-foreground/80 mt-5 max-w-md">Your next anime. Your favourite language.</p>
+            <div className="flex flex-wrap items-center gap-3 mt-6">
+              <Button onClick={() => startWatching('/')} size="lg"><Play className="h-4 w-4 fill-current" />Start watching</Button>
+              <Button variant="glass" size="lg" onClick={() => navigate('/browse')}>Browse anime<ArrowRight className="h-4 w-4" /></Button>
             </div>
-          ))}
+            <form onSubmit={handleSearch} className="welcome-v5-search flex items-center gap-2 mt-7 max-w-lg p-2">
+              <Search className="h-4 w-4 ml-2 shrink-0 text-muted-foreground" />
+              <Input aria-label="Search anime" placeholder="Search anime…" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="border-0 bg-transparent shadow-none focus-visible:ring-0 min-w-0" />
+              <Button type="submit" variant="glass" size="icon" aria-label="Search"><ArrowRight className="h-4 w-4" /></Button>
+            </form>
+            {hero && <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"><span className="text-foreground/80 truncate max-w-full">{hero.title}</span><DubBadge isEngDub={hero.is_eng_dub} isSubOnly={hero.is_sub_only} genres={hero.genres} /></div>}
+          </div>
+        </div>
+        <div className="container relative z-10 pb-5 flex items-center gap-2">
+          {featuredAnime.map((a, i) => <Button key={a.id} variant="ghost" aria-label={`Feature ${a.title}`} aria-pressed={i === activeIndex} className="welcome-v5-pagination p-0 h-6 w-10" onClick={() => setActiveIndex(i)}><span className={i === activeIndex ? 'bg-primary' : 'bg-muted-foreground/40'} /></Button>)}
         </div>
       </section>
 
-      {/* ===================== TRENDING SHOWCASE ===================== */}
-      {featuredAnime.length > 0 && (
-        <section className="mx-auto max-w-5xl px-4 sm:px-6 pb-12">
-          <div className="wlc2-glass rounded-[28px] p-3.5 sm:p-5">
-            <div className="mb-3.5 flex items-center justify-between px-1">
-              <span className="inline-flex items-center gap-2 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.22em]">
-                <Flame className="h-3.5 w-3.5 text-primary" /> Trending now
-              </span>
-              <button
-                onClick={() => navigate('/schedule')}
-                className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-primary"
-              >
-                Full schedule <ChevronRight className="h-3 w-3" />
-              </button>
-            </div>
-
-            <div className="relative w-full overflow-hidden rounded-2xl" style={{ aspectRatio: '16 / 9' }}>
-              {featuredAnime.map((a, i) => {
-                const active = i === activeIndex;
-                return (
-                  <button
-                    key={a.id}
-                    onClick={() => (active ? navigate(`/anime/${a.id}`) : setActiveIndex(i))}
-                    aria-label={a.title}
-                    aria-hidden={!active}
-                    tabIndex={active ? 0 : -1}
-                    className="absolute inset-0 text-left"
-                    style={{
-                      opacity: active ? 1 : 0,
-                      transition: 'opacity 380ms cubic-bezier(0.22,1,0.36,1)',
-                      pointerEvents: active ? 'auto' : 'none',
-                    }}
-                  >
-                    {a.cover_image ? (
-                      <img
-                        src={(a as any).banner_image || a.cover_image}
-                        alt={a.title}
-                        className="absolute inset-0 h-full w-full object-cover"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-accent/60 to-accent/20" />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
-                    <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
-                      <span className="mb-2 inline-flex items-center gap-1.5 rounded-md bg-primary/90 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-primary-foreground">
-                        #{i + 1} Trending
-                      </span>
-                      <p className="truncate text-base sm:text-2xl font-black text-white">{a.title}</p>
-                      <p className="mt-0.5 truncate text-[10px] sm:text-[11px] uppercase tracking-[0.18em] text-white/70">
-                        {(a.genres || []).slice(0, 3).join(' · ') || 'Now streaming'}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Slim bar pagination */}
-            <div className="mt-3.5 flex items-center justify-center gap-1.5" role="tablist" aria-label="Trending pagination">
-              {featuredAnime.map((_, i) => {
-                const active = i === activeIndex;
-                return (
-                  <button
-                    key={i}
-                    role="tab"
-                    aria-selected={active}
-                    aria-label={`Go to slide ${i + 1}`}
-                    onClick={() => setActiveIndex(i)}
-                    style={{
-                      height: 3,
-                      width: active ? 34 : 18,
-                      borderRadius: 999,
-                      background: active
-                        ? 'linear-gradient(90deg, hsl(var(--primary)), hsl(300 85% 60%))'
-                        : 'rgba(255,255,255,0.2)',
-                      transition: 'width 320ms cubic-bezier(0.22,1,0.36,1), background 320ms ease',
-                      padding: 0,
-                      border: 0,
-                      cursor: 'pointer',
-                    }}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ===================== TICKER ===================== */}
-      <div className="relative overflow-hidden border-y border-white/10 bg-white/[0.03]">
-        <div className="flex gap-10 whitespace-nowrap py-2.5" style={{ animation: 'wlc2-marquee 38s linear infinite' }}>
-          {[...TICKER, ...TICKER, ...TICKER].map((t, i) => (
-            <span key={i} className="flex items-center gap-3 text-[10px] sm:text-xs font-bold uppercase tracking-[0.22em] text-foreground/70">
-              <span className="h-1 w-1 rounded-full bg-primary" />
-              {t}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* ===================== PILLARS — bento ===================== */}
-      <section className="mx-auto max-w-5xl px-4 sm:px-6 py-14">
-        <div className="mb-8 text-center">
-          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.3em] text-primary">/ House rules</p>
-          <h2 className="text-2xl sm:text-4xl font-black tracking-tight">Six promises we keep.</h2>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {PILLARS.map((p, i) => (
-            <div key={p.title} className="wlc2-glass group relative rounded-2xl p-5 sm:p-6">
-              <span className="absolute right-5 top-4 text-[10px] font-black tracking-[0.3em] text-primary/40">0{i + 1}</span>
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl border border-primary/20 bg-primary/15">
-                <p.icon className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="mb-1.5 text-base sm:text-lg font-extrabold">{p.title}</h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">{p.body}</p>
-            </div>
-          ))}
+      <section className="container py-7 sm:py-10">
+        <div className="flex items-center justify-between gap-3 mb-5"><h2 className="font-bold text-xl sm:text-2xl flex items-center gap-2"><Flame className="h-5 w-5 text-primary" />Trending now</h2><Button variant="ghost" size="sm" onClick={() => navigate('/schedule')}>Schedule<ChevronRight className="h-4 w-4" /></Button></div>
+        <div className="snap-row flex gap-4 overflow-x-auto pb-4">
+          {featuredAnime.map(a => <Button asChild variant="ghost" key={a.id} className="welcome-v5-tile block h-auto p-0 shrink-0 text-left whitespace-normal"><a href={`/anime/${a.id}`} onClick={e => { e.preventDefault(); navigate(`/anime/${a.id}`); }}><div className="relative aspect-video overflow-hidden rounded-lg"><img src={a.banner_image || a.cover_image || '/placeholder.svg'} alt={a.title} className="h-full w-full object-cover" loading="lazy" /><div className="absolute top-2 right-2"><DubBadge isEngDub={a.is_eng_dub} isSubOnly={a.is_sub_only} genres={a.genres} /></div></div><div className="p-3"><h3 className="line-clamp-2 text-sm font-semibold min-h-10">{a.title}</h3><p className="text-xs text-muted-foreground mt-1 truncate">{(a.genres || []).slice(0, 2).join(' · ')}</p></div></a></Button>)}
         </div>
       </section>
 
-      {/* ===================== EVERYWHERE ===================== */}
-      <section className="mx-auto max-w-5xl px-4 sm:px-6 pb-16">
-        <div className="wlc2-glass rounded-[28px] p-6 sm:p-10 text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">/ Everywhere</p>
-          <h3 className="mt-2 text-2xl sm:text-3xl font-black tracking-tight">Same channel, every screen.</h3>
-          <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground">
-            Pin AnimeSavi to your home screen and it behaves like a native app —
-            push alerts, offline downloads, lock-screen controls and AirPlay to the TV.
-          </p>
-          <div className="mx-auto mt-7 grid max-w-xl grid-cols-2 gap-2.5 sm:grid-cols-4">
-            {[
-              { i: Smartphone, t: 'iOS',     d: 'Safari PWA' },
-              { i: Smartphone, t: 'Android', d: 'Chrome' },
-              { i: Monitor,    t: 'Desktop', d: 'PiP' },
-              { i: Tv,         t: 'TV',      d: 'AirPlay' },
-            ].map(({ i: I, t, d }) => (
-              <div key={t} className="wlc2-chip rounded-xl p-3.5 text-center">
-                <I className="mx-auto mb-1.5 h-5 w-5 text-primary" />
-                <p className="text-xs font-extrabold">{t}</p>
-                <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{d}</p>
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={() => startWatching('/')}
-            className="group relative mt-8 inline-flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-primary px-8 py-3.5 text-sm font-black uppercase tracking-wider text-primary-foreground transition-transform hover:scale-[1.03]"
-            style={{ boxShadow: '0 14px 40px hsl(var(--primary)/0.45), inset 0 1px 0 hsl(0 0% 100%/0.3)' }}
-          >
-            <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-            Start Watching <ArrowRight className="relative h-4 w-4" />
-          </button>
+      <section className="welcome-v5-band border-y border-border">
+        <div className="container grid grid-cols-2 sm:grid-cols-4 py-7 gap-6">
+          {[{value: totalAnime ? totalAnime.toLocaleString() : '—', label: 'Anime titles'}, {value: totalEpisodes ? totalEpisodes.toLocaleString() : '—', label: 'Episodes'}, {value: '4K', label: 'Ultra HD'}, {value: '3', label: 'Audio languages'}].map(stat => <div key={stat.label}><p className="text-2xl font-bold tabular-nums">{stat.value}</p><p className="text-xs mt-2 text-muted-foreground">{stat.label}</p></div>)}
         </div>
       </section>
-
-      {/* ===================== FOOTER ===================== */}
-      <footer className="border-t border-white/10 px-4 sm:px-6 py-9 text-center">
-        <div className="mb-2 flex items-center justify-center gap-2">
-          <img src={logo} alt="" className="h-6 w-6 rounded-md" />
-          <span className="font-black tracking-tight">
-            <span className="text-primary">ANIME</span>SAVI
-          </span>
+      <section className="container py-10 sm:py-14 flex flex-wrap justify-between items-center gap-6">
+        <div><h2 className="text-2xl font-bold">Find something worth watching.</h2><div className="mt-4 flex flex-wrap gap-2">{TRENDING_SEARCHES.slice(0, 4).map(t => <Button key={t} variant="glass" size="sm" onClick={() => navigate(`/browse?q=${encodeURIComponent(t)}`)}>{t}</Button>)}</div></div>
+        <Button onClick={() => startWatching('/')} variant="glass">Open catalogue<ArrowRight className="h-4 w-4" /></Button>
+      </section>
+      <footer className="container border-t border-border py-6 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground"><span>© 2026 AnimeSavi</span><Button variant="ghost" size="sm" onClick={() => navigate('/browse')}>Browse<ArrowRight className="h-3.5 w-3.5" /></Button></footer>
+      {isLaunching && <div className="detail-loading-v4 fixed inset-0 z-[200] flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="launch-title">
+        <div className="detail-loading-v4-panel rounded-lg p-6 w-full max-w-xs text-center">
+          <img src={logo} alt="" className="h-12 w-12 mx-auto object-contain" />
+          <h2 id="launch-title" className="text-lg font-bold mt-4">AnimeSavi</h2><p role="status" className="text-xs text-muted-foreground mt-2">{launchError || 'Opening catalogue…'}</p>
+          <div className="detail-loading-v4-track mt-5"><span /></div>
+          {launchError && <div className="flex gap-2 mt-4"><Button onClick={retryLaunch}>Retry</Button><Button variant="glass" onClick={() => setIsLaunching(false)}>Cancel</Button></div>}
         </div>
-        <p className="text-xs text-muted-foreground/60">© 2026 AnimeSavi — India's ad-free anime broadcast.</p>
-      </footer>
-
-      {/* ===================== LAUNCH LOADER ===================== */}
-      {isLaunching && (
-        <div
-          className="wlc2-loader-bg fixed inset-0 z-[200] flex items-center justify-center overflow-hidden px-5 animate-fade-in"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="as-launch-title"
-          aria-describedby="as-launch-status"
-          style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
-        >
-          <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="absolute -left-24 -top-24 h-[55vw] max-h-[460px] w-[55vw] max-w-[460px] rounded-full opacity-60"
-                 style={{ background: 'radial-gradient(circle, hsl(var(--primary)/0.45), transparent 65%)', filter: 'blur(60px)', animation: 'wlc2-orb 14s ease-in-out infinite' }} />
-            <div className="absolute -bottom-28 -right-20 h-[50vw] max-h-[420px] w-[50vw] max-w-[420px] rounded-full opacity-55"
-                 style={{ background: 'radial-gradient(circle, hsl(300 85% 55% / 0.5), transparent 65%)', filter: 'blur(70px)', animation: 'wlc2-orb 18s ease-in-out -4s infinite reverse' }} />
-          </div>
-
-          <div className="wlc2-loader-card relative flex w-full max-w-sm flex-col items-center gap-6 rounded-[26px] p-6 sm:p-7 animate-scale-in">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
-
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full opacity-70 blur-xl"
-                   style={{ background: 'conic-gradient(from 0deg, hsl(var(--primary)), hsl(300 85% 60%), hsl(220 90% 60%), hsl(var(--primary)))', animation: 'spin 4s linear infinite' }} />
-              <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-white/25 bg-white/[0.08]">
-                <img src={logo} alt="" className="h-10 w-10 rounded-xl object-contain" />
-              </div>
-            </div>
-
-            <div className="space-y-1.5 text-center">
-              <h2 id="as-launch-title" className="text-lg sm:text-xl font-black tracking-tight">
-                <span className="text-primary">ANIME</span>SAVI
-              </h2>
-              <p className="flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-foreground/70">
-                <span className="h-1 w-1 rounded-full bg-primary animate-pulse" aria-hidden="true" />
-                <span aria-hidden="true">{launchBeat}</span>
-              </p>
-              <p id="as-launch-status" role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-                {launchError ? launchError : `${launchBeat}. ${Math.floor(launchProgress)} percent complete.`}
-              </p>
-            </div>
-
-            <div className="w-full space-y-2">
-              <div className="relative h-1.5 w-full overflow-hidden rounded-full border border-white/10 bg-white/[0.08]">
-                <div
-                  className="absolute inset-y-0 left-0 rounded-full"
-                  style={{
-                    width: `${launchProgress}%`,
-                    background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(300 85% 65%), hsl(220 90% 65%), hsl(var(--primary)))',
-                    backgroundSize: '300% 100%',
-                    animation: 'wlc2-shimmer 2.4s linear infinite',
-                    boxShadow: '0 0 14px hsl(var(--primary)/0.6)',
-                    transition: 'width 200ms ease-out',
-                  }}
-                />
-              </div>
-              <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider tabular-nums text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Connected
-                </span>
-                <span className="text-foreground/80">{Math.floor(launchProgress)}%</span>
-              </div>
-            </div>
-
-            {launchError && (
-              <div className="w-full space-y-3 rounded-2xl border border-destructive/35 bg-destructive/10 p-4 animate-fade-in">
-                <p className="text-left text-xs leading-snug text-foreground/90">{launchError}</p>
-                <div className="flex gap-2">
-                  <button onClick={retryLaunch} className="h-9 flex-1 rounded-xl bg-primary text-xs font-bold text-primary-foreground hover:bg-primary/90">Retry</button>
-                  <button onClick={() => { setIsLaunching(false); setLaunchError(null); }}
-                          className="h-9 flex-1 rounded-xl border border-white/20 bg-white/5 text-xs font-semibold hover:bg-white/10">Cancel</button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      <style>{`
-        @keyframes wlc2-marquee { 0% { transform: translateX(0) } 100% { transform: translateX(-33.333%) } }
-        @keyframes wlc2-shimmer { 0% { background-position: 0% 50% } 100% { background-position: 300% 50% } }
-        @keyframes wlc2-orb     { 0%,100% { transform: translate(0,0) scale(1) } 50% { transform: translate(4%, -3%) scale(1.06) } }
-      `}</style>
+      </div>}
     </div>
   );
 }
