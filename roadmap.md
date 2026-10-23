@@ -1,3 +1,6 @@
+- [ ] Refresh What's New and Release Notes without changing version or release content.
+- [ ] Refresh Report, Telegram contact/promotion, navigation and footer presentation.
+- [ ] Simplify homepage sharing and verify desktop/mobile interactions.
 - [x] Repair Settings layout and remove Settings from hamburger options.
 - [x] Redesign Welcome with real catalogue artwork and lightweight glass.
 - [x] Keep only Type, Sort and Genres in Browse filters; refresh the pictured catalogue pages.
