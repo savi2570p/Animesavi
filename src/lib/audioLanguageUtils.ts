@@ -339,9 +339,14 @@ export function getSubtitleTrackLabel(
 export function getPreferredAudioTrack(
   tracks: Array<{ label: string; lang: string; index: number }>,
   animeTitle?: string,
-  userPreference?: string
+  userPreference?: string,
+  isSubOnly = false
 ): number {
   if (tracks.length === 0) return 0;
+  if (isSubOnly) {
+    const japanese = tracks.find(track => ['ja', 'jpn', 'jap'].includes(normalizeLanguageCode(track.lang)) || detectLanguageFromLabel(track.label)?.code === 'ja');
+    return japanese?.index ?? tracks[0].index;
+  }
   
   // Check for saved user preference from localStorage
   const savedPreference = typeof window !== 'undefined' 
@@ -392,6 +397,13 @@ export function getPreferredAudioTrack(
   
   // Fallback to first track
   return 0;
+}
+
+/** Content language when a browser exposes no native track metadata. */
+export function getContentAudioLabel(isSubOnly: boolean, language?: string): string {
+  if (isSubOnly) return '🇯🇵 Japanese';
+  const code = normalizeLanguageCode(language);
+  return code !== 'und' ? getAudioTrackLabel('', code, 0) : 'Audio';
 }
 
 /**

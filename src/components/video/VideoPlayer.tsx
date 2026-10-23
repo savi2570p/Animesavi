@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import Hls from 'hls.js';
 import { getHLSConfig } from '@/lib/videoUtils';
 import { ANIME_QUALITY_OVERRIDES } from '@/lib/audioLanguageUtils';
+import { getContentAudioLabel } from '@/lib/audioLanguageUtils';
 import {
   Play,
   Pause,
@@ -115,6 +116,7 @@ interface VideoPlayerProps {
   activeServer: ServerType;
   isLoading?: boolean;
   audioLanguage?: string;
+  isSubOnly?: boolean;
   captionsUrl?: string | null;
   isEncoding?: boolean;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
@@ -249,6 +251,7 @@ export function VideoPlayer({
   activeServer,
   isLoading = false,
   audioLanguage = 'original',
+  isSubOnly = false,
   captionsUrl,
   isEncoding = false,
   onTimeUpdate,
@@ -633,7 +636,7 @@ export function VideoPlayer({
               setAudioTracks(tracks);
               
               // Use advanced preference-based selection (Hindi default)
-              const preferredIndex = getPreferredAudioTrack(trackInfoForSelection, animeTitle);
+              const preferredIndex = getPreferredAudioTrack(trackInfoForSelection, animeTitle, undefined, isSubOnly);
               console.log('Safari preferred audio track:', preferredIndex, 'for anime:', animeTitle);
               
               if (preferredIndex >= 0 && nativeAudioTracks[preferredIndex]) {
@@ -710,7 +713,7 @@ export function VideoPlayer({
                   lang: t.lang || '', 
                   index: i 
                 })),
-                animeTitle
+                animeTitle, undefined, isSubOnly
               );
               
               console.log('Preferred audio track:', preferredIndex, 'for anime:', animeTitle);
@@ -922,7 +925,7 @@ export function VideoPlayer({
             setAudioTracks(tracks);
             
             // Use advanced preference-based selection (Hindi default)
-            const preferredIndex = getPreferredAudioTrack(trackInfoForSelection, animeTitle);
+            const preferredIndex = getPreferredAudioTrack(trackInfoForSelection, animeTitle, undefined, isSubOnly);
             console.log('Native preferred audio track:', preferredIndex, 'for anime:', animeTitle);
             
             if (preferredIndex >= 0 && nativeAudioTracks[preferredIndex]) {
@@ -977,7 +980,7 @@ export function VideoPlayer({
         hlsRef.current = null;
       }
     };
-  }, [effectiveVideoUrl, activeServer, animeTitle, lockedQuality]);
+  }, [effectiveVideoUrl, activeServer, animeTitle, lockedQuality, isSubOnly]);
 
   // Advanced multilingual audio label detection
   // Uses centralized utility for consistent language detection across the app
@@ -2010,7 +2013,7 @@ export function VideoPlayer({
 
   const getCurrentAudioLabel = () => {
     const track = audioTracks.find(t => t.id === currentAudioTrack);
-    return track?.label || '🇮🇳 Hindi';
+    return track?.label || getContentAudioLabel(isSubOnly, audioLanguage);
   };
 
   const getCurrentSubtitleLabel = () => {
@@ -2286,7 +2289,7 @@ export function VideoPlayer({
               })
             ) : (
               <div className="flex items-center justify-between gap-4 w-full px-2 py-2 bg-primary/20 rounded-sm">
-                <span className="text-sm">🇮🇳 Hindi</span>
+                <span className="text-sm">{getContentAudioLabel(isSubOnly, audioLanguage)}</span>
                 <Check className="w-4 h-4 text-primary" />
               </div>
             )}
