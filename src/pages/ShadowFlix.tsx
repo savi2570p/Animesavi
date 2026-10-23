@@ -22,20 +22,7 @@ import { buildEmbedUrl } from '@/lib/embedLink';
 const SHADOW_FLIX_PASSWORD = 'SHADOW X SAVI';
 const GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Thriller', 'Mystery', 'Supernatural'];
 
-const PLAYER_THEMES = [
-  { name: 'Netflix Red', accent: '#e50914', bg: 'rgba(229,9,20,0.1)' },
-  { name: 'Electric Blue', accent: '#0ea5e9', bg: 'rgba(14,165,233,0.1)' },
-  { name: 'Emerald', accent: '#10b981', bg: 'rgba(16,185,129,0.1)' },
-  { name: 'Purple Haze', accent: '#a855f7', bg: 'rgba(168,85,247,0.1)' },
-  { name: 'Gold', accent: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-  { name: 'Hot Pink', accent: '#ec4899', bg: 'rgba(236,72,153,0.1)' },
-];
-
-const PLAYER_THEME_MAP = new Map(PLAYER_THEMES.map((theme) => [theme.name, theme]));
-
-function getThemeByKey(themeKey?: string | null) {
-  return PLAYER_THEME_MAP.get(themeKey || '') || PLAYER_THEMES[0];
-}
+const PLAYER_THEMES = [{ name: 'Default', accent: 'hsl(var(--primary))', bg: 'hsl(var(--primary) / .1)' }];
 
 interface ShadowFlixItem {
   id: string;
@@ -74,32 +61,11 @@ function incrementWatchCount(id: string) {
 }
 
 function getPlayerTheme(): typeof PLAYER_THEMES[0] {
-  const saved = localStorage.getItem('sf_player_theme');
-  if (saved) { try { return JSON.parse(saved); } catch { /* */ } }
   return PLAYER_THEMES[0];
 }
-function savePlayerTheme(theme: typeof PLAYER_THEMES[0]) {
-  localStorage.setItem('sf_player_theme', JSON.stringify(theme));
-}
-
-async function fetchPlayerThemePreference(userId: string) {
-  const { data, error }: { data: { theme_key?: string | null } | null; error: any } = await supabase
-    .from('shadow_flix_player_preferences' as any)
-    .select('theme_key')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (error || !data?.theme_key) return null;
-  return getThemeByKey(data.theme_key);
-}
-
-async function persistPlayerThemePreference(userId: string, theme: typeof PLAYER_THEMES[0]) {
-  if (!userId) return;
-  await supabase.from('shadow_flix_player_preferences' as any).upsert({
-    user_id: userId,
-    theme_key: theme.name,
-  } as any, { onConflict: 'user_id' });
-}
+function savePlayerTheme(_theme: typeof PLAYER_THEMES[0]) { /* Theme customization removed. */ }
+async function fetchPlayerThemePreference(_userId: string) { return null; }
+async function persistPlayerThemePreference(_userId: string, _theme: typeof PLAYER_THEMES[0]) { /* Theme customization removed. */ }
 
 function generateShareFilename(title: string, season?: number | null, episode?: number | null) {
   const clean = title.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '_');
@@ -447,20 +413,6 @@ function ShadowFlixPlayer({
                 </div>
                 <div className="flex items-center gap-2 relative">
                   <div className="relative">
-                    <button onClick={() => { setShowThemePicker(!showThemePicker); setShowSettings(false); }} className="text-white hover:opacity-80 p-1" title="Customize player color"><Palette className="w-5 h-5" /></button>
-                    {showThemePicker && (
-                      <div className="absolute bottom-full right-0 mb-2 bg-[#1a1a1a] border border-white/10 rounded-lg p-2 min-w-[160px] shadow-xl" onClick={e => e.stopPropagation()}>
-                        <p className="text-white/50 text-[10px] uppercase tracking-wider mb-1 px-2">Player Color</p>
-                        {PLAYER_THEMES.map(t => (
-                          <button key={t.name} onClick={() => handleThemeChange(t)}
-                            className={`flex items-center gap-2 w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${theme.name === t.name ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
-                            <div className="w-3 h-3 rounded-full shrink-0" style={{ background: t.accent }} />{t.name}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="relative">
                     <button onClick={() => { setShowSettings(!showSettings); setShowThemePicker(false); }} className="text-white hover:opacity-80 p-1"><Settings className="w-5 h-5" /></button>
                     {showSettings && (
                       <div className="absolute bottom-full right-0 mb-2 bg-[#1a1a1a] border border-white/10 rounded-lg p-2 min-w-[140px] shadow-xl" onClick={e => e.stopPropagation()}>
@@ -502,22 +454,6 @@ function ShadowFlixPlayer({
               </h3>
             </div>
             <div className="flex items-center gap-2 relative">
-              <div className="relative">
-                <button onClick={() => setShowThemePicker(!showThemePicker)} className="p-2 rounded-full hover:bg-white/10" title="Customize player color">
-                  <Palette className="w-4 h-4 text-white" />
-                </button>
-                {showThemePicker && (
-                  <div className="absolute top-full right-0 mt-2 bg-[#1a1a1a] border border-white/10 rounded-lg p-2 min-w-[160px] shadow-xl z-30" onClick={e => e.stopPropagation()}>
-                    <p className="text-white/50 text-[10px] uppercase tracking-wider mb-1 px-2">Player Color</p>
-                    {PLAYER_THEMES.map(t => (
-                      <button key={t.name} onClick={() => handleThemeChange(t)}
-                        className={`flex items-center gap-2 w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${theme.name === t.name ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}>
-                        <div className="w-3 h-3 rounded-full shrink-0" style={{ background: t.accent }} />{t.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
               <button onClick={toggleFullscreen} className="p-2 rounded-full hover:bg-white/10" title="Fullscreen (F)">
                 {isFullscreen ? <Minimize className="w-4 h-4 text-white" /> : <Maximize className="w-4 h-4 text-white" />}
               </button>
