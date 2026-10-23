@@ -3667,7 +3667,7 @@ html.perf-low .welcome-v5-search, html.perf-medium .welcome-v5-search { backdrop
   --utility-fixed: 270 70% 78%;
 }
 .utility-overlay-v6 { background: hsl(var(--background) / .78); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding-top: max(1rem, env(safe-area-inset-top)); padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
-.utility-glass-v6 { color: hsl(var(--foreground)); background: var(--utility-glass-fill) !important; border: 1px solid hsl(var(--border)); border-radius: 8px; box-shadow: var(--utility-glass-shadow); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.utility-glass-v6 { color: hsl(var(--foreground)); background: var(--utility-glass-fill) hsl(var(--card)) !important; border: 1px solid hsl(var(--border)); border-radius: 8px; box-shadow: var(--utility-glass-shadow); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
 .utility-header-v6 { background: var(--utility-header-fill); }
 .utility-icon-v6 { background: var(--catalogue-v5-surface); border: 1px solid hsl(var(--border)); box-shadow: var(--catalogue-v5-edge); }
 .utility-telegram-icon-v6 { color: hsl(var(--utility-telegram)); }
@@ -3695,6 +3695,7 @@ html.perf-low .welcome-v5-search, html.perf-medium .welcome-v5-search { backdrop
 .nav-v6-link[aria-current="page"] { box-shadow: inset 0 -2px 0 hsl(var(--primary)); }
 .footer-v6 { background: var(--catalogue-v5-surface); }
 .footer-v6 a { overflow-wrap: anywhere; }
+.footer-v6 > .container > div:last-child { padding-right: 9rem; }
 @media (max-width: 640px) { .update-v6 { max-width: 360px; } .update-v6 > header { padding: 1rem; } .update-v6-list { padding: 0 1rem; } .update-v6-list > div { padding: .7rem 0; } .telegram-promo-v6 { gap: .5rem; } }
 html.perf-low .utility-glass-v6, html.perf-medium .utility-glass-v6, html.perf-low .utility-overlay-v6, html.perf-low .nav-v6::before { backdrop-filter: none; -webkit-backdrop-filter: none; }
 @media (prefers-reduced-motion: reduce) { .utility-glass-v6 *, .utility-overlay-v6, .nav-v6 { animation: none !important; transition: none !important; } }
