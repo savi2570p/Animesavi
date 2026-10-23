@@ -268,12 +268,12 @@ export function Header() {
         <div className="container relative flex h-12 sm:h-14 items-center justify-between gap-1.5 sm:gap-4">
           {/* Logo lockup */}
           <div className="flex items-center gap-1 sm:gap-2.5 flex-shrink-0">
-            <Link to="/welcome" className="group relative flex-shrink-0" aria-label="Welcome">
+            <Link to="/welcome" className="nav-logo-v8 group relative flex-shrink-0" aria-label="Welcome">
               <span className="absolute inset-0 rounded-lg bg-primary/30 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <img
                 src={logo}
                 alt="Anime Savi"
-                className="relative h-6 w-6 sm:h-8 sm:w-8 rounded-lg object-contain ring-1 ring-border/50 group-hover:ring-primary/50 group-hover:scale-110 transition-all duration-200"
+                className="relative block h-6 w-6 sm:h-8 sm:w-8 rounded-lg object-contain ring-1 ring-border/50 group-hover:ring-primary/50 transition-colors duration-200"
               />
             </Link>
             {/* Mobile Home Button */}
