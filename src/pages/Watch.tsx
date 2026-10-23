@@ -90,6 +90,7 @@ interface Anime {
   uploader_id: string | null;
   is_crunchyroll?: boolean;
   is_sub_only?: boolean | null;
+  is_eng_dub?: boolean | null;
 }
 
 interface CommentLike {

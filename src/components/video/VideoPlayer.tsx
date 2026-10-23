@@ -2291,7 +2291,7 @@ export function VideoPlayer({
               })
             ) : (
               <div className="flex items-center justify-between gap-4 w-full px-2 py-2 bg-primary/20 rounded-sm">
-                <span className="text-sm">{getContentAudioLabel(isSubOnly, audioLanguage)}</span>
+                <span className="text-sm">{getContentAudioLabel(isSubOnly, audioLanguage, isHindiDub)}</span>
                 <Check className="w-4 h-4 text-primary" />
               </div>
             )}
