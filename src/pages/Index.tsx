@@ -1,10 +1,7 @@
 import { useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-import { Sparkles } from "lucide-react";
-import crunchyrollLogo from "@/assets/crunchyroll-logo.png";
-import museinLogo from "@/assets/musein-logo.jpg";
-import floxLogo from "@/assets/flox-anime-india-logo.jpg";
+import { PlatformsSection } from '@/components/home/PlatformsSection';
 import { FeaturedSlider } from "@/components/home/FeaturedSlider";
 import { ContinueWatching } from "@/components/home/ContinueWatching";
 import { RecommendedAnime } from "@/components/home/RecommendedAnime";
@@ -96,35 +93,7 @@ export default function Index() {
       {/* Continue Watching */}
       <SectionBoundary label="home:continue-watching"><ContinueWatching showOnHomeOnly={true} /></SectionBoundary>
 
-      {/* Platform chips */}
-      <section className="pt-3 md:pt-5">
-        <div className="container">
-          <div className="flex items-center gap-2 md:gap-3 overflow-x-auto snap-row -mx-1 px-1 pb-1">
-            <div className="hidden sm:flex items-center gap-1.5 text-xs uppercase tracking-widest text-muted-foreground pr-2 shrink-0">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              Platforms
-            </div>
-            {[
-              { to: "/crunchy", src: crunchyrollLogo, label: "Crunchy", round: false },
-              { to: "/musein", src: museinLogo, label: "MuseIN", round: true },
-              { to: "/flox", src: floxLogo, label: "Flox +", round: true },
-            ].map((p) => (
-              <Link
-                key={p.label}
-                to={p.to}
-                className="lg-chip shrink-0 inline-flex items-center gap-2 px-3.5 md:px-4 py-2 rounded-full text-sm font-semibold text-foreground/90 transition-transform duration-300 hover:text-primary hover:scale-[1.04] active:scale-95"
-              >
-                <img
-                  src={p.src}
-                  alt={p.label}
-                  className={`h-5 w-5 object-cover ${p.round ? "rounded-full" : "w-auto object-contain"}`}
-                />
-                {p.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+      <PlatformsSection />
 
       <hr className="lg-divider" />
 

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import Hls from 'hls.js';
 import { getHLSConfig } from '@/lib/videoUtils';
 import { ANIME_QUALITY_OVERRIDES } from '@/lib/audioLanguageUtils';
+import { getContentAudioLabel } from '@/lib/audioLanguageUtils';
 import {
   Play,
   Pause,
@@ -51,7 +52,6 @@ import {
 import { toast } from 'sonner';
 import { DownloadVerificationDialog } from './DownloadVerificationDialog';
 import { pauseForDownload } from '@/lib/downloadAudio';
-import { ThemePickerButton, buildThemeStyle, type PlayerThemeKey } from './PlayerThemePicker';
 import { QualityOverlay } from './QualityOverlay';
 import { BufferingIndicator } from './BufferingIndicator';
 import { VolumeSlider } from './VolumeSlider';
@@ -116,6 +116,7 @@ interface VideoPlayerProps {
   activeServer: ServerType;
   isLoading?: boolean;
   audioLanguage?: string;
+  isSubOnly?: boolean;
   captionsUrl?: string | null;
   isEncoding?: boolean;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
@@ -250,6 +251,7 @@ export function VideoPlayer({
   activeServer,
   isLoading = false,
   audioLanguage = 'original',
+  isSubOnly = false,
   captionsUrl,
   isEncoding = false,
   onTimeUpdate,
@@ -338,21 +340,6 @@ export function VideoPlayer({
   // Settings menu state
   const [settingsMenu, setSettingsMenu] = useState<SettingsMenu>('main');
   const [settingsOpen, setSettingsOpen] = useState(false);
-  // Player theme — persisted per-browser in localStorage
-  const [playerTheme, _setPlayerTheme] = useState<PlayerThemeKey>(() => {
-    if (typeof window === 'undefined') return 'classic';
-    try {
-      const saved = window.localStorage.getItem('player_theme') as PlayerThemeKey | null;
-      return saved || 'classic';
-    } catch {
-      return 'classic';
-    }
-  });
-  const setPlayerTheme = (k: PlayerThemeKey) => {
-    _setPlayerTheme(k);
-    try { window.localStorage.setItem('player_theme', k); } catch {}
-  };
-  
   // Keyboard shortcuts info state
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   
@@ -649,7 +636,7 @@ export function VideoPlayer({
               setAudioTracks(tracks);
               
               // Use advanced preference-based selection (Hindi default)
-              const preferredIndex = getPreferredAudioTrack(trackInfoForSelection, animeTitle);
+              const preferredIndex = getPreferredAudioTrack(trackInfoForSelection, animeTitle, undefined, isSubOnly);
               console.log('Safari preferred audio track:', preferredIndex, 'for anime:', animeTitle);
               
               if (preferredIndex >= 0 && nativeAudioTracks[preferredIndex]) {
@@ -726,7 +713,7 @@ export function VideoPlayer({
                   lang: t.lang || '', 
                   index: i 
                 })),
-                animeTitle
+                animeTitle, undefined, isSubOnly
               );
               
               console.log('Preferred audio track:', preferredIndex, 'for anime:', animeTitle);
@@ -938,7 +925,7 @@ export function VideoPlayer({
             setAudioTracks(tracks);
             
             // Use advanced preference-based selection (Hindi default)
-            const preferredIndex = getPreferredAudioTrack(trackInfoForSelection, animeTitle);
+            const preferredIndex = getPreferredAudioTrack(trackInfoForSelection, animeTitle, undefined, isSubOnly);
             console.log('Native preferred audio track:', preferredIndex, 'for anime:', animeTitle);
             
             if (preferredIndex >= 0 && nativeAudioTracks[preferredIndex]) {
@@ -993,7 +980,7 @@ export function VideoPlayer({
         hlsRef.current = null;
       }
     };
-  }, [effectiveVideoUrl, activeServer, animeTitle, lockedQuality]);
+  }, [effectiveVideoUrl, activeServer, animeTitle, lockedQuality, isSubOnly]);
 
   // Advanced multilingual audio label detection
   // Uses centralized utility for consistent language detection across the app
@@ -2026,7 +2013,7 @@ export function VideoPlayer({
 
   const getCurrentAudioLabel = () => {
     const track = audioTracks.find(t => t.id === currentAudioTrack);
-    return track?.label || '🇮🇳 Hindi';
+    return track?.label || getContentAudioLabel(isSubOnly, audioLanguage);
   };
 
   const getCurrentSubtitleLabel = () => {
@@ -2302,7 +2289,7 @@ export function VideoPlayer({
               })
             ) : (
               <div className="flex items-center justify-between gap-4 w-full px-2 py-2 bg-primary/20 rounded-sm">
-                <span className="text-sm">🇮🇳 Hindi</span>
+                <span className="text-sm">{getContentAudioLabel(isSubOnly, audioLanguage)}</span>
                 <Check className="w-4 h-4 text-primary" />
               </div>
             )}
@@ -2478,7 +2465,6 @@ export function VideoPlayer({
         paddingBottom: isFullscreen ? 'env(safe-area-inset-bottom)' : undefined,
         paddingLeft: isFullscreen ? 'env(safe-area-inset-left)' : undefined,
         paddingRight: isFullscreen ? 'env(safe-area-inset-right)' : undefined,
-        ...buildThemeStyle(playerTheme),
       }}
       onClick={handleVideoAreaClick}
       onMouseMove={handleMouseMove}
@@ -3134,13 +3120,6 @@ export function VideoPlayer({
                       <Download className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                     {/* CC button removed from X-PLUS server per design request */}
-                    <ThemePickerButton
-                      value={playerTheme}
-                      onChange={setPlayerTheme}
-                      iconClassName={isIOS ? 'w-4 h-4' : 'w-5 h-5 md:w-6 md:h-6'}
-                      containerEl={containerRef.current}
-                      buttonClassName={flatPlayerControlButtonClass}
-                    />
                     <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
                       <DropdownMenuTrigger asChild>
                         <button 
@@ -3229,13 +3208,6 @@ export function VideoPlayer({
                     <Download className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
                   </button>
                 )}
-                <ThemePickerButton
-                  value={playerTheme}
-                  onChange={setPlayerTheme}
-                  iconClassName={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"}
-                  containerEl={containerRef.current}
-                  buttonClassName={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`}
-                />
                 <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
                   <DropdownMenuTrigger asChild>
                     <button 
@@ -3489,13 +3461,6 @@ export function VideoPlayer({
                     <Download className={isIOS ? "w-4 h-4" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
                   </button>
                   {/* CC button removed from X-PLUS server per design request */}
-                  <ThemePickerButton
-                    value={playerTheme}
-                    onChange={setPlayerTheme}
-                    iconClassName={isIOS ? 'w-4 h-4' : 'w-4.5 h-4.5 md:w-5 md:h-5'}
-                    containerEl={containerRef.current}
-                    buttonClassName={flatPlayerControlButtonClass}
-                  />
                   <DropdownMenu 
                     modal={false} 
                     open={settingsOpen}
@@ -3620,13 +3585,6 @@ export function VideoPlayer({
                 </button>
               )}
               {/* Settings Menu */}
-              <ThemePickerButton
-                value={playerTheme}
-                onChange={setPlayerTheme}
-                iconClassName={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"}
-                containerEl={containerRef.current}
-                buttonClassName={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`}
-              />
               <DropdownMenu 
                 modal={false} 
                 open={settingsOpen}

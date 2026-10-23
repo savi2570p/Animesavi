@@ -89,6 +89,7 @@ interface Anime {
   type: string | null;
   uploader_id: string | null;
   is_crunchyroll?: boolean;
+  is_sub_only?: boolean | null;
 }
 
 interface CommentLike {
@@ -1281,6 +1282,7 @@ export default function Watch() {
               activeServer={activeServer}
               isLoading={false}
               audioLanguage={episode.audio_language || undefined}
+              isSubOnly={anime?.is_sub_only ?? false}
               captionsUrl={episode.captions_url}
               isEncoding={isVideoEncoding}
               onTimeUpdate={updateWatchProgress}
