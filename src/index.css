@@ -3526,6 +3526,17 @@ html.perf-low .catalogue-fill { display: none; }
 .pending-status-processing { color: hsl(var(--primary)); }
 .pending-status-encoding { color: hsl(var(--accent-foreground)); }
 .pending-status-overdue { color: hsl(var(--destructive)); }
+:root { --detail-v3-overlay: linear-gradient(0deg, hsl(var(--background)) 2%, hsl(var(--background) / .85) 32%, hsl(var(--background) / .1) 85%), linear-gradient(90deg, hsl(var(--background) / .55), transparent 80%); }
+.detail-v3-hero { height: 620px; max-height: 85svh; min-height: 460px; overflow: hidden; }
+.detail-v3-scrim { background: var(--detail-v3-overlay); }
+.detail-v3-actions > button, .detail-v3-actions > a { height: 40px; border-radius: 8px; }
+.detail-v3-episodes [class*="rounded"] { border-radius: 8px; }
+@media (max-width: 767px) {
+  .detail-v3-hero { height: auto; min-height: 460px; max-height: none; }
+  .detail-v3-hero > .container { min-height: 460px; }
+  .detail-v3-actions { gap: .5rem; }
+  .detail-v3-actions > button, .detail-v3-actions > a { max-width: 100%; }
+}
 @media (max-width: 767px) {
   .hero-v3 { height: auto; min-height: 0; aspect-ratio: 16 / 9; }
   .hero-v3-media { position: absolute; inset: 0; overflow: hidden; }
