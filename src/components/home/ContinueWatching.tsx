@@ -15,6 +15,7 @@ interface Anime {
   id: string;
   title: string;
   cover_image: string | null;
+  banner_image: string | null;
 }
 
 interface Season {
@@ -68,7 +69,7 @@ const ContinueWatchingCard = memo(function ContinueWatchingCard({
 }: ContinueWatchingCardProps) {
   const progressPct = Math.min(Math.max(item.progress || 0, 0), 100);
   const timeLeft = formatTimeLeft(item.progress, item.episode.duration);
-  const raw = item.episode.thumbnail || item.anime.cover_image || '/placeholder.svg';
+  const raw = item.episode.thumbnail || item.anime.banner_image || item.anime.cover_image || '/placeholder.svg';
 
   return <div className={`catalogue-glass cw-card rounded-xl overflow-hidden w-[280px] md:w-[320px] shrink-0 group ${isFading ? 'cw-tile-fading' : ''}`}>
     <Link to={`/watch/${item.episode.id}`} aria-label={`Resume ${item.anime.title} episode ${item.episode.episode_number}`} className="block">
@@ -125,7 +126,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
       // 1. Resumable rows (in-progress) — keep the existing behaviour.
       const { data, error } = await supabase
         .from('watch_history')
-        .select('id, progress, completed, completed_at, last_position, duration, watched_at, anime:anime_id(id,title,cover_image,status,is_eng_dub,is_sub_only,genres), episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
+        .select('id, progress, completed, completed_at, last_position, duration, watched_at, anime:anime_id(id,title,cover_image,banner_image,status,is_eng_dub,is_sub_only,genres), episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
         .eq('user_id', user.id)
         .or('completed.is.null,completed.eq.false')
         .order('watched_at', { ascending: false })
@@ -211,7 +212,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
 
           const animeMeta = await supabase
             .from('anime')
-            .select('id, title, cover_image, status, is_eng_dub, is_sub_only')
+            .select('id, title, cover_image, banner_image, status, is_eng_dub, is_sub_only')
             .in('id', [...newestPerAnime.keys()]);
           const animeMap = new Map((animeMeta.data ?? []).map((a: any) => [a.id, a]));
 
