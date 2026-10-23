@@ -2,10 +2,12 @@ import { createContext, useContext, useState, useCallback, useEffect, ReactNode 
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchTokenAccessFromDB, fetchTokenSystemStatus, isSuperAdmin } from '@/components/AccessBanner';
+import { APP_VERSION } from '@/data/releaseNotes';
 
 type PopupType = 'expired' | 'whatsNew' | 'welcome';
 
-const NOTICE_VERSION = 'v31';
+// Tied to the app version so every new release re-shows What's New to returning users.
+const NOTICE_VERSION = APP_VERSION;
 
 interface PopupQueueContextType {
   activePopup: PopupType | null;
