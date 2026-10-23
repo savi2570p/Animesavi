@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { User, Mail, Lock, Palette, Camera, Upload, Link as LinkIcon, Crown, ShieldAlert } from 'lucide-react';
@@ -288,114 +288,34 @@ export default function Profile() {
     : '—';
 
   return (
-    <div className="relative min-h-screen pb-16">
-      {/* ─── Cinematic hero ─── */}
-      <div className="relative h-[260px] md:h-[320px] overflow-hidden">
-        {/* Blurred avatar backdrop */}
-        {avatarUrl ? (
-          <img
-            src={avatarUrl}
-            alt=""
-            aria-hidden
-            className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-background" />
-        )}
-        {/* Color washes */}
-        <div className="absolute -top-24 -left-20 w-[28rem] h-[28rem] bg-primary/25 rounded-full blur-[140px]" />
-        <div className="absolute -bottom-24 right-10 w-[22rem] h-[22rem] bg-rose-500/20 rounded-full blur-[120px]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/70 to-background" />
-
-        {/* Avatar + name */}
-        <div className="container relative h-full flex items-end pb-6">
-          <div className="flex items-end gap-5 md:gap-7 w-full">
-            <div className="relative shrink-0 group">
-              <div className="absolute inset-0 rounded-full bg-primary/40 blur-2xl scale-110 opacity-60" />
-              <div className="relative h-24 w-24 md:h-32 md:w-32 rounded-full p-[3px] bg-gradient-to-br from-primary via-rose-500 to-primary shadow-2xl">
-                <Avatar className="h-full w-full ring-2 ring-background/80">
-                  <AvatarImage src={avatarUrl} alt="Avatar" className="object-cover" />
-                  <AvatarFallback className="bg-gradient-to-br from-primary to-rose-600 text-primary-foreground text-3xl md:text-4xl font-heading font-black">
-                    {initial}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-              {isPremium && (
-                <div className="absolute -top-1 -right-1 h-9 w-9 rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 border-2 border-background flex items-center justify-center shadow-lg">
-                  <Crown className="h-4 w-4 text-white animate-crown-shimmer" />
-                </div>
-              )}
-              {/* Quick camera button overlay */}
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploadingAvatar}
-                title="Change photo"
-                className="absolute -bottom-1 -right-1 h-9 w-9 rounded-full bg-background/95 hover:bg-background border-2 border-background shadow-lg flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
-              >
-                <Camera className="h-4 w-4 text-foreground" />
-              </button>
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                {isPremium && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-black uppercase tracking-[0.15em] shadow-md">
-                    <Crown className="h-3 w-3" /> Premium
-                  </span>
-                )}
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-card/70 border border-border/50 backdrop-blur-sm text-muted-foreground uppercase tracking-wider">
-                  Member · {memberSince}
-                </span>
-              </div>
-              <h1 className="text-2xl md:text-4xl font-heading font-black leading-tight truncate">
-                {username || user.email?.split('@')[0] || 'Welcome'}
-              </h1>
-              <p className="text-xs md:text-sm text-muted-foreground truncate flex items-center gap-1.5 mt-1">
-                <Mail className="h-3.5 w-3.5 shrink-0" />
-                {email}
-              </p>
-            </div>
+    <div className="account-v4 min-h-screen pb-16">
+      <header className="account-v4-header border-b border-border">
+        <div className="container max-w-5xl py-8 md:py-12 flex flex-wrap items-center gap-5">
+          <div className="relative shrink-0">
+            <Avatar className="h-20 w-20 md:h-28 md:w-28 ring-2 ring-border ring-offset-4 ring-offset-background">
+              <AvatarImage src={avatarUrl} alt="Profile photo" className="object-cover" />
+              <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-bold">{initial}</AvatarFallback>
+            </Avatar>
+            <Button variant="glass" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isUploadingAvatar} title="Change photo" aria-label="Change photo" className="absolute -bottom-2 -right-2 h-8 w-8 rounded-lg"><Camera /></Button>
+          </div>
+          <div className="flex-1 min-w-0 space-y-2">
+            <p className="text-xs text-muted-foreground">My account · Member since {memberSince}</p>
+            <h1 className="text-2xl md:text-4xl font-bold break-words">{username || user.email?.split('@')[0] || 'My Profile'}</h1>
+            <p className="text-sm text-muted-foreground break-all">{email}</p>
+            {isPremium && <span className="catalogue-chip inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs"><Crown className="h-3.5 w-3.5 text-primary animate-crown-shimmer" />Premium</span>}
           </div>
         </div>
-      </div>
+      </header>
+      <div className="container max-w-5xl py-6 md:py-8">
+        <nav aria-label="Account shortcuts" className="flex flex-wrap gap-2 pb-6 border-b border-border">
+          <Button variant="glass" onClick={() => navigate('/settings')}><Palette />Settings</Button>
+          <Button variant="glass" onClick={() => navigate('/stats')}><User />Watch Stats</Button>
+          <Button variant="glass" onClick={() => navigate('/watchlist')}><Crown />Watch List</Button>
+        </nav>
+        <div className="account-v4-sections">
 
-      <div className="container max-w-3xl -mt-4">
-        {/* Quick action tiles */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3 mb-8">
-          <button
-            onClick={() => navigate('/settings')}
-            className="group flex items-center gap-3 p-3 md:p-4 rounded-xl bg-card/70 backdrop-blur-md border border-border/50 hover:border-primary/40 hover:bg-card transition-all hover:-translate-y-0.5"
-          >
-            <div className="p-2 rounded-lg bg-primary/15 group-hover:bg-primary/25 transition-colors">
-              <Palette className="h-4 w-4 text-primary" />
-            </div>
-            <span className="text-xs md:text-sm font-semibold text-left">Settings</span>
-          </button>
-          <button
-            onClick={() => navigate('/stats')}
-            className="group flex items-center gap-3 p-3 md:p-4 rounded-xl bg-card/70 backdrop-blur-md border border-border/50 hover:border-primary/40 hover:bg-card transition-all hover:-translate-y-0.5"
-          >
-            <div className="p-2 rounded-lg bg-rose-500/15 group-hover:bg-rose-500/25 transition-colors">
-              <User className="h-4 w-4 text-rose-400" />
-            </div>
-            <span className="text-xs md:text-sm font-semibold text-left">Watch Stats</span>
-          </button>
-          <button
-            onClick={() => navigate('/watchlist')}
-            className="col-span-2 md:col-span-1 group flex items-center gap-3 p-3 md:p-4 rounded-xl bg-card/70 backdrop-blur-md border border-border/50 hover:border-primary/40 hover:bg-card transition-all hover:-translate-y-0.5"
-          >
-            <div className="p-2 rounded-lg bg-amber-500/15 group-hover:bg-amber-500/25 transition-colors">
-              <Crown className="h-4 w-4 text-amber-400" />
-            </div>
-            <span className="text-xs md:text-sm font-semibold text-left">Watch List</span>
-          </button>
-        </div>
-
-        <div className="space-y-5">
           {/* ─── Profile Information ─── */}
-          <Card className="overflow-hidden border-border/50 bg-card/60 backdrop-blur-md">
-            <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+          <section className="account-v4-section">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <div className="p-1.5 rounded-md bg-primary/15">
@@ -403,11 +323,11 @@ export default function Profile() {
                 </div>
                 Profile Information
               </CardTitle>
-              <CardDescription>How others see you across AnimeSavi.</CardDescription>
+              
             </CardHeader>
             <CardContent className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-xs uppercase tracking-wider text-muted-foreground">
+                <Label htmlFor="username" className="text-xs text-muted-foreground">
                   Display Name
                 </Label>
                 <Input
@@ -421,13 +341,13 @@ export default function Profile() {
 
               {/* Profile Picture Upload */}
               <div className="space-y-2">
-                <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+                <Label className="text-xs text-muted-foreground">
                   Profile Picture
                 </Label>
                 <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/30 border border-border/40">
                   <Avatar className="h-16 w-16 ring-2 ring-primary/30">
                     <AvatarImage src={avatarUrl} alt="Avatar" />
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-rose-600 text-primary-foreground text-xl font-bold">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
                       {initial}
                     </AvatarFallback>
                   </Avatar>
@@ -458,7 +378,7 @@ export default function Profile() {
 
               {/* Avatar URL Input */}
               <div className="space-y-2">
-                <Label htmlFor="avatar" className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Label htmlFor="avatar" className="text-xs text-muted-foreground flex items-center gap-1.5">
                   <LinkIcon className="h-3 w-3" />
                   Or paste an image URL
                 </Label>
@@ -474,20 +394,19 @@ export default function Profile() {
               <Button
                 onClick={handleUpdateProfile}
                 disabled={isUpdatingProfile}
-                className="anime-button w-full md:w-auto"
+                className="w-full md:w-auto"
               >
                 {isUpdatingProfile ? 'Saving…' : 'Save Changes'}
               </Button>
             </CardContent>
-          </Card>
+          </section>
 
           {/* ─── Email ─── */}
-          <Card className="overflow-hidden border-border/50 bg-card/60 backdrop-blur-md">
-            <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-rose-500/50 to-transparent" />
+          <section className="account-v4-section">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
-                <div className="p-1.5 rounded-md bg-rose-500/15">
-                  <Mail className="h-4 w-4 text-rose-400" />
+                <div className="p-1.5 rounded-md bg-primary/10">
+                  <Mail className="h-4 w-4 text-primary" />
                 </div>
                 Email Address
               </CardTitle>
@@ -497,7 +416,7 @@ export default function Profile() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="newEmail" className="text-xs uppercase tracking-wider text-muted-foreground">
+                <Label htmlFor="newEmail" className="text-xs text-muted-foreground">
                   New Email Address
                 </Label>
                 <Input
@@ -518,15 +437,14 @@ export default function Profile() {
                 {isUpdatingEmail ? 'Sending…' : 'Update Email'}
               </Button>
             </CardContent>
-          </Card>
+          </section>
 
           {/* ─── Password ─── */}
-          <Card className="overflow-hidden border-border/50 bg-card/60 backdrop-blur-md">
-            <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+          <section className="account-v4-section">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
-                <div className="p-1.5 rounded-md bg-amber-500/15">
-                  <Lock className="h-4 w-4 text-amber-400" />
+                <div className="p-1.5 rounded-md bg-primary/10">
+                  <Lock className="h-4 w-4 text-primary" />
                 </div>
                 Change Password
               </CardTitle>
@@ -535,7 +453,7 @@ export default function Profile() {
             <CardContent className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="newPassword" className="text-xs uppercase tracking-wider text-muted-foreground">
+                  <Label htmlFor="newPassword" className="text-xs text-muted-foreground">
                     New Password
                   </Label>
                   <Input
@@ -548,7 +466,7 @@ export default function Profile() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-xs uppercase tracking-wider text-muted-foreground">
+                  <Label htmlFor="confirmPassword" className="text-xs text-muted-foreground">
                     Confirm Password
                   </Label>
                   <Input
@@ -570,16 +488,15 @@ export default function Profile() {
                 {isUpdatingPassword ? 'Updating…' : 'Change Password'}
               </Button>
             </CardContent>
-          </Card>
+          </section>
 
           {/* ─── Emergency Admin/Upload Recovery (owner only) ─── */}
           {isRecoveryAccount && (
-            <Card className="overflow-hidden border-rose-500/40 bg-card/60 backdrop-blur-md">
-              <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-rose-500 to-transparent" />
+            <section className="account-v4-section">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <div className="p-1.5 rounded-md bg-rose-500/15">
-                    <ShieldAlert className="h-4 w-4 text-rose-400" />
+                  <div className="p-1.5 rounded-md bg-primary/10">
+                    <ShieldAlert className="h-4 w-4 text-primary" />
                   </div>
                   Recover Admin / Upload Access
                 </CardTitle>
@@ -592,13 +509,13 @@ export default function Profile() {
                 <Button
                   onClick={handleRecoverAccess}
                   disabled={isRecovering}
-                  className="w-full md:w-auto bg-gradient-to-r from-rose-600 to-red-500 hover:from-rose-500 hover:to-red-400 text-white"
+                  className="w-full md:w-auto bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   <ShieldAlert className="h-4 w-4 mr-2" />
                   {isRecovering ? 'Restoring…' : 'Recover Admin / Upload'}
                 </Button>
               </CardContent>
-            </Card>
+            </section>
           )}
         </div>
       </div>
