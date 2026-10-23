@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Lock, Ban, Globe, ExternalLink, RefreshCw, Tv, Download, Zap, Crown, Sparkles, BookOpen, Home } from 'lucide-react';
+import { Lock, ExternalLink, RefreshCw, Crown, BookOpen, Home } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+
+import { Button } from '@/components/ui/button';
+import { TokenPerks } from '@/components/TokenPerks';
 
 type Language = 'en' | 'hinglish' | 'hi' | 'bn' | 'ta' | 'te';
 
@@ -173,225 +176,36 @@ export function TokenExpiredPopup() {
     }
   };
 
-  const perks = [
-    { icon: Tv, label: t.feature1, tone: 'text-sky-400 bg-sky-500/10' },
-    { icon: Ban, label: t.feature2, tone: 'text-rose-400 bg-rose-500/10' },
-    { icon: Globe, label: t.feature3, tone: 'text-emerald-400 bg-emerald-500/10' },
-    { icon: Download, label: t.feature4, tone: 'text-violet-400 bg-violet-500/10' },
-    { icon: Zap, label: t.feature5, tone: 'text-amber-400 bg-amber-500/10' },
-    { icon: Sparkles, label: t.feature6, tone: 'text-pink-400 bg-pink-500/10' },
-  ];
-
   const overlay = (
-    <div
-      className="fixed inset-0 flex items-center justify-center p-4 animate-in fade-in duration-300"
-      style={{
-        zIndex: 2147483000,
-        paddingTop: 'max(1rem, env(safe-area-inset-top))',
-        paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
-        background:
-          'radial-gradient(120% 90% at 50% 0%, hsla(270,70%,25%,0.35) 0%, hsla(0,0%,0%,0.82) 65%)',
-        backdropFilter: 'blur(26px) saturate(170%)',
-        WebkitBackdropFilter: 'blur(26px) saturate(170%)',
-      }}
-    >
-      <style>{`
-        @keyframes tep-float {
-          0%,100% { transform: translate3d(0,0,0) scale(1); }
-          50%     { transform: translate3d(0,-12px,0) scale(1.08); }
-        }
-        @keyframes tep-sheen {
-          0%   { transform: translateX(-120%) rotate(8deg); }
-          100% { transform: translateX(220%) rotate(8deg); }
-        }
-      `}</style>
-
-      <div
-        className="relative w-full max-w-md max-h-[90dvh] overflow-y-auto scrollbar-hide rounded-[28px] border border-white/20 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
-        style={{
-          background:
-            'linear-gradient(155deg, hsla(0,0%,100%,0.14) 0%, hsla(0,0%,100%,0.05) 40%, hsla(0,0%,0%,0.42) 100%)',
-          backdropFilter: 'blur(40px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(200%)',
-          boxShadow:
-            '0 40px 100px hsla(0,0%,0%,0.7), 0 0 70px hsla(270,80%,55%,0.22), inset 0 1px 0 hsla(0,0%,100%,0.28), inset 0 -1px 0 hsla(0,0%,0%,0.45)',
-          transform: 'translateZ(0)',
-        }}
-      >
-        {/* Liquid highlight sheen */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[28px]">
-          <div
-            className="absolute -top-1/2 left-0 h-[200%] w-1/3 opacity-40"
-            style={{
-              background:
-                'linear-gradient(90deg, transparent, hsla(0,0%,100%,0.18), transparent)',
-              animation: 'tep-sheen 6s ease-in-out infinite',
-            }}
-          />
-        </div>
-
-        {/* Header */}
-        <div className="relative overflow-hidden">
-          <div
-            className="absolute -top-24 -right-16 w-72 h-72 rounded-full blur-3xl"
-            style={{ background: 'hsla(270,85%,60%,0.35)', animation: 'tep-float 7s ease-in-out infinite' }}
-          />
-          <div
-            className="absolute -bottom-28 -left-20 w-72 h-72 rounded-full blur-3xl"
-            style={{ background: 'hsla(330,85%,58%,0.28)', animation: 'tep-float 9s ease-in-out infinite', animationDelay: '1.2s' }}
-          />
-
-          <div className="relative px-6 pt-8 pb-5 flex flex-col items-center text-center">
-            {/* Glass lock orb */}
-            <div className="relative">
-              <div
-                className="absolute inset-0 -m-5 rounded-full blur-2xl"
-                style={{ background: 'hsla(270,85%,60%,0.5)', animation: 'tep-float 4.5s ease-in-out infinite' }}
-              />
-              <div
-                className="relative w-[68px] h-[68px] rounded-[22px] flex items-center justify-center"
-                style={{
-                  background:
-                    'radial-gradient(circle at 32% 26%, hsla(0,0%,100%,0.55), hsla(0,0%,100%,0.06) 55%, hsla(270,80%,55%,0.35))',
-                  border: '1px solid hsla(0,0%,100%,0.35)',
-                  backdropFilter: 'blur(14px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(14px) saturate(180%)',
-                  boxShadow:
-                    'inset 0 2px 10px hsla(0,0%,100%,0.5), inset 0 -12px 22px hsla(270,80%,50%,0.4), 0 18px 45px hsla(270,80%,50%,0.35)',
-                }}
-              >
-                <Lock className="h-8 w-8 text-white drop-shadow-lg" strokeWidth={2.2} />
-              </div>
-              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-400/90 backdrop-blur flex items-center justify-center shadow-lg ring-1 ring-white/40">
-                <Sparkles className="h-2.5 w-2.5 text-amber-900" strokeWidth={3} />
-              </div>
-            </div>
-
-            <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/20 bg-white/10 backdrop-blur-md">
-              <span className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
-              <span className="text-[9px] font-black uppercase tracking-[0.22em] text-foreground/80">
-                {t.badge}
-              </span>
-            </div>
-
-            <h2 className="mt-3 text-xl sm:text-2xl font-black text-foreground leading-tight">
-              {t.title}
-            </h2>
-            <p className="text-xs text-muted-foreground mt-1.5 max-w-[320px] leading-relaxed">
-              {t.subtitle}
-            </p>
-          </div>
-        </div>
-
-        {/* Language Switcher */}
-        <div className="px-4 pb-2 relative">
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide rounded-full p-1 border border-white/15 bg-white/[0.06] backdrop-blur-xl">
+    <div className="token-watch-overlay-v7 utility-overlay-v6 fixed inset-0 flex items-center justify-center p-4" data-scroll-lock="active">
+      <section role="dialog" aria-modal="true" aria-labelledby="watch-token-title" aria-describedby="watch-token-description" className="token-panel-v7 utility-glass-v6">
+        <header className="token-header-v7" data-status="expired">
+          <div className="token-status-icon-v7"><Lock /></div>
+          <span className="token-eyebrow-v7">{t.badge}</span>
+          <h2 id="watch-token-title">{t.title}</h2>
+          <p id="watch-token-description">{t.subtitle}</p>
+        </header>
+        <div className="token-body-v7">
+          <div className="token-language-v7" aria-label="Language">
             {(Object.keys(langLabels) as Language[]).map((l) => (
-              <button
-                key={l}
-                onClick={() => setLang(l)}
-                className={`shrink-0 px-3 py-1 rounded-full text-[10px] font-bold transition-all ${
-                  lang === l
-                    ? 'bg-white/85 text-black shadow-md'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {langLabels[l]}
-              </button>
+              <Button key={l} variant="ghost" size="sm" aria-pressed={lang === l} onClick={() => setLang(l)}>{langLabels[l]}</Button>
             ))}
           </div>
+          <section className="token-section-v7">
+            <h3>{t.perksTitle}</h3>
+            <TokenPerks labels={[t.feature1, t.feature2, t.feature3, t.feature4, t.feature5, t.feature6]} />
+          </section>
+          <p className="token-note-v7"><Lock className="h-3.5 w-3.5 shrink-0" />{t.signInWarn}</p>
         </div>
-
-        {/* Perks */}
-        <div className="px-5 pb-3 relative">
-          <div className="flex items-center gap-1.5 mb-2 px-1">
-            <Crown className="h-3 w-3 text-amber-400" />
-            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-              {t.perksTitle}
-            </p>
-          </div>
-          <div className="grid grid-cols-3 gap-1.5">
-            {perks.map(({ icon: Icon, label, tone }) => (
-              <div
-                key={label}
-                className="rounded-2xl border border-white/12 bg-white/[0.05] backdrop-blur-xl p-2 flex flex-col items-center gap-1 transition-colors hover:border-white/30 hover:bg-white/[0.09]"
-                style={{ boxShadow: 'inset 0 1px 0 hsla(0,0%,100%,0.16)' }}
-              >
-                <div className={`w-7 h-7 rounded-xl flex items-center justify-center ${tone}`}>
-                  <Icon className="h-3.5 w-3.5" />
-                </div>
-                <span className="text-[9px] font-bold text-foreground/80 text-center leading-tight">
-                  {label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Sign-in warning */}
-        <div className="mx-5 mb-3 rounded-xl bg-amber-500/10 border border-amber-400/25 backdrop-blur-md px-3 py-2 flex items-center gap-2">
-          <Sparkles className="h-3 w-3 text-amber-400 shrink-0" />
-          <p className="text-[10px] font-semibold text-amber-300">{t.signInWarn}</p>
-        </div>
-
-        {/* Actions */}
-        <div className="p-5 pt-0 space-y-2 relative">
-          <a
-            href="https://t.me/getunlocktoken"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group relative flex items-center justify-center gap-2 w-full py-3 rounded-2xl font-black text-sm text-white overflow-hidden transition-transform hover:scale-[1.02] active:scale-[0.98]"
-            style={{
-              background:
-                'linear-gradient(135deg, hsla(270,80%,58%,0.92) 0%, hsla(300,80%,58%,0.92) 100%)',
-              border: '1px solid hsla(0,0%,100%,0.28)',
-              boxShadow:
-                'inset 0 1px 0 hsla(0,0%,100%,0.4), 0 0 30px hsla(280,80%,55%,0.45), 0 12px 28px hsla(0,0%,0%,0.45)',
-            }}
-          >
-            <span
-              className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"
-              style={{
-                background:
-                  'linear-gradient(90deg, transparent, hsla(0, 0%, 100%, 0.3), transparent)',
-              }}
-            />
-            <Crown className="h-4 w-4 relative z-10" />
-            <span className="relative z-10">{t.reactivate}</span>
-            <ExternalLink className="h-3.5 w-3.5 relative z-10 opacity-80" />
-          </a>
-
+        <footer className="token-actions-v7">
+          <Button asChild className="w-full"><a href="https://t.me/getunlocktoken" target="_blank" rel="noopener noreferrer"><Crown />{t.reactivate}<ExternalLink /></a></Button>
+          <Button variant="glass" className="w-full" onClick={handleReload} disabled={reloading} aria-busy={reloading}><RefreshCw className={reloading ? 'animate-spin' : ''} />{reloading ? 'Checking…' : t.reload}</Button>
           <div className="grid grid-cols-2 gap-2">
-            <a
-              href="https://telegra.ph/How-to-Get-token-02-20"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 py-2.5 rounded-2xl font-bold text-[11px] text-foreground bg-white/[0.06] hover:bg-white/[0.12] border border-white/15 hover:border-white/30 backdrop-blur-xl transition-all"
-            >
-              <BookOpen className="h-3.5 w-3.5" />
-              {t.howTo}
-            </a>
-            <button
-              onClick={handleReload}
-              disabled={reloading}
-              aria-busy={reloading}
-              className="flex items-center justify-center gap-1.5 py-2.5 rounded-2xl font-bold text-[11px] text-emerald-300 bg-emerald-400/10 hover:bg-emerald-400/20 border border-emerald-400/30 hover:border-emerald-400/60 backdrop-blur-xl transition-all disabled:opacity-60"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${reloading ? 'animate-spin' : ''}`} />
-              {reloading ? 'Checking…' : t.reload}
-            </button>
+            <Button variant="ghost" asChild><a href="https://telegra.ph/How-to-Get-token-02-20" target="_blank" rel="noopener noreferrer"><BookOpen />{t.howTo}</a></Button>
+            <Button variant="ghost" onClick={() => navigate('/')}><Home />Back to Home</Button>
           </div>
-
-          {/* Back to Home — escape hatch */}
-          <button
-            onClick={() => navigate('/')}
-            className="mt-1 w-full flex items-center justify-center gap-1.5 py-2.5 rounded-2xl font-semibold text-[11px] text-muted-foreground hover:text-foreground bg-transparent hover:bg-white/[0.07] border border-white/12 hover:border-white/25 transition-all"
-          >
-            <Home className="h-3.5 w-3.5" />
-            Back to Home
-          </button>
-        </div>
-      </div>
+        </footer>
+      </section>
     </div>
   );
 
