@@ -51,7 +51,6 @@ import {
 import { toast } from 'sonner';
 import { DownloadVerificationDialog } from './DownloadVerificationDialog';
 import { pauseForDownload } from '@/lib/downloadAudio';
-import { ThemePickerButton, buildThemeStyle, type PlayerThemeKey } from './PlayerThemePicker';
 import { QualityOverlay } from './QualityOverlay';
 import { BufferingIndicator } from './BufferingIndicator';
 import { VolumeSlider } from './VolumeSlider';
@@ -338,21 +337,6 @@ export function VideoPlayer({
   // Settings menu state
   const [settingsMenu, setSettingsMenu] = useState<SettingsMenu>('main');
   const [settingsOpen, setSettingsOpen] = useState(false);
-  // Player theme — persisted per-browser in localStorage
-  const [playerTheme, _setPlayerTheme] = useState<PlayerThemeKey>(() => {
-    if (typeof window === 'undefined') return 'classic';
-    try {
-      const saved = window.localStorage.getItem('player_theme') as PlayerThemeKey | null;
-      return saved || 'classic';
-    } catch {
-      return 'classic';
-    }
-  });
-  const setPlayerTheme = (k: PlayerThemeKey) => {
-    _setPlayerTheme(k);
-    try { window.localStorage.setItem('player_theme', k); } catch {}
-  };
-  
   // Keyboard shortcuts info state
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   
@@ -2478,7 +2462,6 @@ export function VideoPlayer({
         paddingBottom: isFullscreen ? 'env(safe-area-inset-bottom)' : undefined,
         paddingLeft: isFullscreen ? 'env(safe-area-inset-left)' : undefined,
         paddingRight: isFullscreen ? 'env(safe-area-inset-right)' : undefined,
-        ...buildThemeStyle(playerTheme),
       }}
       onClick={handleVideoAreaClick}
       onMouseMove={handleMouseMove}
@@ -3134,13 +3117,6 @@ export function VideoPlayer({
                       <Download className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                     {/* CC button removed from X-PLUS server per design request */}
-                    <ThemePickerButton
-                      value={playerTheme}
-                      onChange={setPlayerTheme}
-                      iconClassName={isIOS ? 'w-4 h-4' : 'w-5 h-5 md:w-6 md:h-6'}
-                      containerEl={containerRef.current}
-                      buttonClassName={flatPlayerControlButtonClass}
-                    />
                     <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
                       <DropdownMenuTrigger asChild>
                         <button 
@@ -3229,13 +3205,6 @@ export function VideoPlayer({
                     <Download className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
                   </button>
                 )}
-                <ThemePickerButton
-                  value={playerTheme}
-                  onChange={setPlayerTheme}
-                  iconClassName={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"}
-                  containerEl={containerRef.current}
-                  buttonClassName={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`}
-                />
                 <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
                   <DropdownMenuTrigger asChild>
                     <button 
@@ -3489,13 +3458,6 @@ export function VideoPlayer({
                     <Download className={isIOS ? "w-4 h-4" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
                   </button>
                   {/* CC button removed from X-PLUS server per design request */}
-                  <ThemePickerButton
-                    value={playerTheme}
-                    onChange={setPlayerTheme}
-                    iconClassName={isIOS ? 'w-4 h-4' : 'w-4.5 h-4.5 md:w-5 md:h-5'}
-                    containerEl={containerRef.current}
-                    buttonClassName={flatPlayerControlButtonClass}
-                  />
                   <DropdownMenu 
                     modal={false} 
                     open={settingsOpen}
@@ -3620,13 +3582,6 @@ export function VideoPlayer({
                 </button>
               )}
               {/* Settings Menu */}
-              <ThemePickerButton
-                value={playerTheme}
-                onChange={setPlayerTheme}
-                iconClassName={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"}
-                containerEl={containerRef.current}
-                buttonClassName={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`}
-              />
               <DropdownMenu 
                 modal={false} 
                 open={settingsOpen}
