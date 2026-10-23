@@ -38,8 +38,8 @@ export const VERSION_GROUPS: VersionGroup[] = [
     ],
   },
   {
-    version: APP_VERSION,
-    date: RELEASE_DATE,
+    version: 'S2-V2',
+    date: 'October 20, 2026',
     highlight: 'A refreshed home experience, lighter server playback and more efficient catalogue loading.',
     items: [
       { icon: '🎬', badge: 'IMPROVED', title: 'Smoother Server Playback', desc: 'H.Savi, Multi.Savi and X-PLUS now share bounded buffering and more cautious network adaptation, keeping 4K available.' },
