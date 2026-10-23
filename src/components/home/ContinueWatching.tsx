@@ -1,21 +1,14 @@
-import { memo, useState, useEffect, useCallback } from 'react';
+import { memo, useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Play, ChevronRight, Clock, Check, User } from 'lucide-react';
+import { Play, Clock, Check } from 'lucide-react';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 import { optimizedImageUrl, fhdFallback } from '@/lib/imageOptimization';
 
 import { toast } from 'sonner';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
+import { CatalogueHeading } from './CatalogueHeading';
 import { DubBadge } from '@/components/anime/DubBadge';
 
 interface Anime {
@@ -56,15 +49,6 @@ interface ContinueWatchingProps {
   showOnHomeOnly?: boolean;
 }
 
-const CONTINUE_WATCHING_CAROUSEL_OPTIONS = {
-  align: 'start' as const,
-  loop: false,
-  dragFree: true,
-  duration: 18,
-  containScroll: 'trimSnaps' as const,
-  skipSnaps: true,
-};
-
 function formatTimeLeft(progress: number | null, duration: number | null) {
   if (!progress || !duration) return null;
   const remaining = Math.max(0, duration - (duration * progress / 100));
@@ -86,78 +70,29 @@ const ContinueWatchingCard = memo(function ContinueWatchingCard({
   const timeLeft = formatTimeLeft(item.progress, item.episode.duration);
   const raw = item.episode.thumbnail || item.anime.cover_image || '/placeholder.svg';
 
-  return (
-    <CarouselItem className="cw-slide pl-2 md:pl-4 basis-[80%] sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-      <div className="group relative">
-        <Link
-          to={`/watch/${item.episode.id}?t=${item.progress || 0}`}
-          className={`relative block aspect-video rounded-2xl overflow-hidden bg-muted/40 border border-border/40 group-hover:border-primary/50 transition-all duration-500 shadow-md hover:shadow-xl hover:shadow-primary/20 ${
-            isFading ? 'cw-tile-fading' : 'cw-tile-fresh'
-          }`}
-          aria-label={`Resume ${item.anime.title} episode ${item.episode.episode_number}`}
-        >
-          <img
-            src={optimizedImageUrl(raw, { width: 960, quality: 78 })}
-            onError={fhdFallback(raw)}
-            alt={item.anime.title}
-            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
-            loading="lazy"
-            decoding="async"
-            draggable={false}
-          />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-          <div className="pointer-events-none absolute top-2 left-2 right-2 flex items-start justify-between gap-2">
-            <div className="flex items-center gap-1 flex-wrap">
-              <span className="px-2 py-0.5 rounded-md bg-primary/95 text-[10px] font-bold text-primary-foreground shadow-sm">
-                S{item.season?.season_number || 1} · E{item.episode.episode_number}
-              </span>
-              {item.hasNewEpisode && <span className="badge-glass-new animate-pulse shadow-lg shadow-green-500/40">NEW</span>}
-            </div>
-            <div className="flex flex-col items-end gap-1">
-              <span className="px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-semibold text-white tabular-nums">
-                {Math.round(progressPct)}%
-              </span>
-              <DubBadge isEngDub={(item.anime as any).is_eng_dub} isSubOnly={(item.anime as any).is_sub_only} genres={(item.anime as any).genres} />
-            </div>
-          </div>
-          <div className="pointer-events-none absolute inset-0 hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="relative">
-              <div className="absolute inset-0 bg-primary/30 rounded-full blur-xl scale-150" />
-              <div className="relative w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/50">
-                <Play className="h-5 w-5 text-primary-foreground fill-current ml-0.5" />
-              </div>
-            </div>
-          </div>
-          <div className="pointer-events-none"><TokenCrownBadge /></div>
-          <div className="pointer-events-none absolute bottom-0 left-0 right-0 p-3 pb-4">
-            <h3 className="text-sm font-semibold text-white line-clamp-1 drop-shadow-md">{item.anime.title}</h3>
-            <p className="text-[11px] text-white/75 mt-0.5 flex items-center gap-1.5">
-              <span>EP {item.episode.episode_number}</span>
-              {timeLeft && <><span className="opacity-50">·</span><span className="text-primary-foreground/90">{timeLeft}</span></>}
-            </p>
-          </div>
-          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-1 bg-black/60">
-            <div className="relative h-full bg-gradient-to-r from-primary via-primary to-primary/80 transition-[width] duration-500 ease-out" style={{ width: `${progressPct}%` }}>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shine" />
-            </div>
-          </div>
-        </Link>
-        <button
-          type="button"
-          onClick={(event) => onMarkCompleted(event, item.id, item.anime.title)}
-          className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 h-6 px-2 rounded-full text-[10px] font-semibold bg-background/80 backdrop-blur-md border border-border/60 text-foreground/80 hover:text-primary hover:border-primary/60 hover:bg-background opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-200 shadow-md"
-          aria-label={`Mark ${item.anime.title} as completed`}
-          style={{ marginTop: '1.75rem' }}
-        >
-          <Check className="h-3 w-3" /> Done
-        </button>
+  return <div className={`catalogue-glass rounded-xl overflow-hidden w-[280px] md:w-[320px] shrink-0 group ${isFading ? 'cw-tile-fading' : ''}`}>
+    <Link to={`/watch/${item.episode.id}`} aria-label={`Resume ${item.anime.title} episode ${item.episode.episode_number}`} className="block">
+      <div className="relative aspect-video bg-muted overflow-hidden">
+        <img src={optimizedImageUrl(raw, { width: 640, quality: 78 })} onError={fhdFallback(raw)} alt={item.anime.title} className="w-full h-full object-cover" loading="lazy" decoding="async" draggable={false} />
+        <div className="catalogue-image-scrim absolute inset-0 pointer-events-none" />
+        <span className="catalogue-chip absolute top-2 left-2 rounded px-2 py-1 text-[10px]">S{item.season?.season_number || 1} · E{item.episode.episode_number}</span>
+        {item.hasNewEpisode && <span className="catalogue-chip absolute bottom-2 left-2 rounded px-2 py-1 text-[10px] text-primary">NEW</span>}
+        <Play className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-7 w-7 text-primary-foreground fill-current" />
+        <TokenCrownBadge />
       </div>
-    </CarouselItem>
-  );
+      <div className="px-3 pt-3 space-y-2">
+        <div className="flex items-center justify-between gap-2"><DubBadge isEngDub={(item.anime as any).is_eng_dub} isSubOnly={(item.anime as any).is_sub_only} genres={(item.anime as any).genres} /><span className="text-[10px] text-muted-foreground tabular-nums">{Math.round(progressPct)}%</span></div>
+        <h3 className="text-sm font-semibold line-clamp-1">{item.anime.title}</h3>
+        <div className="h-1 bg-muted rounded-full overflow-hidden"><div className="h-full bg-primary" style={{width: `${progressPct}%`}} /></div>
+      </div>
+    </Link>
+    <div className="px-3 py-2 flex justify-between items-center gap-2"><span className="text-[11px] text-muted-foreground">{timeLeft || `Episode ${item.episode.episode_number}`}</span><Button variant="ghost" size="sm" className="h-7 text-[10px] gap-1" onClick={event => onMarkCompleted(event,item.id,item.anime.title)} aria-label={`Mark ${item.anime.title} as completed`}><Check className="h-3 w-3" />Done</Button></div>
+  </div>;
 });
 
 export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingProps) {
   const { user } = useAuth();
+  const rowRef = useRef<HTMLDivElement>(null);
   const [history, setHistory] = useState<WatchHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<{ username: string | null; avatar_url: string | null } | null>(null);
@@ -528,65 +463,12 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
     );
   }
 
-  return (
-    <section className="relative overflow-x-hidden overflow-y-visible py-10 md:py-14">
-      {/* Ambient background glow */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none" />
-
-      <div className="container relative">
-        {/* Header — cleaner two-row layout on mobile */}
-        <div className="flex items-center justify-between mb-6 md:mb-8">
-          <div className="flex items-center gap-3 md:gap-4 min-w-0">
-            <Avatar className="h-10 w-10 md:h-12 md:w-12 border-2 border-primary/40 shadow-lg shadow-primary/10 shrink-0">
-              <AvatarImage src={userProfile?.avatar_url || undefined} alt={userProfile?.username || 'User'} />
-              <AvatarFallback className="bg-primary/10 text-primary">
-                {userProfile?.username?.charAt(0).toUpperCase() || <User className="h-5 w-5" />}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-primary shrink-0" />
-                <h2 className="text-xl md:text-2xl font-heading font-bold text-foreground truncate">
-                  Continue Watching
-                </h2>
-              </div>
-              <p className="text-xs md:text-sm text-muted-foreground mt-0.5 truncate">
-                {userProfile?.username ? `Welcome back, ${userProfile.username}` : 'Pick up where you left off'}
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-            className="text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all shrink-0"
-          >
-            <Link to="/continue-watching" className="flex items-center gap-1">
-              <span className="hidden sm:inline">View all</span>
-              <span className="sm:hidden">All</span>
-              <ChevronRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-
-        <Carousel
-          opts={CONTINUE_WATCHING_CAROUSEL_OPTIONS}
-          className="w-full cw-carousel"
-        >
-          <CarouselContent className="-ml-2 md:-ml-4">
-            {history.map((item) => (
-              <ContinueWatchingCard
-                key={item.id}
-                item={item}
-                isFading={fadingIds.has(item.id)}
-                onMarkCompleted={handleMarkCompleted}
-              />
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="hidden md:flex -left-4 bg-background/80 backdrop-blur-sm border-border/50 hover:bg-primary/10 hover:border-primary/50" />
-          <CarouselNext className="hidden md:flex -right-4 bg-background/80 backdrop-blur-sm border-border/50 hover:bg-primary/10 hover:border-primary/50" />
-        </Carousel>
+  return <section className="catalogue-section py-6 md:py-9" aria-label="Continue Watching">
+    <div className="container">
+      <CatalogueHeading title="Continue Watching" eyebrow={userProfile?.username ? `For ${userProfile.username}` : 'Your next chapter'} icon={Clock} href="/continue-watching" rowRef={rowRef} />
+      <div ref={rowRef} className="flex gap-3 overflow-x-auto snap-row pb-4 pt-1">
+        {history.map(item => <ContinueWatchingCard key={item.id} item={item} isFading={fadingIds.has(item.id)} onMarkCompleted={handleMarkCompleted} />)}
       </div>
-    </section>
-  );
+    </div>
+  </section>;
 }
