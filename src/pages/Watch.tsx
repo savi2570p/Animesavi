@@ -1152,7 +1152,7 @@ export default function Watch() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background watch-v3">
       <SEO
         title={watchTitle}
         description={watchDesc}
@@ -1227,9 +1227,9 @@ export default function Watch() {
 
 
       {/* Main Watch Area - Video + Episode List */}
-      <div className="flex">
+      <div className="watch-v3-stage flex flex-col lg:flex-row">
         {/* Episode List - Desktop Left Sidebar - Ends at video player border */}
-        <div className="hidden lg:block w-72 shrink-0 border-r border-border/50 bg-card/30">
+        <div className="watch-v3-sidebar hidden lg:block w-64 shrink-0 border-r border-border bg-card/30 lg:order-2">
           <EpisodeList
             episodes={allEpisodes}
             currentEpisodeId={episodeId || ''}
@@ -1241,7 +1241,7 @@ export default function Watch() {
         </div>
 
         {/* Video Player */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0 lg:order-1">
           <div className="relative">
             {/* Player crash isolation: a playback-engine error swaps in a
                 recovery card instead of taking the whole watch page down. */}
@@ -1283,6 +1283,7 @@ export default function Watch() {
               isLoading={false}
               audioLanguage={episode.audio_language || undefined}
               isSubOnly={anime?.is_sub_only ?? false}
+              isHindiDub={!anime?.is_sub_only && !anime?.is_eng_dub}
               captionsUrl={episode.captions_url}
               isEncoding={isVideoEncoding}
               onTimeUpdate={updateWatchProgress}
@@ -1334,7 +1335,7 @@ export default function Watch() {
           {anime && (
             <Link
               to={`/anime/${anime.id}`}
-              className="group mt-2 flex items-center gap-2 px-2 py-1.5 rounded-lg border border-border/40 bg-gradient-to-r from-card/70 via-card/40 to-transparent backdrop-blur-md hover:border-primary/40 hover:bg-card/80 transition-all w-full max-w-full overflow-hidden"
+              className="watch-v3-strip group flex items-center gap-3 px-4 py-2 border-t border-border hover:bg-muted/30 transition-colors w-full max-w-full overflow-hidden"
             >
               <div className="relative rounded-md overflow-hidden shrink-0 ring-1 ring-border/60 group-hover:ring-primary/50 transition-all" style={{ width: 34, height: 48, minWidth: 34 }}>
                 {anime.cover_image ? (
@@ -1375,9 +1376,7 @@ export default function Watch() {
 
       {/* Below Player - Server Selection & Season Switcher */}
       <div className="container py-3 md:py-4">
-        <div className="relative rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-2xl p-3 md:p-4 shadow-[0_10px_40px_-15px_hsl(270_80%_10%/0.6)] overflow-hidden">
-          <div className="absolute -top-12 -right-12 w-40 h-40 bg-primary/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="watch-v3-controls py-3 md:py-4 border-y border-border">
 
           <div className="relative flex flex-col md:flex-row md:items-center gap-3 md:gap-5">
             {/* Server Selection */}
@@ -1401,15 +1400,17 @@ export default function Watch() {
                   const isFailed = failedServers.has(server);
                   const isActive = activeServer === server;
                   return (
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       key={server}
                       onClick={() => handleServerChange(server)}
                       disabled={serverLoading}
                       title={config.description}
                       className={`group relative px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg border text-[11px] md:text-xs font-semibold transition-all duration-300 backdrop-blur-xl ${
                         isActive
-                          ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-primary shadow-lg shadow-primary/30 scale-[1.02]'
-                          : 'bg-white/[0.04] text-foreground/80 border-white/10 hover:border-primary/50 hover:bg-primary/10 hover:text-foreground'
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-muted/30 text-foreground/80 border-border hover:border-primary/50 hover:bg-primary/10 hover:text-foreground'
                       } ${isFailed ? 'opacity-50 line-through' : ''} ${serverLoading ? 'cursor-wait' : ''}`}
                     >
                       <span className="flex items-center gap-1.5">
@@ -1421,7 +1422,7 @@ export default function Watch() {
                         )}
                         {config.name}
                       </span>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -1429,13 +1430,13 @@ export default function Watch() {
 
             {/* Season Switcher */}
             {allSeasons.length > 0 && (
-              <div className="flex items-center gap-2 md:gap-3 md:border-l md:border-white/10 md:pl-5 min-w-0 md:ml-auto">
+              <div className="flex items-center gap-2 md:gap-3 md:border-l md:border-border md:pl-5 min-w-0 md:ml-auto">
                 <span className="text-[11px] md:text-xs font-bold uppercase tracking-wider text-foreground/80 shrink-0">Season</span>
                 <div className="relative flex-1 md:flex-initial">
                   <select
                     value={currentSeason?.id || ''}
                     onChange={(e) => handleSeasonChange(e.target.value)}
-                    className="w-full appearance-none bg-white/[0.04] border border-white/10 rounded-lg pl-3 pr-9 py-1.5 md:py-2 text-xs md:text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 hover:border-primary/40 transition-colors cursor-pointer backdrop-blur-xl"
+                    className="w-full appearance-none bg-muted/30 border border-border rounded-lg pl-3 pr-9 py-1.5 md:py-2 text-xs md:text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 hover:border-primary/40 transition-colors cursor-pointer backdrop-blur-xl"
                   >
                     {allSeasons.map((season) => (
                       <option key={season.id} value={season.id}>
@@ -1465,10 +1466,8 @@ export default function Watch() {
 
       {/* Episode Info & Navigation */}
       <div className="container py-3 md:py-8">
-        <div className="relative rounded-lg md:rounded-3xl border border-border/40 bg-gradient-to-br from-card/70 via-background/40 to-card/50 backdrop-blur-xl p-3 md:p-7 shadow-md md:shadow-xl shadow-black/20 overflow-hidden">
+        <div className="watch-v3-info py-3 md:py-5">
           {/* Decorative glows — desktop only */}
-          <div className="hidden md:block absolute -top-20 -right-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="hidden md:block absolute -bottom-20 -left-20 w-64 h-64 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative flex flex-col gap-2.5 md:gap-6">
             {/* Breadcrumb with Format Indicator */}
