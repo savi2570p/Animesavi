@@ -63,7 +63,7 @@ interface Stats {
 }
 
 export default function Admin() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isRolesLoaded, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
   const [stats, setStats] = useState<Stats>({
@@ -77,6 +77,7 @@ export default function Admin() {
   const [adminNotes, setAdminNotes] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
+    if (isAuthLoading || !isRolesLoaded) return;
     if (!user) {
       navigate('/auth');
       return;
@@ -89,7 +90,7 @@ export default function Admin() {
     }
 
     fetchData();
-  }, [user, isAdmin]);
+  }, [user, isAdmin, isRolesLoaded, isAuthLoading]);
 
   const fetchData = async () => {
     const { data: appsData } = await supabase
