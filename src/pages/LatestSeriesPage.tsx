@@ -125,7 +125,7 @@ export default function LatestSeriesPage() {
   const getStatusBadge = (anime: AnimeSeries) => {
     if (anime.status === 'upcoming') {
       return (
-        <div className="absolute top-10 left-2 px-2 py-1 text-xs font-bold bg-orange-500 text-white rounded-lg shadow-md animate-pulse flex items-center gap-1">
+        <div className="absolute top-10 left-2 px-2 py-1 text-xs font-bold bg-accent text-foreground rounded-lg shadow-md animate-pulse flex items-center gap-1">
           <CalendarClock className="h-3 w-3" />
           Coming Soon
         </div>
@@ -133,7 +133,7 @@ export default function LatestSeriesPage() {
     }
     if (anime.status === 'completed') {
       return (
-        <div className="absolute top-10 left-2 px-2 py-1 text-xs font-bold bg-green-600 text-white rounded-lg shadow-md">
+        <div className="absolute top-10 left-2 px-2 py-1 text-xs font-bold bg-secondary text-foreground rounded-lg shadow-md">
           COMPLETE
         </div>
       );
@@ -146,7 +146,7 @@ export default function LatestSeriesPage() {
   const totalEps = series.reduce((sum, a) => sum + a.episode_count, 0);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen catalogue-page-v5">
       <ContentNavTabs />
 
       <SeeAllHeader
@@ -158,9 +158,9 @@ export default function LatestSeriesPage() {
         glowTone="bg-primary/20"
         stats={[
           { icon: Film, value: series.length, label: 'Series', tone: 'text-primary' },
-          { icon: Play, value: totalEps, label: 'Episodes', tone: 'text-blue-400' },
-          { icon: Flame, value: ongoingCount, label: 'Ongoing', tone: 'text-orange-400' },
-          { icon: Sparkles, value: newCount, label: 'New 24h', tone: 'text-emerald-400' },
+          { icon: Play, value: totalEps, label: 'Episodes', tone: 'text-secondary-foreground' },
+          { icon: Flame, value: ongoingCount, label: 'Ongoing', tone: 'text-accent-foreground' },
+          { icon: Sparkles, value: newCount, label: 'New 24h', tone: 'text-primary' },
         ]}
       />
 
@@ -192,8 +192,8 @@ export default function LatestSeriesPage() {
               >
                 <Link
                   to={`/anime/${anime.id}`}
-                  className="group relative block animate-fade-in"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  className="catalogue-tile-v5 group relative block"
+                  style={{ animationDelay: `${Math.min(index * 25, 200)}ms` }}
                 >
                   <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-muted shadow-md group-hover:shadow-xl transition-all duration-500">
                     <img
@@ -203,7 +203,7 @@ export default function LatestSeriesPage() {
                       loading="lazy"
                     />
                     
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-60 group-hover:opacity-90 transition-all duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/30 to-transparent opacity-60 group-hover:opacity-90 transition-all duration-300" />
                     
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
                       <div className="p-4 rounded-full bg-primary/90 shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300">
@@ -217,7 +217,7 @@ export default function LatestSeriesPage() {
 
                     <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
                       {isNew(anime) && (
-                        <div className="px-2 py-0.5 text-xs font-bold bg-green-500 text-white rounded-lg shadow-md animate-pulse">
+                        <div className="px-2 py-0.5 text-xs font-bold bg-secondary text-foreground rounded-lg shadow-md animate-pulse">
                           NEW
                         </div>
                       )}
@@ -227,11 +227,11 @@ export default function LatestSeriesPage() {
                     {getStatusBadge(anime)}
 
                     <div className="absolute bottom-0 left-0 right-0 p-3">
-                      <h3 className="text-sm md:text-base font-semibold text-white line-clamp-2 drop-shadow-lg">
+                      <h3 className="text-sm md:text-base font-semibold text-foreground line-clamp-2 drop-shadow-lg">
                         {anime.title}
                       </h3>
                       {anime.episode_count > 0 && (
-                        <p className="text-xs text-white/70 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {anime.episode_count} Episode{anime.episode_count !== 1 ? 's' : ''}
                         </p>
                       )}

@@ -70,12 +70,12 @@ function NoEpisodesPopup({ isOpen, onClose, animeTitle }: NoEpisodesPopupProps) 
   if (!isOpen) return null;
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70">
       <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4 shadow-xl animate-scale-in">
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-orange-500/20 flex items-center justify-center">
-              <AlertCircle className="h-6 w-6 text-orange-500" />
+            <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
+              <AlertCircle className="h-6 w-6 text-accent-foreground" />
             </div>
             <h3 className="text-lg font-bold text-foreground">Episodes Coming Soon</h3>
           </div>
@@ -401,8 +401,8 @@ export default function Browse() {
   const showDropdownContent = showSuggestions || showHistory;
 
   return (
-    <div className="min-h-screen browse-glass relative">
-      <div className="browse-aurora" aria-hidden />
+    <div className="min-h-screen browse-glass catalogue-page-v5 browse-v5 relative">
+
       {/* Content Navigation Tabs */}
       <ContentNavTabs />
       
@@ -415,12 +415,6 @@ export default function Browse() {
 
       {/* Compact cinematic hero */}
       <div className="relative overflow-hidden border-b border-border/40">
-        {/* Ambient gradient backdrop */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-background" />
-        <div className="absolute -top-24 left-1/3 w-[420px] h-[420px] bg-primary/15 rounded-full blur-3xl opacity-60" />
-        <div className="absolute -bottom-24 right-1/4 w-72 h-72 bg-accent/10 rounded-full blur-3xl opacity-50" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--primary)/0.08),transparent_60%)]" />
-
         <div className="container relative px-4 py-8 sm:py-12">
           {/* Mode pill + clear */}
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
@@ -451,16 +445,9 @@ export default function Browse() {
             {isSearchMode ? (
               <>Results for <span className="anime-gradient-text">"{searchParams.get('q')}"</span></>
             ) : (
-              <>Discover <span className="anime-gradient-text">Anime</span></>
+              <>Browse <span className="text-primary">Anime</span></>
             )}
           </h1>
-          <p className="text-muted-foreground text-sm sm:text-base mt-2 max-w-xl animate-fade-in animation-delay-100">
-            {isSearchMode 
-              ? 'Refine with the filters below or pick a result.'
-              : 'Browse our entire catalog — filter by type, genre, status, and more.'
-            }
-          </p>
-
           {/* Hero search bar */}
           <form onSubmit={handleSearch} className="mt-5 sm:mt-7 flex gap-2 max-w-2xl animate-fade-in-up">
             <div className="relative flex-1" ref={searchContainerRef}>
@@ -578,7 +565,7 @@ export default function Browse() {
       <div className="container px-4 pt-5 sm:pt-7 pb-12">
         {/* Filters — chip rows in card */}
         <div className={cn(
-          "rounded-2xl border border-border/50 bg-card/40 backdrop-blur-sm p-3 sm:p-5 mb-6 sm:mb-8 space-y-3 sm:space-y-4 transition-all",
+          "catalogue-filters-v5 mb-6 sm:mb-8 space-y-3 sm:space-y-4",
           isSearchMode && "opacity-95"
         )}>
           {isSearchMode && (
@@ -593,7 +580,7 @@ export default function Browse() {
             <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold w-16 shrink-0">Type</span>
             <div className="flex flex-wrap gap-1.5">
               {typeOptions.map((option) => (
-                <button
+                <Button variant="glass" size="sm" aria-pressed={typeFilter === option.value}
                   key={option.value}
                   onClick={() => handleTypeFilter(option.value)}
                   className={cn("filter-btn flex items-center gap-1.5 text-xs", typeFilter === option.value && "active")}
@@ -601,7 +588,7 @@ export default function Browse() {
                   {option.value === 'movie' && <Film className="h-3.5 w-3.5" />}
                   {option.value === 'series' && <Tv className="h-3.5 w-3.5" />}
                   {option.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -612,49 +599,14 @@ export default function Browse() {
               <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold w-16 shrink-0">Sort</span>
               <div className="flex flex-wrap gap-1.5">
                 {sortOptions.map((option) => (
-                  <button
+                  <Button variant="glass" size="sm" aria-pressed={sortBy === option.value}
                     key={option.value}
                     onClick={() => setSortBy(option.value)}
                     className={cn("filter-btn flex items-center gap-1.5 text-xs", sortBy === option.value && "active")}
                   >
                     <option.icon className="h-3.5 w-3.5" />
                     {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Status */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold w-16 shrink-0">Status</span>
-            <div className="flex flex-wrap gap-1.5">
-              {statusOptions.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => handleStatusFilter(option.value)}
-                  className={cn("filter-btn flex items-center gap-1.5 text-xs", statusFilter === option.value && "active")}
-                >
-                  <option.icon className="h-3.5 w-3.5" />
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Episodes */}
-          {!isSearchMode && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold w-16 shrink-0">Episodes</span>
-              <div className="flex flex-wrap gap-1.5">
-                {episodeOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => handleEpisodeFilter(option.value)}
-                    className={cn("filter-btn text-xs", episodeFilter === option.value && "active")}
-                  >
-                    {option.label}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -668,17 +620,17 @@ export default function Browse() {
                 Genres
               </span>
               {selectedGenre && (
-                <button
+                <Button variant="ghost" size="sm"
                   onClick={() => handleGenreFilter(selectedGenre)}
                   className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-destructive font-semibold"
                 >
                   Clear
-                </button>
+                </Button>
               )}
             </div>
             <div className="flex gap-1.5 overflow-x-auto scrollbar-none -mx-3 px-3 sm:mx-0 sm:px-0 pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
               {ALLOWED_GENRES.map((genre) => (
-                <button
+                <Button variant="glass" size="sm" aria-pressed={selectedGenre === genre.toLowerCase()}
                   key={genre}
                   onClick={() => handleGenreFilter(genre)}
                   className={cn(
@@ -689,7 +641,7 @@ export default function Browse() {
                   )}
                 >
                   {genre}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -777,7 +729,7 @@ export default function Browse() {
                   />
 
                   {/* Always-on bottom gradient for legibility */}
-                  <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/95 via-black/50 to-transparent z-[2] pointer-events-none" />
+                  <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background/95 via-background/50 to-transparent z-[2] pointer-events-none" />
 
                   {/* TOP-LEFT: status badge */}
                   <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 items-start">
@@ -788,7 +740,7 @@ export default function Browse() {
                       <div className="badge-glass-com">COM</div>
                     )}
                     {anime.status === 'upcoming' && (
-                      <div className="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider bg-orange-500/95 text-white rounded-md flex items-center gap-1 backdrop-blur-md shadow-lg shadow-orange-500/30 animate-pulse">
+                      <div className="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider bg-accent text-foreground rounded-md flex items-center gap-1 backdrop-blur-md shadow-lg shadow-none animate-pulse">
                         <CalendarClock className="w-2.5 h-2.5" />
                         Soon
                       </div>
@@ -811,7 +763,7 @@ export default function Browse() {
 
                   {/* BOTTOM-LEFT: episode count chip */}
                   {anime.episode_count !== undefined && anime.episode_count > 0 && anime.type !== 'movie' && (
-                    <div className="absolute bottom-2 left-2 z-10 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold bg-black/70 text-white rounded-md flex items-center gap-1 backdrop-blur-md ring-1 ring-white/10">
+                    <div className="absolute bottom-2 left-2 z-10 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold bg-background/70 text-foreground rounded-md flex items-center gap-1 backdrop-blur-md ring-1 ring-border">
                       <Tv className="h-2.5 w-2.5 text-primary" />
                       {anime.episode_count} EP
                     </div>
@@ -819,15 +771,15 @@ export default function Browse() {
 
                   {/* BOTTOM-RIGHT: year */}
                   {anime.release_year && (
-                    <div className="absolute bottom-2 right-2 z-10 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold bg-black/70 text-white/90 rounded-md backdrop-blur-md ring-1 ring-white/10">
+                    <div className="absolute bottom-2 right-2 z-10 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold bg-background/70 text-foreground/90 rounded-md backdrop-blur-md ring-1 ring-border">
                       {anime.release_year}
                     </div>
                   )}
 
                   {/* Episodes Under Progress overlay */}
                   {anime.episode_count === 0 && (
-                    <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px] flex items-center justify-center z-20 p-3 text-center">
-                      <div className="bg-orange-500/95 text-white px-2.5 py-2 rounded-lg shadow-xl">
+                    <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px] flex items-center justify-center z-20 p-3 text-center">
+                      <div className="bg-accent text-foreground px-2.5 py-2 rounded-lg shadow-xl">
                         <AlertCircle className="h-4 w-4 mx-auto mb-1" />
                         <span className="text-[10px] font-bold uppercase tracking-wide">Under Progress</span>
                       </div>
@@ -835,8 +787,8 @@ export default function Browse() {
                   )}
 
                   {/* Hover Play overlay (desktop) */}
-                  <div className="absolute inset-0 z-[3] hidden sm:flex items-center justify-center bg-black/40 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="h-14 w-14 rounded-full bg-primary/95 flex items-center justify-center shadow-2xl shadow-primary/50 ring-4 ring-white/20 scale-75 group-hover:scale-100 transition-transform duration-300">
+                  <div className="absolute inset-0 z-[3] hidden sm:flex items-center justify-center bg-background/40 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="h-14 w-14 rounded-full bg-primary/95 flex items-center justify-center shadow-2xl shadow-primary/50 ring-4 ring-border scale-75 group-hover:scale-100 transition-transform duration-300">
                       <Play className="h-6 w-6 text-primary-foreground fill-current ml-0.5" />
                     </div>
                   </div>
@@ -844,7 +796,7 @@ export default function Browse() {
                   {/* Title overlay always visible at bottom */}
                   <div className="absolute inset-x-0 bottom-0 z-[4] p-2.5 sm:p-3 pt-8">
 
-                    <h3 className="font-bold text-[12px] sm:text-sm text-white line-clamp-2 leading-tight drop-shadow-md group-hover:text-primary transition-colors">
+                    <h3 className="font-bold text-[12px] sm:text-sm text-foreground line-clamp-2 leading-tight drop-shadow-md group-hover:text-primary transition-colors">
                       {anime.title}
                     </h3>
                   </div>
