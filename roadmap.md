@@ -1,3 +1,7 @@
+- [x] Shrink Clones and Platforms to compact tiles.
+- [x] Ensure Continue Watching artwork is fully visible at 16:9 with titles below.
+- [x] Remove public Flox navigation and routes without touching partner integrations.
+- [x] Redesign the main hero with lightweight liquid glass and verify layouts.
 - [x] Redesign Browse Top 10 Most Popular from the supplied reference.
 - [x] Redesign Continue Watching while preserving resume and Done actions.
 - [x] Remove player theme controls and saved theme overrides.
@@ -5,4 +9,4 @@
 - [x] Redesign Clones and Platforms with lightweight glass and native snap scrolling.
 - [x] Run focused tests and check the updated views.
 
-Verified: eight regression tests pass; authenticated homepage shows Continue Watching, Clones and Platforms with real content. Browse mobile screenshots show the new Top 10 and no horizontal page overflow. No browser page errors. Real SUB episode opens without theme controls, but playback errors prevented checking its audio menu end-to-end; selection and fallback are regression-tested. Known non-Japanese audio tracks retain their truthful labels. Done database behavior remains unchanged and was not invoked during visual checks.
+Verified: ten regression tests pass. Authenticated homepage renders real Continue Watching artwork in a reserved 16:9 frame with title below. Clones and Platforms are 46px tall on desktop; no public Flox links remain. Desktop hero and mobile overflow checked; no browser page errors. Playback and Done behavior are unchanged.

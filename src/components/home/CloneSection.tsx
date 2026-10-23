@@ -31,13 +31,13 @@ export function CloneSection() {
   }, []);
 
   if (!cards.length) return null;
-  return <section className="catalogue-section py-6 md:py-9" aria-label="Clones">
+  return <section className="catalogue-section catalogue-compact py-3 md:py-4" aria-label="Clones">
     <div className="container">
       <CatalogueHeading title="Clones" eyebrow="Explore collections" icon={Copy} rowRef={rowRef} />
       <div ref={rowRef} className="snap-row flex gap-3 overflow-x-auto pb-4 pt-1">
-        {cards.map(c => <Link key={c.id} to={`/${c.slug}`} className="catalogue-glass rounded-xl p-4 w-[220px] shrink-0 group">
-          <div className="flex justify-between items-start mb-5">{c.logo_url ? <img src={c.logo_url} alt={`${c.name} logo`} loading="lazy" className="h-12 w-12 rounded-lg object-contain bg-muted" /> : <Copy className="h-10 w-10 text-primary" />}<ArrowUpRight className="h-4 w-4 text-muted-foreground" /></div>
-          <h3 className="text-sm font-semibold truncate">{c.name}</h3><p className="text-[10px] uppercase text-muted-foreground mt-1">{c.category}</p>
+        {cards.map(c => <Link key={c.id} to={`/${c.slug}`} className="catalogue-glass rounded-lg p-2 w-[152px] md:w-[168px] shrink-0 flex items-center gap-2 group">
+          {c.logo_url ? <img src={c.logo_url} alt={`${c.name} logo`} loading="lazy" className="h-7 w-7 rounded object-contain bg-muted shrink-0" /> : <Copy className="h-7 w-7 text-primary shrink-0" />}
+          <div className="min-w-0 flex-1"><h3 className="text-xs font-semibold truncate">{c.name}</h3><p className="text-[8px] uppercase text-muted-foreground truncate">{c.category}</p></div><ArrowUpRight className="h-3 w-3 text-muted-foreground shrink-0" />
         </Link>)}
       </div>
     </div>
