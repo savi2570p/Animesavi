@@ -19,7 +19,7 @@ describe('download confirmation handoff', () => {
   it('passes selected audio and quality even if browser storage is blocked', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('Blocked'); });
     render(<DownloadVerificationDialog {...props} audioTracks={[{ label: 'Hindi', language: 'hin' }, { label: 'English', language: 'eng' }]} />);
-    fireEvent.click(screen.getByRole('button', { name: 'English' }));
+    fireEvent.click(screen.getByRole('button', { name: /English/ }));
     fireEvent.click(screen.getByRole('button', { name: '1080p FHD' }));
     fireEvent.click(screen.getByRole('button', { name: 'Download 1080p' }));
     const url = new URL(mocks.navigate.mock.calls[0][0], 'https://example.test');
