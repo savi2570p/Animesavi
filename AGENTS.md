@@ -22,3 +22,6 @@
 - All HLS server players use getHLSConfig as the single buffering/network policy, preserving native Safari playback and manual quality/server choices to prevent tuning drift.
 - Homepage Latest Series and Latest Episodes share one security-invoker catalogue RPC and a short-lived query cache to reduce duplicated requests without bypassing row permissions.
 - Profile-avatar menus reuse a single utility glass surface and semantic icon tones, preserving existing destinations, account switching and role guards to keep presentation independent of account access.
+
+- Admin uses unframed tools with a single utility-glass navigation layer; upload editors share authenticated server-role access checks, never session-storage codes, so admins without uploader roles can edit safely.
+- Upload no longer uses the legacy password gate; retain server-role and database permission checks as the access authority.

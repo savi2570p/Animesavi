@@ -25,6 +25,9 @@ import {
   Key,
   Sparkles,
   Copy,
+  ArrowUpRight,
+  RefreshCw,
+  Loader2,
 } from 'lucide-react';
 import { VideoEncodingDashboard } from '@/components/admin/VideoEncodingDashboard';
 import { CDNHealthDashboard } from '@/components/admin/CDNHealthDashboard';
@@ -38,7 +41,6 @@ import { EmbedAllowlistManager } from '@/components/admin/EmbedAllowlistManager'
 import { EmbedAudioDebugPanel } from '@/components/admin/EmbedAudioDebugPanel';
 import { RecapAnalyticsDashboard } from '@/components/admin/RecapAnalyticsDashboard';
 import { ClonePlatformsPanel } from '@/components/admin/ClonePlatformsPanel';
-import { UploadUnlockCodes } from '@/components/admin/UploadUnlockCodes';
 
 interface Application {
   id: string;
@@ -171,21 +173,21 @@ export default function Admin() {
     switch (status) {
       case 'approved':
         return (
-          <Badge className="bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 backdrop-blur-md">
+          <Badge className="admin-v10-status admin-v10-approved">
             <CheckCircle className="h-3 w-3 mr-1" />
             Approved
           </Badge>
         );
       case 'rejected':
         return (
-          <Badge className="bg-rose-500/15 text-rose-300 border border-rose-400/30 backdrop-blur-md">
+          <Badge className="admin-v10-status admin-v10-rejected">
             <XCircle className="h-3 w-3 mr-1" />
             Rejected
           </Badge>
         );
       default:
         return (
-          <Badge className="bg-amber-500/15 text-amber-300 border border-amber-400/30 backdrop-blur-md">
+          <Badge className="admin-v10-status admin-v10-pending">
             <Clock className="h-3 w-3 mr-1" />
             Pending
           </Badge>
@@ -194,131 +196,72 @@ export default function Admin() {
   };
 
   if (isLoading) {
-    return (
-      <div className="relative min-h-screen overflow-hidden">
-        <div className="admin-aurora" aria-hidden />
-        <div className="container py-24 flex flex-col items-center justify-center gap-4">
-          <div className="relative h-16 w-16">
-            <div className="absolute inset-0 rounded-full bg-primary/30 blur-2xl animate-pulse" />
-            <div className="relative h-16 w-16 rounded-full border-2 border-white/10 border-t-primary animate-spin" />
-          </div>
-          <p className="text-sm text-muted-foreground tracking-[0.2em] uppercase">Booting Command Center…</p>
-        </div>
-      </div>
-    );
+    return <div className="admin-v10 min-h-screen grid place-items-center"><Loader2 className="h-7 w-7 animate-spin text-primary" aria-label="Loading admin panel" /></div>;
   }
 
   const tabConfig = [
-    { value: 'applications', icon: FileText, label: 'Applications', accent: 'text-amber-300', count: applications.length },
-    { value: 'encoding', icon: FileVideo, label: 'Encoding', accent: 'text-violet-300' },
-    { value: 'ios-conversion', icon: Smartphone, label: 'iOS Convert', accent: 'text-sky-300' },
-    { value: 'hls-system', icon: Zap, label: 'HLS System', accent: 'text-yellow-300' },
-    { value: 'health', icon: Activity, label: 'Health', accent: 'text-emerald-300' },
-    { value: 'notifications', icon: Bell, label: 'Alerts', accent: 'text-rose-300' },
-    { value: 'cdn', icon: Globe, label: 'CDN', accent: 'text-blue-300' },
-    { value: 'tokens', icon: Key, label: 'Tokens', accent: 'text-fuchsia-300' },
-    { value: 'embed', icon: Globe, label: 'Embed', accent: 'text-cyan-300' },
-    { value: 'users', icon: Users, label: 'Users', accent: 'text-teal-300' },
+    { value: 'applications', icon: FileText, label: 'Applications', accent: 'text-primary', count: applications.length },
+    { value: 'encoding', icon: FileVideo, label: 'Encoding', accent: 'text-primary' },
+    { value: 'ios-conversion', icon: Smartphone, label: 'iOS Convert', accent: 'text-primary' },
+    { value: 'hls-system', icon: Zap, label: 'HLS System', accent: 'text-primary' },
+    { value: 'health', icon: Activity, label: 'Health', accent: 'text-primary' },
+    { value: 'notifications', icon: Bell, label: 'Alerts', accent: 'text-primary' },
+    { value: 'cdn', icon: Globe, label: 'CDN', accent: 'text-primary' },
+    { value: 'tokens', icon: Key, label: 'Tokens', accent: 'text-primary' },
+    { value: 'embed', icon: Globe, label: 'Embed', accent: 'text-primary' },
+    { value: 'users', icon: Users, label: 'Users', accent: 'text-primary' },
     { value: 'recaps', icon: Sparkles, label: 'AI Recaps', accent: 'text-primary' },
-    { value: 'clone-page', icon: Copy, label: 'Clone', accent: 'text-purple-300' },
+    { value: 'clone-page', icon: Copy, label: 'Clone', accent: 'text-primary' },
   ];
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      {/* Ambient aurora backdrop */}
-      <div className="admin-aurora" aria-hidden />
-
-      <div className="container relative py-6 md:py-10 animate-fade-in">
-        {/* Cinematic Glass Hero */}
-        <div className="lg-panel relative overflow-hidden rounded-3xl mb-6 md:mb-8">
-          <div className="absolute -top-32 -right-32 h-72 w-72 rounded-full bg-primary/25 blur-[100px] pointer-events-none" />
-          <div className="absolute -bottom-40 -left-24 h-80 w-80 rounded-full bg-fuchsia-500/20 blur-[100px] pointer-events-none" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,hsl(var(--primary)/0.18),transparent_60%)] pointer-events-none" />
-          <div className="relative p-5 md:p-8">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <div className="absolute inset-0 rounded-2xl bg-primary/50 blur-2xl" />
-                  <div className="relative p-3.5 rounded-2xl bg-white/[0.06] border border-white/15 backdrop-blur-2xl shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.5)]">
-                    <Shield className="h-7 w-7 text-primary" />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-400/10 border border-emerald-400/30 text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-300 backdrop-blur-md">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Live
-                    </span>
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Admin Console</span>
-                  </div>
-                  <h1 className="text-2xl md:text-4xl font-heading font-bold leading-tight tracking-tight">
-                    Command <span className="anime-gradient-text">Center</span>
-                  </h1>
-                  <p className="text-xs md:text-sm text-muted-foreground mt-1.5">Pulse-check the platform, approve creators, ship features.</p>
-                </div>
-              </div>
-              <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-xl">
-                <Activity className="h-4 w-4 text-emerald-300" />
-                <span className="text-xs font-semibold tabular-nums text-foreground/90">All systems nominal</span>
-              </div>
-            </div>
-
-            {/* Stats Row */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mt-7">
-              {[
-                { icon: Film, value: stats.totalAnime, label: 'Total Anime', accent: 'text-primary', glow: 'from-primary/25' },
-                { icon: Users, value: stats.totalUsers, label: 'Total Users', accent: 'text-sky-300', glow: 'from-sky-500/25' },
-                { icon: FileText, value: stats.pendingApplications, label: 'Pending Apps', accent: 'text-amber-300', glow: 'from-amber-500/25' },
-                { icon: TrendingUp, value: stats.uploaders, label: 'Uploaders', accent: 'text-emerald-300', glow: 'from-emerald-500/25' },
-              ].map((s) => (
-                <div key={s.label} className="lg-panel group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:-translate-y-0.5">
-                  <div className={`absolute -top-8 -right-8 h-24 w-24 rounded-full bg-gradient-to-br ${s.glow} to-transparent blur-2xl opacity-70 group-hover:opacity-100 transition-opacity`} />
-                  <div className="relative flex items-center gap-3">
-                    <div className={`p-2.5 rounded-xl bg-white/[0.06] border border-white/10 backdrop-blur-xl ${s.accent}`}>
-                      <s.icon className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className={`text-2xl md:text-3xl font-bold tabular-nums ${s.accent}`}>{s.value}</p>
-                      <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-semibold truncate">{s.label}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+    <div className="admin-v10 min-h-screen">
+      <div className="container py-6 md:py-10">
+        <header className="admin-v10-header">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="admin-v10-mark"><Shield className="h-6 w-6" /></span>
+            <div><p className="text-[10px] font-semibold text-muted-foreground mb-1">ANIMESAVI</p><h1 className="text-2xl md:text-3xl font-bold">Admin Panel</h1></div>
           </div>
+          <div className="flex items-center gap-2">
+            <Button variant="glass" size="icon" aria-label="Refresh admin panel" title="Refresh" onClick={fetchData}><RefreshCw className="h-4 w-4" /></Button>
+            <Button variant="glass" onClick={() => navigate('/upload')}><FileVideo className="h-4 w-4 mr-2" />Upload</Button>
+          </div>
+        </header>
+        <div className="admin-v10-stats grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { icon: Film, value: stats.totalAnime, label: 'Anime', tone: 'catalogue' },
+            { icon: Users, value: stats.totalUsers, label: 'Users', tone: 'users' },
+            { icon: FileText, value: stats.pendingApplications, label: 'Pending Applications', tone: 'pending' },
+            { icon: TrendingUp, value: stats.uploaders, label: 'Uploaders', tone: 'uploaders' },
+          ].map(stat => <div key={stat.label} className="admin-v10-stat" data-tone={stat.tone}>
+            <stat.icon className="h-5 w-5" /><strong>{stat.value}</strong><span>{stat.label}</span>
+          </div>)}
         </div>
-
-        {/* Main Tabs */}
-        <Tabs defaultValue="applications">
-          <div className="relative mb-6">
-            <div className="lg-panel rounded-2xl p-1.5 overflow-x-auto no-scrollbar">
-              <TabsList className="h-auto p-0 bg-transparent border-0 flex flex-nowrap md:flex-wrap gap-1.5 justify-start min-w-max md:min-w-0">
-                {tabConfig.map((t) => (
-                  <TabsTrigger
-                    key={t.value}
-                    value={t.value}
-                    className="group relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-300 text-muted-foreground hover:text-foreground data-[state=active]:bg-white/[0.08] data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-white/15 data-[state=active]:backdrop-blur-xl data-[state=active]:shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.4)]"
-                  >
-                    <t.icon className={`h-3.5 w-3.5 ${t.accent}`} />
-                    <span>{t.label}</span>
-                    {t.count !== undefined && t.count > 0 && (
-                      <span className={`ml-0.5 px-1.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-[10px] tabular-nums ${t.accent}`}>
-                        {t.count}
-                      </span>
-                    )}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
-          </div>
-
-          <TabsContent value="applications" className="animate-fade-in">
+        <nav className="admin-v10-shortcuts" aria-label="Admin shortcuts">
+          {[
+            {path:'/admin/site-health',label:'Site Health',icon:Activity},
+            {path:'/admin/partners',label:'Partners',icon:Globe},
+            {path:'/admin/featured',label:'Featured Lineup',icon:Sparkles},
+          ].map(item => <Button key={item.path} variant="glass" className="justify-start" onClick={() => navigate(item.path)}><item.icon className="h-4 w-4 mr-2" /><span>{item.label}</span><ArrowUpRight className="h-3 w-3 ml-auto" /></Button>)}
+        </nav>
+        <Tabs defaultValue="applications" className="admin-v10-workspace">
+          <aside className="admin-v10-navigation utility-glass-v6">
+            <p className="text-[10px] font-semibold text-muted-foreground px-3 pt-3 pb-2">MANAGEMENT</p>
+            <TabsList className="admin-v10-tabs">
+              {tabConfig.map(tab => <TabsTrigger key={tab.value} value={tab.value} className="admin-v10-tab">
+                <tab.icon className="h-4 w-4" /><span>{tab.label}</span>
+                {tab.count !== undefined && tab.count > 0 && <span className="admin-v10-count">{tab.count}</span>}
+              </TabsTrigger>)}
+            </TabsList>
+          </aside>
+          <div className="admin-v10-content">
+          <TabsContent value="applications" className="admin-v10-tab-content">
             <Tabs defaultValue="pending">
-              <TabsList className="mb-4 bg-white/[0.04] border border-white/10 backdrop-blur-xl rounded-xl">
-                <TabsTrigger value="pending" className="rounded-lg data-[state=active]:bg-white/[0.08]">
+              <TabsList className="mb-5 bg-muted/50 border border-border rounded-md">
+                <TabsTrigger value="pending" className="rounded data-[state=active]:bg-accent">
                   Pending ({applications.filter((a) => a.status === 'pending').length})
                 </TabsTrigger>
-                <TabsTrigger value="all" className="rounded-lg data-[state=active]:bg-white/[0.08]">All Applications</TabsTrigger>
+                <TabsTrigger value="all" className="rounded data-[state=active]:bg-accent">All Applications</TabsTrigger>
               </TabsList>
 
               <TabsContent value="pending">
@@ -326,7 +269,7 @@ export default function Admin() {
                   {applications
                     .filter((a) => a.status === 'pending')
                     .map((app) => (
-                      <div key={app.id} className="lg-panel rounded-2xl p-5 md:p-6 animate-fade-in">
+                      <div key={app.id} className="admin-v10-application">
                         <div className="flex items-center justify-between mb-4">
                           <div>
                             <h3 className="text-lg font-semibold">{app.profile?.username || 'Unknown User'}</h3>
@@ -355,14 +298,14 @@ export default function Admin() {
                               onChange={(e) =>
                                 setAdminNotes({ ...adminNotes, [app.id]: e.target.value })
                               }
-                              className="bg-white/[0.04] border-white/10 backdrop-blur-xl rounded-xl"
+                              className="bg-background/60 border-border rounded-md"
                             />
                           </div>
                           <div className="flex gap-3 pt-1">
                             <Button
                               onClick={() => handleApplicationAction(app.id, 'approved', app.user_id)}
                               disabled={processingId === app.id}
-                              className="bg-emerald-500/90 hover:bg-emerald-500 text-white rounded-xl shadow-[0_8px_24px_-8px_rgb(16_185_129/0.6)]"
+                              variant="glass" className="text-primary rounded-md"
                             >
                               <CheckCircle className="h-4 w-4 mr-2" />
                               Approve
@@ -371,7 +314,7 @@ export default function Admin() {
                               variant="destructive"
                               onClick={() => handleApplicationAction(app.id, 'rejected', app.user_id)}
                               disabled={processingId === app.id}
-                              className="rounded-xl"
+                              className="rounded-md"
                             >
                               <XCircle className="h-4 w-4 mr-2" />
                               Reject
@@ -382,10 +325,10 @@ export default function Admin() {
                     ))}
 
                   {applications.filter((a) => a.status === 'pending').length === 0 && (
-                    <div className="lg-panel rounded-2xl flex flex-col items-center justify-center py-16">
+                    <div className="admin-v10-empty flex flex-col items-center justify-center py-16">
                       <div className="relative mb-4">
-                        <div className="absolute inset-0 rounded-full bg-emerald-500/30 blur-2xl" />
-                        <CheckCircle className="relative h-14 w-14 text-emerald-400" />
+                        
+                        <CheckCircle className="relative h-10 w-10 text-primary" />
                       </div>
                       <p className="text-lg font-semibold">No pending applications</p>
                       <p className="text-sm text-muted-foreground">All caught up!</p>
@@ -397,7 +340,7 @@ export default function Admin() {
               <TabsContent value="all">
                 <div className="space-y-3">
                   {applications.map((app) => (
-                    <div key={app.id} className="lg-panel rounded-2xl flex items-center justify-between p-4">
+                    <div key={app.id} className="admin-v10-application flex items-center justify-between gap-3">
                       <div>
                         <p className="font-medium">{app.profile?.username || 'Unknown User'}</p>
                         <p className="text-xs text-muted-foreground">
@@ -412,72 +355,20 @@ export default function Admin() {
             </Tabs>
           </TabsContent>
 
-          <TabsContent value="encoding" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><VideoEncodingDashboard /></div></TabsContent>
-          <TabsContent value="ios-conversion" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><VideoConversionDashboard /></div></TabsContent>
-          <TabsContent value="hls-system" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><HLSConversionDashboard /></div></TabsContent>
-          <TabsContent value="health" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><ConversionHealthDashboard /></div></TabsContent>
-          <TabsContent value="notifications" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><ConversionNotifications /></div></TabsContent>
-          <TabsContent value="cdn" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><CDNHealthDashboard /></div></TabsContent>
-          <TabsContent value="tokens" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><TokenManager /></div></TabsContent>
-          <TabsContent value="embed" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><EmbedAllowlistManager /></div></TabsContent>
-          <TabsContent value="users" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><UserManagement /></div></TabsContent>
-          <TabsContent value="recaps" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><RecapAnalyticsDashboard /></div></TabsContent>
-          <TabsContent value="clone-page" className="animate-fade-in"><div className="lg-panel rounded-2xl p-4 md:p-6"><ClonePlatformsPanel /></div></TabsContent>
+          <TabsContent value="encoding" className="admin-v10-tab-content"><div className="admin-v10-tool"><VideoEncodingDashboard /></div></TabsContent>
+          <TabsContent value="ios-conversion" className="admin-v10-tab-content"><div className="admin-v10-tool"><VideoConversionDashboard /></div></TabsContent>
+          <TabsContent value="hls-system" className="admin-v10-tab-content"><div className="admin-v10-tool"><HLSConversionDashboard /></div></TabsContent>
+          <TabsContent value="health" className="admin-v10-tab-content"><div className="admin-v10-tool"><ConversionHealthDashboard /></div></TabsContent>
+          <TabsContent value="notifications" className="admin-v10-tab-content"><div className="admin-v10-tool"><ConversionNotifications /></div></TabsContent>
+          <TabsContent value="cdn" className="admin-v10-tab-content"><div className="admin-v10-tool"><CDNHealthDashboard /></div></TabsContent>
+          <TabsContent value="tokens" className="admin-v10-tab-content"><div className="admin-v10-tool"><TokenManager /></div></TabsContent>
+          <TabsContent value="embed" className="admin-v10-tab-content"><div className="admin-v10-tool"><EmbedAllowlistManager /></div></TabsContent>
+          <TabsContent value="users" className="admin-v10-tab-content"><div className="admin-v10-tool"><UserManagement /></div></TabsContent>
+          <TabsContent value="recaps" className="admin-v10-tab-content"><div className="admin-v10-tool"><RecapAnalyticsDashboard /></div></TabsContent>
+          <TabsContent value="clone-page" className="admin-v10-tab-content"><div className="admin-v10-tool"><ClonePlatformsPanel /></div></TabsContent>
+          </div>
         </Tabs>
-
-        <UploadUnlockCodes />
-        {/* Audio debug panel */}
-        <div className="mt-8 lg-panel rounded-2xl p-4 md:p-6">
-          <EmbedAudioDebugPanel />
-        </div>
-
-        {/* Quick link tiles */}
-        <div className="grid md:grid-cols-2 gap-4 mt-6">
-          <button
-            onClick={() => navigate('/admin/site-health')}
-            className="lg-panel group rounded-2xl p-5 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Activity className="h-4 w-4 text-emerald-300" />
-                  <div className="text-sm font-semibold">Site Health</div>
-                </div>
-                <div className="text-xs text-muted-foreground">Lighthouse LCP + Search Console verification for animesavi.com.</div>
-              </div>
-              <div className="text-primary text-lg transition-transform group-hover:translate-x-1">→</div>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/admin/partners')}
-            className="lg-panel group rounded-2xl p-5 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="text-sm font-semibold mb-1">Partners</div>
-                <div className="text-xs text-muted-foreground">Partner sites, their keys, and which series they've fetched.</div>
-              </div>
-              <div className="text-primary text-lg">→</div>
-            </div>
-          </button>
-
-          <button
-            onClick={() => navigate('/admin/featured')}
-            className="lg-panel group rounded-2xl p-5 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  <div className="text-sm font-semibold">Featured Hero Lineup</div>
-                </div>
-                <div className="text-xs text-muted-foreground">Edit the homepage hero slider — reorder, swap covers, override titles.</div>
-              </div>
-              <div className="text-primary text-lg transition-transform group-hover:translate-x-1">→</div>
-            </div>
-          </button>
-        </div>
+        <section className="admin-v10-debug"><EmbedAudioDebugPanel /></section>
       </div>
     </div>
   );
