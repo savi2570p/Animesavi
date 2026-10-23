@@ -43,3 +43,7 @@ Verified this refresh: 49 tests pass; preview build OK. Desktop/mobile login bra
 Token refresh verified: signed-in Verify Token loads active account status; End Token confirmation cancels without deleting access; 390px dialog fits the viewport. Existing popup regressions: 16 pass; build OK. Natural expiry on a real expired account and physical iOS/Android devices remain unverified.
 
 Verified: build OK and 49 regressions pass. Signed-in What's New opens from the hamburger and links to Release Notes, now showing S2-V2.1 with a 15MB update size; the popup re-appears for returning users because its seen-marker follows the app version. Desktop check opened the popup with S2-V2.1 and 15MB, no 12MB remnant, and the item list clears the action button when scrolled. Report input enables Send; no report was submitted. Telegram contact has both destinations; a real Watch episode shows the daily promotion and dismissal works. Footer Privacy and Terms dialogs open. Homepage Copy link reads back https://animesavi.com. Embed and S2-home retain zero Report/Telegram buttons. Desktop and 390px screenshots show readable popups, simple sharing and footer without overflow; no browser page errors. Physical devices, native OS share sheets and actual video playback remain unverified.
+
+- [x] Redesign Admin with lightweight liquid glass and remove the upload unlock password.
+- [x] Fix Upload → Edit authorization and add editable series descriptions.
+- [x] Verify signed-in admin, upload edit, and saved description persistence.

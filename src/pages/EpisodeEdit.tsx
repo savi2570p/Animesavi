@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { canEnterUploadEditor } from '@/lib/uploadEditorAccess';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -96,7 +97,7 @@ export default function EpisodeEdit() {
       return;
     }
 
-    if (!isAdmin && !isUploader) {
+    if (!canEnterUploadEditor(!!user, isAdmin, isUploader)) {
       toast.error('You do not have permission to edit episodes');
       navigate('/');
       return;

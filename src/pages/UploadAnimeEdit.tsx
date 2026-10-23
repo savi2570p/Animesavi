@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { canEnterUploadEditor } from '@/lib/uploadEditorAccess';
 import { autoEnsureEmbed } from '@/lib/embedTokens';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -93,6 +94,7 @@ export default function UploadAnimeEdit() {
 
   // Anime info editing
   const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
   const [editCoverImage, setEditCoverImage] = useState('');
   const [editBannerImage, setEditBannerImage] = useState('');
   const [editGenres, setEditGenres] = useState<string[]>([]);
@@ -116,22 +118,18 @@ export default function UploadAnimeEdit() {
     // Wait for auth + roles to be fully loaded before enforcing redirects
     if (!isAuthReady) return;
 
-    // Check if user has code verification
-    const isCodeVerified = sessionStorage.getItem('upload_code_verified') === 'true';
-
-    if (!user && !isCodeVerified) {
-      navigate('/');
+    if (!user) {
+      navigate('/auth');
       return;
     }
-
-    // Allow access if code is verified OR user is an uploader
-    if (!isCodeVerified && !isUploader) {
-      navigate('/');
+    if (!canEnterUploadEditor(!!user, isAdmin, isUploader)) {
+      toast.error('You do not have permission to edit this anime');
+      navigate('/upload');
       return;
     }
 
     fetchAnimeData();
-  }, [isAuthReady, user, isUploader, animeId, navigate]);
+  }, [isAuthReady, user, isAdmin, isUploader, animeId, navigate]);
 
   useEffect(() => {
     if (selectedSeason) {
@@ -152,9 +150,7 @@ export default function UploadAnimeEdit() {
       return;
     }
 
-    // Check ownership or code verification
-    const isCodeVerified = sessionStorage.getItem('upload_code_verified') === 'true';
-    if (!isCodeVerified && animeData.uploader_id !== user?.id && !isAdmin && !isUploader) {
+    if (!canEnterUploadEditor(!!user, isAdmin, isUploader)) {
       toast.error('You do not have permission to edit this anime');
       navigate('/upload');
       return;
@@ -168,6 +164,7 @@ export default function UploadAnimeEdit() {
     setIsSubOnly((animeData as any).is_sub_only || false);
     setScheduleDay((animeData as any).schedule_day !== null && (animeData as any).schedule_day !== undefined ? String((animeData as any).schedule_day) : 'auto');
     setEditTitle(animeData.title || '');
+    setEditDescription(animeData.description || '');
     setEditCoverImage(animeData.cover_image || '');
     setEditBannerImage(animeData.banner_image || '');
     setEditGenres(animeData.genres || []);
@@ -594,7 +591,7 @@ export default function UploadAnimeEdit() {
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>
               <h3 className="text-sm font-bold text-foreground">Edit Series Info</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Title, year, artwork, genres and studio</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Title, description, year, artwork, genres and studio</p>
             </div>
             <Button
               type="button"
@@ -642,6 +639,12 @@ export default function UploadAnimeEdit() {
               <Save className="h-3.5 w-3.5 mr-1.5" />
               Fetch Metadata
             </Button>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="series-description">Series Description</Label>
+            <Textarea id="series-description" value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              placeholder="Series synopsis" rows={5} className="bg-muted/50" />
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -781,6 +784,7 @@ export default function UploadAnimeEdit() {
                 .from('anime')
                 .update({
                   title: editTitle.trim(),
+                  description: editDescription.trim() || null,
                   cover_image: editCoverImage.trim() || null,
                   banner_image: editBannerImage.trim() || null,
                   genres: editGenres.length > 0 ? editGenres : null,
@@ -788,12 +792,14 @@ export default function UploadAnimeEdit() {
                   studio: studioToStore,
                   total_episodes: totalEpisodesToStore,
                 })
-                .eq('id', animeId);
+                .eq('id', animeId)
+                .select('id')
+                .single();
               if (error) {
-                toast.error('Failed to update');
+                toast.error('Failed to update', { description: error.message });
               } else {
                 toast.success('Series info updated!');
-                setAnime(prev => prev ? { ...prev, title: editTitle.trim(), cover_image: editCoverImage.trim() || null, banner_image: editBannerImage.trim() || null, genres: editGenres, release_year: yearToStore, studio: studioToStore, total_episodes: totalEpisodesToStore } : null);
+                setAnime(prev => prev ? { ...prev, title: editTitle.trim(), description: editDescription.trim() || null, cover_image: editCoverImage.trim() || null, banner_image: editBannerImage.trim() || null, genres: editGenres, release_year: yearToStore, studio: studioToStore, total_episodes: totalEpisodesToStore } : null);
               }
               setIsSavingInfo(false);
             }}
