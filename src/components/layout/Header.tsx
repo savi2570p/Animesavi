@@ -5,7 +5,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -33,7 +32,8 @@ import {
   ListVideo,
   RefreshCw,
   Clock,
-  CalendarDays
+  CalendarDays,
+  ChevronRight
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -389,7 +389,7 @@ export function Header() {
           {user && !isMobileOS ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-7 w-7 sm:h-9 sm:w-9 rounded-full p-0">
+                <Button variant="ghost" aria-label="Open account menu" className="account-trigger-v9 relative h-7 w-7 sm:h-9 sm:w-9 rounded-full p-0">
                   <Avatar className="h-7 w-7 sm:h-9 sm:w-9">
                     <AvatarImage src={user.user_metadata?.avatar_url} alt="Avatar" />
                     <AvatarFallback className="bg-primary text-primary-foreground font-medium text-xs sm:text-sm">
@@ -402,157 +402,71 @@ export function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="w-52 md:w-60 origin-top-right bg-card/95 border-border/60 p-0 overflow-hidden shadow-xl rounded-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 duration-100 ease-out"
+                className="account-menu-v9 utility-glass-v6"
+                aria-label="Account menu"
                 align="end"
-                sideOffset={4}
+                sideOffset={10}
+                collisionPadding={12}
               >
-                {/* Cinematic header */}
-                <div className="relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent" />
-                  <div className="relative flex items-center gap-2 p-2.5">
-                    <div className="relative shrink-0">
-                      <Avatar className="relative h-8 w-8 md:h-9 md:w-9 ring-1 ring-primary/40">
-                        <AvatarImage src={user.user_metadata?.avatar_url} alt="Avatar" />
-                        <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
-                          {user.email?.charAt(0).toUpperCase() || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                      {(isAdmin || hasValidTokenAccess(user?.email)) && (
-                        <Crown className="absolute -top-1 -right-1 h-3 w-3 text-yellow-500 drop-shadow animate-crown-shimmer" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs md:text-sm font-bold truncate">{user.user_metadata?.username || 'User'}</p>
-                      <p className="text-[10px] md:text-xs text-muted-foreground truncate">{user.email}</p>
-                      <div className="mt-0.5 flex flex-wrap gap-1">
-                        {isAdmin ? (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-[8px] md:text-[10px] font-black text-yellow-400 uppercase tracking-wider">
-                            <Crown className="h-2 w-2 md:h-2.5 md:w-2.5" /> Admin
-                          </span>
-                        ) : isUploader ? (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/15 border border-primary/30 text-[8px] md:text-[10px] font-black text-primary uppercase tracking-wider">
-                            <Upload className="h-2 w-2 md:h-2.5 md:w-2.5" /> Uploader
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-muted text-[8px] md:text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                            Viewer
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                <header className="account-menu-v9-header">
+                  <Avatar className="h-12 w-12 shrink-0 border border-border">
+                    <AvatarImage src={user.user_metadata?.avatar_url} alt="Profile" />
+                    <AvatarFallback className="bg-primary/15 text-primary font-bold">
+                      {user.email?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-base font-bold truncate">{user.user_metadata?.username || 'My account'}</p>
+                    <p className="account-menu-v9-email">{user.email}</p>
+                    <span className="account-menu-v9-role" data-role={isAdmin ? 'admin' : isUploader ? 'uploader' : 'viewer'}>
+                      {isAdmin ? <Crown /> : isUploader ? <Upload /> : <User />}
+                      {isAdmin ? 'Admin' : isUploader ? 'Uploader' : 'Viewer'}
+                    </span>
                   </div>
-                </div>
-
-                {/* Library section */}
-                <div className="p-1">
-                  <p className="px-1.5 pt-0.5 pb-1 text-[8px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                    Library
-                  </p>
-                  <div className="grid grid-cols-4 gap-1">
-                    <DropdownMenuItem asChild className="rounded-lg p-0">
-                      <Link to="/profile" className="flex flex-col items-center gap-0.5 py-1 hover:bg-primary/10 rounded-md group">
-                        <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-primary/15 flex items-center justify-center group-hover:bg-primary/25 transition-colors">
-                          <User className="h-2.5 w-2.5 md:h-3 md:w-3 text-primary" />
-                        </div>
-                        <span className="text-[8px] md:text-[10px] font-semibold">Profile</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="rounded-lg p-0">
-                      <Link to="/favorites" className="flex flex-col items-center gap-0.5 py-1 hover:bg-rose-500/10 rounded-md group">
-                        <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-rose-500/15 flex items-center justify-center group-hover:bg-rose-500/25 transition-colors">
-                          <Heart className="h-2.5 w-2.5 md:h-3 md:w-3 text-rose-500" />
-                        </div>
-                        <span className="text-[8px] md:text-[10px] font-semibold">Favs</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="rounded-lg p-0">
-                      <Link to="/downloads" className="flex flex-col items-center gap-0.5 py-1 hover:bg-emerald-500/10 rounded-md group">
-                        <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-emerald-500/15 flex items-center justify-center group-hover:bg-emerald-500/25 transition-colors">
-                          <Download className="h-2.5 w-2.5 md:h-3 md:w-3 text-emerald-500" />
-                        </div>
-                        <span className="text-[8px] md:text-[10px] font-semibold">Downloads</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="rounded-lg p-0">
-                      <Link to="/watchlist" className="flex flex-col items-center gap-0.5 py-1 hover:bg-sky-500/10 rounded-md group">
-                        <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-sky-500/15 flex items-center justify-center group-hover:bg-sky-500/25 transition-colors">
-                          <ListVideo className="h-2.5 w-2.5 md:h-3 md:w-3 text-sky-500" />
-                        </div>
-                        <span className="text-[8px] md:text-[10px] font-semibold">List</span>
-                      </Link>
-                    </DropdownMenuItem>
+                </header>
+                <section className="account-menu-v9-section">
+                  <h2 className="account-menu-v9-label">YOUR LIBRARY</h2>
+                  <div className="grid grid-cols-2 gap-1">
+                    {[
+                      { to: '/profile', label: 'Profile', icon: User, tone: 'profile' },
+                      { to: '/favorites', label: 'Favorites', icon: Heart, tone: 'favorites' },
+                      { to: '/downloads', label: 'Downloads', icon: Download, tone: 'downloads' },
+                      { to: '/watchlist', label: 'Watch List', icon: ListVideo, tone: 'list' },
+                    ].map(item => (
+                      <DropdownMenuItem asChild key={item.to} className="account-menu-v9-tile">
+                        <Link to={item.to}>
+                          <span className="account-menu-v9-icon" data-tone={item.tone}><item.icon /></span>
+                          <span>{item.label}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
                   </div>
-
-                  <DropdownMenuItem asChild className="rounded-lg mt-0.5">
-                    <Link to="/history" className="flex items-center gap-1.5 py-1 px-1.5">
-                      <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-violet-500/15 flex items-center justify-center">
-                        <History className="h-2.5 w-2.5 md:h-3 md:w-3 text-violet-500" />
-                      </div>
-                      <span className="text-[10px] md:text-xs font-medium">Watch History</span>
-                    </Link>
+                  <DropdownMenuItem asChild className="account-menu-v9-row mt-1">
+                    <Link to="/history"><History /><span>Watch History</span><ChevronRight className="account-menu-v9-arrow" /></Link>
                   </DropdownMenuItem>
-                </div>
-
+                </section>
                 {(canUpload() || isAdmin) && (
-                  <>
-                    <DropdownMenuSeparator className="my-0" />
-                    <div className="p-1">
-                      <p className="px-1.5 pt-0.5 pb-1 text-[8px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                        Creator Tools
-                      </p>
-                      {canUpload() && (
-                        <DropdownMenuItem asChild className="rounded-md">
-                          <Link to="/upload" className="flex items-center gap-1.5 py-1 px-1.5">
-                            <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-gradient-to-br from-primary to-pink-500 flex items-center justify-center shadow-sm shadow-primary/30">
-                              <Upload className="h-2.5 w-2.5 md:h-3 md:w-3 text-white" />
-                            </div>
-                            <div className="flex-1">
-                              <span className="text-[10px] md:text-xs font-semibold block leading-tight">Upload Anime</span>
-                              <span className="text-[8px] md:text-[10px] text-muted-foreground">Add new episodes</span>
-                            </div>
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
-                      {isAdmin && (
-                        <DropdownMenuItem asChild className="rounded-md">
-                          <Link to="/admin" className="flex items-center gap-1.5 py-1 px-1.5">
-                            <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center shadow-sm shadow-yellow-500/30">
-                              <Shield className="h-2.5 w-2.5 md:h-3 md:w-3 text-white" />
-                            </div>
-                            <div className="flex-1">
-                              <span className="text-[10px] md:text-xs font-semibold block leading-tight">Admin Panel</span>
-                              <span className="text-[8px] md:text-[10px] text-muted-foreground">Manage platform</span>
-                            </div>
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
-                    </div>
-                  </>
+                  <section className="account-menu-v9-section">
+                    <h2 className="account-menu-v9-label">CREATOR TOOLS</h2>
+                    {canUpload() && <DropdownMenuItem asChild className="account-menu-v9-row">
+                      <Link to="/upload"><span className="account-menu-v9-icon" data-tone="profile"><Upload /></span><span className="flex-1"><strong>Upload Anime</strong><small>Add new episodes</small></span><ChevronRight className="account-menu-v9-arrow" /></Link>
+                    </DropdownMenuItem>}
+                    {isAdmin && <DropdownMenuItem asChild className="account-menu-v9-row">
+                      <Link to="/admin"><span className="account-menu-v9-icon" data-tone="admin"><Shield /></span><span className="flex-1"><strong>Admin Panel</strong><small>Manage platform</small></span><ChevronRight className="account-menu-v9-arrow" /></Link>
+                    </DropdownMenuItem>}
+                  </section>
                 )}
-
-                <DropdownMenuSeparator className="my-0" />
-                <div className="p-1 [&_.account-switch-trigger]:h-7 md:[&_.account-switch-trigger]:h-8 [&_.account-switch-trigger]:gap-1.5 [&_.account-switch-trigger]:px-1.5 [&_.account-switch-trigger]:text-[10px] md:[&_.account-switch-trigger]:text-xs [&_.account-switch-trigger_svg]:h-3 [&_.account-switch-trigger_svg]:w-3">
-                  <DropdownMenuItem asChild className="rounded-md">
-                    <Link to="/settings" className="flex items-center gap-1.5 py-1 px-1.5">
-                      <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-muted flex items-center justify-center">
-                        <Settings className="h-2.5 w-2.5 md:h-3 md:w-3 text-muted-foreground" />
-                      </div>
-                      <span className="text-[10px] md:text-xs font-medium">Settings</span>
-                    </Link>
+                <section className="account-menu-v9-section account-menu-v9-footer">
+                  <DropdownMenuItem asChild className="account-menu-v9-row">
+                    <Link to="/settings"><Settings /><span>Settings</span><ChevronRight className="account-menu-v9-arrow" /></Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="p-0 rounded-md">
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="account-menu-v9-switch p-0">
                     <AccountSwitcher />
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={handleSignOut}
-                    className="rounded-md text-destructive focus:text-destructive focus:bg-destructive/10 mt-0.5 py-1 px-1.5"
-                  >
-                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-md bg-destructive/15 flex items-center justify-center mr-1.5">
-                      <LogOut className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                    </div>
-                    <span className="text-[10px] md:text-xs font-semibold">Sign Out</span>
+                  <DropdownMenuItem onClick={handleSignOut} className="account-menu-v9-row account-menu-v9-signout">
+                    <LogOut /><span>Sign Out</span>
                   </DropdownMenuItem>
-                </div>
+                </section>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : null}
