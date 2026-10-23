@@ -3524,7 +3524,7 @@ html.perf-low .catalogue-fill { display: none; }
 .account-v4-section [class*="rounded-xl"] { border-radius: 8px; }
 .account-v4-section [class*="justify-between"] { gap: 1rem; }
 .account-v4-section [role="switch"] { flex-shrink: 0; }
-.menu-v4 { background: var(--account-glass); box-shadow: var(--account-edge); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+.menu-v4 { background: var(--account-glass); box-shadow: var(--account-edge); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding-top: calc(1rem + env(safe-area-inset-top)); padding-bottom: calc(1rem + env(safe-area-inset-bottom)); }
 .menu-v4-section { padding: 1rem 0; border-top: 1px solid hsl(var(--border) / .6); }
 .menu-v4-label { font-size: 10px; color: hsl(var(--muted-foreground)); margin-bottom: .6rem; }
 .menu-v4-link { min-height: 42px; border-radius: 6px; justify-content: flex-start; font-size: 12px; padding: .6rem .75rem; }

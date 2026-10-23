@@ -10,6 +10,7 @@
 - Pass anime SUB classification into the shared audio selector; known stream metadata takes precedence over content-language fallback labels.
 - Watch passes both SUB and Hindi-dub classification into the shared audio fallback, while detected track labels remain authoritative.
 - Watch and Upload presentation reuse catalogue glass tokens, keep playback unframed, and remove per-card duplicate backdrop images without modifying upload guards or media policies.
+- Account pages use unframed section grids and the shared glass Button variant; the hamburger and detail loader share account glass tokens with reduced-motion and low-performance fallbacks, preserving account and menu action handlers.
 - Download confirmation pauses playback and does not automatically resume it on dismissal, so users control playback explicitly.
 - Popular catalogue cards retain shared audio/content badges and native scroll snapping; animations must respect reduced motion and device performance tiers.
 - All HLS server players use getHLSConfig as the single buffering/network policy, preserving native Safari playback and manual quality/server choices to prevent tuning drift.
