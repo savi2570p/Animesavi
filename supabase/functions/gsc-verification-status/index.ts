@@ -1,5 +1,5 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
-import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
+import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const GATEWAY_BASE = 'https://connector-gateway.lovable.dev/google_search_console';
 const SITE_IDENTIFIER = 'https://animesavi.com/';
@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     const authed = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } }
+      { global: { headers: { Authorization: authHeader } }, auth: { persistSession: false, autoRefreshToken: false } }
     );
     const token = authHeader.replace('Bearer ', '');
     const { data: claimsData, error: claimsErr } = await authed.auth.getClaims(token);
@@ -30,13 +30,14 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
       { auth: { persistSession: false } }
     );
-    const { data: isAdmin } = await admin.rpc('has_role', {
+    const { data: isAdmin, error: roleError } = await admin.rpc('has_role', {
       _user_id: claimsData.claims.sub,
       _role: 'admin',
     });
+    if (roleError) return json({ error: 'Unable to verify admin access' }, 500);
     if (!isAdmin) return json({ error: 'Forbidden' }, 403);
   } catch {
-    return json({ error: 'Unauthorized' }, 401);
+    return json({ error: 'Authentication service unavailable' }, 500);
   }
 
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
