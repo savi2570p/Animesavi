@@ -3708,7 +3708,7 @@ html.perf-low .utility-glass-v6, html.perf-medium .utility-glass-v6, html.perf-l
 }
 .token-panel-v7 { position: relative; width: min(410px, calc(100vw - 2rem)); max-width: 410px; max-height: calc(100svh - 2rem); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; letter-spacing: 0; }
 .token-watch-overlay-v7 { z-index: 2147483000; }
-.token-verify-v7 { z-index: 2147483200; }
+.token-verify-v7 { position: fixed; z-index: 2147483200; }
 .token-confirm-overlay-v7 { z-index: 2147483300; pointer-events: auto; }
 .token-confirm-overlay-v7 .token-panel-v7 { max-width: 360px; }
 .token-close-v7 { position: absolute; top: 10px; right: 10px; z-index: 1; width: 32px; height: 32px; border-radius: 6px; }
