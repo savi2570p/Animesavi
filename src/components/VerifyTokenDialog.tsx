@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button';
+import { TokenPerks } from '@/components/TokenPerks';
 import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -22,7 +24,7 @@ import {
   History,
   BadgeCheck,
 } from 'lucide-react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchTokenAccessFromDB, isSuperAdmin } from '@/components/AccessBanner';
 import { useNavigate } from 'react-router-dom';
@@ -235,465 +237,66 @@ export function VerifyTokenDialog({ open, onOpenChange }: Props) {
     if (status === 'expired') navigate('/');
   };
 
-  // SVG ring
-  const ringRadius = 38;
-  const ringCircumference = 2 * Math.PI * ringRadius;
-  const ringOffset = ringCircumference - (remainingPct / 100) * ringCircumference;
-
-  const features = [
-    { icon: Tv, label: '4K Ultra HD', tone: 'text-sky-400 bg-sky-500/10' },
-    { icon: Ban, label: 'Ad-Free', tone: 'text-rose-400 bg-rose-500/10' },
-    { icon: Globe, label: 'Multi-Audio', tone: 'text-emerald-400 bg-emerald-500/10' },
-    { icon: Download, label: '4K Downloads', tone: 'text-violet-400 bg-violet-500/10' },
-    { icon: Zap, label: 'Priority Servers', tone: 'text-amber-400 bg-amber-500/10' },
-    { icon: Sparkles, label: 'Early Access', tone: 'text-pink-400 bg-pink-500/10' },
-  ];
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="w-[calc(100vw-3rem)] max-w-[18rem] sm:max-w-sm p-0 overflow-hidden border-white/15 text-foreground shadow-2xl max-h-[80vh] overflow-y-auto text-[12px] sm:text-[13px]"
-
-        style={{
-          zIndex: 2147483200,
-          background:
-            'linear-gradient(160deg, hsla(0,0%,100%,0.08) 0%, hsla(0,0%,100%,0.02) 45%, hsla(0,0%,0%,0.35) 100%)',
-          backdropFilter: 'blur(28px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-          boxShadow:
-            '0 30px 70px hsla(0,0%,0%,0.55), inset 0 1px 0 hsla(0,0%,100%,0.18), inset 0 -1px 0 hsla(0,0%,0%,0.35)',
-        }}
-      >
+      <DialogContent className="token-panel-v7 token-verify-v7 utility-glass-v6 p-0 gap-0">
         <DialogTitle className="sr-only">Verify Token</DialogTitle>
-
+        <DialogDescription className="sr-only">Your account, premium access and token status.</DialogDescription>
         {status === 'loading' ? (
-          <div className="py-14 flex flex-col items-center gap-3">
-            <div className="relative">
-              <div className="w-12 h-12 border-2 border-primary/20 rounded-full" />
-              <div className="absolute inset-0 w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            </div>
-            <p className="text-xs text-muted-foreground">Verifying your premium access…</p>
-          </div>
+          <div className="token-loading-v7"><Shield className="h-8 w-8 text-primary motion-safe:animate-pulse" /><p>Verifying your premium access…</p></div>
         ) : (
-          <div className="flex flex-col">
-            {/* Cinematic header with progress ring */}
-            <div className="relative overflow-hidden">
-              <div
-                className={`absolute inset-0 ${
-                  isActive
-                    ? 'bg-gradient-to-br from-emerald-500/25 via-primary/10 to-transparent'
-                    : 'bg-gradient-to-br from-destructive/25 via-rose-500/10 to-transparent'
-                }`}
-              />
-              <div
-                className={`absolute -top-16 -right-12 w-56 h-56 rounded-full blur-3xl ${
-                  isActive ? 'bg-emerald-500/30' : 'bg-destructive/30'
-                }`}
-              />
-              <div
-                className={`absolute -bottom-20 -left-12 w-48 h-48 rounded-full blur-3xl ${
-                  isActive ? 'bg-primary/20' : 'bg-rose-500/20'
-                }`}
-              />
-
-              <div className="relative px-4 pt-4 pb-3 sm:px-5 sm:pt-6 sm:pb-4 flex flex-col items-center">
-                {/* Progress ring with status icon */}
-                <div className="relative w-16 h-16 sm:w-24 sm:h-24">
-                  <svg className="w-16 h-16 sm:w-24 sm:h-24 -rotate-90" viewBox="0 0 100 100">
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r={ringRadius}
-                      strokeWidth="6"
-                      fill="none"
-                      className="stroke-muted/40"
-                    />
-                    {isActive && expiresAt && (
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r={ringRadius}
-                        strokeWidth="6"
-                        fill="none"
-                        strokeLinecap="round"
-                        stroke="url(#ringGrad)"
-                        strokeDasharray={ringCircumference}
-                        strokeDashoffset={ringOffset}
-                        style={{ transition: 'stroke-dashoffset 1s linear' }}
-                      />
-                    )}
-                    <defs>
-                      <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="hsl(142, 71%, 50%)" />
-                        <stop offset="100%" stopColor="hsl(160, 85%, 45%)" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div
-                      className={`w-10 h-10 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-xl ${
-                        isActive
-                          ? 'bg-gradient-to-br from-emerald-500 to-emerald-600'
-                          : 'bg-gradient-to-br from-destructive to-rose-600'
-                      }`}
-                    >
-                      {isActive ? (
-                        <CheckCircle2 className="h-5 w-5 sm:h-7 sm:w-7 text-white" strokeWidth={2.5} />
-                      ) : (
-                        <XCircle className="h-5 w-5 sm:h-7 sm:w-7 text-white" strokeWidth={2.5} />
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-3 flex items-center gap-1.5">
-                  <Crown
-                    className={`h-3.5 w-3.5 ${isActive ? 'text-amber-400' : 'text-muted-foreground'}`}
-                  />
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-                    {superAdmin ? 'Lifetime Access' : isActive ? formatPlanLabel(durationHours) : 'Access Ended'}
-                  </p>
-                </div>
-                <h2 className="mt-1 text-lg font-black text-foreground text-center">
-                  {isActive ? 'Premium Active' : 'Premium Expired'}
-                </h2>
-                <p className="text-[11px] text-muted-foreground text-center mt-0.5 max-w-[260px]">
-                  {isActive
-                    ? superAdmin
-                      ? 'You have unlimited access to all premium features.'
-                      : 'Enjoy uninterrupted streaming on every device.'
-                    : 'Renew your token to restore premium streaming.'}
-                </p>
-              </div>
-            </div>
-
-            {/* Body */}
-            <div className="px-4 pb-4 pt-2 space-y-3">
-              {/* Live Countdown */}
+          <>
+            <header className="token-header-v7" data-status={isActive ? 'active' : 'expired'}>
+              <div className="token-status-icon-v7">{isActive ? <CheckCircle2 /> : <XCircle />}</div>
+              <span className="token-eyebrow-v7">{superAdmin ? 'Lifetime Access' : isActive ? formatPlanLabel(durationHours) : 'Access Ended'}</span>
+              <h2>{isActive ? 'Premium Active' : 'Premium Expired'}</h2>
+              <p>{isActive ? superAdmin ? 'You have unlimited access to all premium features.' : 'Enjoy uninterrupted streaming on every device.' : 'Renew your token to restore premium streaming.'}</p>
+            </header>
+            <div className="token-body-v7">
+              {superAdmin && <div className="token-plan-v7"><Crown /><div><strong>Lifetime Premium</strong><p>Never expires • All features unlocked</p></div></div>}
               {isActive && countdown && !superAdmin && (
-                <div className="rounded-xl bg-gradient-to-br from-emerald-500/10 to-primary/5 border border-emerald-500/20 p-3">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <Clock className="h-3 w-3 text-emerald-400" />
-                    <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400">
-                      Time Remaining
-                    </p>
+                <section className="token-section-v7">
+                  <h3><Clock />Time Remaining</h3>
+                  <div className="token-countdown-v7">
+                    {[{ v: countdown.days, l: 'Days' }, { v: countdown.hours, l: 'Hrs' }, { v: countdown.minutes, l: 'Min' }, { v: countdown.seconds, l: 'Sec' }].map((b) => <div key={b.l}><strong>{String(b.v).padStart(2, '0')}</strong><span>{b.l}</span></div>)}
                   </div>
-                  <div className="grid grid-cols-4 gap-1.5">
-                    {[
-                      { v: countdown.days, l: 'Days' },
-                      { v: countdown.hours, l: 'Hrs' },
-                      { v: countdown.minutes, l: 'Min' },
-                      { v: countdown.seconds, l: 'Sec' },
-                    ].map((b) => (
-                      <div
-                        key={b.l}
-                        className="rounded-lg bg-background/60 border border-border/40 py-1.5 text-center backdrop-blur-sm"
-                      >
-                        <div className="text-base font-black text-foreground tabular-nums leading-none">
-                          {String(b.v).padStart(2, '0')}
-                        </div>
-                        <div className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">
-                          {b.l}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                </section>
               )}
-
-              {superAdmin && (
-                <div className="rounded-xl bg-gradient-to-br from-amber-500/15 to-yellow-500/5 border border-amber-500/30 p-3 flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg">
-                    <Crown className="h-4.5 w-4.5 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-black text-foreground">Lifetime Premium</p>
-                    <p className="text-[10px] text-muted-foreground">Never expires • All features unlocked</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Account card */}
               {user && (
-                <div className="rounded-xl bg-muted/40 border border-border/40 p-2.5">
+                <section className="token-section-v7">
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-                        <Shield className="h-3.5 w-3.5 text-primary" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
-                          Account
-                        </p>
-                        <p className="text-[11px] font-semibold text-foreground truncate">
-                          {user.email}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={copyEmail}
-                      className="shrink-0 h-7 w-7 rounded-lg bg-background/60 hover:bg-background border border-border/40 flex items-center justify-center transition-colors"
-                      aria-label="Copy email"
-                    >
-                      {copied ? (
-                        <Check className="h-3 w-3 text-emerald-500" />
-                      ) : (
-                        <Copy className="h-3 w-3 text-muted-foreground" />
-                      )}
-                    </button>
+                    <div className="min-w-0"><h3><Shield />Account</h3><p className="token-email-v7">{user.email}</p></div>
+                    <Button variant="glass" size="icon" className="h-8 w-8 rounded-md shrink-0" onClick={copyEmail} aria-label="Copy email" title="Copy email">{copied ? <Check /> : <Copy />}</Button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-border/40">
-                    <div>
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
-                        Role
-                      </p>
-                      <p className="text-[11px] font-semibold text-foreground">{role}</p>
-                    </div>
-                    <div>
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
-                        Status
-                      </p>
-                      <p
-                        className={`text-[11px] font-bold flex items-center gap-1 ${
-                          isActive ? 'text-emerald-500' : 'text-destructive'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block w-1.5 h-1.5 rounded-full ${
-                            isActive ? 'bg-emerald-500 animate-pulse' : 'bg-destructive'
-                          }`}
-                        />
-                        {isActive ? 'Verified' : 'Expired'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                  <dl className="token-details-v7"><div><dt>Role</dt><dd>{role}</dd></div><div><dt>Status</dt><dd className={isActive ? 'token-active-v7' : 'text-destructive'}>{isActive ? 'Verified' : 'Expired'}</dd></div></dl>
+                </section>
               )}
-
-              {/* Plan timeline */}
               {isActive && !superAdmin && (activatedAt || expiresAt) && (
-                <div className="rounded-xl bg-muted/40 border border-border/40 p-2.5 space-y-2">
-                  <div className="flex items-center gap-1.5">
-                    <KeyRound className="h-3 w-3 text-primary" />
-                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                      Plan Timeline
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-lg bg-background/60 border border-border/30 p-2">
-                      <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                        <Zap className="h-2.5 w-2.5" /> Activated
-                      </div>
-                      <p className="text-[11px] font-semibold text-foreground mt-0.5">
-                        {formatDate(activatedAt)}
-                      </p>
-                      <p className="text-[9px] text-muted-foreground">{formatTime(activatedAt)}</p>
-                    </div>
-                    <div className="rounded-lg bg-background/60 border border-border/30 p-2">
-                      <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                        <Calendar className="h-2.5 w-2.5" /> Expires
-                      </div>
-                      <p className="text-[11px] font-semibold text-foreground mt-0.5">
-                        {formatDate(expiresAt)}
-                      </p>
-                      <p className="text-[9px] text-muted-foreground">{formatTime(expiresAt)}</p>
-                    </div>
-                  </div>
-
-                  {/* Progress bar */}
-                  <div>
-                    <div className="flex justify-between text-[9px] font-bold text-muted-foreground mb-1">
-                      <span>{Math.round(progress)}% used</span>
-                      <span>{Math.round(remainingPct)}% left</span>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-emerald-500 via-primary to-emerald-400 transition-all duration-1000"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
+                <section className="token-section-v7">
+                  <h3><KeyRound />Plan Timeline</h3>
+                  <dl className="token-details-v7"><div><dt>Activated</dt><dd>{formatDate(activatedAt)}</dd><small>{formatTime(activatedAt)}</small></div><div><dt>Expires</dt><dd>{formatDate(expiresAt)}</dd><small>{formatTime(expiresAt)}</small></div></dl>
+                  <div className="mt-3 utility-progress-v6"><span style={{ width: `${progress}%` }} /></div>
+                  <div className="flex justify-between mt-1 text-[10px] text-muted-foreground"><span>{Math.round(progress)}% used</span><span>{Math.round(remainingPct)}% left</span></div>
+                </section>
               )}
-
-              {/* Features grid */}
-              {isActive && (
-                <div>
-                  <div className="flex items-center gap-1.5 mb-1.5 px-1">
-                    <Sparkles className="h-3 w-3 text-primary" />
-                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                      Premium Perks Unlocked
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {features.map(({ icon: Icon, label, tone }) => (
-                      <div
-                        key={label}
-                        className="rounded-lg bg-muted/30 border border-border/30 p-2 flex flex-col items-center gap-1 hover:border-primary/30 transition-colors"
-                      >
-                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${tone}`}>
-                          <Icon className="h-3.5 w-3.5" />
-                        </div>
-                        <span className="text-[9px] font-semibold text-foreground text-center leading-tight">
-                          {label}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* CTA */}
-              {!isActive && (
-                <a
-                  href="https://t.me/getunlocktoken"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-primary to-rose-500 hover:opacity-90 shadow-lg shadow-primary/30 transition-opacity"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  Get New Token
-                </a>
-              )}
-
-              {/* Token info note */}
-              {isActive && (
-                <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-2.5">
-                  <div className="flex items-start gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0 mt-0.5">
-                      <Shield className="h-3 w-3 text-amber-400" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black text-foreground uppercase tracking-wide">
-                        What happens next?
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">
-                        Ending your token will instantly revoke premium access on this device. You will need to activate a new token link from Telegram to restore 4K, ad-free streaming and all premium perks.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* End token */}
-              {isActive && (
-                <button
-                  onClick={handleEndToken}
-                  disabled={ending}
-                  className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-xs font-black text-destructive bg-destructive/10 border border-destructive/30 hover:bg-destructive/20 disabled:opacity-60 transition-colors"
-                >
-                  <PowerOff className="h-3.5 w-3.5" />
-                  {ending ? 'Ending…' : 'End Token'}
-                </button>
-              )}
-
-              {/* Liquid-glass confirmation overlay */}
-              {showConfirm && typeof document !== 'undefined' && createPortal(
-                <div
-                  className="fixed inset-0 flex items-center justify-center p-4"
-                  style={{
-                    zIndex: 2147483300,
-                    // Radix modal dialog sets pointer-events:none on <body>;
-                    // re-enable it for this portaled overlay.
-                    pointerEvents: 'auto',
-                    background: 'hsla(0,0%,0%,0.45)',
-                    backdropFilter: 'blur(18px) saturate(160%)',
-                    WebkitBackdropFilter: 'blur(18px) saturate(160%)',
-                  }}
-                >
-                  <div
-                    className="w-full max-w-xs rounded-2xl border border-white/15 p-4 shadow-2xl"
-                    style={{
-                      background:
-                        'linear-gradient(160deg, hsla(0,0%,100%,0.12) 0%, hsla(0,0%,100%,0.04) 45%, hsla(0,0%,0%,0.45) 100%)',
-                      backdropFilter: 'blur(32px) saturate(180%)',
-                      WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-                      boxShadow:
-                        '0 30px 70px hsla(0,0%,0%,0.55), inset 0 1px 0 hsla(0,0%,100%,0.18), inset 0 -1px 0 hsla(0,0%,0%,0.35)',
-                    }}
-                  >
-                    <div className="flex flex-col items-center text-center">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-destructive/30 to-rose-500/20 flex items-center justify-center border border-destructive/30">
-                        <PowerOff className="h-5 w-5 text-destructive" />
-                      </div>
-                      <h3 className="mt-3 text-sm font-black text-foreground">End Token?</h3>
-                      <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">
-                        This will immediately remove your active premium session. You can only get it back by activating a new token link.
-                      </p>
-                    </div>
-
-                    {/* Token metadata */}
-                    <div className="mt-4 rounded-xl bg-muted/40 border border-border/40 p-3 space-y-2">
-                      <div className="flex items-center gap-1.5">
-                        <BadgeCheck className="h-3 w-3 text-primary" />
-                        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                          Token Details
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-1 gap-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                            <User className="h-3 w-3" />
-                            Issuer
-                          </div>
-                          <span className="text-[10px] font-semibold text-foreground truncate max-w-[140px]">
-                            {metadata.issuerEmail ?? 'Unknown'}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            Created
-                          </div>
-                          <span className="text-[10px] font-semibold text-foreground">
-                            {metadata.createdAt ? formatDate(metadata.createdAt) : '—'}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                            <History className="h-3 w-3" />
-                            Last used
-                          </div>
-                          <span className="text-[10px] font-semibold text-foreground">
-                            {metadata.usedAt ? formatDate(metadata.usedAt) : '—'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      <button
-                        onClick={handleCancelEnd}
-                        className="w-full py-2.5 rounded-xl font-bold text-xs bg-muted/60 text-foreground hover:bg-muted transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleConfirmEnd}
-                        disabled={ending}
-                        className="w-full py-2.5 rounded-xl font-black text-xs text-white bg-gradient-to-r from-destructive to-rose-600 hover:opacity-90 disabled:opacity-60 shadow-lg shadow-destructive/30 transition-opacity"
-                      >
-                        {ending ? 'Ending…' : 'Yes, End'}
-                      </button>
-                    </div>
-                  </div>
-                </div>,
-                document.body,
-              )}
-
-
-              <button
-                onClick={handleClose}
-                className={`w-full py-2.5 rounded-xl font-bold text-xs transition-all ${
-                  isActive
-                    ? 'bg-card border border-border/60 text-foreground hover:bg-muted/60'
-                    : 'bg-muted/60 text-foreground hover:bg-muted'
-                }`}
-              >
-                {isActive ? 'Close' : 'Go to Homepage'}
-              </button>
+              {isActive && <section className="token-section-v7"><h3><Sparkles />Premium Perks Unlocked</h3><TokenPerks /></section>}
+              {isActive && <p className="token-note-v7"><Shield className="h-4 w-4 shrink-0" />Ending your token revokes premium access. Activate a new token link to restore your perks.</p>}
             </div>
-          </div>
+            <footer className="token-actions-v7">
+              {!isActive && <Button asChild className="w-full"><a href="https://t.me/getunlocktoken" target="_blank" rel="noopener noreferrer"><ExternalLink />Get New Token</a></Button>}
+              {isActive && <Button variant="outline" className="token-end-v7 w-full" onClick={handleEndToken} disabled={ending}><PowerOff />{ending ? 'Ending…' : 'End Token'}</Button>}
+              <Button variant="glass" className="w-full" onClick={handleClose}>{isActive ? 'Close' : 'Go to Homepage'}</Button>
+            </footer>
+            {showConfirm && typeof document !== 'undefined' && createPortal(
+              <div className="token-confirm-overlay-v7 utility-overlay-v6 fixed inset-0 flex items-center justify-center p-4">
+                <section role="alertdialog" aria-modal="true" aria-labelledby="end-token-title" aria-describedby="end-token-description" className="token-panel-v7 utility-glass-v6">
+                  <header className="token-header-v7" data-status="expired"><div className="token-status-icon-v7"><PowerOff /></div><h3 id="end-token-title" className="text-lg font-bold">End Token?</h3><p id="end-token-description">This immediately removes your premium session. Activate a new token link to restore access.</p></header>
+                  <div className="token-body-v7"><section className="token-section-v7"><h3><BadgeCheck />Token Details</h3><dl className="token-metadata-v7"><div><dt>Issuer</dt><dd>{metadata.issuerEmail ?? 'Unknown'}</dd></div><div><dt>Created</dt><dd>{metadata.createdAt ? formatDate(metadata.createdAt) : '—'}</dd></div><div><dt>Last used</dt><dd>{metadata.usedAt ? formatDate(metadata.usedAt) : '—'}</dd></div></dl></section></div>
+                  <footer className="token-actions-v7 grid grid-cols-2 gap-2"><Button variant="glass" onClick={handleCancelEnd}>Cancel</Button><Button variant="destructive" onClick={handleConfirmEnd} disabled={ending}>{ending ? 'Ending…' : 'Yes, End'}</Button></footer>
+                </section>
+              </div>, document.body,
+            )}
+          </>
         )}
       </DialogContent>
     </Dialog>
