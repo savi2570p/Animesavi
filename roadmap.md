@@ -1,3 +1,7 @@
+- [ ] Make Continue Watching slightly wider with compact metadata while preserving 16:9 artwork.
+- [ ] Redesign Watch and Upload presentation without changing playback, uploads or permissions.
+- [ ] Correct Hindi-dub fallback audio labels and test concrete language rules.
+- [ ] Verify signed-in Watch, Upload and mobile layouts.
 - [x] Restore mobile hero overlay and immersive desktop sizing; remove navigation button group.
 - [x] Recreate anime details with glass styling while preserving existing actions.
 - [x] Verify banners and real anime detail interactions on desktop and mobile.
