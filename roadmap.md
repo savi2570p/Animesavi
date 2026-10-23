@@ -1,3 +1,6 @@
+- [ ] Restore mobile hero overlay and immersive desktop sizing; remove navigation button group.
+- [ ] Recreate anime details with glass styling while preserving existing actions.
+- [ ] Verify banners and real anime detail interactions on desktop and mobile.
 - [x] Fill Continue Watching artwork without side gutters.
 - [x] Give mobile hero artwork a true 16:9 frame and remove hero counter numbers.
 - [x] Shrink Trending Now and redesign Pending Upload without changing access or actions.

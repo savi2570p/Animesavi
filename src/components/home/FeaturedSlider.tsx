@@ -3,7 +3,7 @@ import { useActiveOnScreen } from '@/hooks/usePerfTier';
 import { preloadImages } from '@/lib/imageOptimization';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Info, ChevronLeft, ChevronRight, Eye, Sparkles } from 'lucide-react';
+import { Play, Info, Eye, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -64,7 +64,6 @@ const getViewCount = (title: string, dbViewCount: number | null): number => {
 export const FeaturedSlider = memo(function FeaturedSlider() {
   const [sliderRef, isActive] = useActiveOnScreen<HTMLElement>('100px');
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const [animKey, setAnimKey] = useState(0);
   const [featuredAnime, setFeaturedAnime] = useState<FeaturedAnimeItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -178,27 +177,18 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
     setAnimKey(k => k + 1);
   }, []);
 
-  const handleNext = useCallback(() => {
-    if (featuredAnime.length === 0) return;
-    goTo((currentIndex + 1) % featuredAnime.length, 'next');
-  }, [currentIndex, featuredAnime.length, goTo]);
-
-  const handlePrev = useCallback(() => {
-    if (featuredAnime.length === 0) return;
-    goTo((currentIndex - 1 + featuredAnime.length) % featuredAnime.length, 'prev');
-  }, [currentIndex, featuredAnime.length, goTo]);
 
   // Auto-loop every 3 seconds — restarts on manual change.
   // Paused whenever the hero is off screen or the tab is backgrounded so we
   // never burn frames animating something nobody is looking at.
   useEffect(() => {
-    if (featuredAnime.length < 2 || !isActive || isPaused) return;
+    if (featuredAnime.length < 2 || !isActive || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const interval = setInterval(() => {
       setCurrentIndex(prev => (prev + 1) % featuredAnime.length);
       setAnimKey(k => k + 1);
     }, 3000);
     return () => clearInterval(interval);
-  }, [currentIndex, featuredAnime.length, isActive, isPaused]);
+  }, [currentIndex, featuredAnime.length, isActive]);
 
   if (loading) return <section className="hero-v3"><Skeleton className="w-full h-full" /></section>;
   const current = featuredAnime[currentIndex];
@@ -239,11 +229,6 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
               aria-label={`Go to slide ${index + 1}`} aria-current={index === currentIndex ? 'true' : undefined}
               onClick={() => goTo(index, index > currentIndex ? 'next' : 'prev')}
               className={`hero-v3-dot h-6 w-5 md:w-8 rounded-none ${index === currentIndex ? 'is-current' : ''}`}><span /></Button>)}
-          </div>
-          <div className="hero-v3-glass flex items-center rounded-full p-1 shrink-0 gap-0.5">
-            <Button variant="ghost" size="icon" className="h-7 w-7 md:h-8 md:w-8 rounded-full" onClick={handlePrev} aria-label="Previous featured anime"><ChevronLeft className="h-4 w-4" /></Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 md:h-8 md:w-8 rounded-full" onClick={() => setIsPaused(value => !value)} aria-label={isPaused ? 'Resume featured slideshow' : 'Pause featured slideshow'}>{isPaused ? <Play className="h-3.5 w-3.5" /> : <Pause className="h-3.5 w-3.5" />}</Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 md:h-8 md:w-8 rounded-full" onClick={handleNext} aria-label="Next featured anime"><ChevronRight className="h-4 w-4" /></Button>
           </div>
         </div>
       </div>
