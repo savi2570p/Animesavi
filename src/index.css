@@ -3601,3 +3601,57 @@ html.perf-low .hero-v3-glass { backdrop-filter: none; -webkit-backdrop-filter: n
   .catalogue-glass { transition: none; }
   .catalogue-glass:hover { transform: none; }
 }
+
+/* Compact catalogue glass: shared optical edge, no animated backdrop layers. */
+:root {
+  --catalogue-v5-surface: linear-gradient(140deg, hsl(var(--foreground) / .08), hsl(var(--card) / .9) 75%);
+  --catalogue-v5-edge: inset 0 1px 0 hsl(var(--foreground) / .12), 0 6px 20px hsl(var(--background) / .18);
+  --welcome-v5-scrim: linear-gradient(90deg, hsl(var(--background) / .9), hsl(var(--background) / .16) 90%), linear-gradient(0deg, hsl(var(--background)), transparent 65%);
+}
+.settings-v5 .account-v4-sections { display: flex; flex-direction: column; gap: 0; }
+.settings-v5 .account-v4-sections > * { width: 100%; background: transparent !important; box-shadow: none !important; border: 0 !important; border-bottom: 1px solid hsl(var(--border)) !important; border-radius: 0 !important; padding: 1.5rem 0; }
+.settings-v5 .account-v4-sections > * > div:not(.absolute) { padding-left: 0; padding-right: 0; }
+.settings-v5 .account-v4-sections > * > .absolute { display: none; }
+.settings-v5 .account-v4-sections [class*="justify-between"] { gap: 1rem; }
+.settings-v5 .account-v4-sections [class*="justify-between"] > div:first-child { min-width: 0; }
+.settings-v5 [role="switch"] { flex-shrink: 0; }
+.settings-v5 .account-v4-section [class*="bg-muted"] { background: transparent; border: 0; border-bottom: 1px solid hsl(var(--border) / .6); border-radius: 0; padding: 1rem 0; }
+.catalogue-page-v5 { background: hsl(var(--background)); }
+.catalogue-page-v5 [class*="tracking-"], .welcome-v5 [class*="tracking-"] { letter-spacing: 0; }
+.catalogue-heading-v5 { border-bottom: 1px solid hsl(var(--border) / .5); margin-bottom: 1.5rem; }
+.catalogue-heading-v5 > .container { padding-bottom: 1.75rem; }
+.catalogue-heading-v5-icon, .catalogue-heading-v5-stat, .catalogue-filters-v5 .filter-btn, .welcome-v5-search { background: var(--catalogue-v5-surface); border: 1px solid hsl(var(--border)); box-shadow: var(--catalogue-v5-edge); }
+.catalogue-heading-v5-stat { backdrop-filter: none; }
+.catalogue-filters-v5 { border-bottom: 1px solid hsl(var(--border)); padding: .5rem 0 1.25rem; }
+.catalogue-filters-v5 [aria-pressed="true"] { background: hsl(var(--primary) / .16); border-color: hsl(var(--primary) / .5); color: hsl(var(--primary)); }
+.catalogue-tile-v5, .browse-v5 .browse-card { background: var(--catalogue-v5-surface); border: 1px solid hsl(var(--border)); border-radius: 8px; box-shadow: var(--catalogue-v5-edge); overflow: hidden; transition: border-color .2s ease; filter: none; will-change: auto; }
+.catalogue-tile-v5:hover, .browse-v5 .browse-card:hover { transform: none; border-color: hsl(var(--primary) / .5); filter: none; }
+.catalogue-tile-v5 > div:first-child { border-radius: 0; margin-bottom: 0; box-shadow: none; transform: none; }
+.catalogue-tile-v5 > h3, .catalogue-tile-v5 > div:last-child:not(:first-child) { padding: .75rem; margin: 0; }
+.catalogue-tile-v5 img, .browse-v5 .browse-card-image { transition: opacity .2s; transform: none !important; }
+.browse-v5 { animation: none; }
+.browse-v5::before { display: none; }
+.browse-v5 .browse-card > div:first-child { border-radius: 0; }
+.browse-v5 .browse-card > div:last-child { padding: .6rem; }
+.eng-dub-v5 .catalogue-tile-v5 > div:last-child { min-height: 4rem; }
+.welcome-v5 { padding-bottom: env(safe-area-inset-bottom); }
+.welcome-v5-nav { padding-top: env(safe-area-inset-top); }
+.welcome-v5-hero { min-height: 620px; height: min(850px, 86svh); display: flex; flex-direction: column; justify-content: flex-end; background: hsl(var(--card)); }
+.welcome-v5-scrim { background: var(--welcome-v5-scrim); }
+.welcome-v5-copy { padding-top: 120px; padding-bottom: 3rem; }
+.welcome-v5-art { object-position: center 30%; }
+.welcome-v5-search { border-radius: 8px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.welcome-v5-label { color: hsl(var(--foreground) / .8); }
+.welcome-v5-pagination span { display: block; width: 100%; height: 3px; border-radius: 2px; }
+.welcome-v5-tile { width: 310px; max-width: 85vw; background: var(--catalogue-v5-surface); border: 1px solid hsl(var(--border)); box-shadow: var(--catalogue-v5-edge); border-radius: 8px; overflow: hidden; scroll-snap-align: start; }
+.welcome-v5-band { background: var(--catalogue-v5-surface); }
+@media (max-width: 640px) {
+  .welcome-v5-hero { height: 76svh; min-height: 540px; max-height: 700px; }
+  .welcome-v5-copy { padding-bottom: 2rem; }
+  .catalogue-heading-v5 > .container > div { flex-direction: row; align-items: flex-start; gap: 1rem; }
+  .catalogue-heading-v5 h1 { font-size: 26px; line-height: 1.15; }
+  .catalogue-heading-v5-stat { padding: .4rem .5rem; }
+  .settings-v5 .account-v4-section .grid-cols-2 { grid-template-columns: 1fr; }
+}
+html.perf-low .welcome-v5-search, html.perf-medium .welcome-v5-search { backdrop-filter: none; -webkit-backdrop-filter: none; background: hsl(var(--card) / .95); }
+@media (prefers-reduced-motion: reduce) { .catalogue-tile-v5, .browse-v5 .browse-card, .welcome-v5 * { animation: none !important; transition: none !important; } }
