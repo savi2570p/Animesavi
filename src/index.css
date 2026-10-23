@@ -3517,7 +3517,7 @@ html.perf-low .catalogue-fill { display: none; }
 .ui-glass-control, .account-v4-icon { background: var(--account-glass); border: 1px solid hsl(var(--border)); box-shadow: var(--account-edge); }
 .account-v4-header { background: var(--account-glass); }
 .account-v4-sections { display: grid; grid-template-columns: 1fr; gap: 0 2.5rem; }
-.account-v4-section, .account-v4-sections > .rounded-lg { border: 0; border-bottom: 1px solid hsl(var(--border)); border-radius: 0; background: transparent; box-shadow: none; padding: 1.5rem 0; backdrop-filter: none; -webkit-backdrop-filter: none; min-width: 0; }
+.account-v4-section, .account-v4-sections > div { border: 0; border-bottom: 1px solid hsl(var(--border)); border-radius: 0; background: transparent; box-shadow: none; padding: 1.5rem 0; backdrop-filter: none; -webkit-backdrop-filter: none; min-width: 0; }
 .account-v4-sections > * > .p-6 { padding: .75rem 0; }
 .account-v4 input { background: hsl(var(--card) / .7); border-color: hsl(var(--border)); border-radius: 6px; }
 .account-v4 [class*="tracking-"] { letter-spacing: 0; }
