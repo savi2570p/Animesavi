@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Play, Sparkles, ArrowLeft, Mail, ShieldAlert, ShieldCheck, AlertTriangle, RotateCcw } from 'lucide-react';
 import { z } from 'zod';
 import { getSavedAccountCount, setSavedAccounts } from '@/lib/accountUtils';
+import logo from '@/assets/logo.png';
 
 const authSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -234,7 +235,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden overflow-y-visible bg-background flex items-center justify-center">
+    <div className="auth-v8 relative min-h-screen overflow-x-hidden overflow-y-visible bg-background flex items-center justify-center py-20">
       {/* Back Button */}
       <Button
         variant="ghost"
@@ -245,49 +246,31 @@ export default function Auth() {
         Back
       </Button>
 
-      {/* Animated background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-anime-purple/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-anime-pink/20 rounded-full blur-3xl animate-pulse animation-delay-400" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-anime-blue/10 rounded-full blur-3xl" />
-      </div>
+      <div className="auth-layout-v8 relative z-10 w-full max-w-md px-5">
+        <header className="auth-brand-v8 text-center mb-7">
+          <img src={logo} alt="AnimeSavi logo" className="w-14 h-14 object-contain mx-auto mb-4 rounded-lg" />
+          <h1 className="text-3xl font-heading font-bold text-foreground">AnimeSavi</h1>
+          <p className="text-xs text-muted-foreground mt-2">Your next episode awaits.</p>
+        </header>
 
-      <div className="relative z-10 w-full max-w-md px-4">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="p-2 rounded-xl bg-gradient-primary">
-            <Play className="h-8 w-8 text-white fill-white" />
-          </div>
-          <h1 className="text-3xl font-heading font-bold anime-gradient-text">
-            AnimesaviinHindi
-          </h1>
-        </div>
-
-        <Card className="glass-effect border-border/50">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-heading flex items-center justify-center gap-2">
-              <Sparkles className="h-5 w-5 text-anime-purple" />
-              {showForgotPassword ? 'Reset Password' : 'Join the Community'}
+        <Card className="auth-panel-v8 utility-glass-v6">
+          <CardHeader className="text-left pb-5">
+            <CardTitle className="text-xl font-heading flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              {showForgotPassword ? 'Reset password' : 'Welcome back'}
             </CardTitle>
-            <CardDescription className="text-muted-foreground">
-              {showForgotPassword 
-                ? 'Enter your email to receive a password reset link'
-                : 'Stream your favorite anime for free'
+            <CardDescription className="text-muted-foreground text-xs">
+              {showForgotPassword
+                ? 'Receive a password reset link by email.'
+                : 'Sign in or create your AnimeSavi account.'
               }
             </CardDescription>
 
             {/* Token Status Indicator */}
             {tokenStatus === 'active' && (
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl mb-4 animate-fade-in"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.05) 100%)',
-                  border: '1px solid rgba(34,197,94,0.3)',
-                }}
-              >
-                <ShieldCheck className="h-5 w-5 shrink-0" style={{ color: 'rgb(34,197,94)' }} />
-                <span className="text-sm font-medium" style={{ color: 'rgb(134,239,172)' }}>
-                  You have active token access
-                </span>
+              <div className="auth-token-v8 flex items-center gap-2 px-3 py-2 rounded-md mt-3">
+                <ShieldCheck className="h-4 w-4 shrink-0" />
+                <span className="text-xs font-medium">You have active token access</span>
               </div>
             )}
           </CardHeader>
@@ -307,7 +290,7 @@ export default function Auth() {
                 </div>
                 <Button
                   type="submit"
-                  className="w-full anime-button"
+                  className="w-full rounded-md"
                   disabled={isResetting}
                 >
                   <Mail className="h-4 w-4 mr-2" />
@@ -324,11 +307,11 @@ export default function Auth() {
               </form>
             ) : (
             <Tabs defaultValue={new URLSearchParams(window.location.search).get('mode') === 'signup' ? 'signup' : 'signin'} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted">
-                <TabsTrigger value="signin" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
+              <TabsList className="auth-tabs-v8 grid w-full grid-cols-2 mb-5 bg-muted">
+                <TabsTrigger value="signin" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   Sign In
                 </TabsTrigger>
-                <TabsTrigger value="signup" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
+                <TabsTrigger value="signup" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   Sign Up
                 </TabsTrigger>
               </TabsList>
@@ -352,13 +335,9 @@ export default function Auth() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="signin-password">Password</Label>
-                      <button
-                        type="button"
-                        onClick={() => setShowForgotPassword(true)}
-                        className="text-xs text-primary hover:underline"
-                      >
-                        Forgot Password?
-                      </button>
+                      <Button variant="link" size="sm" type="button" onClick={() => setShowForgotPassword(true)} className="text-[11px] h-auto min-h-0 p-0">
+                        Forgot password?
+                      </Button>
                     </div>
                     <Input
                       id="signin-password"
@@ -387,7 +366,7 @@ export default function Auth() {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full anime-button"
+                    className="w-full rounded-md"
                     disabled={isLoading}
                   >
                     {isLoading ? 'Signing in...' : 'Sign In'}
@@ -405,7 +384,7 @@ export default function Auth() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full bg-black text-white hover:bg-black/90 hover:text-white border-black"
+                    className="w-full rounded-md"
                     onClick={handleAppleSignIn}
                     disabled={isAppleLoading}
                   >
@@ -423,10 +402,10 @@ export default function Auth() {
                     disabled={isGoogleLoading}
                   >
                     <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                      <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                      <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                     </svg>
                     {isGoogleLoading ? 'Connecting...' : 'Continue with Google'}
                   </Button>
@@ -490,7 +469,7 @@ export default function Auth() {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full anime-button"
+                    className="w-full rounded-md"
                     disabled={isLoading}
                   >
                     {isLoading ? 'Creating account...' : 'Create Account'}
@@ -566,46 +545,15 @@ export default function Auth() {
 
       {/* Expired Token Popup */}
       {showExpiredPopup && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-          style={{ background: 'radial-gradient(ellipse at center, rgba(180,0,0,0.15) 0%, rgba(0,0,0,0.85) 70%)' }}
-        >
-          <div
-            className="w-full max-w-sm rounded-2xl overflow-hidden animate-scale-in"
-            style={{
-              background: 'linear-gradient(165deg, rgba(30,0,0,0.95) 0%, rgba(10,10,10,0.98) 100%)',
-              border: '1px solid rgba(220,38,38,0.3)',
-              boxShadow: '0 0 60px rgba(220,38,38,0.15), 0 25px 50px rgba(0,0,0,0.6)',
-              backdropFilter: 'blur(24px)',
-            }}
-          >
-            <div className="p-6 space-y-5">
-              <div className="text-center">
-                <div
-                  className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(245,158,11,0.25) 0%, rgba(245,158,11,0.08) 100%)',
-                    boxShadow: '0 0 30px rgba(245,158,11,0.2)',
-                  }}
-                >
-                  <AlertTriangle className="h-8 w-8" style={{ color: 'rgb(251,191,36)' }} />
-                </div>
-                <h2 className="text-xl font-bold text-white tracking-tight mb-2">Oops! Token Expired</h2>
-                <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                  Your token has expired. Please activate a new token to continue watching anime.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowExpiredPopup(false)}
-                className="w-full py-3 rounded-xl font-semibold text-white transition-all duration-200"
-                style={{
-                  background: 'linear-gradient(135deg, rgb(220,38,38) 0%, rgb(185,28,28) 100%)',
-                  boxShadow: '0 0 20px rgba(220,38,38,0.3), 0 4px 12px rgba(0,0,0,0.3)',
-                }}
-              >
-                OK
-              </button>
+        <div className="utility-overlay-v6 fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <section role="dialog" aria-modal="true" aria-labelledby="auth-expired-title" className="utility-glass-v6 w-full max-w-sm p-6 space-y-5">
+            <div className="text-center">
+              <div className="utility-icon-v6 mx-auto w-11 h-11 rounded-lg grid place-items-center mb-4 text-destructive"><AlertTriangle className="h-5 w-5" /></div>
+              <h2 id="auth-expired-title" className="text-lg font-bold mb-2">Token expired</h2>
+              <p className="text-xs text-muted-foreground leading-relaxed">Your token has expired. Please activate a new token to continue watching anime.</p>
             </div>
-          </div>
+            <Button className="w-full" onClick={() => setShowExpiredPopup(false)}>OK</Button>
+          </section>
         </div>
       )}
     </div>

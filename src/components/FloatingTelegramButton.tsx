@@ -47,7 +47,7 @@ export function FloatingTelegramButton() {
   };
 
   return (
-    <div ref={wrapperRef} className="fixed bottom-20 right-3 md:bottom-6 md:right-6 z-50">
+    <div ref={wrapperRef} className="clone-hidden-utility-v8 fixed bottom-20 right-3 md:bottom-6 md:right-6 z-50">
       {open && <div role="menu" aria-label="Telegram options" className="utility-glass-v6 telegram-contact-v6 absolute bottom-full right-0 mb-3 w-72 max-w-[calc(100vw-2rem)] overflow-hidden">
         <div className="utility-header-v6 px-4 py-4 border-b border-border flex items-start justify-between gap-2"><div><p className="text-sm font-semibold">Stay connected</p><p className="text-xs text-muted-foreground mt-1">AnimeSavi on Telegram</p></div><Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Close Telegram" className="h-7 w-7"><X className="h-3.5 w-3.5" /></Button></div>
         <div className="p-2 space-y-1">
