@@ -3,12 +3,9 @@ import { useActiveOnScreen } from '@/hooks/usePerfTier';
 import { preloadImages } from '@/lib/imageOptimization';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Play, Plus, Info, ChevronLeft, ChevronRight, Eye, Sparkles, Flame } from 'lucide-react';
+import { Play, Pause, Info, ChevronLeft, ChevronRight, Eye, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 
 interface FeaturedAnimeItem {
   id: string;
@@ -67,11 +64,10 @@ const getViewCount = (title: string, dbViewCount: number | null): number => {
 export const FeaturedSlider = memo(function FeaturedSlider() {
   const [sliderRef, isActive] = useActiveOnScreen<HTMLElement>('100px');
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState<'next' | 'prev'>('next');
+  const [isPaused, setIsPaused] = useState(false);
   const [animKey, setAnimKey] = useState(0);
   const [featuredAnime, setFeaturedAnime] = useState<FeaturedAnimeItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     const fetchFeaturedAnime = async () => {
@@ -177,7 +173,7 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
 
 
   const goTo = useCallback((nextIdx: number, dir: 'next' | 'prev') => {
-    setDirection(dir);
+    void dir;
     setCurrentIndex(nextIdx);
     setAnimKey(k => k + 1);
   }, []);
@@ -196,265 +192,59 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
   // Paused whenever the hero is off screen or the tab is backgrounded so we
   // never burn frames animating something nobody is looking at.
   useEffect(() => {
-    if (featuredAnime.length === 0 || !isActive) return;
+    if (featuredAnime.length < 2 || !isActive || isPaused) return;
     const interval = setInterval(() => {
-      setDirection('next');
       setCurrentIndex(prev => (prev + 1) % featuredAnime.length);
       setAnimKey(k => k + 1);
     }, 3000);
     return () => clearInterval(interval);
-  }, [currentIndex, featuredAnime.length, isActive]);
+  }, [currentIndex, featuredAnime.length, isActive, isPaused]);
 
-  if (loading) {
-    return (
-      <section className="relative w-full">
-        <div className="aspect-[16/9] md:aspect-[21/9] w-full">
-          <Skeleton className="w-full h-full" />
-        </div>
-      </section>
-    );
-  }
-
-  if (featuredAnime.length === 0) return null;
-
+  if (loading) return <section className="hero-v3"><Skeleton className="w-full h-full" /></section>;
   const current = featuredAnime[currentIndex];
-  const heroImage = current.banner || current.thumbnail;
+  if (!current) return null;
 
-  // ─── DESKTOP: Full-width cinematic hero ───
-  if (!isMobile) {
-    return (
-      <section ref={sliderRef} className="relative w-full overflow-x-hidden overflow-y-visible">
-        {/* Background hero image */}
-        <div className="relative w-full aspect-[16/9] overflow-hidden">
-          {featuredAnime.map((anime, idx) => (
-            <div
-              key={anime.id}
-              className={`absolute inset-0 transition-opacity duration-1000 ease-out ${
-                idx === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
-              }`}
-            >
-              <img
-                src={anime.banner || anime.thumbnail || '/placeholder.svg'}
-                alt={anime.title}
-                width={1920}
-                height={1080}
-                loading={idx < 3 ? 'eager' : 'lazy'}
-                decoding={idx === 0 ? 'sync' : 'async'}
-                {...(idx === 0 ? { fetchpriority: 'high' as any } : {})}
-                className={`w-full h-full object-cover ${idx === currentIndex ? (direction === 'next' ? 'hero-slide-in-right' : 'hero-slide-in-left') : ''}`}
-              />
-
-            </div>
-          ))}
-
-          {/* Gradient overlays */}
-          <div className="absolute inset-0 z-20 bg-gradient-to-r from-background via-background/70 to-transparent" />
-          <div className="absolute inset-0 z-20 bg-gradient-to-t from-background via-transparent to-background/30" />
-
-          {/* Content overlay */}
-          <div className="absolute inset-0 z-30 flex items-center">
-            <div className="container">
-              <div key={`content-${animKey}`} className="hero-content-in max-w-2xl space-y-5">
-                {/* Featured pill + slide counter */}
-                <div className="flex items-center gap-3">
-                  <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-primary shadow-lg shadow-primary/10">
-                    <Sparkles className="h-3 w-3" />
-                    Featured · #{currentIndex + 1}
-                  </div>
-                  {current.status === 'ongoing' && (
-                    <span className="badge-glass-og text-[10px] uppercase tracking-wider">OG</span>
-                  )}
-                  <div className="flex items-center gap-1.5 text-sm text-foreground/80 backdrop-blur-sm bg-background/20 rounded-full px-2.5 py-1 border border-border/30">
-                    <Eye className="h-3.5 w-3.5" />
-                    <span className="font-semibold">{formatViews(current.views)}</span>
-                  </div>
-                </div>
-
-                {/* Title */}
-                <h1 className="text-4xl lg:text-5xl xl:text-6xl font-heading font-extrabold leading-[1.05] drop-shadow-[0_4px_20px_rgba(0,0,0,0.6)]">
-                  <span className="bg-gradient-to-br from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent">
-                    {current.title}
-                  </span>
-                </h1>
-
-                {/* Genres — chips */}
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {current.genres.slice(0, 4).map((genre, i) => (
-                    <span
-                      key={i}
-                      className="text-xs font-semibold px-2.5 py-1 rounded-full border border-foreground/15 bg-foreground/5 backdrop-blur-md text-foreground/80 hover:border-primary/40 hover:text-primary transition-colors"
-                    >
-                      {genre}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Description */}
-                <p className="text-base text-foreground/75 line-clamp-3 max-w-lg leading-relaxed border-l-2 border-primary/50 pl-3">
-                  {current.description || 'No description available.'}
-                </p>
-
-                {/* Action buttons */}
-                <div className="flex items-center gap-3 pt-2">
-                  <Button asChild size="lg" className="group bg-gradient-to-r from-primary via-primary to-primary/80 text-primary-foreground hover:scale-[1.03] text-base px-8 h-12 rounded-xl shadow-2xl shadow-primary/40 transition-all">
-                    <Link to={`/anime/${current.id}`}>
-                      <Play className="h-5 w-5 mr-2 fill-current group-hover:translate-x-0.5 transition-transform" />
-                      Watch Now
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg" className="border-foreground/20 bg-foreground/5 text-foreground hover:bg-foreground/15 hover:border-foreground/40 h-12 px-6 rounded-xl backdrop-blur-md transition-all">
-                    <Link to={`/anime/${current.id}`}>
-                      <Info className="h-5 w-5 mr-2" />
-                      More Info
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation arrows — refined glassy */}
-          <button
-            onClick={handlePrev}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-40 w-11 h-11 rounded-full bg-background/30 backdrop-blur-xl flex items-center justify-center hover:bg-primary/20 hover:border-primary/50 hover:scale-110 transition-all border border-foreground/15 shadow-xl"
-            aria-label="Previous"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button
-            onClick={handleNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-40 w-11 h-11 rounded-full bg-background/30 backdrop-blur-xl flex items-center justify-center hover:bg-primary/20 hover:border-primary/50 hover:scale-110 transition-all border border-foreground/15 shadow-xl"
-            aria-label="Next"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Pagination — slim pill bars (locked size, never circles) */}
-        <div className="hero-pagination absolute bottom-6 left-1/2 z-40" style={{ transform: 'translateX(-50%)' }}>
-          {featuredAnime.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => goTo(idx, idx > currentIndex ? 'next' : 'prev')}
-              className={`hero-pagination-bullet${idx === currentIndex ? ' hero-pagination-bullet-active' : ''}`}
-              aria-label={`Go to slide ${idx + 1}`}
-            />
-          ))}
-        </div>
-      </section>
-    );
-  }
-
-  // ─── MOBILE: Taller cinematic slider ───
   return (
-    <section ref={sliderRef} className="relative w-full overflow-x-hidden overflow-y-visible">
-      <div className="relative w-full aspect-[16/9] overflow-hidden">
-        {featuredAnime.map((anime, idx) => (
-          <div
-            key={anime.id}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-out ${
-              idx === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
-            }`}
-          >
-            <img
-              src={anime.banner || anime.thumbnail || '/placeholder.svg'}
-              alt={anime.title}
-              loading={idx < 3 ? 'eager' : 'lazy'}
-              decoding={idx === 0 ? 'sync' : 'async'}
-              className={`w-full h-full object-cover ${idx === currentIndex ? (direction === 'next' ? 'hero-slide-in-right' : 'hero-slide-in-left') : ''}`}
-            />
+    <section ref={sliderRef} className="hero-v3 relative isolate overflow-hidden" aria-label="Featured anime">
+      {featuredAnime.map((anime, index) => (
+        <img key={anime.id} src={anime.banner || anime.thumbnail || '/placeholder.svg'}
+          alt={anime.title} width={1920} height={1080}
+          loading={index < 2 ? 'eager' : 'lazy'} decoding="async"
+          fetchPriority={index === 0 ? 'high' : 'auto'}
+          className={`hero-v3-image absolute inset-0 w-full h-full object-cover ${index === currentIndex ? 'opacity-100' : 'opacity-0'}`} />
+      ))}
+      <div className="hero-v3-scrim absolute inset-0 pointer-events-none" />
+      <div className="container relative flex flex-col justify-end h-full pb-5 md:pb-8 pt-8">
+        <div key={animKey} className="hero-v3-copy max-w-2xl">
+          <div className="flex items-center gap-3 mb-3 text-xs">
+            <span className="hero-v3-glass inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-primary font-semibold"><Sparkles className="h-3 w-3" />Featured</span>
+            <span className="inline-flex items-center gap-1.5 text-foreground/80"><Eye className="h-3.5 w-3.5" />{formatViews(current.views)} views</span>
+            {current.status === 'ongoing' && <span className="badge-glass-og">OG</span>}
           </div>
-        ))}
-
-        {/* Strong gradient overlays for readability */}
-        <div className="absolute inset-0 z-20 bg-gradient-to-t from-background via-background/60 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-1/2 z-20 bg-gradient-to-t from-background to-transparent" />
-
-        {/* Content overlay — mobile */}
-        <div className="absolute inset-0 z-30 flex items-end pb-12 px-3">
-          <div key={`mcontent-${animKey}`} className="hero-content-in w-full space-y-2 max-w-full overflow-hidden">
-            {/* Featured pill + views */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <div className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/15 backdrop-blur-md px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-primary">
-                <Sparkles className="h-2.5 w-2.5" />
-                #{currentIndex + 1}
-              </div>
-              {current.status === 'ongoing' && (
-                <span className="badge-glass-og text-[8px] uppercase tracking-wider font-bold">OG</span>
-              )}
-              <div className="flex items-center gap-1 text-[10px] text-foreground/90 font-semibold backdrop-blur-sm bg-background/30 rounded-full px-1.5 py-0.5 border border-border/30">
-                <Eye className="h-2.5 w-2.5" />
-                {formatViews(current.views)}
-              </div>
-            </div>
-
-            {/* Title */}
-            <h2 className="text-[15px] xs:text-base font-heading font-bold leading-snug line-clamp-2 tracking-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] bg-gradient-to-br from-foreground to-foreground/80 bg-clip-text text-transparent">
-              {current.title}
-            </h2>
-
-            {/* Genres — chips */}
-            <div className="flex flex-wrap items-center gap-1">
-              {current.genres.slice(0, 3).map((genre, i) => (
-                <span
-                  key={i}
-                  className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full border border-foreground/15 bg-foreground/10 backdrop-blur-md text-foreground/85"
-                >
-                  {genre}
-                </span>
-              ))}
-            </div>
-
-            {/* Description */}
-            <p className="text-[12px] text-foreground/75 line-clamp-2 leading-relaxed drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)] border-l-2 border-primary/50 pl-2">
-              {current.description || 'No description available.'}
-            </p>
-
-            {/* Action buttons */}
-            <div className="flex items-center gap-2 pt-1">
-              <Button asChild size="sm" className="bg-gradient-to-r from-primary to-primary/85 text-primary-foreground hover:bg-primary text-xs px-4 h-8 rounded-lg shadow-lg shadow-primary/40 font-semibold">
-                <Link to={`/anime/${current.id}`}>
-                  <Play className="h-3.5 w-3.5 mr-1 fill-current" />
-                  Watch Now
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="sm" className="border-foreground/20 bg-foreground/10 text-foreground hover:bg-foreground/20 h-8 px-3 rounded-lg backdrop-blur-md text-xs font-semibold">
-                <Link to={`/anime/${current.id}`}>
-                  <Info className="h-3.5 w-3.5 mr-1" />
-                  Info
-                </Link>
-              </Button>
-            </div>
+          <h1 className="font-heading font-extrabold text-2xl md:text-4xl lg:text-5xl leading-tight text-foreground break-words line-clamp-3">{current.title}</h1>
+          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-[11px] md:text-xs text-foreground/80">
+            {current.genres.slice(0, 3).map(genre => <span key={genre}>{genre}</span>)}
+          </div>
+          <p className="hidden sm:block mt-3 max-w-lg text-sm text-foreground/75 leading-relaxed line-clamp-2">{current.description}</p>
+          <div className="flex items-center gap-2 mt-5">
+            <Button asChild className="h-9 md:h-11 rounded-lg px-5 gap-2"><Link to={`/anime/${current.id}`}><Play className="h-4 w-4 fill-current" />Watch Now</Link></Button>
+            <Button asChild variant="outline" className="hero-v3-glass h-9 md:h-11 rounded-lg px-4 gap-2"><Link to={`/anime/${current.id}`}><Info className="h-4 w-4" />More Info</Link></Button>
           </div>
         </div>
-
-        {/* Navigation arrows */}
-        <button
-          onClick={handlePrev}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-40 w-8 h-8 rounded-full bg-background/40 backdrop-blur-md flex items-center justify-center border border-foreground/15 shadow-lg"
-          aria-label="Previous"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <button
-          onClick={handleNext}
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-40 w-8 h-8 rounded-full bg-background/40 backdrop-blur-md flex items-center justify-center border border-foreground/15 shadow-lg"
-          aria-label="Next"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* Pagination — slim pill bars (locked size, never circles) */}
-      <div className="hero-pagination absolute bottom-4 left-1/2 z-40" style={{ transform: 'translateX(-50%)' }}>
-        {featuredAnime.map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => goTo(idx, idx > currentIndex ? 'next' : 'prev')}
-            className={`hero-pagination-bullet${idx === currentIndex ? ' hero-pagination-bullet-active' : ''}`}
-            aria-label={`Go to slide ${idx + 1}`}
-          />
-        ))}
+        <div className="flex justify-between items-center gap-3 mt-6 md:mt-8">
+          <div className="hero-v3-pagination flex items-center gap-1.5 min-w-0" aria-label="Featured slides">
+            {featuredAnime.map((anime, index) => <Button key={anime.id} variant="ghost" size="icon"
+              aria-label={`Go to slide ${index + 1}`} aria-current={index === currentIndex ? 'true' : undefined}
+              onClick={() => goTo(index, index > currentIndex ? 'next' : 'prev')}
+              className={`hero-v3-dot h-6 w-5 md:w-8 rounded-none ${index === currentIndex ? 'is-current' : ''}`}><span /></Button>)}
+          </div>
+          <div className="hero-v3-glass flex items-center rounded-full p-1 shrink-0 gap-0.5">
+            <span className="hidden md:block text-[11px] text-muted-foreground tabular-nums pl-3 pr-2">{String(currentIndex + 1).padStart(2, '0')} / {String(featuredAnime.length).padStart(2, '0')}</span>
+            <Button variant="ghost" size="icon" className="h-7 w-7 md:h-8 md:w-8 rounded-full" onClick={handlePrev} aria-label="Previous featured anime"><ChevronLeft className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 md:h-8 md:w-8 rounded-full" onClick={() => setIsPaused(value => !value)} aria-label={isPaused ? 'Resume featured slideshow' : 'Pause featured slideshow'}>{isPaused ? <Play className="h-3.5 w-3.5" /> : <Pause className="h-3.5 w-3.5" />}</Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 md:h-8 md:w-8 rounded-full" onClick={handleNext} aria-label="Next featured anime"><ChevronRight className="h-4 w-4" /></Button>
+          </div>
+        </div>
       </div>
     </section>
   );
