@@ -1,7 +1,7 @@
-- [ ] Fill Continue Watching artwork without side gutters.
-- [ ] Give mobile hero artwork a true 16:9 frame and remove hero counter numbers.
-- [ ] Shrink Trending Now and redesign Pending Upload without changing access or actions.
-- [ ] Verify signed-in desktop and mobile views.
+- [x] Fill Continue Watching artwork without side gutters.
+- [x] Give mobile hero artwork a true 16:9 frame and remove hero counter numbers.
+- [x] Shrink Trending Now and redesign Pending Upload without changing access or actions.
+- [x] Verify signed-in desktop and mobile views.
 - [x] Shrink Clones and Platforms to compact tiles.
 - [x] Ensure Continue Watching artwork is fully visible at 16:9 with titles below.
 - [x] Remove public Flox navigation and routes without touching partner integrations.
@@ -13,4 +13,4 @@
 - [x] Redesign Clones and Platforms with lightweight glass and native snap scrolling.
 - [x] Run focused tests and check the updated views.
 
-Verified: ten regression tests pass. Authenticated homepage renders real Continue Watching artwork in a reserved 16:9 frame with title below. Clones and Platforms are 46px tall on desktop; no public Flox links remain. Desktop hero and mobile overflow checked; no browser page errors. Playback and Done behavior are unchanged.
+Verified: seven focused regressions pass. Signed-in Continue Watching fills the 16:9 frame without side gutters. Mobile hero media is 16:9 and has no slide counter; Trending Now is 240px tall on mobile. Pending Upload search, clear filters, grid/list switching and Continue upload navigation work with real content, without mobile overflow or page errors. Playback and Done behavior are unchanged.
