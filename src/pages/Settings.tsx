@@ -197,7 +197,7 @@ export default function Settings() {
   ];
 
   return (
-    <div className="account-v4 min-h-screen">
+    <div className="account-v4 settings-v5 min-h-screen">
       <header className="account-v4-header border-b border-border">
         <div className="container max-w-5xl py-8 md:py-12 flex flex-wrap items-center gap-4">
           <div className="account-v4-icon h-14 w-14 rounded-lg flex items-center justify-center"><SettingsIcon className="h-6 w-6 text-primary" /></div>
@@ -283,7 +283,8 @@ export default function Settings() {
                         key={q}
                         type="button"
                         onClick={() => setDefaultQuality(q)}
-                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors ${
+                        size="sm" aria-pressed={defaultQuality === q}
+                        className={`h-8 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors ${
                           defaultQuality === q
                             ? 'border-primary bg-primary/15 text-primary'
                             : 'border-border/50 text-muted-foreground hover:border-primary/30'
@@ -310,7 +311,8 @@ export default function Settings() {
                         key={o.v}
                         type="button"
                         onClick={() => setSubLang(o.v)}
-                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors ${
+                        size="sm" aria-pressed={subLang === o.v}
+                        className={`h-8 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors ${
                           subLang === o.v
                             ? 'border-primary bg-primary/15 text-primary'
                             : 'border-border/50 text-muted-foreground hover:border-primary/30'

@@ -1,3 +1,7 @@
+- [ ] Repair Settings layout and remove Settings from hamburger options.
+- [ ] Redesign Welcome with real catalogue artwork and lightweight glass.
+- [ ] Keep only Type, Sort and Genres in Browse filters; refresh the pictured catalogue pages.
+- [ ] Verify signed-in settings, catalogue filters and navigation.
 - [x] Move the Watch episode selector left and widen mobile Continue Watching artwork.
 - [x] Refresh hamburger options, Profile and Settings with lightweight liquid glass.
 - [x] Replace anime detail loading presentation with a glass loading screen.
