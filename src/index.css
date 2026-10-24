@@ -3897,12 +3897,12 @@ body.clone-mode .clone-hidden-utility-v8, body:has(.clone-shell) .clone-hidden-u
 .studio-v12 [class*="tracking-"] { letter-spacing: 0; }
 .studio-v12 :is(h1,h2,h3) { overflow-wrap: anywhere; }
 .studio-v12-overview > div:first-child, .studio-v12-new-header { border-bottom: 1px solid hsl(var(--border)); padding-bottom: 24px; }
-.studio-v12-section { border: 0; border-top: 1px solid hsl(var(--border)); border-radius: 0; background: transparent; box-shadow: none; padding: 24px 0; }
+.studio-v12-section { border: 0; border-top: 1px solid hsl(var(--border)); border-radius: 0; background: transparent !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; padding: 24px 0; }
 .studio-v12-section > :is(.p-6,.px-6) { padding-left: 0; padding-right: 0; }
 .studio-v12-section > div:first-child { padding-top: 0; }
 .studio-v12-section h3 { font-size: 17px; font-weight: 650; }
 .studio-v12-section h3 svg { color: hsl(var(--primary)); }
-.studio-v12 :is(input:not([type="checkbox"]):not([type="file"]),textarea,[role="combobox"]) { min-width: 0; background: var(--studio-field-fill); border: 1px solid hsl(var(--border) / .85); border-radius: 6px; box-shadow: var(--studio-edge); }
+.studio-v12 :is(input:not([type="checkbox"]):not([type="file"]),textarea,[role="combobox"]) { min-width: 0; background: var(--studio-field-fill) !important; border: 1px solid hsl(var(--border) / .85); border-radius: 6px; box-shadow: var(--studio-edge) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 .studio-v12 input:not([type="checkbox"]):not([type="file"]) { min-height: 42px; }
 .studio-v12 input.w-20 { min-height: 34px; }
 .studio-v12 :is(input,textarea,[role="combobox"]):focus-visible { border-color: hsl(var(--primary) / .65); outline: 2px solid hsl(var(--primary) / .15); outline-offset: 2px; }
@@ -3923,7 +3923,7 @@ body.clone-mode .clone-hidden-utility-v8, body:has(.clone-shell) .clone-hidden-u
 .studio-v12-primary:hover { background: hsl(var(--primary) / .85); }
 .studio-v12 button[aria-pressed] { height: 32px; border-radius: 6px; font-size: 11px; transform: none; box-shadow: none; }
 .studio-v12 button[aria-pressed="true"] { background: var(--studio-selected-fill); color: hsl(var(--foreground)); border-color: hsl(var(--primary) / .45); }
-.studio-v12-new-form { border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: visible; }
+.studio-v12-new-form { border: 0; border-radius: 0; background: transparent !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; overflow: visible; }
 .upload-new-v12 form { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 28px 40px; }
 .upload-new-v12 form > section { min-width: 0; padding-bottom: 24px; }
 .upload-new-v12 form > section:nth-child(3) { grid-column: 1 / -1; }
