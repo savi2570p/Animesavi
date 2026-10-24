@@ -269,29 +269,29 @@ export default function EpisodeEdit() {
   }
 
   return (
-    <div className="container py-8 max-w-2xl">
+    <div className="episode-edit-v14 studio-v12 container py-8">
       <Button variant="ghost" onClick={() => navigate(`/upload/anime/${animeId}`)} className="mb-6">
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Anime
       </Button>
 
-      <div className="mb-8">
+      <div className="episode-edit-v14-header mb-8">
         <h1 className="text-3xl font-heading font-bold mb-2">
-          Edit <span className="anime-gradient-text">Episode</span>
+          Edit Episode
         </h1>
         <p className="text-muted-foreground">
           {anime?.title} - Episode {episode?.episode_number}
         </p>
       </div>
 
-      <Card>
+      <div className="episode-edit-v14-main studio-v12-section">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Film className="h-5 w-5" />
             Episode Details
           </CardTitle>
           <CardDescription>
-            Update the episode information below
+            {anime?.title} · Episode {episode?.episode_number}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -364,6 +364,7 @@ export default function EpisodeEdit() {
             />
           </div>
 
+          <h2 className="episode-edit-v14-heading"><Film className="h-5 w-5" />Video & artwork</h2>
           <FileUploadInput
             label="Video URL"
             accept="video"
@@ -403,7 +404,7 @@ export default function EpisodeEdit() {
                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border backdrop-blur-md ${styles}`}>
                       {label}
                     </span>
-                    <button
+                    <Button variant="glass" size="sm"
                       type="button"
                       onClick={() => {
                         setExternalUrl(autoEmbedPrefix);
@@ -412,7 +413,7 @@ export default function EpisodeEdit() {
                       className="text-[10px] font-medium px-2 py-0.5 rounded-full border border-primary/40 bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
                     >
                       Regenerate
-                    </button>
+                    </Button>
                   </div>
                 );
               })()}
@@ -449,6 +450,7 @@ export default function EpisodeEdit() {
             compact={true}
           />
 
+          <h2 className="episode-edit-v14-heading"><Subtitles className="h-5 w-5" />Subtitles & captions</h2>
           {/* Uploaded CC Preview & Delete */}
           {episode?.captions_url && (
             <div className="space-y-2">
@@ -671,7 +673,7 @@ export default function EpisodeEdit() {
 
           />
 
-          <div className="flex gap-4 pt-4">
+          <div className="episode-edit-v14-actions flex gap-4 pt-4">
             <Button
               variant="outline"
               onClick={() => navigate(`/upload/anime/${animeId}`)}
@@ -682,17 +684,17 @@ export default function EpisodeEdit() {
             <Button
               onClick={handleSave}
               disabled={isSaving}
-              className="anime-button flex-1"
+              className="studio-v12-primary flex-1"
             >
               <Save className="h-4 w-4 mr-2" />
               {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </CardContent>
-      </Card>
+      </div>
 
       {/* Add to MUSE Toggle */}
-      <div className="mt-6 flex items-center gap-4 p-4 bg-card/50 rounded-xl border border-border/50">
+      <div className="studio-v12-item mt-6 flex items-center gap-4 p-4">
         <label htmlFor="ep_is_muse" className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
@@ -724,7 +726,7 @@ export default function EpisodeEdit() {
       </div>
 
       {/* Intro/Outro Editor */}
-      <div className="mt-8">
+      <div className="episode-edit-v14-timing mt-8">
         <IntroOutroEditor
           videoUrl={videoUrl || externalUrl}
           introStartTime={introStartTime}
