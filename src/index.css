@@ -3979,6 +3979,10 @@ html.perf-low .studio-v12-tabs { backdrop-filter: none; -webkit-backdrop-filter:
 .episode-edit-v14-timing video { aspect-ratio: 16 / 9; object-fit: contain; }
 .episode-edit-v14-timing > div > div:last-child > .grid { background: var(--studio-row-fill); border: 1px solid hsl(var(--border)); border-radius: 8px; }
 .episode-edit-v14 button { white-space: normal; }
+.episode-edit-v14-actions button { height: auto; min-height: 40px; padding-top: 8px; padding-bottom: 8px; }
+.episode-edit-v14-timing h3 { flex-wrap: wrap; line-height: 1.4; }
+.episode-edit-v14-timing h3 svg { flex-shrink: 0; }
+.episode-edit-v14 input.font-mono { font-size: 12px !important; padding-left: 6px; padding-right: 6px; }
 @media (max-width: 639px) {
   .episode-edit-v14 { padding-top: 20px; }
   .episode-edit-v14 h1 { font-size: 26px; }
