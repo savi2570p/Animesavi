@@ -208,7 +208,7 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
   const validCount = episodes.filter(ep => ep.title.trim() && (ep.videoUrl || ep.externalUrl)).length;
 
   return (
-    <Card ref={ref} className="border-primary/20">
+    <Card ref={ref} className="studio-v12 studio-v12-batch studio-v12-section">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Upload className="h-5 w-5" />
@@ -227,11 +227,11 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
           compact={true}
         />
         
-        <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+        <div className="studio-v12-batch-list space-y-4 max-h-[600px] overflow-y-auto pr-2">
           {episodes.map((episode, index) => (
             <div 
               key={episode.id} 
-              className="p-4 bg-muted/30 rounded-lg border border-border/50 space-y-4"
+              className="studio-v12-item p-4 sm:p-5 space-y-4"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -244,6 +244,7 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
                   variant="ghost"
                   size="sm"
                   className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  aria-label={`Remove episode slot ${index + 1}`} title="Remove episode slot"
                   onClick={() => removeEpisodeSlot(episode.id)}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -333,7 +334,7 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
           <Button
             onClick={handleBatchUpload}
             disabled={isUploading || validCount === 0}
-            className="anime-button flex-1"
+            className="studio-v12-primary flex-1"
           >
             {isUploading ? (
               <>

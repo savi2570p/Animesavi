@@ -681,9 +681,9 @@ function UploadInner() {
           )}
         </TabsContent>
 
-        <TabsContent value="new" className="space-y-5">
+        <TabsContent value="new" className="studio-v12 upload-new-v12 space-y-5">
           {/* Hero header */}
-          <div className="relative overflow-hidden rounded-lg border border-border/40 bg-gradient-to-br from-primary/15   p-5 md:p-6">
+          <div className="studio-v12-new-header py-5 md:py-6">
             <div className="relative flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary  flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
                 <Film className="h-6 w-6 text-foreground" />
@@ -701,9 +701,9 @@ function UploadInner() {
             </div>
           </div>
 
-          <Card className="upload-v3-form border-border/40 rounded-lg overflow-hidden">
-            <div className="h-[3px] bg-gradient-to-r from-primary  " />
-            <CardContent className="p-5 md:p-7">
+          <Card className="upload-v3-form studio-v12-new-form">
+            
+            <CardContent className="p-0">
               <form onSubmit={handleSubmitAnime} className="space-y-7">
 
                 {/* SECTION 1 — IDENTITY */}
@@ -802,7 +802,7 @@ function UploadInner() {
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div className="rounded-xl border border-border/40 bg-muted/20 p-3">
+                    <div className="min-w-0">
                       <FileUploadInput
                         label="Cover Image"
                         accept="image"
@@ -812,7 +812,7 @@ function UploadInner() {
                         placeholder="https://example.com/cover.jpg"
                       />
                     </div>
-                    <div className="rounded-xl border border-border/40 bg-muted/20 p-3">
+                    <div className="min-w-0">
                       <FileUploadInput
                         label="Banner Image"
                         accept="image"
@@ -852,7 +852,7 @@ function UploadInner() {
                   </div>
 
                   {/* Auto-fill banner — premium */}
-                  <div className="relative overflow-hidden rounded-xl border border-primary/30 bg-gradient-to-r   to-transparent p-3.5">
+                  <div className="studio-v12-metadata py-4">
                     <div className="relative flex items-center justify-between gap-3 flex-wrap">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-9 h-9 rounded-lg bg-gradient-to-br   flex items-center justify-center shadow-md shadow-none shrink-0">
@@ -982,12 +982,15 @@ function UploadInner() {
                     </div>
                     <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
                   </div>
-                  <div className="rounded-xl border border-border/40 bg-muted/20 p-3.5">
+                  <div className="studio-v12-genres">
                     <div className="flex flex-wrap gap-2">
                       {genres.map((genre) => {
                         const active = selectedGenres.includes(genre);
                         return (
-                          <button
+                          <Button
+                            variant="glass"
+                            size="sm"
+                            aria-pressed={active}
                             key={genre}
                             type="button"
                             onClick={() => toggleGenre(genre)}
@@ -998,7 +1001,7 @@ function UploadInner() {
                             }`}
                           >
                             {active && '✓ '}{genre}
-                          </button>
+                          </Button>
                         );
                       })}
                     </div>
@@ -1103,11 +1106,11 @@ function UploadInner() {
                 </section>
 
                 {/* SUBMIT */}
-                <div className="sticky bottom-0 -mx-5 md:-mx-7 -mb-5 md:-mb-7 px-5 md:px-7 py-4 bg-gradient-to-t from-card via-card/95 to-card/80 backdrop-blur-md border-t border-border/40 mt-2">
+                <div className="studio-v12-submit py-4 mt-2">
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full h-12 text-sm font-bold bg-gradient-to-r from-primary   hover:opacity-95 text-foreground shadow-lg shadow-primary/30 border-0 gap-2"
+                    className="studio-v12-primary w-full min-h-12 h-auto py-3 text-sm font-semibold gap-2 whitespace-normal"
                   >
                     {isSubmitting ? (
                       <>Creating…</>
