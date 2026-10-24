@@ -71,7 +71,7 @@ const ContinueWatchingCard = memo(function ContinueWatchingCard({
   const timeLeft = formatTimeLeft(item.progress, item.episode.duration);
   const raw = item.episode.thumbnail || item.anime.banner_image || item.anime.cover_image || '/placeholder.svg';
 
-  return <div className={`catalogue-glass cw-card rounded-xl overflow-hidden w-[340px] max-w-[calc(100vw-2rem)] shrink-0 group ${isFading ? 'cw-tile-fading' : ''}`}>
+  return <div className={`catalogue-glass cw-card rounded-xl overflow-hidden w-[360px] max-w-[calc(100vw-1.5rem)] shrink-0 group ${isFading ? 'cw-tile-fading' : ''}`}>
     <Link to={`/watch/${item.episode.id}`} aria-label={`Resume ${item.anime.title} episode ${item.episode.episode_number}`} className="block">
       <div className="cw-artwork relative aspect-video bg-muted overflow-hidden">
         <img src={optimizedImageUrl(raw, { width: 640, quality: 78 })} onError={fhdFallback(raw)} alt={item.anime.title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" draggable={false} />
@@ -80,12 +80,12 @@ const ContinueWatchingCard = memo(function ContinueWatchingCard({
         <Play className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-7 w-7 text-primary-foreground fill-current" />
         <TokenCrownBadge />
       </div>
-      <div className="px-2.5 pt-1.5 space-y-1">
+      <div className="px-2 pt-1 space-y-1">
         <div className="flex items-center gap-2"><DubBadge isEngDub={(item.anime as any).is_eng_dub} isSubOnly={(item.anime as any).is_sub_only} genres={(item.anime as any).genres} /><h3 className="text-xs font-semibold truncate min-w-0 flex-1">{item.anime.title}</h3><span className="text-[9px] text-muted-foreground tabular-nums">{Math.round(progressPct)}%</span></div>
         <div className="h-1 bg-muted rounded-full overflow-hidden"><div className="h-full bg-primary" style={{width: `${progressPct}%`}} /></div>
       </div>
     </Link>
-    <div className="px-2.5 py-0.5 flex justify-between items-center gap-2"><span className="text-[10px] text-muted-foreground">{timeLeft || `Episode ${item.episode.episode_number}`}</span><Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={event => onMarkCompleted(event,item.id,item.anime.title)} aria-label={`Mark ${item.anime.title} as completed`}><Check className="h-3 w-3" />Done</Button></div>
+    <div className="px-2 flex justify-between items-center gap-2"><span className="text-[10px] text-muted-foreground">{timeLeft || `Episode ${item.episode.episode_number}`}</span><Button variant="ghost" size="sm" className="h-5 px-1 text-[10px] gap-1" onClick={event => onMarkCompleted(event,item.id,item.anime.title)} aria-label={`Mark ${item.anime.title} as completed`}><Check className="h-3 w-3" />Done</Button></div>
   </div>;
 });
 

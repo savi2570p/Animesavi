@@ -25,3 +25,4 @@
 
 - Admin uses unframed tools with a single utility-glass navigation layer; upload editors share authenticated server-role access checks, never session-storage codes, so admins without uploader roles can edit safely.
 - Upload no longer uses the legacy password gate; retain server-role and database permission checks as the access authority.
+- Pending preparation popups use the shared portaled Dialog so deferred or transformed sections cannot trap them; homepage recommendations use unframed catalogue glass rows and remain separate from Watch playback.

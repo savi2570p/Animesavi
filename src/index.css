@@ -3694,7 +3694,7 @@ html.perf-low .welcome-v5-search, html.perf-medium .welcome-v5-search { backdrop
 .nav-v6 form > div > div:first-of-type:focus-within { border-color: hsl(var(--primary) / .5) !important; background: hsl(var(--card)) !important; box-shadow: none !important; }
 .nav-v6-link[aria-current="page"] { box-shadow: inset 0 -2px 0 hsl(var(--primary)); }
 .nav-v6 .nav-logo-v8 { display: flex; align-items: center; justify-content: center; align-self: center; width: 44px; height: 44px; min-width: 44px; min-height: 44px; line-height: 0; }
-.nav-v6 .nav-logo-v8 img { flex: none; width: 24px; height: 24px; max-height: 24px; }
+.nav-v6 .nav-logo-v8 img { flex: none; width: 24px; height: 24px; max-height: 24px; border-radius: 50%; object-fit: cover; }
 @media (min-width: 640px) { .nav-v6 .nav-logo-v8 img { width: 32px; height: 32px; max-height: 32px; } }
 .footer-v6 { background: var(--catalogue-v5-surface); }
 .footer-v6 a { overflow-wrap: anywhere; }
@@ -3772,11 +3772,11 @@ html.perf-low .utility-glass-v6, html.perf-medium .utility-glass-v6, html.perf-l
 .notification-bell-v8 { border-color: hsl(var(--border)); box-shadow: var(--catalogue-v5-edge); }
 .notification-count-v8 { font-variant-numeric: tabular-nums; border: 1px solid hsl(var(--background)); }
 .notification-panel-v8 [role="menuitem"] { border-bottom: 1px solid hsl(var(--border) / .45); border-radius: 0; }
-.resume-notice-v8 { width: min(320px, calc(100vw - 2rem)); right: max(1rem, env(safe-area-inset-right)); bottom: max(5rem, calc(env(safe-area-inset-bottom) + 1rem)); }
+.resume-notice-v8 { width: min(240px, calc(100vw - 2rem)); right: max(1rem, env(safe-area-inset-right)); bottom: max(5rem, calc(env(safe-area-inset-bottom) + 1rem)); }
 .resume-art-v8 img { height: 100%; transform: none !important; animation: none !important; }
 .resume-player-v8 { border-top: 2px solid hsl(var(--primary) / .55); }
 body.clone-mode .clone-hidden-utility-v8, body:has(.clone-shell) .clone-hidden-utility-v8 { display: none !important; }
-@media (min-width: 640px) { .resume-notice-v8 { right: 5rem; bottom: 1.5rem; width: 340px; } }
+@media (min-width: 640px) { .resume-notice-v8 { right: 5rem; bottom: 1.5rem; width: 260px; } }
 @media (max-width: 640px) {
   .token-panel-v7 { max-width: 360px; }
   .token-header-v7 { padding: 20px 18px 16px; }
@@ -3876,3 +3876,11 @@ body.clone-mode .clone-hidden-utility-v8, body:has(.clone-shell) .clone-hidden-u
  .admin-v10-stat { padding: 14px; }
 }
 @media (prefers-reduced-motion: reduce) { .admin-v10 *, .admin-v10 { animation: none !important; transition: none !important; } }
+
+/* Compact recommendations, shared poster proportions and portaled queue details. */
+.recommendations-v11-card { width: 120px; flex-shrink: 0; }
+.recommendations-v11-tools { border-bottom: 1px solid hsl(var(--border) / .5); padding-bottom: .5rem; }
+.pending-details-v11 { position: fixed !important; left: 50% !important; top: 50% !important; margin: 0; background: var(--utility-glass-fill); }
+.pending-details-v11 .text-amber-500, .pending-details-v11 .text-blue-400, .pending-details-v11 .text-green-400 { color: hsl(var(--primary)); }
+.pending-details-v11 .bg-amber-500\/15, .pending-details-v11 .bg-amber-500\/10 { background: hsl(var(--muted)); }
+@media (min-width: 1024px) { .recommendations-v11-card { width: 144px; } }

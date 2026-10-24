@@ -19,8 +19,8 @@ export const LatestSeries = memo(function LatestSeries() {
       {isError && <div className="text-sm text-muted-foreground">Unable to load series. <Button variant="ghost" size="sm" onClick={() => refetch()}>Retry</Button></div>}
       <div ref={rowRef} className="flex gap-3 overflow-x-auto snap-row pb-4 pt-1">
         {isPending ? Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="w-[120px] h-[242px] rounded-xl shrink-0" />) : series.map((anime, index) => <AnimeCardContextMenu key={anime.id} animeTitle={anime.title} animeUrl={`/anime/${anime.id}`} coverImage={anime.cover_image}>
-          <Link to={`/anime/${anime.id}`} className="group block w-[120px] shrink-0 catalogue-glass rounded-xl overflow-hidden">
-            <div className="relative w-[120px] h-[180px] overflow-hidden">
+          <Link to={`/anime/${anime.id}`} className="group block w-[120px] lg:w-[144px] shrink-0 catalogue-glass rounded-xl overflow-hidden">
+            <div className="relative w-full aspect-[2/3] overflow-hidden">
               <img src={anime.cover_image || '/placeholder.svg'} alt="" aria-hidden className="catalogue-fill perf-blur-fill absolute inset-0 w-full h-full object-cover" loading="lazy" />
               <img src={anime.cover_image || '/placeholder.svg'} alt={anime.title} className="relative w-full h-full object-contain" loading="lazy" decoding="async" />
               <span className="catalogue-chip absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded">{String(index + 1).padStart(2, '0')}</span>
