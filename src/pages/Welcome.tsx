@@ -271,9 +271,14 @@ export default function Welcome() {
             { q: 'What does signing in add?', a: 'Your account brings together favourites, watch-list titles and watching history. Continue Watching uses saved progress where the player supports it.' },
             { q: 'Why can playback or quality vary?', a: 'Each server and source can offer different formats and qualities. Your connection and device also affect playback. You can choose another available server manually.' },
             { q: 'Can I watch offline?', a: 'Offline saving is available for supported episodes. Keep enough free device storage and use the Downloads page to find saved content.' },
+            { q: 'Do I need an account to watch?', a: 'You can browse and watch without signing in. An account adds favourites, watch-list titles, watching history and Continue Watching progress.' },
+            { q: 'How do I hear about new episodes?', a: 'Join the Telegram channel or allow browser notifications. Favourite anime can send an alert about an hour before a scheduled release, and you can turn these off in Settings.' },
+            { q: 'What should I do if an episode will not play?', a: 'Pick another server in the player and reload the page. Sources differ per episode, so switching servers manually is usually enough.' },
+            { q: 'Can I cast or mirror to a TV?', a: 'You can cast or mirror from a phone, tablet or computer. Simple Mode strips the custom overlays for a cleaner picture on the big screen.' },
+            { q: 'Is my watching history saved?', a: 'Progress is stored with your account so you can resume episodes and see Continue Watching. You can clear history from your account pages.' },
           ].map(item => <details key={item.q}><summary>{item.q}</summary><p>{item.a}</p></details>)}
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Button variant="glass" asChild><a href="https://t.me/animesavihindidub" target="_blank" rel="noopener noreferrer"><Users className="h-4 w-4" />Telegram community</a></Button>
+            <Button variant="glass" asChild><a href="https://t.me/AnimeSaviInhindiDUB" target="_blank" rel="noopener noreferrer"><Users className="h-4 w-4" />Telegram community</a></Button>
             <Button variant="glass" onClick={() => window.open('https://youtube.com/@anime-savi-official?si=4hhAJLdVctT1s6WL', '_blank', 'noopener,noreferrer')}><Play className="h-4 w-4" />Subscribe for more updates</Button>
           </div>
         </div>
