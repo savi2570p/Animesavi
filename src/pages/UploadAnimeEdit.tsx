@@ -823,7 +823,7 @@ export default function UploadAnimeEdit() {
         <TabsContent value="seasons">
           <div className="grid md:grid-cols-2 gap-8">
             {/* Existing Seasons */}
-            <Card className="studio-v12-section">
+            <div className="studio-v12-section">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Tv className="h-5 w-5" />
@@ -918,10 +918,10 @@ export default function UploadAnimeEdit() {
                   </div>
                 )}
               </CardContent>
-            </Card>
+            </div>
 
             {/* Add Season */}
-            <Card className="studio-v12-section">
+            <div className="studio-v12-section">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Plus className="h-5 w-5" />
@@ -985,7 +985,7 @@ export default function UploadAnimeEdit() {
                   Add Season
                 </Button>
               </CardContent>
-            </Card>
+            </div>
           </div>
         </TabsContent>
 
@@ -1022,7 +1022,7 @@ export default function UploadAnimeEdit() {
 
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Existing Episodes */}
-            <Card className="studio-v12-section">
+            <div className="studio-v12-section">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Film className="h-5 w-5" />
@@ -1082,10 +1082,10 @@ export default function UploadAnimeEdit() {
                   </div>
                 )}
               </CardContent>
-            </Card>
+            </div>
 
             {/* Add Episode */}
-            <Card className="studio-v12-section">
+            <div className="studio-v12-section">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Plus className="h-5 w-5" />
@@ -1167,7 +1167,7 @@ export default function UploadAnimeEdit() {
                 </Button>
 
               </CardContent>
-            </Card>
+            </div>
           </div>
         </TabsContent>
       </Tabs>
