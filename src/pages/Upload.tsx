@@ -46,7 +46,6 @@ import {
   Mic,
 } from 'lucide-react';
 import { UpcomingCountdownDialog } from '@/components/home/UpcomingCountdownDialog';
-import { EmbedUploadTab } from '@/components/upload/EmbedUploadTab';
 
 
 const genres = ['Action', 'Adventure', 'Animation', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Mysterious', 'Anime', 'Anime Series', 'Hindi', 'English', 'Tamil', 'Telugu', 'Japanese', 'Crunchyroll', 'Muse India', 'Sony YAY', 'Amazon Prime'];
@@ -470,9 +469,6 @@ function UploadInner() {
               <TabsTrigger value="upcoming" className="rounded-lg gap-1.5 text-xs data-[state=active]:bg-secondary data-[state=active]:text-foreground">
                 <CalendarClock className="h-3.5 w-3.5" /> Upcoming
               </TabsTrigger>
-              <TabsTrigger value="embed-upload" className="rounded-lg gap-1.5 text-xs data-[state=active]:bg-secondary data-[state=active]:text-foreground">
-                <Link2 className="h-3.5 w-3.5" /> Embed Upload
-              </TabsTrigger>
             </TabsList>
 
           </div>
@@ -701,7 +697,7 @@ function UploadInner() {
             </div>
           </div>
 
-          <Card className="upload-v3-form studio-v12-new-form">
+          <div className="upload-v3-form studio-v12-new-form">
             
             <CardContent className="p-0">
               <form onSubmit={handleSubmitAnime} className="space-y-7">
@@ -1126,13 +1122,13 @@ function UploadInner() {
                 </div>
               </form>
             </CardContent>
-          </Card>
+          </div>
         </TabsContent>
 
         {/* Add New Movie Tab - Only Movie, Thumbnail, Banner, Description */}
-        <TabsContent value="new-movie" className="space-y-5 pb-24">
+        <TabsContent value="new-movie" className="studio-v12 upload-movie-v13 space-y-5 pb-8">
           {/* Hero header */}
-          <div className="relative overflow-hidden rounded-lg border border-primary/30 bg-gradient-to-br    p-5">
+          <div className="studio-v12-new-header py-5">
             <div className="relative flex items-start gap-4">
               <div className="w-12 h-12 rounded-lg bg-gradient-to-br    flex items-center justify-center shadow-xl shadow-none ring-1 ring-border">
                 <Film className="h-6 w-6 text-foreground" />
@@ -1150,9 +1146,9 @@ function UploadInner() {
             </div>
           </div>
 
-          <Card className="upload-v3-form border-border/40 rounded-lg overflow-hidden">
-            <div className="h-1 bg-gradient-to-r   " />
-            <CardContent className="p-4 md:p-6">
+          <div className="upload-v3-form studio-v12-new-form">
+            
+            <CardContent className="p-0">
               <form className="space-y-7">
                 {/* SECTION 1 — Identity */}
                 <section className="space-y-4">
@@ -1260,7 +1256,8 @@ function UploadInner() {
                     {genres.map((genre) => {
                       const active = selectedGenres.includes(genre);
                       return (
-                        <button
+                        <Button
+                          variant="glass" size="sm" aria-pressed={active}
                           key={genre}
                           type="button"
                           onClick={() => toggleGenre(genre)}
@@ -1271,18 +1268,18 @@ function UploadInner() {
                           }`}
                         >
                           {active && '✓ '}{genre}
-                        </button>
+                        </Button>
                       );
                     })}
                   </div>
                 </section>
               </form>
             </CardContent>
-          </Card>
+          </div>
 
           {/* Sticky CTA */}
-          <div className="sticky bottom-0 -mx-2 px-2 pt-3 pb-3 bg-gradient-to-t from-card via-card/95 to-card/0 backdrop-blur-md z-10">
-            <div className="flex items-center gap-3 p-3 rounded-lg border border-primary/30 bg-card/80 backdrop-blur-md shadow-xl shadow-none">
+          <div className="studio-v12-submit py-4">
+            <div className="flex flex-wrap items-center gap-4">
               <div className="hidden sm:flex flex-col flex-1 min-w-0">
                 <span className="text-xs font-bold truncate">{title || 'Untitled Movie'}</span>
                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
@@ -1303,7 +1300,7 @@ function UploadInner() {
               <Button
                 type="button"
                 disabled={isSubmitting}
-                className="flex-1 sm:flex-none bg-gradient-to-r    text-foreground font-bold shadow-lg shadow-none hover:opacity-90 h-11 px-6"
+                className="studio-v12-primary flex-1 sm:flex-none h-11 px-6"
                   onClick={async (e) => {
                     e.preventDefault();
                     if (!title.trim()) {
@@ -1441,10 +1438,6 @@ function UploadInner() {
           <UpcomingTabContent anime={myAnime} allAnime={allAnime} isAdmin={isAdmin} onDelete={handleDeleteAnime} />
         </TabsContent>
 
-        {/* Embed Upload Tab */}
-        <TabsContent value="embed-upload">
-          <EmbedUploadTab />
-        </TabsContent>
 
         </Tabs>
       </div>

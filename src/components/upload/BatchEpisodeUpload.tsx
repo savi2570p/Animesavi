@@ -208,7 +208,7 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
   const validCount = episodes.filter(ep => ep.title.trim() && (ep.videoUrl || ep.externalUrl)).length;
 
   return (
-    <Card ref={ref} className="studio-v12 studio-v12-batch studio-v12-section">
+    <div ref={ref} className="studio-v12 studio-v12-batch studio-v12-section">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Upload className="h-5 w-5" />
@@ -352,6 +352,6 @@ export const BatchEpisodeUpload = forwardRef<HTMLDivElement, BatchEpisodeUploadP
           </Button>
         </div>
       </CardContent>
-    </Card>
+    </div>
   );
 });

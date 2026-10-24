@@ -244,6 +244,40 @@ export default function Welcome() {
         <div><h2 className="text-2xl font-bold">Find something worth watching.</h2><div className="mt-4 flex flex-wrap gap-2">{TRENDING_SEARCHES.slice(0, 4).map(t => <Button key={t} variant="glass" size="sm" onClick={() => navigate(`/browse?q=${encodeURIComponent(t)}`)}>{t}</Button>)}</div></div>
         <Button onClick={() => startWatching('/')} variant="glass">Open catalogue<ArrowRight className="h-4 w-4" /></Button>
       </section>
+      <section className="welcome-info-v13">
+        <div className="container py-10 sm:py-14">
+          <h2 className="text-2xl font-bold mb-6">More from AnimeSavi</h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8">
+            {[
+              { icon: Globe, title: 'Hindi, English & Japanese', body: 'Find Hindi-dubbed, English-dubbed and subtitled anime. Audio and subtitle availability varies by title and server.' },
+              { icon: Tv, title: 'Series & movies', body: 'Explore anime by genre, discover recent episodes and find completed series and feature films.' },
+              { icon: Bell, title: 'Release calendar', body: 'Check scheduled releases and follow favourite anime. Notifications depend on your browser permissions and available release information.' },
+              { icon: PlayCircle, title: 'Your watching library', body: 'Keep favourites, save titles to your watch list and return to episodes in Continue Watching when signed in.' },
+              { icon: Download, title: 'Downloads & offline viewing', body: 'Available episodes include download options. Offline viewing depends on supported sources, browser storage and your device.' },
+              { icon: Monitor, title: 'Watch on your devices', body: 'Use AnimeSavi on phones, tablets and computers. Playback quality up to 4K depends on the source, connection and device.' },
+            ].map(item => <article key={item.title}><item.icon className="h-6 w-6" /><h3 className="font-semibold text-base">{item.title}</h3><p className="text-sm leading-relaxed text-muted-foreground mt-2">{item.body}</p></article>)}
+          </div>
+          <div className="flex flex-wrap gap-3 mt-6">
+            <Button variant="glass" onClick={() => navigate('/auth')}><Users className="h-4 w-4" />Your account</Button>
+            <Button variant="glass" onClick={() => navigate('/schedule')}><Bell className="h-4 w-4" />Release calendar</Button>
+          </div>
+        </div>
+      </section>
+      <section className="welcome-info-v13">
+        <div className="container py-10 sm:py-14">
+          <h2 className="text-2xl font-bold mb-6">Good to know</h2>
+          {[
+            { q: 'Which audio and subtitles are available?', a: 'Look for the audio badges on each title. Available tracks and captions depend on the episode and selected server; not every title has every language.' },
+            { q: 'What does signing in add?', a: 'Your account brings together favourites, watch-list titles and watching history. Continue Watching uses saved progress where the player supports it.' },
+            { q: 'Why can playback or quality vary?', a: 'Each server and source can offer different formats and qualities. Your connection and device also affect playback. You can choose another available server manually.' },
+            { q: 'Can I watch offline?', a: 'Offline saving is available for supported episodes. Keep enough free device storage and use the Downloads page to find saved content.' },
+          ].map(item => <details key={item.q}><summary>{item.q}</summary><p>{item.a}</p></details>)}
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Button variant="glass" asChild><a href="https://t.me/animesavihindidub" target="_blank" rel="noopener noreferrer"><Users className="h-4 w-4" />Telegram community</a></Button>
+            <Button variant="glass" onClick={() => window.open('https://youtube.com/@anime-savi-official?si=4hhAJLdVctT1s6WL', '_blank', 'noopener,noreferrer')}><Play className="h-4 w-4" />Subscribe for more updates</Button>
+          </div>
+        </div>
+      </section>
       <footer className="container border-t border-border py-6 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground"><span>© 2026 AnimeSavi</span><Button variant="ghost" size="sm" onClick={() => navigate('/browse')}>Browse<ArrowRight className="h-3.5 w-3.5" /></Button></footer>
       {isLaunching && <div className="detail-loading-v4 fixed inset-0 z-[200] flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="launch-title">
         <div className="detail-loading-v4-panel rounded-lg p-6 w-full max-w-xs text-center">

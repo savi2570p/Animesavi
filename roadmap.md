@@ -52,3 +52,6 @@ Verified: build OK and 49 regressions pass. Signed-in What's New opens from the 
 - [x] Center pending preparation popups above page content and verify real interactions.
 - [x] Recreate series settings, seasons, episode lists, batch upload and new-series forms with cohesive liquid glass.
 - [x] Verify signed-in editor and upload interactions on desktop and phone widths.
+- [x] Repair uneven upload form layout and conflicting panel styles.
+- [x] Recreate Add Movie and remove Embed Upload navigation.
+- [x] Expand Welcome with useful catalogue, account and viewing information; verify all affected screens.
