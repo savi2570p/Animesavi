@@ -47,6 +47,6 @@ Verified: build OK and 49 regressions pass. Signed-in What's New opens from the 
 - [x] Redesign Admin with lightweight liquid glass and remove the upload unlock password.
 - [x] Fix Upload → Edit authorization and add editable series descriptions.
 - [x] Verify signed-in admin, upload edit, and saved description persistence.
-- [ ] Compact resume popups, widen mobile 16:9 resume artwork and round navbar logo.
-- [ ] Refresh homepage recommendations and slightly enlarge desktop catalogue cards; remove Watch recommendations.
-- [ ] Center pending preparation popups above page content and verify real interactions.
+- [x] Compact resume popups, widen mobile 16:9 resume artwork and round navbar logo.
+- [x] Refresh homepage recommendations and slightly enlarge desktop catalogue cards; remove Watch recommendations.
+- [x] Center pending preparation popups above page content and verify real interactions.
