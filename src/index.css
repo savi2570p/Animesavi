@@ -3646,8 +3646,14 @@ html.perf-low .hero-v3-glass { backdrop-filter: none; -webkit-backdrop-filter: n
 .welcome-v5-tile { width: 310px; max-width: 85vw; background: var(--catalogue-v5-surface); border: 1px solid hsl(var(--border)); box-shadow: var(--catalogue-v5-edge); border-radius: 8px; overflow: hidden; scroll-snap-align: start; }
 .welcome-v5-band { background: var(--catalogue-v5-surface); }
 @media (max-width: 640px) {
-  .welcome-v5-hero { height: 76svh; min-height: 540px; max-height: 700px; }
-  .welcome-v5-copy { padding-bottom: 2rem; }
+  /* Phones show the whole 16:9 banner, with the copy in flow beneath it. */
+  .welcome-v5-hero { height: auto; min-height: 0; max-height: none; }
+  .welcome-v5-hero > .welcome-v5-art { position: static; inset: auto; display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; }
+  .welcome-v5-hero > .welcome-v5-scrim { inset: 0 0 auto 0; height: 88px; background: linear-gradient(180deg, hsl(var(--background) / .75), transparent); }
+  .welcome-v5-copy { padding-top: 1.25rem; padding-bottom: 2rem; }
+  .welcome-v5-copy .mt-5 { margin-top: .75rem; }
+  .welcome-v5-copy .mt-6, .welcome-v5-copy .mt-7 { margin-top: 1.15rem; }
+  .welcome-v5-hero > .container:last-child { padding-bottom: 1.25rem; }
   .catalogue-heading-v5 > .container > div { flex-direction: row; align-items: flex-start; gap: 1rem; }
   .catalogue-heading-v5 h1 { font-size: 26px; line-height: 1.15; }
   .catalogue-heading-v5-stat { padding: .4rem .5rem; }
