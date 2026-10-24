@@ -392,24 +392,24 @@ export default function UploadAnimeEdit() {
   }
 
   return (
-    <div className="container py-8">
+    <div className="editor-v12 studio-v12 container py-8">
       <Button variant="ghost" onClick={() => navigate('/upload')} className="mb-6">
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Dashboard
       </Button>
 
-      <div className="mb-8">
+      <div className="studio-v12-overview mb-8">
         <div className="flex items-start justify-between gap-4 flex-wrap mb-2">
           <div>
             <h1 className="text-3xl font-heading font-bold mb-2">
-              Edit: <span className="anime-gradient-text">{anime?.title}</span>
+              <span className="text-muted-foreground text-sm block mb-2">Series editor</span>{anime?.title}
             </h1>
             <p className="text-muted-foreground">Manage seasons, episodes and status</p>
           </div>
         </div>
 
         {/* Settings card — grouped: Status / Visibility / Schedule */}
-        <div className="mt-6 p-5 sm:p-6 bg-card/50 rounded-2xl border border-border/50 space-y-6">
+        <div className="studio-v12-section mt-6 space-y-6">
           <div className="flex items-center justify-between gap-3 pb-1">
             <div>
               <h3 className="text-sm font-bold text-foreground">Series Settings</h3>
@@ -587,7 +587,7 @@ export default function UploadAnimeEdit() {
           </div>
         </div>
 
-        <div className="mt-4 p-5 sm:p-6 bg-card/50 rounded-2xl border border-border/50 space-y-4">
+        <div className="studio-v12-section mt-4 space-y-5">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>
               <h3 className="text-sm font-bold text-foreground">Edit Series Info</h3>
@@ -716,7 +716,10 @@ export default function UploadAnimeEdit() {
             <Label>Genres / Tags</Label>
             <div className="flex flex-wrap gap-2">
               {ALL_GENRES.map((genre) => (
-                <button
+                <Button
+                  variant="glass"
+                  size="sm"
+                  aria-pressed={editGenres.includes(genre)}
                   key={genre}
                   type="button"
                   onClick={() => {
@@ -740,7 +743,7 @@ export default function UploadAnimeEdit() {
                   )}
                 >
                   {genre}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -767,7 +770,7 @@ export default function UploadAnimeEdit() {
             </div>
           </div>
           <Button
-            className="anime-button"
+            className="studio-v12-primary"
             disabled={isSavingInfo}
             onClick={async () => {
               if (!editTitle.trim()) {
@@ -810,7 +813,7 @@ export default function UploadAnimeEdit() {
         </div>
       </div>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-8">
+        <TabsList className="studio-v12-tabs mb-8">
           <TabsTrigger value="seasons">Seasons</TabsTrigger>
           <TabsTrigger value="episodes" disabled={seasons.length === 0}>
             Episodes
@@ -820,7 +823,7 @@ export default function UploadAnimeEdit() {
         <TabsContent value="seasons">
           <div className="grid md:grid-cols-2 gap-8">
             {/* Existing Seasons */}
-            <Card>
+            <Card className="studio-v12-section">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Tv className="h-5 w-5" />
@@ -837,7 +840,7 @@ export default function UploadAnimeEdit() {
                     {seasons.map((season) => (
                       <div
                         key={season.id}
-                        className="flex flex-col gap-2 p-3 bg-muted/50 rounded-lg"
+                        className="studio-v12-season studio-v12-item flex flex-col gap-3 p-4"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -899,9 +902,9 @@ export default function UploadAnimeEdit() {
                             </PopoverContent>
                           </Popover>
                         </div>
-                        <div className="flex items-center justify-between gap-2 px-1 py-1.5 rounded-md bg-orange-500/5 border border-orange-500/20">
+                        <div className="studio-v12-schedule flex items-center justify-between gap-2 py-2">
                           <Label htmlFor={`upcoming-${season.id}`} className="flex items-center gap-1.5 text-xs cursor-pointer">
-                            <CalendarClock className="h-3.5 w-3.5 text-orange-500" />
+                            <CalendarClock className="h-3.5 w-3.5 text-primary" />
                             Add to Upcoming
                           </Label>
                           <Switch
@@ -918,7 +921,7 @@ export default function UploadAnimeEdit() {
             </Card>
 
             {/* Add Season */}
-            <Card>
+            <Card className="studio-v12-section">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Plus className="h-5 w-5" />
@@ -977,7 +980,7 @@ export default function UploadAnimeEdit() {
                     </PopoverContent>
                   </Popover>
                 </div>
-                <Button onClick={handleAddSeason} className="anime-button">
+                <Button onClick={handleAddSeason} className="studio-v12-primary">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Season
                 </Button>
@@ -990,7 +993,7 @@ export default function UploadAnimeEdit() {
           {seasons.length > 1 && (
             <div className="mb-6">
               <Label>Select Season</Label>
-              <div className="flex gap-2 mt-2">
+              <div className="studio-v12-season-tabs flex gap-2 mt-2 overflow-x-auto pb-2">
                 {seasons.map((season) => (
                   <Button
                     key={season.id}
@@ -1006,10 +1009,10 @@ export default function UploadAnimeEdit() {
           )}
 
           {/* Batch Upload Section */}
-          {selectedSeason && (
+          {selectedSeason && animeId && (
             <div className="mb-8">
               <BatchEpisodeUpload
-                animeId={animeId!}
+                animeId={animeId}
                 seasonId={selectedSeason}
                 currentEpisodeCount={episodes.length}
                 onEpisodesAdded={() => fetchEpisodes(selectedSeason)}
@@ -1019,7 +1022,7 @@ export default function UploadAnimeEdit() {
 
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Existing Episodes */}
-            <Card>
+            <Card className="studio-v12-section">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Film className="h-5 w-5" />
@@ -1032,25 +1035,25 @@ export default function UploadAnimeEdit() {
                     No episodes yet. Add one using the batch uploader above.
                   </p>
                 ) : (
-                  <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                  <div className="studio-v12-episode-list space-y-2 max-h-[500px] overflow-y-auto">
                     {episodes.map((episode) => (
                       <div
                         key={episode.id}
-                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                        className="studio-v12-episode studio-v12-item flex items-center justify-between gap-3 p-3"
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
                           {episode.thumbnail && (
                             <img 
                               src={episode.thumbnail} 
                               alt={episode.title}
-                              className="w-16 h-10 object-cover rounded"
+                              className="w-20 aspect-video object-cover rounded shrink-0"
                             />
                           )}
-                          <div>
-                            <span className="text-sm text-muted-foreground">
+                          <div className="min-w-0">
+                            <span className="text-xs text-muted-foreground block">
                               EP {episode.episode_number}:
                             </span>
-                            <span className="ml-2 font-medium">{episode.title}</span>
+                            <span className="block text-sm font-medium truncate">{episode.title}</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-1">
@@ -1059,7 +1062,7 @@ export default function UploadAnimeEdit() {
                             size="sm"
                             asChild
                           >
-                            <a href={`/upload/anime/${animeId}/episode/${episode.id}/edit`}>
+                            <a href={`/upload/anime/${animeId}/episode/${episode.id}/edit`} aria-label={`Edit episode ${episode.episode_number}`} title="Edit episode / subtitles">
                               <Edit className="h-4 w-4 mr-1" />
                               <span className="hidden sm:inline text-xs">Edit / CC</span>
                             </a>
@@ -1067,7 +1070,8 @@ export default function UploadAnimeEdit() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-destructive hover:text-destructive"
+                            className="text-destructive hover:text-destructive shrink-0"
+                            aria-label={`Delete episode ${episode.episode_number}`} title="Delete episode"
                             onClick={() => handleDeleteEpisode(episode.id)}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -1081,7 +1085,7 @@ export default function UploadAnimeEdit() {
             </Card>
 
             {/* Add Episode */}
-            <Card>
+            <Card className="studio-v12-section">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Plus className="h-5 w-5" />
@@ -1135,7 +1139,7 @@ export default function UploadAnimeEdit() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FileUploadInput
                     label="Thumbnail"
                     accept="image"
@@ -1157,7 +1161,7 @@ export default function UploadAnimeEdit() {
                   </div>
                 </div>
 
-                <Button onClick={handleAddEpisode} disabled={isAddingEpisode} className="anime-button w-full">
+                <Button onClick={handleAddEpisode} disabled={isAddingEpisode} className="studio-v12-primary w-full">
                   <Plus className="h-4 w-4 mr-2" />
                   {isAddingEpisode ? 'Adding Episode...' : 'Add Episode'}
                 </Button>

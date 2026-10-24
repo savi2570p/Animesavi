@@ -50,3 +50,5 @@ Verified: build OK and 49 regressions pass. Signed-in What's New opens from the 
 - [x] Compact resume popups, widen mobile 16:9 resume artwork and round navbar logo.
 - [x] Refresh homepage recommendations and slightly enlarge desktop catalogue cards; remove Watch recommendations.
 - [x] Center pending preparation popups above page content and verify real interactions.
+- [x] Recreate series settings, seasons, episode lists, batch upload and new-series forms with cohesive liquid glass.
+- [x] Verify signed-in editor and upload interactions on desktop and phone widths.
