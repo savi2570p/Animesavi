@@ -31,8 +31,8 @@ export function GlassCatalogueRow({ title, eyebrow, href, icon, items, loading, 
         {loading ? Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="w-[120px] h-[258px] shrink-0 rounded-xl" />) : items.map((item, index) => {
           const url = movies && item.firstEpisodeId ? `/watch/${item.firstEpisodeId}` : `/anime/${item.id}`;
           return <AnimeCardContextMenu key={item.id} animeTitle={item.title} animeUrl={url} coverImage={item.cover_image}>
-            <Link to={url} className="group block w-[120px] shrink-0 catalogue-glass rounded-xl overflow-hidden">
-              <div className="relative w-[120px] h-[180px] overflow-hidden bg-muted">
+            <Link to={url} className="group block w-[120px] lg:w-[144px] shrink-0 catalogue-glass rounded-xl overflow-hidden">
+              <div className="relative w-full aspect-[2/3] overflow-hidden bg-muted">
                 <img src={item.cover_image || '/placeholder.svg'} alt="" aria-hidden className="catalogue-fill perf-blur-fill absolute inset-0 w-full h-full object-cover" loading="lazy" />
                 <img src={item.cover_image || '/placeholder.svg'} alt={item.title} className="relative w-full h-full object-contain" loading="lazy" decoding="async" />
                 <span className="catalogue-chip absolute top-1.5 left-1.5 text-[9px] font-semibold rounded px-1.5 py-0.5">{finished ? 'DONE' : movies ? 'FILM' : String(index + 1).padStart(2, '0')}</span>

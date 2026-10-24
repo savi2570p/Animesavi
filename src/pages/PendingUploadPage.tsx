@@ -14,6 +14,7 @@ import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 // ──────────────────────────────────────────────────────────────────────
 // Status heuristics
@@ -109,14 +110,14 @@ interface NoEpisodesPopupProps {
 
 function NoEpisodesPopup({ isOpen, onClose, animeTitle }: NoEpisodesPopupProps) {
   if (!isOpen) return null;
-  return <div className="fixed inset-0 z-50 bg-background/90 flex items-center justify-center p-4" onClick={onClose}>
-    <div className="catalogue-glass rounded-lg max-w-md w-full p-5" onClick={e => e.stopPropagation()} role="dialog" aria-label="Upload preparation">
-      <h2 className="font-heading text-xl font-bold">Episodes Coming Soon</h2>
-      <p className="text-sm text-muted-foreground mt-2">{animeTitle}</p>
+  return <Dialog open={isOpen} onOpenChange={open => { if (!open) onClose(); }}>
+    <DialogContent className="pending-details-v11 utility-glass-v6 block rounded-lg max-w-md w-[calc(100%-2rem)] p-5 max-h-[calc(100dvh-2rem)] overflow-y-auto">
+      <DialogTitle className="font-heading text-xl font-bold">Episodes Coming Soon</DialogTitle>
+      <DialogDescription className="mt-2">{animeTitle}</DialogDescription>
       <ol className="divide-y divide-border mt-4">{['Upload queue', 'Audio + E-sub check', 'HLS encoding', 'Server deployment', 'Quality assurance'].map(stage => <li key={stage} className="py-3 text-sm flex items-center gap-2"><Clock className="h-4 w-4 text-muted-foreground" />{stage}</li>)}</ol>
       <Button onClick={onClose} className="mt-4 w-full">Close</Button>
-    </div>
-  </div>;
+    </DialogContent>
+  </Dialog>;
 }
 
 // ──────────────────────────────────────────────────────────────────────

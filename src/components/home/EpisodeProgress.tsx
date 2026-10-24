@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Clock, ChevronRight, AlertCircle, Upload, Bell, Calendar, Info } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 interface NoEpisodesPopupProps {
   isOpen: boolean;
@@ -22,15 +23,15 @@ function NoEpisodesPopup({ isOpen, onClose, animeTitle, animeType, animeStatus, 
   const daysSinceAdded = createdAt ? Math.floor((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24)) : null;
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="bg-card border border-border rounded-2xl p-6 max-w-md mx-4 shadow-2xl animate-scale-in">
+    <Dialog open={isOpen} onOpenChange={open => { if (!open) onClose(); }}>
+      <DialogContent className="pending-details-v11 utility-glass-v6 block w-[calc(100%-2rem)] max-w-md rounded-lg p-4 sm:p-5 max-h-[calc(100dvh-2rem)] overflow-y-auto">
         <div className="flex items-start gap-4 mb-5">
           <div className="w-14 h-14 rounded-2xl bg-amber-500/15 flex items-center justify-center flex-shrink-0">
             <Clock className="h-7 w-7 text-amber-500" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-foreground">Episodes Under Progress</h3>
-            <p className="text-sm text-muted-foreground mt-0.5">Content is being prepared</p>
+            <DialogTitle className="text-base pr-3">Episodes Under Progress</DialogTitle>
+            <DialogDescription className="text-xs mt-1">Content is being prepared</DialogDescription>
           </div>
         </div>
 
@@ -77,8 +78,8 @@ function NoEpisodesPopup({ isOpen, onClose, animeTitle, animeType, animeStatus, 
         <Button onClick={onClose} className="w-full anime-button">
           OK, Got It!
         </Button>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

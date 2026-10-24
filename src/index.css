@@ -3876,3 +3876,11 @@ body.clone-mode .clone-hidden-utility-v8, body:has(.clone-shell) .clone-hidden-u
  .admin-v10-stat { padding: 14px; }
 }
 @media (prefers-reduced-motion: reduce) { .admin-v10 *, .admin-v10 { animation: none !important; transition: none !important; } }
+
+/* Compact recommendations, shared poster proportions and portaled queue details. */
+.recommendations-v11-card { width: 120px; flex-shrink: 0; }
+.recommendations-v11-tools { border-bottom: 1px solid hsl(var(--border) / .5); padding-bottom: .5rem; }
+.pending-details-v11 { position: fixed !important; left: 50% !important; top: 50% !important; margin: 0; background: var(--utility-glass-fill); }
+.pending-details-v11 .text-amber-500, .pending-details-v11 .text-blue-400, .pending-details-v11 .text-green-400 { color: hsl(var(--primary)); }
+.pending-details-v11 .bg-amber-500\/15, .pending-details-v11 .bg-amber-500\/10 { background: hsl(var(--muted)); }
+@media (min-width: 1024px) { .recommendations-v11-card { width: 144px; } }
