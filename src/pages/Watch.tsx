@@ -17,7 +17,6 @@ import { VideoPlayer } from '@/components/video/VideoPlayer';
 import { ServerType } from '@/hooks/useServerAutoSelect';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { EpisodeList } from '@/components/video/EpisodeList';
-import { RecommendedAnime } from '@/components/home/RecommendedAnime';
 import { WatchParty } from '@/components/WatchParty';
 import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton';
 import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
@@ -1917,10 +1916,6 @@ export default function Watch() {
             </div>
           </div>
 
-          {/* Recommended Anime Section */}
-          <div className="mt-8">
-            <RecommendedAnime />
-          </div>
       </div>
     </div>
   );

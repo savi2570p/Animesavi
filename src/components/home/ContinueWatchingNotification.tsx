@@ -116,9 +116,9 @@ export function ContinueWatchingNotification() {
           <span className="resume-label-v8 utility-fab-v6 absolute top-2 left-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-semibold"><History className="h-3 w-3 text-primary" />Continue Watching</span>
           <Button variant="glass" size="icon" onClick={close} aria-label="Dismiss" title="Dismiss" className="absolute top-2 right-2 h-8 w-8 rounded-md"><X className="h-3.5 w-3.5" /></Button>
         </div>
-        <div className="p-3 sm:p-4 space-y-3">
+        <div className="p-2.5 space-y-2">
           <div className="min-w-0">
-            <h4 className="text-sm font-semibold line-clamp-2">{lastWatched.anime.title}</h4>
+            <h4 className="text-xs font-semibold line-clamp-1">{lastWatched.anime.title}</h4>
             <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1">S{lastWatched.season?.season_number || 1} · E{lastWatched.episode.episode_number}{lastWatched.episode.title ? ` — ${lastWatched.episode.title}` : ''}</p>
           </div>
           <div className="space-y-1.5">

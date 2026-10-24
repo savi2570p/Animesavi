@@ -25,15 +25,12 @@ export function ResumePopup({ progress, duration, onResume, onStartOver }: Resum
 
   return (
     <div className="utility-overlay-v6 absolute inset-0 z-30 flex items-center justify-center">
-      <div className="resume-player-v8 utility-glass-v6 p-5 max-w-sm w-full mx-4 motion-safe:animate-fade-in">
-        <div className="text-center space-y-4">
-          <div className="utility-icon-v6 w-11 h-11 mx-auto rounded-lg flex items-center justify-center">
-            <Play className="h-5 w-5 text-primary" />
-          </div>
+      <div className="resume-player-v8 utility-glass-v6 p-3 max-w-[260px] w-full mx-3 motion-safe:animate-fade-in">
+        <div className="text-center space-y-2">
           
           <div>
-            <h3 className="text-lg font-semibold mb-1">Continue Watching?</h3>
-            <p className="text-muted-foreground text-sm">
+            <h3 className="text-sm font-semibold mb-1">Continue Watching?</h3>
+            <p className="text-muted-foreground text-xs">
               You left off at <span className="text-primary font-medium">{timeDisplay}</span>
             </p>
           </div>
@@ -46,17 +43,19 @@ export function ResumePopup({ progress, duration, onResume, onStartOver }: Resum
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-2 pt-1">
             <Button
               variant="glass"
-              className="flex-1"
+              size="sm"
+              className="flex-1 px-2 text-xs"
               onClick={onStartOver}
             >
               <RotateCcw className="h-4 w-4 mr-2" />
               Start Over
             </Button>
             <Button
-              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+              size="sm"
+              className="flex-1 px-2 text-xs"
               onClick={onResume}
             >
               <Play className="h-4 w-4 mr-2" />
