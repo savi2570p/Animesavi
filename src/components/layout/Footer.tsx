@@ -27,7 +27,7 @@ const footerLinks = {
     { label: 'Sony YAY', href: '/browse?genre=Sony%20YAY' },
   ],
   support: [
-    { label: 'Help Center · @animesaviinhindidub', href: 'https://t.me/animesaviinhindidub', external: true },
+    { label: 'Help Center · @AnimeSaviInhindiDUB', href: 'https://t.me/AnimeSaviInhindiDUB', external: true },
     { label: 'Contact Us · @Lv_Savi', href: 'https://t.me/Lv_Savi', external: true },
     { label: 'Terms of Service', href: '/terms', isTerms: true },
     { label: 'Privacy Policy', href: '/privacy', isPrivacy: true },
@@ -252,7 +252,7 @@ export function Footer() {
     <div className="container py-7 md:py-9">
       <div className="flex flex-wrap items-center justify-between gap-5 pb-6 border-b border-border">
         <div><Link to="/" className="inline-flex items-center gap-2.5"><img src={logo} alt="" className="h-9 w-9 object-contain" /><span className="text-xl font-bold"><span className="text-primary">Anime</span> Savi</span></Link><p className="text-xs text-muted-foreground mt-2">Hindi · English · Japanese</p></div>
-        <Button asChild variant="glass" size="sm"><a href="https://t.me/animesaviinhindidub" target="_blank" rel="noopener noreferrer"><MessageCircle className="h-4 w-4" />Join the community<ExternalLink className="h-3.5 w-3.5" /></a></Button>
+        <Button asChild variant="glass" size="sm"><a href="https://t.me/AnimeSaviInhindiDUB" target="_blank" rel="noopener noreferrer"><MessageCircle className="h-4 w-4" />Join the community<ExternalLink className="h-3.5 w-3.5" /></a></Button>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-6 py-6">
         <nav aria-label="Footer browse"><h3 className="text-xs font-semibold mb-3">Browse</h3><ul className="space-y-2">{footerLinks.browse.map(link => <li key={link.href}><Link to={link.href} className="text-xs text-muted-foreground hover:text-foreground">{link.label}</Link></li>)}</ul></nav>
