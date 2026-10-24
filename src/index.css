@@ -3932,6 +3932,7 @@ body.clone-mode .clone-hidden-utility-v8, body:has(.clone-shell) .clone-hidden-u
 .upload-new-v12 form > section:nth-child(3) > .grid > div { min-width: 0; }
 .studio-v12-metadata { border-top: 1px solid hsl(var(--border)); border-bottom: 1px solid hsl(var(--border)); }
 .studio-v12-submit { grid-column: 1 / -1; border-top: 1px solid hsl(var(--border)); }
+.upload-movie-v13 > .studio-v12-submit { padding-right: 72px; }
 .studio-v12 [class*="border-dashed"] { background: var(--studio-field-fill); border: 1px dashed hsl(var(--foreground) / .2); box-shadow: var(--studio-edge); min-height: 130px; }
 .studio-v12 [class*="border-dashed"]:hover { border-color: hsl(var(--primary) / .55); }
 .studio-v12-batch > div:last-child { padding-bottom: 0; }
