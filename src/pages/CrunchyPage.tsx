@@ -16,7 +16,7 @@ import { TrendingUp, Eye, Flame, Sparkles, Play, Star, Crown } from 'lucide-reac
 import crunchyrollLogo from '@/assets/crunchyroll-logo.png';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
-import { PageLoader } from '@/components/layout/PageLoader';
+import { PlatformLoadingScreen } from '@/components/layout/PlatformLoadingScreen';
 
 interface CrunchyAnime {
   id: string;
@@ -147,7 +147,7 @@ export default function CrunchyPage() {
 
   return (
     <div className="min-h-screen">
-      {isLoading && <PageLoader label="Loading Crunchy" accent="orange-500" logo={crunchyrollLogo} done={!isLoading} />}
+      {isLoading && <PlatformLoadingScreen platform="crunchy" logo={crunchyrollLogo} />}
       <ContentNavTabs />
 
       {/* Editorial magazine hero — bold, orange, asymmetric */}
