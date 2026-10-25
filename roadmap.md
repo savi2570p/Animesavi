@@ -61,3 +61,6 @@ Verified: build OK. At 390px the welcome banner renders as a full 16:9 strip (39
 - [x] Redesign Crunchy and MuseIN loading screens with lightweight liquid glass and verify both platform transitions.
 
 Verified: both homepage platform links display the new branded loading screen and then load real catalogues. Desktop and 390px layouts, loaded artwork, reduced-motion and low-tier blur fallbacks checked; no browser page errors. Physical iOS/Android devices remain untested.
+- [x] Recreate Crunchy and MuseIN collection headers, trending rows and libraries with shared liquid glass; preserve filters and title actions and verify both layouts.
+
+Verified both live catalogues, Crunchy All/New/Trending filters and anime navigation. Desktop and phone-width screenshots checked with no horizontal overflow or browser errors; no pending titles were available to exercise the existing popup. Physical devices remain untested.

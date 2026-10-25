@@ -4051,3 +4051,65 @@ html.perf-medium .platform-loading-panel, html.perf-low .platform-loading-panel 
 html.perf-low .platform-loading-track > span { animation: none; width: 45%; }
 .platform-loading[data-visible="false"] .platform-loading-track > span { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) { .platform-loading-panel, .platform-loading-track > span { animation: none; } .platform-loading-track > span { width: 45%; } }
+
+/* Unframed platform collections with glass limited to repeated catalogue items. */
+:root {
+  --platform-collection-fill: linear-gradient(145deg, hsl(var(--foreground) / .09), hsl(var(--background) / .92) 70%);
+  --platform-collection-edge: inset 0 1px 0 hsl(var(--foreground) / .14), 0 5px 18px hsl(var(--background) / .2);
+  --platform-collection-scrim: 0 0% 4%;
+  --platform-collection-ink: 0 0% 98%;
+}
+.platform-collection { --platform-tone: var(--platform-loading-crunchy); padding-bottom: 48px; letter-spacing: 0; }
+.platform-collection[data-platform="musein"] { --platform-tone: var(--platform-loading-musein); }
+.platform-collection > .container { max-width: 1200px; }
+.platform-collection-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 28px; padding: 32px 0; border-bottom: 1px solid hsl(var(--border)); }
+.platform-collection-brand { display: flex; align-items: center; gap: 20px; min-width: 0; }
+.platform-collection-brand > img { width: 72px; height: 72px; object-fit: contain; border-radius: 8px; }
+.platform-collection-kicker { font-size: 11px; color: hsl(var(--muted-foreground)); margin-bottom: 6px; }
+.platform-collection-brand h1 { font-size: 38px; line-height: 1.2; font-weight: 700; margin-bottom: 7px; }
+.platform-collection-stats { display: flex; gap: 28px; }
+.platform-collection-stats > div { min-width: 64px; }
+.platform-collection-stats dt { display: flex; align-items: center; gap: 5px; font-size: 10px; color: hsl(var(--muted-foreground)); }
+.platform-collection-stats dt svg { width: 13px; height: 13px; color: hsl(var(--platform-tone)); }
+.platform-collection-stats dd { font-size: 22px; font-weight: 700; margin-top: 5px; }
+.platform-collection-filters { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 20px; }
+.platform-collection-filters button { font-size: 11px; min-height: 36px; height: auto; border-radius: 6px; background: var(--platform-collection-fill); box-shadow: var(--platform-collection-edge); }
+.platform-collection-filters button[aria-pressed="true"] { background: hsl(var(--platform-tone) / .14); border-color: hsl(var(--platform-tone) / .55); color: hsl(var(--foreground)); }
+.platform-collection-section { padding-top: 30px; }
+.platform-collection-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.platform-collection-section-heading h2 { font-size: 18px; font-weight: 700; }
+.platform-collection-tone { color: hsl(var(--platform-tone)); flex-shrink: 0; }
+.platform-collection-row { display: flex; gap: 14px; overflow-x: auto; padding: 2px 0 14px; }
+.platform-collection-grid { display: grid; grid-template-columns: repeat(auto-fill,144px); justify-content: space-between; gap: 22px 14px; }
+.platform-collection-card { display: block; width: 144px; flex-shrink: 0; border: 1px solid hsl(var(--border)); border-radius: 8px; background: var(--platform-collection-fill); box-shadow: var(--platform-collection-edge); overflow: hidden; transition: border-color .2s ease; scroll-snap-align: start; }
+.platform-collection-card:hover, .platform-collection-card:focus-visible { border-color: hsl(var(--platform-tone) / .65); }
+.platform-collection-artwork { position: relative; height: 216px; overflow: hidden; background: hsl(var(--muted)); }
+.platform-collection-art-tag { position: absolute; left: 6px; top: 6px; border: 1px solid hsl(var(--platform-collection-ink) / .15); background: hsl(var(--platform-collection-scrim) / .8); color: hsl(var(--platform-collection-ink)); border-radius: 4px; padding: 3px 5px; font-size: 9px; line-height: 1; font-weight: 700; }
+.platform-collection-card-info { padding: 10px 9px; }
+.platform-collection-card-info h3 { font-size: 12px; line-height: 17px; height: 34px; margin: 8px 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.platform-collection-quality { font-size: 9px; padding: 2px 4px; border-radius: 3px; background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+.platform-collection-card-meta { display: flex; justify-content: space-between; gap: 4px; font-size: 9px; color: hsl(var(--muted-foreground)); }
+.platform-collection-card-meta > span { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.platform-collection-play { position: absolute; inset: 0; display: grid; place-items: center; color: hsl(var(--platform-collection-ink)); background: hsl(var(--platform-collection-scrim) / .3); opacity: 0; transition: opacity .2s; }
+.platform-collection-card:hover .platform-collection-play, .platform-collection-card:focus-visible .platform-collection-play { opacity: 1; }
+.platform-collection-pending { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: hsl(var(--platform-collection-scrim) / .65); color: hsl(var(--platform-collection-ink)); }
+.platform-collection-pending span { font-size: 10px; font-weight: 600; padding: 6px; }
+.platform-collection-empty { text-align: center; padding: 48px 0; border-top: 1px solid hsl(var(--border)); }
+@media (max-width: 639px) {
+  .platform-collection-header { gap: 24px; padding: 24px 0; }
+  .platform-collection-brand { gap: 14px; }
+  .platform-collection-brand > img { width: 56px; height: 56px; }
+  .platform-collection-brand h1 { font-size: 30px; }
+  .platform-collection-stats { width: 100%; justify-content: space-between; gap: 12px; }
+  .platform-collection-stats dd { font-size: 20px; }
+  .platform-collection-filters { flex-wrap: nowrap; gap: 5px; }
+  .platform-collection-filters button { padding-left: 8px; padding-right: 8px; font-size: 10px; gap: 5px; }
+  .platform-collection-card { width: 120px; }
+  .platform-collection-artwork { height: 180px; }
+  .platform-collection-grid { grid-template-columns: repeat(auto-fill,120px); gap: 16px 10px; }
+  .platform-collection-row { gap: 12px; }
+  .platform-collection-section-heading h2 { font-size: 16px; }
+}
+html.perf-low .platform-collection .perf-blur-fill { display: none; }
+html.perf-low .platform-collection .badge-glass-hdub, html.perf-medium .platform-collection .badge-glass-hdub { backdrop-filter: none; -webkit-backdrop-filter: none; }
+@media (prefers-reduced-motion: reduce) { .platform-collection *, .platform-collection *::before { animation: none !important; transition: none !important; } }
