@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom';
+import { usePageVisible } from '@/hooks/usePerfTier';
 
 interface PlatformLoadingScreenProps {
   platform: 'crunchy' | 'musein';
@@ -8,9 +9,10 @@ interface PlatformLoadingScreenProps {
 /** Presentation only: the parent catalogue request controls its lifetime. */
 export function PlatformLoadingScreen({ platform, logo }: PlatformLoadingScreenProps) {
   const name = platform === 'crunchy' ? 'Crunchy' : 'MuseIN';
+  const visible = usePageVisible();
 
   return createPortal(
-    <div className="platform-loading" data-platform={platform}>
+    <div className="platform-loading" data-platform={platform} data-visible={visible}>
       <div className="platform-loading-panel" role="status" aria-live="polite" aria-label={`Loading ${name}`}>
         <div className="platform-loading-brand" aria-hidden="true">
           <span className="platform-loading-brand-mark" />

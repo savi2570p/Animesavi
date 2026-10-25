@@ -4049,5 +4049,5 @@ html.perf-low .studio-v12-tabs { backdrop-filter: none; -webkit-backdrop-filter:
 @media (max-width: 639px) { .platform-loading-panel { width: min(100%, 328px); padding: 22px 24px; } .platform-loading-identity { padding: 28px 0; } .platform-loading-identity h2 { font-size: 28px; } }
 html.perf-medium .platform-loading-panel, html.perf-low .platform-loading-panel { backdrop-filter: none; -webkit-backdrop-filter: none; background: hsl(var(--platform-loading-surface)); }
 html.perf-low .platform-loading-track > span { animation: none; width: 45%; }
-html:not(.page-visible) .platform-loading-track > span { animation-play-state: paused; }
+.platform-loading[data-visible="false"] .platform-loading-track > span { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) { .platform-loading-panel, .platform-loading-track > span { animation: none; } .platform-loading-track > span { width: 45%; } }
