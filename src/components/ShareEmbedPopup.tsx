@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { canSeeShadowLinks } from '@/lib/shadowLinkAccess';
 
-// Shadow Link is now available to everyone — no email gating.
+// Shadow link sharing is available to the designated accounts.
 
 interface ShareEmbedPopupProps {
   /** 'series' shows only Copy Series Link; 'episode' shows episode + embed options */
@@ -63,8 +64,7 @@ export function ShareEmbedPopup({
   const fullPageUrl = rebrandUrl(pageUrl);
   const fullEmbedUrl = embedUrl ? rebrandUrl(embedUrl) : '';
   const shadowEmbedUrl = fullEmbedUrl ? `${fullEmbedUrl}${fullEmbedUrl.includes('?') ? '&' : '?'}theme=shadow` : '';
-  const SHADOW_LINK_EMAILS = ['savi2570p@gmail.com', 'shadowtoonsindia@gmail.com'];
-  const canSeeShadowLink = !!fullEmbedUrl && !!user?.email && SHADOW_LINK_EMAILS.includes(user.email.toLowerCase());
+  const canSeeShadowLink = !!fullEmbedUrl && canSeeShadowLinks(user?.email);
 
   const iframeCode = fullEmbedUrl
     ? `<iframe src="${fullEmbedUrl}" width="100%" height="500" frameborder="0" allowfullscreen></iframe>`
@@ -145,7 +145,7 @@ export function ShareEmbedPopup({
             </div>
           </button>
 
-          {/* Shadow Link - only for allowed admin emails */}
+          {/* Shadow Link - only for designated sharing accounts */}
           {type === 'episode' && fullEmbedUrl && canSeeShadowLink && (
             <button
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-left transition-colors"

@@ -6,6 +6,7 @@ import { bestEffort, withRetry } from '@/lib/backendClient';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ShareEmbedPopup } from '@/components/ShareEmbedPopup';
+import { canSeeShadowLinks } from '@/lib/shadowLinkAccess';
 import { SEO } from '@/components/SEO';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
@@ -1576,9 +1577,7 @@ export default function Watch() {
             })()}
 
             {/* Shadow link v2 (BETA 2) — visible only for allowlisted emails */}
-            {['savi2570p@gmail.com', 'shadowtoonsindia@gmail.com'].includes(
-              (user?.email || '').toLowerCase(),
-            ) && (
+            {canSeeShadowLinks(user?.email) && (
             <Button
               size="sm"
               variant="outline"

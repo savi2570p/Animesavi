@@ -1,4 +1,5 @@
 # Project rules
+- Both Shadow link sharing controls use one shared visibility predicate to prevent account allowlists from drifting; it does not grant administrator or playback bypass privileges.
 - Download audio discovery uses a lazy, bounded MP4 metadata reader only when native track metadata is unavailable; never fetch the entire video to populate the selector.
 - Download metadata probes have bounded deadlines and never gate confirmation indefinitely, because CDN metadata can hang or be unavailable.
 - Copied embed players store exact native-media checkpoints by resolved episode ID through a shared resume hook; do not fabricate third-party iframe positions.
