@@ -11,10 +11,11 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Eye, Sparkles, Clock, Film, Globe, Play, Flame, Star, Languages } from 'lucide-react';
+import { TrendingUp, Eye, Sparkles, Clock, Film, Globe, Play, Flame, Star, Languages, Layers } from 'lucide-react';
 import museinLogo from '@/assets/musein-logo.jpg';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
+import { PlatformCatalogueHeader, PlatformCatalogueCard } from '@/components/layout/PlatformCatalogue';
 import { PlatformLoadingScreen } from '@/components/layout/PlatformLoadingScreen';
 
 // Launch date: 7 days from first deployment (set a fixed date)
@@ -304,209 +305,22 @@ function LiveListingView() {
   return (
     <>
       {isLoading && <PlatformLoadingScreen platform="musein" logo={museinLogo} />}
-      {/* Elegant vinyl/cinematic hero — rose blooming rings */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#180510] via-background to-background" />
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[42rem] h-[42rem] rounded-full opacity-40 pointer-events-none"
-          style={{
-            background: 'radial-gradient(circle, hsl(340 90% 65% / 0.35), transparent 60%)',
-          }}
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--background)),transparent_70%)]" />
-
-        <div className="container relative px-4 py-12 md:py-16">
-          <div className="flex flex-col items-center text-center gap-5">
-            {/* Vinyl logo */}
-            <div className="relative">
-              {/* Concentric rings */}
-              <div className="absolute inset-0 -m-6 rounded-full border border-rose-500/20 animate-[muse-spin_30s_linear_infinite]" />
-              <div className="absolute inset-0 -m-12 rounded-full border border-rose-500/10 animate-[muse-spin-rev_45s_linear_infinite]" />
-              <div className="absolute inset-0 -m-20 rounded-full border border-dashed border-rose-500/8" />
-              <div className="absolute inset-0 blur-3xl bg-rose-500/40 rounded-full scale-125" />
-              <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-full p-[3px] bg-gradient-to-br from-rose-300 via-pink-500 to-rose-700 shadow-2xl shadow-rose-500/40">
-                <img src={museinLogo} alt="MuseIN" className="w-full h-full rounded-full object-cover border-2 border-background" />
-                {/* Center vinyl hole */}
-                <div className="absolute inset-1/2 w-3 h-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-background border border-rose-500/50" />
-              </div>
+      <div className="platform-collection" data-platform="musein">
+        <div className="container">
+          <PlatformCatalogueHeader name="MuseIN" logo={museinLogo} series={readyCount} episodes={totalEpisodes} />
+          {!isLoading && trendingAnime.length > 0 && <section className="platform-collection-section" aria-label="Trending in MuseIN">
+            <div className="platform-collection-section-heading"><div className="flex items-center gap-2.5"><Flame className="platform-collection-tone h-5 w-5" /><h2>Trending in MuseIN</h2></div><span className="text-xs text-muted-foreground">Top {trendingAnime.length}</span></div>
+            <div className="platform-collection-row snap-row">
+              {trendingAnime.map((anime, index) => <PlatformCatalogueCard key={anime.id} anime={anime} rank={index + 1} views={formatViewCount(anime.view_count || 0)} onClick={(event) => handleAnimeClick(event, anime)} />)}
             </div>
-
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/12 border border-rose-500/30 backdrop-blur-sm mt-2">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-500" />
-              </span>
-              <span className="text-[10px] font-bold text-rose-200 uppercase tracking-[0.25em]">Hindi Dub · Muse India</span>
-            </div>
-
-            <h1 className="text-5xl md:text-7xl font-heading font-black tracking-tight leading-[0.95]">
-              Muse<span className="italic bg-gradient-to-r from-rose-300 via-pink-400 to-rose-500 bg-clip-text text-transparent">IN</span>
-            </h1>
-            <p className="text-muted-foreground text-sm md:text-base max-w-lg -mt-1">
-              A cinematic Hindi-dub collection by Muse India — licensed, premium, ready to play.
-            </p>
-
-            {/* Elegant divider */}
-            <div className="flex items-center gap-2 my-1">
-              <div className="h-px w-8 bg-gradient-to-r from-transparent to-rose-400/60" />
-              <div className="w-1.5 h-1.5 rotate-45 bg-rose-400/60" />
-              <div className="h-px w-8 bg-gradient-to-l from-transparent to-rose-400/60" />
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-2 mt-1">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 border border-rose-500/25 backdrop-blur-sm">
-                <Play className="h-3.5 w-3.5 text-rose-400" />
-                <span className="text-xs font-bold">{readyCount} Series</span>
-              </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 border border-rose-500/25 backdrop-blur-sm">
-                <Star className="h-3.5 w-3.5 text-amber-400" />
-                <span className="text-xs font-bold">{totalEpisodes} Episodes</span>
-              </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 border border-rose-500/25 backdrop-blur-sm">
-                <Globe className="h-3.5 w-3.5 text-rose-300" />
-                <span className="text-xs font-bold">4K Quality</span>
-              </div>
-            </div>
-          </div>
+          </section>}
+          <section className="platform-collection-section" aria-label="MuseIN library">
+            <div className="platform-collection-section-heading"><div className="flex items-center gap-2.5"><Layers className="platform-collection-tone h-5 w-5" /><h2>Full MuseIN Library</h2></div><span className="text-xs text-muted-foreground">{animeList.length} titles</span></div>
+            {isLoading ? <div className="platform-collection-grid">{Array.from({ length: 10 }, (_, i) => <Skeleton key={i} className="h-[258px] rounded-lg" />)}</div> : animeList.length === 0 ? <div className="platform-collection-empty"><img src={museinLogo} alt="" className="h-12 w-12 object-contain mx-auto mb-4" /><h3 className="font-semibold">Nothing here yet</h3><p className="text-sm text-muted-foreground mt-2">Check back soon for more titles.</p></div> : <div className="platform-collection-grid">
+              {animeList.map((anime) => <PlatformCatalogueCard key={anime.id} anime={anime} views={formatViewCount(anime.view_count || 0)} onClick={(event) => handleAnimeClick(event, anime)} />)}
+            </div>}
+          </section>
         </div>
-
-        <style>{`
-          @keyframes muse-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-          @keyframes muse-spin-rev { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
-        `}</style>
-      </div>
-
-      <div className="container px-4 pb-12">
-        {/* Trending Section */}
-        {!isLoading && trendingAnime.length > 0 && (
-          <div className="mb-12">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-rose-500/40 blur-md rounded-lg" />
-                  <div className="relative p-2 rounded-lg bg-gradient-to-br from-rose-500 to-pink-500">
-                    <Flame className="h-5 w-5 text-white" />
-                  </div>
-                </div>
-                <div>
-                  <h2 className="text-xl md:text-2xl font-heading font-black">Trending in MuseIN</h2>
-                  <p className="text-[11px] text-muted-foreground">Top Hindi dubs this week</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-none">
-              {trendingAnime.map((anime, idx) => (
-                <Link key={anime.id} to={`/anime/${anime.id}`} onClick={(e) => handleAnimeClick(e, anime)} className="group relative shrink-0 w-[150px] md:w-[170px]">
-                  <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted ring-1 ring-border/30 group-hover:ring-rose-500/50 transition-all duration-300">
-                    <div className="absolute -left-1 top-2 z-20">
-                      <div
-                        className="text-5xl md:text-6xl font-heading font-black leading-none"
-                        style={{
-                          WebkitTextStroke: '2px rgba(244, 63, 94, 0.9)',
-                          color: 'transparent',
-                          textShadow: '0 4px 20px rgba(244, 63, 94, 0.3)',
-                        }}
-                      >
-                        {idx + 1}
-                      </div>
-                    </div>
-                    {anime.cover_image ? (
-                      <img src={anime.cover_image} alt={anime.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20">
-                        <span className="text-muted-foreground">No Image</span>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="w-12 h-12 rounded-full bg-rose-500/95 flex items-center justify-center shadow-2xl shadow-rose-500/50 scale-90 group-hover:scale-100 transition-transform">
-                        <Play className="h-5 w-5 text-white fill-white ml-0.5" />
-                      </div>
-                    </div>
-                    <div className="absolute bottom-2 left-2 right-2">
-                      <div className="flex items-center gap-1 text-[10px] text-white/90 font-medium">
-                        <Eye className="h-3 w-3" />
-                        {formatViewCount(anime.view_count || 0)}
-                      </div>
-                    </div>
-                    <TokenCrownBadge />
-                    <div className="absolute top-2 right-2 px-2 py-0.5 text-[9px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-md shadow-md uppercase tracking-wider">H-DUB</div>
-                  </div>
-                  <h3 className="mt-2.5 text-sm font-semibold line-clamp-2 group-hover:text-rose-400 transition-colors">{anime.title}</h3>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* All MUSE Anime */}
-        <div className="flex items-center gap-3 mb-5">
-          <div className="h-6 w-1 rounded-full bg-gradient-to-b from-rose-400 to-pink-500" />
-          <h2 className="text-lg md:text-xl font-heading font-black">Full MuseIN Library</h2>
-          <span className="text-xs text-muted-foreground">({animeList.length})</span>
-        </div>
-
-        {isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="space-y-2">
-                <Skeleton className="aspect-[2/3] rounded-xl" />
-                <Skeleton className="h-4 w-3/4" />
-              </div>
-            ))}
-          </div>
-        ) : animeList.length === 0 ? (
-          <div className="text-center py-16 rounded-2xl border border-dashed border-border/50 bg-card/30">
-            <img src={museinLogo} alt="MuseIN" className="h-16 w-16 rounded-full mx-auto mb-4 opacity-50" />
-            <h3 className="text-xl font-semibold mb-2">No MuseIN Anime Yet</h3>
-            <p className="text-muted-foreground text-sm">Check back soon for Hindi dubbed content.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {animeList.map((anime, index) => (
-              <Link key={anime.id} to={`/anime/${anime.id}`} onClick={(e) => handleAnimeClick(e, anime)} className="group relative animate-fade-in" style={{ animationDelay: `${Math.min(index * 30, 600)}ms` }}>
-                <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted ring-1 ring-border/30 group-hover:ring-rose-500/50 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-rose-500/20">
-                  {anime.cover_image ? (
-                    <img src={anime.cover_image} alt={anime.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20">
-                      <span className="text-muted-foreground">No Image</span>
-                    </div>
-                  )}
-                  {anime.episode_count === 0 && (
-                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center">
-                      <span className="text-white text-[10px] font-black bg-rose-500/90 px-3 py-1.5 rounded-full uppercase tracking-wider shadow-lg">Under Progress</span>
-                    </div>
-                  )}
-                  {anime.type && (
-                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[9px] font-bold text-white uppercase tracking-wider border border-white/10">{anime.type}</div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent" />
-                  {(anime.episode_count || 0) > 0 && (
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="w-11 h-11 rounded-full bg-rose-500/95 flex items-center justify-center shadow-2xl shadow-rose-500/50 scale-90 group-hover:scale-100 transition-transform">
-                        <Play className="h-4 w-4 text-white fill-white ml-0.5" />
-                      </div>
-                    </div>
-                  )}
-                  <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-[10px] text-white/90 font-medium">
-                      <Eye className="h-3 w-3" />
-                      {formatViewCount(anime.view_count || 0)}
-                    </div>
-                    {(anime.episode_count || 0) > 0 && (
-                      <span className="text-[9px] font-bold text-white/80 px-1.5 py-0.5 rounded bg-black/40 backdrop-blur-sm">{anime.episode_count} EP</span>
-                    )}
-                  </div>
-                  <TokenCrownBadge />
-                  <div className="absolute top-2 right-2 px-2 py-0.5 text-[9px] font-black bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-md shadow-md uppercase tracking-wider">H-DUB</div>
-                </div>
-                <div className="mt-2.5">
-                  <h3 className="text-sm font-semibold line-clamp-2 group-hover:text-rose-400 transition-colors">{anime.title}</h3>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Under Progress Popup */}
