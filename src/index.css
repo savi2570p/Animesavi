@@ -4102,6 +4102,8 @@ html.perf-low .platform-loading-track > span { animation: none; width: 45%; }
   .platform-collection-brand h1 { font-size: 30px; }
   .platform-collection-stats { width: 100%; justify-content: space-between; gap: 12px; }
   .platform-collection-stats dd { font-size: 20px; }
+  .platform-collection-filters { flex-wrap: nowrap; gap: 5px; }
+  .platform-collection-filters button { padding-left: 8px; padding-right: 8px; font-size: 10px; gap: 5px; }
   .platform-collection-card { width: 120px; }
   .platform-collection-artwork { height: 180px; }
   .platform-collection-grid { grid-template-columns: repeat(auto-fill,120px); gap: 16px 10px; }
