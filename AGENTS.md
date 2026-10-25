@@ -28,3 +28,4 @@
 - Pending preparation popups use the shared portaled Dialog so deferred or transformed sections cannot trap them; homepage recommendations use unframed catalogue glass rows and remain separate from Watch playback.
 - Upload creation and series editing use plain unframed section containers instead of generic Card wrappers to avoid inherited glass fills, a single vertical form flow and scoped studio optical tokens; preserve metadata, season, episode, upload handlers and access guards.
 - Episode editing scopes the studio presentation to its page and embedded tools without altering shared subtitle or timestamp handlers, so other upload surfaces keep their existing behavior.
+- Crunchy and MuseIN share a portaled platform loader with scoped optical tokens and motion/performance fallbacks; its lifetime follows existing catalogue requests without simulated percentages or added delays.

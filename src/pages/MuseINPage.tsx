@@ -15,7 +15,7 @@ import { TrendingUp, Eye, Sparkles, Clock, Film, Globe, Play, Flame, Star, Langu
 import museinLogo from '@/assets/musein-logo.jpg';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
-import { PageLoader } from '@/components/layout/PageLoader';
+import { PlatformLoadingScreen } from '@/components/layout/PlatformLoadingScreen';
 
 // Launch date: 7 days from first deployment (set a fixed date)
 const LAUNCH_DATE_KEY = 'musein_launch_date';
@@ -303,7 +303,7 @@ function LiveListingView() {
 
   return (
     <>
-      {isLoading && <PageLoader label="Loading MuseIN" accent="rose-500" logo={museinLogo} done={!isLoading} />}
+      {isLoading && <PlatformLoadingScreen platform="musein" logo={museinLogo} />}
       {/* Elegant vinyl/cinematic hero — rose blooming rings */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#180510] via-background to-background" />

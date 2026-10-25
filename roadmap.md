@@ -58,3 +58,4 @@ Verified: build OK and 49 regressions pass. Signed-in What's New opens from the 
 - [x] Point the Welcome Telegram community link at t.me/AnimeSaviInhindiDUB, add more Good to know answers, and show the full 16:9 welcome banner on phones.
 
 Verified: build OK. At 390px the welcome banner renders as a full 16:9 strip (390x219, no crop of the 1200x675 artwork) with title, buttons, search field and pagination readable below it; the Telegram community link reads https://t.me/AnimeSaviInhindiDUB and Good to know now lists nine answers. Desktop hero sizing is unchanged. Physical iOS/Android devices remain untested.
+- [ ] Redesign Crunchy and MuseIN loading screens with lightweight liquid glass and verify both platform transitions.
