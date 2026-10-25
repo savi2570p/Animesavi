@@ -64,3 +64,6 @@ Verified: both homepage platform links display the new branded loading screen an
 - [x] Recreate Crunchy and MuseIN collection headers, trending rows and libraries with shared liquid glass; preserve filters and title actions and verify both layouts.
 
 Verified both live catalogues, Crunchy All/New/Trending filters and anime navigation. Desktop and phone-width screenshots checked with no horizontal overflow or browser errors; no pending titles were available to exercise the existing popup. Physical devices remain untested.
+- [x] Allow shadowflixxorg@gmail.com to see and use Shadow Link V2 and Copy Shadow Link without unrelated privileges; run focused access tests.
+
+Verified: three sharing-access tests pass and preview build OK. Both controls and copied URLs checked with the available signed-in account; the requested email is covered by the access tests, not a separate live sign-in. Existing public Shadow playback and administrator/domain bypasses remain unchanged.
