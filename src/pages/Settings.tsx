@@ -44,6 +44,8 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { clearImageData } from '@/lib/clearAccountCache';
+import { PREFERENCES_EVENT } from '@/lib/playbackPreferences';
 
 export default function Settings() {
   const { user, signOut, isAdmin, isUploader } = useAuth();
@@ -57,22 +59,31 @@ export default function Settings() {
   const [subLang, setSubLang] = useState<string>(() => localStorage.getItem('pref_sub_lang') || 'en');
 
   useEffect(() => { localStorage.setItem('pref_autoplay', autoplay ? '1' : '0'); }, [autoplay]);
-  useEffect(() => { localStorage.setItem('pref_data_saver', dataSaver ? '1' : '0'); }, [dataSaver]);
+  useEffect(() => { localStorage.setItem('pref_data_saver', dataSaver ? '1' : '0'); window.dispatchEvent(new Event(PREFERENCES_EVENT)); }, [dataSaver]);
   useEffect(() => { localStorage.setItem('pref_reduced_motion', reducedMotion ? '1' : '0'); }, [reducedMotion]);
   useEffect(() => { localStorage.setItem('pref_subs_default', subsDefault ? '1' : '0'); }, [subsDefault]);
   useEffect(() => { localStorage.setItem('pref_mature_filter', matureFilter ? '1' : '0'); }, [matureFilter]);
   useEffect(() => { localStorage.setItem('pref_default_quality', defaultQuality); }, [defaultQuality]);
   useEffect(() => { localStorage.setItem('pref_sub_lang', subLang); }, [subLang]);
 
+  const [cacheOpen, setCacheOpen] = useState(false);
+  const [clearingCache, setClearingCache] = useState(false);
   const clearCache = async () => {
+    if (!user || clearingCache) return;
+    setClearingCache(true);
     try {
-      if ('caches' in window) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map((k) => caches.delete(k)));
-      }
-      toast.success('Cache cleared');
+      const { error } = await supabase.from('watch_history').delete().eq('user_id', user.id);
+      if (error) throw error;
+      const { error: shadowError } = await supabase.from('shadow_flix_continue_watching').delete().eq('user_id', user.id);
+      if (shadowError) throw shadowError;
+      await clearImageData(localStorage, 'caches' in window ? caches : undefined);
+      window.dispatchEvent(new Event('watch-history-updated'));
+      setCacheOpen(false);
+      toast.success('Cached images and Continue Watching cleared');
     } catch {
-      toast.error('Failed to clear cache');
+      toast.error('Could not finish clearing data. Please try again.');
+    } finally {
+      setClearingCache(false);
     }
   };
 
@@ -278,14 +289,14 @@ export default function Settings() {
                     <PlayCircle className="h-3 w-3" /> Default quality
                   </Label>
                   <div className="flex flex-wrap gap-1.5">
-                    {['auto', '480p', '720p', '1080p', '4K'].map((q) => (
+                    {(dataSaver ? ['1080p'] : ['auto', '480p', '720p', '1080p', '4K']).map((q) => (
                       <Button variant="ghost"
                         key={q}
                         type="button"
                         onClick={() => setDefaultQuality(q)}
-                        size="sm" aria-pressed={defaultQuality === q}
+                        size="sm" aria-pressed={dataSaver || defaultQuality === q}
                         className={`h-8 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors ${
-                          defaultQuality === q
+                          dataSaver || defaultQuality === q
                             ? 'border-primary bg-primary/15 text-primary'
                             : 'border-border/50 text-muted-foreground hover:border-primary/30'
                         }`}
@@ -344,12 +355,12 @@ export default function Settings() {
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/40">
                 <div className="space-y-0.5">
-                  <Label className="text-sm font-medium flex items-center gap-2">
+                  <Label htmlFor="data-saver" className="text-sm font-medium flex items-center gap-2">
                     <Zap className="h-3.5 w-3.5 text-primary" /> Data Saver
                   </Label>
-                  <p className="text-xs text-muted-foreground">Prefer lower quality and lighter images</p>
+                  <p className="text-xs text-muted-foreground">1080p playback when available</p>
                 </div>
-                <Switch checked={dataSaver} onCheckedChange={setDataSaver} />
+                <Switch id="data-saver" checked={dataSaver} onCheckedChange={setDataSaver} />
               </div>
               <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/40">
                 <div className="space-y-0.5">
@@ -360,14 +371,14 @@ export default function Settings() {
               </div>
               <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/40">
                 <div className="space-y-0.5">
-                  <Label className="text-sm font-medium">Mature Content Filter</Label>
-                  <p className="text-xs text-muted-foreground">Hide 18+ titles from discovery</p>
+                  <Label htmlFor="mature-filter" className="text-sm font-medium">Mature Content Filter</Label>
+                  <p className="text-xs text-muted-foreground">Hide titles marked Hentai</p>
                 </div>
-                <Switch checked={matureFilter} onCheckedChange={setMatureFilter} />
+                <Switch id="mature-filter" checked={matureFilter} onCheckedChange={setMatureFilter} />
               </div>
               <Button
                 variant="outline"
-                onClick={clearCache}
+                onClick={() => setCacheOpen(true)}
                 className="w-full justify-start h-10 border-border/50 hover:border-destructive/40 hover:bg-destructive/5"
               >
                 <Trash2 className="h-4 w-4 mr-2 text-destructive" />
@@ -574,6 +585,18 @@ export default function Settings() {
       </div>
 
       {/* Delete account confirmation */}
+      <Dialog open={cacheOpen} onOpenChange={open => { if (!clearingCache) setCacheOpen(open); }}>
+        <DialogContent className="utility-glass-v6 max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Clear cached images & data?</DialogTitle>
+            <DialogDescription>This removes cached images on this device and all Continue Watching entries for your account, including Shadow. Saved offline videos, favorites and your sign-in are kept. This cannot be undone.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="glass" disabled={clearingCache} onClick={() => setCacheOpen(false)}>Cancel</Button>
+            <Button variant="destructive" disabled={clearingCache} onClick={clearCache}>{clearingCache ? 'Clearing…' : 'Clear data'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent className="max-w-md border-destructive/40 bg-background/95 backdrop-blur-xl">
           <DialogHeader>

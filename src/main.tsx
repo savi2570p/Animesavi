@@ -8,6 +8,10 @@ import "@fontsource/plus-jakarta-sans/600.css";
 import "@fontsource/plus-jakarta-sans/700.css";
 import { installIframeSandboxGuard } from "./lib/iframeSandboxGuard";
 import { initPerfTier } from "./lib/performance/deviceTier";
+import { supabase } from './integrations/supabase/client';
+import { installMatureContentFilter } from './lib/matureContentFilter';
+
+installMatureContentFilter(supabase);
 
 
 // Initialize theme from localStorage before render to prevent flash
@@ -71,7 +75,9 @@ if (!isInIframe && !isPreviewHost && 'serviceWorker' in navigator) {
   });
 }
 
-createRoot(document.getElementById("root")!).render(
+const rootElement = document.getElementById('root');
+if (!rootElement) throw new Error('Application root is missing');
+createRoot(rootElement).render(
   <HelmetProvider>
     <App />
   </HelmetProvider>
