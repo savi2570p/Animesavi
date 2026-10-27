@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Authenticated users can view embed mappings" ON public.video_embeds;
