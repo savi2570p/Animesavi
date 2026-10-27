@@ -1,3 +1,7 @@
+- [ ] Enforce Hentai filtering when Mature Content Filter is enabled.
+- [ ] Confirm cached-image clearing and remove account-wide Continue Watching safely.
+- [ ] Enforce Data Saver quality and refresh compact liquid-glass player settings.
+- [ ] Resolve second-password request without presenting a bypassable lock as 2FA.
 - [x] Refresh login, notification bell and Continue Watching popups without changing existing account or resume behavior.
 - [x] Show AnimeSavi Team for missing token issuers and contain the iOS navbar logo.
 - [x] Hide Report and Telegram buttons on clone pages and verify affected screens.
