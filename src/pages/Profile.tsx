@@ -182,7 +182,7 @@ export default function Profile() {
     // Validate username
     const usernameResult = usernameSchema.safeParse(username.trim());
     if (!usernameResult.success) {
-      toast.error(usernameResult.error.errors[0]?.message || 'Invalid username');
+      toast.error(usernameResult.error.issues[0]?.message || 'Invalid username');
       return;
     }
     
@@ -190,7 +190,7 @@ export default function Profile() {
     if (avatarUrl.trim()) {
       const avatarResult = avatarUrlSchema.safeParse(avatarUrl.trim());
       if (!avatarResult.success) {
-        toast.error(avatarResult.error.errors[0]?.message || 'Invalid avatar URL');
+        toast.error(avatarResult.error.issues[0]?.message || 'Invalid avatar URL');
         return;
       }
     }

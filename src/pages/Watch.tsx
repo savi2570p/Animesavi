@@ -912,7 +912,7 @@ export default function Watch() {
     // Validate comment
     const commentResult = commentSchema.safeParse(trimmedComment);
     if (!commentResult.success) {
-      toast.error(commentResult.error.errors[0]?.message || 'Invalid comment');
+      toast.error(commentResult.error.issues[0]?.message || 'Invalid comment');
       return;
     }
 
