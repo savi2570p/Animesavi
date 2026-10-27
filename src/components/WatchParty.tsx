@@ -428,7 +428,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     // Validate message using zod schema
     const result = messageSchema.safeParse({ message: newMessage });
     if (!result.success) {
-      const error = result.error.errors[0];
+      const error = result.error.issues[0];
       toast.error(error.message);
       return;
     }
