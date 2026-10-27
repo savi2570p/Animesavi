@@ -607,7 +607,7 @@ function FloxUploadDialog({
           if (Object.keys(patch).length > 0) {
             const { error } = await supabase
               .from('flox_content')
-              .update(patch)
+              .update(patch as never)
               .eq('title', editAnime!.title);
             if (error) throw error;
           }
