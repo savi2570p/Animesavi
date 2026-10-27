@@ -2079,6 +2079,10 @@ export type Database = {
         Returns: boolean
       }
       is_flox_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_party_member: {
+        Args: { _party_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_upload_locked: { Args: never; Returns: boolean }
       mark_continue_watching_done: {
         Args: {

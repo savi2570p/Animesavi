@@ -64,6 +64,13 @@
       "when": 1793083506706,
       "tag": "0008_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793083631996,
+      "tag": "0009_restrict_party_and_vault_reads",
+      "breakpoints": true
     }
   ]
 }
