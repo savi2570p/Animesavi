@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { bestEffort, withRetry } from '@/lib/backendClient';
+import { historyResetSinceLoad } from '@/lib/watchHistoryReset';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -532,6 +533,7 @@ export default function Watch() {
   }, [user, episodeId, anime?.id, currentSeason, watchHistoryId]);
 
   const updateWatchProgress = useCallback(async (currentTime: number, duration: number) => {
+    if (historyResetSinceLoad()) return;
     if (!user || !episodeId || !anime) return;
 
     // Handle initial seek from resume progress - "Remember Playback Position"

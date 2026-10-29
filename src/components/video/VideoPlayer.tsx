@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import Hls from 'hls.js';
 import { getHLSConfig } from '@/lib/videoUtils';
+import { useDataSaver, dataSaverEnabled, selectDataSaverLevel } from '@/lib/playbackPreferences';
+import { select1080Variant } from '@/lib/hlsDataSaver';
 import { ANIME_QUALITY_OVERRIDES } from '@/lib/audioLanguageUtils';
 import { getContentAudioLabel } from '@/lib/audioLanguageUtils';
 import {
@@ -325,10 +327,35 @@ export function VideoPlayer({
   const [currentSubtitleTrack, setCurrentSubtitleTrack] = useState<number>(-1); // -1 = off
   
   // HLS Quality levels
+  const dataSaver = useDataSaver();
+  const effectiveQuality = dataSaver ? 1080 : lockedQuality;
   const [qualityLevels, setQualityLevels] = useState<QualityLevel[]>([]);
   const [currentQualityLevel, setCurrentQualityLevel] = useState<number>(-1); // -1 = Auto
   const [isAutoQuality, setIsAutoQuality] = useState(true);
   
+  useEffect(() => {
+    const hls = hlsRef.current;
+    if (!hls || !qualityLevels.length) return;
+    const target = dataSaver ? selectDataSaverLevel(qualityLevels) : lockedQuality ? qualityLevels[0] : undefined;
+    if (dataSaver && !target) {
+      videoRef.current?.pause();
+      toast.error('This stream has no 1080p or lower rendition. Turn off Data Saver to play it.');
+      return;
+    }
+    hls.autoLevelCapping = dataSaver && target ? target.id : -1;
+    if (target) {
+      hls.currentLevel = target.id;
+      setCurrentQualityLevel(target.id);
+      setIsAutoQuality(false);
+    } else {
+      const savedHeight = Number(localStorage.getItem('preferred_quality_level') ?? -1);
+      const saved = qualityLevels.find(level => level.height === savedHeight);
+      hls.currentLevel = saved?.id ?? -1;
+      setCurrentQualityLevel(saved?.id ?? -1);
+      setIsAutoQuality(!saved);
+    }
+  }, [dataSaver, lockedQuality, qualityLevels]);
+
   // Bitrate indicator
   const [currentBitrate, setCurrentBitrate] = useState<number>(0);
   const [estimatedBandwidth, setEstimatedBandwidth] = useState<number>(0);
@@ -596,6 +623,7 @@ export function VideoPlayer({
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !effectiveVideoUrl) return;
+    const controller = new AbortController();
 
     const setupHls = () => {
       // Check if it's an HLS stream
@@ -609,7 +637,23 @@ export function VideoPlayer({
         // Check if browser natively supports HLS (Safari)
         if (video.canPlayType('application/vnd.apple.mpegurl')) {
           console.log('Using native HLS support (Safari)');
-          video.src = effectiveVideoUrl;
+          if (dataSaverEnabled()) {
+            const timeout = window.setTimeout(() => controller.abort(), 8000);
+            fetch(effectiveVideoUrl, { signal: controller.signal }).then(response => {
+              if (!response.ok) throw new Error('Playlist unavailable');
+              return response.text();
+            }).then(manifest => {
+              if (controller.signal.aborted) return;
+              const variant = select1080Variant(manifest, effectiveVideoUrl);
+              if (!variant) throw new Error('No compatible rendition');
+              video.src = variant;
+              void video.play().catch(() => {});
+            }).catch(() => {
+              if (!controller.signal.aborted) toast.error('1080p is unavailable on this stream. Turn off Data Saver to play it.');
+            }).finally(() => window.clearTimeout(timeout));
+          } else {
+            video.src = effectiveVideoUrl;
+          }
           
           // For Safari, use native audioTracks and textTracks API
             const detectNativeTracks = () => {
@@ -760,8 +804,8 @@ export function VideoPlayer({
               console.log('Quality levels detected:', levels);
               
               // If quality is locked (e.g. Crunchy content), force highest available
-              if (lockedQuality) {
-                const highestLevel = levels[0]; // Already sorted descending
+              if (effectiveQuality) {
+                const highestLevel = dataSaverEnabled() ? selectDataSaverLevel(levels) : levels[0]; // Already sorted descending
                 if (highestLevel) {
                   hls.currentLevel = highestLevel.id;
                   setIsAutoQuality(false);
@@ -977,12 +1021,13 @@ export function VideoPlayer({
     setupHls();
 
     return () => {
+      controller.abort();
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
     };
-  }, [effectiveVideoUrl, activeServer, animeTitle, lockedQuality, isSubOnly]);
+  }, [effectiveVideoUrl, activeServer, animeTitle, lockedQuality, isSubOnly, dataSaver]);
 
   // Advanced multilingual audio label detection
   // Uses centralized utility for consistent language detection across the app
@@ -1012,7 +1057,7 @@ export function VideoPlayer({
 
   // Switch quality level - HLS.js only, with preference saving
   const switchQualityLevel = useCallback((levelId: number) => {
-    if (lockedQuality) return; // Quality is locked, ignore switches
+    if (effectiveQuality) return; // Preserve the active quality restriction
     if (hlsRef.current) {
       if (levelId === -1) {
         // Auto quality
@@ -1034,7 +1079,7 @@ export function VideoPlayer({
       }
     }
     setSettingsOpen(false);
-  }, [qualityLevels]);
+  }, [qualityLevels, effectiveQuality]);
 
   // Switch audio track — works with HLS.js (Android/PC/Chrome/Edge/Firefox)
   // and the native audioTracks API (iOS Safari, Firefox MP4 with multi-tracks).
@@ -2004,6 +2049,7 @@ export function VideoPlayer({
 
   // Get current quality/audio/subtitle labels for display
   const getCurrentQualityLabel = () => {
+    if (dataSaver) return '1080p';
     if (isAutoQuality) {
       const currentLevel = qualityLevels.find(l => l.id === currentQualityLevel);
       if (currentLevel) return `Auto (${currentLevel.height}p)`;
@@ -2197,8 +2243,8 @@ export function VideoPlayer({
       case 'quality': {
         // Helper to get badge info for a height
         const getBadge = (height: number) => {
-          if (height >= 2160) return { badge: '4K', cls: 'bg-gradient-to-r from-violet-500 to-purple-500 text-white' };
-          if (height >= 1440) return { badge: '2K', cls: 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' };
+          if (height >= 2160) return { badge: '4K', cls: 'bg-primary/15 text-primary' };
+          if (height >= 1440) return { badge: '2K', cls: 'bg-secondary text-secondary-foreground' };
           if (height >= 720) return { badge: 'HD', cls: 'bg-primary/20 text-primary' };
           return null;
         };
@@ -2208,31 +2254,31 @@ export function VideoPlayer({
 
         return (
           <div className="py-1 max-h-[300px] overflow-y-auto">
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('main'); }}
               className="flex items-center gap-2 cursor-pointer text-muted-foreground w-full px-2 py-2 hover:bg-accent rounded-sm"
             >
               <ChevronLeft className="w-4 h-4" />
               <span className="text-sm">Back</span>
-            </button>
+            </Button>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground">Quality</DropdownMenuLabel>
             {/* Auto option */}
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); switchQualityLevel(-1); }}
               className={`${isAutoQuality ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm`}
             >
               <span className="text-sm">Auto</span>
               {isAutoQuality && <Check className="w-4 h-4 text-primary" />}
-            </button>
+            </Button>
             {sortedLevels.length > 0 ? (
               sortedLevels.map((level) => {
                 const isActive = !isAutoQuality && currentQualityLevel === level.id;
                 const badgeInfo = getBadge(level.height);
                 return (
-                  <button
+                  <Button variant="ghost"
                     key={level.id}
                     type="button"
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); switchQualityLevel(level.id); }}
@@ -2245,7 +2291,7 @@ export function VideoPlayer({
                       )}
                     </div>
                     {isActive && <Check className="w-4 h-4 text-primary" />}
-                  </button>
+                  </Button>
                 );
               })
             ) : (
@@ -2260,14 +2306,14 @@ export function VideoPlayer({
       case 'audio':
         return (
           <div className="py-1">
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('main'); }}
               className="flex items-center gap-2 cursor-pointer text-muted-foreground w-full px-2 py-2 hover:bg-accent rounded-sm"
             >
               <ChevronLeft className="w-4 h-4" />
               <span className="text-sm">Back</span>
-            </button>
+            </Button>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground">Audio Track</DropdownMenuLabel>
             {audioTracks.length > 0 ? (
@@ -2278,7 +2324,7 @@ export function VideoPlayer({
                   .replace(/\s+/g, ' ')
                   .trim() || `Track ${track.id + 1}`;
                 return (
-                  <button
+                  <Button variant="ghost"
                     key={track.id}
                     type="button"
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); switchAudioTrack(track.id); }}
@@ -2286,7 +2332,7 @@ export function VideoPlayer({
                   >
                     <span className="text-sm">{cleanLabel}</span>
                     {currentAudioTrack === track.id && <Check className="w-4 h-4 text-primary" />}
-                  </button>
+                  </Button>
                 );
               })
             ) : (
@@ -2307,26 +2353,26 @@ export function VideoPlayer({
         }
         return (
           <div className="py-1">
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('main'); }}
               className="flex items-center gap-2 cursor-pointer text-muted-foreground w-full px-2 py-2 hover:bg-accent rounded-sm"
             >
               <ChevronLeft className="w-4 h-4" />
               <span className="text-sm">Back</span>
-            </button>
+            </Button>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground">Subtitles</DropdownMenuLabel>
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); switchSubtitleTrack(-1); }}
               className={`${currentSubtitleTrack === -1 ? 'bg-primary/20' : ''} flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm`}
             >
               <span className="text-sm">Off</span>
               {currentSubtitleTrack === -1 && <Check className="w-4 h-4 text-primary" />}
-            </button>
+            </Button>
             {subtitleTracks.map((track) => (
-              <button
+              <Button variant="ghost"
                 key={track.id}
                 type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); switchSubtitleTrack(track.id); }}
@@ -2334,7 +2380,7 @@ export function VideoPlayer({
               >
                 <span className="text-sm">{track.label}</span>
                 {currentSubtitleTrack === track.id && <Check className="w-4 h-4 text-primary" />}
-              </button>
+              </Button>
             ))}
           </div>
         );
@@ -2342,18 +2388,18 @@ export function VideoPlayer({
       case 'speed':
         return (
           <div className="py-1">
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('main'); }}
               className="flex items-center gap-2 cursor-pointer text-muted-foreground w-full px-2 py-2 hover:bg-accent rounded-sm"
             >
               <ChevronLeft className="w-4 h-4" />
               <span className="text-sm">Back</span>
-            </button>
+            </Button>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground">Playback Speed</DropdownMenuLabel>
             {PLAYBACK_SPEEDS.map((speed) => (
-              <button
+              <Button variant="ghost"
                 key={speed}
                 type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); changePlaybackSpeed(speed); }}
@@ -2361,7 +2407,7 @@ export function VideoPlayer({
               >
                 <span className="text-sm">{speed}x</span>
                 {playbackSpeed === speed && <Check className="w-4 h-4 text-primary" />}
-              </button>
+              </Button>
             ))}
           </div>
         );
@@ -2376,7 +2422,7 @@ export function VideoPlayer({
             <DropdownMenuSeparator />
             
             {/* Speed option */}
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('speed'); }}
               className="flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm"
@@ -2389,12 +2435,12 @@ export function VideoPlayer({
                 <span className="text-xs">{playbackSpeed}x</span>
                 <ChevronRight className="w-4 h-4" />
               </div>
-            </button>
+            </Button>
             
             {/* Quality option - show locked label when locked */}
-            <button
+            <Button variant="ghost"
               type="button"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!lockedQuality) setSettingsMenu('quality'); }}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!effectiveQuality) setSettingsMenu('quality'); }}
               className="flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm"
             >
               <div className="flex items-center gap-2">
@@ -2402,16 +2448,16 @@ export function VideoPlayer({
                 <span className="text-sm">Quality</span>
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
-                <span className="text-xs">{lockedQuality ? '4K' : getCurrentQualityLabel()}</span>
-                {lockedQuality && (
-                  <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white">4K</span>
+                <span className="text-xs">{dataSaver ? '1080p' : lockedQuality ? '4K' : getCurrentQualityLabel()}</span>
+                {lockedQuality && !dataSaver && (
+                  <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-primary/15 text-primary">4K</span>
                 )}
-                {!lockedQuality && <ChevronRight className="w-4 h-4" />}
+                {!effectiveQuality && <ChevronRight className="w-4 h-4" />}
               </div>
-            </button>
+            </Button>
             
             {/* Audio option */}
-            <button
+            <Button variant="ghost"
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('audio'); }}
               className="flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm"
@@ -2424,11 +2470,11 @@ export function VideoPlayer({
                 <span className="text-xs truncate max-w-[80px]">{getCurrentAudioLabel()}</span>
                 <ChevronRight className="w-4 h-4" />
               </div>
-            </button>
+            </Button>
             
             {/* Subtitles option - only show if subtitles exist */}
             {subtitleTracks.length > 0 && (
-              <button
+              <Button variant="ghost"
                 type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('subtitles'); }}
                 className="flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm"
@@ -2441,7 +2487,7 @@ export function VideoPlayer({
                   <span className="text-xs truncate max-w-[80px]">{getCurrentSubtitleLabel()}</span>
                   <ChevronRight className="w-4 h-4" />
                 </div>
-              </button>
+              </Button>
             )}
           </div>
         );
@@ -3082,7 +3128,7 @@ export function VideoPlayer({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
                         align="end" side="top"
-                        className="bg-black/70 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl min-w-[210px] md:min-w-[230px] max-h-[360px] overflow-y-auto text-white p-1.5"
+                        className="player-settings-glass"
                         sideOffset={12}
                         style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                         onCloseAutoFocus={(e) => e.preventDefault()}
@@ -3135,7 +3181,7 @@ export function VideoPlayer({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent 
                         align="end" side="top"
-                        className="bg-black/70 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl min-w-[210px] md:min-w-[230px] max-h-[360px] overflow-y-auto text-white p-1.5"
+                        className="player-settings-glass"
                         sideOffset={12}
                         style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                         onCloseAutoFocus={(e) => e.preventDefault()}
@@ -3223,7 +3269,7 @@ export function VideoPlayer({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
                     align="end" side="top"
-                    className="bg-black/70 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl min-w-[210px] md:min-w-[230px] max-h-[360px] overflow-y-auto text-white p-1.5"
+                    className="player-settings-glass"
                     sideOffset={12}
                     style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                     onCloseAutoFocus={(e) => e.preventDefault()}
@@ -3403,7 +3449,7 @@ export function VideoPlayer({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="end" side="top"
-                      className="bg-black/70 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl min-w-[210px] md:min-w-[230px] max-h-[360px] overflow-y-auto text-white p-1.5"
+                      className="player-settings-glass"
                       sideOffset={12}
                       style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                       onCloseAutoFocus={(e) => e.preventDefault()}
@@ -3488,7 +3534,7 @@ export function VideoPlayer({
                     <DropdownMenuContent 
                       align="end" 
                       side="top"
-                      className="bg-black/70 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl min-w-[210px] md:min-w-[230px] max-h-[360px] overflow-y-auto text-white p-1.5"
+                      className="player-settings-glass"
                       sideOffset={12}
                       style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                       onCloseAutoFocus={(e) => e.preventDefault()}
@@ -3612,7 +3658,7 @@ export function VideoPlayer({
                 <DropdownMenuContent 
                   align="end" 
                   side="top"
-                  className="bg-black/70 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl min-w-[210px] md:min-w-[230px] max-h-[360px] overflow-y-auto text-white p-1.5"
+                  className="player-settings-glass"
                   sideOffset={12}
                   style={{ zIndex: 2147483647, pointerEvents: 'auto' }}
                   onCloseAutoFocus={(e) => e.preventDefault()}

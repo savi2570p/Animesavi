@@ -1,3 +1,4 @@
+import { historyResetSinceLoad } from './watchHistoryReset';
 type Content = { genres?: unknown; genre?: unknown; content_rating?: unknown; [key: string]: unknown };
 export function isHentai(value: Content): boolean {
   const labels = [value.genre, value.content_rating, ...(Array.isArray(value.genres) ? value.genres : [])];
@@ -40,6 +41,9 @@ export function installMatureContentFilter(client: { from: Function; rpc: Functi
         member.call(target, (response: { data: unknown }) => resolve(read && localStorage.getItem('pref_mature_filter') === '1'
           ? { ...response, data: filterMatureContent(response.data) } : response), reject);
       return (...args: unknown[]) => {
+        if (['watch_history', 'shadow_flix_continue_watching'].includes(table) && ['insert', 'upsert', 'update'].includes(String(property)) && historyResetSinceLoad()) {
+          return Promise.resolve({ data: null, error: null });
+        }
         const isRead = read && !['insert', 'update', 'upsert', 'delete'].includes(String(property));
         if (property === 'select' && isRead) args[0] = includeClassification(typeof args[0] === 'string' ? args[0] : '*', table);
         const next = member.apply(target, args);
@@ -48,6 +52,8 @@ export function installMatureContentFilter(client: { from: Function; rpc: Functi
     },
   });
   client.from = (table: string) => wrap(originalFrom(table), table);
-  client.rpc = (name: string, ...args: unknown[]) => name === 'home_latest_catalogue'
-    ? wrap(originalRpc(name, ...args), '') : originalRpc(name, ...args);
+  client.rpc = (name: string, ...args: unknown[]) => {
+    if (name === 'upsert_watch_progress' && historyResetSinceLoad()) return Promise.resolve({ data: null, error: null });
+    return name === 'home_latest_catalogue' ? wrap(originalRpc(name, ...args), '') : originalRpc(name, ...args);
+  };
 }
