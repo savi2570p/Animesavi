@@ -298,6 +298,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
     };
 
     window.addEventListener('focus', refreshLatest);
+    window.addEventListener('watch-history-updated', refreshLatest);
     document.addEventListener('visibilitychange', refreshLatest);
 
     // Realtime: refresh the row instantly when watch_history changes for this
@@ -319,6 +320,7 @@ export function ContinueWatching({ showOnHomeOnly = false }: ContinueWatchingPro
 
     return () => {
       window.removeEventListener('focus', refreshLatest);
+      window.removeEventListener('watch-history-updated', refreshLatest);
       document.removeEventListener('visibilitychange', refreshLatest);
       void supabase.removeChannel(channel);
     };

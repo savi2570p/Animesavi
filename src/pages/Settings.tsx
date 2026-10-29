@@ -46,6 +46,7 @@ import {
 import { toast } from 'sonner';
 import { clearImageData } from '@/lib/clearAccountCache';
 import { PREFERENCES_EVENT } from '@/lib/playbackPreferences';
+import { markHistoryReset } from '@/lib/watchHistoryReset';
 
 export default function Settings() {
   const { user, signOut, isAdmin, isUploader } = useAuth();
@@ -72,6 +73,7 @@ export default function Settings() {
     if (!user || clearingCache) return;
     setClearingCache(true);
     try {
+      markHistoryReset();
       const { error } = await supabase.from('watch_history').delete().eq('user_id', user.id);
       if (error) throw error;
       const { error: shadowError } = await supabase.from('shadow_flix_continue_watching').delete().eq('user_id', user.id);
@@ -80,6 +82,7 @@ export default function Settings() {
       window.dispatchEvent(new Event('watch-history-updated'));
       setCacheOpen(false);
       toast.success('Cached images and Continue Watching cleared');
+      window.location.assign('/settings');
     } catch {
       toast.error('Could not finish clearing data. Please try again.');
     } finally {

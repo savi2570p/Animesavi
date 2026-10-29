@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { historyResetSinceLoad } from '@/lib/watchHistoryReset';
 
 interface Options {
   /** Episode id used to namespace localStorage. */
@@ -60,6 +61,7 @@ export function useEmbedWatchTracker({
     const duration = Math.max(60, estimatedDuration || 24 * 60); // safe default = 24m
 
     const flush = () => {
+      if (historyResetSinceLoad()) return;
       try {
         if (accumulatedRef.current > 5) {
           localStorage.setItem(`resume:${episodeId}`, String(Math.floor(accumulatedRef.current)));

@@ -1,4 +1,5 @@
 import { safeStorage } from '@/lib/storage/safeStorage';
+import { historyResetSinceLoad } from './watchHistoryReset';
 
 export function readEmbedResume(episodeId: string, duration: number, explicitTime?: number): number {
   const time = explicitTime ?? Number(safeStorage.getItem(`resume:${episodeId}`));
@@ -9,6 +10,7 @@ export function readEmbedResume(episodeId: string, duration: number, explicitTim
 }
 
 export function saveEmbedResume(episodeId: string, time: number, duration: number, ended = false) {
+  if (historyResetSinceLoad()) return;
   if (!Number.isFinite(time) || time < 0 || !Number.isFinite(duration) || duration <= 0) return;
   if (ended || time >= duration - 5) safeStorage.removeItem(`resume:${episodeId}`);
   else safeStorage.setItem(`resume:${episodeId}`, String(time));
