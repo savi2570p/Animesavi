@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import Hls from 'hls.js';
 import { getHLSConfig } from '@/lib/videoUtils';
 import { useDataSaver, dataSaverEnabled, selectDataSaverLevel } from '@/lib/playbackPreferences';
+import { select1080Variant } from '@/lib/hlsDataSaver';
 import { ANIME_QUALITY_OVERRIDES } from '@/lib/audioLanguageUtils';
 import { getContentAudioLabel } from '@/lib/audioLanguageUtils';
 import {
@@ -622,6 +623,7 @@ export function VideoPlayer({
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !effectiveVideoUrl) return;
+    const controller = new AbortController();
 
     const setupHls = () => {
       // Check if it's an HLS stream
@@ -635,7 +637,23 @@ export function VideoPlayer({
         // Check if browser natively supports HLS (Safari)
         if (video.canPlayType('application/vnd.apple.mpegurl')) {
           console.log('Using native HLS support (Safari)');
-          video.src = effectiveVideoUrl;
+          if (dataSaverEnabled()) {
+            const timeout = window.setTimeout(() => controller.abort(), 8000);
+            fetch(effectiveVideoUrl, { signal: controller.signal }).then(response => {
+              if (!response.ok) throw new Error('Playlist unavailable');
+              return response.text();
+            }).then(manifest => {
+              if (controller.signal.aborted) return;
+              const variant = select1080Variant(manifest, effectiveVideoUrl);
+              if (!variant) throw new Error('No compatible rendition');
+              video.src = variant;
+              void video.play().catch(() => {});
+            }).catch(() => {
+              if (!controller.signal.aborted) toast.error('1080p is unavailable on this stream. Turn off Data Saver to play it.');
+            }).finally(() => window.clearTimeout(timeout));
+          } else {
+            video.src = effectiveVideoUrl;
+          }
           
           // For Safari, use native audioTracks and textTracks API
             const detectNativeTracks = () => {
@@ -1003,12 +1021,13 @@ export function VideoPlayer({
     setupHls();
 
     return () => {
+      controller.abort();
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
     };
-  }, [effectiveVideoUrl, activeServer, animeTitle, lockedQuality, isSubOnly]);
+  }, [effectiveVideoUrl, activeServer, animeTitle, lockedQuality, isSubOnly, dataSaver]);
 
   // Advanced multilingual audio label detection
   // Uses centralized utility for consistent language detection across the app
