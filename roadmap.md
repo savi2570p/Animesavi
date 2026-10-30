@@ -1,3 +1,9 @@
+- [ ] Optimize mobile adaptive playback and smooth compact settings dismissal.
+- [ ] Preserve full original resume and poster artwork across phone, PWA and desktop cards.
+- [ ] Limit cleanup to images and Continue Watching; preserve favorites/offline media and avoid cold catalogue reloads.
+- [ ] Remove mature-filter helper line and redesign Watch Stats with scoped liquid glass.
+- [ ] Update Terms and Privacy to current behavior and date.
+- [ ] Add admin-managed Trending Now lineup and verify affected flows.
 - [x] Enforce Hentai filtering when Mature Content Filter is enabled; classifier and projected-join tests passed.
 - [x] Confirm cached-image clearing and remove account-wide Continue Watching safely; signed-in confirmation/cancellation checked, destructive account-wide deletion not executed against the owner's real history.
 - [x] Enforce Data Saver HLS quality and refresh compact liquid-glass player settings; 14 regressions passed, signed-in controls and real-episode menu checked at desktop and 390px (184px menu). Actual streaming rendition unverified because the selected source failed. Single-resolution MP4 and third-party iframes cannot be converted to 1080p by this setting.
