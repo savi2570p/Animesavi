@@ -11,6 +11,7 @@ import { MainLayout } from "@/components/layout";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { RouteBoundary } from "@/components/common/RouteBoundary";
 import { installGlobalErrorHandlers } from "@/lib/errors/logger";
+import { beginHistorySession } from '@/lib/watchHistoryReset';
 
 installGlobalErrorHandlers();
 import { WelcomePopup } from "@/components/WelcomePopup";
@@ -181,6 +182,7 @@ function ScrollRecoveryInitializer() {
   const location = useLocation();
 
   useEffect(() => {
+    beginHistorySession();
     const frame = window.requestAnimationFrame(() => {
       const hasActiveOverlay = Boolean(
         document.querySelector('[role="dialog"][data-state="open"], [data-scroll-lock="active"]')

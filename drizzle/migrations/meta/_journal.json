@@ -71,6 +71,13 @@
       "when": 1793083631996,
       "tag": "0009_restrict_party_and_vault_reads",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793324210802,
+      "tag": "0010_add_trending_banner_lineup",
+      "breakpoints": true
     }
   ]
 }

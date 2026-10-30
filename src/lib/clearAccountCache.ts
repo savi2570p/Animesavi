@@ -1,4 +1,4 @@
-export const IMAGE_DATA_CACHES = ['images-cache', 'gcp-images-cache', 'anime-catalog-cache', 'episodes-cache', 'seasons-cache'];
+export const IMAGE_DATA_CACHES = ['images-cache', 'gcp-images-cache'];
 export async function clearImageData(storage: Storage, cacheStorage?: CacheStorage) {
   if (cacheStorage) {
     const names = await cacheStorage.keys();

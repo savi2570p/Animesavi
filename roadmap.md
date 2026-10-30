@@ -1,3 +1,9 @@
+- [x] Optimize mobile adaptive playback and smooth compact settings dismissal; real episode menu is 184px and outside tap closes it. Source never became ready, so streaming throughput and native iOS remain unverified.
+- [x] Preserve full original resume and poster artwork across phone, PWA and desktop cards; real episode images checked with contain, no transform, 16:9 frames at desktop/390px. Physical iOS PWA untested.
+- [x] Limit cleanup to images and Continue Watching; confirmed UI cleanup of the playback test entry preserves offline cache/metadata, removes resume keys, and does not reload the document. Catalogue caches remain; 72 regression tests pass.
+- [x] Remove mature-filter helper line and redesign Watch Stats with scoped liquid glass; signed-in tabs and desktop/mobile layouts verified.
+- [x] Update Terms and Privacy to October 30, 2026 and actual storage/playback behavior; both dialogs verified. Legal review not supplied.
+- [x] Add independent admin-managed Trending Now lineup; temporary entry saved and read back on home, then removed. Admin navigation waits for server roles; preview build OK.
 - [x] Enforce Hentai filtering when Mature Content Filter is enabled; classifier and projected-join tests passed.
 - [x] Confirm cached-image clearing and remove account-wide Continue Watching safely; signed-in confirmation/cancellation checked, destructive account-wide deletion not executed against the owner's real history.
 - [x] Enforce Data Saver HLS quality and refresh compact liquid-glass player settings; 14 regressions passed, signed-in controls and real-episode menu checked at desktop and 390px (184px menu). Actual streaming rendition unverified because the selected source failed. Single-resolution MP4 and third-party iframes cannot be converted to 1080p by this setting.

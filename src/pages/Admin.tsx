@@ -243,6 +243,7 @@ export default function Admin() {
             {path:'/admin/site-health',label:'Site Health',icon:Activity},
             {path:'/admin/partners',label:'Partners',icon:Globe},
             {path:'/admin/featured',label:'Featured Lineup',icon:Sparkles},
+            {path:'/admin/featured?banner=trending',label:'Trending Now Lineup',icon:TrendingUp},
           ].map(item => <Button key={item.path} variant="glass" className="justify-start" onClick={() => navigate(item.path)}><item.icon className="h-4 w-4 mr-2" /><span>{item.label}</span><ArrowUpRight className="h-3 w-3 ml-auto" /></Button>)}
         </nav>
         <Tabs defaultValue="applications" className="admin-v10-workspace">

@@ -1,7 +1,8 @@
 # Project rules
 - Mature-content discovery uses one shared read-boundary classifier and includes genre metadata on projected anime joins; this is a display preference, never an access-control rule.
 - Data Saver overrides the main player's quality lock without replacing saved preferences; compact settings reuse a scoped tokenized glass surface.
-- Cache clearing deletes only known image/catalogue caches and signed-in watch history; offline videos and credentials must survive.
+- Cache clearing deletes only the named image caches and signed-in watch history without a document reload; catalogue metadata, favorites, offline videos and credentials survive.
+- History-reset write suppression ends on new navigation, not on cleanup dismissal, so stale players stay paused while new sessions can save progress.
 - Both Shadow link sharing controls use one shared visibility predicate to prevent account allowlists from drifting; it does not grant administrator or playback bypass privileges.
 - Download audio discovery uses a lazy, bounded MP4 metadata reader only when native track metadata is unavailable; never fetch the entire video to populate the selector.
 - Download metadata probes have bounded deadlines and never gate confirmation indefinitely, because CDN metadata can hang or be unavailable.
@@ -24,6 +25,9 @@
 - Download confirmation pauses playback and does not automatically resume it on dismissal, so users control playback explicitly.
 - Popular catalogue cards retain shared audio/content badges and native scroll snapping; animations must respect reduced motion and device performance tiers.
 - All HLS server players use getHLSConfig as the single buffering/network policy, preserving native Safari playback and manual quality/server choices to prevent tuning drift.
+- Mobile HLS uses adaptive quality rather than the desktop lock, while Data Saver caps adaptive levels and preserves saved quality choices.
+- Trending Now has its own admin-protected lineup table and reuses the hero editor in a separate mode so changing one banner never changes the other.
+- Watch Stats uses scoped optical tokens and unframed account sections while retaining existing statistics calculations.
 - Homepage Latest Series and Latest Episodes share one security-invoker catalogue RPC and a short-lived query cache to reduce duplicated requests without bypassing row permissions.
 - Profile-avatar menus reuse a single utility glass surface and semantic icon tones, preserving existing destinations, account switching and role guards to keep presentation independent of account access.
 

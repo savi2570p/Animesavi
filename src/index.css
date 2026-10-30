@@ -770,11 +770,11 @@ button, [role="button"], a {
   }
 
   .browse-card-image {
-    @apply w-full h-full object-cover transition-all duration-700 ease-out;
+    @apply w-full h-full object-contain transition-opacity duration-200;
   }
 
   .browse-card:hover .browse-card-image {
-    @apply scale-[1.08];
+    transform: none;
   }
 
   .browse-card-overlay {
@@ -4134,6 +4134,31 @@ html.perf-low .platform-collection .badge-glass-hdub, html.perf-medium .platform
   -webkit-backdrop-filter: blur(14px) saturate(125%);
   box-shadow: inset 0 1px 0 hsl(var(--player-settings-edge) / .12), 0 12px 32px hsl(var(--player-settings-shadow) / .4);
 }
+.player-settings-glass[data-state="open"] { animation: player-settings-enter 150ms ease-out !important; }
+.player-settings-glass[data-state="closed"] { animation: player-settings-exit 130ms ease-in !important; pointer-events: none !important; }
+@keyframes player-settings-enter { from { opacity: 0; transform: translateY(4px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes player-settings-exit { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(4px); } }
+.resume-original-art { aspect-ratio: 16 / 9; background: hsl(var(--background)); }
+.resume-original-art > img { object-fit: contain; width: 100%; height: 100%; transform: none !important; }
+@media (prefers-reduced-motion: reduce) { .player-settings-glass[data-state] { animation: none !important; } }
+:root {
+  --stats-time: 190 65% 65%;
+  --stats-completed: 145 50% 62%;
+  --stats-progress: 40 80% 65%;
+  --stats-glass: linear-gradient(145deg, hsl(var(--foreground) / .07), hsl(var(--card) / .65));
+  --stats-edge: inset 0 1px 0 hsl(var(--foreground) / .12), 0 8px 24px hsl(var(--background) / .2);
+}
+.stats-v12-header { background: var(--stats-glass); }
+.stats-v12-metric, .stats-v12-review { border: 1px solid hsl(var(--border)); border-radius: 8px; background: var(--stats-glass); box-shadow: var(--stats-edge); }
+.stats-v12-metric { min-width: 0; padding: 20px; }
+.stats-v12-metric > svg { color: hsl(var(--primary)); }
+.stats-v12-metric[data-tone="time"] > svg { color: hsl(var(--stats-time)); }
+.stats-v12-metric[data-tone="completed"] > svg { color: hsl(var(--stats-completed)); }
+.stats-v12-metric[data-tone="progress"] > svg { color: hsl(var(--stats-progress)); }
+.stats-v12-tabs { background: var(--stats-glass); border: 1px solid hsl(var(--border)); border-radius: 8px; box-shadow: var(--stats-edge); }
+.stats-v12-genre { max-width: 720px; }
+@media (min-width: 641px) { html.perf-high .stats-v12-metric { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); } }
+@media (max-width: 640px) { .stats-v12-metric { padding: 16px; } }
 .player-settings-glass button {
   height: auto;
   min-height: 36px;

@@ -123,7 +123,7 @@ export function MoreInfoDrawer({
               <img
                 src={anime.cover_image || '/placeholder.svg'}
                 alt={anime.title}
-                className="w-24 h-32 rounded-lg border border-white/10 shadow-2xl object-cover"
+                className="w-24 h-32 rounded-lg border border-border bg-background shadow-2xl object-contain"
               />
               <div className="pb-1">
                 <SheetHeader className="text-left space-y-1">

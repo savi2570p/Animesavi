@@ -15,6 +15,9 @@ describe('shared server streaming budget', () => {
     expect(config.maxBufferLength).toBe(12);
     expect(config.maxMaxBufferLength).toBe(24);
     expect(config.backBufferLength).toBe(6);
+    expect(config.startLevel).toBe(-1);
+    expect(config.abrEwmaFastVoD).toBe(2);
+    expect(config.maxLoadingDelay).toBe(2);
   });
   it('limits ahead data on save-data connections while preserving renditions', () => {
     vi.stubGlobal('navigator', { userAgent: 'iPhone', connection: { saveData: true } });

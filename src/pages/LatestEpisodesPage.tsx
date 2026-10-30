@@ -211,7 +211,7 @@ export default function LatestEpisodesPage() {
                       <img
                         src={displayImage}
                         alt={group.animeTitle}
-                        className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
+                        className="w-full h-full object-contain"
                         loading="lazy"
                       />
                       
