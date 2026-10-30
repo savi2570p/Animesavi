@@ -2,6 +2,13 @@ import { useSyncExternalStore } from 'react';
 
 export const PREFERENCES_EVENT = 'playback-preferences-changed';
 export function dataSaverEnabled() { return localStorage.getItem('pref_data_saver') === '1'; }
+export function useMatureFilter() {
+  return useSyncExternalStore((notify) => {
+    window.addEventListener(PREFERENCES_EVENT, notify);
+    window.addEventListener('storage', notify);
+    return () => { window.removeEventListener(PREFERENCES_EVENT, notify); window.removeEventListener('storage', notify); };
+  }, () => localStorage.getItem('pref_mature_filter') === '1', () => false);
+}
 export function useDataSaver() {
   return useSyncExternalStore((notify) => {
     window.addEventListener(PREFERENCES_EVENT, notify);
