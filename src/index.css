@@ -4141,6 +4141,24 @@ html.perf-low .platform-collection .badge-glass-hdub, html.perf-medium .platform
 .resume-original-art { aspect-ratio: 16 / 9; background: hsl(var(--background)); }
 .resume-original-art > img { object-fit: contain; width: 100%; height: 100%; transform: none !important; }
 @media (prefers-reduced-motion: reduce) { .player-settings-glass[data-state] { animation: none !important; } }
+:root {
+  --stats-time: 190 65% 65%;
+  --stats-completed: 145 50% 62%;
+  --stats-progress: 40 80% 65%;
+  --stats-glass: linear-gradient(145deg, hsl(var(--foreground) / .07), hsl(var(--card) / .65));
+  --stats-edge: inset 0 1px 0 hsl(var(--foreground) / .12), 0 8px 24px hsl(var(--background) / .2);
+}
+.stats-v12-header { background: var(--stats-glass); }
+.stats-v12-metric, .stats-v12-review { border: 1px solid hsl(var(--border)); border-radius: 8px; background: var(--stats-glass); box-shadow: var(--stats-edge); }
+.stats-v12-metric { min-width: 0; padding: 20px; }
+.stats-v12-metric > svg { color: hsl(var(--primary)); }
+.stats-v12-metric[data-tone="time"] > svg { color: hsl(var(--stats-time)); }
+.stats-v12-metric[data-tone="completed"] > svg { color: hsl(var(--stats-completed)); }
+.stats-v12-metric[data-tone="progress"] > svg { color: hsl(var(--stats-progress)); }
+.stats-v12-tabs { background: var(--stats-glass); border: 1px solid hsl(var(--border)); border-radius: 8px; box-shadow: var(--stats-edge); }
+.stats-v12-genre { max-width: 720px; }
+@media (min-width: 641px) { html.perf-high .stats-v12-metric { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); } }
+@media (max-width: 640px) { .stats-v12-metric { padding: 16px; } }
 .player-settings-glass button {
   height: auto;
   min-height: 36px;
