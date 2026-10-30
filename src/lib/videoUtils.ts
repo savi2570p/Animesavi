@@ -252,18 +252,18 @@ export function getHLSConfig() {
     testBandwidth: false,
 
     // Start low for fast first frame; ABR ramps up to 4K
-    startLevel: 0,
+    startLevel: -1,
     autoStartLoad: true,
 
     // ABR tuned to avoid overshoot (overshoot = discarded downloads)
     abrEwmaDefaultEstimate: slow ? 400000 : (isCellular ? 2500000 : 8000000),
-    abrEwmaFastVoD: 3,
+    abrEwmaFastVoD: isMobile ? 2 : 3,
     abrEwmaSlowVoD: 9,
     abrBandWidthFactor: isMobile ? 0.7 : 0.85,
     abrBandWidthUpFactor: isMobile ? 0.5 : 0.7,
     abrMaxWithRealBitrate: true,
-    maxStarvationDelay: 4,
-    maxLoadingDelay: 4,
+    maxStarvationDelay: isMobile ? 2 : 4,
+    maxLoadingDelay: isMobile ? 2 : 4,
 
     // Discard already-played data aggressively to cut memory + re-fetch waste
     backBufferLength: isMobile ? 6 : 15,

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import Hls from 'hls.js';
 import { getHLSConfig } from '@/lib/videoUtils';
+import { effectivePlayerQuality } from '@/lib/playerQualityPolicy';
 import { useDataSaver, dataSaverEnabled, selectDataSaverLevel } from '@/lib/playbackPreferences';
 import { select1080Variant } from '@/lib/hlsDataSaver';
 import { ANIME_QUALITY_OVERRIDES } from '@/lib/audioLanguageUtils';
@@ -328,7 +329,8 @@ export function VideoPlayer({
   
   // HLS Quality levels
   const dataSaver = useDataSaver();
-  const effectiveQuality = dataSaver ? 1080 : lockedQuality;
+  const adaptiveMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const effectiveQuality = effectivePlayerQuality(dataSaver, adaptiveMobile, lockedQuality);
   const [qualityLevels, setQualityLevels] = useState<QualityLevel[]>([]);
   const [currentQualityLevel, setCurrentQualityLevel] = useState<number>(-1); // -1 = Auto
   const [isAutoQuality, setIsAutoQuality] = useState(true);
@@ -336,7 +338,7 @@ export function VideoPlayer({
   useEffect(() => {
     const hls = hlsRef.current;
     if (!hls || !qualityLevels.length) return;
-    const target = dataSaver ? selectDataSaverLevel(qualityLevels) : lockedQuality ? qualityLevels[0] : undefined;
+    const target = dataSaver ? selectDataSaverLevel(qualityLevels) : effectiveQuality ? qualityLevels[0] : undefined;
     if (dataSaver && !target) {
       videoRef.current?.pause();
       toast.error('This stream has no 1080p or lower rendition. Turn off Data Saver to play it.');
@@ -344,9 +346,9 @@ export function VideoPlayer({
     }
     hls.autoLevelCapping = dataSaver && target ? target.id : -1;
     if (target) {
-      hls.currentLevel = target.id;
+      hls.currentLevel = dataSaver ? -1 : target.id;
       setCurrentQualityLevel(target.id);
-      setIsAutoQuality(false);
+      setIsAutoQuality(dataSaver);
     } else {
       const savedHeight = Number(localStorage.getItem('preferred_quality_level') ?? -1);
       const saved = qualityLevels.find(level => level.height === savedHeight);
@@ -354,7 +356,7 @@ export function VideoPlayer({
       setCurrentQualityLevel(saved?.id ?? -1);
       setIsAutoQuality(!saved);
     }
-  }, [dataSaver, lockedQuality, qualityLevels]);
+  }, [dataSaver, effectiveQuality, qualityLevels]);
 
   // Bitrate indicator
   const [currentBitrate, setCurrentBitrate] = useState<number>(0);
@@ -807,8 +809,9 @@ export function VideoPlayer({
               if (effectiveQuality) {
                 const highestLevel = dataSaverEnabled() ? selectDataSaverLevel(levels) : levels[0]; // Already sorted descending
                 if (highestLevel) {
-                  hls.currentLevel = highestLevel.id;
-                  setIsAutoQuality(false);
+                  hls.autoLevelCapping = dataSaverEnabled() ? highestLevel.id : -1;
+                  hls.currentLevel = dataSaverEnabled() ? -1 : highestLevel.id;
+                  setIsAutoQuality(dataSaverEnabled());
                   setCurrentQualityLevel(highestLevel.id);
                 }
               } else {
@@ -817,7 +820,7 @@ export function VideoPlayer({
                   ([key]) => animeTitle.toLowerCase().includes(key)
                 );
                 
-                if (animeQualityOverride) {
+                if (animeQualityOverride && !adaptiveMobile) {
                   const targetHeight = animeQualityOverride[1];
                   const matchingLevel = levels.find(l => l.height === targetHeight);
                   if (matchingLevel) {
@@ -2448,8 +2451,8 @@ export function VideoPlayer({
                 <span className="text-sm">Quality</span>
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
-                <span className="text-xs">{dataSaver ? '1080p' : lockedQuality ? '4K' : getCurrentQualityLabel()}</span>
-                {lockedQuality && !dataSaver && (
+                <span className="text-xs">{dataSaver ? '1080p' : effectiveQuality ? '4K' : getCurrentQualityLabel()}</span>
+                {effectiveQuality && !dataSaver && (
                   <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-primary/15 text-primary">4K</span>
                 )}
                 {!effectiveQuality && <ChevronRight className="w-4 h-4" />}
