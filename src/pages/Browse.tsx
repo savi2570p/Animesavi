@@ -498,7 +498,7 @@ export default function Browse() {
                             <img 
                               src={suggestion.cover_image || '/placeholder.svg'} 
                               alt={suggestion.title}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                             />
                           </div>
                           <div className="flex-1 min-w-0">

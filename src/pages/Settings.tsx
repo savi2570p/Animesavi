@@ -88,7 +88,6 @@ export default function Settings() {
       window.dispatchEvent(new Event('watch-history-updated'));
       setCacheOpen(false);
       toast.success('Cached images and Continue Watching cleared');
-      window.location.assign('/settings');
     } catch {
       toast.error('Could not finish clearing data. Please try again.');
     } finally {
@@ -381,7 +380,6 @@ export default function Settings() {
               <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/40">
                 <div className="space-y-0.5">
                   <Label htmlFor="mature-filter" className="text-sm font-medium">Mature Content Filter</Label>
-                  <p className="text-xs text-muted-foreground">Hide titles marked Hentai</p>
                 </div>
                 <Switch id="mature-filter" checked={matureFilter} onCheckedChange={setMatureFilter} />
               </div>

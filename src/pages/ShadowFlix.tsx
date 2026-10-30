@@ -1770,7 +1770,7 @@ export default function ShadowFlix() {
                       className="shrink-0 w-44 sm:w-56 cursor-pointer group rounded-xl overflow-hidden"
                       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
                       onClick={() => handlePlayWithEpisodes(episode, group.items)}>
-                      <div className="aspect-video relative bg-black">
+                      <div className="resume-original-art aspect-video relative bg-background">
                         {/* Remove from Continue Watching */}
                         <button
                           onClick={(e) => handleRemoveContinueWatching(e, group.title)}
@@ -1782,7 +1782,7 @@ export default function ShadowFlix() {
                         </button>
                         {(episode.thumbnail_url || group.thumbnail) ? (
                           <img src={episode.thumbnail_url || group.thumbnail || ''} alt={group.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            className="w-full h-full object-contain" />
                         ) : (
                           <div className="w-full h-full bg-white/5 flex items-center justify-center"><Film className="w-8 h-8 text-white/20" /></div>
                         )}

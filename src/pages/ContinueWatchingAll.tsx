@@ -15,8 +15,8 @@ interface Row {
   completed: boolean | null;
   last_position: number | null;
   duration: number | null;
-  anime: { id: string; title: string; cover_image: string | null } | null;
-  episode: { id: string; title: string; episode_number: number; duration: number | null; season_id: string } | null;
+  anime: { id: string; title: string; cover_image: string | null; banner_image: string | null } | null;
+  episode: { id: string; title: string; episode_number: number; duration: number | null; season_id: string; thumbnail: string | null } | null;
 }
 
 type Tab = 'all' | 'in-progress' | 'completed';
@@ -33,7 +33,7 @@ export default function ContinueWatchingAll() {
     (async () => {
       const { data } = await supabase
         .from('watch_history')
-        .select('id,watched_at,progress,completed,last_position,duration,anime:anime_id(id,title,cover_image),episode:episode_id(id,title,episode_number,duration,season_id)')
+        .select('id,watched_at,progress,completed,last_position,duration,anime:anime_id(id,title,cover_image,banner_image),episode:episode_id(id,title,episode_number,duration,season_id,thumbnail)')
         .eq('user_id', user.id)
         .order('watched_at', { ascending: false })
         .limit(200);
@@ -134,13 +134,13 @@ export default function ContinueWatchingAll() {
                 <div key={r.id} className="group relative">
                   <Link
                     to={`/watch/${r.episode.id}?t=${pct}`}
-                    className="block relative aspect-video rounded-2xl overflow-hidden border border-border/40 bg-muted/40 shadow-md group-hover:shadow-2xl group-hover:shadow-primary/25 group-hover:border-primary/60 transition-all duration-500"
+                    className="resume-original-art block relative aspect-video rounded-2xl overflow-hidden border border-border/40 bg-background shadow-md group-hover:shadow-2xl group-hover:shadow-primary/25 group-hover:border-primary/60 transition-all duration-500"
                   >
                     <img
-                      src={r.anime.cover_image || '/placeholder.svg'}
+                      src={r.episode.thumbnail || r.anime.banner_image || r.anime.cover_image || '/placeholder.svg'}
                       alt={r.anime.title}
                       loading="lazy"
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      className="absolute inset-0 w-full h-full object-contain"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                     <div className="absolute inset-0 grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity">
