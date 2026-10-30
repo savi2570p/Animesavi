@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,6 +58,7 @@ export default function Settings() {
   const [reducedMotion, setReducedMotion] = useState(() => localStorage.getItem('pref_reduced_motion') === '1');
   const [subsDefault, setSubsDefault] = useState(() => localStorage.getItem('pref_subs_default') !== '0');
   const [matureFilter, setMatureFilter] = useState(() => localStorage.getItem('pref_mature_filter') === '1');
+  const previousMatureFilter = useRef(matureFilter);
   const [defaultQuality, setDefaultQuality] = useState<string>(() => localStorage.getItem('pref_default_quality') || 'auto');
   const [subLang, setSubLang] = useState<string>(() => localStorage.getItem('pref_sub_lang') || 'en');
 
@@ -67,6 +68,8 @@ export default function Settings() {
   useEffect(() => { localStorage.setItem('pref_subs_default', subsDefault ? '1' : '0'); }, [subsDefault]);
   useEffect(() => {
     localStorage.setItem('pref_mature_filter', matureFilter ? '1' : '0');
+    if (previousMatureFilter.current === matureFilter) return;
+    previousMatureFilter.current = matureFilter;
     window.dispatchEvent(new Event(PREFERENCES_EVENT));
     void queryClient.invalidateQueries();
   }, [matureFilter, queryClient]);
