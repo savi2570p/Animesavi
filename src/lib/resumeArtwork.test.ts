@@ -15,3 +15,11 @@ describe('resume artwork choice', () => {
     expect(resumeArtworkCandidates('a', null, 'a', '', 'b')).toEqual(['a', 'b']);
   });
 });
+
+import { optimizedImageUrl } from './imageOptimization';
+describe('image resizing keeps the original shape', () => {
+  it('width-only resizes use contain so 16:9 art is not cropped', () => {
+    const url = optimizedImageUrl('https://x.supabase.co/storage/v1/object/public/a/b.jpg', { width: 640 });
+    expect(new URL(url).searchParams.get('resize')).toBe('contain');
+  });
+});
