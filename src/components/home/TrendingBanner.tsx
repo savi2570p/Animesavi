@@ -37,6 +37,16 @@ export const TrendingBanner = memo(function TrendingBanner() {
   const { data: trending = [], isPending } = useQuery({
     queryKey: ['home-trending-v2'], staleTime: 5 * 60_000, refetchOnWindowFocus: false,
     queryFn: async () => {
+      const custom = await supabase.from('trending_banner_lineup')
+        .select('custom_title, custom_cover_url, custom_banner_url, anime:anime_id(id,title,cover_image,banner_image,view_count,genres,status,is_eng_dub,is_sub_only)')
+        .eq('is_active', true).order('position', { ascending: true });
+      if (custom.error) throw custom.error;
+      const lineup = (custom.data || []).flatMap(row => row.anime ? [{
+        ...row.anime, title: row.custom_title || row.anime.title,
+        cover_image: row.custom_cover_url || row.anime.cover_image,
+        banner_image: row.custom_banner_url || row.anime.banner_image,
+      }] : []) as TrendingAnime[];
+      if (lineup.length) return lineup;
       const [curated, popular] = await Promise.all([
         supabase.from('anime_public').select(FIELDS).in('title', TRENDING_TITLES).limit(7),
         supabase.from('anime_public').select(FIELDS).order('view_count', { ascending: false }).limit(TRENDING_LIMIT),
