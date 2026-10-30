@@ -1,3 +1,4 @@
+import { ResumeArtwork } from '@/components/anime/ResumeArtwork';
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -102,17 +103,12 @@ export function ContinueWatchingNotification() {
 
   const progress = Math.round(lastWatched.progress || 0);
   const timeLeft = formatTimeLeft(progress, lastWatched.episode.duration);
-  const backdrop =
-    lastWatched.episode.thumbnail ||
-    lastWatched.anime.banner_image ||
-    lastWatched.anime.cover_image ||
-    '/placeholder.svg';
 
   return (
     <aside aria-label="Continue Watching" className={`resume-notice-v8 fixed z-50 ${isClosing ? 'motion-safe:animate-out motion-safe:fade-out' : 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2'} duration-200`}>
       <div className="utility-glass-v6 overflow-hidden">
         <div className="resume-art-v8 resume-original-art relative aspect-video bg-background overflow-hidden">
-          <img src={backdrop} alt={lastWatched.anime.title} className="absolute inset-0 h-full w-full object-contain" />
+          <ResumeArtwork sources={[lastWatched.episode.thumbnail, lastWatched.anime.banner_image, lastWatched.anime.cover_image]} alt={lastWatched.anime.title} width={480} loading="eager" />
           <span className="resume-label-v8 utility-fab-v6 absolute top-2 left-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-semibold"><History className="h-3 w-3 text-primary" />Continue Watching</span>
           <Button variant="glass" size="icon" onClick={close} aria-label="Dismiss" title="Dismiss" className="absolute top-2 right-2 h-8 w-8 rounded-md"><X className="h-3.5 w-3.5" /></Button>
         </div>

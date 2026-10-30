@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Play, Clock, Check } from 'lucide-react';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
-import { optimizedImageUrl, fhdFallback } from '@/lib/imageOptimization';
+import { ResumeArtwork } from '@/components/anime/ResumeArtwork';
 
 import { toast } from 'sonner';
 import { CatalogueHeading } from './CatalogueHeading';
@@ -69,12 +69,11 @@ const ContinueWatchingCard = memo(function ContinueWatchingCard({
 }: ContinueWatchingCardProps) {
   const progressPct = Math.min(Math.max(item.progress || 0, 0), 100);
   const timeLeft = formatTimeLeft(item.progress, item.episode.duration);
-  const raw = item.episode.thumbnail || item.anime.banner_image || item.anime.cover_image || '/placeholder.svg';
 
   return <div className={`catalogue-glass cw-card rounded-xl overflow-hidden w-[360px] max-w-[calc(100vw-1.5rem)] shrink-0 group ${isFading ? 'cw-tile-fading' : ''}`}>
     <Link to={`/watch/${item.episode.id}`} aria-label={`Resume ${item.anime.title} episode ${item.episode.episode_number}`} className="block">
       <div className="cw-artwork resume-original-art relative aspect-video bg-background overflow-hidden">
-        <img src={optimizedImageUrl(raw, { width: 640, quality: 78 })} onError={fhdFallback(raw)} alt={item.anime.title} className="absolute inset-0 w-full h-full object-contain" loading="lazy" decoding="async" draggable={false} />
+        <ResumeArtwork sources={[item.episode.thumbnail, item.anime.banner_image, item.anime.cover_image]} alt={item.anime.title} />
         <span className="catalogue-chip absolute top-2 left-2 rounded px-2 py-1 text-[10px]">S{item.season?.season_number || 1} · E{item.episode.episode_number}</span>
         {item.hasNewEpisode && <span className="catalogue-chip absolute bottom-2 left-2 rounded px-2 py-1 text-[10px] text-primary">NEW</span>}
         <Play className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-7 w-7 text-primary-foreground fill-current" />

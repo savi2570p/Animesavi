@@ -64,6 +64,9 @@ export function optimizedImageUrl(
   const params = new URLSearchParams();
   if (width) params.set('width', String(width));
   if (height) params.set('height', String(height));
+  // Width-only resizes default to "cover" with the original height, which
+  // crops wide/tall artwork. "contain" keeps the original aspect ratio.
+  if (width && !height) params.set('resize', 'contain');
   params.set('quality', String(quality));
   
   // Supabase render endpoint

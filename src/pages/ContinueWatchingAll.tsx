@@ -1,3 +1,4 @@
+import { ResumeArtwork } from '@/components/anime/ResumeArtwork';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -136,12 +137,7 @@ export default function ContinueWatchingAll() {
                     to={`/watch/${r.episode.id}?t=${pct}`}
                     className="resume-original-art block relative aspect-video rounded-2xl overflow-hidden border border-border/40 bg-background shadow-md group-hover:shadow-2xl group-hover:shadow-primary/25 group-hover:border-primary/60 transition-all duration-500"
                   >
-                    <img
-                      src={r.episode.thumbnail || r.anime.banner_image || r.anime.cover_image || '/placeholder.svg'}
-                      alt={r.anime.title}
-                      loading="lazy"
-                      className="absolute inset-0 w-full h-full object-contain"
-                    />
+                    <ResumeArtwork sources={[r.episode.thumbnail, r.anime.banner_image, r.anime.cover_image]} alt={r.anime.title} />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                     <div className="absolute inset-0 grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="h-14 w-14 rounded-full bg-primary/90 grid place-items-center backdrop-blur shadow-lg shadow-primary/50">
