@@ -38,11 +38,12 @@ export function installMatureContentFilter(client: { from: Function; rpc: Functi
       const member = Reflect.get(target, property);
       if (typeof member !== 'function') return member;
       if (property === 'then') return (resolve: (value: unknown) => unknown, reject: (error: unknown) => unknown) =>
-        member.call(target, (response: { data: unknown }) => resolve(read && localStorage.getItem('pref_mature_filter') === '1'
+        member.call(target, (response: { data: unknown }) => resolve(!read && ['watch_history', 'shadow_flix_continue_watching'].includes(table) && historyResetSinceLoad()
+          ? { data: null, error: null } : read && localStorage.getItem('pref_mature_filter') === '1'
           ? { ...response, data: filterMatureContent(response.data) } : response), reject);
       return (...args: unknown[]) => {
         if (['watch_history', 'shadow_flix_continue_watching'].includes(table) && ['insert', 'upsert', 'update'].includes(String(property)) && historyResetSinceLoad()) {
-          return Promise.resolve({ data: null, error: null });
+          return wrap({ then: (resolve: (value: unknown) => unknown) => Promise.resolve(resolve({ data: null, error: null })), select() { return this; }, eq() { return this; }, single() { return this; }, maybeSingle() { return this; } }, table, false);
         }
         const isRead = read && !['insert', 'update', 'upsert', 'delete'].includes(String(property));
         if (property === 'select' && isRead) args[0] = includeClassification(typeof args[0] === 'string' ? args[0] : '*', table);

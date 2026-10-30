@@ -47,8 +47,10 @@ import { toast } from 'sonner';
 import { clearImageData } from '@/lib/clearAccountCache';
 import { PREFERENCES_EVENT } from '@/lib/playbackPreferences';
 import { markHistoryReset } from '@/lib/watchHistoryReset';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function Settings() {
+  const queryClient = useQueryClient();
   const { user, signOut, isAdmin, isUploader } = useAuth();
   const navigate = useNavigate();
   const [autoplay, setAutoplay] = useState(() => localStorage.getItem('pref_autoplay') !== '0');
@@ -63,7 +65,11 @@ export default function Settings() {
   useEffect(() => { localStorage.setItem('pref_data_saver', dataSaver ? '1' : '0'); window.dispatchEvent(new Event(PREFERENCES_EVENT)); }, [dataSaver]);
   useEffect(() => { localStorage.setItem('pref_reduced_motion', reducedMotion ? '1' : '0'); }, [reducedMotion]);
   useEffect(() => { localStorage.setItem('pref_subs_default', subsDefault ? '1' : '0'); }, [subsDefault]);
-  useEffect(() => { localStorage.setItem('pref_mature_filter', matureFilter ? '1' : '0'); }, [matureFilter]);
+  useEffect(() => {
+    localStorage.setItem('pref_mature_filter', matureFilter ? '1' : '0');
+    window.dispatchEvent(new Event(PREFERENCES_EVENT));
+    void queryClient.invalidateQueries();
+  }, [matureFilter, queryClient]);
   useEffect(() => { localStorage.setItem('pref_default_quality', defaultQuality); }, [defaultQuality]);
   useEffect(() => { localStorage.setItem('pref_sub_lang', subLang); }, [subLang]);
 

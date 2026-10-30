@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useMatureFilter } from '@/lib/playbackPreferences';
 
 export interface HomeSeries {
   id: string; title: string; cover_image: string | null; created_at: string;
@@ -13,8 +14,9 @@ export interface HomeEpisode {
   season: { season_number: number; anime: HomeSeries & { type: string | null } };
 }
 export function useHomeCatalogue() {
+  const matureFilter = useMatureFilter();
   return useQuery({
-    queryKey: ['home-latest-catalogue'],
+    queryKey: ['home-latest-catalogue', matureFilter],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('home_latest_catalogue');
       if (error) throw error;
