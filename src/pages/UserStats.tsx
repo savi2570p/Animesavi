@@ -5,10 +5,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Star, Clock, Film, Heart, TrendingUp, Calendar, Eye, Award } from 'lucide-react';
+import { ArrowLeft, Star, Clock, Film, Heart, TrendingUp, Calendar, Eye, Award } from 'lucide-react';
 
 interface UserProfile {
   username: string | null;
@@ -213,189 +214,60 @@ export default function UserStats() {
   }
 
   return (
-    <div className="container py-8 max-w-4xl">
-      {/* Profile Header */}
-      <div className="flex items-center gap-6 mb-8">
-        <Avatar className="h-24 w-24 ring-4 ring-primary/30">
-          <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.username || 'User'} />
-          <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-3xl text-white">
-            {profile?.username?.charAt(0).toUpperCase() || 'U'}
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <h1 className="text-3xl font-heading font-bold">
-            {profile?.username || 'Anime Fan'}
-          </h1>
-          <div className="flex items-center gap-2 text-muted-foreground mt-1">
-            <Calendar className="h-4 w-4" />
-            <span>Member since {profile?.created_at ? formatDate(profile.created_at) : 'Unknown'}</span>
-          </div>
-          <div className="flex gap-2 mt-3">
-            <Badge variant="secondary" className="gap-1">
-              <Eye className="h-3 w-3" />
-              {stats?.totalAnimeStarted || 0} Anime
-            </Badge>
-            <Badge variant="secondary" className="gap-1">
-              <Star className="h-3 w-3" />
-              {reviews.length} Reviews
-            </Badge>
+    <div className="stats-v12 account-v4 min-h-screen">
+      <header className="stats-v12-header border-b border-border">
+        <div className="container max-w-5xl py-8 md:py-12">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/profile')} className="mb-6"><ArrowLeft className="h-4 w-4" />My Profile</Button>
+          <div className="flex items-center gap-4 md:gap-6">
+            <Avatar className="h-16 w-16 md:h-20 md:w-20 shrink-0 ring-2 ring-border">
+              <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.username || 'User'} />
+              <AvatarFallback className="bg-primary/15 text-primary text-2xl">{profile?.username?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground mb-2 truncate">{profile?.username || 'Anime Fan'}</p>
+              <h1 className="font-heading text-3xl md:text-4xl font-bold">Watch Stats</h1>
+              <div className="flex items-center gap-2 text-muted-foreground mt-3 text-xs"><Calendar className="h-3.5 w-3.5 shrink-0" /><span>Member since {profile?.created_at ? formatDate(profile.created_at) : 'Unknown'}</span></div>
+            </div>
           </div>
         </div>
+      </header>
+      <div className="container max-w-5xl py-6 md:py-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+          {[
+            { icon: Film, value: stats?.totalEpisodesWatched || 0, label: 'Episodes watched', tone: 'episodes' },
+            { icon: Clock, value: formatDuration(stats?.totalMinutesWatched || 0), label: 'Watch time', tone: 'time' },
+            { icon: Award, value: stats?.completedAnime || 0, label: 'Anime with completions', tone: 'completed' },
+            { icon: TrendingUp, value: `${stats?.averageWatchProgress || 0}%`, label: 'Average progress', tone: 'progress' },
+          ].map(metric => <div key={metric.label} className="stats-v12-metric" data-tone={metric.tone}>
+            <metric.icon className="h-5 w-5 mb-5" /><strong className="block text-2xl md:text-3xl font-bold tabular-nums break-words">{metric.value}</strong><span className="block text-xs text-muted-foreground mt-2">{metric.label}</span>
+          </div>)}
+        </div>
+        <div className="flex flex-wrap items-center gap-5 border-y border-border py-4 mb-8 text-sm">
+          <span className="flex items-center gap-2"><Eye className="h-4 w-4 text-primary" /><strong>{stats?.totalAnimeStarted || 0}</strong><span className="text-muted-foreground">Anime started</span></span>
+          <span className="flex items-center gap-2"><Star className="h-4 w-4 text-primary" /><strong>{reviews.length}</strong><span className="text-muted-foreground">Reviews</span></span>
+        </div>
+        <Tabs defaultValue="genres" className="space-y-6">
+          <TabsList className="stats-v12-tabs"><TabsTrigger value="genres" className="gap-2"><Heart className="h-4 w-4" />Favorite Genres</TabsTrigger><TabsTrigger value="reviews" className="gap-2"><Star className="h-4 w-4" />Reviews</TabsTrigger></TabsList>
+          <TabsContent value="genres">
+            <section className="py-2">
+              <h2 className="text-xl font-bold mb-6">Your Favorite Genres</h2>
+              {genres.length === 0 ? <p className="text-muted-foreground py-10 text-sm">No viewing preferences yet.</p> : <div className="space-y-5">{genres.map((genre, index) => <div key={genre.genre} className="stats-v12-genre">
+                <div className="flex items-center justify-between gap-3 mb-2"><div className="flex items-center gap-3 min-w-0"><span className="text-xs text-muted-foreground tabular-nums">{String(index + 1).padStart(2, '0')}</span><span className="text-sm font-medium break-words">{genre.genre}</span></div><span className="text-xs text-muted-foreground shrink-0">{genre.watch_count} {genre.watch_count === 1 ? 'watch' : 'watches'}</span></div>
+                <Progress value={(genre.watch_count / getMaxGenreCount()) * 100} className="h-1.5" />
+              </div>)}</div>}
+            </section>
+          </TabsContent>
+          <TabsContent value="reviews">
+            <section className="py-2">
+              <h2 className="text-xl font-bold mb-6">Your Reviews</h2>
+              {reviews.length === 0 ? <p className="text-muted-foreground py-10 text-sm">No reviews yet.</p> : <div className="grid md:grid-cols-2 gap-3">{reviews.map(review => <article key={review.id} className="stats-v12-review flex gap-3 p-4">
+                <img src={review.anime.cover_image || '/placeholder.svg'} alt={review.anime.title} className="w-16 h-24 object-contain bg-background rounded shrink-0" loading="lazy" />
+                <div className="min-w-0"><h3 className="text-sm font-semibold line-clamp-2">{review.anime.title}</h3><div className="flex items-center gap-0.5 mt-2" aria-label={`${review.rating} out of 5 stars`}>{Array.from({length: 5}, (_, i) => <Star key={i} className={`h-3.5 w-3.5 ${i < review.rating ? 'text-primary fill-current' : 'text-muted-foreground'}`} />)}</div><p className="text-[11px] text-muted-foreground mt-2">{formatDate(review.created_at)}</p>{review.review_text && <p className="text-xs text-muted-foreground mt-3 line-clamp-3 break-words">{review.review_text}</p>}</div>
+              </article>)}</div>}
+            </section>
+          </TabsContent>
+        </Tabs>
       </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/20">
-                <Film className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats?.totalEpisodesWatched || 0}</p>
-                <p className="text-xs text-muted-foreground">Episodes Watched</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-accent/20">
-                <Clock className="h-5 w-5 text-accent-foreground" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{formatDuration(stats?.totalMinutesWatched || 0)}</p>
-                <p className="text-xs text-muted-foreground">Watch Time</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/20">
-                <Award className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats?.completedAnime || 0}</p>
-                <p className="text-xs text-muted-foreground">Completed</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-secondary/20 to-secondary/10 border-secondary/30">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-secondary">
-                <TrendingUp className="h-5 w-5 text-secondary-foreground" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats?.averageWatchProgress || 0}%</p>
-                <p className="text-xs text-muted-foreground">Avg Progress</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabs for Genres and Reviews */}
-      <Tabs defaultValue="genres" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="genres" className="gap-2">
-            <Heart className="h-4 w-4" />
-            Favorite Genres
-          </TabsTrigger>
-          <TabsTrigger value="reviews" className="gap-2">
-            <Star className="h-4 w-4" />
-            Reviews
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="genres" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Favorite Genres</CardTitle>
-              <CardDescription>Based on your watch history</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {genres.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  Start watching anime to see your genre preferences!
-                </p>
-              ) : (
-                genres.map((genre, index) => (
-                  <div key={genre.genre} className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground text-sm">#{index + 1}</span>
-                        <span className="font-medium">{genre.genre}</span>
-                      </div>
-                      <span className="text-sm text-muted-foreground">
-                        {genre.watch_count} {genre.watch_count === 1 ? 'watch' : 'watches'}
-                      </span>
-                    </div>
-                    <Progress 
-                      value={(genre.watch_count / getMaxGenreCount()) * 100} 
-                      className="h-2" 
-                    />
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="reviews" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Reviews</CardTitle>
-              <CardDescription>{reviews.length} {reviews.length === 1 ? 'review' : 'reviews'} written</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {reviews.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  You haven't written any reviews yet. Share your thoughts on anime you've watched!
-                </p>
-              ) : (
-                reviews.map((review) => (
-                  <div key={review.id} className="flex gap-4 p-4 rounded-lg bg-muted/50">
-                    <img
-                      src={review.anime.cover_image || '/placeholder.svg'}
-                      alt={review.anime.title}
-                      className="w-16 h-24 object-cover rounded-lg flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold truncate">{review.anime.title}</h4>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex items-center">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-4 w-4 ${i < review.rating ? 'text-yellow-500 fill-current' : 'text-muted-foreground'}`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {formatDate(review.created_at)}
-                        </span>
-                      </div>
-                      {review.review_text && (
-                        <p className="text-sm text-muted-foreground mt-2 line-clamp-3">
-                          {review.review_text}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }
