@@ -30,7 +30,7 @@ interface LineupRow {
 }
 
 export default function AdminFeaturedLineup() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isLoading, isRolesLoaded } = useAuth();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const queryClient = useQueryClient();
@@ -43,10 +43,11 @@ export default function AdminFeaturedLineup() {
   const [searchResults, setSearchResults] = useState<AnimeLite[]>([]);
 
   useEffect(() => {
+    if (isLoading || !isRolesLoaded) return;
     if (!user) { navigate('/auth'); return; }
     if (!isAdmin) { toast.error('Admin only'); navigate('/'); return; }
     load();
-  }, [user, isAdmin, table]);
+  }, [user, isAdmin, table, isLoading, isRolesLoaded]);
 
   const load = async () => {
     setLoading(true);
