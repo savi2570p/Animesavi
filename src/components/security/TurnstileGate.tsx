@@ -145,101 +145,114 @@ export const TurnstileGate = () => {
 
   return (
     <div
-      className="app-global-overlay fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-300 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(91,33,182,0.5),rgba(20,5,40,0.7)_55%,rgba(8,2,20,0.88))] backdrop-blur-2xl"
+      className="app-global-overlay fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-300 backdrop-blur-xl"
+      style={{ background: "radial-gradient(130% 90% at 50% 0%, hsl(var(--primary) / .28), hsl(var(--background) / .78) 58%, hsl(var(--background) / .92))" }}
       role="dialog"
       aria-modal="true"
       aria-label="Verifying you are human"
     >
-      {/* Dark purple glass pill — matches What's New aesthetic */}
-      <div className="relative w-full max-w-[320px] mx-auto overflow-hidden bg-purple-950/25 backdrop-blur-3xl border border-violet-300/15 rounded-[36px] shadow-[0_48px_120px_-20px_rgba(76,29,149,0.7),inset_0_1px_1px_rgba(216,180,254,0.18)] font-popup">
-        {/* Ambient purple bloom + sheen */}
-        <div className="absolute -inset-1 bg-gradient-to-b from-violet-400/15 via-purple-500/5 to-transparent rounded-[38px] blur-xl opacity-40 pointer-events-none" />
-        <div className="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-gradient-to-br from-white/[0.06] via-transparent to-transparent rotate-12 pointer-events-none" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-violet-200/40 to-transparent" />
-        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-2/3 h-20 bg-purple-600/30 blur-3xl rounded-full pointer-events-none" />
+      {/* Liquid glass card */}
+      <div
+        className="relative w-full max-w-[300px] mx-auto overflow-hidden rounded-[28px] font-popup border border-border/60"
+        style={{
+          background: "var(--utility-glass-fill)",
+          boxShadow: "var(--utility-glass-shadow), 0 40px 90px -24px hsl(var(--primary) / .45)",
+          backdropFilter: "blur(22px)",
+          WebkitBackdropFilter: "blur(22px)",
+        }}
+      >
+        {/* Liquid sheen + specular edge */}
+        <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent rotate-12 pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-foreground/40 to-transparent" />
+        <div
+          className="absolute -bottom-12 left-1/2 -translate-x-1/2 w-2/3 h-20 rounded-full blur-3xl pointer-events-none transition-colors duration-500"
+          style={{ background: verified ? "hsl(160 84% 39% / .25)" : "hsl(var(--primary) / .3)" }}
+        />
 
         <div className="relative z-10 px-6 py-7 flex flex-col items-center text-center">
-          {/* Animated shield orb */}
-          <div className="relative h-16 w-16 mb-4">
+          {/* Liquid orb */}
+          <div className="relative h-[72px] w-[72px] mb-4">
             <div
-              className={`absolute inset-0 rounded-full blur-xl transition-colors duration-500 ${
-                verified
-                  ? "bg-emerald-500/40"
-                  : "bg-gradient-to-br from-violet-500/40 to-purple-600/25 animate-pulse"
-              }`}
+              className={`absolute inset-0 rounded-full blur-xl transition-colors duration-500 ${verified ? "" : "animate-pulse"}`}
+              style={{ background: verified ? "hsl(160 84% 39% / .35)" : "hsl(var(--primary) / .35)" }}
             />
             {!verified && (
               <>
                 <div
-                  className="absolute inset-0 rounded-full border-2 border-transparent border-t-violet-300 border-r-violet-400"
-                  style={{ animation: "spin 1.4s linear infinite" }}
+                  className="absolute inset-0 rounded-full border-2 border-transparent"
+                  style={{ borderTopColor: "hsl(var(--primary))", borderRightColor: "hsl(var(--primary) / .6)", animation: "spin 1.4s linear infinite" }}
                 />
                 <div
-                  className="absolute inset-1.5 rounded-full border-2 border-transparent border-b-purple-300 border-l-purple-400"
-                  style={{ animation: "spin 2s linear infinite reverse" }}
+                  className="absolute inset-1.5 rounded-full border-2 border-transparent"
+                  style={{ borderBottomColor: "hsl(var(--foreground) / .5)", borderLeftColor: "hsl(var(--primary) / .5)", animation: "spin 2s linear infinite reverse" }}
                 />
               </>
             )}
             <div className="absolute inset-0 flex items-center justify-center">
               <div
-                className={`h-9 w-9 rounded-full flex items-center justify-center transition-all duration-500 ${
-                  verified
-                    ? "bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-[0_0_24px_rgba(16,185,129,0.7)]"
-                    : "bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-600 shadow-[0_0_24px_rgba(139,92,246,0.8)]"
-                }`}
+                className="h-10 w-10 rounded-full flex items-center justify-center transition-all duration-500 border border-foreground/20"
+                style={{
+                  background: verified
+                    ? "linear-gradient(135deg, hsl(160 84% 45%), hsl(160 84% 30%))"
+                    : "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / .65))",
+                  boxShadow: verified
+                    ? "0 0 26px hsl(160 84% 39% / .6), inset 0 1px 1px hsl(0 0% 100% / .35)"
+                    : "0 0 26px hsl(var(--primary) / .7), inset 0 1px 1px hsl(0 0% 100% / .35)",
+                }}
               >
                 {verified ? (
-                  <Check className="h-4 w-4 text-white" strokeWidth={3} />
+                  <Check className="h-4 w-4 text-primary-foreground" strokeWidth={3} />
                 ) : (
-                  <ShieldCheck className="h-4 w-4 text-white drop-shadow" />
+                  <ShieldCheck className="h-4 w-4 text-primary-foreground drop-shadow" />
                 )}
               </div>
             </div>
           </div>
 
-          {/* Pill label */}
+          {/* Status pill */}
           <div
-            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.2em] mb-2 transition-colors ${
-              verified
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-                : "border-violet-300/30 bg-violet-500/15 text-violet-200"
-            }`}
+            className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.2em] mb-2 transition-colors border-border/60 bg-foreground/[0.06]"
+            style={{ color: verified ? "hsl(160 84% 55%)" : "hsl(var(--foreground) / .8)" }}
           >
             <span className="relative flex h-1.5 w-1.5">
               <span
-                className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${
-                  verified ? "bg-emerald-400" : "bg-violet-300"
-                }`}
+                className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
+                style={{ background: verified ? "hsl(160 84% 50%)" : "hsl(var(--primary))" }}
               />
               <span
-                className={`relative inline-flex h-1.5 w-1.5 rounded-full ${
-                  verified ? "bg-emerald-400" : "bg-violet-300"
-                }`}
+                className="relative inline-flex h-1.5 w-1.5 rounded-full"
+                style={{ background: verified ? "hsl(160 84% 50%)" : "hsl(var(--primary))" }}
               />
             </span>
             {verified ? "Verified" : "Security Check"}
           </div>
 
-          <h2 className="bg-gradient-to-r from-white via-violet-100 to-white bg-clip-text text-base font-bold text-transparent tracking-tight">
+          <h2 className="text-base font-bold tracking-tight text-foreground">
             {verified ? "You're all set" : "Verify you are human"}
           </h2>
-          <p className="text-[11px] text-violet-200/60 mt-1 leading-relaxed px-2">
+          <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed px-2">
             {verified
               ? "Verification complete. Taking you in…"
               : "Performing a quick security check. This only takes a moment."}
           </p>
 
-          {/* Shimmer progress bar */}
-          <div className="relative mt-5 h-1 w-full overflow-hidden rounded-full bg-violet-300/[0.08]">
+          {/* Liquid progress bar */}
+          <div className="relative mt-5 h-1 w-full overflow-hidden rounded-full bg-foreground/[0.08]">
             {verified ? (
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.7)]" />
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{ background: "linear-gradient(90deg, hsl(160 84% 45%), hsl(160 84% 35%))", boxShadow: "0 0 12px hsl(160 84% 39% / .6)" }}
+              />
             ) : (
-              <div className="absolute inset-y-0 left-0 w-1/3 rounded-full bg-gradient-to-r from-transparent via-violet-300 to-transparent shadow-[0_0_12px_rgba(139,92,246,0.8)] animate-[turnstile_1.4s_ease-in-out_infinite]" />
+              <div
+                className="absolute inset-y-0 left-0 w-1/3 rounded-full animate-[turnstile_1.4s_ease-in-out_infinite]"
+                style={{ background: "linear-gradient(90deg, transparent, hsl(var(--primary)), transparent)", boxShadow: "0 0 12px hsl(var(--primary) / .7)" }}
+              />
             )}
           </div>
 
           {/* Footer */}
-          <div className="mt-4 flex items-center justify-between w-full text-[9px] uppercase tracking-wider text-violet-200/40">
+          <div className="mt-4 flex items-center justify-between w-full text-[9px] uppercase tracking-wider text-muted-foreground/70">
             <span className="inline-flex items-center gap-1">
               <ShieldCheck className="h-2.5 w-2.5" />
               AnimeSavi Security
@@ -254,6 +267,12 @@ export const TurnstileGate = () => {
           0% { transform: translateX(-100%); width: 33%; }
           50% { transform: translateX(100%); width: 50%; }
           100% { transform: translateX(300%); width: 33%; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .app-global-overlay * { animation: none !important; transition: none !important; }
+        }
+        html.perf-low .app-global-overlay, html.perf-low .app-global-overlay > div {
+          backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
         }
       `}</style>
     </div>
