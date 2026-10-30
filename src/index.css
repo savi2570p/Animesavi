@@ -4126,9 +4126,9 @@ html.perf-low .platform-collection .badge-glass-hdub, html.perf-medium .platform
   max-height: min(320px, var(--radix-dropdown-menu-content-available-height, 320px));
   overflow-y: auto;
   padding: 6px;
-  border-radius: 8px;
-  border: 1px solid hsl(var(--player-settings-edge) / .2);
-  background: hsl(var(--player-settings-surface) / .87);
+  border-radius: 8px !important;
+  border: 1px solid hsl(var(--player-settings-edge) / .2) !important;
+  background: hsl(var(--player-settings-surface) / .87) !important;
   color: hsl(var(--foreground));
   backdrop-filter: blur(14px) saturate(125%);
   -webkit-backdrop-filter: blur(14px) saturate(125%);
@@ -4153,5 +4153,5 @@ html.perf-low .platform-collection .badge-glass-hdub, html.perf-medium .platform
 html.perf-low .player-settings-glass, html.perf-medium .player-settings-glass {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  background: hsl(var(--player-settings-surface) / .98);
+  background: hsl(var(--player-settings-surface) / .98) !important;
 }
