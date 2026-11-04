@@ -1097,6 +1097,10 @@ export default function Watch() {
   const handleSeasonChange = async (seasonId: string) => {
     const newSeason = allSeasons.find(s => s.id === seasonId);
     if (!newSeason || newSeason.id === currentSeason?.id) return;
+    if (isGuestLocked(getWatchPartySession())) {
+      toast.info('Only the party host can change episodes');
+      return;
+    }
 
     // Fetch first episode of the new season
     const { data: episodesData } = await supabase
@@ -1107,7 +1111,7 @@ export default function Watch() {
       .limit(1);
 
     if (episodesData && episodesData.length > 0) {
-      navigate(`/watch/${episodesData[0].id}`);
+      navigate(partyEpisodePath(episodesData[0].id, getWatchPartySession()));
     } else {
       toast.error('No episodes found in this season');
     }
