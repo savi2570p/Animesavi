@@ -13,6 +13,7 @@ import { RecapSidebar } from '@/components/watch-party/RecapSidebar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
+import { setWatchPartySession, setWatchPartyPlayback, getWatchPartyPlayback, expectedPartyTime } from '@/lib/watchPartySession';
 
 // Message validation schema
 const messageSchema = z.object({
@@ -277,12 +278,48 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     return () => { cancelled = true; if (!settled) restoredCodeRef.current = null; };
   }, [user, partyCode]);
 
+  // Always resolve the live <video>: the element is remounted on episode and
+  // server switches, so a ref captured at render time goes stale.
+  const videoRefLatest = useRef(videoRef);
+  videoRefLatest.current = videoRef;
+  const getVideo = useCallback(
+    () => (document.querySelector('video') as HTMLVideoElement | null) ?? videoRefLatest.current.current,
+    [],
+  );
+  const episodeIdRef = useRef(episodeId);
+  episodeIdRef.current = episodeId;
+
+  // Publish membership so the Watch page can lock guest controls and skip history.
+  useEffect(() => {
+    setWatchPartySession(partyId && partyCode ? { partyId, code: partyCode, isHost } : null);
+  }, [partyId, partyCode, isHost]);
+  useEffect(() => () => setWatchPartySession(null), []);
+
+  // Host changes episode -> move the whole room to the new episode.
+  useEffect(() => {
+    if (!isHost || !partyId || !episodeId) return;
+    if (partyInfo?.episodeId === episodeId) return;
+    setPartyInfo({ animeTitle, seasonNumber, episodeNumber, episodeId });
+    supabase
+      .from('watch_parties')
+      .update({
+        episode_id: episodeId,
+        anime_id: animeId,
+        anime_title: animeTitle,
+        season_number: seasonNumber,
+        episode_number: episodeNumber,
+        playback_time: 0,
+      })
+      .eq('id', partyId)
+      .then(({ error }) => { if (error) console.error('Party episode sync failed:', error); });
+  }, [isHost, partyId, episodeId, partyInfo?.episodeId, animeId, animeTitle, seasonNumber, episodeNumber]);
+
   // Real-time sync: Host syncs playback state
   useEffect(() => {
-    if (!isHost || !partyId || !videoRef.current) return;
+    if (!isHost || !partyId) return;
 
     const syncPlayback = async () => {
-      const video = videoRef.current;
+      const video = getVideo();
       if (!video) return;
 
       await supabase
@@ -297,29 +334,92 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     // Sync every 2 seconds
     syncIntervalRef.current = setInterval(syncPlayback, 2000);
 
-    // Also sync on play/pause
-    const handlePlay = () => syncPlayback();
-    const handlePause = () => syncPlayback();
-    const handleSeeked = () => syncPlayback();
-
-    videoRef.current.addEventListener('play', handlePlay);
-    videoRef.current.addEventListener('pause', handlePause);
-    videoRef.current.addEventListener('seeked', handleSeeked);
+    // Media events don't bubble, but document capture sees every <video>,
+    // including ones remounted after a server switch.
+    const onMediaEvent = (e: Event) => {
+      if (e.target instanceof HTMLVideoElement) syncPlayback();
+    };
+    document.addEventListener('play', onMediaEvent, true);
+    document.addEventListener('pause', onMediaEvent, true);
+    document.addEventListener('seeked', onMediaEvent, true);
 
     return () => {
       if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
-      const video = videoRef.current;
-      if (video) {
-        video.removeEventListener('play', handlePlay);
-        video.removeEventListener('pause', handlePause);
-        video.removeEventListener('seeked', handleSeeked);
-      }
+      document.removeEventListener('play', onMediaEvent, true);
+      document.removeEventListener('pause', onMediaEvent, true);
+      document.removeEventListener('seeked', onMediaEvent, true);
     };
-  }, [isHost, partyId, videoRef]);
+  }, [isHost, partyId, getVideo]);
 
-  // Real-time sync: Non-host receives updates - auto exit when party ends
+  // Real-time sync: Non-host follows the host and cannot drive playback.
   useEffect(() => {
     if (isHost || !partyId) return;
+
+    let applying = false;
+    const applyState = () => {
+      const state = getWatchPartyPlayback();
+      const video = getVideo();
+      if (!state || !video || applying) return;
+      applying = true;
+      try {
+        const target = expectedPartyTime(state);
+        if (Number.isFinite(target) && Math.abs(video.currentTime - target) > 2) {
+          video.currentTime = target;
+        }
+        if (state.playing && video.paused) {
+          video.play().catch(() => {
+            // Autoplay blocked: start muted so the guest stays in sync.
+            try { video.muted = true; video.play().catch(() => {}); } catch {}
+          });
+        } else if (!state.playing && !video.paused) {
+          video.pause();
+        }
+      } finally {
+        applying = false;
+      }
+    };
+
+    const handleParty = (party: any) => {
+      if (!party.is_active) {
+        toast.error('Party is ended', {
+          description: 'The host has ended this watch party',
+          duration: 5000,
+        });
+        if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
+        setPartyCode(null);
+        setPartyId(null);
+        setIsHost(false);
+        setParticipants([]);
+        setMessages([]);
+        setPartyInfo(null);
+        setIsOpen(false);
+        return;
+      }
+
+      setWatchPartyPlayback({ time: Number(party.playback_time) || 0, playing: !!party.is_playing, at: Date.now() });
+
+      // Host moved to another episode -> follow.
+      if (party.episode_id && party.episode_id !== episodeIdRef.current) {
+        setPartyInfo({
+          animeTitle: party.anime_title,
+          seasonNumber: party.season_number,
+          episodeNumber: party.episode_number,
+          episodeId: party.episode_id,
+        });
+        navigate(`/watch/${party.episode_id}?party=${party.code}`, { replace: true });
+        return;
+      }
+
+      applyState();
+    };
+
+    // Initial state, so guests sync immediately instead of waiting for the next tick.
+    supabase
+      .from('watch_parties')
+      .select('*')
+      .eq('id', partyId)
+      .maybeSingle()
+      .then(({ data }) => { if (data) handleParty(data); });
 
     const channel = supabase
       .channel(`party-sync-${partyId}`)
@@ -331,48 +431,27 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
           table: 'watch_parties',
           filter: `id=eq.${partyId}`,
         },
-        (payload) => {
-          const party = payload.new as any;
-          const video = videoRef.current;
-
-          // Check if party ended - auto exit everyone
-          if (!party.is_active) {
-            toast.error('Party is ended', {
-              description: 'The host has ended this watch party',
-              duration: 5000,
-            });
-            // Auto cleanup and exit
-            if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
-            setPartyCode(null);
-            setPartyId(null);
-            setIsHost(false);
-            setParticipants([]);
-            setMessages([]);
-            setPartyInfo(null);
-            setIsOpen(false);
-            return;
-          }
-
-          if (!video) return;
-
-          // Sync playback state
-          if (Math.abs(video.currentTime - party.playback_time) > 2) {
-            video.currentTime = party.playback_time;
-          }
-
-          if (party.is_playing && video.paused) {
-            video.play().catch(() => {});
-          } else if (!party.is_playing && !video.paused) {
-            video.pause();
-          }
-        }
+        (payload) => handleParty(payload.new),
       )
       .subscribe();
 
+    // Revert any guest-side play/pause/seek (lock screen, PiP, native controls).
+    const onMediaEvent = (e: Event) => {
+      if (e.target instanceof HTMLVideoElement) applyState();
+    };
+    document.addEventListener('play', onMediaEvent, true);
+    document.addEventListener('pause', onMediaEvent, true);
+    document.addEventListener('seeked', onMediaEvent, true);
+    document.addEventListener('loadedmetadata', onMediaEvent, true);
+
     return () => {
       supabase.removeChannel(channel);
+      document.removeEventListener('play', onMediaEvent, true);
+      document.removeEventListener('pause', onMediaEvent, true);
+      document.removeEventListener('seeked', onMediaEvent, true);
+      document.removeEventListener('loadedmetadata', onMediaEvent, true);
     };
-  }, [isHost, partyId, videoRef]);
+  }, [isHost, partyId, getVideo, navigate]);
 
   // Real-time: Listen for new messages
   useEffect(() => {
