@@ -5,6 +5,58 @@
 const PIN_HASH_KEY = "as_pin_hash_v1";
 const PIN_LENGTH_KEY = "as_pin_length_v1";
 const PIN_UNLOCKED_KEY = "as_pin_unlocked_v1";
+const PIN_FAILS_KEY = "as_pin_fails_v1";
+const PIN_LOCKED_UNTIL_KEY = "as_pin_locked_until_v1";
+
+/** Wrong PIN entries allowed before the gate locks. */
+export const PIN_MAX_ATTEMPTS = 3;
+/** How long the gate stays locked after too many wrong entries. */
+export const PIN_LOCKOUT_MS = 60 * 60 * 1000;
+
+/** Returns the lockout end timestamp if the PIN gate is currently locked, else null. Clears an expired lockout. */
+export function getPinLockoutUntil(now: number = Date.now()): number | null {
+  try {
+    const until = parseInt(localStorage.getItem(PIN_LOCKED_UNTIL_KEY) || "0", 10);
+    if (until > now) return until;
+    if (until) {
+      localStorage.removeItem(PIN_LOCKED_UNTIL_KEY);
+      localStorage.removeItem(PIN_FAILS_KEY);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function getFailedPinAttempts(): number {
+  try {
+    return Math.max(0, parseInt(localStorage.getItem(PIN_FAILS_KEY) || "0", 10) || 0);
+  } catch {
+    return 0;
+  }
+}
+
+/** Records a wrong PIN. After PIN_MAX_ATTEMPTS failures, locks for PIN_LOCKOUT_MS. */
+export function recordFailedPinAttempt(now: number = Date.now()): { attempts: number; lockedUntil: number | null } {
+  const attempts = getFailedPinAttempts() + 1;
+  try {
+    if (attempts >= PIN_MAX_ATTEMPTS) {
+      const lockedUntil = now + PIN_LOCKOUT_MS;
+      localStorage.setItem(PIN_LOCKED_UNTIL_KEY, String(lockedUntil));
+      localStorage.setItem(PIN_FAILS_KEY, String(attempts));
+      return { attempts, lockedUntil };
+    }
+    localStorage.setItem(PIN_FAILS_KEY, String(attempts));
+  } catch {}
+  return { attempts, lockedUntil: null };
+}
+
+export function resetPinAttempts() {
+  try {
+    localStorage.removeItem(PIN_FAILS_KEY);
+    localStorage.removeItem(PIN_LOCKED_UNTIL_KEY);
+  } catch {}
+}
 
 export type PinLength = 4 | 6;
 
@@ -59,6 +111,7 @@ export async function setPin(pin: string, length: PinLength) {
   const hash = await sha256(pin);
   localStorage.setItem(PIN_HASH_KEY, hash);
   localStorage.setItem(PIN_LENGTH_KEY, String(length));
+  resetPinAttempts();
   markUnlocked();
 }
 
@@ -72,6 +125,7 @@ export async function verifyPin(pin: string): Promise<boolean> {
 export function disablePin() {
   localStorage.removeItem(PIN_HASH_KEY);
   localStorage.removeItem(PIN_LENGTH_KEY);
+  resetPinAttempts();
   sessionStorage.removeItem(PIN_UNLOCKED_KEY);
   window.dispatchEvent(new Event("pinlock:changed"));
 }
