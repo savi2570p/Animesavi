@@ -456,6 +456,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     document.addEventListener('loadedmetadata', onMediaEvent, true);
 
     return () => {
+      console.info('PARTYDBG cleanup');
       supabase.removeChannel(channel);
       document.removeEventListener('play', onMediaEvent, true);
       document.removeEventListener('pause', onMediaEvent, true);
