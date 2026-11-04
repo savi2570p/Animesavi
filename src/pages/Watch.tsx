@@ -3,6 +3,8 @@ import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client';
 import { bestEffort, withRetry } from '@/lib/backendClient';
 import { historyResetSinceLoad } from '@/lib/watchHistoryReset';
+import { useWatchPartySession, getWatchPartySession, isGuestLocked, shouldSkipWatchHistory, partyEpisodePath } from '@/lib/watchPartySession';
+import { PartyGuestLock } from '@/components/watch-party/PartyGuestLock';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -152,6 +154,22 @@ export default function Watch() {
   const navigate = useNavigate();
   const isCastingScreen = useCastDetection();
   const resumeProgress = searchParams.get('t');
+
+  // Watch party: only the room owner drives playback; party viewing stays out of Continue Watching.
+  const partySession = useWatchPartySession();
+  const guestLocked = isGuestLocked(partySession);
+  const skipPartyHistory = shouldSkipWatchHistory(partySession, `?${searchParams.toString()}`);
+  const skipPartyHistoryRef = useRef(skipPartyHistory);
+  skipPartyHistoryRef.current = skipPartyHistory;
+  const playerShellRef = useRef<HTMLDivElement>(null);
+  const goToEpisode = useCallback((id: string) => {
+    const current = getWatchPartySession();
+    if (isGuestLocked(current)) {
+      toast.info('Only the party host can change episodes');
+      return;
+    }
+    navigate(partyEpisodePath(id, current), { replace: true });
+  }, [navigate]);
 
   const [episode, setEpisode] = useState<Episode | null>(null);
   const [anime, setAnime] = useState<Anime | null>(null);
@@ -480,6 +498,7 @@ export default function Watch() {
   // Ensure watch history gets created/updated - one row per episode per user.
   useEffect(() => {
     if (!user || !episodeId || !anime?.id || !currentSeason) return;
+    if (skipPartyHistory) return;
     if (watchHistoryId || ensureHistoryInFlightRef.current) return;
 
     ensureHistoryInFlightRef.current = true;
@@ -530,10 +549,11 @@ export default function Watch() {
         ensureHistoryInFlightRef.current = false;
       }
     })();
-  }, [user, episodeId, anime?.id, currentSeason, watchHistoryId]);
+  }, [user, episodeId, anime?.id, currentSeason, watchHistoryId, skipPartyHistory]);
 
   const updateWatchProgress = useCallback(async (currentTime: number, duration: number) => {
     if (historyResetSinceLoad()) return;
+    if (skipPartyHistoryRef.current) return;
     if (!user || !episodeId || !anime) return;
 
     // Handle initial seek from resume progress - "Remember Playback Position"
@@ -651,7 +671,7 @@ export default function Watch() {
     (!episode.video_url && isEmbedLikeUrl(episode.external_url))
   );
   useEmbedWatchTracker({
-    enabled: embedTrackingActive,
+    enabled: embedTrackingActive && !skipPartyHistory,
     episodeId: episodeId || null,
     estimatedDuration: (episode as any)?.duration_seconds || (episode as any)?.duration || 24 * 60,
     onTick: (curr, dur) => {
@@ -736,7 +756,7 @@ export default function Watch() {
       }
 
       // Record watch history using UPSERT - ONE entry per anime per user
-      if (user && seasonData.anime) {
+      if (user && seasonData.anime && !shouldSkipWatchHistory(getWatchPartySession(), window.location.search)) {
         const animeId = (seasonData.anime as Anime).id;
 
         // First check for existing episode entry to get saved progress for resume.
@@ -1077,6 +1097,10 @@ export default function Watch() {
   const handleSeasonChange = async (seasonId: string) => {
     const newSeason = allSeasons.find(s => s.id === seasonId);
     if (!newSeason || newSeason.id === currentSeason?.id) return;
+    if (isGuestLocked(getWatchPartySession())) {
+      toast.info('Only the party host can change episodes');
+      return;
+    }
 
     // Fetch first episode of the new season
     const { data: episodesData } = await supabase
@@ -1087,7 +1111,7 @@ export default function Watch() {
       .limit(1);
 
     if (episodesData && episodesData.length > 0) {
-      navigate(`/watch/${episodesData[0].id}`);
+      navigate(partyEpisodePath(episodesData[0].id, getWatchPartySession()));
     } else {
       toast.error('No episodes found in this season');
     }
@@ -1220,7 +1244,7 @@ export default function Watch() {
             episodes={allEpisodes}
             currentEpisodeId={episodeId || ''}
             className="sticky top-16 max-h-[60vh]"
-            onEpisodeSelect={(newEpId) => navigate(`/watch/${newEpId}`, { replace: true })}
+            onEpisodeSelect={goToEpisode}
             animeTitle={anime?.title}
             seasonNumber={currentSeason?.season_number}
           />
@@ -1228,7 +1252,7 @@ export default function Watch() {
 
         {/* Video Player */}
         <div className="flex-1 min-w-0 lg:order-2">
-          <div className="relative">
+          <div className="relative" ref={playerShellRef}>
             {/* Player crash isolation: a playback-engine error swaps in a
                 recovery card instead of taking the whole watch page down. */}
             <ErrorBoundary
@@ -1273,9 +1297,9 @@ export default function Watch() {
               captionsUrl={episode.captions_url}
               isEncoding={isVideoEncoding}
               onTimeUpdate={updateWatchProgress}
-              hasNextEpisode={!!nextEpisode}
+              hasNextEpisode={!!nextEpisode && !guestLocked}
               lockedQuality={2160}
-              onNextEpisode={nextEpisode ? () => navigate(`/watch/${nextEpisode.id}`, { replace: true }) : undefined}
+              onNextEpisode={nextEpisode && !guestLocked ? () => goToEpisode(nextEpisode.id) : undefined}
               introStartTime={episode.intro_start_time}
               introEndTime={episode.intro_end_time}
               outroStartTime={episode.outro_start_time}
@@ -1290,6 +1314,7 @@ export default function Watch() {
               onVideoLoadError={onVideoLoadError}
             />
             </ErrorBoundary>
+            {guestLocked && <PartyGuestLock containerRef={playerShellRef} />}
 
             {/* Server-mismatch modal — centered inside the player area, never collapsed */}
             {serverBlockMessage && (
@@ -1444,7 +1469,7 @@ export default function Watch() {
           episodes={allEpisodes}
           currentEpisodeId={episodeId || ''}
           className="max-h-[250px]"
-          onEpisodeSelect={(newEpId) => navigate(`/watch/${newEpId}`, { replace: true })}
+          onEpisodeSelect={goToEpisode}
           animeTitle={anime?.title}
           seasonNumber={currentSeason?.season_number}
         />
@@ -1531,7 +1556,8 @@ export default function Watch() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigate(`/watch/${prevEpisode.id}`, { replace: true })}
+                  onClick={() => goToEpisode(prevEpisode.id)}
+                  disabled={guestLocked}
                   className="h-9 md:h-10 text-xs md:text-sm border-border/60 hover:border-primary/60 hover:bg-primary/5"
                 >
                   <ChevronLeft className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5" />
@@ -1542,7 +1568,8 @@ export default function Watch() {
                 <Button
                   size="sm"
                   className="anime-button h-9 md:h-10 text-xs md:text-sm shadow-lg shadow-primary/20"
-                  onClick={() => navigate(`/watch/${nextEpisode.id}`, { replace: true })}
+                  onClick={() => goToEpisode(nextEpisode.id)}
+                  disabled={guestLocked}
                 >
                   Next Episode
                   <ChevronRight className="h-3.5 w-3.5 md:h-4 md:w-4 ml-1.5" />
