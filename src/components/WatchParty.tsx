@@ -226,6 +226,54 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     }
   }, [user, joinCode, episodeId, navigate]);
 
+  // Restore party membership when arriving via a ?party=CODE link (header Join / View Parties / episode switch)
+  const restoredCodeRef = useRef<string | null>(null);
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get('party')?.toUpperCase();
+    if (!user || !code || partyCode || restoredCodeRef.current === code) return;
+    restoredCodeRef.current = code;
+    let cancelled = false;
+    (async () => {
+      const { data: party } = await supabase
+        .from('watch_parties')
+        .select('*')
+        .eq('code', code)
+        .eq('is_active', true)
+        .maybeSingle();
+      if (cancelled || !party) {
+        if (!party) toast.error('Offline', { description: 'This party code is not available or has ended.' });
+        return;
+      }
+      const name = user.email?.split('@')[0] || 'Guest';
+      const host = party.host_id === user.id;
+      const { data: existing } = await supabase
+        .from('watch_party_members')
+        .select('id')
+        .eq('party_id', party.id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!existing) {
+        await supabase.from('watch_party_members').insert({ party_id: party.id, user_id: user.id, username: name });
+        if (!host) {
+          await supabase.from('watch_party_messages').insert({
+            party_id: party.id, user_id: user.id, username: name, message: `${name} joined the party!`, is_host: false,
+          });
+        }
+      }
+      if (cancelled) return;
+      setPartyCode(party.code);
+      setPartyId(party.id);
+      setIsHost(host);
+      setPartyInfo({
+        animeTitle: party.anime_title,
+        seasonNumber: party.season_number,
+        episodeNumber: party.episode_number,
+        episodeId: party.episode_id,
+      });
+    })();
+    return () => { cancelled = true; restoredCodeRef.current = null; };
+  }, [user, partyCode]);
+
   // Real-time sync: Host syncs playback state
   useEffect(() => {
     if (!isHost || !partyId || !videoRef.current) return;
