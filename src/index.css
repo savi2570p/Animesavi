@@ -4402,8 +4402,8 @@ html.perf-low .pin-v2-panel, html.perf-low .pin-v2-status { background: hsl(var(
 @media (max-width: 380px) { .party-v2-cell { height: 44px; font-size: 1.1rem; } .party-v2-cells { gap: 4px; } }
 /* Keep every party popup's content inside the card: grid children may shrink, long titles wrap. */
 .party-v2.party-v2 { overflow-x: hidden; max-width: min(28rem, calc(100vw - 1.5rem)); }
-.party-v2.party-v2 > .party-v2-body { padding: 4px 20px 20px; min-width: 0; grid-template-columns: minmax(0, 1fr); }
-.party-v2.party-v2 > .party-v2-body > * { min-width: 0; max-width: 100%; }
+.party-v2.party-v2 .party-v2-body { padding: 4px 20px 20px; min-width: 0; grid-template-columns: minmax(0, 1fr); }
+.party-v2.party-v2 .party-v2-body > * { min-width: 0; max-width: 100%; }
 .party-v2.party-v2 .party-v2-hero { padding-left: 22px; padding-right: 22px; }
 .party-v2.party-v2 .party-v2-desc, .party-v2.party-v2 .party-v2-title { max-width: 100%; overflow-wrap: anywhere; }
 .party-v2.party-v2 .party-v2-episode { min-width: 0; }
