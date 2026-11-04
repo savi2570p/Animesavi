@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Users, Send, Copy, X, Crown, UserPlus, Link2, Tv, Play, Eye, MessageSquare, SmilePlus, Sparkles } from 'lucide-react';
+import { Users, Send, Copy, X, Crown, UserPlus, Link2, Tv, Play, Eye, MessageSquare, SmilePlus, Sparkles, LogOut } from 'lucide-react';
 import { RecapSidebar } from '@/components/watch-party/RecapSidebar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useNavigate } from 'react-router-dom';
@@ -762,7 +762,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
         {activeTab === 'party' ? (
           <>
             {/* Participants */}
-            <div className="p-3 border-b bg-muted/50">
+            <div className="party-sheet-people">
               <p className="text-xs text-muted-foreground mb-2">Participants ({participants.length})</p>
               <div className="flex flex-wrap gap-2">
                 {participants.map(p => (
@@ -866,7 +866,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
             </ScrollArea>
 
             {/* Chat input */}
-            <div className="p-3 border-t bg-card">
+            <div className="party-sheet-composer">
               <div className="flex gap-2">
                 <Input
                   placeholder="Type a message..."
