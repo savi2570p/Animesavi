@@ -437,7 +437,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
         },
         (payload) => {
           const msg = payload.new as any;
-          setMessages(prev => [...prev, {
+          setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, {
             id: msg.id,
             userId: msg.user_id,
             username: msg.username,
