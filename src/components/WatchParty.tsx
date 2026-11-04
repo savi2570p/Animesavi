@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Users, Send, Copy, X, Crown, UserPlus, Link2, Tv, Play, Eye, MessageSquare, SmilePlus, Sparkles } from 'lucide-react';
+import { Users, Send, Copy, X, Crown, UserPlus, Link2, Tv, Play, Eye, MessageSquare, SmilePlus, Sparkles, LogOut } from 'lucide-react';
 import { RecapSidebar } from '@/components/watch-party/RecapSidebar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useNavigate } from 'react-router-dom';
@@ -226,6 +226,57 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     }
   }, [user, joinCode, episodeId, navigate]);
 
+  // Restore party membership when arriving via a ?party=CODE link (header Join / View Parties / episode switch)
+  const restoredCodeRef = useRef<string | null>(null);
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get('party')?.toUpperCase();
+    if (!user || !code || partyCode || restoredCodeRef.current === code) return;
+    restoredCodeRef.current = code;
+    let cancelled = false;
+    let settled = false;
+    (async () => {
+      const { data: party } = await supabase
+        .from('watch_parties')
+        .select('*')
+        .eq('code', code)
+        .eq('is_active', true)
+        .maybeSingle();
+      if (cancelled) return;
+      settled = true;
+      if (!party) {
+        toast.error('Offline', { description: 'This party code is not available or has ended.' });
+        return;
+      }
+      const name = user.email?.split('@')[0] || 'Guest';
+      const host = party.host_id === user.id;
+      const { data: existing } = await supabase
+        .from('watch_party_members')
+        .select('id')
+        .eq('party_id', party.id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!existing) {
+        await supabase.from('watch_party_members').insert({ party_id: party.id, user_id: user.id, username: name });
+        if (!host) {
+          await supabase.from('watch_party_messages').insert({
+            party_id: party.id, user_id: user.id, username: name, message: `${name} joined the party!`, is_host: false,
+          });
+        }
+      }
+      if (cancelled) return;
+      setPartyCode(party.code);
+      setPartyId(party.id);
+      setIsHost(host);
+      setPartyInfo({
+        animeTitle: party.anime_title,
+        seasonNumber: party.season_number,
+        episodeNumber: party.episode_number,
+        episodeId: party.episode_id,
+      });
+    })();
+    return () => { cancelled = true; if (!settled) restoredCodeRef.current = null; };
+  }, [user, partyCode]);
+
   // Real-time sync: Host syncs playback state
   useEffect(() => {
     if (!isHost || !partyId || !videoRef.current) return;
@@ -386,7 +437,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
         },
         (payload) => {
           const msg = payload.new as any;
-          setMessages(prev => [...prev, {
+          setMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, {
             id: msg.id,
             userId: msg.user_id,
             username: msg.username,
@@ -648,87 +699,70 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
           Chat
         </Button>
       </div>
-      <SheetContent side="right" className="w-full sm:w-96 p-0 flex flex-col">
-        <SheetHeader className="p-4 border-b bg-card">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              Watch Party
-              <span className="text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full">LIVE</span>
-            </SheetTitle>
-            <div className="flex items-center gap-2">
-              <Button variant="destructive" size="sm" onClick={endParty} className="gap-1">
-                <X className="h-3 w-3" />
-                End Party
-              </Button>
-              <Button variant="ghost" size="icon" onClick={leaveParty}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          
+      <SheetContent side="right" className="party-sheet w-full sm:w-96 p-0 flex flex-col gap-0">
+        <SheetHeader className="party-sheet-head">
+          <SheetTitle className="party-sheet-title">
+            <span className="party-sheet-title-icon"><Users /></span>
+            Watch Party
+            <span className="party-v2-live"><span className="party-v2-live-dot" />Live</span>
+          </SheetTitle>
+
           {/* Party code */}
-          <div className="flex items-center gap-2 bg-muted rounded-lg p-3 mt-2">
-            <div className="flex-1">
-              <p className="text-xs text-muted-foreground">Party Code</p>
-              <p className="text-xl font-mono font-bold tracking-widest">{partyCode}</p>
+          <div className="party-sheet-code">
+            <div className="min-w-0 flex-1">
+              <p className="party-sheet-label">Party Code</p>
+              <p className="party-sheet-code-value">{partyCode}</p>
             </div>
-            <Button size="sm" variant="outline" onClick={copyCode} className="gap-1">
-              <Copy className="h-3 w-3" />
-              Copy
+            <Button size="sm" variant="outline" onClick={copyCode} className="party-sheet-copy">
+              <Copy /> Copy
             </Button>
           </div>
-          
+
           {/* Now Watching Info */}
           {partyInfo && (
-            <div className="mt-3 bg-primary/10 border border-primary/30 rounded-lg p-3">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                <Play className="h-3 w-3" />
-                <span>{isHost ? 'Now Watching' : 'Synced with Host'}</span>
-              </div>
-              <p className="font-medium text-sm">{partyInfo.animeTitle}</p>
-              <p className="text-xs text-muted-foreground">
-                Season {partyInfo.seasonNumber} • Episode {partyInfo.episodeNumber}
-              </p>
+            <div className="party-sheet-now">
+              <p className="party-sheet-label"><Play /> {isHost ? 'Now Watching' : 'Synced with Host'}</p>
+              <p className="party-sheet-now-title">{partyInfo.animeTitle}</p>
+              <p className="party-sheet-now-sub">Season {partyInfo.seasonNumber} · Episode {partyInfo.episodeNumber}</p>
             </div>
           )}
+
+          <div className="party-sheet-actions" data-host={isHost || undefined}>
+            <Button variant="ghost" size="sm" onClick={endParty} className="party-v2-end">
+              <X /> End Party
+            </Button>
+            {!isHost && (
+              <Button variant="ghost" size="sm" onClick={leaveParty} className="party-sheet-leave">
+                <LogOut /> Leave
+              </Button>
+            )}
+          </div>
         </SheetHeader>
 
         {/* Tab switcher */}
-        <div className="flex border-b">
-          <button
-            onClick={() => setActiveTab('party')}
-            className={`flex-1 py-2 text-xs font-medium text-center transition-colors ${
-              activeTab === 'party' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Users className="h-4 w-4 inline mr-1" />
-            Party
-          </button>
-          <button
-            onClick={() => setActiveTab('recap')}
-            className={`flex-1 py-2 text-xs font-medium text-center transition-colors ${
-              activeTab === 'recap' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Sparkles className="h-4 w-4 inline mr-1" />
-            Recap
-          </button>
-          <button
-            onClick={() => setActiveTab('chat')}
-            className={`flex-1 py-2 text-xs font-medium text-center transition-colors ${
-              activeTab === 'chat' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <MessageSquare className="h-4 w-4 inline mr-1" />
-            Chat
-          </button>
+        <div className="party-sheet-tabs" role="tablist">
+          {([
+            ['party', Users, 'Party'],
+            ['recap', Sparkles, 'Recap'],
+            ['chat', MessageSquare, 'Chat'],
+          ] as const).map(([key, Icon, label]) => (
+            <button
+              key={key}
+              role="tab"
+              aria-selected={activeTab === key}
+              onClick={() => setActiveTab(key)}
+              className="party-sheet-tab"
+              data-active={activeTab === key || undefined}
+            >
+              <Icon /> {label}
+            </button>
+          ))}
         </div>
 
         {activeTab === 'party' ? (
           <>
             {/* Participants */}
-            <div className="p-3 border-b bg-muted/50">
+            <div className="party-sheet-people">
               <p className="text-xs text-muted-foreground mb-2">Participants ({participants.length})</p>
               <div className="flex flex-wrap gap-2">
                 {participants.map(p => (
@@ -832,7 +866,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
             </ScrollArea>
 
             {/* Chat input */}
-            <div className="p-3 border-t bg-card">
+            <div className="party-sheet-composer">
               <div className="flex gap-2">
                 <Input
                   placeholder="Type a message..."
