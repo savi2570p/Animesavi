@@ -4402,6 +4402,3 @@ html.perf-low .pin-v2-panel, html.perf-low .pin-v2-status { background: hsl(var(
 @media (max-width: 380px) { .party-v2-cell { height: 44px; font-size: 1.1rem; } .party-v2-cells { gap: 4px; } }
 html.perf-low .party-v2.party-v2 { backdrop-filter: none; -webkit-backdrop-filter: none; background: hsl(var(--card)); }
 @media (prefers-reduced-motion: reduce) { .party-v2-live-dot, .party-v2-skeleton { animation: none; } }
-
-/* Hamburger watch-together buttons: equal compact rows on phones. */
-.menu-v4 .menu-v4-link { min-height: 40px; }
