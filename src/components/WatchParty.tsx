@@ -80,6 +80,14 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const syncIntervalRef = useRef<NodeJS.Timeout>();
 
+  // Drop ?party= once membership ends so normal history saving resumes.
+  const clearPartyParam = useCallback(() => {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has('party')) return;
+    url.searchParams.delete('party');
+    navigate(`${url.pathname}${url.search}${url.hash}`, { replace: true });
+  }, [navigate]);
+
   // Generate a unique party code with timestamp
   const generatePartyCode = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -246,6 +254,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
       settled = true;
       if (!party) {
         toast.error('Offline', { description: 'This party code is not available or has ended.' });
+        clearPartyParam();
         return;
       }
       const name = user.email?.split('@')[0] || 'Guest';
@@ -392,6 +401,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
         setParticipants([]);
         setMessages([]);
         setPartyInfo(null);
+        clearPartyParam();
         setIsOpen(false);
         return;
       }
@@ -645,6 +655,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     setParticipants([]);
     setMessages([]);
     setPartyInfo(null);
+    clearPartyParam();
     setIsOpen(false);
   };
 
@@ -673,6 +684,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
       setParticipants([]);
       setMessages([]);
       setPartyInfo(null);
+      clearPartyParam();
       setIsOpen(false);
       toast.success('Watch party ended');
     } catch (error) {
