@@ -406,7 +406,13 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
         return;
       }
 
-      setWatchPartyPlayback({ time: Number(party.playback_time) || 0, playing: !!party.is_playing, at: Date.now() });
+      // Re-reading an unchanged row (poll) must not reset the extrapolation clock.
+      const nextTime = Number(party.playback_time) || 0;
+      const nextPlaying = !!party.is_playing;
+      const prev = getWatchPartyPlayback();
+      if (!prev || prev.time !== nextTime || prev.playing !== nextPlaying) {
+        setWatchPartyPlayback({ time: nextTime, playing: nextPlaying, at: Date.now() });
+      }
 
       // Host moved to another episode -> follow.
       if (party.episode_id && party.episode_id !== episodeIdRef.current) {
