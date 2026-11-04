@@ -141,6 +141,8 @@ export function Header() {
   }, [navigate]);
 
 
+  const [joinPartyOpen, setJoinPartyOpen] = useState(false);
+  const [viewPartiesOpen, setViewPartiesOpen] = useState(false);
   const closeMenuThen = (callback: () => void) => {
     setMobileMenuOpen(false);
     // Wait for the sheet exit animation to finish so the next dialog
@@ -542,7 +544,7 @@ export function Header() {
                 {[...navLinks, {to: '/schedule', label: 'Schedule', icon: CalendarDays}].map(link => { const Icon = link.icon || Home; return <Button asChild variant="ghost" key={link.label} className="menu-v4-link"><Link to={link.to} aria-current={isActivePath(link.to) ? 'page' : undefined} onClick={() => setMobileMenuOpen(false)}><Icon className="text-primary" />{link.label}</Link></Button>; })}
               </nav></section>
               {user && <section className="menu-v4-section"><h2 className="menu-v4-label">MY LIBRARY</h2><nav className="grid grid-cols-2 gap-1">{[{to:'/favorites',icon:Heart,label:'Favorites'},{to:'/history',icon:History,label:'History'},{to:'/downloads',icon:Download,label:'Downloads'},{to:'/watchlist',icon:Clock,label:'Watch Later'}].map(item => <Button key={item.to} asChild variant="ghost" className="menu-v4-link"><Link to={item.to} aria-current={location.pathname === item.to ? 'page' : undefined} onClick={() => setMobileMenuOpen(false)}><item.icon className="text-primary" />{item.label}</Link></Button>)}</nav></section>}
-              <section className="menu-v4-section"><h2 className="menu-v4-label">WATCH TOGETHER</h2><div className="grid grid-cols-2 gap-1"><JoinPartyDialog trigger={<Button variant="glass" className="menu-v4-link"><Users />Join Party</Button>} /><ViewPartyDialog trigger={<Button variant="glass" className="menu-v4-link"><Eye />View Parties</Button>} /></div></section>
+              <section className="menu-v4-section"><h2 className="menu-v4-label">WATCH TOGETHER</h2><div className="grid grid-cols-2 gap-1"><Button variant="glass" className="menu-v4-link" onClick={() => closeMenuThen(() => setJoinPartyOpen(true))}><Users />Join Party</Button><Button variant="glass" className="menu-v4-link" onClick={() => closeMenuThen(() => setViewPartiesOpen(true))}><Eye />View Parties</Button></div></section>
               <section className="menu-v4-section"><h2 className="menu-v4-label">APP & ACCOUNT</h2><div className="space-y-1">
                 <Button variant="ghost" className="menu-v4-link w-full" onClick={() => closeMenuThen(() => setVerifyOpen(true))}><BadgeCheck />Verify Token</Button>
                 <Button variant="ghost" className="menu-v4-link w-full" onClick={() => closeMenuThen(showWhatsNewManually)}><Sparkles />What's New</Button>
@@ -554,6 +556,8 @@ export function Header() {
             </SheetContent>
           </Sheet>
           <VerifyTokenDialog open={verifyOpen} onOpenChange={setVerifyOpen} />
+          <JoinPartyDialog trigger={null} open={joinPartyOpen} onOpenChange={setJoinPartyOpen} />
+          <ViewPartyDialog trigger={null} open={viewPartiesOpen} onOpenChange={setViewPartiesOpen} />
           
         </div>
         </div>
