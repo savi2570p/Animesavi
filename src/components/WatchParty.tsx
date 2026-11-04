@@ -432,7 +432,11 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
         .select('*')
         .eq('id', partyId)
         .maybeSingle()
-        .then(({ data }) => { if (data && !disposed) handleParty(data); });
+        .then(({ data, error }) => {
+          if (disposed || error) return;
+          // Ended parties are no longer readable, so a missing row means it ended.
+          handleParty(data ?? { is_active: false });
+        });
     fetchState();
     const pollId = window.setInterval(fetchState, 4000);
 
