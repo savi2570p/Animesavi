@@ -233,6 +233,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     if (!user || !code || partyCode || restoredCodeRef.current === code) return;
     restoredCodeRef.current = code;
     let cancelled = false;
+    let settled = false;
     (async () => {
       const { data: party } = await supabase
         .from('watch_parties')
@@ -240,8 +241,10 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
         .eq('code', code)
         .eq('is_active', true)
         .maybeSingle();
-      if (cancelled || !party) {
-        if (!party) toast.error('Offline', { description: 'This party code is not available or has ended.' });
+      if (cancelled) return;
+      settled = true;
+      if (!party) {
+        toast.error('Offline', { description: 'This party code is not available or has ended.' });
         return;
       }
       const name = user.email?.split('@')[0] || 'Guest';
@@ -271,7 +274,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
         episodeId: party.episode_id,
       });
     })();
-    return () => { cancelled = true; restoredCodeRef.current = null; };
+    return () => { cancelled = true; if (!settled) restoredCodeRef.current = null; };
   }, [user, partyCode]);
 
   // Real-time sync: Host syncs playback state
