@@ -7,7 +7,19 @@ import {
   getPinLength,
   verifyPin,
   markUnlocked,
+  getPinLockoutUntil,
+  getFailedPinAttempts,
+  recordFailedPinAttempt,
+  resetPinAttempts,
+  PIN_MAX_ATTEMPTS,
 } from "@/lib/pinLock";
+
+function formatRemaining(ms: number) {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
 
 function vibrate(pattern: number | number[]) {
   try {
@@ -26,7 +38,10 @@ export function PinLockGate() {
   const [error, setError] = useState(false);
   const [checking, setChecking] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [attempts, setAttempts] = useState(0);
+  const [attempts, setAttempts] = useState(() => getFailedPinAttempts());
+  const [lockedUntil, setLockedUntil] = useState<number | null>(() => getPinLockoutUntil());
+  const [now, setNow] = useState(() => Date.now());
+  const isLockedOut = lockedUntil !== null && lockedUntil > now;
   const checkingRef = useRef(false);
   const enteredRef = useRef("");
 
@@ -40,6 +55,8 @@ export function PinLockGate() {
       const unlocked = isUnlocked();
       setLength(getPinLength());
       setNeedsPin(enabled && !unlocked);
+      setLockedUntil(getPinLockoutUntil());
+      setAttempts(getFailedPinAttempts());
       if (!enabled || unlocked) setEntered("");
     };
     evaluate();
@@ -52,10 +69,28 @@ export function PinLockGate() {
     };
   }, []);
 
+  // Tick the lockout countdown; re-open the keypad once the hour has passed.
+  useEffect(() => {
+    if (!lockedUntil) return;
+    const id = window.setInterval(() => {
+      const t = Date.now();
+      setNow(t);
+      if (t >= lockedUntil) {
+        setLockedUntil(getPinLockoutUntil(t));
+        setAttempts(getFailedPinAttempts());
+      }
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [lockedUntil]);
+
   // Verify PIN once the buffer reaches the required length.
   useEffect(() => {
     if (!needsPin) return;
     if (entered.length !== length || checkingRef.current) return;
+    if (getPinLockoutUntil() !== null) {
+      setEntered("");
+      return;
+    }
     checkingRef.current = true;
     setChecking(true);
     const pinAttempt = entered;
@@ -71,11 +106,17 @@ export function PinLockGate() {
           setNeedsPin(false);
           setEntered("");
           setSuccess(false);
+          resetPinAttempts();
           setAttempts(0);
         }, 260);
       } else {
         vibrate([40, 60, 40]);
-        setAttempts((a) => a + 1);
+        const result = recordFailedPinAttempt();
+        setAttempts(result.attempts);
+        if (result.lockedUntil) {
+          setNow(Date.now());
+          setLockedUntil(result.lockedUntil);
+        }
         setError(true);
         setTimeout(() => {
           setEntered("");
@@ -99,7 +140,7 @@ export function PinLockGate() {
 
   const press = useCallback(
     (n: string) => {
-      if (checkingRef.current) return;
+      if (checkingRef.current || getPinLockoutUntil() !== null) return;
       setEntered((p) => {
         if (p.length >= length) return p;
         vibrate(8);
@@ -139,14 +180,19 @@ export function PinLockGate() {
     { n: "4", sub: "GHI" }, { n: "5", sub: "JKL" }, { n: "6", sub: "MNO" },
     { n: "7", sub: "PQRS" }, { n: "8", sub: "TUV" }, { n: "9", sub: "WXYZ" },
   ];
-  const message = error
-    ? "Wrong PIN, try again"
+  const attemptsLeft = Math.max(0, PIN_MAX_ATTEMPTS - attempts);
+  const message = isLockedOut
+    ? `Too many wrong PINs. Try again in ${formatRemaining((lockedUntil ?? now) - now)}`
+    : error
+    ? attemptsLeft > 0
+      ? `Wrong PIN · ${attemptsLeft} ${attemptsLeft === 1 ? "try" : "tries"} left`
+      : "Wrong PIN"
     : success
     ? "Unlocked"
     : checking
     ? "Checking…"
     : attempts > 0
-    ? `${attempts} incorrect ${attempts === 1 ? "attempt" : "attempts"}`
+    ? `${attemptsLeft} ${attemptsLeft === 1 ? "try" : "tries"} left before a 1-hour lock`
     : `Enter your ${length}-digit PIN`;
 
   return (
@@ -181,8 +227,8 @@ export function PinLockGate() {
               </span>
             </div>
             <p className="pin-v2-eyebrow">AnimeSavi</p>
-            <h2 id="pin-gate-title" className="pin-v2-title">{success ? "Welcome back" : "Locked"}</h2>
-            <p className="pin-v2-message" aria-live="polite" data-tone={error ? "error" : success ? "ok" : undefined}>{message}</p>
+            <h2 id="pin-gate-title" className="pin-v2-title">{success ? "Welcome back" : isLockedOut ? "Temporarily locked" : "Locked"}</h2>
+            <p className="pin-v2-message" aria-live="polite" data-tone={error || isLockedOut ? "error" : success ? "ok" : undefined}>{message}</p>
 
             <motion.div
               animate={error ? { x: [-9, 9, -6, 6, 0] } : { x: 0 }}
@@ -209,7 +255,7 @@ export function PinLockGate() {
                 <button
                   key={k.n}
                   type="button"
-                  disabled={checking || success}
+                  disabled={checking || success || isLockedOut}
                   onClick={() => press(k.n)}
                   className="pin-v2-key"
                   aria-label={k.n}
@@ -221,7 +267,7 @@ export function PinLockGate() {
               <span aria-hidden="true" />
               <button
                 type="button"
-                disabled={checking || success}
+                disabled={checking || success || isLockedOut}
                 onClick={() => press("0")}
                 className="pin-v2-key"
                 aria-label="0"
@@ -230,7 +276,7 @@ export function PinLockGate() {
               </button>
               <button
                 type="button"
-                disabled={checking || success || entered.length === 0}
+                disabled={checking || success || isLockedOut || entered.length === 0}
                 onClick={back}
                 aria-label="Delete"
                 className="pin-v2-key pin-v2-key-ghost"
