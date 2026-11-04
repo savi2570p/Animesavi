@@ -78,6 +78,13 @@
       "when": 1793324210802,
       "tag": "0010_add_trending_banner_lineup",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793779931485,
+      "tag": "0011_party_host_only_updates",
+      "breakpoints": true
     }
   ]
 }
