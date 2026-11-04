@@ -1,10 +1,7 @@
-import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Lock, ShieldCheck, KeyRound } from "lucide-react";
+import { Lock, ShieldCheck, KeyRound, ShieldOff, Check } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -17,6 +14,81 @@ import {
 } from "@/lib/pinLock";
 
 type Mode = "idle" | "create" | "change-verify" | "change-new" | "disable-verify";
+
+const digitsOnly = (v: string, max: number) => v.replace(/\D/g, "").slice(0, max);
+
+/** Segmented PIN field: one real numeric input rendered as glass digit cells. */
+function PinCodeField({
+  label,
+  value,
+  length,
+  onChange,
+  autoFocus,
+  state,
+}: {
+  label: string;
+  value: string;
+  length: number;
+  onChange: (v: string) => void;
+  autoFocus?: boolean;
+  state?: "match" | "mismatch";
+}) {
+  const id = useId();
+  const [focused, setFocused] = useState(false);
+  return (
+    <div className="pin-v2-field">
+      <label htmlFor={id} className="pin-v2-field-label">{label}</label>
+      <div className="pin-v2-cells" data-state={state} data-focused={focused || undefined}>
+        {Array.from({ length }).map((_, i) => (
+          <span
+            key={i}
+            className="pin-v2-cell"
+            data-filled={i < value.length || undefined}
+            data-active={focused && i === Math.min(value.length, length - 1) || undefined}
+          >
+            {i < value.length ? <span className="pin-v2-cell-dot" /> : null}
+          </span>
+        ))}
+        <input
+          id={id}
+          inputMode="numeric"
+          pattern="[0-9]*"
+          autoComplete="off"
+          autoFocus={autoFocus}
+          maxLength={length}
+          value={value}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          onChange={(e) => onChange(digitsOnly(e.target.value, length))}
+          className="pin-v2-input"
+          aria-label={label}
+        />
+      </div>
+    </div>
+  );
+}
+
+function LengthPicker({ length, onPick, label }: { length: PinLength; onPick: (n: PinLength) => void; label: string }) {
+  return (
+    <div className="pin-v2-length" role="radiogroup" aria-label={label}>
+      <span>{label}</span>
+      <div>
+        {[4, 6].map((n) => (
+          <button
+            key={n}
+            type="button"
+            role="radio"
+            aria-checked={length === n}
+            data-active={length === n || undefined}
+            onClick={() => onPick(n as PinLength)}
+          >
+            {n} digits
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function PinLockSettings() {
   const [enabled, setEnabled] = useState(false);
@@ -43,7 +115,15 @@ export function PinLockSettings() {
       setMode("create");
     } else if (!next && enabled) {
       setMode("disable-verify");
+    } else if (!next && mode === "create") {
+      reset();
     }
+  };
+
+  const pickLength = (n: PinLength) => {
+    setLength(n);
+    setStep1("");
+    setStep2("");
   };
 
   const handleCreate = async () => {
@@ -94,225 +174,99 @@ export function PinLockSettings() {
     reset();
   };
 
-  const digitsOnly = (v: string, max: number) =>
-    v.replace(/\D/g, "").slice(0, max);
+  const confirmState = step2.length === length ? (step1 === step2 ? "match" : "mismatch") : undefined;
+  const pairReady = step1.length === length && step1 === step2;
+
+  const panelMotion = {
+    initial: { opacity: 0, y: 6 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -6 },
+    transition: { duration: 0.18 },
+  };
 
   return (
-    <Card className="relative overflow-hidden border-border/50 bg-card/60 backdrop-blur-sm">
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Lock className="h-4 w-4 text-primary" />
-          </div>
-          PIN Lock
-        </CardTitle>
-        <CardDescription>
-          Require a {length}-digit PIN to open this site. Re-locks every time you close the tab.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/40">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-primary" />
-            <Label className="text-sm font-medium">
-              {enabled ? "PIN lock is active" : "Enable PIN lock"}
-            </Label>
-          </div>
-          <Switch checked={enabled || mode === "create"} onCheckedChange={onToggle} />
+    <section className="account-v4-section pin-v2-settings" aria-labelledby="pin-lock-title">
+      <header className="pin-v2-head">
+        <span className="pin-v2-head-icon" data-on={enabled || undefined}><Lock /></span>
+        <div className="min-w-0 flex-1">
+          <h3 id="pin-lock-title">PIN Lock</h3>
+          <p>Ask for a {length}-digit PIN every time this site opens in a new tab on this device.</p>
         </div>
+      </header>
 
-        {enabled && mode === "idle" && (
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setMode("change-verify")}
-              className="border-border/50"
-            >
-              <KeyRound className="h-3.5 w-3.5 mr-1.5" />
-              Change PIN
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setMode("disable-verify")}
-              className="border-destructive/40 text-destructive hover:bg-destructive/10"
-            >
-              Disable
-            </Button>
-          </div>
+      <div className="pin-v2-status" data-on={enabled || undefined}>
+        <span className="pin-v2-status-icon">{enabled ? <ShieldCheck /> : <ShieldOff />}</span>
+        <div className="min-w-0 flex-1">
+          <p className="pin-v2-status-title">{enabled ? "PIN lock is on" : "PIN lock is off"}</p>
+          <p className="pin-v2-status-sub">{enabled ? `${length}-digit PIN · locks again when the tab closes` : "Turn on to protect this device"}</p>
+        </div>
+        <Switch checked={enabled || mode === "create"} onCheckedChange={onToggle} aria-label="PIN lock" />
+      </div>
+
+      {enabled && mode === "idle" && (
+        <div className="pin-v2-actions">
+          <Button variant="glass" size="sm" onClick={() => setMode("change-verify")}>
+            <KeyRound /> Change PIN
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setMode("disable-verify")} className="pin-v2-danger">
+            <ShieldOff /> Turn off
+          </Button>
+        </div>
+      )}
+
+      <AnimatePresence mode="wait">
+        {mode === "create" && (
+          <motion.div key="create" {...panelMotion} className="pin-v2-panel">
+            <p className="pin-v2-step">Create your PIN</p>
+            <LengthPicker length={length} onPick={pickLength} label="PIN length" />
+            <PinCodeField label="New PIN" value={step1} length={length} onChange={setStep1} autoFocus />
+            <PinCodeField label="Confirm PIN" value={step2} length={length} onChange={setStep2} state={confirmState} />
+            {confirmState === "mismatch" && <p className="pin-v2-hint" data-tone="error">PINs do not match</p>}
+            {confirmState === "match" && <p className="pin-v2-hint" data-tone="ok"><Check /> PINs match</p>}
+            <div className="pin-v2-buttons">
+              <Button onClick={handleCreate} disabled={busy || !pairReady} className="flex-1">Turn on PIN lock</Button>
+              <Button variant="ghost" onClick={reset}>Cancel</Button>
+            </div>
+          </motion.div>
         )}
 
-        <AnimatePresence mode="wait">
-          {mode === "create" && (
-            <motion.div
-              key="create"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              className="space-y-3 p-4 rounded-xl bg-muted/20 border border-border/40"
-            >
-              <div className="flex items-center gap-3">
-                <Label className="text-xs uppercase tracking-wider text-muted-foreground">PIN length</Label>
-                <div className="flex gap-1.5">
-                  {[4, 6].map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => {
-                        setLength(n as PinLength);
-                        setStep1("");
-                        setStep2("");
-                      }}
-                      className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-colors ${
-                        length === n
-                          ? "border-primary bg-primary/15 text-primary"
-                          : "border-border/50 text-muted-foreground hover:border-primary/30"
-                      }`}
-                    >
-                      {n} digits
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <Input
-                inputMode="numeric"
-                pattern="[0-9]*"
-                autoComplete="off"
-                placeholder={`Enter ${length}-digit PIN`}
-                value={step1}
-                onChange={(e) => setStep1(digitsOnly(e.target.value, length))}
-                className="text-center tracking-[0.5em] font-mono h-11"
-              />
-              <Input
-                inputMode="numeric"
-                pattern="[0-9]*"
-                autoComplete="off"
-                placeholder="Confirm PIN"
-                value={step2}
-                onChange={(e) => setStep2(digitsOnly(e.target.value, length))}
-                className="text-center tracking-[0.5em] font-mono h-11"
-              />
-              <div className="flex gap-2">
-                <Button onClick={handleCreate} disabled={busy} className="flex-1 bg-gradient-to-r from-primary to-rose-500 text-white">
-                  Enable PIN
-                </Button>
-                <Button variant="ghost" onClick={reset}>Cancel</Button>
-              </div>
-            </motion.div>
-          )}
+        {mode === "change-verify" && (
+          <motion.div key="cv" {...panelMotion} className="pin-v2-panel">
+            <p className="pin-v2-step">Step 1 of 2 · Confirm it's you</p>
+            <PinCodeField label="Current PIN" value={step1} length={length} onChange={setStep1} autoFocus />
+            <div className="pin-v2-buttons">
+              <Button onClick={handleChangeVerify} disabled={busy || step1.length !== length} className="flex-1">Continue</Button>
+              <Button variant="ghost" onClick={reset}>Cancel</Button>
+            </div>
+          </motion.div>
+        )}
 
-          {mode === "change-verify" && (
-            <motion.div
-              key="cv"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              className="space-y-3 p-4 rounded-xl bg-muted/20 border border-border/40"
-            >
-              <Input
-                inputMode="numeric"
-                pattern="[0-9]*"
-                autoComplete="off"
-                placeholder="Current PIN"
-                value={step1}
-                onChange={(e) => setStep1(digitsOnly(e.target.value, length))}
-                className="text-center tracking-[0.5em] font-mono h-11"
-              />
-              <div className="flex gap-2">
-                <Button onClick={handleChangeVerify} disabled={busy || step1.length !== length} className="flex-1">
-                  Continue
-                </Button>
-                <Button variant="ghost" onClick={reset}>Cancel</Button>
-              </div>
-            </motion.div>
-          )}
+        {mode === "change-new" && (
+          <motion.div key="cn" {...panelMotion} className="pin-v2-panel">
+            <p className="pin-v2-step">Step 2 of 2 · Choose a new PIN</p>
+            <LengthPicker length={length} onPick={pickLength} label="New length" />
+            <PinCodeField label="New PIN" value={step1} length={length} onChange={setStep1} autoFocus />
+            <PinCodeField label="Confirm new PIN" value={step2} length={length} onChange={setStep2} state={confirmState} />
+            {confirmState === "mismatch" && <p className="pin-v2-hint" data-tone="error">PINs do not match</p>}
+            {confirmState === "match" && <p className="pin-v2-hint" data-tone="ok"><Check /> PINs match</p>}
+            <div className="pin-v2-buttons">
+              <Button onClick={handleChangeNew} disabled={busy || !pairReady} className="flex-1">Save new PIN</Button>
+              <Button variant="ghost" onClick={reset}>Cancel</Button>
+            </div>
+          </motion.div>
+        )}
 
-          {mode === "change-new" && (
-            <motion.div
-              key="cn"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              className="space-y-3 p-4 rounded-xl bg-muted/20 border border-border/40"
-            >
-              <div className="flex items-center gap-3">
-                <Label className="text-xs uppercase tracking-wider text-muted-foreground">New length</Label>
-                <div className="flex gap-1.5">
-                  {[4, 6].map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => {
-                        setLength(n as PinLength);
-                        setStep1("");
-                        setStep2("");
-                      }}
-                      className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-colors ${
-                        length === n
-                          ? "border-primary bg-primary/15 text-primary"
-                          : "border-border/50 text-muted-foreground hover:border-primary/30"
-                      }`}
-                    >
-                      {n} digits
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <Input
-                inputMode="numeric"
-                pattern="[0-9]*"
-                placeholder={`New ${length}-digit PIN`}
-                value={step1}
-                onChange={(e) => setStep1(digitsOnly(e.target.value, length))}
-                className="text-center tracking-[0.5em] font-mono h-11"
-              />
-              <Input
-                inputMode="numeric"
-                pattern="[0-9]*"
-                placeholder="Confirm new PIN"
-                value={step2}
-                onChange={(e) => setStep2(digitsOnly(e.target.value, length))}
-                className="text-center tracking-[0.5em] font-mono h-11"
-              />
-              <div className="flex gap-2">
-                <Button onClick={handleChangeNew} disabled={busy} className="flex-1 bg-gradient-to-r from-primary to-rose-500 text-white">
-                  Save new PIN
-                </Button>
-                <Button variant="ghost" onClick={reset}>Cancel</Button>
-              </div>
-            </motion.div>
-          )}
-
-          {mode === "disable-verify" && (
-            <motion.div
-              key="dv"
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              className="space-y-3 p-4 rounded-xl bg-destructive/5 border border-destructive/30"
-            >
-              <p className="text-xs text-destructive">Enter your current PIN to disable the lock.</p>
-              <Input
-                inputMode="numeric"
-                pattern="[0-9]*"
-                autoComplete="off"
-                placeholder="Current PIN"
-                value={step1}
-                onChange={(e) => setStep1(digitsOnly(e.target.value, length))}
-                className="text-center tracking-[0.5em] font-mono h-11"
-              />
-              <div className="flex gap-2">
-                <Button variant="destructive" onClick={handleDisable} disabled={busy || step1.length !== length} className="flex-1">
-                  Disable PIN lock
-                </Button>
-                <Button variant="ghost" onClick={reset}>Cancel</Button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </CardContent>
-    </Card>
+        {mode === "disable-verify" && (
+          <motion.div key="dv" {...panelMotion} className="pin-v2-panel" data-tone="danger">
+            <p className="pin-v2-step">Enter your current PIN to turn off the lock</p>
+            <PinCodeField label="Current PIN" value={step1} length={length} onChange={setStep1} autoFocus />
+            <div className="pin-v2-buttons">
+              <Button variant="destructive" onClick={handleDisable} disabled={busy || step1.length !== length} className="flex-1">Turn off PIN lock</Button>
+              <Button variant="ghost" onClick={reset}>Cancel</Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
   );
 }
