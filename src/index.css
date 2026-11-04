@@ -4329,3 +4329,5 @@ html.perf-low .pin-v2-orb { display: none; }
 .pin-v2-hint svg { width: 13px; height: 13px; }
 .pin-v2-buttons { display: flex; gap: 8px; }
 html.perf-low .pin-v2-panel, html.perf-low .pin-v2-status { background: hsl(var(--card)); }
+.settings-v5 .account-v4-sections > .pin-v2-settings > .pin-v2-status { padding-left: 14px; padding-right: 14px; }
+.settings-v5 .account-v4-sections > .pin-v2-settings > .pin-v2-panel { padding-left: 16px; padding-right: 16px; }
