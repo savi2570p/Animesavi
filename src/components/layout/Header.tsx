@@ -282,13 +282,13 @@ export function Header() {
               variant="ghost"
               size="icon"
               asChild
-              className="lg:hidden h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-primary/10"
+              className="xl:hidden h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-primary/10"
             >
               <Link to="/" aria-label="Home">
                 <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
               </Link>
             </Button>
-            <Link to="/" className="hidden sm:flex items-baseline gap-1 leading-none hover:opacity-90 transition-opacity">
+            <Link to="/" className="nav-v6-brand hidden sm:flex items-center gap-1 leading-none whitespace-nowrap hover:opacity-90 transition-opacity">
               <span className="text-lg font-bold text-primary">
                 Anime
               </span>
@@ -300,7 +300,7 @@ export function Header() {
           </div>
 
           {/* Navigation - Desktop pill bar */}
-          <nav className="nav-v6-links hidden lg:flex items-center gap-0.5">
+          <nav className="nav-v6-links hidden xl:flex items-center gap-0.5 whitespace-nowrap">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const active = isActivePath(link.to);
@@ -333,7 +333,7 @@ export function Header() {
           </nav>
 
           {/* Search — Crimson obsidian glass */}
-          <form onSubmit={handleSearch} className="flex-1 max-w-md hidden md:flex">
+          <form onSubmit={handleSearch} className="nav-v6-searchform flex-1 min-w-0 max-w-md hidden md:flex">
             <div className="group relative w-full">
               <div className={`nav-v6-search relative w-full flex items-center border rounded-lg p-1 transition-colors ${isSearchFocused ? 'border-primary/40' : 'border-border/40'}`}>
                 <div className="pl-3 pr-2 flex items-center">
@@ -359,15 +359,15 @@ export function Header() {
                   className="flex-1 min-w-0 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground/70 text-[13px] font-medium py-2"
                 />
                 <div className="flex items-center gap-2 pr-1">
-                  <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 bg-muted/60 border border-border/50 rounded-md text-[10px] font-bold text-muted-foreground tracking-wider">
+                  <kbd className="hidden xl:inline-flex items-center px-1.5 py-0.5 bg-muted/60 border border-border/50 rounded-md text-[10px] font-bold text-muted-foreground tracking-wider">
                     /
                   </kbd>
                   <Button
                     type="submit"
                     className="h-7 px-3 rounded-md text-[11px] font-semibold"
                   >
-                    <Search className="h-3.5 w-3.5 lg:hidden" />
-                    <span className="hidden lg:inline">Search</span>
+                    <Search className="h-3.5 w-3.5 xl:hidden" />
+                    <span className="hidden xl:inline">Search</span>
                   </Button>
                 </div>
               </div>
@@ -384,7 +384,7 @@ export function Header() {
           </form>
 
           {/* User Menu */}
-          <div className="flex items-center gap-1 sm:gap-1.5">
+          <div className="nav-v6-actions flex flex-shrink-0 items-center gap-1 sm:gap-1.5">
           {user && <div className="[&_button]:h-7 [&_button]:w-7 sm:[&_button]:h-9 sm:[&_button]:w-9 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4"><NotificationBell /></div>}
           
           {user && !isMobileOS ? (
