@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { effectivePlayerQuality } from './playerQualityPolicy';
-it('allows adaptive mobile playback even when the normal quality lock is 4K', () => {
-  expect(effectivePlayerQuality(false, true, 2160)).toBeUndefined();
+it('uses the 4K lock on mobile when Data Saver is off', () => {
+  expect(effectivePlayerQuality(false, true, 2160)).toBe(2160);
 });
 it('preserves 1080p Data Saver on mobile', () => {
   expect(effectivePlayerQuality(true, true, 2160)).toBe(1080);
