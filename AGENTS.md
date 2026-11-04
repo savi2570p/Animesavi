@@ -25,7 +25,9 @@
 - Download confirmation pauses playback and does not automatically resume it on dismissal, so users control playback explicitly.
 - Popular catalogue cards retain shared audio/content badges and native scroll snapping; animations must respect reduced motion and device performance tiers.
 - All HLS server players use getHLSConfig as the single buffering/network policy, preserving native Safari playback and manual quality/server choices to prevent tuning drift.
-- Mobile HLS uses adaptive quality rather than the desktop lock, while Data Saver caps adaptive levels and preserves saved quality choices.
+- The page quality lock applies on every device when Data Saver is off; Data Saver caps adaptive levels and preserves saved quality choices, so the label matches actual playback.
+- PIN lock gate and settings share scoped pin glass tokens; the token banner keeps its fixed 25px strip geometry so restyles never shift page layout.
+- Header touch-target overrides are scoped to nav classes, and desktop nav links appear only at wide widths so landscape phones and tablets keep a single-row header.
 - Trending Now has its own admin-protected lineup table and reuses the hero editor in a separate mode so changing one banner never changes the other.
 - Watch Stats uses scoped optical tokens and unframed account sections while retaining existing statistics calculations.
 - Homepage Latest Series and Latest Episodes share one security-invoker catalogue RPC and a short-lived query cache to reduce duplicated requests without bypassing row permissions.
