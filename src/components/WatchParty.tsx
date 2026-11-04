@@ -389,7 +389,6 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     };
 
     const handleParty = (party: any) => {
-      console.info('PARTYDBG', party.is_playing, party.playback_time);
       if (!party.is_active) {
         toast.error('Party is ended', {
           description: 'The host has ended this watch party',
@@ -424,13 +423,18 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
       applyState();
     };
 
-    // Initial state, so guests sync immediately instead of waiting for the next tick.
-    supabase
-      .from('watch_parties')
-      .select('*')
-      .eq('id', partyId)
-      .maybeSingle()
-      .then(({ data }) => { if (data) handleParty(data); });
+    // Initial state, then a light poll as a safety net when live updates are
+    // delayed (mobile networks, backgrounded tabs).
+    let disposed = false;
+    const fetchState = () =>
+      supabase
+        .from('watch_parties')
+        .select('*')
+        .eq('id', partyId)
+        .maybeSingle()
+        .then(({ data }) => { if (data && !disposed) handleParty(data); });
+    fetchState();
+    const pollId = window.setInterval(fetchState, 4000);
 
     const channel = supabase
       .channel(`party-sync-${partyId}`)
@@ -444,7 +448,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
         },
         (payload) => handleParty(payload.new),
       )
-      .subscribe((status) => console.info('PARTYDBG status', status));
+      .subscribe();
 
     // Revert any guest-side play/pause/seek (lock screen, PiP, native controls).
     const onMediaEvent = (e: Event) => {
@@ -456,7 +460,8 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     document.addEventListener('loadedmetadata', onMediaEvent, true);
 
     return () => {
-      console.info('PARTYDBG cleanup');
+      disposed = true;
+      window.clearInterval(pollId);
       supabase.removeChannel(channel);
       document.removeEventListener('play', onMediaEvent, true);
       document.removeEventListener('pause', onMediaEvent, true);
