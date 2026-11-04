@@ -579,32 +579,23 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
               <span className="hidden sm:inline">Watch Party</span>
             </Button>
           </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                Create Watch Party
-              </DialogTitle>
-              <DialogDescription>
-                Watch "{animeTitle}" S{seasonNumber} E{episodeNumber} together with friends
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="bg-muted/50 rounded-lg p-3 flex items-center gap-3">
-                <div className="p-2 bg-primary/20 rounded-lg">
-                  <Tv className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">{animeTitle}</p>
-                  <p className="text-xs text-muted-foreground">Season {seasonNumber} • Episode {episodeNumber}</p>
+          <DialogContent className="party-v2 sm:max-w-md">
+            <PartyHero icon={Crown} tone="create" eyebrow="Host · Live sync" title="Create a Watch Party" description="Start a room and share the code. Everyone watches in sync with live chat." />
+            <div className="party-v2-body">
+              <div className="party-v2-episode">
+                <span className="party-v2-episode-icon"><Tv /></span>
+                <div className="min-w-0">
+                  <p className="party-v2-episode-title">{animeTitle}</p>
+                  <p className="party-v2-episode-sub">Season {seasonNumber} · Episode {episodeNumber}</p>
                 </div>
               </div>
-              <p className="text-muted-foreground text-sm">
-                Create a watch party and share the code with your friends. Everyone watches in real-time sync with chat!
-              </p>
-              <Button onClick={createParty} className="w-full gap-2">
-                <Crown className="h-4 w-4" />
-                Create Party
+              <ul className="party-v2-perks">
+                <li><Play /> Synced playback</li>
+                <li><MessageSquare /> Live chat</li>
+                <li><Sparkles /> AI recap</li>
+              </ul>
+              <Button onClick={createParty} className="party-v2-cta">
+                <Crown /> Create Party
               </Button>
             </div>
           </DialogContent>
@@ -619,27 +610,12 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
                 <span className="hidden sm:inline">Join</span>
               </Button>
             </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <UserPlus className="h-5 w-5 text-primary" />
-                  Join Watch Party
-                </DialogTitle>
-                <DialogDescription>
-                  Enter the party code shared by your friend
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <Input
-                  placeholder="Enter 6-character code"
-                  value={joinCode}
-                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                  maxLength={6}
-                  className="text-center text-2xl tracking-widest font-mono"
-                />
-                <Button onClick={joinParty} className="w-full gap-2" disabled={joinCode.length !== 6}>
-                  <Link2 className="h-4 w-4" />
-                  Join Party
+            <DialogContent className="party-v2 sm:max-w-md">
+              <PartyHero icon={UserPlus} tone="join" eyebrow="Live sync · Watch together" title="Join a Watch Party" description="Enter the 6-character code shared by your friend." />
+              <div className="party-v2-body">
+                <PartyCodeCells value={joinCode} onChange={setJoinCode} />
+                <Button onClick={joinParty} className="party-v2-cta" disabled={joinCode.length !== 6}>
+                  <Link2 /> Join Party
                 </Button>
               </div>
             </DialogContent>
@@ -878,13 +854,76 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// JOIN PARTY DIALOG — Premium cinematic redesign
+// SHARED PARTY PRESENTATION — scoped liquid-glass surface
 // ─────────────────────────────────────────────────────────────────────
-export function JoinPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
+type PartyTone = 'create' | 'join' | 'view';
+
+function PartyHero({ icon: Icon, tone, eyebrow, title, description }: {
+  icon: React.ComponentType<{ className?: string }>;
+  tone: PartyTone;
+  eyebrow: string;
+  title: string;
+  description: React.ReactNode;
+}) {
+  return (
+    <DialogHeader className="party-v2-hero" data-tone={tone}>
+      <span className="party-v2-hero-glow" aria-hidden="true" />
+      <span className="party-v2-hero-icon"><Icon /></span>
+      <span className="party-v2-eyebrow"><span className="party-v2-live-dot" />{eyebrow}</span>
+      <DialogTitle className="party-v2-title">{title}</DialogTitle>
+      <DialogDescription className="party-v2-desc">{description}</DialogDescription>
+    </DialogHeader>
+  );
+}
+
+function PartyCodeCells({ value, onChange, onSubmit }: { value: string; onChange: (v: string) => void; onSubmit?: () => void }) {
+  const [focused, setFocused] = useState(false);
+  const cells = Array.from({ length: 6 }, (_, i) => value[i] || '');
+  return (
+    <div className="party-v2-code">
+      <div className="party-v2-cells" data-focused={focused || undefined}>
+        {cells.map((char, i) => (
+          <span key={i} className="party-v2-cell" data-filled={char ? true : undefined} data-active={focused && i === Math.min(value.length, 5) ? true : undefined}>
+            {char}
+          </span>
+        ))}
+        <input
+          autoFocus
+          value={value}
+          inputMode="text"
+          autoCapitalize="characters"
+          autoComplete="off"
+          spellCheck={false}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          onChange={(e) => onChange(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
+          onKeyDown={(e) => { if (e.key === 'Enter' && value.length === 6) onSubmit?.(); }}
+          maxLength={6}
+          className="party-v2-code-input"
+          aria-label="Party code"
+        />
+      </div>
+      <p className="party-v2-hint">Letters &amp; numbers only · {value.length}/6</p>
+    </div>
+  );
+}
+
+function useControllableOpen(open?: boolean, onOpenChange?: (v: boolean) => void) {
+  const [inner, setInner] = useState(false);
+  const controlled = open !== undefined;
+  const value = controlled ? open : inner;
+  const set = (v: boolean) => { if (!controlled) setInner(v); onOpenChange?.(v); };
+  return [value, set] as const;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// JOIN PARTY DIALOG
+// ─────────────────────────────────────────────────────────────────────
+export function JoinPartyDialog({ trigger, open: openProp, onOpenChange }: { trigger?: React.ReactNode | null; open?: boolean; onOpenChange?: (open: boolean) => void }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [joinCode, setJoinCode] = useState('');
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useControllableOpen(openProp, onOpenChange);
   const [busy, setBusy] = useState(false);
 
   const handleJoin = async () => {
@@ -921,104 +960,36 @@ export function JoinPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
     }
   };
 
-  // Render code as 6 individual cells
-  const cells = Array.from({ length: 6 }, (_, i) => joinCode[i] || '');
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="ghost" size="sm" className="gap-2 w-full justify-start">
-            <UserPlus className="h-4 w-4" />
-            Join Party
+      {trigger !== null && (
+        <DialogTrigger asChild>
+          {trigger || (
+            <Button variant="ghost" size="sm" className="gap-2 w-full justify-start">
+              <UserPlus className="h-4 w-4" />
+              Join Party
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
+      <DialogContent className="party-v2 sm:max-w-md">
+        <PartyHero
+          icon={UserPlus}
+          tone="join"
+          eyebrow="Live sync · Watch together"
+          title="Join a Watch Party"
+          description={<>Enter the <strong>6-character code</strong> your friend shared to watch in perfect sync.</>}
+        />
+        <div className="party-v2-body">
+          <PartyCodeCells value={joinCode} onChange={setJoinCode} onSubmit={handleJoin} />
+          <Button onClick={handleJoin} disabled={joinCode.length !== 6 || busy} className="party-v2-cta">
+            <Link2 /> {busy ? 'Joining…' : 'Join Party'}
           </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden border border-purple-500/30 bg-card">
-        {/* Cinematic header */}
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/25 via-pink-500/10 to-transparent" />
-          <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full blur-3xl bg-purple-500/30 animate-pulse" />
-          <div
-            className="absolute -bottom-24 -left-16 w-64 h-64 rounded-full blur-3xl bg-pink-500/25 animate-pulse"
-            style={{ animationDelay: '0.6s' }}
-          />
-
-          <DialogHeader className="relative px-6 pt-7 pb-3">
-            <div className="mx-auto relative">
-              <div className="absolute inset-0 bg-purple-500/40 blur-2xl rounded-2xl animate-pulse" />
-              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 via-fuchsia-500 to-pink-500 flex items-center justify-center shadow-2xl mx-auto rotate-3">
-                <UserPlus className="h-7 w-7 text-white drop-shadow" strokeWidth={2.5} />
-              </div>
-            </div>
-            <div className="mt-3 mx-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/15 border border-purple-500/30">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-purple-300">
-                Live Sync · Watch Together
-              </span>
-            </div>
-            <DialogTitle className="text-center text-xl sm:text-2xl font-black mt-2">
-              Join a Watch Party
-            </DialogTitle>
-            <DialogDescription className="text-center text-xs text-muted-foreground max-w-[320px] mx-auto">
-              Enter the <span className="font-bold text-foreground">6-character code</span> shared by your friend to watch in perfect sync.
-            </DialogDescription>
-          </DialogHeader>
-        </div>
-
-        {/* Code cells display + hidden input for typing */}
-        <div className="px-6 pb-2">
-          <div className="relative">
-            <div className="grid grid-cols-6 gap-1.5">
-              {cells.map((char, i) => (
-                <div
-                  key={i}
-                  className={`aspect-square rounded-xl flex items-center justify-center font-mono font-black text-xl sm:text-2xl uppercase border-2 transition-all ${
-                    char
-                      ? 'bg-gradient-to-br from-purple-500/20 to-pink-500/15 border-purple-500/50 text-foreground shadow-md shadow-purple-500/20'
-                      : 'bg-muted/30 border-border/50 text-muted-foreground/40'
-                  } ${i === joinCode.length ? 'ring-2 ring-purple-500/60 animate-pulse' : ''}`}
-                >
-                  {char}
-                </div>
-              ))}
-            </div>
-            <Input
-              autoFocus
-              placeholder=""
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
-              maxLength={6}
-              className="absolute inset-0 opacity-0 cursor-pointer text-center"
-              aria-label="Party code"
-            />
-          </div>
-          <p className="mt-2 text-center text-[10px] text-muted-foreground">
-            Tap or type to enter the code · letters &amp; numbers only
-          </p>
-        </div>
-
-        {/* CTA */}
-        <div className="p-6 pt-3">
-          <Button
-            onClick={handleJoin}
-            disabled={joinCode.length !== 6 || busy}
-            className="w-full h-11 rounded-xl font-black text-sm text-white relative overflow-hidden group disabled:opacity-50"
-            style={{
-              background: 'linear-gradient(135deg, hsl(270, 75%, 50%) 0%, hsl(330, 75%, 55%) 100%)',
-              boxShadow: '0 0 25px hsla(280, 75%, 55%, 0.4), 0 8px 20px hsla(0, 0%, 0%, 0.4)',
-            }}
-          >
-            <span
-              className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"
-              style={{ background: 'linear-gradient(90deg, transparent, hsla(0,0%,100%,0.25), transparent)' }}
-            />
-            <Link2 className="h-4 w-4 mr-2 relative z-10" />
-            <span className="relative z-10">{busy ? 'Joining...' : 'Join Party'}</span>
-          </Button>
-          <p className="mt-2 text-center text-[10px] text-muted-foreground">
-            Synced playback · live chat · emoji reactions
-          </p>
+          <ul className="party-v2-perks">
+            <li><Play /> Synced playback</li>
+            <li><MessageSquare /> Live chat</li>
+            <li><SmilePlus /> Reactions</li>
+          </ul>
         </div>
       </DialogContent>
     </Dialog>
@@ -1030,10 +1001,10 @@ export function JoinPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
 // ─────────────────────────────────────────────────────────────────────
 const EMPTY_PARTY_TIMEOUT_MS = 30_000; // 30s
 
-export function ViewPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
+export function ViewPartyDialog({ trigger, open: openProp, onOpenChange }: { trigger?: React.ReactNode | null; open?: boolean; onOpenChange?: (open: boolean) => void }) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useControllableOpen(openProp, onOpenChange);
   const [parties, setParties] = useState<(JoinedParty & { memberCount: number; ageMs: number })[]>([]);
   const [loading, setLoading] = useState(false);
   const [purging, setPurging] = useState(false);
@@ -1155,151 +1126,81 @@ export function ViewPartyDialog({ trigger }: { trigger?: React.ReactNode }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="ghost" size="sm" className="gap-2 w-full justify-start">
-            <Eye className="h-4 w-4" />
-            View Parties
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden border border-cyan-500/30 bg-card">
-        {/* Cinematic header */}
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/25 via-blue-500/10 to-transparent" />
-          <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full blur-3xl bg-cyan-500/30 animate-pulse" />
-
-          <DialogHeader className="relative px-6 pt-7 pb-3">
-            <div className="mx-auto relative">
-              <div className="absolute inset-0 bg-cyan-500/40 blur-2xl rounded-2xl animate-pulse" />
-              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500 via-sky-500 to-blue-500 flex items-center justify-center shadow-2xl mx-auto -rotate-3">
-                <Eye className="h-7 w-7 text-white drop-shadow" strokeWidth={2.5} />
-              </div>
-            </div>
-            <div className="mt-3 mx-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-300">
-                Live Parties
-              </span>
-            </div>
-            <DialogTitle className="text-center text-xl sm:text-2xl font-black mt-2">
-              Your Watch Parties
-            </DialogTitle>
-            <DialogDescription className="text-center text-xs text-muted-foreground max-w-[320px] mx-auto">
-              Active rooms you've joined. Empty parties auto-close after{' '}
-              <span className="font-bold text-foreground">30 seconds</span>.
-            </DialogDescription>
-          </DialogHeader>
-        </div>
-
-        {/* Body */}
-        <div className="px-5 pb-5">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500" />
+      {trigger !== null && (
+        <DialogTrigger asChild>
+          {trigger || (
+            <Button variant="ghost" size="sm" className="gap-2 w-full justify-start">
+              <Eye className="h-4 w-4" />
+              View Parties
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
+      <DialogContent className="party-v2 sm:max-w-md">
+        <PartyHero
+          icon={Eye}
+          tone="view"
+          eyebrow={`Live parties${parties.length ? ` · ${parties.length}` : ''}`}
+          title="Your Watch Parties"
+          description={<>Rooms you've joined. Empty parties close after <strong>30 seconds</strong>.</>}
+        />
+        <div className="party-v2-body">
+          {loading && parties.length === 0 ? (
+            <div className="party-v2-list" aria-busy="true">
+              {[0, 1].map((i) => <div key={i} className="party-v2-skeleton" />)}
             </div>
           ) : parties.length === 0 ? (
-            <div className="text-center py-10">
-              <div className="mx-auto w-14 h-14 rounded-2xl bg-muted/40 border border-border/50 flex items-center justify-center mb-3">
-                <MessageSquare className="h-6 w-6 text-muted-foreground/60" />
-              </div>
-              <p className="text-sm font-bold">No active parties</p>
-              <p className="text-xs text-muted-foreground mt-1">Join or create a party to watch together!</p>
+            <div className="party-v2-empty">
+              <span className="party-v2-empty-icon"><Users /></span>
+              <p className="party-v2-empty-title">No active parties</p>
+              <p className="party-v2-empty-sub">Join a friend's room with a code, or start one from any episode.</p>
             </div>
           ) : (
-            <div className="space-y-2.5">
+            <ul className="party-v2-list">
               {parties.map((party) => {
                 const isHost = party.host_id === user?.id;
-                const aloneAndOld =
+                const closingSoon =
                   party.memberCount <= 1 &&
                   EMPTY_PARTY_TIMEOUT_MS - party.ageMs < 15_000 &&
                   party.ageMs < EMPTY_PARTY_TIMEOUT_MS;
                 return (
-                  <button
-                    key={party.id}
-                    onClick={() => handleJoinParty(party)}
-                    className="group relative w-full text-left rounded-xl bg-gradient-to-br from-card to-card/60 hover:from-card hover:to-card border border-border/50 hover:border-cyan-500/40 p-3 transition-all overflow-hidden"
-                  >
-                    {/* Live shine */}
-                    <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="absolute inset-y-0 -inset-x-full bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent group-hover:translate-x-full transition-transform duration-1000" />
-                    </div>
-
-                    <div className="relative flex items-start gap-3">
-                      {/* Code badge */}
-                      <div className="shrink-0 flex flex-col items-center">
-                        <div className="px-2 py-1 rounded-lg bg-gradient-to-br from-cyan-500/25 to-blue-500/15 border border-cyan-500/40 font-mono font-black text-xs tracking-widest text-cyan-300 shadow-md shadow-cyan-500/10">
-                          {party.code}
-                        </div>
-                        <span className="mt-1.5 inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-emerald-400">
-                          <span className="relative flex h-1.5 w-1.5">
-                            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
-                            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                          </span>
-                          LIVE
-                        </span>
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm truncate flex items-center gap-1.5">
-                          {isHost && <Crown className="h-3.5 w-3.5 text-amber-400 shrink-0" />}
-                          {party.anime_title}
+                  <li key={party.id} className="party-v2-room">
+                    <div className="party-v2-room-main">
+                      <span className="party-v2-room-code">{party.code}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="party-v2-room-title">
+                          {isHost && <Crown className="party-v2-host" aria-label="You host this party" />}
+                          <span className="truncate">{party.anime_title}</span>
                         </p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">
-                          S{party.season_number} · E{party.episode_number}
+                        <p className="party-v2-room-meta">
+                          <span className="party-v2-live"><span className="party-v2-live-dot" />Live</span>
+                          <span>S{party.season_number} · E{party.episode_number}</span>
+                          <span className="inline-flex items-center gap-1"><Users />{party.memberCount}</span>
+                          <span>{fmtAge(party.ageMs)}</span>
                         </p>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/50 text-[9px] font-bold text-muted-foreground">
-                            <Users className="h-2.5 w-2.5" />
-                            {party.memberCount}
-                          </span>
-                          <span className="text-[9px] text-muted-foreground/70">
-                            · {fmtAge(party.ageMs)}
-                          </span>
-                          {aloneAndOld && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-[9px] font-black text-amber-300 uppercase">
-                              auto-close soon
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="shrink-0 flex flex-col gap-1">
-                        <span className="inline-flex items-center justify-center gap-1 h-7 w-16 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 text-white text-[10px] font-black uppercase tracking-wider shadow-md shadow-cyan-500/20">
-                          <Play className="h-3 w-3" />
-                          Watch
-                        </span>
-                        <button
-                          onClick={(e) => handleEndParty(e, party.id)}
-                          className="inline-flex items-center justify-center gap-1 h-7 w-16 rounded-lg bg-destructive/15 hover:bg-destructive/25 border border-destructive/30 text-destructive text-[10px] font-black uppercase tracking-wider transition-colors"
-                        >
-                          <X className="h-3 w-3" />
-                          End
-                        </button>
+                        {closingSoon && <span className="party-v2-warn">Closing soon</span>}
                       </div>
                     </div>
-                  </button>
+                    <div className="party-v2-room-actions">
+                      <Button size="sm" onClick={() => handleJoinParty(party)} className="party-v2-watch">
+                        <Play /> Watch
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={(e) => handleEndParty(e, party.id)} className="party-v2-end" aria-label={`End party ${party.code}`}>
+                        <X /> End
+                      </Button>
+                    </div>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           )}
 
           {parties.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-border/40">
-              <Button
-                variant="outline"
-                onClick={handleClearAll}
-                disabled={purging}
-                className="w-full h-9 text-[11px] font-bold border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              >
-                <X className="h-3.5 w-3.5 mr-1.5" />
-                {purging ? 'Clearing...' : `Clear all ${parties.length} parties (every device)`}
+            <div className="party-v2-footer">
+              <Button variant="ghost" onClick={handleClearAll} disabled={purging} className="party-v2-clear">
+                <X /> {purging ? 'Clearing…' : `Clear all ${parties.length} ${parties.length === 1 ? 'party' : 'parties'}`}
               </Button>
-              <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
-                Removes hosted parties for everyone &amp; your saved entries on all devices.
-              </p>
+              <p className="party-v2-hint">Ends parties you host for everyone and removes the rest from your list on all devices.</p>
             </div>
           )}
         </div>
