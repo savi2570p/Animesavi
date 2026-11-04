@@ -92,7 +92,6 @@ export function PartyGuestLock({ containerRef }: { containerRef: RefObject<HTMLE
       onDoubleClick={stop}
       onPointerDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
-      onTouchMove={stop}
       onWheel={(e) => e.stopPropagation()}
       onContextMenu={stop}
     >
