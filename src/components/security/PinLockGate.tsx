@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, Delete } from "lucide-react";
+import { Lock, Delete, LockOpen } from "lucide-react";
 import {
   isPinEnabled,
   isUnlocked,
@@ -25,6 +25,8 @@ export function PinLockGate() {
   const [entered, setEntered] = useState("");
   const [error, setError] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [attempts, setAttempts] = useState(0);
   const checkingRef = useRef(false);
   const enteredRef = useRef("");
 
@@ -61,12 +63,19 @@ export function PinLockGate() {
       const ok = await verifyPin(pinAttempt);
       if (ok) {
         vibrate(20);
-        markUnlocked();
-        setNeedsPin(false);
-        setEntered("");
+        setSuccess(true);
         setError(false);
+        // Brief unlocked state before the gate fades away.
+        setTimeout(() => {
+          markUnlocked();
+          setNeedsPin(false);
+          setEntered("");
+          setSuccess(false);
+          setAttempts(0);
+        }, 260);
       } else {
         vibrate([40, 60, 40]);
+        setAttempts((a) => a + 1);
         setError(true);
         setTimeout(() => {
           setEntered("");
@@ -125,6 +134,21 @@ export function PinLockGate() {
     return () => window.removeEventListener("keydown", onKey);
   }, [needsPin, press, back]);
 
+  const keys: Array<{ n: string; sub?: string }> = [
+    { n: "1" }, { n: "2", sub: "ABC" }, { n: "3", sub: "DEF" },
+    { n: "4", sub: "GHI" }, { n: "5", sub: "JKL" }, { n: "6", sub: "MNO" },
+    { n: "7", sub: "PQRS" }, { n: "8", sub: "TUV" }, { n: "9", sub: "WXYZ" },
+  ];
+  const message = error
+    ? "Wrong PIN, try again"
+    : success
+    ? "Unlocked"
+    : checking
+    ? "Checking…"
+    : attempts > 0
+    ? `${attempts} incorrect ${attempts === 1 ? "attempt" : "attempts"}`
+    : `Enter your ${length}-digit PIN`;
+
   return (
     <AnimatePresence>
       {needsPin && (
@@ -132,99 +156,89 @@ export function PinLockGate() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/95 backdrop-blur-xl"
-          style={{
-            paddingTop: "env(safe-area-inset-top)",
-            paddingBottom: "env(safe-area-inset-bottom)",
-          }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
+          className="pin-v2-gate"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pin-gate-title"
         >
-          {/* glow */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.25),transparent_60%)] pointer-events-none" />
+          <span className="pin-v2-orb pin-v2-orb-a" aria-hidden="true" />
+          <span className="pin-v2-orb pin-v2-orb-b" aria-hidden="true" />
 
           <motion.div
-            initial={{ scale: 0.96, y: 8, opacity: 0 }}
+            initial={{ scale: 0.96, y: 10, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
-            exit={{ scale: 0.96, y: 8, opacity: 0 }}
+            exit={{ scale: 0.97, y: -6, opacity: 0 }}
             transition={{ type: "spring", stiffness: 320, damping: 26, mass: 0.7 }}
-            className="relative w-[92vw] max-w-sm px-6 py-8 rounded-3xl border border-border/50 bg-card/70 backdrop-blur-2xl shadow-2xl will-change-transform"
+            className="pin-v2-card"
+            data-state={error ? "error" : success ? "success" : undefined}
           >
-            <div className="flex flex-col items-center mb-5">
-              <div className="relative mb-3">
-                <div className="absolute inset-0 bg-primary/40 blur-xl rounded-full" />
-                <div className="relative h-14 w-14 rounded-2xl bg-gradient-to-br from-primary to-rose-500 flex items-center justify-center shadow-xl">
-                  <Lock className="h-7 w-7 text-white" />
-                </div>
-              </div>
-              <h2 className="text-lg font-bold">Enter PIN</h2>
-              <p className="text-xs text-muted-foreground mt-1">
-                Account locked — enter your {length}-digit PIN
-              </p>
+            <span className="pin-v2-card-edge" aria-hidden="true" />
+            <div className="pin-v2-badge">
+              <span className="pin-v2-badge-ring" aria-hidden="true" />
+              <span className="pin-v2-badge-core">
+                {success ? <LockOpen /> : <Lock />}
+              </span>
             </div>
+            <p className="pin-v2-eyebrow">AnimeSavi</p>
+            <h2 id="pin-gate-title" className="pin-v2-title">{success ? "Welcome back" : "Locked"}</h2>
+            <p className="pin-v2-message" aria-live="polite" data-tone={error ? "error" : success ? "ok" : undefined}>{message}</p>
 
-            {/* dots */}
             <motion.div
-              animate={error ? { x: [-8, 8, -6, 6, 0] } : { x: 0 }}
+              animate={error ? { x: [-9, 9, -6, 6, 0] } : { x: 0 }}
               transition={{ duration: 0.38 }}
-              className="flex justify-center gap-3 mb-7"
-              aria-live="polite"
+              className="pin-v2-dots"
+              aria-hidden="true"
             >
               {Array.from({ length }).map((_, i) => {
                 const filled = i < entered.length;
                 return (
-                  <motion.div
+                  <motion.span
                     key={i}
-                    animate={{
-                      scale: filled && !error ? 1.15 : 1,
-                    }}
+                    animate={{ scale: filled && !error ? 1.12 : 1 }}
                     transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                    className={`h-3 w-3 rounded-full border transition-colors duration-150 ${
-                      error
-                        ? "border-destructive bg-destructive"
-                        : filled
-                        ? "bg-primary border-primary"
-                        : "border-border bg-transparent"
-                    }`}
+                    className="pin-v2-dot"
+                    data-filled={filled || undefined}
                   />
                 );
               })}
             </motion.div>
 
-            {/* keypad */}
-            <div className="grid grid-cols-3 gap-2.5 select-none">
-              {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((n) => (
+            <div className="pin-v2-keypad">
+              {keys.map((k) => (
                 <button
-                  key={n}
+                  key={k.n}
                   type="button"
-                  disabled={checking}
-                  onClick={() => press(n)}
-                  className="h-14 rounded-2xl bg-muted/50 hover:bg-primary/15 active:scale-[0.94] active:bg-primary/25 transition-all duration-100 text-xl font-semibold border border-border/40 touch-manipulation disabled:opacity-70"
-                  style={{ WebkitTapHighlightColor: "transparent" }}
+                  disabled={checking || success}
+                  onClick={() => press(k.n)}
+                  className="pin-v2-key"
+                  aria-label={k.n}
                 >
-                  {n}
+                  <span className="pin-v2-key-num">{k.n}</span>
+                  {k.sub && <span className="pin-v2-key-sub">{k.sub}</span>}
                 </button>
               ))}
-              <div />
+              <span aria-hidden="true" />
               <button
                 type="button"
-                disabled={checking}
+                disabled={checking || success}
                 onClick={() => press("0")}
-                className="h-14 rounded-2xl bg-muted/50 hover:bg-primary/15 active:scale-[0.94] active:bg-primary/25 transition-all duration-100 text-xl font-semibold border border-border/40 touch-manipulation disabled:opacity-70"
-                style={{ WebkitTapHighlightColor: "transparent" }}
+                className="pin-v2-key"
+                aria-label="0"
               >
-                0
+                <span className="pin-v2-key-num">0</span>
               </button>
               <button
                 type="button"
-                disabled={checking || entered.length === 0}
+                disabled={checking || success || entered.length === 0}
                 onClick={back}
                 aria-label="Delete"
-                className="h-14 rounded-2xl bg-muted/30 hover:bg-destructive/15 active:scale-[0.94] transition-all duration-100 flex items-center justify-center border border-border/40 touch-manipulation disabled:opacity-40"
-                style={{ WebkitTapHighlightColor: "transparent" }}
+                className="pin-v2-key pin-v2-key-ghost"
               >
-                <Delete className="h-5 w-5 text-muted-foreground" />
+                <Delete />
               </button>
             </div>
+            <p className="pin-v2-foot">Locks again when you close this tab</p>
           </motion.div>
         </motion.div>
       )}
