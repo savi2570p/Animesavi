@@ -699,81 +699,64 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
           Chat
         </Button>
       </div>
-      <SheetContent side="right" className="w-full sm:w-96 p-0 flex flex-col">
-        <SheetHeader className="p-4 border-b bg-card">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              Watch Party
-              <span className="text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full">LIVE</span>
-            </SheetTitle>
-            <div className="flex items-center gap-2">
-              <Button variant="destructive" size="sm" onClick={endParty} className="gap-1">
-                <X className="h-3 w-3" />
-                End Party
-              </Button>
-              <Button variant="ghost" size="icon" onClick={leaveParty}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          
+      <SheetContent side="right" className="party-sheet w-full sm:w-96 p-0 flex flex-col gap-0">
+        <SheetHeader className="party-sheet-head">
+          <SheetTitle className="party-sheet-title">
+            <span className="party-sheet-title-icon"><Users /></span>
+            Watch Party
+            <span className="party-v2-live"><span className="party-v2-live-dot" />Live</span>
+          </SheetTitle>
+
           {/* Party code */}
-          <div className="flex items-center gap-2 bg-muted rounded-lg p-3 mt-2">
-            <div className="flex-1">
-              <p className="text-xs text-muted-foreground">Party Code</p>
-              <p className="text-xl font-mono font-bold tracking-widest">{partyCode}</p>
+          <div className="party-sheet-code">
+            <div className="min-w-0 flex-1">
+              <p className="party-sheet-label">Party Code</p>
+              <p className="party-sheet-code-value">{partyCode}</p>
             </div>
-            <Button size="sm" variant="outline" onClick={copyCode} className="gap-1">
-              <Copy className="h-3 w-3" />
-              Copy
+            <Button size="sm" variant="outline" onClick={copyCode} className="party-sheet-copy">
+              <Copy /> Copy
             </Button>
           </div>
-          
+
           {/* Now Watching Info */}
           {partyInfo && (
-            <div className="mt-3 bg-primary/10 border border-primary/30 rounded-lg p-3">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                <Play className="h-3 w-3" />
-                <span>{isHost ? 'Now Watching' : 'Synced with Host'}</span>
-              </div>
-              <p className="font-medium text-sm">{partyInfo.animeTitle}</p>
-              <p className="text-xs text-muted-foreground">
-                Season {partyInfo.seasonNumber} • Episode {partyInfo.episodeNumber}
-              </p>
+            <div className="party-sheet-now">
+              <p className="party-sheet-label"><Play /> {isHost ? 'Now Watching' : 'Synced with Host'}</p>
+              <p className="party-sheet-now-title">{partyInfo.animeTitle}</p>
+              <p className="party-sheet-now-sub">Season {partyInfo.seasonNumber} · Episode {partyInfo.episodeNumber}</p>
             </div>
           )}
+
+          <div className="party-sheet-actions" data-host={isHost || undefined}>
+            <Button variant="ghost" size="sm" onClick={endParty} className="party-v2-end">
+              <X /> End Party
+            </Button>
+            {!isHost && (
+              <Button variant="ghost" size="sm" onClick={leaveParty} className="party-sheet-leave">
+                <LogOut /> Leave
+              </Button>
+            )}
+          </div>
         </SheetHeader>
 
         {/* Tab switcher */}
-        <div className="flex border-b">
-          <button
-            onClick={() => setActiveTab('party')}
-            className={`flex-1 py-2 text-xs font-medium text-center transition-colors ${
-              activeTab === 'party' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Users className="h-4 w-4 inline mr-1" />
-            Party
-          </button>
-          <button
-            onClick={() => setActiveTab('recap')}
-            className={`flex-1 py-2 text-xs font-medium text-center transition-colors ${
-              activeTab === 'recap' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Sparkles className="h-4 w-4 inline mr-1" />
-            Recap
-          </button>
-          <button
-            onClick={() => setActiveTab('chat')}
-            className={`flex-1 py-2 text-xs font-medium text-center transition-colors ${
-              activeTab === 'chat' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <MessageSquare className="h-4 w-4 inline mr-1" />
-            Chat
-          </button>
+        <div className="party-sheet-tabs" role="tablist">
+          {([
+            ['party', Users, 'Party'],
+            ['recap', Sparkles, 'Recap'],
+            ['chat', MessageSquare, 'Chat'],
+          ] as const).map(([key, Icon, label]) => (
+            <button
+              key={key}
+              role="tab"
+              aria-selected={activeTab === key}
+              onClick={() => setActiveTab(key)}
+              className="party-sheet-tab"
+              data-active={activeTab === key || undefined}
+            >
+              <Icon /> {label}
+            </button>
+          ))}
         </div>
 
         {activeTab === 'party' ? (
