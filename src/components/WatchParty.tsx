@@ -444,7 +444,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
         },
         (payload) => handleParty(payload.new),
       )
-      .subscribe();
+      .subscribe((status) => console.info('PARTYDBG status', status));
 
     // Revert any guest-side play/pause/seek (lock screen, PiP, native controls).
     const onMediaEvent = (e: Event) => {
