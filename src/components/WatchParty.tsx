@@ -389,6 +389,7 @@ export function WatchParty({ episodeId, videoRef, animeTitle, episodeNumber, sea
     };
 
     const handleParty = (party: any) => {
+      console.info('PARTYDBG', party.is_playing, party.playback_time);
       if (!party.is_active) {
         toast.error('Party is ended', {
           description: 'The host has ended this watch party',
