@@ -43,3 +43,4 @@
 - Watch party create/join/view dialogs share scoped party glass presentation; header menu party dialogs are controlled outside the hamburger sheet so closing the menu never unmounts them.
 - The coarse-pointer 44px tap-target rule excludes switch, checkbox and radio roles so toggles keep their designed size.
 - Watch party membership is published through the shared watchPartySession store: only the host writes shared playback (database UPDATE is host-only), guests get a player cover and reverted media events, and every party session skips Continue Watching writes.
+- Clone platforms that forbid framing are detected by a header-only backend check against saved platform URLs and shown an open-directly card; never proxy or strip third-party frame protections.
