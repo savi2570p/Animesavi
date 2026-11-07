@@ -297,6 +297,28 @@ export default function ClonePlatform() {
 
   const target = platform?.target_url;
 
+  /* Some sites forbid being shown inside other websites (the browser then
+     shows "refused to connect"). Ask the backend once per platform; when the
+     site blocks it, offer to open it directly instead of a broken frame. */
+  const [embedBlocked, setEmbedBlocked] = useState(false);
+  useEffect(() => {
+    setEmbedBlocked(false);
+    if (!platform?.slug) return;
+    let cancelled = false;
+    supabase.functions
+      .invoke('clone-frame-check', {
+        body: { slug: platform.slug, origin: window.location.origin },
+      })
+      .then(({ data }) => {
+        if (cancelled) return;
+        if (data?.data?.embeddable === false) setEmbedBlocked(true);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [platform?.slug]);
+
   // Reset the loading UI only when the embed identity actually changes.
   useEffect(() => {
     if (!target) return;
@@ -360,7 +382,7 @@ export default function ClonePlatform() {
 
     const onClick = (e: MouseEvent) => {
       const anchor = (e.target as HTMLElement | null)?.closest?.('a');
-      if (!anchor) return;
+      if (!anchor || anchor.hasAttribute('data-allow-external')) return;
       const href = anchor.getAttribute('href') || '';
       const isExternal = /^https?:\/\//i.test(href) && !href.startsWith(window.location.origin);
       if (isExternal || anchor.target === '_blank') {
@@ -509,6 +531,37 @@ export default function ClonePlatform() {
           {...sandboxProps}
         />
 
+        {embedBlocked && (
+          <div className="absolute inset-0 z-[45] flex items-center justify-center bg-background px-6">
+            <div className="clone-glass w-full max-w-sm rounded-3xl px-6 py-8 text-center">
+              <ExternalLink className="mx-auto mb-3 h-7 w-7 text-[hsl(275_90%_78%)]" />
+              <h2 className="text-sm font-semibold">{platform.name} opens in its own tab</h2>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                This site doesn't allow being shown inside AnimeSavi, so it can't load here.
+                Open it directly to keep watching.
+              </p>
+              <div className="mt-5 flex flex-col gap-2">
+                <a
+                  href={platform.target_url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  data-allow-external
+                  className="clone-cta flex items-center justify-center gap-1.5 rounded-2xl px-5 py-2.5 text-xs font-semibold"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Open {platform.name}
+                </a>
+                <button
+                  onClick={() => navigate('/')}
+                  className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-2.5 text-xs text-muted-foreground transition hover:text-foreground"
+                >
+                  Back to home
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {frameFailed && (
           <div className="absolute inset-0 z-30 flex items-center justify-center px-6">
             <div className="clone-glass w-full max-w-sm rounded-3xl px-6 py-8 text-center">
@@ -537,7 +590,7 @@ export default function ClonePlatform() {
           </div>
         )}
 
-        {isLocked && !overlayVisible && (
+        {isLocked && !overlayVisible && !embedBlocked && (
           <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/45 px-6">
             <button
               onClick={() => setShowUnlockPopup(true)}
@@ -548,7 +601,7 @@ export default function ClonePlatform() {
           </div>
         )}
 
-        {overlayVisible && !frameFailed && (
+        {overlayVisible && !frameFailed && !embedBlocked && (
           <BootOverlay phase={phase} fading={overlayFading} siteName={platform.name} />
         )}
 
