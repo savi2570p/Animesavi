@@ -679,6 +679,27 @@ export default function Watch() {
 
   }, [user, episodeId, anime, watchHistoryId, resumeProgress, initialSeekDone, searchParams]);
 
+  // Flush the latest throttled position when the viewer leaves or hides the
+  // page, and when the episode changes, so no progress is lost between saves.
+  const updateWatchProgressRef = useRef(updateWatchProgress);
+  updateWatchProgressRef.current = updateWatchProgress;
+  useEffect(() => {
+    const flush = () => {
+      const pending = progressPendingRef.current;
+      if (!pending) return;
+      progressPendingRef.current = null;
+      void updateWatchProgressRef.current(pending.currentTime, pending.duration, true);
+    };
+    const onVisibility = () => { if (document.visibilityState === 'hidden') flush(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', flush);
+    return () => {
+      flush();
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', flush);
+    };
+  }, [episodeId]);
+
   // ─── ULTRA BEAST EMBED CONTINUE WATCHING ───
   // External iframe servers (EMBED) and any embed-like external_url cannot expose
   // currentTime cross-origin. Run a smart estimating tracker that pipes ticks
