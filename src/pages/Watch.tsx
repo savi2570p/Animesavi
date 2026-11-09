@@ -551,7 +551,10 @@ export default function Watch() {
     })();
   }, [user, episodeId, anime?.id, currentSeason, watchHistoryId, skipPartyHistory]);
 
-  const updateWatchProgress = useCallback(async (currentTime: number, duration: number) => {
+  const progressWriteRef = useRef<ProgressWriteState | null>(null);
+  const progressPendingRef = useRef<{ currentTime: number; duration: number } | null>(null);
+
+  const updateWatchProgress = useCallback(async (currentTime: number, duration: number, force = false) => {
     if (historyResetSinceLoad()) return;
     if (skipPartyHistoryRef.current) return;
     if (!user || !episodeId || !anime) return;
@@ -633,6 +636,22 @@ export default function Watch() {
     if (completed) {
       try { localStorage.removeItem(`resume:${episodeId}`); } catch {}
     }
+
+    // Throttle backend writes (timeupdate fires ~4x/second). Exact seconds are
+    // already kept locally above; the backend gets a save every 15s plus on
+    // first tick, seeks, completion and when the page is hidden.
+    const writeTick = {
+      episodeId,
+      now: Date.now(),
+      position: Math.floor(completed ? duration : currentTime),
+      completed,
+    };
+    if (!force && !shouldWriteProgress(progressWriteRef.current, writeTick)) {
+      progressPendingRef.current = { currentTime, duration };
+      return;
+    }
+    progressPendingRef.current = null;
+    progressWriteRef.current = recordProgressWrite(writeTick);
 
     // Atomic, idempotent, monotonic progress write. The DB function decides
     // whether this tick may advance / rewind / complete the row, so two tabs,
