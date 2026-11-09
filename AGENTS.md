@@ -44,5 +44,4 @@
 - The coarse-pointer 44px tap-target rule excludes switch, checkbox and radio roles so toggles keep their designed size.
 - Watch party membership is published through the shared watchPartySession store: only the host writes shared playback (database UPDATE is host-only), guests get a player cover and reverted media events, and every party session skips Continue Watching writes.
 - Clone platforms that forbid framing are detected by a header-only backend check against saved platform URLs and shown an open-directly card; never proxy or strip third-party frame protections.
-- Watch progress reaches the backend only through the shared watchProgressThrottle gate (fixed cadence plus first tick, seek, completion and page-hide flush); local resume keeps exact seconds, because per-timeupdate writes multiplied database load.
-- Recurring client polls skip hidden tabs, and the full conversion scan runs at most daily because a trigger already creates conversion records; idle tabs must not keep the database awake.
+- Watch progress writes go through watchProgressThrottle, client polls skip hidden tabs, and the full conversion scan runs at most daily (a trigger creates records), so viewers and idle tabs don't flood or wake the database.
