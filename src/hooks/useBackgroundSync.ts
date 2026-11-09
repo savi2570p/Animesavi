@@ -170,7 +170,8 @@ export function useBackgroundSync() {
     if (!user || !isOnline) return;
 
     const interval = setInterval(() => {
-      checkForNewEpisodes();
+      // Skip while the tab is hidden so idle tabs don't keep the database awake.
+      if (document.visibilityState === 'visible') checkForNewEpisodes();
     }, 15 * 60 * 1000); // 15 minutes
 
     return () => clearInterval(interval);

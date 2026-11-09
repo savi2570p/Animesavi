@@ -126,12 +126,27 @@ export function useAutoVideoScan() {
       }
     };
 
-    // Delay the initial scan slightly to not block page load
-    const timeoutId = setTimeout(runBackgroundScan, 3000);
+    // New and edited episodes already get a conversion record from a database
+    // trigger, so the full catalogue scan is only a safety net: run it at most
+    // once a day per browser instead of on every page load.
+    const SCAN_KEY = 'autoVideoScan:lastFullScanAt';
+    const lastScan = Number(localStorage.getItem(SCAN_KEY) || 0);
+    const scanDue = !Number.isFinite(lastScan) || Date.now() - lastScan > 24 * 60 * 60 * 1000;
+    const timeoutId = setTimeout(() => {
+      if (scanDue) {
+        try { localStorage.setItem(SCAN_KEY, String(Date.now())); } catch {}
+        void runBackgroundScan();
+      } else {
+        setHasScanned(true);
+        void autoStartPending();
+      }
+    }, 3000);
 
-    // Keep checking for pending conversions every 60 seconds
-    // This ensures the converter never stops unless the browser is closed
-    intervalRef.current = setInterval(autoStartPending, 60000);
+    // Check for pending conversions every 60 seconds while the tab is visible.
+    // A hidden admin tab no longer keeps the database awake around the clock.
+    intervalRef.current = setInterval(() => {
+      if (document.visibilityState === 'visible') void autoStartPending();
+    }, 60000);
     
     return () => {
       clearTimeout(timeoutId);

@@ -56,7 +56,9 @@ export function ConversionNotifications() {
       .subscribe();
 
     // Check queue status every 30 seconds
-    const interval = setInterval(checkQueueStatus, 30000);
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') checkQueueStatus();
+    }, 30000);
 
     return () => {
       supabase.removeChannel(channel);
