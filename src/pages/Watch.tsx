@@ -31,6 +31,7 @@ import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hook
 import { isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 import { useEmbedWatchTracker } from '@/hooks/useEmbedWatchTracker';
 import { z } from 'zod';
+import { recordProgressWrite, shouldWriteProgress, type ProgressWriteState } from '@/lib/watchProgressThrottle';
 import { hasValidTokenAccess, isSuperAdmin, fetchTokenSystemStatus, fetchTokenAccessFromDB } from '@/components/AccessBanner';
 import { TokenExpiredPopup } from '@/components/TokenExpiredPopup';
 import { useCastDetection } from '@/hooks/useCastDetection';
@@ -552,7 +553,7 @@ export default function Watch() {
   }, [user, episodeId, anime?.id, currentSeason, watchHistoryId, skipPartyHistory]);
 
   const progressWriteRef = useRef<ProgressWriteState | null>(null);
-  const progressPendingRef = useRef<{ currentTime: number; duration: number } | null>(null);
+  const progressPendingRef = useRef<{ episodeId: string; currentTime: number; duration: number } | null>(null);
 
   const updateWatchProgress = useCallback(async (currentTime: number, duration: number, force = false) => {
     if (historyResetSinceLoad()) return;
@@ -647,7 +648,7 @@ export default function Watch() {
       completed,
     };
     if (!force && !shouldWriteProgress(progressWriteRef.current, writeTick)) {
-      progressPendingRef.current = { currentTime, duration };
+      progressPendingRef.current = { episodeId, currentTime, duration };
       return;
     }
     progressPendingRef.current = null;
@@ -683,11 +684,17 @@ export default function Watch() {
   // page, and when the episode changes, so no progress is lost between saves.
   const updateWatchProgressRef = useRef(updateWatchProgress);
   updateWatchProgressRef.current = updateWatchProgress;
+  const progressEpisodeRef = useRef(episodeId);
+  progressEpisodeRef.current = episodeId;
   useEffect(() => {
+    const effectEpisodeId = episodeId;
     const flush = () => {
       const pending = progressPendingRef.current;
       if (!pending) return;
       progressPendingRef.current = null;
+      // After an episode switch the latest callback belongs to the new episode;
+      // never write the previous episode's position onto it.
+      if (pending.episodeId !== effectEpisodeId || progressEpisodeRef.current !== effectEpisodeId) return;
       void updateWatchProgressRef.current(pending.currentTime, pending.duration, true);
     };
     const onVisibility = () => { if (document.visibilityState === 'hidden') flush(); };
