@@ -31,6 +31,7 @@ import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hook
 import { isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 import { useEmbedWatchTracker } from '@/hooks/useEmbedWatchTracker';
 import { z } from 'zod';
+import { recordProgressWrite, shouldWriteProgress, type ProgressWriteState } from '@/lib/watchProgressThrottle';
 import { hasValidTokenAccess, isSuperAdmin, fetchTokenSystemStatus, fetchTokenAccessFromDB } from '@/components/AccessBanner';
 import { TokenExpiredPopup } from '@/components/TokenExpiredPopup';
 import { useCastDetection } from '@/hooks/useCastDetection';
@@ -551,7 +552,10 @@ export default function Watch() {
     })();
   }, [user, episodeId, anime?.id, currentSeason, watchHistoryId, skipPartyHistory]);
 
-  const updateWatchProgress = useCallback(async (currentTime: number, duration: number) => {
+  const progressWriteRef = useRef<ProgressWriteState | null>(null);
+  const progressPendingRef = useRef<{ episodeId: string; currentTime: number; duration: number } | null>(null);
+
+  const updateWatchProgress = useCallback(async (currentTime: number, duration: number, force = false) => {
     if (historyResetSinceLoad()) return;
     if (skipPartyHistoryRef.current) return;
     if (!user || !episodeId || !anime) return;
@@ -634,6 +638,22 @@ export default function Watch() {
       try { localStorage.removeItem(`resume:${episodeId}`); } catch {}
     }
 
+    // Throttle backend writes (timeupdate fires ~4x/second). Exact seconds are
+    // already kept locally above; the backend gets a save every 15s plus on
+    // first tick, seeks, completion and when the page is hidden.
+    const writeTick = {
+      episodeId,
+      now: Date.now(),
+      position: Math.floor(completed ? duration : currentTime),
+      completed,
+    };
+    if (!force && !shouldWriteProgress(progressWriteRef.current, writeTick)) {
+      progressPendingRef.current = { episodeId, currentTime, duration };
+      return;
+    }
+    progressPendingRef.current = null;
+    progressWriteRef.current = recordProgressWrite(writeTick);
+
     // Atomic, idempotent, monotonic progress write. The DB function decides
     // whether this tick may advance / rewind / complete the row, so two tabs,
     // rapid seeks or a retried request can never lose or downgrade progress.
@@ -659,6 +679,33 @@ export default function Watch() {
     }
 
   }, [user, episodeId, anime, watchHistoryId, resumeProgress, initialSeekDone, searchParams]);
+
+  // Flush the latest throttled position when the viewer leaves or hides the
+  // page, and when the episode changes, so no progress is lost between saves.
+  const updateWatchProgressRef = useRef(updateWatchProgress);
+  updateWatchProgressRef.current = updateWatchProgress;
+  const progressEpisodeRef = useRef(episodeId);
+  progressEpisodeRef.current = episodeId;
+  useEffect(() => {
+    const effectEpisodeId = episodeId;
+    const flush = () => {
+      const pending = progressPendingRef.current;
+      if (!pending) return;
+      progressPendingRef.current = null;
+      // After an episode switch the latest callback belongs to the new episode;
+      // never write the previous episode's position onto it.
+      if (pending.episodeId !== effectEpisodeId || progressEpisodeRef.current !== effectEpisodeId) return;
+      void updateWatchProgressRef.current(pending.currentTime, pending.duration, true);
+    };
+    const onVisibility = () => { if (document.visibilityState === 'hidden') flush(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', flush);
+    return () => {
+      flush();
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', flush);
+    };
+  }, [episodeId]);
 
   // ─── ULTRA BEAST EMBED CONTINUE WATCHING ───
   // External iframe servers (EMBED) and any embed-like external_url cannot expose
