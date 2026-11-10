@@ -145,37 +145,20 @@ export const TurnstileGate = () => {
 
   return (
     <div
-      className="app-global-overlay fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-300 backdrop-blur-xl"
-      style={{ background: "radial-gradient(130% 90% at 50% 0%, hsl(var(--primary) / .28), hsl(var(--background) / .78) 58%, hsl(var(--background) / .92))" }}
+      className="app-global-overlay fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-300 bg-background/90"
       role="dialog"
       aria-modal="true"
       aria-label="Verifying you are human"
     >
-      {/* Liquid glass card */}
+      {/* Flat card */}
       <div
-        className="relative w-full max-w-[300px] mx-auto overflow-hidden rounded-[28px] font-popup border border-border/60"
-        style={{
-          background: "var(--utility-glass-fill)",
-          boxShadow: "var(--utility-glass-shadow), 0 40px 90px -24px hsl(var(--primary) / .45)",
-          backdropFilter: "blur(22px)",
-          WebkitBackdropFilter: "blur(22px)",
-        }}
+        className="relative w-full max-w-[300px] mx-auto overflow-hidden rounded-2xl font-popup border border-border bg-card"
+        style={{ boxShadow: "var(--shadow-float)" }}
       >
-        {/* Liquid sheen + specular edge */}
-        <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] bg-gradient-to-br from-foreground/[0.07] via-transparent to-transparent rotate-12 pointer-events-none" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-foreground/40 to-transparent" />
-        <div
-          className="absolute -bottom-12 left-1/2 -translate-x-1/2 w-2/3 h-20 rounded-full blur-3xl pointer-events-none transition-colors duration-500"
-          style={{ background: verified ? "hsl(160 84% 39% / .25)" : "hsl(var(--primary) / .3)" }}
-        />
 
         <div className="relative z-10 px-6 py-7 flex flex-col items-center text-center">
           {/* Liquid orb */}
           <div className="relative h-[72px] w-[72px] mb-4">
-            <div
-              className={`absolute inset-0 rounded-full blur-xl transition-colors duration-500 ${verified ? "" : "animate-pulse"}`}
-              style={{ background: verified ? "hsl(160 84% 39% / .35)" : "hsl(var(--primary) / .35)" }}
-            />
             {!verified && (
               <>
                 <div
