@@ -142,16 +142,21 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
 
   return (
     <section ref={sliderRef} className="home-hero relative isolate overflow-hidden" aria-label="Featured anime">
-      {featuredAnime.map((anime, index) => (
-        <img key={anime.id} src={anime.banner || anime.thumbnail || '/placeholder.svg'}
-          alt="" aria-hidden width={1920} height={1080}
-          loading={index < 2 ? 'eager' : 'lazy'} decoding="async"
-          fetchPriority={index === 0 ? 'high' : 'auto'}
-          className={`home-hero-image absolute inset-0 w-full h-full object-cover ${index === currentIndex ? 'opacity-100' : 'opacity-0'}`} />
-      ))}
-      <div className="home-hero-scrim absolute inset-0 pointer-events-none" />
+      {/* Phones get an exact 16:9 frame so the whole banner is visible; larger screens stay full-bleed. */}
+      <div className="home-hero-media">
+        <img src={current.banner || current.thumbnail || '/placeholder.svg'} alt="" aria-hidden
+          className="home-hero-fill catalogue-fill perf-blur-fill absolute inset-0 w-full h-full object-cover" />
+        {featuredAnime.map((anime, index) => (
+          <img key={anime.id} src={anime.banner || anime.thumbnail || '/placeholder.svg'}
+            alt="" aria-hidden width={1920} height={1080}
+            loading={index < 2 ? 'eager' : 'lazy'} decoding="async"
+            fetchPriority={index === 0 ? 'high' : 'auto'}
+            className={`home-hero-image absolute inset-0 w-full h-full ${index === currentIndex ? 'opacity-100' : 'opacity-0'}`} />
+        ))}
+        <div className="home-hero-scrim absolute inset-0 pointer-events-none" />
+      </div>
 
-      <div className="relative z-10 flex h-full flex-col justify-end px-4 pb-14 md:px-12 md:pb-16">
+      <div className="home-hero-body relative z-10 flex flex-col justify-end px-4 pb-12 md:px-12 md:pb-16">
         <div key={animKey} className="home-hero-copy max-w-xl">
           <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
             <span className="home-hero-meta is-accent"><Eye className="h-3 w-3" />{formatViews(current.views)}</span>

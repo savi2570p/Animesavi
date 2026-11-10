@@ -271,9 +271,21 @@ html.perf-low .home-search-hero-art { display: none; }
 .nav-v6-brand { gap: 0 !important; }
 
 /* ---------------- Homepage hero (full-bleed, Re:ANIME-style) ---------------- */
-.home-hero { height: min(72svh, 640px); min-height: 420px; background: hsl(var(--background)); }
-@media (min-width: 768px) { .home-hero { height: min(82vh, 760px); min-height: 520px; } }
-.home-hero-image { transition: opacity .7s ease; }
+/* Phones: the banner sits in an exact 16:9 frame (contain, never cropped) with the copy below it. */
+.home-hero { background: hsl(var(--background)); }
+.home-hero-media { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: hsl(var(--background)); }
+.home-hero-image { transition: opacity .7s ease; object-fit: contain; }
+.home-hero-body { margin-top: -1.25rem; padding-top: 0; }
+@media (max-width: 767px) {
+  .home-hero-scrim { background: linear-gradient(0deg, hsl(var(--background)) 0%, transparent 14%) !important; }
+}
+@media (min-width: 768px) {
+  .home-hero { height: min(82vh, 760px); min-height: 520px; }
+  .home-hero-media { position: absolute; inset: 0; aspect-ratio: auto; height: 100%; }
+  .home-hero-image { object-fit: cover; }
+  .home-hero-fill { display: none; }
+  .home-hero-body { height: 100%; margin-top: 0; }
+}
 .home-hero-scrim {
   background:
     linear-gradient(90deg, hsl(var(--background) / .92) 0%, hsl(var(--background) / .55) 38%, transparent 70%),
