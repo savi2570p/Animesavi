@@ -22,6 +22,8 @@ export interface PosterCardProps {
   tag?: string | null;
   /** Shows the "Under Progress" overlay when no episodes are uploaded yet. */
   pending?: boolean;
+  /** Overrides the pending overlay text, e.g. "Coming Soon". */
+  pendingLabel?: string;
   /** Fill the grid column instead of using the fixed row width. */
   fluid?: boolean;
   className?: string;
@@ -33,7 +35,7 @@ const TYPE_LABEL: Record<string, string> = { series: 'TV', movie: 'MOVIE', ova: 
 /** Re:ANIME-style poster card shared by every catalogue surface. */
 export const PosterCard = memo(function PosterCard({
   to, title, cover, isEngDub, isSubOnly, genres, contentRating, episodes, views,
-  type, year, status, tag, pending = false, fluid = false, className, onClick,
+  type, year, status, tag, pending = false, pendingLabel = 'Under Progress', fluid = false, className, onClick,
 }: PosterCardProps) {
   const img = cover || '/placeholder.svg';
   const typeLabel = type ? (TYPE_LABEL[type.toLowerCase()] ?? type.toUpperCase()) : null;
@@ -56,7 +58,7 @@ export const PosterCard = memo(function PosterCard({
           </div>
         )}
         {pending ? (
-          <div className="poster-card-pending"><span>Under Progress</span></div>
+          <div className="poster-card-pending"><span>{pendingLabel}</span></div>
         ) : (
           <span className="poster-card-play" aria-hidden><Play className="fill-current" /></span>
         )}

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CalendarClock, Rocket, Clock, Layers } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
+import { PosterCard } from '@/components/anime/PosterCard';
 import { ContentNavTabs } from '@/components/layout/ContentNavTabs';
 import { AnimatedPage } from '@/components/layout/AnimatedPage';
 import { UpcomingCountdownDialog } from '@/components/home/UpcomingCountdownDialog';
@@ -143,11 +144,11 @@ export default function UpcomingPage() {
       />
       <div className="container px-4 pb-12">
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        <div className="browse-ra-grid">
           {isLoading ? (
             Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="space-y-2">
-                <Skeleton className="aspect-[2/3] rounded-lg" />
+                <Skeleton className="aspect-[2/3] rounded-md" />
                 <Skeleton className="h-4 w-3/4" />
               </div>
             ))
@@ -170,61 +171,18 @@ export default function UpcomingPage() {
                   animeUrl={`/anime/${anime.id}`}
                   coverImage={anime.cover_image}
                 >
-                  <div
-                    onClick={() => setSelectedAnime(anime)}
-                    className="group relative cursor-pointer"
-                  >
-                    <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-muted">
-                      {anime.cover_image ? (
-                        <img
-                          src={anime.cover_image}
-                          alt={anime.title}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20">
-                          <span className="text-muted-foreground text-xs">No Image</span>
-                        </div>
-                      )}
-
-                      {/* Coming Soon overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                        <div className="text-center px-3">
-                          <CalendarClock className="h-6 w-6 text-orange-400 mx-auto mb-1" />
-                          <span className="text-white text-xs font-medium leading-tight block">
-                            Coming Soon
-                          </span>
-                          {seasonChip && (
-                            <span className="mt-1.5 inline-block px-2 py-0.5 rounded-full bg-orange-500/90 text-white text-[10px] font-bold">
-                              {seasonChip}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {anime.type && (
-                        <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-muted/90 text-[10px] font-bold uppercase">
-                          {anime.type}
-                        </div>
-                      )}
-
-                      {anime.release_year && (
-                        <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-orange-500/90 text-[10px] font-bold text-white">
-                          {anime.release_year}
-                        </div>
-                      )}
-                    </div>
-
-                    <h3 className="mt-2 text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                      {anime.title}
-                      {seasonChip && (
-                        <span className="ml-1.5 text-xs text-orange-400 font-semibold">
-                          • {seasonChip}
-                        </span>
-                      )}
-                    </h3>
-                  </div>
+                  <PosterCard
+                    to={`/anime/${anime.id}`}
+                    onClick={(e) => { e.preventDefault(); setSelectedAnime(anime); }}
+                    title={anime.title}
+                    cover={anime.cover_image}
+                    type={anime.type}
+                    year={anime.release_year}
+                    tag={seasonChip}
+                    pending
+                    pendingLabel="Coming Soon"
+                    fluid
+                  />
                 </AnimeCardContextMenu>
               );
             })
