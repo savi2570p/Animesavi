@@ -151,7 +151,7 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
       ))}
       <div className="home-hero-scrim absolute inset-0 pointer-events-none" />
 
-      <div className="relative z-10 flex h-full flex-col justify-end px-4 pb-10 md:px-12 md:pb-16">
+      <div className="relative z-10 flex h-full flex-col justify-end px-4 pb-14 md:px-12 md:pb-16">
         <div key={animKey} className="home-hero-copy max-w-xl">
           <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
             <span className="home-hero-meta is-accent"><Eye className="h-3 w-3" />{formatViews(current.views)}</span>
