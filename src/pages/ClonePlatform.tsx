@@ -471,7 +471,7 @@ export default function ClonePlatform() {
             />
           ) : null}
           <span className="shrink-0 text-[11px] font-bold tracking-tight">
-            Anime<span className="text-primary">Savi</span>
+            <span className="text-primary">Anime</span>Savi<sup className="text-primary">+</sup>
           </span>
           <span className="truncate text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
             {platform.name}
