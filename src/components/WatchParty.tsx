@@ -1018,7 +1018,7 @@ function PartyHero({ icon: Icon, tone, eyebrow, title, description }: {
   );
 }
 
-function PartyCodeCells({ value, onChange, onSubmit }: { value: string; onChange: (v: string) => void; onSubmit?: () => void }) {
+function PartyCodeCells({ value, onChange, onSubmit, autoFocus = true }: { value: string; onChange: (v: string) => void; onSubmit?: () => void; autoFocus?: boolean }) {
   const [focused, setFocused] = useState(false);
   const cells = Array.from({ length: 6 }, (_, i) => value[i] || '');
   return (
@@ -1030,7 +1030,7 @@ function PartyCodeCells({ value, onChange, onSubmit }: { value: string; onChange
           </span>
         ))}
         <input
-          autoFocus
+          autoFocus={autoFocus}
           value={value}
           inputMode="text"
           autoCapitalize="characters"
@@ -1061,12 +1061,13 @@ function useControllableOpen(open?: boolean, onOpenChange?: (v: boolean) => void
 // ─────────────────────────────────────────────────────────────────────
 // JOIN PARTY DIALOG
 // ─────────────────────────────────────────────────────────────────────
-export function JoinPartyDialog({ trigger, open: openProp, onOpenChange }: { trigger?: React.ReactNode | null; open?: boolean; onOpenChange?: (open: boolean) => void }) {
+/** Shared join-by-code flow used by the Join dialog and the combined Watch Party dialog. */
+function useJoinPartyByCode(onJoined: () => void) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [joinCode, setJoinCode] = useState('');
-  const [open, setOpen] = useControllableOpen(openProp, onOpenChange);
   const [busy, setBusy] = useState(false);
+  const setOpen = (v: boolean) => { if (!v) onJoined(); };
 
   const handleJoin = async () => {
     if (!user) {
@@ -1101,6 +1102,13 @@ export function JoinPartyDialog({ trigger, open: openProp, onOpenChange }: { tri
       setBusy(false);
     }
   };
+
+  return { joinCode, setJoinCode, busy, handleJoin };
+}
+
+export function JoinPartyDialog({ trigger, open: openProp, onOpenChange }: { trigger?: React.ReactNode | null; open?: boolean; onOpenChange?: (open: boolean) => void }) {
+  const [open, setOpen] = useControllableOpen(openProp, onOpenChange);
+  const { joinCode, setJoinCode, busy, handleJoin } = useJoinPartyByCode(() => setOpen(false));
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
