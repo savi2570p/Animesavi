@@ -1,7 +1,7 @@
 /* =====================================================================
    AnimeSavi flat design system (Re:ANIME-inspired)
    ---------------------------------------------------------------------
-   Loaded after index.css. It replaces every liquid-glass surface with a
+   Accent: Re:ANIME lime on neutral near-black. Loaded after index.css. It replaces every liquid-glass surface with a
    flat, solid, minimal dark surface by redefining the shared tokens that
    all pages already consume. Presentation only: no behavior lives here.
    ===================================================================== */
@@ -11,40 +11,40 @@
   --font-heading: 'Sora Variable', 'Manrope Variable', system-ui, sans-serif;
   --font-body: 'Manrope Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-  --background: 264 44% 5%;
+  --background: 0 0% 4%;
   --foreground: 0 0% 96%;
-  --card: 263 34% 9%;
+  --card: 0 0% 8%;
   --card-foreground: 0 0% 96%;
-  --popover: 263 34% 9%;
+  --popover: 0 0% 8%;
   --popover-foreground: 0 0% 96%;
-  --primary: 258 90% 66%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 263 24% 14%;
+  --primary: 79 86% 59%;
+  --primary-foreground: 0 0% 4%;
+  --secondary: 0 0% 12%;
   --secondary-foreground: 0 0% 96%;
-  --muted: 263 22% 12%;
-  --muted-foreground: 260 9% 64%;
-  --accent: 263 24% 16%;
+  --muted: 0 0% 11%;
+  --muted-foreground: 0 0% 64%;
+  --accent: 0 0% 14%;
   --accent-foreground: 0 0% 96%;
   --destructive: 350 80% 58%;
   --destructive-foreground: 0 0% 100%;
-  --border: 263 18% 17%;
-  --input: 263 18% 17%;
-  --ring: 258 90% 66%;
+  --border: 0 0% 16%;
+  --input: 0 0% 16%;
+  --ring: 79 86% 59%;
   --radius: 0.625rem;
 
-  --cr-orange: 258 90% 66%;
-  --cr-orange-light: 258 90% 74%;
-  --cr-orange-dark: 258 70% 54%;
-  --hi-yellow: 258 90% 66%;
-  --hi-yellow-light: 258 90% 74%;
-  --hi-yellow-dark: 258 70% 54%;
-  --sidebar-primary: 258 90% 66%;
-  --sidebar-ring: 258 90% 66%;
-  --chart-1: 258 90% 66%;
+  --cr-orange: 79 86% 59%;
+  --cr-orange-light: 79 86% 68%;
+  --cr-orange-dark: 79 76% 48%;
+  --hi-yellow: 79 86% 59%;
+  --hi-yellow-light: 79 86% 68%;
+  --hi-yellow-dark: 79 76% 48%;
+  --sidebar-primary: 79 86% 59%;
+  --sidebar-ring: 79 86% 59%;
+  --chart-1: 79 86% 59%;
 
   /* Flat surfaces: one solid color, hairline border, no sheen. */
   --flat-surface: hsl(var(--card));
-  --flat-surface-raised: hsl(263 30% 12%);
+  --flat-surface-raised: hsl(0 0% 11%);
   --flat-edge: 0 0 0 0 transparent;
   --flat-shadow: 0 1px 2px hsl(0 0% 0% / .35);
 
