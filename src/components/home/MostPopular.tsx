@@ -3,9 +3,8 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Flame, ChevronRight, Play, Eye, Filter, Crown, TrendingUp, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Flame, ChevronRight, Filter, Crown, TrendingUp, ArrowLeft, ArrowRight } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
-import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 import { getViewCount, formatViews } from '@/lib/viewCount';
 import {
   DropdownMenu,
@@ -130,7 +129,7 @@ export const MostPopular = memo(function MostPopular() {
             {filteredList.slice(0, 14).map((anime, index) => (
               <AnimeCardContextMenu key={anime.id} animeTitle={anime.title} animeUrl={`/anime/${anime.id}`} coverImage={anime.cover_image}>
                 <PosterCard to={`/anime/${anime.id}`} title={anime.title} cover={anime.cover_image} isEngDub={anime.is_eng_dub} isSubOnly={anime.is_sub_only} genres={anime.genres}
-                  tag={`#${String(index + 1).padStart(2, '0')}`} views={formatViews(anime.view_count || 0)} type={(anime as { type?: string | null }).type ?? null} status={(anime as { status?: string | null }).status ?? null} />
+                  tag={`#${String(index + 1).padStart(2, '0')}`} views={formatViews(anime.view_count || 0)} type={(anime as { type?: string | null }).type ?? null} status={anime.status} />
               </AnimeCardContextMenu>
             ))}
           </div>
