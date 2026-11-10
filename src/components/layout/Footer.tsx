@@ -12,28 +12,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-const footerLinks = {
-  browse: [
-    { label: 'Popular Anime', href: '/browse?sort=popular' },
-    { label: 'New Releases', href: '/browse?sort=new' },
-    { label: 'Ongoing Series', href: '/browse?status=ongoing' },
-    { label: 'Movies', href: '/browse?type=movie' },
-  ],
-  genres: [
-    { label: 'Action', href: '/browse?genre=action' },
-    { label: 'Romance', href: '/browse?genre=romance' },
-    { label: 'Comedy', href: '/browse?genre=comedy' },
-    { label: 'Fantasy', href: '/browse?genre=fantasy' },
-    { label: 'Sony YAY', href: '/browse?genre=Sony%20YAY' },
-  ],
-  support: [
-    { label: 'Help Center · @AnimeSaviInhindiDUB', href: 'https://t.me/AnimeSaviInhindiDUB', external: true },
-    { label: 'Contact Us · @Lv_Savi', href: 'https://t.me/Lv_Savi', external: true },
-    { label: 'Terms of Service', href: '/terms', isTerms: true },
-    { label: 'Privacy Policy', href: '/privacy', isPrivacy: true },
-  ],
-};
-
 const privacySections = [
   { icon: Database, title: 'Information We Collect', tone: 'text-primary', body: 'Account data includes your email, username and optional avatar. Watch history, favorites, saved lists, reviews, comments, genre preferences and notification subscriptions may be stored with your account. Your browser also stores sign-in sessions, viewing settings, resume checkpoints and any videos you choose to save offline. Requests may generate operational logs used for security and reliability.' },
   { icon: UserCheck, title: 'How We Use Your Information', tone: 'text-primary', body: 'We use account and viewing information to sign you in, sync progress, personalize recommendations, deliver requested notifications, manage access and prevent abuse. Service providers supporting authentication, storage, delivery and monitoring may process data to provide these functions. We do not sell your personal information.' },

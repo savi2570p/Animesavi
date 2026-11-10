@@ -530,3 +530,22 @@ html.perf-low .home-search-hero-art { display: none; }
 .account-menu-v10 .account-menu-v10-signout:focus { background: hsl(var(--destructive) / .1); color: hsl(var(--destructive)); }
 .account-menu-v10-sep { margin: 4px 10px 0; background: hsl(var(--border)); }
 @media (prefers-reduced-motion: reduce) { .nav-menu-v10, .account-menu-v10 { animation: none !important; } }
+
+/* ---------------- Footer (Re:ANIME-style, AnimeSavi+) ---------------- */
+.footer-v7 { background: hsl(var(--background)); border-top: 1px solid hsl(var(--border)); }
+.footer-v7-brand { display: inline-flex; align-items: center; gap: .6rem; font-family: var(--font-heading, inherit); font-size: 1.5rem; font-weight: 800; font-style: italic; letter-spacing: -.02em; color: hsl(var(--foreground)); }
+.footer-v7-brand sup { font-size: .7em; margin-left: 1px; }
+.footer-v7-about { margin-top: 1rem; max-width: 34rem; font-size: .8rem; line-height: 1.6; color: hsl(var(--muted-foreground)); }
+.footer-v7-social { margin-top: 1.25rem; display: flex; align-items: center; gap: .35rem; }
+.footer-v7-social a { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 6px; color: hsl(var(--muted-foreground)); transition: color .2s, background .2s; }
+.footer-v7-social a:hover { color: hsl(var(--primary)); background: hsl(var(--foreground) / .06); }
+.footer-v7-social svg { width: 1.1rem; height: 1.1rem; }
+.footer-v7-sep { width: 1px; height: 1.25rem; margin: 0 .6rem; background: hsl(var(--border)); }
+.footer-v7-lang { font-size: .7rem; font-weight: 700; letter-spacing: .04em; color: hsl(var(--foreground) / .8); }
+.footer-v7-bottom { margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid hsl(var(--border)); padding-bottom: 3.5rem; }
+@media (min-width: 768px) { .footer-v7-bottom { padding-bottom: 0; } }
+.footer-v7-copy { font-size: .8rem; color: hsl(var(--foreground) / .85); }
+.footer-v7-note { margin-top: .4rem; font-size: .7rem; color: hsl(var(--muted-foreground)); }
+.footer-v7-links { margin-top: .9rem; display: flex; flex-wrap: wrap; gap: .35rem 1.25rem; }
+.footer-v7-links a, .footer-v7-links button { font-size: .78rem; color: hsl(var(--muted-foreground)); background: none; border: 0; padding: 0; min-height: 0; min-width: 0; cursor: pointer; transition: color .2s; }
+.footer-v7-links a:hover, .footer-v7-links button:hover { color: hsl(var(--primary)); }
