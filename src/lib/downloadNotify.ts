@@ -29,8 +29,8 @@ export async function notifyDownload(title: string, body: string, tag = 'animesa
   const options: NotificationOptions = {
     body,
     tag,
-    icon: '/Animesavi+.png?v=3',
-    badge: '/Animesavi+.png?v=3',
+    icon: '/Animesavi+.png?v=5',
+    badge: '/Animesavi+.png?v=5',
   };
 
   try {

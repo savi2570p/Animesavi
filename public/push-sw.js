@@ -6,8 +6,8 @@
 // Bump SW_VERSION whenever icon assets change to guarantee a fresh activate.
 
 const SW_VERSION = 'v3-2026-05-23';
-const DEFAULT_ICON = '/Animesavi+.png?v=3';
-const DEFAULT_BADGE = '/Animesavi+.png?v=3';
+const DEFAULT_ICON = '/Animesavi+.png?v=5';
+const DEFAULT_BADGE = '/Animesavi+.png?v=5';
 
 self.addEventListener('install', (event) => {
   // Activate this worker immediately, do not wait for old SW to release.
