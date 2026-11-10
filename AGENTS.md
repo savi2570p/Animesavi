@@ -46,4 +46,4 @@
 - Clone sites that forbid framing are detected by a header-only backend check and shown an open-directly card; never proxy or strip frame protections.
 - Watch progress writes use watchProgressThrottle, polls skip hidden tabs and the full conversion scan runs at most daily, so idle tabs don't flood or wake the database.
 - Site-wide flat styling lives in src/styles/flat-design.css (loaded after index.css) as token overrides; restyle there, not per component, for consistency.
-- The hamburger menu exposes one Watch Party entry whose dialog combines join-by-code with the joined-party list; admin, upload and settings entry points live in the profile/side rail, not the hamburger.
+- The hamburger menu exposes one Watch Party entry whose dialog combines join-by-code with the joined-party list; admin, upload and settings entry points live in the PC side rail and Profile page, not the hamburger.
