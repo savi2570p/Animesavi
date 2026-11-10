@@ -45,3 +45,4 @@
 - Watch party membership is published through the shared watchPartySession store: only the host writes shared playback (database UPDATE is host-only), guests get a player cover and reverted media events, and every party session skips Continue Watching writes.
 - Clone platforms that forbid framing are detected by a header-only backend check against saved platform URLs and shown an open-directly card; never proxy or strip third-party frame protections.
 - Watch progress writes go through watchProgressThrottle, client polls skip hidden tabs, and the full conversion scan runs at most daily (a trigger creates records), so viewers and idle tabs don't flood or wake the database.
+- Site-wide surface styling is flattened by src/styles/flat-design.css, loaded after index.css, which redefines shared theme and scoped glass tokens; restyle through tokens there instead of per-component overrides so pages stay consistent.
