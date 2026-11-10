@@ -1,10 +1,10 @@
 ## Nov 10 pass 3
-- [ ] Mobile/iOS hero banner shows full 16:9 artwork
-- [ ] Poster cards everywhere (Favorites, Watch List, Upcoming, Coming Soon, Recommended, Episode Progress, Share)
-- [ ] Hamburger: remove Upload Anime, Admin Panel, Settings
-- [ ] Combine Join Party + View Parties into one Watch Party item/dialog
-- [ ] Flat theme on clone sites and platforms pages
-- [ ] Footer redesign (AnimeSavi+), Telegram, YouTube, Instagram links
+- [x] Mobile/iOS hero banner shows full 16:9 artwork
+- [x] Poster cards everywhere (Favorites, Watch List, Upcoming, Coming Soon, Recommended, Episode Progress, Share)
+- [x] Hamburger: remove Upload Anime, Admin Panel, Settings
+- [x] Combine Join Party + View Parties into one Watch Party item/dialog
+- [x] Flat theme on clone sites and platforms pages
+- [x] Footer redesign (AnimeSavi+), Telegram, YouTube, Instagram links
 
 ## Nov 10 Re:ANIME pass 2
 - [x] Re:ANIME-style poster cards across home rows, browse/search, listing, platform and detail pages

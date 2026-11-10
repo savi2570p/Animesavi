@@ -9,7 +9,7 @@
 - Copied embed players store exact native-media checkpoints by resolved episode ID through a shared resume hook; do not fabricate third-party iframe positions.
 - Anime poster cards render through the shared PosterCard so badges, artwork sizing and fallbacks stay consistent across rows, grids and platform pages.
 - Discovery, platform and continue-watching rows reuse catalogue glass tokens and native snap scrolling to avoid animation-loop and per-card blur overhead.
-- The main hero keeps text/actions over its media on every viewport with visibility-gated autoplay and tokenized glass; resume cards reserve edge-to-edge aspect-ratio artwork independently from text.
+- The main hero shows phone artwork uncropped in an exact 16:9 frame with copy below and stays full-bleed with overlaid copy on larger screens, using visibility-gated autoplay; resume cards reserve edge-to-edge aspect-ratio artwork independently from text.
 - Anime details retain shared EpisodeGrid, MoreInfoDrawer, download, share and review components in an unframed layout so visual refreshes preserve their existing behavior.
 - Pending Upload reuses catalogue glass and keeps presentation separate from existing role checks, queue heuristics, realtime updates and edit actions to avoid changing upload permissions during redesigns.
 - Pass anime SUB classification into the shared audio selector; known stream metadata takes precedence over content-language fallback labels.
@@ -46,3 +46,4 @@
 - Clone sites that forbid framing are detected by a header-only backend check and shown an open-directly card; never proxy or strip frame protections.
 - Watch progress writes use watchProgressThrottle, polls skip hidden tabs and the full conversion scan runs at most daily, so idle tabs don't flood or wake the database.
 - Site-wide flat styling lives in src/styles/flat-design.css (loaded after index.css) as token overrides; restyle there, not per component, for consistency.
+- The hamburger menu exposes one Watch Party entry whose dialog combines join-by-code with the joined-party list; admin, upload and settings entry points live in the profile/side rail, not the hamburger.
