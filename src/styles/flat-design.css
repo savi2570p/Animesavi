@@ -268,3 +268,4 @@ html.perf-low .home-search-hero-art { display: none; }
 @media (max-width: 640px) {
   .home-search-hero-art { grid-template-columns: repeat(3, 1fr); opacity: .26; }
 }
+.nav-v6-brand { gap: 0 !important; }
