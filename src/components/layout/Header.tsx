@@ -42,7 +42,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
-import { JoinPartyDialog, ViewPartyDialog } from '@/components/WatchParty';
+import { ViewPartyDialog } from '@/components/WatchParty';
 import { NotificationBell } from '@/components/NotificationBell';
 import { rememberAccount } from '@/components/AccountSwitcher';
 import { hasValidTokenAccess } from '@/components/AccessBanner';
@@ -144,7 +144,6 @@ export function Header() {
   }, [navigate]);
 
 
-  const [joinPartyOpen, setJoinPartyOpen] = useState(false);
   const [viewPartiesOpen, setViewPartiesOpen] = useState(false);
   const closeMenuThen = (callback: () => void) => {
     setMobileMenuOpen(false);
@@ -224,24 +223,6 @@ export function Header() {
     navigate('/');
   };
 
-  const canUpload = () => {
-    return isUploader || isAdmin;
-  };
-
-  const handleUploadClick = () => {
-    if (!user) {
-      toast.error('Please sign in first');
-      navigate('/auth');
-      return;
-    }
-
-    if (!canUpload()) {
-      toast.error('You are not authorized to upload.');
-      return;
-    }
-
-    navigate('/upload');
-  };
 
   const isActivePath = (to: string) => {
     const [path, query] = to.split('?');
