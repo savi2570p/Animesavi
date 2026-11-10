@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { PosterCard } from '@/components/anime/PosterCard';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tv, Play, CalendarClock, Sparkles, Film, Flame } from 'lucide-react';
@@ -166,7 +166,7 @@ export default function LatestSeriesPage() {
 
       <div className="container pb-12">
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="browse-ra-grid">
             {Array(12).fill(0).map((_, i) => (
               <div key={i} className="space-y-2">
                 <Skeleton className="aspect-[3/4] rounded-lg" />
@@ -182,62 +182,17 @@ export default function LatestSeriesPage() {
             <p className="text-muted-foreground">Check back later for new series.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {series.map((anime, index) => (
+          <div className="browse-ra-grid">
+            {series.map((anime) => (
               <AnimeCardContextMenu
                 key={anime.id}
                 animeTitle={anime.title}
                 animeUrl={`/anime/${anime.id}`}
                 coverImage={anime.cover_image}
               >
-                <Link
-                  to={`/anime/${anime.id}`}
-                  className="catalogue-tile-v5 group relative block"
-                  style={{ animationDelay: `${Math.min(index * 25, 200)}ms` }}
-                >
-                  <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-muted shadow-md group-hover:shadow-xl transition-all duration-500">
-                    <img
-                      src={anime.cover_image || '/placeholder.svg'}
-                      alt={anime.title}
-                      className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
-                      loading="lazy"
-                    />
-                    
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/30 to-transparent opacity-60 group-hover:opacity-90 transition-all duration-300" />
-                    
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                      <div className="p-4 rounded-full bg-primary/90 shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300">
-                        <Play className="h-6 w-6 text-primary-foreground fill-current" />
-                      </div>
-                    </div>
-
-                    <div className="absolute top-2 left-2 px-2 py-1 text-xs font-bold bg-primary text-primary-foreground rounded-lg shadow-md">
-                      {anime.episode_count} EP{anime.episode_count !== 1 ? 'S' : ''}
-                    </div>
-
-                    <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
-                      {isNew(anime) && (
-                        <div className="px-2 py-0.5 text-xs font-bold bg-secondary text-foreground rounded-lg shadow-md animate-pulse">
-                          NEW
-                        </div>
-                      )}
-                      <DubBadge isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} genres={(anime as any).genres} />
-                    </div>
-
-                    {getStatusBadge(anime)}
-
-                    <div className="absolute bottom-0 left-0 right-0 p-3">
-                      <h3 className="text-sm md:text-base font-semibold text-foreground line-clamp-2 drop-shadow-lg">
-                        {anime.title}
-                      </h3>
-                      {anime.episode_count > 0 && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {anime.episode_count} Episode{anime.episode_count !== 1 ? 's' : ''}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </Link>
+                <PosterCard to={`/anime/${anime.id}`} title={anime.title} cover={anime.cover_image}
+                  isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} genres={(anime as any).genres}
+                  episodes={anime.episode_count} type="series" status={anime.status} tag={isNew(anime) ? 'NEW' : null} fluid />
               </AnimeCardContextMenu>
             ))}
           </div>
