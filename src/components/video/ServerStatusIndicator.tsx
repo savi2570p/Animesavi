@@ -93,7 +93,7 @@ export function ServerStatusIndicator({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction
-              className="bg-primary hover:bg-primary/90 text-white text-xs px-4 py-1.5"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs px-4 py-1.5"
               onClick={() => setMaintenanceServer(null)}
             >
               OK
