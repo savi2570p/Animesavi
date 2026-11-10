@@ -9,7 +9,7 @@
 - Copied embed players store exact native-media checkpoints by resolved episode ID through a shared resume hook; do not fabricate third-party iframe positions.
 - Anime poster cards render through the shared PosterCard so badges, artwork sizing and fallbacks stay consistent across rows, grids and platform pages.
 - Discovery, platform and continue-watching rows reuse catalogue glass tokens and native snap scrolling to avoid animation-loop and per-card blur overhead.
-- The main hero shows phone artwork uncropped in an exact 16:9 frame with copy below and stays full-bleed with overlaid copy on larger screens, using visibility-gated autoplay; resume cards reserve edge-to-edge aspect-ratio artwork independently from text.
+- Main hero: phones show uncropped 16:9 art with copy below, larger screens full-bleed with overlaid copy, visibility-gated autoplay; resume cards keep edge-to-edge aspect-ratio art separate from text.
 - Anime details retain shared EpisodeGrid, MoreInfoDrawer, download, share and review components in an unframed layout so visual refreshes preserve their existing behavior.
 - Pending Upload reuses catalogue glass and keeps presentation separate from existing role checks, queue heuristics, realtime updates and edit actions to avoid changing upload permissions during redesigns.
 - Pass anime SUB classification into the shared audio selector; known stream metadata takes precedence over content-language fallback labels.
@@ -36,7 +36,7 @@
 - Admin uses unframed tools with a single utility-glass navigation layer; upload editors share authenticated server-role access checks, never session-storage codes, so admins without uploader roles can edit safely.
 - Upload no longer uses the legacy password gate; retain server-role and database permission checks as the access authority.
 - Pending preparation popups use the shared portaled Dialog so deferred or transformed sections cannot trap them; homepage recommendations use unframed catalogue glass rows and remain separate from Watch playback.
-- Upload creation and series editing use plain unframed section containers instead of generic Card wrappers to avoid inherited glass fills, a single vertical form flow and scoped studio optical tokens; preserve metadata, season, episode, upload handlers and access guards.
+- Upload creation/series editing use plain unframed sections (no Card wrappers, avoiding inherited glass), one vertical form flow and scoped studio tokens; preserve upload handlers and access guards.
 - Episode editing scopes the studio presentation to its page and embedded tools without altering shared subtitle or timestamp handlers, so other upload surfaces keep their existing behavior.
 - Crunchy and MuseIN share a portaled platform loader with scoped optical tokens and motion/performance fallbacks; its lifetime follows existing catalogue requests without simulated percentages or added delays.
 - Platform collections share presentation-only catalogue headers and cards with fixed portrait artwork, shared badges and native snap rows; preserve page-owned filters, queries and pending-title handlers.
@@ -46,4 +46,4 @@
 - Clone sites that forbid framing are detected by a header-only backend check and shown an open-directly card; never proxy or strip frame protections.
 - Watch progress writes use watchProgressThrottle, polls skip hidden tabs and the full conversion scan runs at most daily, so idle tabs don't flood or wake the database.
 - Site-wide flat styling lives in src/styles/flat-design.css (loaded after index.css) as token overrides; restyle there, not per component, for consistency.
-- The hamburger menu exposes one Watch Party entry whose dialog combines join-by-code with the joined-party list; admin, upload and settings entry points live in the PC side rail and Profile page, not the hamburger.
+- Hamburger has one Watch Party entry (join-by-code plus joined parties in one dialog); admin/upload/settings live in the PC side rail and Profile, not the hamburger.
