@@ -1158,6 +1158,7 @@ export function ViewPartyDialog({ trigger, open: openProp, onOpenChange }: { tri
   const [parties, setParties] = useState<(JoinedParty & { memberCount: number; ageMs: number })[]>([]);
   const [loading, setLoading] = useState(false);
   const [purging, setPurging] = useState(false);
+  const { joinCode, setJoinCode, busy: joining, handleJoin } = useJoinPartyByCode(() => setOpen(false));
 
   const sweepEmptyParties = useCallback(async (rows: JoinedParty[]) => {
     // For each party, count members. If memberCount <= 1 AND age > timeout → end it.
@@ -1291,10 +1292,18 @@ export function ViewPartyDialog({ trigger, open: openProp, onOpenChange }: { tri
           icon={Eye}
           tone="view"
           eyebrow={`Live parties${parties.length ? ` · ${parties.length}` : ''}`}
-          title="Your Watch Parties"
-          description={<>Rooms you've joined. Empty parties close after <strong>30 seconds</strong>.</>}
+          title="Watch Party"
+          description={<>Join with a friend's code or jump back into your rooms. Empty parties close after <strong>30 seconds</strong>.</>}
         />
         <div className="party-v2-body">
+          <section className="party-v2-join" aria-label="Join with a code">
+            <p className="party-v2-section-label"><UserPlus /> Join with a code</p>
+            <PartyCodeCells value={joinCode} onChange={setJoinCode} onSubmit={handleJoin} autoFocus={false} />
+            <Button onClick={handleJoin} disabled={joinCode.length !== 6 || joining} className="party-v2-cta">
+              <Link2 /> {joining ? 'Joining…' : 'Join Party'}
+            </Button>
+          </section>
+          <p className="party-v2-section-label"><Eye /> Your parties</p>
           {loading && parties.length === 0 ? (
             <div className="party-v2-list" aria-busy="true">
               {[0, 1].map((i) => <div key={i} className="party-v2-skeleton" />)}
