@@ -130,7 +130,7 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
     return () => clearInterval(interval);
   }, [currentIndex, featuredAnime.length, isActive]);
 
-  if (loading) return <section className="home-hero"><Skeleton className="w-full h-full rounded-none" /></section>;
+  if (loading) return <section className="home-hero relative"><div className="home-hero-media"><Skeleton className="w-full h-full rounded-none" /></div></section>;
   const current = featuredAnime[currentIndex];
   if (!current) return null;
 
