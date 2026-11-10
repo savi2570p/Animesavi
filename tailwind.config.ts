@@ -15,19 +15,20 @@ export default {
   	extend: {
    		fontFamily: {
    			popup: [
-   				'Plus Jakarta Sans',
+   				'Manrope Variable',
    				'sans-serif'
    			],
    			heading: [
-   				'Outfit',
+   				'Sora Variable',
+   				'Manrope Variable',
    				'sans-serif'
    			],
    			body: [
-   				'Inter',
+   				'Manrope Variable',
    				'sans-serif'
    			],
    			sans: [
-   				'Inter',
+   				'Manrope Variable',
    				'ui-sans-serif',
    				'system-ui',
    				'-apple-system',
