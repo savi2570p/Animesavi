@@ -15,7 +15,7 @@
 - Pass anime SUB classification into the shared audio selector; known stream metadata takes precedence over content-language fallback labels.
 - Watch passes both SUB and Hindi-dub classification into the shared audio fallback, while detected track labels remain authoritative.
 - Watch and Upload presentation reuse catalogue glass tokens, keep playback unframed, and remove per-card duplicate backdrop images without modifying upload guards or media policies.
-- Account pages use unframed section grids and the shared glass Button variant; the hamburger and detail loader share account glass tokens with reduced-motion and low-performance fallbacks, preserving account and menu action handlers.
+- Account pages use unframed grids and the shared glass Button variant; hamburger and detail loader share account glass tokens with motion/performance fallbacks, keeping existing handlers.
 - Settings uses a single unframed vertical section flow; catalogue listing pages share lightweight optical-edge tokens and SeeAllHeader so page refreshes preserve existing links, badges and queries.
 - Welcome renders catalogue banner artwork behind its title and actions with visibility-gated rotation rather than animated ambient backdrops, keeping its first screen lightweight.
 - Utility popups, navigation and footer share bounded optical-glass tokens with performance fallbacks; presentation changes retain popup queues, route exclusions, contact destinations and update state transitions.
@@ -35,7 +35,7 @@
 
 - Admin uses unframed tools with a single utility-glass navigation layer; upload editors share authenticated server-role access checks, never session-storage codes, so admins without uploader roles can edit safely.
 - Upload no longer uses the legacy password gate; retain server-role and database permission checks as the access authority.
-- Pending preparation popups use the shared portaled Dialog so deferred or transformed sections cannot trap them; homepage recommendations use unframed catalogue glass rows and remain separate from Watch playback.
+- Pending preparation popups use the shared portaled Dialog so transformed sections can't trap them; homepage recommendations stay separate from Watch playback.
 - Upload creation/series editing use plain unframed sections (no Card wrappers, avoiding inherited glass), one vertical form flow and scoped studio tokens; preserve upload handlers and access guards.
 - Episode editing scopes the studio presentation to its page and embedded tools without altering shared subtitle or timestamp handlers, so other upload surfaces keep their existing behavior.
 - Crunchy and MuseIN share a portaled platform loader with scoped optical tokens and motion/performance fallbacks; its lifetime follows existing catalogue requests without simulated percentages or added delays.
