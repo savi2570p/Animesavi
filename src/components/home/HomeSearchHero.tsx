@@ -119,8 +119,8 @@ export const HomeSearchHero = memo(function HomeSearchHero() {
         {popular.length > 0 && (
           <p className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-0 text-xs md:text-sm">
             <span className="hidden sm:inline text-muted-foreground/70">Popular:</span>
-            {popular.map((item) => (
-              <Link key={item.id} to={`/anime/${item.id}`} className="home-search-chip max-w-[14rem] truncate">
+            {popular.map((item, index) => (
+              <Link key={item.id} to={`/anime/${item.id}`} className={`home-search-chip max-w-[14rem] truncate ${index > 2 ? "hidden sm:inline" : ""}`}>
                 {item.title}
               </Link>
             ))}
