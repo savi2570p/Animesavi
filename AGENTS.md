@@ -9,13 +9,13 @@
 - Copied embed players store exact native-media checkpoints by resolved episode ID through a shared resume hook; do not fabricate third-party iframe positions.
 - Anime poster cards render through the shared PosterCard so badges, artwork sizing and fallbacks stay consistent across rows, grids and platform pages.
 - Discovery, platform and continue-watching rows reuse catalogue glass tokens and native snap scrolling to avoid animation-loop and per-card blur overhead.
-- The main hero keeps text/actions over its media on every viewport with visibility-gated autoplay and tokenized glass; resume cards reserve edge-to-edge aspect-ratio artwork independently from text.
+- Main hero: phones show uncropped 16:9 art with copy below, larger screens full-bleed with overlaid copy, visibility-gated autoplay; resume cards keep edge-to-edge aspect-ratio art separate from text.
 - Anime details retain shared EpisodeGrid, MoreInfoDrawer, download, share and review components in an unframed layout so visual refreshes preserve their existing behavior.
 - Pending Upload reuses catalogue glass and keeps presentation separate from existing role checks, queue heuristics, realtime updates and edit actions to avoid changing upload permissions during redesigns.
 - Pass anime SUB classification into the shared audio selector; known stream metadata takes precedence over content-language fallback labels.
 - Watch passes both SUB and Hindi-dub classification into the shared audio fallback, while detected track labels remain authoritative.
 - Watch and Upload presentation reuse catalogue glass tokens, keep playback unframed, and remove per-card duplicate backdrop images without modifying upload guards or media policies.
-- Account pages use unframed section grids and the shared glass Button variant; the hamburger and detail loader share account glass tokens with reduced-motion and low-performance fallbacks, preserving account and menu action handlers.
+- Account pages use unframed grids and the shared glass Button variant; hamburger and detail loader share account glass tokens with motion/performance fallbacks, keeping existing handlers.
 - Settings uses a single unframed vertical section flow; catalogue listing pages share lightweight optical-edge tokens and SeeAllHeader so page refreshes preserve existing links, badges and queries.
 - Welcome renders catalogue banner artwork behind its title and actions with visibility-gated rotation rather than animated ambient backdrops, keeping its first screen lightweight.
 - Utility popups, navigation and footer share bounded optical-glass tokens with performance fallbacks; presentation changes retain popup queues, route exclusions, contact destinations and update state transitions.
@@ -35,8 +35,8 @@
 
 - Admin uses unframed tools with a single utility-glass navigation layer; upload editors share authenticated server-role access checks, never session-storage codes, so admins without uploader roles can edit safely.
 - Upload no longer uses the legacy password gate; retain server-role and database permission checks as the access authority.
-- Pending preparation popups use the shared portaled Dialog so deferred or transformed sections cannot trap them; homepage recommendations use unframed catalogue glass rows and remain separate from Watch playback.
-- Upload creation and series editing use plain unframed section containers instead of generic Card wrappers to avoid inherited glass fills, a single vertical form flow and scoped studio optical tokens; preserve metadata, season, episode, upload handlers and access guards.
+- Pending preparation popups use the shared portaled Dialog so transformed sections can't trap them; homepage recommendations stay separate from Watch playback.
+- Upload creation/series editing use plain unframed sections (no Card wrappers, avoiding inherited glass), one vertical form flow and scoped studio tokens; preserve upload handlers and access guards.
 - Episode editing scopes the studio presentation to its page and embedded tools without altering shared subtitle or timestamp handlers, so other upload surfaces keep their existing behavior.
 - Crunchy and MuseIN share a portaled platform loader with scoped optical tokens and motion/performance fallbacks; its lifetime follows existing catalogue requests without simulated percentages or added delays.
 - Platform collections share presentation-only catalogue headers and cards with fixed portrait artwork, shared badges and native snap rows; preserve page-owned filters, queries and pending-title handlers.
@@ -46,3 +46,4 @@
 - Clone sites that forbid framing are detected by a header-only backend check and shown an open-directly card; never proxy or strip frame protections.
 - Watch progress writes use watchProgressThrottle, polls skip hidden tabs and the full conversion scan runs at most daily, so idle tabs don't flood or wake the database.
 - Site-wide flat styling lives in src/styles/flat-design.css (loaded after index.css) as token overrides; restyle there, not per component, for consistency.
+- Hamburger has one Watch Party entry (join-by-code plus joined parties in one dialog); admin/upload/settings live in the PC side rail and Profile, not the hamburger.

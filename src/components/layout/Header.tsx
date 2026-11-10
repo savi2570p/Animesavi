@@ -42,7 +42,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
-import { JoinPartyDialog, ViewPartyDialog } from '@/components/WatchParty';
+import { ViewPartyDialog } from '@/components/WatchParty';
 import { NotificationBell } from '@/components/NotificationBell';
 import { rememberAccount } from '@/components/AccountSwitcher';
 import { hasValidTokenAccess } from '@/components/AccessBanner';
@@ -144,7 +144,6 @@ export function Header() {
   }, [navigate]);
 
 
-  const [joinPartyOpen, setJoinPartyOpen] = useState(false);
   const [viewPartiesOpen, setViewPartiesOpen] = useState(false);
   const closeMenuThen = (callback: () => void) => {
     setMobileMenuOpen(false);
@@ -224,24 +223,6 @@ export function Header() {
     navigate('/');
   };
 
-  const canUpload = () => {
-    return isUploader || isAdmin;
-  };
-
-  const handleUploadClick = () => {
-    if (!user) {
-      toast.error('Please sign in first');
-      navigate('/auth');
-      return;
-    }
-
-    if (!canUpload()) {
-      toast.error('You are not authorized to upload.');
-      return;
-    }
-
-    navigate('/upload');
-  };
 
   const isActivePath = (to: string) => {
     const [path, query] = to.split('?');
@@ -283,8 +264,7 @@ export function Header() {
       label: 'MORE',
       items: [
         ...(!user ? [{ to: '/auth', label: 'Sign In', icon: LogIn }] : []),
-        { label: 'Join Party', icon: Users, onClick: () => closeMenuThen(() => setJoinPartyOpen(true)) },
-        { label: 'View Parties', icon: Eye, onClick: () => closeMenuThen(() => setViewPartiesOpen(true)) },
+        { label: 'Watch Party', icon: Users, onClick: () => closeMenuThen(() => setViewPartiesOpen(true)) },
         ...(user && !hasPremium ? [{ label: 'Get Premium', icon: Crown, onClick: () => closeMenuThen(() => window.open('https://t.me/getunlocktoken', '_blank', 'noopener')) }] : []),
         { label: 'Verify Token', icon: BadgeCheck, onClick: () => closeMenuThen(() => setVerifyOpen(true)) },
         { label: "What's New", icon: Sparkles, onClick: () => closeMenuThen(showWhatsNewManually) },
@@ -295,9 +275,6 @@ export function Header() {
             setMobileMenuOpen(false);
           },
         }] : []),
-        ...(canUpload() ? [{ label: 'Upload Anime', icon: Upload, onClick: () => closeMenuThen(handleUploadClick) }] : []),
-        ...(isAdmin ? [{ to: '/admin', label: 'Admin Panel', icon: Shield }] : []),
-        ...(user ? [{ to: '/settings', label: 'Settings', icon: Settings }] : []),
       ],
     },
   ];
@@ -539,7 +516,6 @@ export function Header() {
           </form>
 
           <VerifyTokenDialog open={verifyOpen} onOpenChange={setVerifyOpen} />
-          <JoinPartyDialog trigger={null} open={joinPartyOpen} onOpenChange={setJoinPartyOpen} />
           <ViewPartyDialog trigger={null} open={viewPartiesOpen} onOpenChange={setViewPartiesOpen} />
           
         </div>

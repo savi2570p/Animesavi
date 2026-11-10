@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Clock, ChevronRight, AlertCircle, Upload, Bell, Calendar, Info } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
+import { PosterCard } from '@/components/anime/PosterCard';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 interface NoEpisodesPopupProps {
@@ -207,11 +208,11 @@ export function EpisodeProgress() {
           </Button>
         </div>
 
-        <div className="flex md:grid md:grid-cols-4 lg:grid-cols-4 gap-4 overflow-x-auto pb-4 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible snap-row">
+        <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 snap-row">
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="anime-card-uniform space-y-2 shrink-0">
-                <Skeleton className="aspect-[2/3] rounded-lg" />
+              <div key={i} className="poster-card-fixed space-y-2 shrink-0">
+                <Skeleton className="aspect-[2/3] rounded-md" />
                 <Skeleton className="h-4 w-3/4" />
               </div>
             ))
@@ -223,49 +224,8 @@ export function EpisodeProgress() {
                 animeUrl={`/anime/${anime.id}`}
                 coverImage={anime.cover_image}
               >
-                <div
-                  onClick={(e) => handleAnimeClick(anime, e)}
-                  className="group relative anime-card-uniform shrink-0 cursor-pointer"
-                >
-                  <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-muted">
-                    {anime.cover_image ? (
-                      <img
-                        src={anime.cover_image}
-                        alt={anime.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20">
-                        <span className="text-muted-foreground">No Image</span>
-                      </div>
-                    )}
-                    
-                    {/* Episodes Under Progress Badge */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                      <div className="text-center px-3">
-                        <Clock className="h-6 w-6 text-amber-400 mx-auto mb-1" />
-                        <span className="text-white text-xs font-medium leading-tight block">
-                          Episodes Under Progress
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Type badge */}
-                    {anime.type && (
-                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-muted/90 text-[10px] font-bold uppercase">
-                        {anime.type}
-                      </div>
-                    )}
-
-                    {/* Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </div>
-
-                  <h3 className="mt-2 text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                    {anime.title}
-                  </h3>
-                </div>
+                <PosterCard to={`/anime/${anime.id}`} onClick={(e) => handleAnimeClick(anime, e)}
+                  title={anime.title} cover={anime.cover_image} type={anime.type} status={anime.status} pending />
               </AnimeCardContextMenu>
             ))
           )}

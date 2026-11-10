@@ -1018,7 +1018,7 @@ function PartyHero({ icon: Icon, tone, eyebrow, title, description }: {
   );
 }
 
-function PartyCodeCells({ value, onChange, onSubmit }: { value: string; onChange: (v: string) => void; onSubmit?: () => void }) {
+function PartyCodeCells({ value, onChange, onSubmit, autoFocus = true }: { value: string; onChange: (v: string) => void; onSubmit?: () => void; autoFocus?: boolean }) {
   const [focused, setFocused] = useState(false);
   const cells = Array.from({ length: 6 }, (_, i) => value[i] || '');
   return (
@@ -1030,7 +1030,7 @@ function PartyCodeCells({ value, onChange, onSubmit }: { value: string; onChange
           </span>
         ))}
         <input
-          autoFocus
+          autoFocus={autoFocus}
           value={value}
           inputMode="text"
           autoCapitalize="characters"
@@ -1061,12 +1061,13 @@ function useControllableOpen(open?: boolean, onOpenChange?: (v: boolean) => void
 // ─────────────────────────────────────────────────────────────────────
 // JOIN PARTY DIALOG
 // ─────────────────────────────────────────────────────────────────────
-export function JoinPartyDialog({ trigger, open: openProp, onOpenChange }: { trigger?: React.ReactNode | null; open?: boolean; onOpenChange?: (open: boolean) => void }) {
+/** Shared join-by-code flow used by the Join dialog and the combined Watch Party dialog. */
+function useJoinPartyByCode(onJoined: () => void) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [joinCode, setJoinCode] = useState('');
-  const [open, setOpen] = useControllableOpen(openProp, onOpenChange);
   const [busy, setBusy] = useState(false);
+  const setOpen = (v: boolean) => { if (!v) onJoined(); };
 
   const handleJoin = async () => {
     if (!user) {
@@ -1101,6 +1102,13 @@ export function JoinPartyDialog({ trigger, open: openProp, onOpenChange }: { tri
       setBusy(false);
     }
   };
+
+  return { joinCode, setJoinCode, busy, handleJoin };
+}
+
+export function JoinPartyDialog({ trigger, open: openProp, onOpenChange }: { trigger?: React.ReactNode | null; open?: boolean; onOpenChange?: (open: boolean) => void }) {
+  const [open, setOpen] = useControllableOpen(openProp, onOpenChange);
+  const { joinCode, setJoinCode, busy, handleJoin } = useJoinPartyByCode(() => setOpen(false));
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -1150,6 +1158,7 @@ export function ViewPartyDialog({ trigger, open: openProp, onOpenChange }: { tri
   const [parties, setParties] = useState<(JoinedParty & { memberCount: number; ageMs: number })[]>([]);
   const [loading, setLoading] = useState(false);
   const [purging, setPurging] = useState(false);
+  const { joinCode, setJoinCode, busy: joining, handleJoin } = useJoinPartyByCode(() => setOpen(false));
 
   const sweepEmptyParties = useCallback(async (rows: JoinedParty[]) => {
     // For each party, count members. If memberCount <= 1 AND age > timeout → end it.
@@ -1278,15 +1287,23 @@ export function ViewPartyDialog({ trigger, open: openProp, onOpenChange }: { tri
           )}
         </DialogTrigger>
       )}
-      <DialogContent className="party-v2 sm:max-w-md">
+      <DialogContent className="party-v2 sm:max-w-md" onOpenAutoFocus={(e) => e.preventDefault()}>
         <PartyHero
           icon={Eye}
           tone="view"
           eyebrow={`Live parties${parties.length ? ` · ${parties.length}` : ''}`}
-          title="Your Watch Parties"
-          description={<>Rooms you've joined. Empty parties close after <strong>30 seconds</strong>.</>}
+          title="Watch Party"
+          description={<>Join with a friend's code or jump back into your rooms. Empty parties close after <strong>30 seconds</strong>.</>}
         />
         <div className="party-v2-body">
+          <section className="party-v2-join" aria-label="Join with a code">
+            <p className="party-v2-section-label"><UserPlus /> Join with a code</p>
+            <PartyCodeCells value={joinCode} onChange={setJoinCode} onSubmit={handleJoin} autoFocus={false} />
+            <Button onClick={handleJoin} disabled={joinCode.length !== 6 || joining} className="party-v2-cta">
+              <Link2 /> {joining ? 'Joining…' : 'Join Party'}
+            </Button>
+          </section>
+          <p className="party-v2-section-label"><Eye /> Your parties</p>
           {loading && parties.length === 0 ? (
             <div className="party-v2-list" aria-busy="true">
               {[0, 1].map((i) => <div key={i} className="party-v2-skeleton" />)}

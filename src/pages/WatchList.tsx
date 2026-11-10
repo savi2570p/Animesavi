@@ -9,7 +9,7 @@ import {
   Play, Trash2, ListVideo, Search, SortAsc, SortDesc,
   Layers, Sparkles, ArrowRight, Clock,
 } from 'lucide-react';
-import { DubBadge } from '@/components/anime/DubBadge';
+import { PosterCard } from '@/components/anime/PosterCard';
 
 interface WatchListItem {
   id: string;
@@ -186,9 +186,9 @@ export default function WatchList() {
 
         {/* Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="browse-ra-grid">
             {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="aspect-[3/4] rounded-2xl bg-muted/40 skeleton-shimmer" />
+              <div key={i} className="aspect-[2/3] rounded-md bg-muted/40 skeleton-shimmer" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
@@ -209,63 +209,19 @@ export default function WatchList() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {filtered.map(item => {
-              const img = item.coverImage || '/placeholder.svg';
-              return (
-                <div
-                  key={item.id}
-                  className="group relative rounded-2xl overflow-hidden border border-border/40 bg-card/50 transition-all duration-300 hover:border-primary/50 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/20"
-                >
-                  <Link to={`/anime/${item.animeId}`} className="block">
-                    <div className="relative aspect-[3/4] overflow-hidden">
-                      <img
-                        src={img}
-                        alt={item.animeTitle}
-                        loading="lazy"
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                      <span className="absolute top-2 right-2"><DubBadge isEngDub={(item as any).isEngDub} isSubOnly={(item as any).isSubOnly} /></span>
-                      <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-background/70 backdrop-blur text-[9px] font-bold uppercase tracking-wider">
-                        <Layers className="h-2.5 w-2.5 text-primary" />
-                        {item.totalSeasons}S
-                      </span>
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="p-3.5 rounded-full bg-primary/95 shadow-xl shadow-primary/40">
-                          <Play className="w-5 h-5 text-primary-foreground fill-current" />
-                        </div>
-                      </div>
-                      <div className="absolute bottom-0 left-0 right-0 p-3 space-y-1">
-                        <h3 className="text-sm font-bold text-white line-clamp-2 drop-shadow-lg">
-                          {item.animeTitle}
-                        </h3>
-                        <div className="flex items-center gap-1.5 text-[10px] text-white/70">
-                          <Clock className="h-2.5 w-2.5" />
-                          Added {new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                  <div className="flex items-center gap-1 p-2">
-                    <Button asChild size="sm" className="flex-1 h-8 text-xs rounded-lg">
-                      <Link to={`/anime/${item.animeId}`}>
-                        Continue <ArrowRight className="h-3 w-3 ml-1" />
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeItem(item.id)}
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      aria-label="Remove"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="browse-ra-grid">
+            {filtered.map(item => (
+              <div key={item.id} className="poster-card-shell group relative">
+                <PosterCard to={`/anime/${item.animeId}`} title={item.animeTitle || 'Untitled'} cover={item.coverImage}
+                  isEngDub={item.isEngDub} isSubOnly={item.isSubOnly}
+                  tag={item.totalSeasons ? `${item.totalSeasons}S` : null}
+                  year={`Added ${new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`}
+                  fluid />
+                <Button variant="ghost" size="icon" onClick={() => removeItem(item.id)} className="poster-card-remove" aria-label={`Remove ${item.animeTitle || 'anime'}`}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))}
           </div>
         )}
       </div>

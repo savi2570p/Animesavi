@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CalendarClock, ChevronRight, Rocket, Bell, Sparkles } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
+import { PosterCard } from '@/components/anime/PosterCard';
 import { UpcomingCountdownDialog } from '@/components/home/UpcomingCountdownDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -145,11 +146,11 @@ export function ComingSoon() {
           </Button>
         </div>
 
-        <div className="flex gap-4 md:gap-5 overflow-x-auto pb-4 -mx-4 px-4 snap-row scrollbar-thin scrollbar-thumb-orange-500/20 scrollbar-track-transparent">
+        <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 snap-row scrollbar-thin">
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="space-y-2 w-[170px] md:w-[200px] shrink-0">
-                <Skeleton className="aspect-[2/3] rounded-2xl" />
+              <div key={i} className="space-y-2 poster-card-fixed shrink-0">
+                <Skeleton className="aspect-[2/3] rounded-md" />
                 <Skeleton className="h-4 w-3/4" />
               </div>
             ))
@@ -158,98 +159,20 @@ export function ComingSoon() {
               const nearestRelease = anime.season_details?.find(s => s.release_date)?.release_date || null;
               const countdown = getCountdown(nearestRelease);
 
+              const seasonTag = anime.upcoming_seasons && anime.upcoming_seasons.length > 0
+                ? `S${Math.min(...anime.upcoming_seasons)}` : 'SOON';
               const card = (
-                <div
-                  onClick={() => setSelectedAnime(anime)}
-                  className="group relative w-[170px] md:w-[200px] lg:w-[220px] shrink-0 cursor-pointer animate-fade-in"
-                >
-                  <div className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-muted shadow-lg group-hover:shadow-2xl group-hover:-translate-y-1 transition-all duration-500 ring-1 ring-white/5 group-hover:ring-orange-500/50">
-                    {/* Blurred backdrop */}
-                    {anime.cover_image && (
-                      <img
-                        src={anime.cover_image}
-                        alt=""
-                        aria-hidden
-                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                        style={{ filter: 'blur(24px) brightness(0.35)' }}
-                      />
-                    )}
-                    {anime.cover_image ? (
-                      <img
-                        src={anime.cover_image}
-                        alt={anime.title}
-                        className="relative z-[2] w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="relative z-[2] w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20">
-                        <span className="text-muted-foreground">No Image</span>
-                      </div>
-                    )}
-
-                    {/* Locked overlay */}
-                    <div className="absolute inset-0 z-[3] bg-gradient-to-t from-black/85 via-black/40 to-black/30 group-hover:from-black/70 transition-all duration-300" />
-
-                    {/* Top badges */}
-                    <div className="absolute top-2 left-2 right-2 z-[5] flex items-start justify-between gap-2">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-500/95 text-white text-[10px] font-bold uppercase tracking-wider shadow-md">
-                        <Rocket className="h-2.5 w-2.5" />
-                        Soon
-                      </span>
-                      {anime.release_year && (
-                        <span className="px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold">
-                          {anime.release_year}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Center countdown / coming soon */}
-                    <div className="absolute inset-0 z-[4] flex items-center justify-center px-3 pointer-events-none">
-                      <div className="text-center">
-                        {countdown ? (
-                          <div className="px-3 py-2 rounded-xl bg-black/55 backdrop-blur-md border border-orange-500/30 shadow-xl">
-                            <div className="flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-wider text-orange-300 font-semibold mb-0.5">
-                              <CalendarClock className="h-3 w-3" />
-                              Releases in
-                            </div>
-                            <div className="text-base md:text-lg font-heading font-bold text-white leading-tight">
-                              {countdown}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="px-3 py-2 rounded-xl bg-black/55 backdrop-blur-md border border-white/10">
-                            <CalendarClock className="h-5 w-5 text-orange-400 mx-auto mb-1" />
-                            <span className="text-white text-[11px] font-semibold uppercase tracking-wider">
-                              Coming Soon
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Bottom title */}
-                    <div className="absolute bottom-0 left-0 right-0 z-[5] p-3 pointer-events-none">
-                      <h3 className="text-sm md:text-base font-semibold text-white line-clamp-2 leading-tight drop-shadow-lg">
-                        {anime.title}
-                      </h3>
-                      <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-white/70">
-                        {anime.type && (
-                          <span className="px-1.5 py-0.5 rounded bg-white/10 backdrop-blur-sm uppercase font-bold">
-                            {anime.type}
-                          </span>
-                        )}
-                        {anime.upcoming_seasons && anime.upcoming_seasons.length > 0 && (
-                          <span className="text-orange-300 font-medium">
-                            S{Math.min(...anime.upcoming_seasons)} incoming
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Hover wash */}
-                    <div className="absolute inset-0 z-[3] bg-gradient-to-tr from-orange-500/20 via-transparent to-amber-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  </div>
-                </div>
+                <PosterCard
+                  to={`/anime/${anime.id}`}
+                  onClick={(e) => { e.preventDefault(); setSelectedAnime(anime); }}
+                  title={anime.title}
+                  cover={anime.cover_image}
+                  type={anime.type}
+                  year={anime.release_year}
+                  tag={seasonTag}
+                  pending
+                  pendingLabel={countdown ? `Releases in ${countdown}` : 'Coming Soon'}
+                />
               );
 
               if (isMobile) return <div key={anime.id}>{card}</div>;

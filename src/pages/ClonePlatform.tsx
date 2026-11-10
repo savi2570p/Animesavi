@@ -64,17 +64,17 @@ function BootOverlay({
         <div className="clone-orb clone-orb-a" aria-hidden />
         <div className="clone-orb clone-orb-b" aria-hidden />
         <div className="relative">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.07] shadow-[0_16px_50px_-16px_rgba(168,85,247,0.85)]">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-foreground/5">
             {phase === 'verifying' ? (
-              <ShieldCheck className="h-8 w-8 text-[hsl(275_90%_78%)]" />
+              <ShieldCheck className="h-8 w-8 text-primary" />
             ) : (
-              <Shield className="h-8 w-8 text-[hsl(275_90%_78%)]" />
+              <Shield className="h-8 w-8 text-primary" />
             )}
           </div>
           <h2 className="text-lg font-semibold tracking-tight text-foreground">{copy.title}</h2>
           <p className="mt-1.5 text-xs text-muted-foreground">{copy.sub}</p>
 
-          <div className="mx-auto mt-6 h-5 w-5 animate-spin rounded-full border-2 border-[hsl(275_90%_70%)] border-t-transparent" />
+          <div className="mx-auto mt-6 h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
       </div>
     </div>
@@ -157,8 +157,8 @@ function UnlockPopup({
 
         <div className="clone-orb clone-orb-a" aria-hidden />
         <div className="relative">
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.07]">
-            <PlayCircle className="h-7 w-7 text-[hsl(275_90%_78%)]" />
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-foreground/5">
+            <PlayCircle className="h-7 w-7 text-primary" />
           </div>
           <h2 className="text-lg font-semibold tracking-tight">Watch a short ad</h2>
           <p className="mt-1.5 text-xs text-muted-foreground">
@@ -167,9 +167,9 @@ function UnlockPopup({
 
           {watching ? (
             <div className="mt-6">
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-[hsl(268_90%_62%)] to-[hsl(292_90%_70%)] transition-[width] duration-1000 ease-linear"
+                  className="h-full rounded-full bg-primary transition-[width] duration-1000 ease-linear"
                   style={{ width: `${((AD_WATCH_SECONDS - left) / AD_WATCH_SECONDS) * 100}%` }}
                 />
               </div>
@@ -187,7 +187,7 @@ function UnlockPopup({
 
               <button
                 onClick={onClose}
-                className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-muted-foreground transition hover:text-foreground"
+                className="w-full rounded-xl border border-border bg-foreground/5 px-4 py-2.5 text-sm text-muted-foreground transition hover:text-foreground"
               >
                 Not now
               </button>
@@ -417,7 +417,7 @@ export default function ClonePlatform() {
   if (loading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[hsl(275_90%_70%)] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     );
   }
@@ -428,7 +428,7 @@ export default function ClonePlatform() {
       <Suspense
         fallback={
           <div className="fixed inset-0 flex items-center justify-center bg-background">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[hsl(275_90%_70%)] border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           </div>
         }
       >
@@ -441,7 +441,7 @@ export default function ClonePlatform() {
     return (
       <div className="fixed inset-0 flex flex-col items-center justify-center gap-3 bg-background px-6 text-center">
         <div className="clone-glass rounded-3xl px-8 py-10">
-          <Lock className="mx-auto mb-4 h-8 w-8 text-[hsl(275_90%_78%)]" />
+          <Lock className="mx-auto mb-4 h-8 w-8 text-primary" />
           <h1 className="text-lg font-semibold">No URL configured</h1>
           <p className="mt-1.5 text-xs text-muted-foreground">
             {platform.name} has no target URL set yet.
@@ -453,7 +453,7 @@ export default function ClonePlatform() {
 
   return (
     <div
-      className="fixed inset-0 flex flex-col overflow-hidden bg-[hsl(272_45%_6%)] clone-shell"
+      className="fixed inset-0 flex flex-col overflow-hidden bg-background clone-shell"
     >
       {/* Top watermark bar */}
       <div
@@ -471,7 +471,7 @@ export default function ClonePlatform() {
             />
           ) : null}
           <span className="shrink-0 text-[11px] font-bold tracking-tight">
-            Anime<span className="text-[hsl(275_90%_72%)]">Savi</span>
+            <span className="text-primary">Anime</span>Savi<sup className="text-primary">+</sup>
           </span>
           <span className="truncate text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
             {platform.name}
@@ -534,7 +534,7 @@ export default function ClonePlatform() {
         {embedBlocked && (
           <div className="absolute inset-0 z-[45] flex items-center justify-center bg-background px-6">
             <div className="clone-glass w-full max-w-sm rounded-3xl px-6 py-8 text-center">
-              <ExternalLink className="mx-auto mb-3 h-7 w-7 text-[hsl(275_90%_78%)]" />
+              <ExternalLink className="mx-auto mb-3 h-7 w-7 text-primary" />
               <h2 className="text-sm font-semibold">{platform.name} opens in its own tab</h2>
               <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
                 This site doesn't allow being shown inside AnimeSavi, so it can't load here.
@@ -553,7 +553,7 @@ export default function ClonePlatform() {
                 </a>
                 <button
                   onClick={() => navigate('/')}
-                  className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-2.5 text-xs text-muted-foreground transition hover:text-foreground"
+                  className="rounded-2xl border border-border bg-foreground/5 px-5 py-2.5 text-xs text-muted-foreground transition hover:text-foreground"
                 >
                   Back to home
                 </button>
@@ -565,7 +565,7 @@ export default function ClonePlatform() {
         {frameFailed && (
           <div className="absolute inset-0 z-30 flex items-center justify-center px-6">
             <div className="clone-glass w-full max-w-sm rounded-3xl px-6 py-8 text-center">
-              <Shield className="mx-auto mb-3 h-7 w-7 text-[hsl(275_90%_78%)]" />
+              <Shield className="mx-auto mb-3 h-7 w-7 text-primary" />
               <h2 className="text-sm font-semibold">Embedded platform unavailable</h2>
               <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
                 {platform.name} refused to load inside the embedded viewer.
@@ -580,7 +580,7 @@ export default function ClonePlatform() {
                 <a
                   href={platform.target_url}
                   rel="noreferrer noopener"
-                  className="flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-2.5 text-xs text-muted-foreground transition hover:text-foreground"
+                  className="flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-foreground/5 px-5 py-2.5 text-xs text-muted-foreground transition hover:text-foreground"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   Open Platform
@@ -591,7 +591,7 @@ export default function ClonePlatform() {
         )}
 
         {isLocked && !overlayVisible && !embedBlocked && (
-          <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/45 px-6">
+          <div className="absolute inset-0 z-40 flex items-center justify-center bg-background/70 px-6">
             <button
               onClick={() => setShowUnlockPopup(true)}
               className="clone-cta rounded-2xl px-6 py-3 text-sm font-semibold"
@@ -619,7 +619,7 @@ export default function ClonePlatform() {
         className="clone-bar flex shrink-0 items-center justify-center gap-1 px-2.5"
         style={{ paddingTop: '2px', paddingBottom: 'max(2px, env(safe-area-inset-bottom))' }}
       >
-        <Shield className="h-2.5 w-2.5 shrink-0 text-[hsl(275_90%_72%)]" />
+        <Shield className="h-2.5 w-2.5 shrink-0 text-primary" />
         <span className="text-[9px] font-medium tracking-wide text-muted-foreground">
           Powered by AnimeSavi Ad Blocker
         </span>

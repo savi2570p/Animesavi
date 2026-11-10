@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Heart, Share2, Loader2, Sparkles, Users, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { PosterCard } from '@/components/anime/PosterCard';
 
 interface Anime {
   id: string;
@@ -141,14 +142,9 @@ export default function SharePage() {
       {anime.length === 0 ? (
         <p className="text-center text-muted-foreground py-16">This collection is empty.</p>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-4">
+        <div className="browse-ra-grid">
           {anime.map((a) => (
-            <Link key={a.id} to={`/anime/${a.id}`} className="group">
-              <div className="aspect-[2/3] rounded-xl overflow-hidden bg-muted/40 border border-border/40 group-hover:border-primary/60 transition-all shadow-md group-hover:shadow-xl group-hover:shadow-primary/20">
-                <img src={a.cover_image || '/placeholder.svg'} alt={a.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-              </div>
-              <p className="text-xs md:text-sm mt-2 line-clamp-2 group-hover:text-primary transition-colors">{a.title}</p>
-            </Link>
+            <PosterCard key={a.id} to={`/anime/${a.id}`} title={a.title} cover={a.cover_image} fluid />
           ))}
         </div>
       )}
