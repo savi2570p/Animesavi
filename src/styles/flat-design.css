@@ -549,3 +549,9 @@ html.perf-low .home-search-hero-art { display: none; }
 .footer-v7-links { margin-top: .9rem; display: flex; flex-wrap: wrap; gap: .35rem 1.25rem; }
 .footer-v7-links a, .footer-v7-links button { font-size: .78rem; color: hsl(var(--muted-foreground)); background: none; border: 0; padding: 0; min-height: 0; min-width: 0; cursor: pointer; transition: color .2s; }
 .footer-v7-links a:hover, .footer-v7-links button:hover { color: hsl(var(--primary)); }
+/* Remove action layered on a shared poster card (Favorites, Watch List). */
+.poster-card-shell { min-width: 0; }
+.poster-card-remove.poster-card-remove { position: absolute; top: .4rem; right: .4rem; z-index: 3; width: 1.9rem; height: 1.9rem; min-width: 0; min-height: 0; border-radius: 6px; background: hsl(var(--background) / .8); color: hsl(var(--foreground)); opacity: 0; transition: opacity .2s, background .2s; }
+.poster-card-shell:hover .poster-card-remove, .poster-card-remove:focus-visible { opacity: 1; }
+.poster-card-remove.poster-card-remove:hover { background: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); }
+@media (hover: none) { .poster-card-remove.poster-card-remove { opacity: 1; } }
