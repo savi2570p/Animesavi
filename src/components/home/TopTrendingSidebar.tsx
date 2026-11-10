@@ -72,13 +72,13 @@ export const TopTrendingSidebar = memo(function TopTrendingSidebar() {
         {loading && Array.from({ length: 6 }).map((_, i) => <li key={i}><Skeleton className="h-[72px] w-full rounded-md" /></li>)}
         {!loading && ranked.map((a, i) => (
           <li key={a.id}>
-            <Link to={`/anime/${a.id}`} className="top-trending-item group relative flex items-center gap-3 overflow-hidden px-3 py-2.5">
+            <Link to={`/anime/${a.id}`} className="top-trending-item relative flex items-center gap-3 overflow-hidden px-3 py-2.5">
               {(a.banner_image || a.cover_image) && (
                 <img src={a.banner_image || a.cover_image!} alt="" aria-hidden loading="lazy" className="top-trending-art absolute inset-0 h-full w-full object-cover" />
               )}
               <span className="top-trending-rank relative w-7 shrink-0 text-center font-heading text-2xl font-extrabold italic">{i + 1}</span>
               <div className="relative min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold group-hover:text-primary">{a.title}</p>
+                <p className="top-trending-title truncate text-sm font-semibold">{a.title}</p>
                 <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
                   <span className="inline-flex items-center gap-1 text-primary"><Eye className="h-3 w-3" />{formatViews(a.views)}</span>
                   {a.type && <span className="uppercase">{a.type}</span>}

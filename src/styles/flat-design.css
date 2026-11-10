@@ -352,3 +352,4 @@ html.perf-low .home-search-hero-art { display: none; }
 .welcome-plus-mosaic { border-radius: 12px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); }
 .welcome-plus-mosaic-grid { position: absolute; inset: -12%; transform: rotate(-12deg); }
 .welcome-plus-mosaic::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, hsl(var(--card)) 0%, transparent 45%); pointer-events: none; }
+.top-trending-item:hover .top-trending-title { color: hsl(var(--primary)); }
