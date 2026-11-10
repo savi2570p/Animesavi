@@ -28,7 +28,7 @@
 - The page quality lock applies on every device when Data Saver is off; Data Saver caps adaptive levels and preserves saved quality choices, so the label matches actual playback.
 - PIN lock gate and settings share scoped pin glass tokens; the token banner keeps its fixed 25px strip geometry so restyles never shift page layout.
 - Header touch-target overrides are scoped to nav classes; PC nav links live in the hideable SideRail (lg+), keeping the header single-row on every device.
-- Trending Now and Top Trending each have an admin-protected lineup table edited in separate hero-editor modes, so lists never affect each other.
+- Trending Now and Top Trending each have an admin lineup table edited in separate hero-editor modes so lists never interact; empty Trending Now hides it.
 - Watch Stats uses scoped optical tokens and unframed account sections while retaining existing statistics calculations.
 - Homepage Latest Series and Latest Episodes share one security-invoker catalogue RPC and a short-lived query cache to reduce duplicated requests without bypassing row permissions.
 - The header hamburger is an anchored Popover built from one menuSections list and the profile dropdown renders on every device; both keep role guards and existing handlers so menu restyles never change access.
@@ -46,4 +46,4 @@
 - Clone sites that forbid framing are detected by a header-only backend check and shown an open-directly card; never proxy or strip frame protections.
 - Watch progress writes use watchProgressThrottle, polls skip hidden tabs and the full conversion scan runs at most daily, so idle tabs don't flood or wake the database.
 - Site-wide flat styling lives in src/styles/flat-design.css (loaded after index.css) as token overrides; restyle there, not per component, for consistency.
-- Hamburger has one Watch Party entry (join-by-code plus joined parties in one dialog); admin/upload/settings live in the PC side rail and Profile, not the hamburger.
+- Hamburger has one Watch Party entry (join-by-code + joined parties); admin/upload/settings live in the PC side rail and Profile.

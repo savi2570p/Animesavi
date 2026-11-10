@@ -7,6 +7,7 @@ import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 import { DubBadge } from '@/components/anime/DubBadge';
 import { useHomeCatalogue } from '@/hooks/useHomeCatalogue';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { CatalogueHeading } from './CatalogueHeading';
 
 interface GroupedEpisode {
@@ -17,6 +18,7 @@ interface GroupedEpisode {
 }
 export const LatestEpisodes = memo(function LatestEpisodes() {
   const rowRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
   const { data, isPending, isError, refetch } = useHomeCatalogue();
   const episodes = useMemo(() => data?.episodes ?? [], [data]);
   const groupedEpisodes = useMemo<GroupedEpisode[]>(() => {
@@ -55,8 +57,8 @@ export const LatestEpisodes = memo(function LatestEpisodes() {
     }
     return Array.from(groups.values())
       .sort((a, b) => new Date(b.latestCreatedAt).getTime() - new Date(a.latestCreatedAt).getTime())
-      .slice(0, 8);
-  }, [episodes]);
+      .slice(0, isMobile ? 8 : 16);
+  }, [episodes, isMobile]);
 
 
   const timeAgo = (date: string) => {

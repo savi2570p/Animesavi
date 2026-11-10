@@ -91,7 +91,7 @@ html, body {
   touch-action: auto !important;
 }
 
-/* Netflix-style red scrollbar */
+/* Brand scrollbar uses the site accent */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -100,15 +100,15 @@ html, body {
   background: hsl(0 0% 8%);
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(270 75% 55%);
+  background: hsl(var(--primary));
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(270 85% 65%);
+  background: hsl(var(--primary) / 0.85);
 }
 html {
   scrollbar-width: thin;
-  scrollbar-color: hsl(270 75% 55%) hsl(0 0% 8%);
+  scrollbar-color: hsl(var(--primary)) hsl(0 0% 8%);
 }
 
 #root {

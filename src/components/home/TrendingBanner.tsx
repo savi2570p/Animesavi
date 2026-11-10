@@ -14,28 +14,15 @@ interface TrendingAnime {
   view_count: number | null; genres: string[] | null; status: string | null;
   is_eng_dub: boolean | null; is_sub_only: boolean | null;
 }
-// Curated trending titles in priority order
-const TRENDING_TITLES = [
-  'Hanaori-san Still Wants to Fight in the Next Life',
-  'Grand Blue Dreaming',
-  'Trapped in a Dating Sim: The World of Otome Games Is Tough for Mobs',
-  'Witch Hat Atelier',
-  'Wistoria: Wand and Sword',
-  'Liar Game',
-  'Snowball Earth',
-];
-
-const TRENDING_LIMIT = 6;
 const ROTATE_INTERVAL = 6000;
 
 
-const FIELDS = 'id, title, cover_image, banner_image, view_count, genres, status, is_eng_dub, is_sub_only';
 export const TrendingBanner = memo(function TrendingBanner() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [sectionRef, isActive] = useActiveOnScreen<HTMLElement>('0px');
   const { data: trending = [], isPending } = useQuery({
-    queryKey: ['home-trending-v2'], staleTime: 5 * 60_000, refetchOnWindowFocus: false,
+    queryKey: ['home-trending-v2'], staleTime: 60_000, refetchOnWindowFocus: false,
     queryFn: async () => {
       const custom = await supabase.from('trending_banner_lineup')
         .select('custom_title, custom_cover_url, custom_banner_url, anime:anime_id(id,title,cover_image,banner_image,view_count,genres,status,is_eng_dub,is_sub_only)')
@@ -46,16 +33,8 @@ export const TrendingBanner = memo(function TrendingBanner() {
         cover_image: row.custom_cover_url || row.anime.cover_image,
         banner_image: row.custom_banner_url || row.anime.banner_image,
       }] : []) as TrendingAnime[];
-      if (lineup.length) return lineup;
-      const [curated, popular] = await Promise.all([
-        supabase.from('anime_public').select(FIELDS).in('title', TRENDING_TITLES).limit(7),
-        supabase.from('anime_public').select(FIELDS).order('view_count', { ascending: false }).limit(TRENDING_LIMIT),
-      ]);
-      if (curated.error) throw curated.error;
-      if (popular.error) throw popular.error;
-      const candidates = [...(curated.data || []).sort((a, b) => TRENDING_TITLES.indexOf(a.title || '') - TRENDING_TITLES.indexOf(b.title || '')), ...(popular.data || [])];
-      const seen = new Set<string>();
-      return candidates.filter(a => { if (!a.id || seen.has(a.id)) return false; seen.add(a.id); return true; }).slice(0, TRENDING_LIMIT) as TrendingAnime[];
+      // The admin lineup is the only source: an empty lineup hides the banner until titles are added back.
+      return lineup;
     },
   });
   useEffect(() => {
