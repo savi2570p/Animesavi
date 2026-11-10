@@ -41,7 +41,7 @@
 - Crunchy and MuseIN share a portaled platform loader with scoped optical tokens and motion/performance fallbacks; its lifetime follows existing catalogue requests without simulated percentages or added delays.
 - Platform collections share presentation-only catalogue headers and cards with fixed portrait artwork, shared badges and native snap rows; preserve page-owned filters, queries and pending-title handlers.
 - Watch party create/join/view dialogs share scoped party glass presentation; header menu party dialogs are controlled outside the hamburger sheet so closing the menu never unmounts them.
-- The coarse-pointer 44px tap-target rule excludes switch, checkbox and radio roles so toggles keep their designed size.
+- The coarse-pointer 44px tap-target rule excludes switch, checkbox and radio roles so toggles keep their size.
 - Watch party membership is published through the shared watchPartySession store: only the host writes shared playback (database UPDATE is host-only), guests get a player cover and reverted media events, and every party session skips Continue Watching writes.
 - Clone sites that forbid framing are detected by a header-only backend check and shown an open-directly card; never proxy or strip frame protections.
 - Watch progress writes use watchProgressThrottle, polls skip hidden tabs and the full conversion scan runs at most daily, so idle tabs don't flood or wake the database.
