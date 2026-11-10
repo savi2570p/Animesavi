@@ -99,7 +99,7 @@ export const HomeSearchHero = memo(function HomeSearchHero() {
               onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
               placeholder="Search anime"
               aria-label="Search anime"
-              className="flex-1 min-w-0 bg-transparent text-base text-foreground placeholder:text-muted-foreground outline-none"
+              className="flex-1 min-w-0 h-full appearance-none !bg-transparent !border-0 !shadow-none !ring-0 px-0 text-base text-foreground placeholder:text-muted-foreground outline-none"
             />
             <Button asChild size="sm" className="h-10 px-4 font-semibold">
               <Link to={query.trim() ? `/browse?q=${encodeURIComponent(query.trim())}` : '/browse'}>
@@ -116,7 +116,7 @@ export const HomeSearchHero = memo(function HomeSearchHero() {
         </form>
 
         {popular.length > 0 && (
-          <p className="mt-4 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs md:text-sm">
+          <p className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-0 text-xs md:text-sm">
             <span className="text-muted-foreground/70">Popular:</span>
             {popular.map((item) => (
               <Link key={item.id} to={`/anime/${item.id}`} className="home-search-chip max-w-[14rem] truncate">
@@ -126,11 +126,11 @@ export const HomeSearchHero = memo(function HomeSearchHero() {
           </p>
         )}
 
-        <div className="mt-7 md:mt-9 flex flex-wrap justify-center gap-3">
-          <Button asChild size="lg" className="h-12 px-7 text-base font-semibold">
+        <div className="mt-6 md:mt-9 flex justify-center gap-2.5 md:gap-3">
+          <Button asChild size="lg" className="h-11 md:h-12 px-5 md:px-7 text-sm md:text-base font-semibold">
             <Link to={watchTarget}><Play className="h-4 w-4 fill-current" /> Watch now</Link>
           </Button>
-          <Button asChild size="lg" variant="outline" className="h-12 px-7 text-base font-semibold bg-card">
+          <Button asChild size="lg" variant="outline" className="h-11 md:h-12 px-5 md:px-7 text-sm md:text-base font-semibold bg-card">
             <Link to="/schedule"><CalendarDays className="h-4 w-4" /> View Schedule</Link>
           </Button>
         </div>
