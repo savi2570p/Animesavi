@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertTriangle, ListX, VideoOff, VolumeX, Captions, CircleEllipsis, Clock, MonitorSmartphone } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -56,16 +56,11 @@ export function PlayerReportDialog({ open, onOpenChange, animeTitle, coverImage,
   const [openedAt, setOpenedAt] = useState(0);
   const device = deviceSummary();
 
-  const handleOpenChange = (next: boolean) => {
-    if (next) setOpenedAt(getCurrentTime());
-    onOpenChange(next);
-  };
-
-  // Capture the playback position whenever the dialog opens from outside.
-  if (open && openedAt === 0) {
-    const t = getCurrentTime();
-    if (t > 0) setOpenedAt(t);
-  }
+  // Capture the playback position at the moment the dialog opens.
+  useEffect(() => {
+    if (open) setOpenedAt(getCurrentTime());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const reset = () => { setReason(''); setNotes(''); setAttachTime(false); setAttachDevice(false); setOpenedAt(0); };
 
@@ -86,7 +81,7 @@ export function PlayerReportDialog({ open, onOpenChange, animeTitle, coverImage,
   };
 
   return (
-    <Dialog open={open} onOpenChange={(next) => { if (!next) reset(); handleOpenChange(next); }}>
+    <Dialog open={open} onOpenChange={(next) => { if (!next) reset(); onOpenChange(next); }}>
       <DialogContent className="sm:max-w-[440px] p-5 gap-4">
         <DialogHeader className="text-left space-y-1">
           <div className="flex items-start gap-3">

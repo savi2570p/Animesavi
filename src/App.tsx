@@ -26,7 +26,6 @@ import { useAutoVideoScan } from "@/hooks/useAutoVideoScan";
 import { AccessBanner, fetchTokenAccessFromDB } from "@/components/AccessBanner";
 import { TokenExpiredGlobalPopup } from "@/components/TokenExpiredGlobalPopup";
 import { AdminTrialPopup } from "@/components/AdminTrialPopup";
-import { ReportButton } from "@/components/ReportButton";
 import { BanGuard } from "@/components/BanGuard";
 import { installRoutePrefetch } from "@/lib/routePrefetch";
 import { AntiPiracyShield } from "@/components/security/AntiPiracyShield";
@@ -235,7 +234,6 @@ const App = () => (
                   <OfflineIndicator />
                   <WelcomePopup />
                   <FloatingTelegramButton />
-                  <ReportButton />
                   <MiniPlayer />
                   <PWAInstallPrompt />
                   <NetworkSpeedInitializer />
