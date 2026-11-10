@@ -457,3 +457,8 @@ html.perf-low .home-search-hero-art { display: none; }
 .report-ra-option[aria-pressed='true'] svg { color: hsl(var(--primary)); }
 .report-ra-attach { display: flex; align-items: center; gap: .6rem; min-height: 40px; padding: 0 .75rem; border-radius: 6px; border: 1px solid hsl(var(--border)); background: hsl(var(--background)); font-size: 13px; font-weight: 600; cursor: pointer; }
 .report-ra-attach small { margin-left: auto; font-size: 11px; font-weight: 500; color: hsl(var(--muted-foreground)); }
+/* Keep page content clear of the PC side rail while it is shown. */
+@media (min-width: 1024px) {
+  .app-shell-ra[data-rail='shown'] > main, .app-shell-ra[data-rail='shown'] > footer { padding-left: 64px; }
+  .app-shell-ra[data-rail='hidden'] > main, .app-shell-ra[data-rail='hidden'] > footer { padding-left: 14px; }
+}
