@@ -463,3 +463,58 @@ html.perf-low .home-search-hero-art { display: none; }
   .app-shell-ra[data-rail='hidden'] > main, .app-shell-ra[data-rail='hidden'] > footer { padding-left: 14px; }
 }
 @media (max-width: 767px) { .detail-ra-info { display: none; } }
+
+/* ---------------------------------------------------------------------
+   Navbar menus v10 — compact hamburger pop-up and profile dropdown
+   --------------------------------------------------------------------- */
+.nav-menu-trigger-v10[data-open] { background: hsl(var(--primary) / .12); color: hsl(var(--primary)); }
+.nav-menu-v10 {
+  z-index: 170; width: 210px; padding: 6px 6px 8px; border-radius: 4px 4px 14px 4px;
+  border: 1px solid hsl(var(--border)); background: hsl(var(--card)); box-shadow: var(--shadow-float);
+  max-height: min(var(--radix-popover-content-available-height, 80svh), calc(100svh - 72px)); overflow-y: auto; overscroll-behavior: contain; outline: none;
+}
+.nav-menu-v10-section + .nav-menu-v10-section { margin-top: 6px; }
+.nav-menu-v10-label {
+  display: flex; align-items: center; gap: 6px; padding: 6px 8px 6px 6px;
+  font-size: 9px; font-weight: 700; letter-spacing: .18em; color: hsl(var(--muted-foreground));
+}
+.nav-menu-v10-label::before { content: ""; width: 3px; height: 10px; background: hsl(var(--primary)); transform: skewX(-18deg); }
+.nav-menu-v10-label::after { content: ""; flex: 1; border-top: 1px dashed hsl(var(--border)); }
+.nav-menu-v10-item {
+  position: relative; display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; padding: 4px 8px;
+  border-radius: 4px; font-size: 13px; font-weight: 500; color: hsl(var(--foreground) / .88); text-align: left;
+  transition: background-color .15s, color .15s;
+}
+.nav-menu-v10-item:hover, .nav-menu-v10-item:focus-visible { background: hsl(var(--accent)); color: hsl(var(--foreground)); outline: none; }
+.nav-menu-v10-item[aria-current="page"] { background: linear-gradient(90deg, hsl(var(--primary) / .14), hsl(var(--primary) / .03)); color: hsl(var(--primary)); }
+.nav-menu-v10-item[aria-current="page"]::before { content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 2px; background: hsl(var(--primary)); }
+.nav-menu-v10-icon {
+  display: inline-grid; place-items: center; flex-shrink: 0; width: 24px; height: 24px; border-radius: 4px;
+  border: 1px solid hsl(var(--border)); background: hsl(var(--background));
+}
+.nav-menu-v10-icon svg { width: 14px; height: 14px; }
+.nav-menu-v10-item[aria-current="page"] .nav-menu-v10-icon { border-color: hsl(var(--primary) / .5); color: hsl(var(--primary)); }
+
+.account-menu-v10 {
+  z-index: 170; width: min(232px, calc(100vw - 24px)); padding: 0 0 6px; border-radius: 10px; overflow: hidden;
+  border: 1px solid hsl(var(--border)); border-top: 2px solid hsl(var(--primary)); background: hsl(var(--card)); box-shadow: var(--shadow-float);
+}
+.account-menu-v10-header {
+  display: flex; align-items: center; gap: 10px; padding: 14px 14px 12px;
+  background: linear-gradient(90deg, hsl(var(--card)), hsl(var(--primary) / .07)); border-bottom: 1px solid hsl(var(--border));
+}
+.account-menu-v10-name { font-size: 14px; font-weight: 700; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-menu-v10-email { margin-top: 2px; font-size: 11px; color: hsl(var(--muted-foreground)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-menu-v10-joined { display: flex; align-items: center; gap: 4px; margin-top: 3px; font-size: 11px; color: hsl(var(--primary) / .85); }
+.account-menu-v10-joined svg { width: 11px; height: 11px; }
+.account-menu-v10-list { padding: 4px 6px 0; }
+.account-menu-v10 .account-menu-v10-item {
+  display: flex; align-items: center; gap: 12px; min-height: 36px; padding: 6px 10px; border-radius: 6px;
+  font-size: 13px; font-weight: 500; color: hsl(var(--foreground) / .9); cursor: pointer;
+}
+.account-menu-v10 .account-menu-v10-item svg { width: 16px; height: 16px; color: hsl(var(--muted-foreground)); }
+.account-menu-v10 .account-menu-v10-item:focus { background: hsl(var(--accent)); color: hsl(var(--foreground)); }
+.account-menu-v10 .account-menu-v10-signout, .account-menu-v10 .account-menu-v10-signout svg { color: hsl(var(--destructive)); }
+.account-menu-v10 .account-menu-v10-signout:focus { background: hsl(var(--destructive) / .1); color: hsl(var(--destructive)); }
+.account-menu-v10-sep { margin: 4px 10px 0; background: hsl(var(--border)); }
+@media (prefers-reduced-motion: reduce) { .nav-menu-v10, .account-menu-v10 { animation: none !important; } }

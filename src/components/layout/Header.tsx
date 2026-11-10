@@ -30,7 +30,6 @@ import {
   Sparkles,
   Home,
   Download,
-  ListVideo,
   RefreshCw,
   Clock,
   CalendarDays,
@@ -243,13 +242,6 @@ export function Header() {
 
     navigate('/upload');
   };
-
-  const navLinks = [
-    { to: '/', label: 'Home', icon: null },
-    { to: '/browse?type=movie', label: 'Movies', icon: Film },
-    { to: '/browse?type=series', label: 'TV Series', icon: Tv },
-    { to: '/browse?sort=popular', label: 'Most Popular', icon: TrendingUp },
-  ];
 
   const isActivePath = (to: string) => {
     const [path, query] = to.split('?');
