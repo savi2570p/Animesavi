@@ -85,6 +85,13 @@
       "when": 1793779931485,
       "tag": "0011_party_host_only_updates",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794302841919,
+      "tag": "0012_create_top_trending_lineup",
+      "breakpoints": true
     }
   ]
 }

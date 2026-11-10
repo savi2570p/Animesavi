@@ -1319,6 +1319,57 @@ export type Database = {
           },
         ]
       }
+      top_trending_lineup: {
+        Row: {
+          anime_id: string
+          created_at: string
+          custom_banner_url: string | null
+          custom_cover_url: string | null
+          custom_title: string | null
+          id: string
+          is_active: boolean
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          anime_id: string
+          created_at?: string
+          custom_banner_url?: string | null
+          custom_cover_url?: string | null
+          custom_title?: string | null
+          id?: string
+          is_active?: boolean
+          position?: number
+          updated_at?: string
+        }
+        Update: {
+          anime_id?: string
+          created_at?: string
+          custom_banner_url?: string | null
+          custom_cover_url?: string | null
+          custom_title?: string | null
+          id?: string
+          is_active?: boolean
+          position?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "top_trending_lineup_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: true
+            referencedRelation: "anime"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "top_trending_lineup_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: true
+            referencedRelation: "anime_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trending_banner_lineup: {
         Row: {
           anime_id: string

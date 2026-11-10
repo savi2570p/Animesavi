@@ -5,6 +5,7 @@ import { bestEffort, withRetry } from '@/lib/backendClient';
 import { historyResetSinceLoad } from '@/lib/watchHistoryReset';
 import { useWatchPartySession, getWatchPartySession, isGuestLocked, shouldSkipWatchHistory, partyEpisodePath } from '@/lib/watchPartySession';
 import { PartyGuestLock } from '@/components/watch-party/PartyGuestLock';
+import { PlayerReportDialog } from '@/components/ReportButton';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -215,6 +216,7 @@ export default function Watch() {
       }
     },
   });
+  const [playerReportOpen, setPlayerReportOpen] = useState(false);
   const [reportingCommentId, setReportingCommentId] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState('');
   const [commentNotifications, setCommentNotifications] = useState<any[]>([]);
@@ -1437,8 +1439,18 @@ export default function Watch() {
 
           <p className="watch-reanime-notice flex items-center gap-2 mx-3 lg:mx-0 mt-2 px-3 py-2 text-[11px] md:text-xs">
             <Flag className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            If this episode isn&apos;t working, pick another server below or report it and we&apos;ll fix it soon.
+            <span className="flex-1 min-w-0">If this episode isn&apos;t working, pick another server below or report it and we&apos;ll fix it soon.</span>
+            <Button type="button" size="sm" variant="outline" onClick={() => setPlayerReportOpen(true)} className="h-7 shrink-0 px-2.5 text-[11px] gap-1"><Flag className="h-3 w-3" />Report</Button>
           </p>
+          <PlayerReportDialog
+            open={playerReportOpen}
+            onOpenChange={setPlayerReportOpen}
+            animeTitle={anime?.title || episode.title}
+            coverImage={anime?.cover_image}
+            episodeLabel={isMovie ? 'Movie' : `Season ${currentSeason?.season_number || 1} · Episode ${episode.episode_number}`}
+            serverLabel={SERVER_CONFIGS[activeServer]?.name}
+            getCurrentTime={() => document.querySelector<HTMLVideoElement>('.watch-reanime-player video')?.currentTime || 0}
+          />
 
       {/* Below Player - Server Selection & Season Switcher */}
       <div className="px-3 lg:px-0 py-3 md:py-4">

@@ -34,8 +34,14 @@ export default function AdminFeaturedLineup() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const queryClient = useQueryClient();
-  const trending = params.get('banner') === 'trending';
-  const table = trending ? 'trending_banner_lineup' : 'featured_hero_lineup';
+  const mode = params.get('banner') === 'trending' ? 'trending' : params.get('banner') === 'top' ? 'top' : 'hero';
+  const trending = mode !== 'hero';
+  const table = mode === 'top' ? 'top_trending_lineup' : mode === 'trending' ? 'trending_banner_lineup' : 'featured_hero_lineup';
+  const modeLabel = mode === 'top' ? 'Top Trending' : mode === 'trending' ? 'Trending Now' : 'hero';
+  const invalidateHome = () => {
+    void queryClient.invalidateQueries({ queryKey: ['home-trending-v2'] });
+    void queryClient.invalidateQueries({ queryKey: ['home-top-trending'] });
+  };
   const [rows, setRows] = useState<LineupRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -88,12 +94,12 @@ export default function AdminFeaturedLineup() {
     setRows(rows.map(r => r.id === id ? { ...r, ...changes } : r));
 
   const remove = async (id: string) => {
-    if (!confirm(`Remove this anime from the ${trending ? 'trending' : 'hero'} lineup?`)) return;
+    if (!confirm(`Remove this anime from the ${modeLabel} lineup?`)) return;
     const { error } = await supabase.from(table).delete().eq('id', id);
     if (error) return toast.error(error.message);
     toast.success('Removed');
     setRows(rows.filter(r => r.id !== id));
-    void queryClient.invalidateQueries({ queryKey: ['home-trending-v2'] });
+    invalidateHome();
   };
 
   const add = async (a: AnimeLite) => {
@@ -108,7 +114,7 @@ export default function AdminFeaturedLineup() {
     setSearch('');
     setSearchResults([]);
     toast.success(`Added ${a.title}`);
-    void queryClient.invalidateQueries({ queryKey: ['home-trending-v2'] });
+    invalidateHome();
   };
 
   const saveAll = async () => {
@@ -128,7 +134,7 @@ export default function AdminFeaturedLineup() {
         if (error) throw error;
       }
       toast.success('Lineup saved');
-      void queryClient.invalidateQueries({ queryKey: ['home-trending-v2'] });
+      invalidateHome();
     } catch (e: any) {
       toast.error(e.message || 'Save failed');
     } finally {
@@ -144,7 +150,7 @@ export default function AdminFeaturedLineup() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1 min-w-[220px]">
-            <h1 className="text-2xl md:text-3xl font-bold">{trending ? 'Trending Now Lineup' : 'Featured Hero Lineup'}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">{mode === 'top' ? 'Top Trending Lineup' : mode === 'trending' ? 'Trending Now Lineup' : 'Featured Hero Lineup'}</h1>
           </div>
           <Button variant="outline" size="sm" onClick={load} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} /> Reload
@@ -154,9 +160,10 @@ export default function AdminFeaturedLineup() {
           </Button>
         </div>
 
-        <Tabs value={trending ? 'trending' : 'hero'} onValueChange={value => { setRows([]); setSearch(''); setParams(value === 'trending' ? { banner: 'trending' } : {}); }}>
-          <TabsList><TabsTrigger value="hero">Hero banner</TabsTrigger><TabsTrigger value="trending">Trending Now</TabsTrigger></TabsList>
+        <Tabs value={mode} onValueChange={value => { setRows([]); setSearch(''); setParams(value === 'hero' ? {} : { banner: value }); }}>
+          <TabsList><TabsTrigger value="hero">Hero banner</TabsTrigger><TabsTrigger value="trending">Trending Now</TabsTrigger><TabsTrigger value="top">Top Trending</TabsTrigger></TabsList>
         </Tabs>
+        {mode === 'top' && <p className="text-xs text-muted-foreground -mt-3">This list sets the ranked "Top Trending" panel on the homepage (top 10 shown, in this order). Leave it empty to rank by views automatically.</p>}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Add anime</CardTitle>
@@ -234,7 +241,7 @@ export default function AdminFeaturedLineup() {
                         checked={r.is_active}
                         onChange={(e) => patch(r.id, { is_active: e.target.checked })}
                       />
-                      Show in slider
+                      {mode === 'top' ? 'Show in Top Trending' : 'Show in slider'}
                     </label>
                     <Input
                       placeholder="Cover image URL override"

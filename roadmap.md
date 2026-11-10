@@ -1,3 +1,11 @@
+## Nov 10 Re:ANIME pass 2
+- [x] Re:ANIME-style poster cards across home rows, browse/search, listing, platform and detail pages
+- [x] Browse/search page: top filter bar + left facets + pagination (Movie filter 263→32 checked)
+- [x] Navbar: hamburger + logo + search left, bell/avatar right; PC-only left icon rail with show/hide (checked)
+- [x] Remove global Report button; Report an Issue only under the video player (5 options verified)
+- [x] Anime detail page: Re:ANIME layout with only Overview and Recommendations tabs (desktop + 390px)
+- [x] Admin: Top Trending list — Bleach added showed as #1 on home, removed, fallback returned
+
 - [x] Optimize mobile adaptive playback and smooth compact settings dismissal; real episode menu is 184px and outside tap closes it. Source never became ready, so streaming throughput and native iOS remain unverified.
 - [x] Preserve full original resume and poster artwork across phone, PWA and desktop cards; real episode images checked with contain, no transform, 16:9 frames at desktop/390px. Physical iOS PWA untested.
 - [x] Limit cleanup to images and Continue Watching; confirmed UI cleanup of the playback test entry preserves offline cache/metadata, removes resume keys, and does not reload the document. Catalogue caches remain; 72 regression tests pass.

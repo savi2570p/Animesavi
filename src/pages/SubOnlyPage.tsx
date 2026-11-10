@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { PosterCard } from '@/components/anime/PosterCard';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Play, Star, Subtitles } from 'lucide-react';
@@ -71,7 +71,7 @@ export default function SubOnlyPage() {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="browse-ra-grid">
             {Array(12).fill(0).map((_, i) => (
               <Skeleton key={i} className="aspect-[2/3] rounded-2xl" />
             ))}
@@ -79,56 +79,10 @@ export default function SubOnlyPage() {
         ) : filtered.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nothing here yet.</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="browse-ra-grid">
             {filtered.map((item) => (
-              <Link key={item.id} to={`/anime/${item.id}`} className="group relative block">
-                <div className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-muted ring-1 ring-white/5 group-hover:ring-emerald-400/50 transition-all duration-300">
-                  {item.cover_image && (
-                    <img
-                      src={item.cover_image}
-                      alt=""
-                      aria-hidden
-                      className="absolute inset-0 w-full h-full object-cover"
-                      style={{ filter: 'blur(24px) brightness(0.4)' }}
-                    />
-                  )}
-                  <img
-                    src={item.cover_image || '/placeholder.svg'}
-                    alt={item.title}
-                    loading="lazy"
-                    className="relative z-[2] w-full h-full object-contain"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 h-2/3 z-[3] bg-gradient-to-t from-black via-black/55 to-transparent" />
-
-                  <span className="absolute top-2 left-2 z-[5] inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/95 text-white text-[10px] font-bold uppercase tracking-wider">
-                    <Subtitles className="h-2.5 w-2.5" />
-                    SUB
-                  </span>
-                  <span className="absolute top-2 right-2 z-[5] text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-violet-500 to-purple-500 text-white">
-                    4K
-                  </span>
-                  <div className="pointer-events-none"><TokenCrownBadge /></div>
-
-                  <div className="absolute inset-0 z-[4] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="p-3 rounded-full bg-emerald-500/95">
-                      <Play className="h-5 w-5 text-white fill-current" />
-                    </div>
-                  </div>
-
-                  <div className="absolute bottom-0 left-0 right-0 z-[5] p-3">
-                    <h3 className="text-sm font-semibold text-white line-clamp-2 leading-tight">{item.title}</h3>
-                    <div className="flex items-center gap-1.5 mt-1 text-[10px] text-white/80">
-                      {item.release_year && <span className="px-1.5 py-0.5 rounded bg-white/10">{item.release_year}</span>}
-                      {item.genres?.[0] && (
-                        <span className="flex items-center gap-1 truncate">
-                          <Star className="h-2.5 w-2.5 text-emerald-400" />
-                          {item.genres[0]}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </Link>
+              <PosterCard key={item.id} to={`/anime/${item.id}`} title={item.title} cover={item.cover_image} isSubOnly
+                genres={(item as any).genres} type={(item as any).type ?? 'series'} year={(item as any).release_year} status={(item as any).status} fluid />
             ))}
           </div>
         )}

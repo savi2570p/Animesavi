@@ -7,7 +7,7 @@
 - Download audio discovery uses a lazy, bounded MP4 metadata reader only when native track metadata is unavailable; never fetch the entire video to populate the selector.
 - Download metadata probes have bounded deadlines and never gate confirmation indefinitely, because CDN metadata can hang or be unavailable.
 - Copied embed players store exact native-media checkpoints by resolved episode ID through a shared resume hook; do not fabricate third-party iframe positions.
-- Homepage collection rows share GlassCatalogueRow to preserve audio/content badge priority, artwork dimensions and performance-tier glass fallbacks.
+- Anime poster cards render through the shared PosterCard so badges, artwork sizing and fallbacks stay consistent across rows, grids and platform pages.
 - Discovery, platform and continue-watching rows reuse catalogue glass tokens and native snap scrolling to avoid animation-loop and per-card blur overhead.
 - The main hero keeps text/actions over its media on every viewport with visibility-gated autoplay and tokenized glass; resume cards reserve edge-to-edge aspect-ratio artwork independently from text.
 - Anime details retain shared EpisodeGrid, MoreInfoDrawer, download, share and review components in an unframed layout so visual refreshes preserve their existing behavior.
@@ -27,8 +27,8 @@
 - All HLS server players use getHLSConfig as the single buffering/network policy, preserving native Safari playback and manual quality/server choices to prevent tuning drift.
 - The page quality lock applies on every device when Data Saver is off; Data Saver caps adaptive levels and preserves saved quality choices, so the label matches actual playback.
 - PIN lock gate and settings share scoped pin glass tokens; the token banner keeps its fixed 25px strip geometry so restyles never shift page layout.
-- Header touch-target overrides are scoped to nav classes, and desktop nav links appear only at wide widths so landscape phones and tablets keep a single-row header.
-- Trending Now has its own admin-protected lineup table and reuses the hero editor in a separate mode so changing one banner never changes the other.
+- Header touch-target overrides are scoped to nav classes; PC nav links live in the hideable SideRail (lg+), keeping the header single-row on every device.
+- Trending Now and Top Trending each have an admin-protected lineup table edited in separate hero-editor modes, so lists never affect each other.
 - Watch Stats uses scoped optical tokens and unframed account sections while retaining existing statistics calculations.
 - Homepage Latest Series and Latest Episodes share one security-invoker catalogue RPC and a short-lived query cache to reduce duplicated requests without bypassing row permissions.
 - Profile-avatar menus reuse a single utility glass surface and semantic icon tones, preserving existing destinations, account switching and role guards to keep presentation independent of account access.

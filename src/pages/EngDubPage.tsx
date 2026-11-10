@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { PosterCard } from '@/components/anime/PosterCard';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Eye, Play, Star, Sparkles, Flame, Languages, Mic } from 'lucide-react';
@@ -146,7 +146,7 @@ export default function EngDubPage() {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="browse-ra-grid">
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="space-y-2">
                 <Skeleton className="aspect-[2/3] rounded-xl" />
@@ -161,58 +161,10 @@ export default function EngDubPage() {
             <p className="text-muted-foreground text-sm">Admins can flag anime as ENG DUB from the edit page — they'll show up here.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {filtered.map((anime, index) => (
-              <Link
-                key={anime.id}
-                to={`/anime/${anime.id}`}
-                className="catalogue-tile-v5 group relative"
-                style={{ animationDelay: `${Math.min(index * 30, 600)}ms` }}
-              >
-                <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted ring-1 ring-border/30 group-hover:ring-primary/60 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-none">
-                  {anime.cover_image ? (
-                    <img
-                      src={anime.cover_image}
-                      alt={anime.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20">
-                      <span className="text-muted-foreground">No Image</span>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/10 to-transparent" />
-
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${ACCENT} flex items-center justify-center shadow-2xl shadow-none scale-90 group-hover:scale-100 transition-transform`}>
-                      <Play className="h-4 w-4 text-foreground fill-current ml-0.5" />
-                    </div>
-                  </div>
-
-                  <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-[10px] text-foreground/90 font-medium">
-                      <Eye className="h-3 w-3" />
-                      {formatViewCount(anime.view_count || 0)}
-                    </div>
-                    {(anime.episode_count || 0) > 0 && (
-                      <span className="text-[9px] font-bold text-foreground/80 px-1.5 py-0.5 rounded bg-background/40 backdrop-blur-sm">
-                        {anime.episode_count} EP
-                      </span>
-                    )}
-                  </div>
-
-                  <TokenCrownBadge />
-                  <div className={`absolute top-2 right-2 px-2 py-0.5 text-[9px] font-black bg-gradient-to-r ${ACCENT} text-foreground rounded-md shadow-md uppercase tracking-wider`}>
-                    ENG DUB
-                  </div>
-                </div>
-                <div className="mt-2.5">
-                  <h3 className="text-sm font-semibold line-clamp-2 group-hover:text-primary transition-colors">
-                    {anime.title}
-                  </h3>
-                </div>
-              </Link>
+          <div className="browse-ra-grid">
+            {filtered.map((anime) => (
+              <PosterCard key={anime.id} to={`/anime/${anime.id}`} title={anime.title} cover={anime.cover_image} isEngDub
+                episodes={anime.episode_count} views={formatViewCount(anime.view_count || 0)} type={(anime as any).type ?? 'series'} status={(anime as any).status} fluid />
             ))}
           </div>
         )}

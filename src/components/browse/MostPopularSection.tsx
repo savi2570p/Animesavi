@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Crown, Eye, ArrowUpRight } from 'lucide-react';
+import { PosterCard } from '@/components/anime/PosterCard';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DubBadge } from '@/components/anime/DubBadge';
@@ -41,10 +42,7 @@ export function MostPopularSection() {
       </Link>)}
     </div>
     <div className="flex gap-3 overflow-x-auto snap-row pb-3">
-      {items.slice(3).map((item,index)=><Link key={item.id} to={`/anime/${item.id}`} className="catalogue-glass rounded-xl overflow-hidden w-[120px] shrink-0 group">
-        <div className="relative w-[120px] h-[180px] overflow-hidden"><img src={item.cover_image || '/placeholder.svg'} alt="" aria-hidden className="catalogue-fill perf-blur-fill absolute inset-0 h-full w-full object-cover" loading="lazy" /><img src={item.cover_image || '/placeholder.svg'} alt={item.title} className="relative h-full w-full object-contain" loading="lazy" /><span className="catalogue-chip absolute top-1.5 left-1.5 rounded px-1 text-xs">{String(index+4).padStart(2,'0')}</span></div>
-        <div className="p-2 space-y-2"><DubBadge isEngDub={item.is_eng_dub} isSubOnly={item.is_sub_only} genres={item.genres} /><h3 className="text-xs font-semibold line-clamp-2 h-8">{item.title}</h3><p className="text-[10px] text-muted-foreground">{formatViews(item.view_count)} views</p></div>
-      </Link>)}
+      {items.slice(3).map((item,index)=><PosterCard key={item.id} to={`/anime/${item.id}`} title={item.title} cover={item.cover_image} isEngDub={item.is_eng_dub} isSubOnly={item.is_sub_only} genres={item.genres} views={formatViews(item.view_count)} tag={String(index+4).padStart(2,'0')} />)}
     </div>
   </section>;
 }

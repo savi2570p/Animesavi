@@ -1,7 +1,5 @@
-import { Link } from 'react-router-dom';
-import { Eye, Film, Layers, Play, Sparkles } from 'lucide-react';
-import { DubBadge } from '@/components/anime/DubBadge';
-import { TokenCrownBadge } from '@/components/TokenCrownBadge';
+import { Film, Layers, Sparkles } from 'lucide-react';
+import { PosterCard } from '@/components/anime/PosterCard';
 
 export function PlatformCatalogueHeader({ name, logo, series, episodes }: {
   name: string; logo: string; series: number; episodes: number;
@@ -28,18 +26,7 @@ export function PlatformCatalogueCard({ anime, rank, fresh = false, views, onCli
   anime: PlatformCatalogueItem; rank?: number; fresh?: boolean; views: string;
   onClick: (event: React.MouseEvent<HTMLAnchorElement>) => void;
 }) {
-  return <Link to={`/anime/${anime.id}`} onClick={onClick} className="platform-collection-card group">
-    <div className="platform-collection-artwork">
-      <img src={anime.cover_image || '/placeholder.svg'} alt="" aria-hidden="true" loading="lazy" className="catalogue-fill perf-blur-fill absolute inset-0 h-full w-full object-cover" />
-      <img src={anime.cover_image || '/placeholder.svg'} alt={anime.title} loading="lazy" decoding="async" className="relative h-full w-full object-contain" />
-      <span className="platform-collection-art-tag">{rank ? String(rank).padStart(2, '0') : fresh ? 'NEW' : anime.type === 'movie' ? 'FILM' : 'SERIES'}</span>
-      {anime.episode_count === 0 ? <div className="platform-collection-pending"><span>Under Progress</span></div> : <span className="platform-collection-play"><Play className="h-5 w-5 fill-current" /></span>}
-      <TokenCrownBadge />
-    </div>
-    <div className="platform-collection-card-info">
-      <div className="flex items-center gap-1.5"><DubBadge /><span className="platform-collection-quality">4K</span></div>
-      <h3>{anime.title}</h3>
-      <div className="platform-collection-card-meta"><span><Eye className="h-3 w-3" />{views}</span><span>{anime.episode_count || 0} EP</span></div>
-    </div>
-  </Link>;
+  return <PosterCard to={`/anime/${anime.id}`} onClick={onClick} title={anime.title} cover={anime.cover_image}
+    tag={rank ? String(rank).padStart(2, '0') : fresh ? 'NEW' : null} episodes={anime.episode_count ?? 0} views={views}
+    type={anime.type} pending={anime.episode_count === 0} className="scroll-snap-start" />;
 }
