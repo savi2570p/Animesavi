@@ -8,6 +8,7 @@ import {
   Smile, Swords, Ghost, Coffee, Compass, Wand2, Zap as ZapIcon,
 } from 'lucide-react';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
+import { PosterCard } from '@/components/anime/PosterCard';
 import { TokenCrownBadge } from '@/components/TokenCrownBadge';
 import { DubBadge } from '@/components/anime/DubBadge';
 import { CatalogueHeading } from './CatalogueHeading';
@@ -210,26 +211,15 @@ export function RecommendedAnime() {
         </div>
         <div ref={rowRef} className="flex gap-3 overflow-x-auto snap-row pb-3 pt-2" aria-busy={isLoading}>
           {isLoading && !recommendations.length ? Array.from({ length: 8 }, (_, i) => (
-            <div key={i} className="recommendations-v11-card h-[242px] rounded-lg bg-muted motion-safe:animate-pulse shrink-0" />
-          )) : recommendations.map(anime => {
-            const image = anime.cover_image || '/placeholder.svg';
-            return <AnimeCardContextMenu key={anime.id} animeTitle={anime.title} animeUrl={`/anime/${anime.id}`} coverImage={anime.cover_image}>
-              <Link to={`/anime/${anime.id}`} className="recommendations-v11-card catalogue-glass group block rounded-lg overflow-hidden">
-                <div className="relative aspect-[2/3] overflow-hidden bg-muted">
-                  <img src={optimizedImageUrl(image, { width: 320, quality: 75 })} alt="" aria-hidden loading="lazy" className="catalogue-fill perf-blur-fill absolute inset-0 w-full h-full object-cover" />
-                  <img src={optimizedImageUrl(image, { width: 320, quality: 85 })} onError={fhdFallback(image)} alt={anime.title} loading="lazy" decoding="async" className="relative w-full h-full object-contain" />
-                  <div className="catalogue-image-scrim absolute inset-0 pointer-events-none" />
-                  <div className="absolute inset-x-1.5 bottom-2 flex flex-wrap gap-1"><DubBadge isEngDub={anime.is_eng_dub} isSubOnly={anime.is_sub_only} genres={anime.genres} /></div>
-                  <TokenCrownBadge />
-                  <Play className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 text-primary-foreground fill-current opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                </div>
-                <div className="p-2 space-y-1">
-                  <h3 className="text-xs leading-4 font-semibold line-clamp-2 h-8">{anime.title}</h3>
-                  <p className="text-[10px] text-muted-foreground truncate">{[anime.release_year, anime.genres?.[0]].filter(Boolean).join(' · ')}</p>
-                </div>
-              </Link>
-            </AnimeCardContextMenu>;
-          })}
+            <div key={i} className="poster-card-fixed aspect-[2/3] rounded-md bg-muted motion-safe:animate-pulse shrink-0" />
+          )) : recommendations.map(anime => (
+            <AnimeCardContextMenu key={anime.id} animeTitle={anime.title} animeUrl={`/anime/${anime.id}`} coverImage={anime.cover_image}>
+              <PosterCard to={`/anime/${anime.id}`} title={anime.title}
+                cover={anime.cover_image ? optimizedImageUrl(anime.cover_image, { width: 320, quality: 85 }) : null}
+                isEngDub={anime.is_eng_dub} isSubOnly={anime.is_sub_only} genres={anime.genres}
+                type={(anime as any).type} year={anime.release_year} status={(anime as any).status} />
+            </AnimeCardContextMenu>
+          ))}
         </div>
       </div>
     </section>
