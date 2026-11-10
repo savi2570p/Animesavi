@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { PlatformsSection } from '@/components/home/PlatformsSection';
@@ -24,8 +24,18 @@ import { SectionBoundary } from "@/components/common/SectionBoundary";
 import { DeferredSection } from "@/components/common/DeferredSection";
 
 
+const DESKTOP_QUERY = "(min-width: 1024px)";
+const subscribeDesktop = (cb: () => void) => {
+  const mq = window.matchMedia(DESKTOP_QUERY);
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+};
+const getDesktop = () => window.matchMedia(DESKTOP_QUERY).matches;
+
 export default function Index() {
   const navigate = useNavigate();
+  // Mount the Top Trending list once: sidebar on desktop, after the rows elsewhere.
+  const isDesktop = useSyncExternalStore(subscribeDesktop, getDesktop, () => false);
 
   // Redirect first-time visitors to /welcome
   useEffect(() => {
@@ -92,13 +102,15 @@ export default function Index() {
       </section>
       </div>
 
-      <aside className="home-sidebar hidden lg:block min-w-0" aria-label="Top trending">
-        <div className="sticky top-20"><SectionBoundary label="home:top-trending"><TopTrendingSidebar /></SectionBoundary></div>
-      </aside>
+      {isDesktop && (
+        <aside className="home-sidebar min-w-0" aria-label="Top trending">
+          <div className="sticky top-20"><SectionBoundary label="home:top-trending"><TopTrendingSidebar /></SectionBoundary></div>
+        </aside>
+      )}
       </div>
 
       {/* Phones and tablets get the ranking after the rows */}
-      <div className="lg:hidden px-3 pb-6"><SectionBoundary label="home:top-trending-mobile"><DeferredSection minHeight={300}><TopTrendingSidebar /></DeferredSection></SectionBoundary></div>
+      {!isDesktop && <div className="px-3 pb-6"><SectionBoundary label="home:top-trending-mobile"><DeferredSection minHeight={300}><TopTrendingSidebar /></DeferredSection></SectionBoundary></div>}
     </div>
   );
 }
