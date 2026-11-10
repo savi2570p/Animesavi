@@ -45,4 +45,4 @@
 - Watch party membership is published through the shared watchPartySession store: only the host writes shared playback (database UPDATE is host-only), guests get a player cover and reverted media events, and every party session skips Continue Watching writes.
 - Clone sites that forbid framing are detected by a header-only backend check and shown an open-directly card; never proxy or strip frame protections.
 - Watch progress writes use watchProgressThrottle, polls skip hidden tabs and the full conversion scan runs at most daily, so idle tabs don't flood or wake the database.
-- Site-wide flat styling lives in src/styles/flat-design.css (loaded after index.css) as token overrides; restyle there, not per component, to keep pages consistent.
+- Site-wide flat styling lives in src/styles/flat-design.css (loaded after index.css) as token overrides; restyle there, not per component, for consistency.
