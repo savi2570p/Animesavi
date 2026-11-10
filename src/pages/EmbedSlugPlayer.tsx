@@ -883,7 +883,7 @@ export default function EmbedSlugPlayer() {
                     if (subtitleTracks.length > 1) { closeAllMenus(); setShowCcMenu(!showCcMenu); }
                     else { setCcEnabled(v => !v); }
                   }}
-                    className={`${controlButtonClass} ${ccEnabled ? '!bg-primary/80 !text-white' : ''}`} title="Captions">
+                    className={`${controlButtonClass} ${ccEnabled ? '!bg-primary/80 !text-primary-foreground' : ''}`} title="Captions">
                     {ccEnabled ? <Captions className={iconSize} /> : <CaptionsOff className={iconSize} />}
                   </button>
                   {showCcMenu && subtitleTracks.length > 1 && (
