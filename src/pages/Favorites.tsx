@@ -70,6 +70,44 @@ export default function Favorites() {
       <div className="container py-8">
         <h1 className="text-3xl font-heading font-bold mb-8">My Favorites</h1>
         <div className="browse-ra-grid">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="aspect-[2/3] rounded-md" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container py-8">
+      <div className="flex items-center justify-between gap-3 mb-8 flex-wrap">
+        <div className="flex items-center gap-3">
+          <Heart className="h-8 w-8 text-primary fill-primary" />
+          <h1 className="text-3xl font-heading font-bold">
+            My <span className="text-primary">Favorites</span>
+          </h1>
+        </div>
+        {favorites.length > 0 && (
+          <Button onClick={() => setShareOpen(true)} className="rounded-md">
+            <Share2 className="h-4 w-4 mr-2" /> Share with Friends
+          </Button>
+        )}
+      </div>
+      <ShareCollectionDialog open={shareOpen} onOpenChange={setShareOpen} />
+
+      {favorites.length === 0 ? (
+        <div className="text-center py-20">
+          <Heart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">No favorites yet</h2>
+          <p className="text-muted-foreground mb-6">
+            Start adding anime to your favorites to see them here
+          </p>
+          <Button asChild>
+            <Link to="/browse">Browse Anime</Link>
+          </Button>
+        </div>
+      ) : (
+        <div className="browse-ra-grid">
           {favorites.map((favorite) => (
             <div key={favorite.id} className="poster-card-shell group relative">
               <PosterCard to={`/anime/${favorite.anime.id}`} title={favorite.anime.title} cover={favorite.anime.cover_image}
