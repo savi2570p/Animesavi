@@ -263,7 +263,7 @@ export function useReleaseSchedule() {
         if (Notification.permission === 'granted') {
           new Notification(`${reminder.animeTitle} - Episode Soon!`, {
             body: `New episode typically releases in about ${Math.round(hoursUntil * 60)} minutes`,
-            icon: 'https://storage.googleapis.com/gpt-engineer-file-uploads/9zI1yCNlGfZymWSADZuYy9FGrtQ2/uploads/1768537236542-logo.png',
+            icon: 'https://animesavi.com/Animesavi+.png?v=5',
             tag: `reminder-${animeId}`,
           });
         }

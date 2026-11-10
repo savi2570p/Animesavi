@@ -28,13 +28,13 @@ export default defineConfig(({ mode }) => ({
         start_url: '/',
         icons: [
           {
-            src: '/Animesavi+.png?v=4',
+            src: '/Animesavi+.png?v=5',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable'
           },
           {
-            src: '/Animesavi+.png?v=4',
+            src: '/Animesavi+.png?v=5',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
