@@ -28,7 +28,7 @@
 - The page quality lock applies on every device when Data Saver is off; Data Saver caps adaptive levels and preserves saved quality choices, so the label matches actual playback.
 - PIN lock gate and settings share scoped pin glass tokens; the token banner keeps its fixed 25px strip geometry so restyles never shift page layout.
 - Header touch-target overrides are scoped to nav classes; PC nav links live in the hideable SideRail (lg+), keeping the header single-row on every device.
-- Trending Now and Top Trending each have their own admin-protected lineup table edited by the hero editor in separate modes, so changing one list never changes another.
+- Trending Now and Top Trending each have an admin-protected lineup table edited in separate hero-editor modes, so lists never affect each other.
 - Watch Stats uses scoped optical tokens and unframed account sections while retaining existing statistics calculations.
 - Homepage Latest Series and Latest Episodes share one security-invoker catalogue RPC and a short-lived query cache to reduce duplicated requests without bypassing row permissions.
 - Profile-avatar menus reuse a single utility glass surface and semantic icon tones, preserving existing destinations, account switching and role guards to keep presentation independent of account access.
