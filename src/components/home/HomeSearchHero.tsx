@@ -18,7 +18,15 @@ interface HeroTitle {
  * the "Watch now" target come from the admin-managed hero lineup, falling
  * back to the most-viewed titles.
  */
-export const HomeSearchHero = memo(function HomeSearchHero() {
+interface HomeSearchHeroProps {
+  /** Show the "AnimeSavi+" wordmark used on the Welcome page. */
+  plusBrand?: boolean;
+  /** Overrides where "Watch now" goes (defaults to the first featured title). */
+  watchHref?: string;
+  headline?: string;
+}
+
+export const HomeSearchHero = memo(function HomeSearchHero({ plusBrand = false, watchHref, headline = 'Watch Anime in Hindi DUB' }: HomeSearchHeroProps = {}) {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -63,7 +71,7 @@ export const HomeSearchHero = memo(function HomeSearchHero() {
     navigate(q ? `/browse?q=${encodeURIComponent(q)}` : '/browse');
   };
 
-  const watchTarget = featured[0] ? `/anime/${featured[0].id}` : '/browse';
+  const watchTarget = watchHref || (featured[0] ? `/anime/${featured[0].id}` : '/browse');
   const art = featured.filter((f) => f.art).slice(0, 6);
 
   return (
@@ -80,12 +88,12 @@ export const HomeSearchHero = memo(function HomeSearchHero() {
         <div className="flex items-center gap-3">
           <img src={logo} alt="" className="home-search-hero-logo" />
           <span className="font-heading text-3xl md:text-5xl font-bold tracking-tight leading-none">
-            <span className="text-primary">Anime</span>Savi
+            <span className="text-primary">Anime</span>Savi{plusBrand && <sup className="home-search-plus text-primary">+</sup>}
           </span>
         </div>
 
         <h1 className="mt-5 md:mt-7 text-2xl md:text-4xl font-semibold text-foreground">
-          Watch Anime in Hindi DUB
+          {headline}
         </h1>
 
         <form onSubmit={submit} className="relative mt-6 md:mt-8 w-full" role="search">
@@ -118,7 +126,7 @@ export const HomeSearchHero = memo(function HomeSearchHero() {
 
         {popular.length > 0 && (
           <p className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-0 text-xs md:text-sm">
-            <span className="hidden sm:inline text-muted-foreground/70">Popular:</span>
+            <span className="hidden sm:inline text-muted-foreground/70">Suggestion:</span>
             {popular.map((item, index) => (
               <Link key={item.id} to={`/anime/${item.id}`} className={`home-search-chip max-w-[14rem] truncate ${index > 2 ? "hidden sm:inline" : ""}`}>
                 {item.title}

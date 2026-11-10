@@ -21,6 +21,7 @@ import { VideoPlayer } from '@/components/video/VideoPlayer';
 import { ServerType } from '@/hooks/useServerAutoSelect';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { EpisodeList } from '@/components/video/EpisodeList';
+import { WatchInfoPanel } from '@/components/video/WatchInfoPanel';
 import { WatchParty } from '@/components/WatchParty';
 import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton';
 import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
@@ -95,6 +96,14 @@ interface Anime {
   is_crunchyroll?: boolean;
   is_sub_only?: boolean | null;
   is_eng_dub?: boolean | null;
+  description?: string | null;
+  genres?: string[] | null;
+  status?: string | null;
+  release_year?: number | null;
+  studio?: string | null;
+  total_episodes?: number | null;
+  source_material?: string | null;
+  content_rating?: string | null;
 }
 
 interface CommentLike {
@@ -1284,21 +1293,18 @@ export default function Watch() {
 
 
       {/* Main Watch Area - Video + Episode List */}
-      <div className="watch-v3-stage flex flex-col lg:flex-row">
-        {/* Episode List - Desktop Left Sidebar - Ends at video player border */}
-        <div className="watch-v3-sidebar hidden lg:block w-64 shrink-0 border-r border-border bg-card/30 lg:order-1">
-          <EpisodeList
-            episodes={allEpisodes}
-            currentEpisodeId={episodeId || ''}
-            className="sticky top-16 max-h-[60vh]"
-            onEpisodeSelect={goToEpisode}
-            animeTitle={anime?.title}
-            seasonNumber={currentSeason?.season_number}
-          />
-        </div>
-
+      <div className="watch-reanime-grid lg:px-5 lg:py-4">
+        <WatchInfoPanel anime={anime} episodeNumber={episode.episode_number} seasonNumber={currentSeason?.season_number || 1} episodeCount={allEpisodes.length} />
         {/* Video Player */}
-        <div className="flex-1 min-w-0 lg:order-2">
+        <div className="min-w-0">
+          <nav aria-label="Breadcrumb" className="hidden lg:flex items-center gap-1.5 text-[11px] text-muted-foreground mb-2 min-w-0">
+            <Link to="/" className="hover:text-foreground">Home</Link>
+            <ChevronRight className="h-3 w-3 shrink-0" />
+            {anime && <Link to={`/anime/${anime.id}`} className="hover:text-foreground truncate max-w-[24rem]">{anime.title}</Link>}
+            <ChevronRight className="h-3 w-3 shrink-0" />
+            <span className="text-primary shrink-0">{isMovie ? 'Movie' : `Episode ${episode.episode_number}`}</span>
+          </nav>
+          <div className="watch-reanime-player">
           <div className="relative" ref={playerShellRef}>
             {/* Player crash isolation: a playback-engine error swaps in a
                 recovery card instead of taking the whole watch page down. */}
@@ -1393,7 +1399,7 @@ export default function Watch() {
           {anime && (
             <Link
               to={`/anime/${anime.id}`}
-              className="watch-v3-strip group flex items-center gap-3 px-4 py-2 border-t border-border hover:bg-muted/30 transition-colors w-full max-w-full overflow-hidden"
+              className="watch-v3-strip xl:hidden group flex items-center gap-3 px-4 py-2 border-t border-border hover:bg-muted/30 transition-colors w-full max-w-full overflow-hidden"
             >
               <div className="relative rounded-md overflow-hidden shrink-0 ring-1 ring-border/60 group-hover:ring-primary/50 transition-all" style={{ width: 34, height: 48, minWidth: 34 }}>
                 {anime.cover_image ? (
@@ -1427,14 +1433,16 @@ export default function Watch() {
               <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
             </Link>
           )}
+          </div>
 
-        </div>
-      </div>
-
+          <p className="watch-reanime-notice flex items-center gap-2 mx-3 lg:mx-0 mt-2 px-3 py-2 text-[11px] md:text-xs">
+            <Flag className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            If this episode isn&apos;t working, pick another server below or report it and we&apos;ll fix it soon.
+          </p>
 
       {/* Below Player - Server Selection & Season Switcher */}
-      <div className="container py-3 md:py-4">
-        <div className="watch-v3-controls py-3 md:py-4 border-y border-border">
+      <div className="px-3 lg:px-0 py-3 md:py-4">
+        <div className="watch-v3-controls py-3 md:py-4 border-b border-border">
 
           <div className="relative flex flex-col md:flex-row md:items-center gap-3 md:gap-5">
             {/* Server Selection */}
@@ -1508,6 +1516,20 @@ export default function Watch() {
             )}
           </div>
         </div>
+      </div>
+
+        </div>
+
+        <aside className="watch-reanime-episodes hidden lg:block min-w-0" aria-label="Episodes">
+          <EpisodeList
+            episodes={allEpisodes}
+            currentEpisodeId={episodeId || ''}
+            className="sticky top-20"
+            onEpisodeSelect={goToEpisode}
+            animeTitle={anime?.title}
+            seasonNumber={currentSeason?.season_number}
+          />
+        </aside>
       </div>
 
       {/* Mobile Episode List - Below Server/Season Selection */}

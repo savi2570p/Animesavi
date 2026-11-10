@@ -1,8 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { PlatformsSection } from '@/components/home/PlatformsSection';
-import { HomeSearchHero } from "@/components/home/HomeSearchHero";
+import { FeaturedSlider } from "@/components/home/FeaturedSlider";
+import { HomeNoticeBar } from "@/components/home/HomeNoticeBar";
+import { TopTrendingSidebar } from "@/components/home/TopTrendingSidebar";
 import { ContinueWatching } from "@/components/home/ContinueWatching";
 import { RecommendedAnime } from "@/components/home/RecommendedAnime";
 import { CloneSection } from "@/components/home/CloneSection";
@@ -22,8 +24,18 @@ import { SectionBoundary } from "@/components/common/SectionBoundary";
 import { DeferredSection } from "@/components/common/DeferredSection";
 
 
+const DESKTOP_QUERY = "(min-width: 1024px)";
+const subscribeDesktop = (cb: () => void) => {
+  const mq = window.matchMedia(DESKTOP_QUERY);
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+};
+const getDesktop = () => window.matchMedia(DESKTOP_QUERY).matches;
+
 export default function Index() {
   const navigate = useNavigate();
+  // Mount the Top Trending list once: sidebar on desktop, after the rows elsewhere.
+  const isDesktop = useSyncExternalStore(subscribeDesktop, getDesktop, () => false);
 
   // Redirect first-time visitors to /welcome
   useEffect(() => {
@@ -35,20 +47,24 @@ export default function Index() {
   }, [navigate]);
 
   return (
-    <div className="home-smooth home-aurora min-h-screen [&_section]:py-2 [&_section]:md:py-4 [&_.container]:px-3 [&_.container]:md:px-4">
+    <div className="home-smooth home-aurora min-h-screen">
       <SEO
         title="AnimeSavi - Watch Anime in Hindi DUB"
         description="Watch your favorite anime in official Hindi DUB. Stream the best anime series and movies for free. Episode update same day as release calendar."
         path="/"
       />
-      {/* Search header — artwork and "Watch now" follow the admin hero lineup */}
-      <SectionBoundary label="home:search-hero"><HomeSearchHero /></SectionBoundary>
+      {/* Full-bleed hero — follows the admin-managed hero lineup */}
+      <SectionBoundary label="home:hero"><FeaturedSlider /></SectionBoundary>
+
+      <div className="home-layout px-3 md:px-5 pt-4 md:pt-6">
+      <div className="home-main min-w-0 [&_section]:py-2 [&_section]:md:py-4 [&_.container]:px-0 [&_.container]:max-w-none">
+      <SectionBoundary label="home:notice"><HomeNoticeBar /></SectionBoundary>
+
+      {/* Continue Watching first, like the Re:ANIME layout */}
+      <SectionBoundary label="home:continue-watching"><ContinueWatching showOnHomeOnly={true} /></SectionBoundary>
 
       {/* Trending Now */}
       <SectionBoundary label="home:trending"><TrendingBanner /></SectionBoundary>
-
-      {/* Continue Watching */}
-      <SectionBoundary label="home:continue-watching"><ContinueWatching showOnHomeOnly={true} /></SectionBoundary>
 
       <PlatformsSection />
 
@@ -84,7 +100,17 @@ export default function Index() {
           </div>
         </div>
       </section>
+      </div>
 
+      {isDesktop && (
+        <aside className="home-sidebar min-w-0" aria-label="Top trending">
+          <div className="sticky top-20"><SectionBoundary label="home:top-trending"><TopTrendingSidebar /></SectionBoundary></div>
+        </aside>
+      )}
+      </div>
+
+      {/* Phones and tablets get the ranking after the rows */}
+      {!isDesktop && <div className="px-3 pb-6"><SectionBoundary label="home:top-trending-mobile"><DeferredSection minHeight={300}><TopTrendingSidebar /></DeferredSection></SectionBoundary></div>}
     </div>
   );
 }

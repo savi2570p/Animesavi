@@ -1,80 +1,50 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Search, Play, ChevronRight, Radio, Tv, Film, Shield, Zap, Bell,
-  Globe, Download, Monitor, Smartphone, Users, ArrowRight,
-  PlayCircle, Flame, TrendingUp, Sparkles,
-} from 'lucide-react';
-import logo from '@/assets/logo.png';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowRight, Download, Globe, MonitorPlay, Play, Star, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { DubBadge } from '@/components/anime/DubBadge';
+import { HomeSearchHero } from '@/components/home/HomeSearchHero';
 import { supabase } from '@/integrations/supabase/client';
 
-interface AnimePreview {
+interface Poster {
   id: string;
   title: string;
   cover_image: string | null;
-  banner_image?: string | null;
-  is_eng_dub?: boolean | null;
-  is_sub_only?: boolean | null;
-  genres: string[] | null;
-  view_count: number | null;
 }
 
-/* ---------- Static content ---------- */
-
-const TICKER = [
-  '4 active CDN servers',
-  'Hindi · English · Japanese audio',
-  '4K UHD playback site-wide',
-  'No ads. No popups. No paywalls.',
-  '1-hour pre-release push alerts',
-  '5 profiles per family account',
-  'Offline downloads up to 4K',
-  'Watch parties with live chat',
+const FEATURES = [
+  { icon: Globe, title: 'Hindi, English & Japanese', body: 'Hindi DUB first, with English dubs and Japanese audio where available. Switch audio from the player.' },
+  { icon: MonitorPlay, title: 'Up to 4K playback', body: 'Pick the quality you want, up to 4K. What you get depends on the episode, your connection and device.' },
+  { icon: Download, title: 'Downloads & offline', body: 'Save supported episodes and watch them later from the Downloads page, even without a connection.' },
+  { icon: Users, title: 'Watch parties', body: 'Watch in sync with friends and chat live while the host controls playback.' },
 ];
 
-const TRENDING_SEARCHES = [
-  'Solo Leveling', 'Demon Slayer', 'Dandadan', 'Frieren',
-  'Jujutsu Kaisen', 'Chainsaw Man', 'Re:Zero',
+const FAQ = [
+  { q: 'Which audio and subtitles are available?', a: 'Look for the audio badges on each title. Available tracks and captions depend on the episode and selected server; not every title has every language.' },
+  { q: 'What does signing in add?', a: 'Your account brings together favourites, watch-list titles and watching history. Continue Watching uses saved progress where the player supports it.' },
+  { q: 'Why can playback or quality vary?', a: 'Each server and source can offer different formats and qualities. Your connection and device also affect playback. You can choose another available server manually.' },
+  { q: 'Can I watch offline?', a: 'Offline saving is available for supported episodes. Keep enough free device storage and use the Downloads page to find saved content.' },
+  { q: 'Do I need an account to watch?', a: 'You can browse and watch without signing in. An account adds favourites, watch-list titles, watching history and Continue Watching progress.' },
+  { q: 'How do I hear about new episodes?', a: 'Join the Telegram channel or allow browser notifications. Favourite anime can send an alert about an hour before a scheduled release, and you can turn these off in Settings.' },
+  { q: 'What should I do if an episode will not play?', a: 'Pick another server in the player and reload the page. Sources differ per episode, so switching servers manually is usually enough.' },
+  { q: 'Can I cast or mirror to a TV?', a: 'You can cast or mirror from a phone, tablet or computer. Simple Mode strips the custom overlays for a cleaner picture on the big screen.' },
+  { q: 'Is my watching history saved?', a: 'Progress is stored with your account so you can resume episodes and see Continue Watching. You can clear history from your account pages.' },
 ];
 
-const PILLARS = [
-  { icon: Shield,   title: 'Zero Ads, Zero Walls', body: 'No banners, no preroll, no premium tier hiding episodes. Every feature, free, forever.' },
-  { icon: Globe,    title: 'Official Hindi Dub',   body: 'Hindi alongside English & Japanese — switch tracks mid-episode without reloading the player.' },
-  { icon: Zap,      title: 'Sub-second Start',     body: 'H.Savi, Multi.Savi and X-PLUS pre-warm. Tap play and the first frame lands in under a second.' },
-  { icon: Download, title: 'Real 4K Downloads',    body: 'Save 480p → 2160p with clean episode names, codec tag and audio language in the filename.' },
-  { icon: Users,    title: 'Watch Parties + Chat', body: 'Sync playback with friends, react in a live chat sidebar, resume where the party left off.' },
-  { icon: Bell,     title: 'Heads-up Alerts',      body: 'A push exactly one hour before your favourite show airs — perfectly timed, never spammy.' },
-];
+const SectionLabel = ({ children }: { children: string }) => (
+  <p className="welcome-plus-label text-[10px] font-bold uppercase text-primary">{children}</p>
+);
 
-const LOADER_BEATS = [
-  { at: 0,   label: 'Tuning signal' },
-  { at: 24,  label: 'Warming servers' },
-  { at: 48,  label: 'Loading catalog' },
-  { at: 70,  label: 'Color graded' },
-  { at: 88,  label: 'Audio synced' },
-  { at: 100, label: 'On air' },
-];
+const PosterImg = ({ poster, className = '' }: { poster?: Poster; className?: string }) => (
+  <div className={`welcome-plus-poster ${className}`}>
+    {poster?.cover_image && <img src={poster.cover_image} alt={poster.title} loading="lazy" decoding="async" />}
+  </div>
+);
 
 export default function Welcome() {
-  const navigate = useNavigate();
+  const [posters, setPosters] = useState<Poster[]>([]);
+  const [totals, setTotals] = useState<{ anime: number; episodes: number }>({ anime: 0, episodes: 0 });
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [featuredAnime, setFeaturedAnime] = useState<AnimePreview[]>([]);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [totalAnime, setTotalAnime] = useState(0);
-  const [totalEpisodes, setTotalEpisodes] = useState(0);
-  const [clock, setClock] = useState(() => new Date());
-
-  const [isLaunching, setIsLaunching] = useState(false);
-  const [launchProgress, setLaunchProgress] = useState(0);
-  const [launchBeat, setLaunchBeat] = useState(LOADER_BEATS[0].label);
-  const [launchError, setLaunchError] = useState<string | null>(null);
-  const [launchTarget, setLaunchTarget] = useState<string>('/');
-
-  /* ---------- Guarantee scrolling (dialogs elsewhere can lock <body>) ---------- */
+  /* Guarantee scrolling (dialogs elsewhere can lock <body>) */
   useEffect(() => {
     const html = document.documentElement;
     const body = document.body;
@@ -97,201 +67,119 @@ export default function Welcome() {
     };
   }, []);
 
-  /* ---------- Data ---------- */
   useEffect(() => {
+    let cancelled = false;
     (async () => {
-      const FEATURED_TITLES = [
-        'Solo Leveling', 'Demon Slayer', 'Frieren', 'Dandadan',
-        'That Time I Got Reincarnated as a Slime',
-      ];
-      const { data: curated } = await supabase
-        .from('anime')
-        .select('id, title, cover_image, banner_image, genres, view_count, is_eng_dub, is_sub_only')
-        .or(FEATURED_TITLES.map(t => `title.ilike.%${t.slice(0, 40)}%`).join(','))
-        .limit(8);
-      let list = curated || [];
-      if (list.length < 4) {
-        const { data: fb } = await supabase
-          .from('anime').select('id, title, cover_image, banner_image, genres, view_count, is_eng_dub, is_sub_only')
-          .eq('is_featured', true).neq('title', 'My Hero Academia').limit(8);
-        const seen = new Set(list.map(a => a.id));
-        list = [...list, ...((fb || []).filter(a => !seen.has(a.id)))];
-      }
-      if (list.length) setFeaturedAnime(list.slice(0, 4));
-
-      const [{ count: ac }, { count: ec }] = await Promise.all([
+      const [{ data }, { count: animeCount }, { count: episodeCount }] = await Promise.all([
+        supabase.from('anime').select('id, title, cover_image').not('cover_image', 'is', null).order('view_count', { ascending: false }).limit(12),
         supabase.from('anime').select('id', { count: 'exact', head: true }),
         supabase.from('episodes').select('id', { count: 'exact', head: true }),
       ]);
-      if (ac) setTotalAnime(ac);
-      if (ec) setTotalEpisodes(ec);
+      if (cancelled) return;
+      setPosters((data as Poster[]) || []);
+      setTotals({ anime: animeCount || 0, episodes: episodeCount || 0 });
     })();
+    return () => { cancelled = true; };
   }, []);
 
-  useEffect(() => {
-    if (featuredAnime.length <= 1) return;
-    const id = setInterval(() => {
-      if (document.visibilityState === 'visible' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        setActiveIndex(p => (p + 1) % featuredAnime.length);
-      }
-    }, 6000);
-    return () => clearInterval(id);
-  }, [featuredAnime.length]);
-
-  useEffect(() => {
-    const id = setInterval(() => setClock(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  /* ---------- Launch sequence ---------- */
-  const startWatching = useCallback((target: string = '/') => {
-    setLaunchTarget(target);
-    setLaunchError(null);
-    setLaunchProgress(0);
-    setLaunchBeat(LOADER_BEATS[0].label);
-    setIsLaunching(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isLaunching) return;
-    const start = performance.now();
-    const duration = 2100;
-    let raf = 0;
-    const tick = () => {
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-        setLaunchError('You appear to be offline. Reconnect and try again.');
-        return;
-      }
-      const elapsed = performance.now() - start;
-      const pct = Math.min(100, (elapsed / duration) * 100);
-      setLaunchProgress(pct);
-      const beat = [...LOADER_BEATS].reverse().find(b => pct >= b.at);
-      if (beat) setLaunchBeat(beat.label);
-      if (pct < 100) {
-        raf = requestAnimationFrame(tick);
-      } else {
-        setTimeout(() => {
-          try { navigate(launchTarget); }
-          catch { setLaunchError('Something blocked the redirect. Please try again.'); }
-        }, 240);
-      }
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [isLaunching, launchTarget, navigate]);
-
-  const retryLaunch = () => {
-    setIsLaunching(false);
-    setLaunchError(null);
-    setTimeout(() => startWatching(launchTarget), 60);
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) navigate(`/browse?q=${encodeURIComponent(searchQuery.trim())}`);
-  };
-
-  const hero = featuredAnime[activeIndex];
-  const timeStr = clock.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const p = (i: number) => posters[i % Math.max(posters.length, 1)];
 
   return (
-    <div className="welcome-v5 min-h-screen text-foreground">
-      <header className="welcome-v5-nav absolute inset-x-0 top-0 z-20">
-        <div className="container flex items-center justify-between gap-4 py-4 sm:py-5">
-          <div className="flex items-center gap-2.5"><img src={logo} alt="" className="h-9 w-9 object-contain" /><span className="font-bold text-lg"><span className="text-primary">Anime</span>Savi</span></div>
-          <Button variant="glass" onClick={() => startWatching('/')}><Play className="h-4 w-4" />Watch now</Button>
-        </div>
-      </header>
+    <div className="welcome-plus min-h-screen text-foreground">
+      <HomeSearchHero plusBrand watchHref="/" headline="Watch Anime in Hindi DUB" />
 
-      <section className="welcome-v5-hero relative overflow-hidden">
-        {hero && <img src={hero.banner_image || hero.cover_image || '/placeholder.svg'} alt={hero.title} className="welcome-v5-art absolute inset-0 h-full w-full object-cover" fetchPriority="high" />}
-        <div className="welcome-v5-scrim absolute inset-0" aria-hidden="true" />
-        <div className="container relative z-10 welcome-v5-copy">
-          <div className="max-w-2xl">
-            <span className="welcome-v5-label inline-flex items-center gap-2 text-xs mb-4"><span className="h-1.5 w-1.5 rounded-full bg-primary" />Hindi · English · Japanese</span>
-            <h1 className="text-5xl sm:text-7xl font-bold leading-none"><span className="text-primary">Anime</span>Savi</h1>
-            <p className="text-sm sm:text-lg text-foreground/80 mt-5 max-w-md">Your next anime. Your favourite language.</p>
-            <div className="flex flex-wrap items-center gap-3 mt-6">
-              <Button onClick={() => startWatching('/')} size="lg"><Play className="h-4 w-4 fill-current" />Start watching</Button>
-              <Button variant="glass" size="lg" onClick={() => navigate('/browse')}>Browse anime<ArrowRight className="h-4 w-4" /></Button>
-            </div>
-            <form onSubmit={handleSearch} className="welcome-v5-search flex items-center gap-2 mt-7 max-w-lg p-2">
-              <Search className="h-4 w-4 ml-2 shrink-0 text-muted-foreground" />
-              <Input aria-label="Search anime" placeholder="Search anime…" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="border-0 bg-transparent shadow-none focus-visible:ring-0 min-w-0" />
-              <Button type="submit" variant="glass" size="icon" aria-label="Search"><ArrowRight className="h-4 w-4" /></Button>
-            </form>
-            {hero && <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"><span className="text-foreground/80 truncate max-w-full">{hero.title}</span><DubBadge isEngDub={hero.is_eng_dub} isSubOnly={hero.is_sub_only} genres={hero.genres} /></div>}
-          </div>
+      {/* About */}
+      <section className="container max-w-5xl py-14 md:py-24 grid md:grid-cols-2 gap-10 md:gap-16 items-center">
+        <div>
+          <SectionLabel>About AnimeSavi+</SectionLabel>
+          <h2 className="mt-3 font-heading text-2xl md:text-3xl font-medium leading-snug">
+            A calm, fast home for anime <span className="text-primary">in your own language.</span>
+          </h2>
+          <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
+            Anime is more than a show — it is the story you can&apos;t stop thinking about, the fight you replay and the ending you never forget. Millions of fans grew up with it, and many of them want to hear it in Hindi.
+          </p>
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+            AnimeSavi+ keeps things simple: find a title, press play and watch. Hindi DUB episodes, English dubs and subtitled releases sit side by side, with your progress saved so you can pick up where you left off.
+          </p>
         </div>
-        <div className="container relative z-10 pb-5 flex items-center gap-2">
-          {featuredAnime.map((a, i) => <Button key={a.id} variant="ghost" aria-label={`Feature ${a.title}`} aria-pressed={i === activeIndex} className="welcome-v5-pagination p-0 h-6 w-10" onClick={() => setActiveIndex(i)}><span className={i === activeIndex ? 'bg-primary' : 'bg-muted-foreground/40'} /></Button>)}
+        <div className="welcome-plus-stack relative mx-auto h-[300px] w-[260px] md:h-[340px] md:w-[300px]" aria-hidden>
+          <PosterImg poster={p(0)} className="is-back" />
+          <PosterImg poster={p(1)} className="is-mid" />
+          <PosterImg poster={p(2)} className="is-front" />
+          <span className="welcome-plus-dot is-a" /><span className="welcome-plus-dot is-b" />
         </div>
       </section>
 
-      <section className="container py-7 sm:py-10">
-        <div className="flex items-center justify-between gap-3 mb-5"><h2 className="font-bold text-xl sm:text-2xl flex items-center gap-2"><Flame className="h-5 w-5 text-primary" />Trending now</h2><Button variant="ghost" size="sm" onClick={() => navigate('/schedule')}>Schedule<ChevronRight className="h-4 w-4" /></Button></div>
-        <div className="snap-row flex gap-4 overflow-x-auto pb-4">
-          {featuredAnime.map(a => <Button asChild variant="ghost" key={a.id} className="welcome-v5-tile block h-auto p-0 shrink-0 text-left whitespace-normal"><a href={`/anime/${a.id}`} onClick={e => { e.preventDefault(); navigate(`/anime/${a.id}`); }}><div className="relative aspect-video overflow-hidden rounded-lg"><img src={a.banner_image || a.cover_image || '/placeholder.svg'} alt={a.title} className="h-full w-full object-cover" loading="lazy" /><div className="absolute top-2 right-2"><DubBadge isEngDub={a.is_eng_dub} isSubOnly={a.is_sub_only} genres={a.genres} /></div></div><div className="p-3"><h3 className="line-clamp-2 text-sm font-semibold min-h-10">{a.title}</h3><p className="text-xs text-muted-foreground mt-1 truncate">{(a.genres || []).slice(0, 2).join(' · ')}</p></div></a></Button>)}
+      {/* Why */}
+      <section className="container max-w-5xl py-14 md:py-20 grid md:grid-cols-2 gap-10 md:gap-16 items-center">
+        <div className="welcome-plus-collage relative mx-auto h-[300px] w-full max-w-[380px] order-2 md:order-1" aria-hidden>
+          <PosterImg poster={p(3)} className="is-left" />
+          <PosterImg poster={p(4)} className="is-center" />
+          <PosterImg poster={p(5)} className="is-right" />
+          <div className="welcome-plus-badge absolute flex items-center gap-2.5 px-3 py-2">
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-primary/15 text-primary"><Star className="h-3.5 w-3.5 fill-current" /></span>
+            <span className="leading-tight"><span className="block text-[10px] text-muted-foreground">Top quality</span><span className="block text-xs font-semibold">Up to 4K</span></span>
+          </div>
+        </div>
+        <div className="order-1 md:order-2">
+          <SectionLabel>Why AnimeSavi+?</SectionLabel>
+          <h2 className="mt-3 font-heading text-2xl md:text-3xl font-medium leading-snug">
+            Built for <span className="text-primary">smooth playback</span> and easy watching.
+          </h2>
+          <ul className="mt-6 space-y-5">
+            {FEATURES.map(f => (
+              <li key={f.title} className="flex gap-3.5">
+                <span className="welcome-plus-icon grid h-9 w-9 shrink-0 place-items-center"><f.icon className="h-4 w-4" /></span>
+                <div>
+                  <h3 className="text-sm font-semibold">{f.title}</h3>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{f.body}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
-      <section className="welcome-v5-band border-y border-border">
-        <div className="container grid grid-cols-2 sm:grid-cols-4 py-7 gap-6">
-          {[{value: totalAnime ? totalAnime.toLocaleString() : '—', label: 'Anime titles'}, {value: totalEpisodes ? totalEpisodes.toLocaleString() : '—', label: 'Episodes'}, {value: '4K', label: 'Ultra HD'}, {value: '3', label: 'Audio languages'}].map(stat => <div key={stat.label}><p className="text-2xl font-bold tabular-nums">{stat.value}</p><p className="text-xs mt-2 text-muted-foreground">{stat.label}</p></div>)}
+      {/* Library */}
+      <section className="container max-w-5xl py-14 md:py-20 grid md:grid-cols-2 gap-10 md:gap-16 items-center">
+        <div>
+          <SectionLabel>Growing library</SectionLabel>
+          <h2 className="mt-3 font-heading text-2xl md:text-3xl font-medium leading-snug">
+            Every genre, every mood. <span className="text-primary">All in one place.</span>
+          </h2>
+          <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
+            From this season&apos;s new episodes to finished classics and anime movies, everything is organised by genre, audio and release day so the next thing to watch is always a tap away.
+          </p>
+          {(totals.anime > 0 || totals.episodes > 0) && (
+            <dl className="mt-6 flex gap-8">
+              <div><dt className="text-[10px] uppercase tracking-wider text-muted-foreground">Titles</dt><dd className="font-heading text-2xl font-bold tabular-nums">{totals.anime.toLocaleString()}</dd></div>
+              <div><dt className="text-[10px] uppercase tracking-wider text-muted-foreground">Episodes</dt><dd className="font-heading text-2xl font-bold tabular-nums">{totals.episodes.toLocaleString()}</dd></div>
+            </dl>
+          )}
+          <Link to="/browse" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold hover:text-primary">Explore the catalog <ArrowRight className="h-4 w-4" /></Link>
         </div>
-      </section>
-      <section className="container py-10 sm:py-14 flex flex-wrap justify-between items-center gap-6">
-        <div><h2 className="text-2xl font-bold">Find something worth watching.</h2><div className="mt-4 flex flex-wrap gap-2">{TRENDING_SEARCHES.slice(0, 4).map(t => <Button key={t} variant="glass" size="sm" onClick={() => navigate(`/browse?q=${encodeURIComponent(t)}`)}>{t}</Button>)}</div></div>
-        <Button onClick={() => startWatching('/')} variant="glass">Open catalogue<ArrowRight className="h-4 w-4" /></Button>
-      </section>
-      <section className="welcome-info-v13">
-        <div className="container py-10 sm:py-14">
-          <h2 className="text-2xl font-bold mb-6">More from AnimeSavi</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8">
-            {[
-              { icon: Globe, title: 'Hindi, English & Japanese', body: 'Find Hindi-dubbed, English-dubbed and subtitled anime. Audio and subtitle availability varies by title and server.' },
-              { icon: Tv, title: 'Series & movies', body: 'Explore anime by genre, discover recent episodes and find completed series and feature films.' },
-              { icon: Bell, title: 'Release calendar', body: 'Check scheduled releases and follow favourite anime. Notifications depend on your browser permissions and available release information.' },
-              { icon: PlayCircle, title: 'Your watching library', body: 'Keep favourites, save titles to your watch list and return to episodes in Continue Watching when signed in.' },
-              { icon: Download, title: 'Downloads & offline viewing', body: 'Available episodes include download options. Offline viewing depends on supported sources, browser storage and your device.' },
-              { icon: Monitor, title: 'Watch on your devices', body: 'Use AnimeSavi on phones, tablets and computers. Playback quality up to 4K depends on the source, connection and device.' },
-            ].map(item => <article key={item.title}><item.icon className="h-6 w-6" /><h3 className="font-semibold text-base">{item.title}</h3><p className="text-sm leading-relaxed text-muted-foreground mt-2">{item.body}</p></article>)}
-          </div>
-          <div className="flex flex-wrap gap-3 mt-6">
-            <Button variant="glass" onClick={() => navigate('/auth')}><Users className="h-4 w-4" />Your account</Button>
-            <Button variant="glass" onClick={() => navigate('/schedule')}><Bell className="h-4 w-4" />Release calendar</Button>
+        <div className="welcome-plus-mosaic relative overflow-hidden aspect-square w-full max-w-[380px] mx-auto" aria-hidden>
+          <div className="welcome-plus-mosaic-grid grid grid-cols-3 gap-3">
+            {Array.from({ length: 9 }).map((_, i) => <PosterImg key={i} poster={p(i + 3)} />)}
           </div>
         </div>
       </section>
-      <section className="welcome-info-v13">
-        <div className="container py-10 sm:py-14">
-          <h2 className="text-2xl font-bold mb-6">Good to know</h2>
-          {[
-            { q: 'Which audio and subtitles are available?', a: 'Look for the audio badges on each title. Available tracks and captions depend on the episode and selected server; not every title has every language.' },
-            { q: 'What does signing in add?', a: 'Your account brings together favourites, watch-list titles and watching history. Continue Watching uses saved progress where the player supports it.' },
-            { q: 'Why can playback or quality vary?', a: 'Each server and source can offer different formats and qualities. Your connection and device also affect playback. You can choose another available server manually.' },
-            { q: 'Can I watch offline?', a: 'Offline saving is available for supported episodes. Keep enough free device storage and use the Downloads page to find saved content.' },
-            { q: 'Do I need an account to watch?', a: 'You can browse and watch without signing in. An account adds favourites, watch-list titles, watching history and Continue Watching progress.' },
-            { q: 'How do I hear about new episodes?', a: 'Join the Telegram channel or allow browser notifications. Favourite anime can send an alert about an hour before a scheduled release, and you can turn these off in Settings.' },
-            { q: 'What should I do if an episode will not play?', a: 'Pick another server in the player and reload the page. Sources differ per episode, so switching servers manually is usually enough.' },
-            { q: 'Can I cast or mirror to a TV?', a: 'You can cast or mirror from a phone, tablet or computer. Simple Mode strips the custom overlays for a cleaner picture on the big screen.' },
-            { q: 'Is my watching history saved?', a: 'Progress is stored with your account so you can resume episodes and see Continue Watching. You can clear history from your account pages.' },
-          ].map(item => <details key={item.q}><summary>{item.q}</summary><p>{item.a}</p></details>)}
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Button variant="glass" asChild><a href="https://t.me/AnimeSaviInhindiDUB" target="_blank" rel="noopener noreferrer"><Users className="h-4 w-4" />Telegram community</a></Button>
-            <Button variant="glass" onClick={() => window.open('https://youtube.com/@anime-savi-official?si=4hhAJLdVctT1s6WL', '_blank', 'noopener,noreferrer')}><Play className="h-4 w-4" />Subscribe for more updates</Button>
-          </div>
+
+      {/* FAQ */}
+      <section className="container max-w-3xl py-14 md:py-20 welcome-info-v13">
+        <SectionLabel>Good to know</SectionLabel>
+        <h2 className="mt-3 mb-6 font-heading text-2xl md:text-3xl font-medium">Questions, answered.</h2>
+        {FAQ.map(item => <details key={item.q}><summary>{item.q}</summary><p>{item.a}</p></details>)}
+        <div className="mt-8 flex flex-wrap items-center gap-3">
+          <Button asChild><a href="https://t.me/AnimeSaviInhindiDUB" target="_blank" rel="noopener noreferrer"><Users className="h-4 w-4" />Telegram community</a></Button>
+          <Button variant="outline" onClick={() => window.open('https://youtube.com/@anime-savi-official?si=4hhAJLdVctT1s6WL', '_blank', 'noopener,noreferrer')}><Play className="h-4 w-4" />Subscribe for more updates</Button>
         </div>
       </section>
-      <footer className="container border-t border-border py-6 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground"><span>© 2026 AnimeSavi</span><Button variant="ghost" size="sm" onClick={() => navigate('/browse')}>Browse<ArrowRight className="h-3.5 w-3.5" /></Button></footer>
-      {isLaunching && <div className="detail-loading-v4 fixed inset-0 z-[200] flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="launch-title">
-        <div className="detail-loading-v4-panel rounded-lg p-6 w-full max-w-xs text-center">
-          <img src={logo} alt="" className="h-12 w-12 mx-auto object-contain" />
-          <h2 id="launch-title" className="text-lg font-bold mt-4">AnimeSavi</h2><p role="status" className="text-xs text-muted-foreground mt-2">{launchError || 'Opening catalogue…'}</p>
-          <div className="detail-loading-v4-track mt-5"><span /></div>
-          {launchError && <div className="flex gap-2 mt-4"><Button onClick={retryLaunch}>Retry</Button><Button variant="glass" onClick={() => setIsLaunching(false)}>Cancel</Button></div>}
-        </div>
-      </div>}
+
+      <footer className="container max-w-5xl border-t border-border py-6 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+        <span>© 2026 AnimeSavi+</span>
+        <Link to="/" className="inline-flex items-center gap-1.5 hover:text-foreground">Start watching <ArrowRight className="h-3.5 w-3.5" /></Link>
+      </footer>
     </div>
   );
 }
