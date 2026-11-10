@@ -233,7 +233,8 @@ h1, h2, h3, h4, .font-heading {
 }
 
 /* ---------- Home search header (Re:ANIME-style) ---------- */
-.home-search-hero {
+.home-search-hero,
+.home-smooth section.home-search-hero {
   position: relative;
   overflow: hidden;
   isolation: isolate;
