@@ -511,7 +511,7 @@ export default function AnimeDetail() {
               <div className="mx-auto w-40 md:w-full" onTouchStart={isIOSDevice() ? undefined : handleTouchStart} onTouchEnd={isIOSDevice() ? undefined : handleTouchEnd} onTouchMove={isIOSDevice() ? undefined : handleTouchMove}>
                 <img src={anime.cover_image || '/placeholder.svg'} alt={`${anime.title} poster`} className="detail-ra-poster" draggable={isIOSDevice()} />
               </div>
-              <dl className="detail-ra-info hidden md:grid">
+              <dl className="detail-ra-info">
                 <div><dt>Type</dt><dd>{anime.type === 'movie' ? 'Movie' : 'TV Series'}</dd></div>
                 <div><dt>Episodes</dt><dd>{anime.total_episodes ?? episodes.length}</dd></div>
                 {seasons.length > 0 && <div><dt>Seasons</dt><dd>{seasons.length}</dd></div>}

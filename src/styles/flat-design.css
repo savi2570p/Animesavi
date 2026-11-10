@@ -462,3 +462,4 @@ html.perf-low .home-search-hero-art { display: none; }
   .app-shell-ra[data-rail='shown'] > main, .app-shell-ra[data-rail='shown'] > footer { padding-left: 64px; }
   .app-shell-ra[data-rail='hidden'] > main, .app-shell-ra[data-rail='hidden'] > footer { padding-left: 14px; }
 }
+@media (max-width: 767px) { .detail-ra-info { display: none; } }
