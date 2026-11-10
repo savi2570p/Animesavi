@@ -1287,7 +1287,7 @@ export function ViewPartyDialog({ trigger, open: openProp, onOpenChange }: { tri
           )}
         </DialogTrigger>
       )}
-      <DialogContent className="party-v2 sm:max-w-md">
+      <DialogContent className="party-v2 sm:max-w-md" onOpenAutoFocus={(e) => e.preventDefault()}>
         <PartyHero
           icon={Eye}
           tone="view"
