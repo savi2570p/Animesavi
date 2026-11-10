@@ -5,6 +5,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -29,19 +30,21 @@ import {
   Sparkles,
   Home,
   Download,
-  ListVideo,
   RefreshCw,
   Clock,
   CalendarDays,
-  ChevronRight
+  Bookmark,
+  X,
+  LogIn,
+  type LucideIcon,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
 import { JoinPartyDialog, ViewPartyDialog } from '@/components/WatchParty';
 import { NotificationBell } from '@/components/NotificationBell';
-import { AccountSwitcher, rememberAccount } from '@/components/AccountSwitcher';
+import { rememberAccount } from '@/components/AccountSwitcher';
 import { hasValidTokenAccess } from '@/components/AccessBanner';
 import { VerifyTokenDialog } from '@/components/VerifyTokenDialog';
 import { usePopupQueue } from '@/contexts/PopupQueueContext';
@@ -147,7 +150,7 @@ export function Header() {
     setMobileMenuOpen(false);
     // Wait for the sheet exit animation to finish so the next dialog
     // isn't swallowed by the closing overlay / focus lock.
-    window.setTimeout(callback, 360);
+    window.setTimeout(callback, 200);
   };
 
   const handleHardRefresh = async () => {
@@ -240,19 +243,64 @@ export function Header() {
     navigate('/upload');
   };
 
-  const navLinks = [
-    { to: '/', label: 'Home', icon: null },
-    { to: '/browse?type=movie', label: 'Movies', icon: Film },
-    { to: '/browse?type=series', label: 'TV Series', icon: Tv },
-    { to: '/browse?sort=popular', label: 'Most Popular', icon: TrendingUp },
-  ];
-
   const isActivePath = (to: string) => {
     const [path, query] = to.split('?');
     if (path !== location.pathname) return false;
     if (!query) return location.search === '' || path === '/';
     return location.search.includes(query);
   };
+
+  const joinedLabel = (() => {
+    if (!user?.created_at) return '';
+    const days = Math.max(0, Math.floor((Date.now() - new Date(user.created_at).getTime()) / 86_400_000));
+    if (days === 0) return 'Joined today';
+    return `Joined ${days} day${days === 1 ? '' : 's'} ago`;
+  })();
+
+  type MenuItem = { label: string; icon: LucideIcon; to?: string; onClick?: () => void };
+  const menuSections: { label: string; items: MenuItem[] }[] = [
+    {
+      label: 'BROWSE',
+      items: [
+        { to: '/', label: 'Home', icon: Home },
+        { to: '/browse', label: 'Search', icon: Search },
+        { to: '/browse?type=movie', label: 'Movies', icon: Film },
+        { to: '/browse?type=series', label: 'TV Series', icon: Tv },
+        { to: '/browse?sort=popular', label: 'Most Popular', icon: TrendingUp },
+        { to: '/schedule', label: 'Schedule', icon: CalendarDays },
+      ],
+    },
+    ...(user ? [{
+      label: 'LIBRARY',
+      items: [
+        { to: '/favorites', label: 'Favorites', icon: Heart },
+        { to: '/history', label: 'History', icon: History },
+        { to: '/downloads', label: 'Downloads', icon: Download },
+        { to: '/watchlist', label: 'Watch Later', icon: Clock },
+      ],
+    }] : []),
+    {
+      label: 'MORE',
+      items: [
+        ...(!user ? [{ to: '/auth', label: 'Sign In', icon: LogIn }] : []),
+        { label: 'Join Party', icon: Users, onClick: () => closeMenuThen(() => setJoinPartyOpen(true)) },
+        { label: 'View Parties', icon: Eye, onClick: () => closeMenuThen(() => setViewPartiesOpen(true)) },
+        ...(user && !hasPremium ? [{ label: 'Get Premium', icon: Crown, onClick: () => closeMenuThen(() => window.open('https://t.me/getunlocktoken', '_blank', 'noopener')) }] : []),
+        { label: 'Verify Token', icon: BadgeCheck, onClick: () => closeMenuThen(() => setVerifyOpen(true)) },
+        { label: "What's New", icon: Sparkles, onClick: () => closeMenuThen(showWhatsNewManually) },
+        { label: 'Refresh App', icon: RefreshCw, onClick: () => closeMenuThen(handleHardRefresh) },
+        ...(['savi2570p@gmail.com', 'shadowtoonsindia@gmail.com'].includes((user?.email || '').toLowerCase()) ? [{
+          label: 'Home V2', icon: Home, onClick: () => {
+            navigator.clipboard?.writeText(`${window.location.origin}/s2-home`).then(() => toast.success('Home V2 link copied'), () => toast.error('Could not copy link'));
+            setMobileMenuOpen(false);
+          },
+        }] : []),
+        ...(canUpload() ? [{ label: 'Upload Anime', icon: Upload, onClick: () => closeMenuThen(handleUploadClick) }] : []),
+        ...(isAdmin ? [{ to: '/admin', label: 'Admin Panel', icon: Shield }] : []),
+        ...(user ? [{ to: '/settings', label: 'Settings', icon: Settings }] : []),
+      ],
+    },
+  ];
 
   return (
     <header
@@ -268,51 +316,50 @@ export function Header() {
           <div className="absolute inset-x-0 top-0 h-px bg-primary/20" />
         </div>
 
-        <div className="container relative flex h-12 sm:h-14 items-center justify-between gap-1.5 sm:gap-4">
+        <div className="container lg:max-w-none relative flex h-12 sm:h-14 items-center justify-between gap-1.5 sm:gap-4">
           {/* Logo lockup */}
           <div className="flex items-center gap-1 sm:gap-2.5 flex-shrink-0">
             {/* Hamburger menu — left side on every screen */}
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild className="flex-shrink-0">
-                <Button variant="ghost" size="icon" aria-label="Open menu" className="h-7 w-7 sm:h-8 sm:w-8">
-                  <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
+            <Popover open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <PopoverTrigger asChild className="flex-shrink-0">
+                <Button variant="ghost" size="icon" aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileMenuOpen} className="nav-menu-trigger-v10 h-7 w-7 sm:h-8 sm:w-8" data-open={mobileMenuOpen || undefined}>
+                  {mobileMenuOpen ? <X className="h-4 w-4 sm:h-5 sm:w-5" /> : <Menu className="h-4 w-4 sm:h-5 sm:w-5" />}
                 </Button>
-              </SheetTrigger>
-              <SheetContent
+              </PopoverTrigger>
+              <PopoverContent
                 ref={menuContentRef}
                 tabIndex={-1}
+                align="start"
+                side="bottom"
+                sideOffset={8}
+                collisionPadding={10}
                 onOpenAutoFocus={(event) => {
-                  // Focus the menu itself, not its search input, to avoid opening
-                  // the iOS/Android keyboard before the user chooses to search.
+                  // Focus the menu itself so no phone keyboard opens.
                   event.preventDefault();
                   menuContentRef.current?.focus({ preventScroll: true });
                 }}
-                side="left" className="menu-v4 w-[min(360px,calc(100vw-1rem))] sm:max-w-[360px] border-border px-5 overflow-y-auto z-[160]">
-                <div className="pt-5 pb-6">
-                  <div className="flex items-center gap-3 mb-6"><img src={logo} alt="" className="w-9 h-9 object-contain" /><div><p className="text-lg font-bold">Anime Savi</p><p className="text-xs text-muted-foreground">Your library</p></div></div>
-                  {user ? <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 border border-border"><AvatarImage src={user.user_metadata?.avatar_url} alt="Profile" /><AvatarFallback className="bg-primary text-primary-foreground">{user.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback></Avatar>
-                    <div className="flex-1 min-w-0"><p className="text-sm font-semibold truncate">{user.user_metadata?.username || 'My account'}</p><p className="text-[11px] text-muted-foreground truncate">{user.email}</p></div>
-                    <Button asChild variant="glass" size="icon" title="Profile" aria-label="Open profile" className="h-8 w-8 rounded-lg"><Link to="/profile" onClick={() => setMobileMenuOpen(false)}><User /></Link></Button>
-                  </div> : <Button asChild className="w-full"><Link to="/auth" onClick={() => setMobileMenuOpen(false)}>Sign In</Link></Button>}
-                </div>
-                {user && <div className="flex items-center gap-2 text-xs pb-4"><Crown className="h-4 w-4 text-primary" /><span>{hasPremium ? 'Premium Active' : 'Get Premium Access'}</span>{!hasPremium && <Button variant="glass" size="sm" className="ml-auto h-7 text-xs" onClick={() => closeMenuThen(() => window.open('https://t.me/getunlocktoken', '_blank', 'noopener'))}>Get</Button>}</div>}
-                <form onSubmit={handleSearch} className="relative mb-3"><Input type="search" placeholder="Search anime..." aria-label="Search anime in menu" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="bg-card/70 border-border pr-10" /><Button type="submit" size="icon" variant="ghost" aria-label="Search" className="absolute right-1 top-1 h-8 w-8"><Search /></Button></form>
-                <section className="menu-v4-section"><h2 className="menu-v4-label">DISCOVER</h2><nav className="grid grid-cols-2 gap-1">
-                  {[...navLinks, {to: '/schedule', label: 'Schedule', icon: CalendarDays}].map(link => { const Icon = link.icon || Home; return <Button asChild variant="ghost" key={link.label} className="menu-v4-link"><Link to={link.to} aria-current={isActivePath(link.to) ? 'page' : undefined} onClick={() => setMobileMenuOpen(false)}><Icon className="text-primary" />{link.label}</Link></Button>; })}
-                </nav></section>
-                {user && <section className="menu-v4-section"><h2 className="menu-v4-label">MY LIBRARY</h2><nav className="grid grid-cols-2 gap-1">{[{to:'/favorites',icon:Heart,label:'Favorites'},{to:'/history',icon:History,label:'History'},{to:'/downloads',icon:Download,label:'Downloads'},{to:'/watchlist',icon:Clock,label:'Watch Later'}].map(item => <Button key={item.to} asChild variant="ghost" className="menu-v4-link"><Link to={item.to} aria-current={location.pathname === item.to ? 'page' : undefined} onClick={() => setMobileMenuOpen(false)}><item.icon className="text-primary" />{item.label}</Link></Button>)}</nav></section>}
-                <section className="menu-v4-section"><h2 className="menu-v4-label">WATCH TOGETHER</h2><div className="grid grid-cols-2 gap-1"><Button variant="glass" className="menu-v4-link" onClick={() => closeMenuThen(() => setJoinPartyOpen(true))}><Users />Join Party</Button><Button variant="glass" className="menu-v4-link" onClick={() => closeMenuThen(() => setViewPartiesOpen(true))}><Eye />View Parties</Button></div></section>
-                <section className="menu-v4-section"><h2 className="menu-v4-label">APP & ACCOUNT</h2><div className="space-y-1">
-                  <Button variant="ghost" className="menu-v4-link w-full" onClick={() => closeMenuThen(() => setVerifyOpen(true))}><BadgeCheck />Verify Token</Button>
-                  <Button variant="ghost" className="menu-v4-link w-full" onClick={() => closeMenuThen(showWhatsNewManually)}><Sparkles />What's New</Button>
-                  <Button variant="ghost" className="menu-v4-link w-full" onClick={() => closeMenuThen(handleHardRefresh)}><RefreshCw />Refresh App</Button>
-                  {['savi2570p@gmail.com','shadowtoonsindia@gmail.com'].includes((user?.email || '').toLowerCase()) && <Button variant="ghost" className="menu-v4-link w-full" onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/s2-home`).then(() => toast.success('Home V2 link copied'), () => toast.error('Could not copy link')); setMobileMenuOpen(false); }}><Home />Home V2</Button>}
-                  {canUpload() && <Button variant="glass" className="menu-v4-link w-full" onClick={() => closeMenuThen(handleUploadClick)}><Upload />Upload Anime</Button>}
-                  {isAdmin && <Button asChild variant="glass" className="menu-v4-link w-full"><Link to="/admin" onClick={() => setMobileMenuOpen(false)}><Shield />Admin Panel</Link></Button>}
-                </div></section>
-              </SheetContent>
-            </Sheet>
+                className="nav-menu-v10"
+                aria-label="Main menu"
+              >
+                {menuSections.map(section => (
+                  <section key={section.label} className="nav-menu-v10-section">
+                    <h2 className="nav-menu-v10-label">{section.label}</h2>
+                    <nav className="flex flex-col">
+                      {section.items.map(item => {
+                        const Icon = item.icon;
+                        const active = item.to ? isActivePath(item.to) : false;
+                        const content = <><span className="nav-menu-v10-icon"><Icon /></span><span className="truncate">{item.label}</span></>;
+                        return item.to ? (
+                          <Link key={item.label} to={item.to} className="nav-menu-v10-item" aria-current={active ? 'page' : undefined} onClick={() => setMobileMenuOpen(false)}>{content}</Link>
+                        ) : (
+                          <button key={item.label} type="button" className="nav-menu-v10-item" onClick={item.onClick}>{content}</button>
+                        );
+                      })}
+                    </nav>
+                  </section>
+                ))}
+              </PopoverContent>
+            </Popover>
             <Link to="/welcome" className="nav-logo-v8 group relative flex-shrink-0" aria-label="Welcome">
               <span className="absolute inset-0 rounded-lg bg-primary/30 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <img
@@ -396,7 +443,7 @@ export function Header() {
           <div className="nav-v6-actions flex flex-shrink-0 items-center gap-1 sm:gap-1.5">
           {user && <div className="[&_button]:h-7 [&_button]:w-7 sm:[&_button]:h-9 sm:[&_button]:w-9 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4"><NotificationBell /></div>}
           
-          {user && !isMobileOS ? (
+          {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" aria-label="Open account menu" className="account-trigger-v9 relative h-7 w-7 sm:h-9 sm:w-9 rounded-full p-0">
@@ -412,71 +459,42 @@ export function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="account-menu-v9 utility-glass-v6"
+                className="account-menu-v10"
                 aria-label="Account menu"
                 align="end"
                 sideOffset={10}
                 collisionPadding={12}
               >
-                <header className="account-menu-v9-header">
-                  <Avatar className="h-12 w-12 shrink-0 border border-border">
-                    <AvatarImage src={user.user_metadata?.avatar_url} alt="Profile" />
-                    <AvatarFallback className="bg-primary/15 text-primary font-bold">
+                <header className="account-menu-v10-header">
+                  <Avatar className="h-11 w-11 shrink-0 rounded-lg border border-border">
+                    <AvatarImage src={user.user_metadata?.avatar_url} alt="Profile" className="object-cover" />
+                    <AvatarFallback className="rounded-lg bg-primary/15 text-primary font-bold">
                       {user.email?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
-                    <p className="text-base font-bold truncate">{user.user_metadata?.username || 'My account'}</p>
-                    <p className="account-menu-v9-email">{user.email}</p>
-                    <span className="account-menu-v9-role" data-role={isAdmin ? 'admin' : isUploader ? 'uploader' : 'viewer'}>
-                      {isAdmin ? <Crown /> : isUploader ? <Upload /> : <User />}
-                      {isAdmin ? 'Admin' : isUploader ? 'Uploader' : 'Viewer'}
-                    </span>
+                    <p className="account-menu-v10-name">{user.user_metadata?.username || 'My account'}</p>
+                    <p className="account-menu-v10-email">{user.email}</p>
+                    {joinedLabel && <p className="account-menu-v10-joined"><CalendarDays />{joinedLabel}</p>}
                   </div>
                 </header>
-                <section className="account-menu-v9-section">
-                  <h2 className="account-menu-v9-label">YOUR LIBRARY</h2>
-                  <div className="grid grid-cols-2 gap-1">
-                    {[
-                      { to: '/profile', label: 'Profile', icon: User, tone: 'profile' },
-                      { to: '/favorites', label: 'Favorites', icon: Heart, tone: 'favorites' },
-                      { to: '/downloads', label: 'Downloads', icon: Download, tone: 'downloads' },
-                      { to: '/watchlist', label: 'Watch List', icon: ListVideo, tone: 'list' },
-                    ].map(item => (
-                      <DropdownMenuItem asChild key={item.to} className="account-menu-v9-tile">
-                        <Link to={item.to}>
-                          <span className="account-menu-v9-icon" data-tone={item.tone}><item.icon /></span>
-                          <span>{item.label}</span>
-                        </Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </div>
-                  <DropdownMenuItem asChild className="account-menu-v9-row mt-1">
-                    <Link to="/history"><History /><span>Watch History</span><ChevronRight className="account-menu-v9-arrow" /></Link>
-                  </DropdownMenuItem>
-                </section>
-                {(canUpload() || isAdmin) && (
-                  <section className="account-menu-v9-section">
-                    <h2 className="account-menu-v9-label">CREATOR TOOLS</h2>
-                    {canUpload() && <DropdownMenuItem asChild className="account-menu-v9-row">
-                      <Link to="/upload"><span className="account-menu-v9-icon" data-tone="profile"><Upload /></span><span className="flex-1"><strong>Upload Anime</strong><small>Add new episodes</small></span><ChevronRight className="account-menu-v9-arrow" /></Link>
-                    </DropdownMenuItem>}
-                    {isAdmin && <DropdownMenuItem asChild className="account-menu-v9-row">
-                      <Link to="/admin"><span className="account-menu-v9-icon" data-tone="admin"><Shield /></span><span className="flex-1"><strong>Admin Panel</strong><small>Manage platform</small></span><ChevronRight className="account-menu-v9-arrow" /></Link>
-                    </DropdownMenuItem>}
-                  </section>
-                )}
-                <section className="account-menu-v9-section account-menu-v9-footer">
-                  <DropdownMenuItem asChild className="account-menu-v9-row">
-                    <Link to="/settings"><Settings /><span>Settings</span><ChevronRight className="account-menu-v9-arrow" /></Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="account-menu-v9-switch p-0">
-                    <AccountSwitcher />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleSignOut} className="account-menu-v9-row account-menu-v9-signout">
+                <div className="account-menu-v10-list">
+                  {[
+                    { to: '/profile', label: 'Profile', icon: User },
+                    { to: '/watchlist', label: 'Watchlist', icon: Bookmark },
+                    { to: '/continue-watching', label: 'Continue Watching', icon: History },
+                  ].map(item => (
+                    <DropdownMenuItem asChild key={item.to} className="account-menu-v10-item">
+                      <Link to={item.to}><item.icon /><span>{item.label}</span></Link>
+                    </DropdownMenuItem>
+                  ))}
+                </div>
+                <DropdownMenuSeparator className="account-menu-v10-sep" />
+                <div className="account-menu-v10-list">
+                  <DropdownMenuItem onClick={handleSignOut} className="account-menu-v10-item account-menu-v10-signout">
                     <LogOut /><span>Sign Out</span>
                   </DropdownMenuItem>
-                </section>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : null}

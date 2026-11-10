@@ -6,10 +6,10 @@ import {
   VERSION_GROUPS,
 } from './releaseNotes';
 
-it('shows the S2-V2.1 release with a 15MB update size', () => {
-  expect(APP_VERSION).toBe('S2-V2.1');
-  expect(DOWNLOAD_SIZE_MB).toBe(15);
-  expect(RELEASE_DATE).toBe('October 23, 2026');
+it('shows the S2-V3+ release with a 25MB update size', () => {
+  expect(APP_VERSION).toBe('S2-V3+');
+  expect(DOWNLOAD_SIZE_MB).toBe(25);
+  expect(RELEASE_DATE).toBe('November 10, 2026');
 });
 
 it('leads the popup with performance, stability and bug-fix news', () => {
@@ -26,6 +26,6 @@ it('leads the popup with performance, stability and bug-fix news', () => {
 
 it('keeps the previous release listed under its own version', () => {
   const previous = VERSION_GROUPS[1];
-  expect(previous.version).toBe('S2-V2');
+  expect(previous.version).toBe('S2-V2.1');
   expect(previous.version).not.toBe(APP_VERSION);
 });

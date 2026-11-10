@@ -14,9 +14,9 @@ export interface VersionGroup {
   items: ChangelogItem[];
 }
 
-export const APP_VERSION = 'S2-V2.1';
-export const RELEASE_DATE = 'October 23, 2026';
-export const DOWNLOAD_SIZE_MB = 15;
+export const APP_VERSION = 'S2-V3+';
+export const RELEASE_DATE = 'November 10, 2026';
+export const DOWNLOAD_SIZE_MB = 25;
 
 export const BETA_NOTE =
   'Shadow link v2 is now running BETA 2 — a minimal, branding-free standalone player with in-player episode switching and an auto-hiding title overlay.';
@@ -25,6 +25,21 @@ export const VERSION_GROUPS: VersionGroup[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    highlight:
+      'A brand-new AnimeSavi+ look — a cleaner flat design across every page, plus performance, stability and bug fixes.',
+    items: [
+      { icon: '🎨', badge: 'NEW', title: 'Brand-New AnimeSavi+ Design', desc: 'A clean, flat dark look with a fresh lime accent across home, browse, detail and watch pages.' },
+      { icon: '🏠', badge: 'NEW', title: 'New Homepage Banner', desc: 'A full-width rotating banner with quick Watch now and Details buttons, plus a Top Trending list.' },
+      { icon: '🔎', badge: 'NEW', title: 'Browse & Search Filters', desc: 'Filter by genre, year, format, status and audio, with page numbers and a clear result count.' },
+      { icon: '🧭', badge: 'NEW', title: 'Compact Menus', desc: 'A small menu pop-up, a simpler profile menu and a hideable side bar on PC.' },
+      { icon: '🎬', badge: 'IMPROVED', title: 'Three-Column Watch Page', desc: 'Anime info, the player and the episode list sit side by side on PC.' },
+      { icon: '🚩', badge: 'IMPROVED', title: 'Simpler Reports', desc: 'Report a problem from under the video player with five clear options.' },
+      { icon: '🐞', badge: 'FIX', title: 'Stability & Bug Fixes', desc: 'Smoother playback, lighter database use and many layout fixes on iOS, Android and PC.' },
+    ],
+  },
+  {
+    version: 'S2-V2.1',
+    date: 'October 23, 2026',
     highlight:
       'A performance and stability release — faster loading, smoother playback and a long list of bug fixes.',
     items: [
