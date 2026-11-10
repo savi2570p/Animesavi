@@ -45,11 +45,14 @@ const privacySections = [
   { icon: Baby, title: "Children's Privacy", tone: 'text-rose-400', body: 'Our service is not intended for children under 13. We do not knowingly collect personal information from children. If you believe a child has provided us with personal data, please contact us immediately.' },
 ];
 
-function PrivacyPolicyButton() {
+function PrivacyPolicyButton({ plain = false }: { plain?: boolean }) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
+      {plain ? (
+        <button type="button" onClick={() => setOpen(true)}>Privacy</button>
+      ) : (
       <Button variant="ghost"
         onClick={() => setOpen(true)}
         className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground hover:bg-transparent transition-colors text-left flex items-center justify-start gap-1"
@@ -57,6 +60,7 @@ function PrivacyPolicyButton() {
         <Shield className="h-3 w-3" />
         Privacy Policy
       </Button>
+      )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl bg-card/95 backdrop-blur-xl border-border/50 p-0 overflow-hidden" aria-describedby="privacy-policy-description">
           {/* Cinematic Header */}
@@ -149,11 +153,14 @@ const termsSections = [
   { icon: Mail, title: 'Contact', tone: 'text-blue-400', body: 'For questions, concerns, or DMCA notices, contact us via Telegram: @Lv_Savi' },
 ];
 
-function TermsOfServiceButton() {
+function TermsOfServiceButton({ plain = false }: { plain?: boolean }) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
+      {plain ? (
+        <button type="button" onClick={() => setOpen(true)}>Terms</button>
+      ) : (
       <Button variant="ghost"
         onClick={() => setOpen(true)}
         className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground hover:bg-transparent transition-colors text-left flex items-center justify-start gap-1"
@@ -161,6 +168,7 @@ function TermsOfServiceButton() {
         <FileText className="h-3 w-3" />
         Terms of Service
       </Button>
+      )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-3xl bg-card/95 backdrop-blur-xl border-border/50 p-0 overflow-hidden" aria-describedby="terms-of-service-description">
           {/* Cinematic Header */}
@@ -249,19 +257,52 @@ function TermsOfServiceButton() {
   );
 }
 
+const TelegramIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M21.94 4.3 18.7 19.6c-.24 1.07-.88 1.34-1.78.83l-4.93-3.63-2.38 2.29c-.26.26-.48.48-.99.48l.35-5.03 9.16-8.28c.4-.35-.09-.55-.62-.2L6.2 13.2 1.33 11.68c-1.06-.33-1.08-1.06.22-1.57L20.6 2.77c.88-.32 1.65.2 1.34 1.53Z" /></svg>
+);
+const YouTubeIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z" /></svg>
+);
+const InstagramIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" /></svg>
+);
+
+const socialLinks = [
+  { label: 'Telegram channel', href: 'https://t.me/AnimeSaviInhindiDUB', Icon: TelegramIcon },
+  { label: 'YouTube channel', href: 'https://www.youtube.com/@Anime-Savi-official', Icon: YouTubeIcon },
+  { label: 'Instagram profile', href: 'https://www.instagram.com/animesavi.official?vrfl=cWpmMzZ3d3Z2d2ky', Icon: InstagramIcon },
+];
+
 export function Footer() {
-  return <footer className="footer-v6 mt-auto border-t border-border">
-    <div className="container py-7 md:py-9">
-      <div className="flex flex-wrap items-center justify-between gap-5 pb-6 border-b border-border">
-        <div><Link to="/" className="inline-flex items-center gap-2.5"><img src={logo} alt="" className="h-9 w-9 object-contain" /><span className="text-xl font-bold"><span className="text-primary">Anime</span> Savi</span></Link><p className="text-xs text-muted-foreground mt-2">Hindi · English · Japanese</p></div>
-        <Button asChild variant="glass" size="sm"><a href="https://t.me/AnimeSaviInhindiDUB" target="_blank" rel="noopener noreferrer"><MessageCircle className="h-4 w-4" />Join the community<ExternalLink className="h-3.5 w-3.5" /></a></Button>
+  const year = new Date().getFullYear();
+  return <footer className="footer-v7 mt-auto">
+    <div className="container py-10 md:py-12">
+      <Link to="/" className="footer-v7-brand" aria-label="AnimeSavi+ home">
+        <img src={logo} alt="" className="h-10 w-10 object-contain" />
+        <span><span className="text-primary">Anime</span>Savi<sup className="text-primary">+</sup></span>
+      </Link>
+      <p className="footer-v7-about">
+        Your home for anime in Hindi DUB, English dub and subtitles. Discover, watch and pick up right where you left off.
+      </p>
+      <div className="footer-v7-social">
+        {socialLinks.map(({ label, href, Icon }) => (
+          <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} title={label}><Icon /></a>
+        ))}
+        <span className="footer-v7-sep" aria-hidden />
+        <span className="footer-v7-lang">HINDI / ENG / JP</span>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-6 py-6">
-        <nav aria-label="Footer browse"><h3 className="text-xs font-semibold mb-3">Browse</h3><ul className="space-y-2">{footerLinks.browse.map(link => <li key={link.href}><Link to={link.href} className="text-xs text-muted-foreground hover:text-foreground">{link.label}</Link></li>)}</ul></nav>
-        <nav aria-label="Footer genres"><h3 className="text-xs font-semibold mb-3">Genres</h3><ul className="space-y-2">{footerLinks.genres.map(link => <li key={link.href}><Link to={link.href} className="text-xs text-muted-foreground hover:text-foreground">{link.label}</Link></li>)}</ul></nav>
-        <nav aria-label="Footer support" className="col-span-2 md:col-span-1"><h3 className="text-xs font-semibold mb-3">Legal & support</h3><ul className="space-y-2">{footerLinks.support.map(link => <li key={link.label}>{link.external ? <a href={link.href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">{link.label}<ExternalLink className="h-3 w-3 shrink-0" /></a> : link.isPrivacy ? <PrivacyPolicyButton /> : link.isTerms ? <TermsOfServiceButton /> : <Link to={link.href}>{link.label}</Link>}</li>)}</ul></nav>
+
+      <div className="footer-v7-bottom">
+        <p className="footer-v7-copy">© {year} AnimeSavi+. All rights reserved.</p>
+        <p className="footer-v7-note">AnimeSavi+ does not claim ownership of any anime titles, characters or artwork; they belong to their respective owners.</p>
+        <nav aria-label="Footer" className="footer-v7-links">
+          <Link to="/release-notes">News</Link>
+          <PrivacyPolicyButton plain />
+          <TermsOfServiceButton plain />
+          <a href="https://t.me/Lv_Savi" target="_blank" rel="noopener noreferrer">Contact</a>
+          <Link to="/schedule">Schedule</Link>
+        </nav>
       </div>
-      <div className="border-t border-border pt-4 flex flex-wrap items-center justify-between gap-3 text-[11px] text-muted-foreground"><span>©{new Date().getFullYear()} Anime Savi · All rights reserved</span><Link to="/release-notes" className="inline-flex items-center gap-1 hover:text-foreground"><Sparkles className="h-3 w-3" />Release notes<ExternalLink className="h-3 w-3" /></Link></div>
     </div>
   </footer>;
 }
