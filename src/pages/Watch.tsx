@@ -21,6 +21,7 @@ import { VideoPlayer } from '@/components/video/VideoPlayer';
 import { ServerType } from '@/hooks/useServerAutoSelect';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { EpisodeList } from '@/components/video/EpisodeList';
+import { WatchInfoPanel } from '@/components/video/WatchInfoPanel';
 import { WatchParty } from '@/components/WatchParty';
 import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton';
 import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
