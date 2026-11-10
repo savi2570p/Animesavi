@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { DubBadge } from '@/components/anime/DubBadge';
+import { PosterCard } from '@/components/anime/PosterCard';
 
 interface PopularAnime {
   id: string;
@@ -122,30 +122,15 @@ export const MostPopular = memo(function MostPopular() {
           </div>
         </div>
         {loading ? (
-          <div className="flex gap-3 overflow-hidden">{Array.from({length: 8}, (_, i) => <Skeleton key={i} className="w-[144px] h-[260px] shrink-0 rounded-xl" />)}</div>
+          <div className="flex gap-3 overflow-hidden">{Array.from({length: 8}, (_, i) => <Skeleton key={i} className="w-[120px] lg:w-[144px] h-[220px] lg:h-[256px] shrink-0 rounded-md" />)}</div>
         ) : filteredList.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground"><p>No anime found for “{selectedGenre}”.</p><Button variant="link" onClick={() => setSelectedGenre(null)}>Clear filter</Button></div>
         ) : (
           <div ref={rowRef} className="snap-row flex gap-3 md:gap-4 overflow-x-auto -mx-3 px-3 pt-1 pb-4">
             {filteredList.slice(0, 14).map((anime, index) => (
               <AnimeCardContextMenu key={anime.id} animeTitle={anime.title} animeUrl={`/anime/${anime.id}`} coverImage={anime.cover_image}>
-                <Link to={`/anime/${anime.id}`} className="popular-glass-card group block w-[144px] md:w-[160px] shrink-0 rounded-xl overflow-hidden focus-visible:outline focus-visible:outline-primary">
-                  <div className="relative w-[120px] h-[180px] mx-auto mt-3 overflow-hidden rounded-xl bg-muted">
-                    {anime.cover_image && <img src={anime.cover_image} alt="" aria-hidden loading="lazy" className="perf-blur-fill popular-poster-fill absolute inset-0 w-full h-full object-cover" />}
-                    <img src={anime.cover_image || '/placeholder.svg'} alt={anime.title} loading="lazy" decoding="async" className="relative h-full w-full object-contain" />
-                    <div className="absolute inset-x-0 top-0 flex justify-between items-start p-1.5">
-                      <span className="popular-rank inline-flex items-center gap-1 px-1.5 py-1 text-[10px] font-bold rounded-md">{index < 3 && <Crown className="h-3 w-3" />}#{String(index + 1).padStart(2, '0')}</span>
-                      <span className="popular-rank px-1.5 py-1 text-[9px] rounded-md font-bold">4K</span>
-                    </div>
-                    <TokenCrownBadge />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity motion-reduce:transition-none pointer-events-none"><span className="bg-primary text-primary-foreground rounded-md p-2"><Play className="h-4 w-4 fill-current" /></span></div>
-                  </div>
-                  <div className="px-3 pt-2.5 pb-3">
-                    <div className="min-h-5"><DubBadge isEngDub={anime.is_eng_dub} isSubOnly={anime.is_sub_only} genres={anime.genres} /></div>
-                    <h3 className="text-xs font-semibold line-clamp-2 leading-4 h-8 mt-1.5">{anime.title}</h3>
-                    <span className="mt-2 flex items-center gap-1 text-[10px] text-muted-foreground"><Eye className="h-3 w-3" />{formatViews(anime.view_count || 0)} views</span>
-                  </div>
-                </Link>
+                <PosterCard to={`/anime/${anime.id}`} title={anime.title} cover={anime.cover_image} isEngDub={anime.is_eng_dub} isSubOnly={anime.is_sub_only} genres={anime.genres}
+                  tag={`#${String(index + 1).padStart(2, '0')}`} views={formatViews(anime.view_count || 0)} type={(anime as { type?: string | null }).type ?? null} status={(anime as { status?: string | null }).status ?? null} />
               </AnimeCardContextMenu>
             ))}
           </div>
