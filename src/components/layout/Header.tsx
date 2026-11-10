@@ -283,8 +283,7 @@ export function Header() {
       label: 'MORE',
       items: [
         ...(!user ? [{ to: '/auth', label: 'Sign In', icon: LogIn }] : []),
-        { label: 'Join Party', icon: Users, onClick: () => closeMenuThen(() => setJoinPartyOpen(true)) },
-        { label: 'View Parties', icon: Eye, onClick: () => closeMenuThen(() => setViewPartiesOpen(true)) },
+        { label: 'Watch Party', icon: Users, onClick: () => closeMenuThen(() => setViewPartiesOpen(true)) },
         ...(user && !hasPremium ? [{ label: 'Get Premium', icon: Crown, onClick: () => closeMenuThen(() => window.open('https://t.me/getunlocktoken', '_blank', 'noopener')) }] : []),
         { label: 'Verify Token', icon: BadgeCheck, onClick: () => closeMenuThen(() => setVerifyOpen(true)) },
         { label: "What's New", icon: Sparkles, onClick: () => closeMenuThen(showWhatsNewManually) },
@@ -295,9 +294,6 @@ export function Header() {
             setMobileMenuOpen(false);
           },
         }] : []),
-        ...(canUpload() ? [{ label: 'Upload Anime', icon: Upload, onClick: () => closeMenuThen(handleUploadClick) }] : []),
-        ...(isAdmin ? [{ to: '/admin', label: 'Admin Panel', icon: Shield }] : []),
-        ...(user ? [{ to: '/settings', label: 'Settings', icon: Settings }] : []),
       ],
     },
   ];
@@ -539,7 +535,6 @@ export function Header() {
           </form>
 
           <VerifyTokenDialog open={verifyOpen} onOpenChange={setVerifyOpen} />
-          <JoinPartyDialog trigger={null} open={joinPartyOpen} onOpenChange={setJoinPartyOpen} />
           <ViewPartyDialog trigger={null} open={viewPartiesOpen} onOpenChange={setViewPartiesOpen} />
           
         </div>
