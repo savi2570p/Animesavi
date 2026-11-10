@@ -64,7 +64,7 @@ function BootOverlay({
         <div className="clone-orb clone-orb-a" aria-hidden />
         <div className="clone-orb clone-orb-b" aria-hidden />
         <div className="relative">
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.07] shadow-[0_16px_50px_-16px_rgba(168,85,247,0.85)]">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-foreground/5">
             {phase === 'verifying' ? (
               <ShieldCheck className="h-8 w-8 text-primary" />
             ) : (
@@ -157,7 +157,7 @@ function UnlockPopup({
 
         <div className="clone-orb clone-orb-a" aria-hidden />
         <div className="relative">
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.07]">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-foreground/5">
             <PlayCircle className="h-7 w-7 text-primary" />
           </div>
           <h2 className="text-lg font-semibold tracking-tight">Watch a short ad</h2>
@@ -167,7 +167,7 @@ function UnlockPopup({
 
           {watching ? (
             <div className="mt-6">
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
                 <div
                   className="h-full rounded-full bg-primary transition-[width] duration-1000 ease-linear"
                   style={{ width: `${((AD_WATCH_SECONDS - left) / AD_WATCH_SECONDS) * 100}%` }}
@@ -187,7 +187,7 @@ function UnlockPopup({
 
               <button
                 onClick={onClose}
-                className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-muted-foreground transition hover:text-foreground"
+                className="w-full rounded-xl border border-border bg-foreground/5 px-4 py-2.5 text-sm text-muted-foreground transition hover:text-foreground"
               >
                 Not now
               </button>
@@ -553,7 +553,7 @@ export default function ClonePlatform() {
                 </a>
                 <button
                   onClick={() => navigate('/')}
-                  className="rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-2.5 text-xs text-muted-foreground transition hover:text-foreground"
+                  className="rounded-2xl border border-border bg-foreground/5 px-5 py-2.5 text-xs text-muted-foreground transition hover:text-foreground"
                 >
                   Back to home
                 </button>
@@ -580,7 +580,7 @@ export default function ClonePlatform() {
                 <a
                   href={platform.target_url}
                   rel="noreferrer noopener"
-                  className="flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-2.5 text-xs text-muted-foreground transition hover:text-foreground"
+                  className="flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-foreground/5 px-5 py-2.5 text-xs text-muted-foreground transition hover:text-foreground"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   Open Platform

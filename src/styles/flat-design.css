@@ -555,3 +555,16 @@ html.perf-low .home-search-hero-art { display: none; }
 .poster-card-shell:hover .poster-card-remove, .poster-card-remove:focus-visible { opacity: 1; }
 .poster-card-remove.poster-card-remove:hover { background: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); }
 @media (hover: none) { .poster-card-remove.poster-card-remove { opacity: 1; } }
+
+/* ---------------- Clone sites: flat shell around the embedded site ---------------- */
+/* Never add blur/filters here: WebKit can paint the cross-origin frame black. */
+.clone-shell { background-image: none; }
+.clone-glass { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 0 24px 60px -30px hsl(var(--background) / .95); border-radius: 12px; }
+.clone-boot-backdrop { background: hsl(var(--background) / .92); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.clone-orb { display: none; }
+.clone-bar { background: hsl(var(--background)); border-color: hsl(var(--border)); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.clone-icon-btn { border-radius: 6px; color: hsl(var(--foreground) / .75); border-color: hsl(var(--border)); background: hsl(var(--foreground) / .04); }
+.clone-icon-btn:hover { color: hsl(var(--primary)); background: hsl(var(--primary) / .12); }
+.clone-cta { color: hsl(var(--primary-foreground)); background: hsl(var(--primary)); border-color: hsl(var(--primary)); box-shadow: none; border-radius: 8px; }
+.clone-cta:hover { filter: none; background: hsl(var(--primary) / .88); }
+.clone-input { background: hsl(var(--foreground) / .04) !important; border-color: hsl(var(--border)) !important; backdrop-filter: none; -webkit-backdrop-filter: none; border-radius: 8px !important; }
