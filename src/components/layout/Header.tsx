@@ -271,6 +271,48 @@ export function Header() {
         <div className="container relative flex h-12 sm:h-14 items-center justify-between gap-1.5 sm:gap-4">
           {/* Logo lockup */}
           <div className="flex items-center gap-1 sm:gap-2.5 flex-shrink-0">
+            {/* Hamburger menu — left side on every screen */}
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild className="flex-shrink-0">
+                <Button variant="ghost" size="icon" aria-label="Open menu" className="h-7 w-7 sm:h-8 sm:w-8">
+                  <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent
+                ref={menuContentRef}
+                tabIndex={-1}
+                onOpenAutoFocus={(event) => {
+                  // Focus the menu itself, not its search input, to avoid opening
+                  // the iOS/Android keyboard before the user chooses to search.
+                  event.preventDefault();
+                  menuContentRef.current?.focus({ preventScroll: true });
+                }}
+                side="left" className="menu-v4 w-[min(360px,calc(100vw-1rem))] sm:max-w-[360px] border-border px-5 overflow-y-auto z-[160]">
+                <div className="pt-5 pb-6">
+                  <div className="flex items-center gap-3 mb-6"><img src={logo} alt="" className="w-9 h-9 object-contain" /><div><p className="text-lg font-bold">Anime Savi</p><p className="text-xs text-muted-foreground">Your library</p></div></div>
+                  {user ? <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 border border-border"><AvatarImage src={user.user_metadata?.avatar_url} alt="Profile" /><AvatarFallback className="bg-primary text-primary-foreground">{user.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback></Avatar>
+                    <div className="flex-1 min-w-0"><p className="text-sm font-semibold truncate">{user.user_metadata?.username || 'My account'}</p><p className="text-[11px] text-muted-foreground truncate">{user.email}</p></div>
+                    <Button asChild variant="glass" size="icon" title="Profile" aria-label="Open profile" className="h-8 w-8 rounded-lg"><Link to="/profile" onClick={() => setMobileMenuOpen(false)}><User /></Link></Button>
+                  </div> : <Button asChild className="w-full"><Link to="/auth" onClick={() => setMobileMenuOpen(false)}>Sign In</Link></Button>}
+                </div>
+                {user && <div className="flex items-center gap-2 text-xs pb-4"><Crown className="h-4 w-4 text-primary" /><span>{hasPremium ? 'Premium Active' : 'Get Premium Access'}</span>{!hasPremium && <Button variant="glass" size="sm" className="ml-auto h-7 text-xs" onClick={() => closeMenuThen(() => window.open('https://t.me/getunlocktoken', '_blank', 'noopener'))}>Get</Button>}</div>}
+                <form onSubmit={handleSearch} className="relative mb-3"><Input type="search" placeholder="Search anime..." aria-label="Search anime in menu" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="bg-card/70 border-border pr-10" /><Button type="submit" size="icon" variant="ghost" aria-label="Search" className="absolute right-1 top-1 h-8 w-8"><Search /></Button></form>
+                <section className="menu-v4-section"><h2 className="menu-v4-label">DISCOVER</h2><nav className="grid grid-cols-2 gap-1">
+                  {[...navLinks, {to: '/schedule', label: 'Schedule', icon: CalendarDays}].map(link => { const Icon = link.icon || Home; return <Button asChild variant="ghost" key={link.label} className="menu-v4-link"><Link to={link.to} aria-current={isActivePath(link.to) ? 'page' : undefined} onClick={() => setMobileMenuOpen(false)}><Icon className="text-primary" />{link.label}</Link></Button>; })}
+                </nav></section>
+                {user && <section className="menu-v4-section"><h2 className="menu-v4-label">MY LIBRARY</h2><nav className="grid grid-cols-2 gap-1">{[{to:'/favorites',icon:Heart,label:'Favorites'},{to:'/history',icon:History,label:'History'},{to:'/downloads',icon:Download,label:'Downloads'},{to:'/watchlist',icon:Clock,label:'Watch Later'}].map(item => <Button key={item.to} asChild variant="ghost" className="menu-v4-link"><Link to={item.to} aria-current={location.pathname === item.to ? 'page' : undefined} onClick={() => setMobileMenuOpen(false)}><item.icon className="text-primary" />{item.label}</Link></Button>)}</nav></section>}
+                <section className="menu-v4-section"><h2 className="menu-v4-label">WATCH TOGETHER</h2><div className="grid grid-cols-2 gap-1"><Button variant="glass" className="menu-v4-link" onClick={() => closeMenuThen(() => setJoinPartyOpen(true))}><Users />Join Party</Button><Button variant="glass" className="menu-v4-link" onClick={() => closeMenuThen(() => setViewPartiesOpen(true))}><Eye />View Parties</Button></div></section>
+                <section className="menu-v4-section"><h2 className="menu-v4-label">APP & ACCOUNT</h2><div className="space-y-1">
+                  <Button variant="ghost" className="menu-v4-link w-full" onClick={() => closeMenuThen(() => setVerifyOpen(true))}><BadgeCheck />Verify Token</Button>
+                  <Button variant="ghost" className="menu-v4-link w-full" onClick={() => closeMenuThen(showWhatsNewManually)}><Sparkles />What's New</Button>
+                  <Button variant="ghost" className="menu-v4-link w-full" onClick={() => closeMenuThen(handleHardRefresh)}><RefreshCw />Refresh App</Button>
+                  {['savi2570p@gmail.com','shadowtoonsindia@gmail.com'].includes((user?.email || '').toLowerCase()) && <Button variant="ghost" className="menu-v4-link w-full" onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/s2-home`).then(() => toast.success('Home V2 link copied'), () => toast.error('Could not copy link')); setMobileMenuOpen(false); }}><Home />Home V2</Button>}
+                  {canUpload() && <Button variant="glass" className="menu-v4-link w-full" onClick={() => closeMenuThen(handleUploadClick)}><Upload />Upload Anime</Button>}
+                  {isAdmin && <Button asChild variant="glass" className="menu-v4-link w-full"><Link to="/admin" onClick={() => setMobileMenuOpen(false)}><Shield />Admin Panel</Link></Button>}
+                </div></section>
+              </SheetContent>
+            </Sheet>
             <Link to="/welcome" className="nav-logo-v8 group relative flex-shrink-0" aria-label="Welcome">
               <span className="absolute inset-0 rounded-lg bg-primary/30 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <img
@@ -284,7 +326,7 @@ export function Header() {
               variant="ghost"
               size="icon"
               asChild
-              className="xl:hidden h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-primary/10"
+              className="lg:hidden h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-primary/10"
             >
               <Link to="/" aria-label="Home">
                 <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
@@ -295,47 +337,12 @@ export function Header() {
                 Anime
               </span>
               <span className="text-lg font-black tracking-tight text-foreground">Savi</span>
-              <span className="hidden xl:inline-block ml-1.5 px-1.5 py-0.5 rounded-md bg-primary/15 border border-primary/25 text-[8px] font-black uppercase tracking-[0.2em] text-primary">
-                4K
-              </span>
+              <span className="text-lg font-black text-primary">+</span>
             </Link>
           </div>
 
-          {/* Navigation - Desktop pill bar */}
-          <nav className="nav-v6-links hidden xl:flex items-center gap-0.5 whitespace-nowrap">
-            {navLinks.map((link) => {
-              const Icon = link.icon;
-              const active = isActivePath(link.to);
-              return (
-                <Link
-                  key={link.label}
-                  to={link.to}
-                  aria-current={active ? 'page' : undefined}
-                  className={`nav-v6-link relative inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-[13px] font-semibold transition-colors duration-200 ${
-                    active
-                      ? 'text-primary bg-primary/10'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'
-                  }`}
-                >
-                  {Icon && <Icon className="h-3.5 w-3.5" />}
-                  <span>{link.label}</span>
-                </Link>
-              );
-            })}
-
-            {canUpload() && (
-              <Button variant="glass" size="sm"
-                onClick={handleUploadClick}
-                className="ml-1 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[13px] font-bold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/30 transition-all"
-              >
-                <Upload className="h-3.5 w-3.5" />
-                Upload
-              </Button>
-            )}
-          </nav>
-
           {/* Search — Crimson obsidian glass */}
-          <form onSubmit={handleSearch} className="nav-v6-searchform flex-1 min-w-0 max-w-md hidden md:flex">
+          <form onSubmit={handleSearch} className="nav-v6-searchform flex-1 min-w-0 max-w-sm mr-auto hidden md:flex">
             <div className="group relative w-full">
               <div className={`nav-v6-search relative w-full flex items-center border rounded-lg p-1 transition-colors ${isSearchFocused ? 'border-primary/40' : 'border-border/40'}`}>
                 <div className="pl-3 pr-2 flex items-center">
@@ -344,7 +351,7 @@ export function Header() {
                 <input
                   ref={desktopSearchRef}
                   type="search"
-                  placeholder="Search anime, characters, or studios…"
+                  placeholder="Search anime..."
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
@@ -513,48 +520,6 @@ export function Header() {
             </div>
           </form>
 
-          {/* Hamburger Menu - All Screens */}
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild className="flex-shrink-0">
-              <Button variant="ghost" size="icon" aria-label="Open menu" className="h-7 w-7 sm:h-8 sm:w-8">
-                <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent
-              ref={menuContentRef}
-              tabIndex={-1}
-              onOpenAutoFocus={(event) => {
-                // Focus the menu itself, not its search input, to avoid opening
-                // the iOS/Android keyboard before the user chooses to search.
-                event.preventDefault();
-                menuContentRef.current?.focus({ preventScroll: true });
-              }}
-              side="right" className="menu-v4 w-[min(360px,calc(100vw-1rem))] sm:max-w-[360px] border-border px-5 overflow-y-auto z-[160]">
-              <div className="pt-5 pb-6">
-                <div className="flex items-center gap-3 mb-6"><img src={logo} alt="" className="w-9 h-9 object-contain" /><div><p className="text-lg font-bold">Anime Savi</p><p className="text-xs text-muted-foreground">Your library</p></div></div>
-                {user ? <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10 border border-border"><AvatarImage src={user.user_metadata?.avatar_url} alt="Profile" /><AvatarFallback className="bg-primary text-primary-foreground">{user.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback></Avatar>
-                  <div className="flex-1 min-w-0"><p className="text-sm font-semibold truncate">{user.user_metadata?.username || 'My account'}</p><p className="text-[11px] text-muted-foreground truncate">{user.email}</p></div>
-                  <Button asChild variant="glass" size="icon" title="Profile" aria-label="Open profile" className="h-8 w-8 rounded-lg"><Link to="/profile" onClick={() => setMobileMenuOpen(false)}><User /></Link></Button>
-                </div> : <Button asChild className="w-full"><Link to="/auth" onClick={() => setMobileMenuOpen(false)}>Sign In</Link></Button>}
-              </div>
-              {user && <div className="flex items-center gap-2 text-xs pb-4"><Crown className="h-4 w-4 text-primary" /><span>{hasPremium ? 'Premium Active' : 'Get Premium Access'}</span>{!hasPremium && <Button variant="glass" size="sm" className="ml-auto h-7 text-xs" onClick={() => closeMenuThen(() => window.open('https://t.me/getunlocktoken', '_blank', 'noopener'))}>Get</Button>}</div>}
-              <form onSubmit={handleSearch} className="relative mb-3"><Input type="search" placeholder="Search anime..." aria-label="Search anime in menu" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="bg-card/70 border-border pr-10" /><Button type="submit" size="icon" variant="ghost" aria-label="Search" className="absolute right-1 top-1 h-8 w-8"><Search /></Button></form>
-              <section className="menu-v4-section"><h2 className="menu-v4-label">DISCOVER</h2><nav className="grid grid-cols-2 gap-1">
-                {[...navLinks, {to: '/schedule', label: 'Schedule', icon: CalendarDays}].map(link => { const Icon = link.icon || Home; return <Button asChild variant="ghost" key={link.label} className="menu-v4-link"><Link to={link.to} aria-current={isActivePath(link.to) ? 'page' : undefined} onClick={() => setMobileMenuOpen(false)}><Icon className="text-primary" />{link.label}</Link></Button>; })}
-              </nav></section>
-              {user && <section className="menu-v4-section"><h2 className="menu-v4-label">MY LIBRARY</h2><nav className="grid grid-cols-2 gap-1">{[{to:'/favorites',icon:Heart,label:'Favorites'},{to:'/history',icon:History,label:'History'},{to:'/downloads',icon:Download,label:'Downloads'},{to:'/watchlist',icon:Clock,label:'Watch Later'}].map(item => <Button key={item.to} asChild variant="ghost" className="menu-v4-link"><Link to={item.to} aria-current={location.pathname === item.to ? 'page' : undefined} onClick={() => setMobileMenuOpen(false)}><item.icon className="text-primary" />{item.label}</Link></Button>)}</nav></section>}
-              <section className="menu-v4-section"><h2 className="menu-v4-label">WATCH TOGETHER</h2><div className="grid grid-cols-2 gap-1"><Button variant="glass" className="menu-v4-link" onClick={() => closeMenuThen(() => setJoinPartyOpen(true))}><Users />Join Party</Button><Button variant="glass" className="menu-v4-link" onClick={() => closeMenuThen(() => setViewPartiesOpen(true))}><Eye />View Parties</Button></div></section>
-              <section className="menu-v4-section"><h2 className="menu-v4-label">APP & ACCOUNT</h2><div className="space-y-1">
-                <Button variant="ghost" className="menu-v4-link w-full" onClick={() => closeMenuThen(() => setVerifyOpen(true))}><BadgeCheck />Verify Token</Button>
-                <Button variant="ghost" className="menu-v4-link w-full" onClick={() => closeMenuThen(showWhatsNewManually)}><Sparkles />What's New</Button>
-                <Button variant="ghost" className="menu-v4-link w-full" onClick={() => closeMenuThen(handleHardRefresh)}><RefreshCw />Refresh App</Button>
-                {['savi2570p@gmail.com','shadowtoonsindia@gmail.com'].includes((user?.email || '').toLowerCase()) && <Button variant="ghost" className="menu-v4-link w-full" onClick={() => { navigator.clipboard?.writeText(`${window.location.origin}/s2-home`).then(() => toast.success('Home V2 link copied'), () => toast.error('Could not copy link')); setMobileMenuOpen(false); }}><Home />Home V2</Button>}
-                {canUpload() && <Button variant="glass" className="menu-v4-link w-full" onClick={() => closeMenuThen(handleUploadClick)}><Upload />Upload Anime</Button>}
-                {isAdmin && <Button asChild variant="glass" className="menu-v4-link w-full"><Link to="/admin" onClick={() => setMobileMenuOpen(false)}><Shield />Admin Panel</Link></Button>}
-              </div></section>
-            </SheetContent>
-          </Sheet>
           <VerifyTokenDialog open={verifyOpen} onOpenChange={setVerifyOpen} />
           <JoinPartyDialog trigger={null} open={joinPartyOpen} onOpenChange={setJoinPartyOpen} />
           <ViewPartyDialog trigger={null} open={viewPartiesOpen} onOpenChange={setViewPartiesOpen} />
