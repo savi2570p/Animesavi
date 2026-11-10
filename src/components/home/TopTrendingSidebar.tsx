@@ -1,4 +1,5 @@
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,36 +26,44 @@ const TABS = [
   { id: 'sub', label: 'Sub' },
 ] as const;
 type TabId = typeof TABS[number]['id'];
+const FIELDS = 'id, title, cover_image, banner_image, type, view_count, total_episodes, genres, is_eng_dub, is_sub_only';
 
 /** Ranked "Top Trending" list for the homepage sidebar, ordered by views. */
 export const TopTrendingSidebar = memo(function TopTrendingSidebar() {
-  const [items, setItems] = useState<TrendingItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabId>('all');
-
-  useEffect(() => {
-    let cancelled = false;
-    supabase
-      .from('anime')
-      .select('id, title, cover_image, banner_image, type, view_count, total_episodes, genres, is_eng_dub, is_sub_only')
-      .order('view_count', { ascending: false })
-      .limit(60)
-      .then(({ data }) => {
-        if (cancelled) return;
-        setItems((data as TrendingItem[]) || []);
-        setLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, []);
+  const { data, isPending: loading } = useQuery({
+    queryKey: ['home-top-trending'],
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    queryFn: async () => {
+      // Admin-curated list wins; an empty list falls back to ranking by views.
+      const { data: lineup } = await supabase
+        .from('top_trending_lineup')
+        .select(`position, custom_title, custom_cover_url, custom_banner_url, anime:anime_id (${FIELDS})`)
+        .eq('is_active', true)
+        .order('position', { ascending: true });
+      const curated = ((lineup || []) as unknown as { custom_title: string | null; custom_cover_url: string | null; custom_banner_url: string | null; anime: TrendingItem | null }[])
+        .filter(r => r.anime)
+        .map(r => ({
+          ...r.anime!,
+          title: r.custom_title || r.anime!.title,
+          cover_image: r.custom_cover_url || r.anime!.cover_image,
+          banner_image: r.custom_banner_url || r.anime!.banner_image,
+        }));
+      if (curated.length) return { curated: true, items: curated };
+      const { data: ranked } = await supabase.from('anime').select(FIELDS).order('view_count', { ascending: false }).limit(60);
+      return { curated: false, items: (ranked as TrendingItem[]) || [] };
+    },
+  });
+  const items = data?.items ?? [];
 
   const ranked = useMemo(() => {
     const filtered = items.filter(a =>
       tab === 'all' ? true : tab === 'sub' ? a.is_sub_only : !a.is_sub_only && !a.is_eng_dub);
-    return filtered
-      .map(a => ({ ...a, views: getViewCount(a.title, a.view_count) }))
-      .sort((a, b) => b.views - a.views)
-      .slice(0, 10);
-  }, [items, tab]);
+    const withViews = filtered.map(a => ({ ...a, views: getViewCount(a.title, a.view_count) }));
+    // Curated lists keep the admin's order; automatic lists rank by views.
+    return (data?.curated ? withViews : withViews.sort((a, b) => b.views - a.views)).slice(0, 10);
+  }, [items, tab, data?.curated]);
 
   return (
     <section className="top-trending p-3 md:p-4" aria-labelledby="top-trending-title">
