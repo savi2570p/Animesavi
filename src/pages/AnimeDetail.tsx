@@ -37,6 +37,8 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { DubBadge } from '@/components/anime/DubBadge';
+import { PosterCard } from '@/components/anime/PosterCard';
+import { formatViews, getViewCount } from '@/lib/viewCount';
 
 // Helper to create slug from title
 const createSlug = (title: string): string => {
@@ -97,6 +99,7 @@ export default function AnimeDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [seasonLoading, setSeasonLoading] = useState(false);
   const [recommendations, setRecommendations] = useState<Anime[]>([]);
+  const [detailTab, setDetailTab] = useState<'overview' | 'recs'>('overview');
   const [watchProgress, setWatchProgress] = useState<Map<string, WatchProgress>>(new Map());
   
   // Long press for mobile thumbnail download
@@ -154,7 +157,7 @@ export default function AnimeDetail() {
   // Previously this depended on [id, user] which restarted the loader the
   // moment the auth context hydrated, causing the visible "loading restart".
   useEffect(() => {
-    if (id) fetchAnimeDetails();
+    if (id) { setDetailTab('overview'); fetchAnimeDetails(); }
   }, [id]);
 
   // User-scoped data is fetched independently so it never interrupts the page.
@@ -233,7 +236,7 @@ export default function AnimeDetail() {
         .select('*')
         .neq('id', id)
         .overlaps('genres', animeData.genres)
-        .limit(6);
+        .limit(12);
 
       if (recData) {
         setRecommendations(recData);
@@ -472,6 +475,8 @@ export default function AnimeDetail() {
   }
 
   const nextEpisode = getFirstUnwatchedEpisode();
+  const statusLabel = anime.status === 'ongoing' ? 'Releasing' : anime.status === 'completed' ? 'Finished' : anime.status === 'upcoming' ? 'Not Yet Released' : anime.status;
+  const views = formatViews(getViewCount(anime.title, anime.view_count));
 
   const seoDesc = (anime.description || `Watch ${anime.title} in Hindi DUB on AnimeSavi.`).replace(/<[^>]+>/g, '').slice(0, 160);
   const seoTitle = `${anime.title} — Watch in Hindi DUB | AnimeSavi`;
@@ -495,46 +500,90 @@ export default function AnimeDetail() {
         type="video.tv_show"
         jsonLd={seriesLd}
       />
-      <section className="detail-v3-hero relative isolate">
-        <img src={anime.banner_image || anime.cover_image || '/placeholder.svg'} alt={anime.title} className="absolute inset-0 w-full h-full object-cover" decoding="async" fetchPriority="high" />
-        <div className="detail-v3-scrim absolute inset-0 pointer-events-none" />
-        <div className="container relative pt-4 pb-8 md:pb-12 h-full flex flex-col justify-between">
-          <Button variant="ghost" size="icon" aria-label="Go back" onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/')} className="hero-v3-glass rounded-full h-9 w-9"><ArrowLeft className="h-4 w-4" /></Button>
-          <div className="flex items-end gap-5 md:gap-8 mt-8">
-            <div className="hidden md:block shrink-0" onTouchStart={isIOSDevice() ? undefined : handleTouchStart} onTouchEnd={isIOSDevice() ? undefined : handleTouchEnd} onTouchMove={isIOSDevice() ? undefined : handleTouchMove}>
-              <img src={anime.cover_image || '/placeholder.svg'} alt={`${anime.title} poster`} className="w-40 lg:w-48 aspect-[2/3] object-contain rounded-lg border border-border" draggable={isIOSDevice()} />
-            </div>
-            <div className="min-w-0 max-w-3xl">
-              <div className="flex items-center gap-2 flex-wrap mb-3"><DubBadge size="md" isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} genres={anime.genres} />{anime.status && <span className={anime.status === 'ongoing' ? 'badge-glass-og' : 'badge-glass-com'}>{anime.status === 'ongoing' ? 'OG' : anime.status === 'completed' ? 'COM' : anime.status}</span>}{anime.type && <span className="text-xs text-foreground/80 capitalize">{anime.type}</span>}</div>
-              <h1 className="font-heading font-extrabold text-2xl md:text-4xl lg:text-5xl leading-tight break-words">{anime.title}</h1>
-              <div className="flex flex-wrap items-center gap-3 text-xs text-foreground/75 mt-3">{anime.release_year && <span>{anime.release_year}</span>}{anime.total_episodes != null && <span>{anime.total_episodes} episodes</span>}{anime.studio && <span>{anime.studio}</span>}{anime.like_count != null && anime.like_count > 0 && <span className="flex gap-1 items-center"><Heart className="h-3 w-3" />{anime.like_count}</span>}</div>
-              <div className="detail-v3-actions flex flex-wrap gap-2 mt-5">
-                {nextEpisode && <Button asChild className="gap-2"><Link to={`/watch/${nextEpisode.id}`}><Play className="h-4 w-4 fill-current" />{watchProgress.size > 0 ? 'Continue' : 'Watch Now'}</Link></Button>}
-                <Button variant="outline" size="icon" aria-label={isFavorite ? 'Remove favorite' : 'Add favorite'} title={isFavorite ? 'Remove favorite' : 'Add favorite'} onClick={toggleFavorite} className={cn('hero-v3-glass',isFavorite && 'text-primary')}><Heart className={cn('h-4 w-4',isFavorite && 'fill-current')} /></Button>
-                {nextEpisode && <Button variant="outline" size="icon" aria-label={isInWatchList ? 'Remove from Watch List' : 'Add to Watch List'} title="Watch List" onClick={toggleWatchList} className={cn('hero-v3-glass',isInWatchList && 'text-primary')}><ListVideo className="h-4 w-4" /></Button>}
-                <ShareEmbedPopup type="series" pageUrl={`/${createSlug(anime.title)}`} animeTitle={anime.title} className="hero-v3-glass h-10" />
+      <div className="detail-ra relative isolate">
+        <div className="detail-ra-banner" aria-hidden>
+          <img src={anime.banner_image || anime.cover_image || '/placeholder.svg'} alt="" decoding="async" fetchPriority="high" />
+        </div>
+        <div className="container relative pt-10 md:pt-24 pb-12">
+          <div className="detail-ra-grid">
+            {/* Left: poster + info */}
+            <aside className="space-y-4">
+              <div className="mx-auto w-40 md:w-full" onTouchStart={isIOSDevice() ? undefined : handleTouchStart} onTouchEnd={isIOSDevice() ? undefined : handleTouchEnd} onTouchMove={isIOSDevice() ? undefined : handleTouchMove}>
+                <img src={anime.cover_image || '/placeholder.svg'} alt={`${anime.title} poster`} className="detail-ra-poster" draggable={isIOSDevice()} />
+              </div>
+              <dl className="detail-ra-info hidden md:grid">
+                <div><dt>Type</dt><dd>{anime.type === 'movie' ? 'Movie' : 'TV Series'}</dd></div>
+                <div><dt>Episodes</dt><dd>{anime.total_episodes ?? episodes.length}</dd></div>
+                {seasons.length > 0 && <div><dt>Seasons</dt><dd>{seasons.length}</dd></div>}
+                {anime.status && <div><dt>Status</dt><dd>{statusLabel}</dd></div>}
+                {anime.release_year && <div><dt>Year</dt><dd>{anime.release_year}</dd></div>}
+                {anime.studio && <div><dt>Studio</dt><dd>{anime.studio}</dd></div>}
+                <div><dt>Views</dt><dd>{views}</dd></div>
+              </dl>
+            </aside>
+
+            {/* Right: title, story, actions, tabs */}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap mb-2"><DubBadge size="md" isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} genres={anime.genres} /></div>
+              <h1 className="font-heading font-bold text-2xl md:text-3xl leading-tight break-words">{anime.title}</h1>
+              {anime.description && <p className="mt-3 text-sm text-foreground/80 leading-relaxed max-w-5xl whitespace-pre-line">{anime.description}</p>}
+              {anime.genres?.length > 0 && <div className="flex flex-wrap gap-1.5 mt-4">{anime.genres.map(g => <Link key={g} to={`/browse?genre=${encodeURIComponent(g.toLowerCase())}`} className="detail-ra-genre">{g}</Link>)}</div>}
+
+              <div className="detail-v3-actions flex flex-wrap items-center gap-2 mt-4">
+                {nextEpisode && <Button asChild size="sm" className="gap-1.5"><Link to={`/watch/${nextEpisode.id}`}><Play className="h-3.5 w-3.5 fill-current" />{watchProgress.size > 0 ? `Continue Ep ${nextEpisode.episode_number}` : anime.type === 'movie' ? 'Watch Now' : `Watch Ep ${nextEpisode.episode_number}`}</Link></Button>}
+                {nextEpisode && <Button variant="outline" size="sm" onClick={toggleWatchList} className={cn('gap-1.5', isInWatchList && 'text-primary border-primary/50')}><ListVideo className="h-3.5 w-3.5" />{isInWatchList ? 'In My List' : 'Add to List'}</Button>}
+                <Button variant="outline" size="icon" aria-label={isFavorite ? 'Remove favorite' : 'Add favorite'} title={isFavorite ? 'Remove favorite' : 'Add favorite'} onClick={toggleFavorite} className={cn('h-9 w-9', isFavorite && 'text-primary border-primary/50')}><Heart className={cn('h-3.5 w-3.5', isFavorite && 'fill-current')} /></Button>
+                <ShareEmbedPopup type="series" pageUrl={`/${createSlug(anime.title)}`} animeTitle={anime.title} className="h-9" />
                 <MoreInfoDrawer anime={anime as any} totalSeasons={seasons.length} totalAvailableEpisodes={anime.total_episodes ?? episodes.length} />
                 {episodes.length > 0 && <BatchDownload episodes={episodes} animeTitle={anime.title} />}
+              </div>
+
+              <div className="flex flex-wrap gap-1.5 mt-4">
+                <span className="detail-ra-meta">{anime.type === 'movie' ? 'Movie' : 'TV'}</span>
+                {(anime.total_episodes ?? episodes.length) > 0 && <span className="detail-ra-meta">{anime.total_episodes ?? episodes.length} episodes</span>}
+                {anime.status && <span className="detail-ra-meta">{statusLabel}</span>}
+                {anime.release_year && <span className="detail-ra-meta">{anime.release_year}</span>}
+              </div>
+
+              <div className="detail-ra-panel mt-6">
+                <div className="detail-ra-tabs" role="tablist" aria-label="Anime sections">
+                  <button type="button" role="tab" id="tab-overview" aria-controls="panel-overview" aria-selected={detailTab === 'overview'} className="detail-ra-tab" onClick={() => setDetailTab('overview')}>Overview</button>
+                  <button type="button" role="tab" id="tab-recs" aria-controls="panel-recs" aria-selected={detailTab === 'recs'} className="detail-ra-tab" onClick={() => setDetailTab('recs')}>Recommendations</button>
+                </div>
+
+                {detailTab === 'overview' ? (
+                  <div id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" className="p-4 md:p-5 space-y-7">
+                    {anime.studio && <section className="detail-ra-section"><h2>Studios</h2><div className="flex flex-wrap gap-1.5">{anime.studio.split(',').map(st => st.trim()).filter(Boolean).map(st => <span key={st} className="detail-ra-chip">{st}</span>)}</div></section>}
+                    {anime.genres?.length > 0 && <section className="detail-ra-section"><h2>Tags</h2><div className="flex flex-wrap gap-1.5">{anime.genres.map(g => <span key={g} className="detail-ra-chip">{g}</span>)}</div></section>}
+                    <section className="detail-ra-section"><h2>Stats</h2>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+                        <div className="detail-ra-stat"><span>Episodes</span><strong>{anime.total_episodes ?? episodes.length}</strong></div>
+                        <div className="detail-ra-stat"><span>Seasons</span><strong>{Math.max(seasons.length, 1)}</strong></div>
+                        <div className="detail-ra-stat"><span>Audio</span><strong>{(anime as any).is_sub_only ? 'SUB' : (anime as any).is_eng_dub ? 'E-DUB' : 'H-DUB'}</strong></div>
+                        <div className="detail-ra-stat"><span>Views</span><strong>{views}</strong></div>
+                      </div>
+                    </section>
+                    <section className="detail-ra-section" aria-label="Episode library">
+                      <div className="flex items-center justify-between flex-wrap gap-3 mb-3"><h2 className="!mb-0">Episodes <span className="text-xs font-normal text-muted-foreground">{episodes.length} available</span></h2>
+                        {seasons.length > 0 && <Select value={selectedSeason || undefined} onValueChange={setSelectedSeason}><SelectTrigger className="w-[200px] max-w-full h-9"><SelectValue placeholder="Season" /></SelectTrigger><SelectContent>{seasons.map(season => <SelectItem key={season.id} value={season.id}>{season.title || `Season ${season.season_number}`}</SelectItem>)}</SelectContent></Select>}
+                      </div>
+                      {seasonLoading ? <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{Array.from({length:8},(_,i)=><Skeleton key={i} className="aspect-video rounded-md" />)}</div> : episodes.length === 0 ? <div className="py-10 text-center"><Clock className="h-6 w-6 text-muted-foreground mx-auto mb-2" /><p className="text-sm text-muted-foreground">No episodes available yet.</p></div> : <div className="detail-v3-episodes"><EpisodeGrid episodes={episodes} fallbackImage={anime.banner_image || anime.cover_image} getProgress={getEpisodeProgress} isCompleted={isEpisodeCompleted} onToggleWatched={(episodeId,e) => markAsWatched(episodeId,e)} /></div>}
+                    </section>
+                    <section className="detail-ra-section"><AnimeReviews animeId={anime.id} /></section>
+                  </div>
+                ) : (
+                  <div id="panel-recs" role="tabpanel" aria-labelledby="tab-recs" className="p-4 md:p-5">
+                    {recommendations.length === 0 ? <p className="py-10 text-center text-sm text-muted-foreground">No recommendations yet.</p> : (
+                      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
+                        {recommendations.map(rec => <PosterCard key={rec.id} fluid to={`/anime/${rec.id}`} title={rec.title} cover={rec.cover_image} isEngDub={(rec as any).is_eng_dub} isSubOnly={(rec as any).is_sub_only} genres={rec.genres} type={rec.type} year={rec.release_year} status={rec.status} views={formatViews(getViewCount(rec.title, rec.view_count))} />)}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
-      </section>
-      <section className="border-b border-border"><div className="container py-6 md:py-8 grid md:grid-cols-[1fr_260px] gap-5 md:gap-10">
-        <div><h2 className="text-sm font-semibold mb-3">Story</h2><p className="text-sm text-muted-foreground leading-relaxed max-w-3xl">{anime.description}</p></div>
-        <div className="flex flex-wrap gap-1.5 content-start">{anime.genres?.map(genre => <Badge key={genre} variant="outline" className="catalogue-chip rounded text-[10px] font-medium">{genre}</Badge>)}</div>
-      </div></section>
-      <div className="container py-6 md:py-9">
-        <section aria-label="Episode library">
-          <div className="flex items-center justify-between flex-wrap gap-3 mb-5"><div><span className="text-[10px] text-muted-foreground uppercase">{episodes.length} available</span><h2 className="font-heading text-xl md:text-2xl font-semibold mt-1">Episodes</h2></div>
-            {seasons.length > 0 && <Select value={selectedSeason || undefined} onValueChange={setSelectedSeason}><SelectTrigger className="catalogue-glass w-[210px] max-w-full"><SelectValue placeholder="Season" /></SelectTrigger><SelectContent>{seasons.map(season => <SelectItem key={season.id} value={season.id}>{season.title || `Season ${season.season_number}`}</SelectItem>)}</SelectContent></Select>}
-          </div>
-          {seasonLoading ? <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{Array.from({length:8},(_,i)=><Skeleton key={i} className="aspect-video rounded-lg" />)}</div> : episodes.length === 0 ? <div className="py-14 text-center border-y border-border"><Clock className="h-7 w-7 text-muted-foreground mx-auto mb-3" /><p className="text-sm text-muted-foreground">No episodes available yet.</p></div> : <div className="detail-v3-episodes"><EpisodeGrid episodes={episodes} fallbackImage={anime.banner_image || anime.cover_image} getProgress={getEpisodeProgress} isCompleted={isEpisodeCompleted} onToggleWatched={(episodeId,e) => markAsWatched(episodeId,e)} /></div>}
-        </section>
-        {recommendations.length > 0 && <section className="mt-9 md:mt-12" aria-label="You Might Also Like"><h2 className="font-heading text-xl md:text-2xl font-semibold mb-5">You Might Also Like</h2><div className="snap-row flex gap-3 overflow-x-auto pb-3">
-          {recommendations.map(rec => <Link key={rec.id} to={`/anime/${rec.id}`} className="catalogue-glass rounded-lg overflow-hidden w-[120px] shrink-0"><div className="relative h-[180px]"><img src={rec.cover_image || '/placeholder.svg'} alt={rec.title} className="w-full h-full object-contain" loading="lazy" /><div className="absolute left-1.5 top-1.5"><DubBadge isEngDub={(rec as any).is_eng_dub} isSubOnly={(rec as any).is_sub_only} genres={rec.genres} /></div></div><h3 className="text-xs font-semibold line-clamp-2 min-h-10 p-2">{rec.title}</h3></Link>)}
-        </div></section>}
-        <AnimeReviews animeId={anime.id} />
       </div>
     </div>
   );
