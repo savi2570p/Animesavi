@@ -22,7 +22,7 @@ export const TrendingBanner = memo(function TrendingBanner() {
   const [paused, setPaused] = useState(false);
   const [sectionRef, isActive] = useActiveOnScreen<HTMLElement>('0px');
   const { data: trending = [], isPending } = useQuery({
-    queryKey: ['home-trending-v2'], staleTime: 5 * 60_000, refetchOnWindowFocus: false,
+    queryKey: ['home-trending-v2'], staleTime: 60_000, refetchOnWindowFocus: false,
     queryFn: async () => {
       const custom = await supabase.from('trending_banner_lineup')
         .select('custom_title, custom_cover_url, custom_banner_url, anime:anime_id(id,title,cover_image,banner_image,view_count,genres,status,is_eng_dub,is_sub_only)')
