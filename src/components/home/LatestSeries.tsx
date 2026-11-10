@@ -5,12 +5,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AnimeCardContextMenu } from '@/components/AnimeCardContextMenu';
 import { PosterCard } from '@/components/anime/PosterCard';
 import { useHomeCatalogue } from '@/hooks/useHomeCatalogue';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { CatalogueHeading } from './CatalogueHeading';
 
 export const LatestSeries = memo(function LatestSeries() {
   const rowRef = useRef<HTMLDivElement>(null);
   const { data, isPending, isError, refetch } = useHomeCatalogue();
-  const series = data?.series ?? [];
+  const isMobile = useIsMobile();
+  // PC shows 16 titles; phones keep the shorter 12-title row.
+  const series = (data?.series ?? []).slice(0, isMobile ? 12 : 16);
   return <section className="catalogue-section py-6 md:py-9" aria-label="Latest Series">
     <div className="container">
       <CatalogueHeading title="Latest Series" eyebrow="The latest chapter" icon={Tv} href="/latest-series" rowRef={rowRef} />
