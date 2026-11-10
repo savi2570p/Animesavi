@@ -31,7 +31,7 @@
 - Trending Now and Top Trending each have an admin-protected lineup table edited in separate hero-editor modes, so lists never affect each other.
 - Watch Stats uses scoped optical tokens and unframed account sections while retaining existing statistics calculations.
 - Homepage Latest Series and Latest Episodes share one security-invoker catalogue RPC and a short-lived query cache to reduce duplicated requests without bypassing row permissions.
-- Profile-avatar menus reuse a single utility glass surface and semantic icon tones, preserving existing destinations, account switching and role guards to keep presentation independent of account access.
+- The header hamburger is an anchored Popover built from one menuSections list and the profile dropdown renders on every device; both keep role guards and existing handlers so menu restyles never change access.
 
 - Admin uses unframed tools with a single utility-glass navigation layer; upload editors share authenticated server-role access checks, never session-storage codes, so admins without uploader roles can edit safely.
 - Upload no longer uses the legacy password gate; retain server-role and database permission checks as the access authority.
