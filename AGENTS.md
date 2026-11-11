@@ -46,5 +46,6 @@
 - Clone sites forbidding framing get a header-only backend check and an open-directly card; never proxy or strip frame protections.
 - Progress writes use watchProgressThrottle, polls skip hidden tabs, conversion scans run daily at most, so idle tabs don't wake the database.
 - Site-wide flat styling lives in src/styles/flat-design.css (loaded after index.css) as token overrides; restyle there, not per component, for consistency.
-- One Watch Party menu entry; admin/upload in PC rail; phone NotificationBell opens from the profile menu.
+- One Watch Party menu entry; admin/upload in PC rail; the bell and phone profile-menu Notifications open the /notifications page via the shared useNotifications cache, never a popup.
+- Phone/tablet Watch uses MobileWatchSections (season cards, episode list, About card) driven by the page's existing season/episode handlers; selected servers use a slim primary outline.
 - getServerGroups (is_sub_only) groups DUB/SUB servers; SUB = AS+ engine, audioLocked, getServerVideoUrl.
