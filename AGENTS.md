@@ -47,4 +47,4 @@
 - Progress writes use watchProgressThrottle, polls skip hidden tabs, conversion scans run daily at most, so idle tabs don't wake the database.
 - Site-wide flat styling lives in src/styles/flat-design.css (loaded after index.css) as token overrides; restyle there, not per component, for consistency.
 - One Watch Party menu entry; admin/upload in PC rail; phones open the one NotificationBell from the profile menu.
-- getServerGroups (is_sub_only) groups DUB/SUB servers; SUB reuses the AS+ engine with audioLocked.
+- getServerGroups (is_sub_only) groups DUB/SUB servers; SUB reuses the AS+ engine with audioLocked and plays the per-episode SUB file via getServerVideoUrl, else the main file.
