@@ -1,3 +1,4 @@
+import { StreamServersPicker } from '@/components/upload/StreamServersPicker';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -559,30 +560,26 @@ export default function UploadAnimeEdit() {
                 </div>
               </label>
 
-              <label htmlFor="edit_is_sub_only" className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-muted/30 border border-border/40 hover:border-emerald-400/50 transition-colors">
-                <input
-                  type="checkbox"
-                  id="edit_is_sub_only"
-                  checked={isSubOnly}
-                  onChange={async (e) => {
-                    const val = e.target.checked;
+              <div className="sm:col-span-2 space-y-2">
+                <span className="text-sm font-medium block">Streaming servers</span>
+                <StreamServersPicker
+                  value={isSubOnly ? 'sub' : 'dub'}
+                  disabled={isSavingSubOnly}
+                  onChange={async (kind) => {
+                    const val = kind === 'sub';
+                    if (val === isSubOnly) return;
                     setIsSubOnly(val);
                     setIsSavingSubOnly(true);
                     const { error } = await (supabase as any)
                       .from('anime')
                       .update({ is_sub_only: val })
                       .eq('id', animeId);
-                    if (error) { toast.error('Failed to update SUB status'); setIsSubOnly(!val); }
-                    else { toast.success(val ? 'Added to SUB-ONLY tab' : 'Removed from SUB-ONLY tab'); }
+                    if (error) { toast.error('Failed to update streaming servers'); setIsSubOnly(!val); }
+                    else { toast.success(val ? 'SUB only: viewers get the 4K+ server' : 'DUB: viewers get H.Savi, AS+ and 4K+'); }
                     setIsSavingSubOnly(false);
                   }}
-                  className="w-5 h-5 rounded border-border accent-primary"
                 />
-                <div className="flex-1">
-                  <span className="text-sm font-medium block">Add to SUB</span>
-                  <span className="text-[10px] text-muted-foreground">Show under the SUB-ONLY collection with the SUB tag</span>
-                </div>
-              </label>
+              </div>
             </div>
           </div>
         </div>
