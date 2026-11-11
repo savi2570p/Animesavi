@@ -1082,6 +1082,11 @@ button, [role="button"], a {
     min-height: 44px;
     min-width: 44px;
   }
+  /* Player controls and the watch breadcrumb keep their compact designed size. */
+  .player-shell button, .player-shell a, .watch-breadcrumb a {
+    min-height: 0;
+    min-width: 0;
+  }
 }
 
 /* Uniform anime card sizing for all devices */

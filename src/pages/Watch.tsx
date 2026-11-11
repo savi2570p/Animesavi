@@ -1322,7 +1322,7 @@ export default function Watch() {
         <WatchInfoPanel anime={anime} episodeNumber={episode.episode_number} seasonNumber={currentSeason?.season_number || 1} episodeCount={allEpisodes.length} />
         {/* Video Player */}
         <div className="min-w-0">
-          <nav aria-label="Breadcrumb" className="watch-breadcrumb flex items-center gap-1.5 text-[11px] text-muted-foreground mb-2 px-3 pt-2 lg:px-0 lg:pt-0 min-w-0">
+          <nav aria-label="Breadcrumb" className="watch-breadcrumb flex flex-nowrap items-center gap-1.5 text-[11px] text-muted-foreground mb-2 px-3 pt-2 lg:px-0 lg:pt-0 min-w-0">
             <Link to="/" className="hover:text-foreground">Home</Link>
             <ChevronRight className="h-3 w-3 shrink-0" />
             {anime && <Link to={`/anime/${anime.id}`} className="hover:text-foreground truncate min-w-0 max-w-[24rem]">{anime.title}</Link>}
@@ -1449,13 +1449,6 @@ export default function Watch() {
               <div className="watch-servers-head">
                 <p className="watch-servers-title">You are watching <span>{isMovie ? 'the Movie' : `Episode ${episode.episode_number}`}</span></p>
                 <p className="watch-servers-hint">If the current server is not working, please try switching to other servers.</p>
-                <ServerStatusIndicator
-                  activeServer={activeServer}
-                  failedServers={failedServers}
-                  isServerLoading={serverLoading}
-                  fallbackOccurred={fallbackOccurred}
-                  fallbackFrom={fallbackFrom}
-                />
               </div>
               {(() => {
                 const embedOnly = !episode.video_url && isEmbedLikeUrl(episode.external_url);
