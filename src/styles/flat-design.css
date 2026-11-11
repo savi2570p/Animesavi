@@ -613,14 +613,15 @@ html.perf-low .home-search-hero-art { display: none; }
 }
 
 /* ===== Phone/tablet watch sections (Re:ANIME-style) ===== */
-.wm-sections { display: grid; gap: 22px; }
+.wm-sections { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; min-width: 0; }
+.wm-sections > * { min-width: 0; }
 .wm-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-bottom: 10px; }
 .wm-title { font-family: var(--font-heading, inherit); font-size: 20px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; }
 .wm-count { font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 6px; border: 1px solid hsl(var(--border)); color: hsl(var(--foreground) / .85); }
 .wm-season-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
 .wm-season-row::-webkit-scrollbar { display: none; }
 .wm-season-card { position: relative; flex: 0 0 auto; width: min(62vw, 240px); height: 76px; border-radius: 10px; overflow: hidden; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); text-align: center; scroll-snap-align: start; }
-.wm-season-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .35; }
+.wm-season-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .28; }
 .wm-season-card[aria-pressed="true"] { border-color: hsl(var(--primary)); box-shadow: 0 0 0 1px hsl(var(--primary) / .6); }
 .wm-season-copy { position: relative; display: grid; place-content: center; gap: 1px; height: 100%; padding: 0 12px; background: linear-gradient(180deg, hsl(0 0% 0% / .2), hsl(0 0% 0% / .55)); }
 .wm-season-label { font-size: 9.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: hsl(var(--primary)); }
