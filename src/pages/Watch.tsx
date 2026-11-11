@@ -28,7 +28,7 @@ import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton'
 import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
 
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
-import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers, getServerGroups, getPlaybackEngine, getDefaultServer, getServerVideoUrl } from '@/hooks/useServerAutoSelect';
+import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers, getServerGroups, getPlaybackEngine, getDefaultServer, getServerVideoUrl, episodeHasSub, getEpisodeAudioMarks, filterEpisodesForServer } from '@/hooks/useServerAutoSelect';
 import { isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 import { useEmbedWatchTracker } from '@/hooks/useEmbedWatchTracker';
 import { z } from 'zod';
@@ -365,6 +365,11 @@ export default function Watch() {
       return;
     }
 
+    if (server === 'SUB' && !anime?.is_sub_only && !episodeHasSub(episode)) {
+      setServerBlockMessage('SUB is not available for this episode yet. Please use a DUB server.');
+      return;
+    }
+
     if (server === 'EMBED' && isFileOnlyEpisode) {
       setServerBlockMessage('Embed link is not available. Please use other servers.');
       return;
@@ -442,7 +447,8 @@ export default function Watch() {
         autoSubAnimeRef.current = anime.id;
         handleServerSwitch('SUB');
       }
-    } else if (autoSubAnimeRef.current && activeServer === 'SUB') {
+    } else if (activeServer === 'SUB' && (autoSubAnimeRef.current || !episodeHasSub(episode))) {
+      // Leaving a SUB-only title, or a DUB episode with no SUB video: back to the saved DUB server.
       autoSubAnimeRef.current = null;
       handleServerSwitch(getDefaultServer());
     }
@@ -1198,10 +1204,19 @@ export default function Watch() {
     }
   };
 
-  const getCurrentEpisodeIndex = () => allEpisodes.findIndex((ep) => ep.id === episodeId);
+  // On a DUB title the SUB server lists (and steps through) only episodes that have a SUB video.
+  const serverEpisodes = useMemo(() => {
+    const list = filterEpisodesForServer(allEpisodes, activeServer, !!anime?.is_sub_only);
+    return list.some((ep) => ep.id === episodeId) ? list : allEpisodes;
+  }, [allEpisodes, activeServer, anime?.is_sub_only, episodeId]);
+  const getEpisodeMarks = useCallback(
+    (ep: { sub_video_url?: string | null }) => getEpisodeAudioMarks({ isSubOnly: anime?.is_sub_only, isEngDub: anime?.is_eng_dub }, ep),
+    [anime?.is_sub_only, anime?.is_eng_dub],
+  );
+  const getCurrentEpisodeIndex = () => serverEpisodes.findIndex((ep) => ep.id === episodeId);
 
-  const prevEpisode = allEpisodes[getCurrentEpisodeIndex() - 1];
-  const nextEpisode = allEpisodes[getCurrentEpisodeIndex() + 1];
+  const prevEpisode = serverEpisodes[getCurrentEpisodeIndex() - 1];
+  const nextEpisode = serverEpisodes[getCurrentEpisodeIndex() + 1];
 
   const isMovie = anime?.type?.toLowerCase() === 'movie';
 
@@ -1452,12 +1467,12 @@ export default function Watch() {
               </div>
               {(() => {
                 const embedOnly = !episode.video_url && isEmbedLikeUrl(episode.external_url);
-                const groups = getServerGroups(!!anime?.is_sub_only);
+                const groups = getServerGroups(!!anime?.is_sub_only, episodeHasSub(episode));
                 const rows: { key: string; label: string; Icon: typeof Mic; servers: typeof availableServers }[] = embedOnly
                   ? [{ key: 'embed', label: 'EMBED', Icon: Server, servers: ['EMBED'] }]
                   : [
                       ...(groups.dub.length ? [{ key: 'dub', label: 'DUB', Icon: Mic, servers: groups.dub }] : []),
-                      { key: 'sub', label: 'SUB', Icon: Captions, servers: groups.sub },
+                      ...(groups.sub.length ? [{ key: 'sub', label: 'SUB', Icon: Captions, servers: groups.sub }] : []),
                     ];
                 return rows.map(row => (
                   <div key={row.key} className="watch-servers-row">
@@ -1514,7 +1529,8 @@ export default function Watch() {
 
         <aside className="watch-reanime-episodes hidden lg:block min-w-0" aria-label="Episodes">
           <EpisodeList
-            episodes={allEpisodes}
+            episodes={serverEpisodes}
+            getMarks={getEpisodeMarks}
             currentEpisodeId={episodeId || ''}
             className="sticky top-20"
             onEpisodeSelect={goToEpisode}
@@ -1527,7 +1543,8 @@ export default function Watch() {
       {/* Mobile Episode List - Below Server/Season Selection */}
       <div className="lg:hidden container py-4 border-b border-border/30">
         <EpisodeList
-          episodes={allEpisodes}
+          episodes={serverEpisodes}
+          getMarks={getEpisodeMarks}
           currentEpisodeId={episodeId || ''}
           className="max-h-[250px]"
           onEpisodeSelect={goToEpisode}
