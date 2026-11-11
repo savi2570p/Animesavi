@@ -46,5 +46,5 @@
 - Clone sites that forbid framing are detected by a header-only backend check and shown an open-directly card; never proxy or strip frame protections.
 - Watch progress writes use watchProgressThrottle, polls skip hidden tabs and the full conversion scan runs at most daily, so idle tabs don't flood or wake the database.
 - Site-wide flat styling lives in src/styles/flat-design.css (loaded after index.css) as token overrides; restyle there, not per component, for consistency.
-- Hamburger has one Watch Party entry; admin/upload live in the PC side rail, settings in Profile; phones reuse one NotificationBell via a hidden anchor opened from the profile menu.
-- Player servers are grouped by getServerGroups (DUB vs SUB, driven by is_sub_only); SUB renders through the AS+ engine with audioLocked, so no new player engine exists.
+- One Watch Party hamburger entry; admin/upload in PC rail; phones open the single NotificationBell from the profile menu.
+- getServerGroups (is_sub_only) groups DUB/SUB servers; SUB reuses the AS+ engine with audioLocked, avoiding a new engine.
