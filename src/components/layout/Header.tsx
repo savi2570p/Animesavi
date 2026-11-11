@@ -120,6 +120,7 @@ export function Header() {
   // Never keep the navbar hidden across navigations.
   useEffect(() => {
     setNavHidden(false);
+    setMobileSearchOpen(false);
   }, [location.pathname]);
 
 
@@ -431,7 +432,7 @@ export function Header() {
           {/* Phones: search is an icon that opens a full-width bar */}
           {isMobileOS && (
             <Button type="button" variant="ghost" size="icon" aria-label="Search" title="Search"
-              className="nav-mobile-search-btn h-8 w-8 rounded-full" onClick={() => setMobileSearchOpen(true)}>
+              className="nav-mobile-search-btn md:hidden h-8 w-8 rounded-full" onClick={() => setMobileSearchOpen(true)}>
               <Search className="h-4 w-4" />
             </Button>
           )}
