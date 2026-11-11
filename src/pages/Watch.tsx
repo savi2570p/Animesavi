@@ -23,6 +23,7 @@ import { ServerType } from '@/hooks/useServerAutoSelect';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { EpisodeList } from '@/components/video/EpisodeList';
 import { WatchInfoPanel } from '@/components/video/WatchInfoPanel';
+import { MobileWatchEpisodes, MobileAboutAnime } from '@/components/video/MobileWatchSections';
 import { WatchParty } from '@/components/WatchParty';
 import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton';
 import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
@@ -1501,7 +1502,7 @@ export default function Watch() {
 
             {/* Season Switcher */}
             {allSeasons.length > 0 && (
-              <div className="flex items-center gap-2 md:gap-3 md:border-l md:border-border md:pl-5 min-w-0 md:ml-auto">
+              <div className={`${allSeasons.length > 1 ? 'hidden lg:flex' : 'flex'} items-center gap-2 md:gap-3 lg:border-l lg:border-border lg:pl-5 min-w-0 lg:ml-auto`}>
                 <span className="text-[11px] md:text-xs font-bold uppercase tracking-wider text-foreground/80 shrink-0">Season</span>
                 <div className="relative flex-1 md:flex-initial">
                   <select
@@ -1539,13 +1540,14 @@ export default function Watch() {
 
       {/* Mobile Episode List - Below Server/Season Selection */}
       <div className="lg:hidden container py-4 border-b border-border/30">
-        <EpisodeList
-          episodes={serverEpisodes}
+        <MobileWatchEpisodes
+          anime={anime as any}
+          seasons={allSeasons}
+          currentSeasonId={currentSeason?.id}
+          onSeasonChange={handleSeasonChange}
+          episodes={serverEpisodes as any}
           currentEpisodeId={episodeId || ''}
-          className="max-h-[250px]"
           onEpisodeSelect={goToEpisode}
-          animeTitle={anime?.title}
-          seasonNumber={currentSeason?.season_number}
         />
       </div>
 
@@ -1717,6 +1719,10 @@ export default function Watch() {
             )}
           </div>
             </div>
+          </div>
+
+          <div className="xl:hidden mt-6">
+            <MobileAboutAnime anime={anime as any} episodeCount={allEpisodes.length} />
           </div>
 
           {/* Comments */}

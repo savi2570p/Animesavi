@@ -45,6 +45,7 @@ import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
 import { ViewPartyDialog } from '@/components/WatchParty';
 import { NotificationBell } from '@/components/NotificationBell';
+import { useNotifications } from '@/hooks/useNotifications';
 import { rememberAccount } from '@/components/AccountSwitcher';
 import { hasValidTokenAccess } from '@/components/AccessBanner';
 import { VerifyTokenDialog } from '@/components/VerifyTokenDialog';
@@ -61,8 +62,7 @@ export function Header() {
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [mobileNotifOpen, setMobileNotifOpen] = useState(false);
-  const [unreadNotifs, setUnreadNotifs] = useState(0);
+  const { unreadCount: unreadNotifs } = useNotifications();
   const { showWhatsNewManually } = usePopupQueue();
   const hasPremium = !!user && (isAdmin || hasValidTokenAccess(user?.email));
   const desktopSearchRef = useRef<HTMLInputElement>(null);
@@ -437,11 +437,6 @@ export function Header() {
             </Button>
           )}
           {user && !isMobileOS && <div className="[&_button]:h-7 [&_button]:w-7 sm:[&_button]:h-9 sm:[&_button]:w-9 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4"><NotificationBell /></div>}
-          {user && isMobileOS && (
-            <div className="relative h-0 w-0">
-              <NotificationBell hideTrigger open={mobileNotifOpen} onOpenChange={setMobileNotifOpen} onUnreadChange={setUnreadNotifs} />
-            </div>
-          )}
           
           {user ? (
             <DropdownMenu>
@@ -490,13 +485,11 @@ export function Header() {
                     </DropdownMenuItem>
                   ))}
                   {isMobileOS && (
-                    <DropdownMenuItem
-                      className="account-menu-v10-item"
-                      // Let the profile menu finish closing before the panel opens.
-                      onSelect={() => window.setTimeout(() => setMobileNotifOpen(true), 120)}
-                    >
-                      <Bell /><span>Notifications</span>
-                      {unreadNotifs > 0 && <span className="account-menu-v10-badge">{unreadNotifs > 9 ? '9+' : unreadNotifs}</span>}
+                    <DropdownMenuItem asChild className="account-menu-v10-item">
+                      <Link to="/notifications">
+                        <Bell /><span>Notifications</span>
+                        {unreadNotifs > 0 && <span className="account-menu-v10-badge">{unreadNotifs > 9 ? '9+' : unreadNotifs}</span>}
+                      </Link>
                     </DropdownMenuItem>
                   )}
                 </div>

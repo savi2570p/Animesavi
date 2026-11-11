@@ -36,7 +36,7 @@ import {
   CalendarClock,
   ArrowLeft,
 } from 'lucide-react';
-import { DubBadge } from '@/components/anime/DubBadge';
+import { isAdultGenres } from '@/components/anime/DubBadge';
 import { PosterCard } from '@/components/anime/PosterCard';
 import { formatViews, getViewCount } from '@/lib/viewCount';
 
@@ -524,7 +524,7 @@ export default function AnimeDetail() {
 
             {/* Right: title, story, actions, tabs */}
             <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap mb-2"><DubBadge size="md" isEngDub={(anime as any).is_eng_dub} isSubOnly={(anime as any).is_sub_only} genres={anime.genres} /></div>
+              {isAdultGenres(anime.genres) && <div className="flex items-center gap-2 flex-wrap mb-2"><span className="rounded font-bold bg-destructive text-destructive-foreground shadow px-2 py-0.5 text-[10px]">18+</span></div>}
               <h1 className="font-heading font-bold text-2xl md:text-3xl leading-tight break-words">{anime.title}</h1>
               {anime.description && <p className="mt-3 text-sm text-foreground/80 leading-relaxed max-w-5xl whitespace-pre-line">{anime.description}</p>}
               {anime.genres?.length > 0 && <div className="flex flex-wrap gap-1.5 mt-4">{anime.genres.map(g => <Link key={g} to={`/browse?genre=${encodeURIComponent(g.toLowerCase())}`} className="detail-ra-genre">{g}</Link>)}</div>}
@@ -559,7 +559,7 @@ export default function AnimeDetail() {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
                         <div className="detail-ra-stat"><span>Episodes</span><strong>{anime.total_episodes ?? episodes.length}</strong></div>
                         <div className="detail-ra-stat"><span>Seasons</span><strong>{Math.max(seasons.length, 1)}</strong></div>
-                        <div className="detail-ra-stat"><span>Audio</span><strong>{(anime as any).is_sub_only ? 'SUB' : (anime as any).is_eng_dub ? 'E-DUB' : 'H-DUB'}</strong></div>
+                        <div className="detail-ra-stat"><span>Status</span><strong>{statusLabel || '—'}</strong></div>
                         <div className="detail-ra-stat"><span>Views</span><strong>{views}</strong></div>
                       </div>
                     </section>
@@ -567,7 +567,7 @@ export default function AnimeDetail() {
                       <div className="flex items-center justify-between flex-wrap gap-3 mb-3"><h2 className="!mb-0">Episodes <span className="text-xs font-normal text-muted-foreground">{episodes.length} available</span></h2>
                         {seasons.length > 0 && <Select value={selectedSeason || undefined} onValueChange={setSelectedSeason}><SelectTrigger className="w-[200px] max-w-full h-9"><SelectValue placeholder="Season" /></SelectTrigger><SelectContent>{seasons.map(season => <SelectItem key={season.id} value={season.id}>{season.title || `Season ${season.season_number}`}</SelectItem>)}</SelectContent></Select>}
                       </div>
-                      {seasonLoading ? <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{Array.from({length:8},(_,i)=><Skeleton key={i} className="aspect-video rounded-md" />)}</div> : episodes.length === 0 ? <div className="py-10 text-center"><Clock className="h-6 w-6 text-muted-foreground mx-auto mb-2" /><p className="text-sm text-muted-foreground">No episodes available yet.</p></div> : <div className="detail-v3-episodes"><EpisodeGrid episodes={episodes} audio={{ isSubOnly: (anime as any).is_sub_only, isEngDub: (anime as any).is_eng_dub }} fallbackImage={anime.banner_image || anime.cover_image} getProgress={getEpisodeProgress} isCompleted={isEpisodeCompleted} onToggleWatched={(episodeId,e) => markAsWatched(episodeId,e)} /></div>}
+                      {seasonLoading ? <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{Array.from({length:8},(_,i)=><Skeleton key={i} className="aspect-video rounded-md" />)}</div> : episodes.length === 0 ? <div className="py-10 text-center"><Clock className="h-6 w-6 text-muted-foreground mx-auto mb-2" /><p className="text-sm text-muted-foreground">No episodes available yet.</p></div> : <div className="detail-v3-episodes"><EpisodeGrid episodes={episodes} fallbackImage={anime.banner_image || anime.cover_image} getProgress={getEpisodeProgress} isCompleted={isEpisodeCompleted} onToggleWatched={(episodeId,e) => markAsWatched(episodeId,e)} /></div>}
                     </section>
                     <section className="detail-ra-section"><AnimeReviews animeId={anime.id} /></section>
                   </div>

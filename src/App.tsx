@@ -75,6 +75,7 @@ const Welcome = lazy(() => import("./pages/Welcome"));
 const QaCheck = lazy(() => import("./pages/QaCheck"));
 const Downloads = lazy(() => import("./pages/Downloads"));
 const WatchList = lazy(() => import("./pages/WatchList"));
+const Notifications = lazy(() => import("./pages/Notifications"));
 const ShadowArise = lazy(() => import("./pages/ShadowArise"));
 const SiteHealth = lazy(() => import("./pages/SiteHealth"));
 const AdminFeaturedLineup = lazy(() => import("./pages/AdminFeaturedLineup"));
@@ -295,6 +296,7 @@ const App = () => (
                     <Route path="/stats" element={<UserStats />} />
                     <Route path="/downloads" element={<Downloads />} />
                     <Route path="/watchlist" element={<WatchList />} />
+                    <Route path="/notifications" element={<Notifications />} />
                     <Route path="/flox/*" element={<Navigate to="/" replace />} />
                     <Route path="/:animeSlug/:episodeSlug" element={<AnimeSlugRedirect />} />
                     <Route path="/:animeSlug" element={<AnimeSlugRedirect />} />
