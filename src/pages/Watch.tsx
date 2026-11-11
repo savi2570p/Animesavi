@@ -28,7 +28,7 @@ import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton'
 import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
 
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
-import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers, getServerGroups, getPlaybackEngine, getDefaultServer, getServerVideoUrl, episodeHasSub, getEpisodeAudioMarks, filterEpisodesForServer } from '@/hooks/useServerAutoSelect';
+import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers, getServerGroups, getPlaybackEngine, getDefaultServer, getServerVideoUrl, episodeHasSub, filterEpisodesForServer } from '@/hooks/useServerAutoSelect';
 import { isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 import { useEmbedWatchTracker } from '@/hooks/useEmbedWatchTracker';
 import { z } from 'zod';
@@ -1209,10 +1209,6 @@ export default function Watch() {
     const list = filterEpisodesForServer(allEpisodes, activeServer, !!anime?.is_sub_only);
     return list.some((ep) => ep.id === episodeId) ? list : allEpisodes;
   }, [allEpisodes, activeServer, anime?.is_sub_only, episodeId]);
-  const getEpisodeMarks = useCallback(
-    (ep: { sub_video_url?: string | null }) => getEpisodeAudioMarks({ isSubOnly: anime?.is_sub_only, isEngDub: anime?.is_eng_dub }, ep),
-    [anime?.is_sub_only, anime?.is_eng_dub],
-  );
   const getCurrentEpisodeIndex = () => serverEpisodes.findIndex((ep) => ep.id === episodeId);
 
   const prevEpisode = serverEpisodes[getCurrentEpisodeIndex() - 1];
@@ -1482,7 +1478,7 @@ export default function Watch() {
                         const isActive = activeServer === server;
                         const isFailed = failedServers.has(server);
                         return (
-                          <button
+                          <Button
                             type="button"
                             key={server}
                             onClick={() => handleServerChange(server)}
@@ -1490,9 +1486,11 @@ export default function Watch() {
                             aria-pressed={isActive}
                             title={SERVER_CONFIGS[server].description}
                             className={`watch-server-btn ${isFailed ? 'is-failed' : ''}`}
+                            variant="outline"
                           >
                             {SERVER_CONFIGS[server].name}
-                          </button>
+                            {row.key === 'sub' && <span className="ml-1.5 rounded border border-primary/30 bg-primary/10 px-1.5 text-[9px] leading-4 text-primary">BETA</span>}
+                          </Button>
                         );
                       })}
                     </div>
@@ -1530,7 +1528,6 @@ export default function Watch() {
         <aside className="watch-reanime-episodes hidden lg:block min-w-0" aria-label="Episodes">
           <EpisodeList
             episodes={serverEpisodes}
-            getMarks={getEpisodeMarks}
             currentEpisodeId={episodeId || ''}
             className="sticky top-20"
             onEpisodeSelect={goToEpisode}
@@ -1544,7 +1541,6 @@ export default function Watch() {
       <div className="lg:hidden container py-4 border-b border-border/30">
         <EpisodeList
           episodes={serverEpisodes}
-          getMarks={getEpisodeMarks}
           currentEpisodeId={episodeId || ''}
           className="max-h-[250px]"
           onEpisodeSelect={goToEpisode}
