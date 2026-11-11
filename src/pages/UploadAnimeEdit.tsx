@@ -1,4 +1,5 @@
 import { StreamServersPicker } from '@/components/upload/StreamServersPicker';
+import { SubEpisodesManager } from '@/components/upload/SubEpisodesManager';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -90,6 +91,7 @@ export default function UploadAnimeEdit() {
   const [isSavingEngDub, setIsSavingEngDub] = useState(false);
   const [isSubOnly, setIsSubOnly] = useState(false);
   const [isSavingSubOnly, setIsSavingSubOnly] = useState(false);
+  const [subEpisodesOpen, setSubEpisodesOpen] = useState(false);
   const [scheduleDay, setScheduleDay] = useState<string>('auto');
   const [isSavingSchedule, setIsSavingSchedule] = useState(false);
 
@@ -163,6 +165,7 @@ export default function UploadAnimeEdit() {
     setIsMuse((animeData as any).is_muse || false);
     setIsEngDub((animeData as any).is_eng_dub || false);
     setIsSubOnly((animeData as any).is_sub_only || false);
+    if ((animeData as any).is_sub_only) setSubEpisodesOpen(true);
     setScheduleDay((animeData as any).schedule_day !== null && (animeData as any).schedule_day !== undefined ? String((animeData as any).schedule_day) : 'auto');
     setEditTitle(animeData.title || '');
     setEditDescription(animeData.description || '');
@@ -567,6 +570,8 @@ export default function UploadAnimeEdit() {
                   disabled={isSavingSubOnly}
                   onChange={async (kind) => {
                     const val = kind === 'sub';
+                    // Choosing SUB always opens the uploaded-episodes list for adding SUB videos.
+                    if (val) setSubEpisodesOpen(true);
                     if (val === isSubOnly) return;
                     setIsSubOnly(val);
                     setIsSavingSubOnly(true);
@@ -579,6 +584,14 @@ export default function UploadAnimeEdit() {
                     setIsSavingSubOnly(false);
                   }}
                 />
+                {animeId && (
+                  <SubEpisodesManager
+                    animeId={animeId}
+                    seasons={seasons}
+                    open={subEpisodesOpen}
+                    onOpenChange={setSubEpisodesOpen}
+                  />
+                )}
               </div>
             </div>
           </div>
