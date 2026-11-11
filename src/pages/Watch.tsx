@@ -27,7 +27,6 @@ import { WatchParty } from '@/components/WatchParty';
 import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton';
 import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
 
-import { ServerStatusIndicator } from '@/components/video/ServerStatusIndicator';
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
 import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers, getServerGroups, getPlaybackEngine, getDefaultServer } from '@/hooks/useServerAutoSelect';
 import { isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
