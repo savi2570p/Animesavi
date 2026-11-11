@@ -31,3 +31,14 @@ export function DubBadge(props: DubBadgeProps) {
     </span>
   );
 }
+
+/** Per-episode audio marks, e.g. H-DUB + SUB when a SUB video was added to a dubbed episode. */
+export function EpisodeAudioMarks({ marks, className = "" }: { marks: ("H-DUB" | "E-DUB" | "SUB")[]; className?: string }) {
+  return (
+    <span className={`inline-flex items-center gap-1 ${className}`}>
+      {marks.map((m) => (
+        <DubOnly key={m} isSubOnly={m === "SUB"} isEngDub={m === "E-DUB"} />
+      ))}
+    </span>
+  );
+}
