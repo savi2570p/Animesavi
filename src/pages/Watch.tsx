@@ -28,7 +28,7 @@ import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton'
 import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
 
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
-import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers, getServerGroups, getPlaybackEngine, getDefaultServer } from '@/hooks/useServerAutoSelect';
+import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers, getServerGroups, getPlaybackEngine, getDefaultServer, getServerVideoUrl } from '@/hooks/useServerAutoSelect';
 import { isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 import { useEmbedWatchTracker } from '@/hooks/useEmbedWatchTracker';
 import { z } from 'zod';
@@ -69,6 +69,7 @@ interface Episode {
   title: string;
   description: string | null;
   video_url: string | null;
+  sub_video_url?: string | null;
   external_url: string | null;
   duration: number | null;
   season_id: string;
@@ -1356,7 +1357,7 @@ export default function Watch() {
             >
             <VideoPlayer
               key={`${episodeId}-${activeServer}-${reloadToken}`}
-              videoUrl={deviceOptimizedVideo.videoUrl || episode.video_url}
+              videoUrl={getServerVideoUrl(activeServer, deviceOptimizedVideo.videoUrl || episode.video_url, episode.sub_video_url)}
               externalUrl={episode.external_url}
               title={episode.title}
               animeTitle={anime?.title || ''}

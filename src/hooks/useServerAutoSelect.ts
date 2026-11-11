@@ -17,6 +17,16 @@ export function getPlaybackEngine(server: ServerType): ServerType {
   return server === 'SUB' ? 'XPLUS' : server;
 }
 
+/** Video file a server plays: 4K+ uses the episode's own SUB file when one was added, else the main file. */
+export function getServerVideoUrl(
+  server: ServerType,
+  mainUrl: string | null | undefined,
+  subUrl: string | null | undefined,
+): string | null {
+  if (server === 'SUB' && subUrl && subUrl.trim()) return subUrl.trim();
+  return mainUrl || null;
+}
+
 interface ServerConfig {
   id: ServerType;
   name: string;

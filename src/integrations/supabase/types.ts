@@ -442,6 +442,7 @@ export type Database = {
           outro_start_time: number | null
           season_id: string
           short_id: string | null
+          sub_video_url: string | null
           thumbnail: string | null
           title: string
           video_url: string | null
@@ -463,6 +464,7 @@ export type Database = {
           outro_start_time?: number | null
           season_id: string
           short_id?: string | null
+          sub_video_url?: string | null
           thumbnail?: string | null
           title: string
           video_url?: string | null
@@ -484,6 +486,7 @@ export type Database = {
           outro_start_time?: number | null
           season_id?: string
           short_id?: string | null
+          sub_video_url?: string | null
           thumbnail?: string | null
           title?: string
           video_url?: string | null

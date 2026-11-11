@@ -4459,3 +4459,16 @@ html.perf-low .party-v2.party-v2 { backdrop-filter: none; -webkit-backdrop-filte
 .party-guest-lock-actions button svg { width: 15px; height: 15px; }
 .party-guest-lock-actions button:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; }
 html.perf-low .party-guest-lock-pill, html.perf-low .party-guest-lock-actions button { backdrop-filter: none; -webkit-backdrop-filter: none; background: hsl(var(--background) / .85); }
+
+/* SUB episodes manager (Edit Series) */
+.sub-eps { border: 1px solid hsl(var(--border) / .65); border-radius: 12px; background: hsl(var(--muted) / .2); overflow: hidden; }
+.sub-eps-head { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; color: hsl(var(--foreground)); }
+.sub-eps-head:hover { background: hsl(var(--muted) / .3); }
+.sub-eps-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); flex-shrink: 0; }
+.sub-eps-body { display: grid; gap: 10px; padding: 0 14px 14px; }
+.sub-eps-select { height: 32px; border-radius: 6px; border: 1px solid hsl(var(--border)); background: hsl(var(--background)); color: hsl(var(--foreground)); padding: 0 10px; font-size: 12px; }
+.sub-eps-list { display: grid; gap: 6px; max-height: 520px; overflow-y: auto; }
+.sub-eps-row { display: grid; gap: 10px; padding: 8px; border-radius: 8px; border: 1px solid hsl(var(--border) / .55); background: hsl(var(--background) / .6); }
+.sub-eps-pill { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: .04em; color: hsl(var(--muted-foreground)); border: 1px solid hsl(var(--border)); }
+.sub-eps-pill.is-on { color: hsl(var(--primary)); border-color: hsl(var(--primary) / .45); background: hsl(var(--primary) / .1); }
+.sub-eps-editor { display: grid; gap: 10px; padding-top: 8px; border-top: 1px solid hsl(var(--border) / .5); }
