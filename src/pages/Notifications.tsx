@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications, formatNotificationTime } from '@/hooks/useNotifications';
 
 export default function Notifications() {
-  const { user, loading } = useAuth() as ReturnType<typeof useAuth> & { loading?: boolean };
+  const { user, isLoading: authLoading } = useAuth();
   const { notifications, unreadCount, isLoading, markAllRead, clearAll } = useNotifications();
 
   // Opening the page marks queued alerts as read.
@@ -31,7 +31,7 @@ export default function Notifications() {
         )}
       </header>
 
-      {!user && !loading ? (
+      {!user && !authLoading ? (
         <div className="py-16 text-center">
           <Bell className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
           <p className="font-semibold">Sign in to see your notifications</p>
