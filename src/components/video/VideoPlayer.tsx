@@ -35,6 +35,7 @@ import {
   X,
   AlertCircle,
   RefreshCw,
+  Lock,
 } from 'lucide-react';
 import { 
   getAudioTrackLabel, 
