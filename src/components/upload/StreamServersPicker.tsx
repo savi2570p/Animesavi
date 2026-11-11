@@ -6,7 +6,7 @@ export type StreamKind = 'dub' | 'sub';
 const names = (ids: typeof DUB_SERVERS) => ids.map(id => SERVER_CONFIGS[id].name).join(' · ');
 
 const OPTIONS: { value: StreamKind; title: string; Icon: typeof Mic; detail: string }[] = [
-  { value: 'dub', title: 'DUB', Icon: Mic, detail: `DUB servers ${names(DUB_SERVERS)} plus SUB ${names(SUB_SERVERS)}` },
+  { value: 'dub', title: 'DUB', Icon: Mic, detail: `DUB servers ${names(DUB_SERVERS)}, plus SUB ${names(SUB_SERVERS)} on episodes with a SUB video` },
   { value: 'sub', title: 'SUB', Icon: Captions, detail: `Only the ${names(SUB_SERVERS)} server, Japanese audio` },
 ];
 
