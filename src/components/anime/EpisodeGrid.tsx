@@ -2,6 +2,8 @@ import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { EpisodeAudioMarks } from '@/components/anime/DubBadge';
+import { getEpisodeAudioMarks } from '@/hooks/useServerAutoSelect';
 
 export interface EpisodeGridItem {
   id: string;
@@ -9,6 +11,7 @@ export interface EpisodeGridItem {
   title: string;
   thumbnail: string | null;
   duration: number | null;
+  sub_video_url?: string | null;
 }
 
 interface EpisodeGridProps {
@@ -17,6 +20,8 @@ interface EpisodeGridProps {
   getProgress: (id: string) => number;
   isCompleted: (id: string) => boolean;
   onToggleWatched: (id: string, e: React.MouseEvent) => void;
+  /** Anime audio classification, used for per-episode H-DUB / E-DUB / SUB marks. */
+  audio?: { isSubOnly?: boolean | null; isEngDub?: boolean | null };
 }
 
 const formatDuration = (m: number | null) => (m ? `${m} min` : '');
@@ -32,7 +37,9 @@ function EpisodeCardImpl({
   completed,
   onToggleWatched,
   index,
+  audio,
 }: {
+  audio?: EpisodeGridProps['audio'];
   ep: EpisodeGridItem;
   fallbackImage?: string | null;
   progress: number;
@@ -65,8 +72,11 @@ function EpisodeCardImpl({
 
         {/* EP + duration bottom row */}
         <div className="absolute inset-x-0 bottom-0 p-2 flex items-end justify-between gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/85 text-primary-foreground shadow">
-            EP {ep.episode_number}
+          <span className="inline-flex items-center gap-1 min-w-0">
+            <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/85 text-primary-foreground shadow">
+              EP {ep.episode_number}
+            </span>
+            {audio && <EpisodeAudioMarks marks={getEpisodeAudioMarks(audio, ep)} />}
           </span>
           {ep.duration && (
             <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-black/70 text-white/90 backdrop-blur-sm">
@@ -127,6 +137,9 @@ function EpisodeCardImpl({
 
 const EpisodeCard = memo(EpisodeCardImpl, (prev, next) =>
   prev.ep.id === next.ep.id &&
+  prev.ep.sub_video_url === next.ep.sub_video_url &&
+  prev.audio?.isSubOnly === next.audio?.isSubOnly &&
+  prev.audio?.isEngDub === next.audio?.isEngDub &&
   prev.progress === next.progress &&
   prev.completed === next.completed &&
   prev.fallbackImage === next.fallbackImage
@@ -138,6 +151,7 @@ export const EpisodeGrid = memo(function EpisodeGrid({
   getProgress,
   isCompleted,
   onToggleWatched,
+  audio,
 }: EpisodeGridProps) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
@@ -150,6 +164,7 @@ export const EpisodeGrid = memo(function EpisodeGrid({
           progress={getProgress(ep.id)}
           completed={isCompleted(ep.id)}
           onToggleWatched={onToggleWatched}
+          audio={audio}
         />
       ))}
     </div>
