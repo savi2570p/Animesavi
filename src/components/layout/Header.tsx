@@ -36,6 +36,7 @@ import {
   Bookmark,
   X,
   LogIn,
+  Bell,
   type LucideIcon,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
@@ -59,6 +60,9 @@ export function Header() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileNotifOpen, setMobileNotifOpen] = useState(false);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
   const { showWhatsNewManually } = usePopupQueue();
   const hasPremium = !!user && (isAdmin || hasValidTokenAccess(user?.email));
   const desktopSearchRef = useRef<HTMLInputElement>(null);
@@ -279,24 +283,9 @@ export function Header() {
     },
   ];
 
-  return (
-    <header
-      className={`sticky top-0 z-[100] w-full lg-nav-floating nav-v6 transition-transform duration-300 will-change-transform ${
-        navHidden ? '-translate-y-[120%]' : 'translate-y-0'
-      }`}
-    >
-      {/* Layered glass surface */}
-      <div className="relative">
-
-        {/* Ambient gradient wash */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-60">
-          <div className="absolute inset-x-0 top-0 h-px bg-primary/20" />
-        </div>
-
-        <div className="container lg:max-w-none relative flex h-12 sm:h-14 items-center justify-between gap-1.5 sm:gap-4">
-          {/* Logo lockup */}
-          <div className="flex items-center gap-1 sm:gap-2.5 flex-shrink-0">
-            {/* Hamburger menu — left side on every screen */}
+  const menuButton = (
+          <>
+            {/* Hamburger menu — left on PC, right on phones */}
             <Popover open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <PopoverTrigger asChild className="flex-shrink-0">
                 <Button variant="ghost" size="icon" aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileMenuOpen} className="nav-menu-trigger-v10 h-7 w-7 sm:h-8 sm:w-8" data-open={mobileMenuOpen || undefined}>
@@ -306,7 +295,7 @@ export function Header() {
               <PopoverContent
                 ref={menuContentRef}
                 tabIndex={-1}
-                align="start"
+                align={isMobileOS ? 'end' : 'start'}
                 side="bottom"
                 sideOffset={8}
                 collisionPadding={10}
@@ -337,6 +326,27 @@ export function Header() {
                 ))}
               </PopoverContent>
             </Popover>
+          </>
+  );
+
+  return (
+    <header
+      className={`sticky top-0 z-[100] w-full lg-nav-floating nav-v6 transition-transform duration-300 will-change-transform ${
+        navHidden ? '-translate-y-[120%]' : 'translate-y-0'
+      }`}
+    >
+      {/* Layered glass surface */}
+      <div className="relative">
+
+        {/* Ambient gradient wash */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-60">
+          <div className="absolute inset-x-0 top-0 h-px bg-primary/20" />
+        </div>
+
+        <div className="container lg:max-w-none relative flex h-12 sm:h-14 items-center justify-between gap-1.5 sm:gap-4">
+          {/* Logo lockup */}
+          <div className="flex items-center gap-1 sm:gap-2.5 flex-shrink-0">
+            {!isMobileOS && menuButton}
             <Link to="/welcome" className="nav-logo-v8 group relative flex-shrink-0" aria-label="Welcome">
               <span className="absolute inset-0 rounded-lg bg-primary/30 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <img
@@ -418,7 +428,19 @@ export function Header() {
 
           {/* User Menu */}
           <div className="nav-v6-actions flex flex-shrink-0 items-center gap-1 sm:gap-1.5">
-          {user && <div className="[&_button]:h-7 [&_button]:w-7 sm:[&_button]:h-9 sm:[&_button]:w-9 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4"><NotificationBell /></div>}
+          {/* Phones: search is an icon that opens a full-width bar */}
+          {isMobileOS && (
+            <Button type="button" variant="ghost" size="icon" aria-label="Search" title="Search"
+              className="nav-mobile-search-btn h-8 w-8 rounded-full" onClick={() => setMobileSearchOpen(true)}>
+              <Search className="h-4 w-4" />
+            </Button>
+          )}
+          {user && !isMobileOS && <div className="[&_button]:h-7 [&_button]:w-7 sm:[&_button]:h-9 sm:[&_button]:w-9 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4"><NotificationBell /></div>}
+          {user && isMobileOS && (
+            <div className="relative h-0 w-0">
+              <NotificationBell hideTrigger open={mobileNotifOpen} onOpenChange={setMobileNotifOpen} onUnreadChange={setUnreadNotifs} />
+            </div>
+          )}
           
           {user ? (
             <DropdownMenu>
@@ -430,6 +452,7 @@ export function Header() {
                       {user.email?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
+                  {isMobileOS && unreadNotifs > 0 && <span className="account-trigger-dot" aria-label={`${unreadNotifs} unread notifications`} />}
                   {(isAdmin || hasValidTokenAccess(user?.email)) && (
                     <Crown className="absolute -top-1 -right-1 h-3 w-3 sm:h-3.5 sm:w-3.5 text-yellow-500 animate-crown-shimmer" />
                   )}
@@ -465,6 +488,16 @@ export function Header() {
                       <Link to={item.to}><item.icon /><span>{item.label}</span></Link>
                     </DropdownMenuItem>
                   ))}
+                  {isMobileOS && (
+                    <DropdownMenuItem
+                      className="account-menu-v10-item"
+                      // Let the profile menu finish closing before the panel opens.
+                      onSelect={() => window.setTimeout(() => setMobileNotifOpen(true), 120)}
+                    >
+                      <Bell /><span>Notifications</span>
+                      {unreadNotifs > 0 && <span className="account-menu-v10-badge">{unreadNotifs > 9 ? '9+' : unreadNotifs}</span>}
+                    </DropdownMenuItem>
+                  )}
                 </div>
                 <DropdownMenuSeparator className="account-menu-v10-sep" />
                 <div className="account-menu-v10-list">
@@ -489,31 +522,35 @@ export function Header() {
             </div>
           )}
 
-          {/* Mobile Search Button */}
-          <form onSubmit={handleSearch} className="md:hidden flex-shrink-0">
-            <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-              <Input
-                ref={mobileSearchRef}
-                type="search"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setShowSuggestions(true);
-                }}
-                onFocus={() => { if (searchQuery.trim().length >= 2) setShowSuggestions(true); }}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className={`pl-6 pr-1 h-7 sm:h-8 bg-card border-border transition-all duration-200 rounded-lg text-xs ${isMobileOS ? 'w-20 sm:w-24 focus:w-28 sm:focus:w-32' : 'w-16 sm:w-20 focus:w-24 sm:focus:w-28'}`}
-              />
-              <SearchSuggestions
-                query={searchQuery}
-                isVisible={showSuggestions}
-                onSelect={() => { setSearchQuery(''); setShowSuggestions(false); }}
-                className="w-[70vw] right-0 left-auto"
-              />
-            </div>
-          </form>
+          {isMobileOS && menuButton}
+
+          {isMobileOS && mobileSearchOpen && (
+            <form onSubmit={(e) => { handleSearch(e); setMobileSearchOpen(false); }} className="nav-mobile-search-overlay absolute inset-x-0 inset-y-0 z-20 flex items-center gap-2 px-3">
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  ref={mobileSearchRef}
+                  autoFocus
+                  type="search"
+                  aria-label="Search anime"
+                  placeholder="Search anime..."
+                  value={searchQuery}
+                  onChange={(e) => { setSearchQuery(e.target.value); setShowSuggestions(true); }}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  className="h-9 w-full rounded-lg bg-card border-border pl-9 pr-3 text-sm"
+                />
+                <SearchSuggestions
+                  query={searchQuery}
+                  isVisible={showSuggestions}
+                  onSelect={() => { setSearchQuery(''); setShowSuggestions(false); setMobileSearchOpen(false); }}
+                  className="w-full right-0 left-0"
+                />
+              </div>
+              <Button type="button" variant="ghost" size="icon" className="h-9 w-9 shrink-0" aria-label="Close search" onClick={() => { setMobileSearchOpen(false); setShowSuggestions(false); }}>
+                <X className="h-4 w-4" />
+              </Button>
+            </form>
+          )}
 
           <VerifyTokenDialog open={verifyOpen} onOpenChange={setVerifyOpen} />
           <ViewPartyDialog trigger={null} open={viewPartiesOpen} onOpenChange={setViewPartiesOpen} />
