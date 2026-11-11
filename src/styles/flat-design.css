@@ -568,3 +568,15 @@ html.perf-low .home-search-hero-art { display: none; }
 .clone-cta { color: hsl(var(--primary-foreground)); background: hsl(var(--primary)); border-color: hsl(var(--primary)); box-shadow: none; border-radius: 8px; }
 .clone-cta:hover { filter: none; background: hsl(var(--primary) / .88); }
 .clone-input { background: hsl(var(--foreground) / .04) !important; border-color: hsl(var(--border)) !important; backdrop-filter: none; -webkit-backdrop-filter: none; border-radius: 8px !important; }
+
+/* Nov 11 — phone navbar: search icon overlay, notifications in profile menu */
+.nav-mobile-search-overlay { background: hsl(var(--background)); }
+.account-menu-v10 .account-menu-v10-badge {
+  margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
+}
+.account-trigger-dot {
+  position: absolute; bottom: 0; right: 0; width: 9px; height: 9px; border-radius: 999px;
+  background: hsl(var(--primary)); box-shadow: 0 0 0 2px hsl(var(--background));
+}
