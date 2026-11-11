@@ -38,7 +38,7 @@
 - Pending preparation popups use the shared portaled Dialog so transformed sections can't trap them; homepage recommendations stay separate from Watch playback.
 - Upload creation/series editing use plain unframed sections (no Card wrappers, avoiding inherited glass), one vertical form flow and scoped studio tokens; preserve upload handlers and access guards.
 - Episode editing scopes the studio presentation to its page and embedded tools without altering shared subtitle or timestamp handlers, so other upload surfaces keep their existing behavior.
-- Crunchy and MuseIN share a portaled platform loader with scoped optical tokens and motion/performance fallbacks; its lifetime follows existing catalogue requests without simulated percentages or added delays.
+- Crunchy/MuseIN share a portaled loader whose lifetime follows real catalogue requests (no fake progress or delays).
 - Platform collections share presentation-only catalogue headers and cards with fixed portrait artwork, shared badges and native snap rows; preserve page-owned filters, queries and pending-title handlers.
 - Watch party create/join/view dialogs share scoped party glass presentation; header menu party dialogs are controlled outside the hamburger sheet so closing the menu never unmounts them.
 - The coarse-pointer 44px tap-target rule excludes switch, checkbox and radio roles so toggles keep their size.
