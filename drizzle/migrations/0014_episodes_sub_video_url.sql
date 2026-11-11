@@ -1,0 +1,2 @@
+ALTER TABLE public.episodes ADD COLUMN IF NOT EXISTS sub_video_url text;
+COMMENT ON COLUMN public.episodes.sub_video_url IS 'Optional Japanese-audio SUB video played by the 4K+ (SUB) server; falls back to video_url when empty.';
