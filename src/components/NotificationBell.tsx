@@ -56,6 +56,17 @@ export function NotificationBell() {
         source: 'queue',
       }));
 
+      // Older queued alerts stored the episode banner; always show the anime poster instead.
+      const queueAnimeIds = [...new Set(queueItems.map((q) => q.anime_id).filter(Boolean))] as string[];
+      if (queueAnimeIds.length > 0) {
+        const { data: posters } = await supabase.from('anime').select('id, cover_image').in('id', queueAnimeIds);
+        const posterById = new Map((posters || []).map((a: any) => [a.id, a.cover_image as string | null]));
+        queueItems.forEach((q) => {
+          const poster = q.anime_id ? posterById.get(q.anime_id) : null;
+          if (poster) q.cover_image = poster;
+        });
+      }
+
       // 2. Recent favorited episodes (legacy fallback)
       const { data: favorites } = await supabase
         .from('user_favorites')
