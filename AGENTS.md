@@ -44,7 +44,7 @@
 - The coarse-pointer 44px tap-target rule excludes switch, checkbox and radio roles so toggles keep their size.
 - Watch party membership is published through the shared watchPartySession store: only the host writes shared playback (database UPDATE is host-only), guests get a player cover and reverted media events, and every party session skips Continue Watching writes.
 - Clone sites that forbid framing are detected by a header-only backend check and shown an open-directly card; never proxy or strip frame protections.
-- Watch progress writes use watchProgressThrottle, polls skip hidden tabs and the full conversion scan runs at most daily, so idle tabs don't flood or wake the database.
+- Progress writes use watchProgressThrottle, polls skip hidden tabs, conversion scans run daily at most, so idle tabs don't wake the database.
 - Site-wide flat styling lives in src/styles/flat-design.css (loaded after index.css) as token overrides; restyle there, not per component, for consistency.
-- One Watch Party hamburger entry; admin/upload in PC rail; phones open the single NotificationBell from the profile menu.
+- One Watch Party menu entry; admin/upload in PC rail; phones open the single NotificationBell from the profile menu.
 - getServerGroups (is_sub_only) groups DUB/SUB servers; SUB reuses the AS+ engine with audioLocked, avoiding a new engine.
