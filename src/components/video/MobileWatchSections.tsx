@@ -70,7 +70,7 @@ export const MobileWatchEpisodes = memo(function MobileWatchEpisodes({
     const box = scrollRef.current;
     const active = box?.querySelector<HTMLElement>('[data-active="true"]');
     if (!box || !active) return;
-    box.scrollTop = Math.max(0, active.offsetTop - box.offsetTop - 8);
+    box.scrollTop = Math.max(0, active.offsetTop - 8);
   }, [currentEpisodeId, view, episodes.length]);
 
   return (
