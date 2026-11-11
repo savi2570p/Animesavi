@@ -1,17 +1,23 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { getServerGroups, getPlaybackEngine, getDefaultServer, getServerVideoUrl, SERVER_CONFIGS } from './useServerAutoSelect';
+import { getServerGroups, getPlaybackEngine, getDefaultServer, getServerVideoUrl, getEpisodeAudioMarks, filterEpisodesForServer, SERVER_CONFIGS } from './useServerAutoSelect';
 
 const names = (ids: string[]) => ids.map(id => SERVER_CONFIGS[id as keyof typeof SERVER_CONFIGS].name);
 
 describe('player server groups', () => {
-  it('DUB anime get H.Savi and AS+ under DUB, and 4K+ under SUB', () => {
-    const g = getServerGroups(false);
+  it('DUB episode with a SUB video gets H.Savi and AS+ under DUB, and 4K+ under SUB', () => {
+    const g = getServerGroups(false, true);
     expect(names(g.dub)).toEqual(['H.Savi', 'AS+']);
     expect(names(g.sub)).toEqual(['4K+']);
   });
 
+  it('DUB episode without a SUB video has no SUB server', () => {
+    const g = getServerGroups(false, false);
+    expect(names(g.dub)).toEqual(['H.Savi', 'AS+']);
+    expect(g.sub).toEqual([]);
+  });
+
   it('SUB-only anime get only the 4K+ SUB server', () => {
-    const g = getServerGroups(true);
+    const g = getServerGroups(true, false);
     expect(g.dub).toEqual([]);
     expect(names(g.sub)).toEqual(['4K+']);
   });
@@ -45,5 +51,30 @@ describe('SUB episode file', () => {
   it('DUB servers never play the SUB file', () => {
     expect(getServerVideoUrl('PLAY', 'dub.mp4', 'sub.mp4')).toBe('dub.mp4');
     expect(getServerVideoUrl('XPLUS', 'dub.mp4', 'sub.mp4')).toBe('dub.mp4');
+  });
+});
+
+describe('episode audio marks', () => {
+  it('DUB episode with a SUB video shows H-DUB and SUB', () => {
+    expect(getEpisodeAudioMarks({}, { sub_video_url: 'sub.mp4' })).toEqual(['H-DUB', 'SUB']);
+  });
+  it('DUB-only episode shows just H-DUB', () => {
+    expect(getEpisodeAudioMarks({}, { sub_video_url: null })).toEqual(['H-DUB']);
+  });
+  it('SUB-only anime shows just SUB', () => {
+    expect(getEpisodeAudioMarks({ isSubOnly: true }, {})).toEqual(['SUB']);
+  });
+});
+
+describe('episodes listed per server', () => {
+  const eps = [{ id: '1', sub_video_url: 'a.mp4' }, { id: '2', sub_video_url: null }];
+  it('SUB server on a DUB anime lists only episodes with a SUB video', () => {
+    expect(filterEpisodesForServer(eps, 'SUB', false).map(e => e.id)).toEqual(['1']);
+  });
+  it('DUB servers list every episode', () => {
+    expect(filterEpisodesForServer(eps, 'PLAY', false).map(e => e.id)).toEqual(['1', '2']);
+  });
+  it('SUB-only anime list every episode on SUB', () => {
+    expect(filterEpisodesForServer(eps, 'SUB', true).map(e => e.id)).toEqual(['1', '2']);
   });
 });

@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { EpisodeAudioMarks } from '@/components/anime/DubBadge';
 
 import {
   ContextMenu,
@@ -22,6 +23,7 @@ interface Episode {
   episode_number: number;
   title: string;
   audio_language?: string | null;
+  sub_video_url?: string | null;
 }
 
 interface EpisodeListProps {
@@ -31,9 +33,11 @@ interface EpisodeListProps {
   onEpisodeSelect?: (episodeId: string) => void;
   animeTitle?: string;
   seasonNumber?: number;
+  /** Audio marks per episode, e.g. H-DUB + SUB. */
+  getMarks?: (episode: Episode) => ('H-DUB' | 'E-DUB' | 'SUB')[];
 }
 
-export function EpisodeList({ episodes, currentEpisodeId, className, onEpisodeSelect, animeTitle, seasonNumber = 1 }: EpisodeListProps) {
+export function EpisodeList({ episodes, currentEpisodeId, className, onEpisodeSelect, animeTitle, seasonNumber = 1, getMarks }: EpisodeListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortAsc, setSortAsc] = useState(true);
   const { user } = useAuth();
@@ -244,6 +248,7 @@ export function EpisodeList({ episodes, currentEpisodeId, className, onEpisodeSe
                           </p>
                         )}
                       </div>
+                      {getMarks && <EpisodeAudioMarks marks={getMarks(episode)} className="shrink-0" />}
                     </Link>
 
                     {/* Watch Later button */}

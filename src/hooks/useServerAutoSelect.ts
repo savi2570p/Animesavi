@@ -7,9 +7,36 @@ export type ServerType = 'PLAY' | 'SHORT' | 'Zex' | 'XPLUS' | 'SUB' | 'EMBED';
 export const DUB_SERVERS: ServerType[] = ['PLAY', 'XPLUS'];
 export const SUB_SERVERS: ServerType[] = ['SUB'];
 
-/** Which server groups an anime offers: SUB-only titles get only the SUB server. */
-export function getServerGroups(isSubOnly: boolean): { dub: ServerType[]; sub: ServerType[] } {
-  return { dub: isSubOnly ? [] : DUB_SERVERS, sub: SUB_SERVERS };
+/** True when a SUB (Japanese audio) video was added to this episode. */
+export function episodeHasSub(ep: { sub_video_url?: string | null } | null | undefined): boolean {
+  return !!ep?.sub_video_url?.trim();
+}
+
+/**
+ * Which server groups an episode offers. SUB-only titles get only the SUB server;
+ * DUB titles get the SUB server only on episodes that have a SUB video added.
+ */
+export function getServerGroups(isSubOnly: boolean, hasSubEpisode: boolean): { dub: ServerType[]; sub: ServerType[] } {
+  if (isSubOnly) return { dub: [], sub: SUB_SERVERS };
+  return { dub: DUB_SERVERS, sub: hasSubEpisode ? SUB_SERVERS : [] };
+}
+
+/** Audio marks for an episode: its dub mark, plus SUB when a SUB video was added. */
+export function getEpisodeAudioMarks(
+  anime: { isSubOnly?: boolean | null; isEngDub?: boolean | null },
+  ep: { sub_video_url?: string | null },
+): ('H-DUB' | 'E-DUB' | 'SUB')[] {
+  if (anime.isSubOnly) return ['SUB'];
+  const dub = anime.isEngDub ? 'E-DUB' : 'H-DUB';
+  return episodeHasSub(ep) ? [dub, 'SUB'] : [dub];
+}
+
+/** On a DUB title, the SUB server lists only the episodes that have a SUB video. */
+export function filterEpisodesForServer<T extends { sub_video_url?: string | null }>(
+  episodes: T[], server: ServerType, isSubOnly: boolean,
+): T[] {
+  if (server !== 'SUB' || isSubOnly) return episodes;
+  return episodes.filter(episodeHasSub);
 }
 
 /** The SUB server plays through the X-PLUS engine with the audio locked to Japanese. */
