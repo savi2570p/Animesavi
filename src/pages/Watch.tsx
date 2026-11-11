@@ -1489,7 +1489,7 @@ export default function Watch() {
                             variant="outline"
                           >
                             {SERVER_CONFIGS[server].name}
-                            {row.key === 'sub' && <Badge variant="secondary" className="ml-1.5 px-1.5 py-0 text-[9px] leading-4">BETA</Badge>}
+                            {row.key === 'sub' && <span className="ml-1.5 rounded border border-primary/30 bg-primary/10 px-1.5 text-[9px] leading-4 text-primary">BETA</span>}
                           </Button>
                         );
                       })}
