@@ -46,5 +46,5 @@
 - Clone sites forbidding framing get a header-only backend check and an open-directly card; never proxy or strip frame protections.
 - Progress writes use watchProgressThrottle, polls skip hidden tabs, conversion scans run daily at most, so idle tabs don't wake the database.
 - Site-wide flat styling lives in src/styles/flat-design.css (loaded after index.css) as token overrides; restyle there, not per component, for consistency.
-- One Watch Party menu entry; admin/upload in PC rail; phones open the single NotificationBell from the profile menu.
-- getServerGroups (is_sub_only) groups DUB/SUB servers; SUB reuses the AS+ engine with audioLocked (no new engine).
+- One Watch Party menu entry; admin/upload in PC rail; phones open the one NotificationBell from the profile menu.
+- getServerGroups (is_sub_only) groups DUB/SUB servers; SUB reuses the AS+ engine with audioLocked.
