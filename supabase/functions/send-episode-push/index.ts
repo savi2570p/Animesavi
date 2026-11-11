@@ -81,7 +81,8 @@ Deno.serve(async (req) => {
     const animeId: string = anime.id;
     const animeTitle: string = anime.title;
     const seasonNum: number = (ep as any).season.season_number ?? 1;
-    const cover: string | null = ep.thumbnail || anime.cover_image || null;
+    // Favorites alerts show the anime's portrait poster, never the episode banner.
+    const cover: string | null = anime.cover_image || ep.thumbnail || null;
     const epNum: number = ep.episode_number;
     // Deep link directly to the watch page for this episode so a tap opens the player.
     const link = `/watch/${episode_id}`;

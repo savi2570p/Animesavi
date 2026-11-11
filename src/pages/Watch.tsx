@@ -27,9 +27,8 @@ import { WatchParty } from '@/components/WatchParty';
 import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton';
 import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
 
-import { ServerStatusIndicator } from '@/components/video/ServerStatusIndicator';
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
-import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers } from '@/hooks/useServerAutoSelect';
+import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers, getServerGroups, getPlaybackEngine, getDefaultServer } from '@/hooks/useServerAutoSelect';
 import { isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 import { useEmbedWatchTracker } from '@/hooks/useEmbedWatchTracker';
 import { z } from 'zod';
@@ -55,6 +54,8 @@ import {
   Flag,
   Bell,
   BellDot,
+  Mic,
+  Captions,
 } from 'lucide-react';
 
 // Comment validation schema
@@ -358,6 +359,11 @@ export default function Watch() {
     const isEmbedOnlyEpisode = !hasDirectVideo && externalIsEmbed;
     const isFileOnlyEpisode = hasDirectVideo;
 
+    if (anime?.is_sub_only && server !== 'SUB' && server !== 'EMBED') {
+      setServerBlockMessage('This anime is SUB only. Please use the 4K+ server.');
+      return;
+    }
+
     if (server === 'EMBED' && isFileOnlyEpisode) {
       setServerBlockMessage('Embed link is not available. Please use other servers.');
       return;
@@ -398,7 +404,7 @@ export default function Watch() {
         window.clearInterval(kick);
       }
     }, 250);
-  }, [handleServerSwitch, episode, episodeId]);
+  }, [handleServerSwitch, episode, episodeId, anime?.is_sub_only]);
 
   // (Removed) Previously showed a one-time "Embed server under development" toast on
   // episode entry. Disabled per UX request — users can still switch servers freely.
@@ -424,6 +430,22 @@ export default function Watch() {
       autoEmbedAppliedRef.current = episode.id;
     }
   }, [episode, activeServer, handleServerSwitch]);
+
+  // SUB-only anime always play on the SUB server; leaving them restores the saved DUB server.
+  const autoSubAnimeRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!anime || !episode) return;
+    const embedOnly = !episode.video_url && isEmbedLikeUrl(episode.external_url);
+    if (anime.is_sub_only) {
+      if (!embedOnly && activeServer !== 'SUB') {
+        autoSubAnimeRef.current = anime.id;
+        handleServerSwitch('SUB');
+      }
+    } else if (autoSubAnimeRef.current && activeServer === 'SUB') {
+      autoSubAnimeRef.current = null;
+      handleServerSwitch(getDefaultServer());
+    }
+  }, [anime, episode, activeServer, handleServerSwitch]);
 
   const prevEpisodeIdRef = useRef<string | undefined>(undefined);
 
@@ -1299,10 +1321,10 @@ export default function Watch() {
         <WatchInfoPanel anime={anime} episodeNumber={episode.episode_number} seasonNumber={currentSeason?.season_number || 1} episodeCount={allEpisodes.length} />
         {/* Video Player */}
         <div className="min-w-0">
-          <nav aria-label="Breadcrumb" className="hidden lg:flex items-center gap-1.5 text-[11px] text-muted-foreground mb-2 min-w-0">
+          <nav aria-label="Breadcrumb" className="watch-breadcrumb flex flex-nowrap items-center gap-1.5 text-[11px] text-muted-foreground mb-2 px-3 pt-2 lg:px-0 lg:pt-0 min-w-0">
             <Link to="/" className="hover:text-foreground">Home</Link>
             <ChevronRight className="h-3 w-3 shrink-0" />
-            {anime && <Link to={`/anime/${anime.id}`} className="hover:text-foreground truncate max-w-[24rem]">{anime.title}</Link>}
+            {anime && <Link to={`/anime/${anime.id}`} className="hover:text-foreground truncate min-w-0 max-w-[24rem]">{anime.title}</Link>}
             <ChevronRight className="h-3 w-3 shrink-0" />
             <span className="text-primary shrink-0">{isMovie ? 'Movie' : `Episode ${episode.episode_number}`}</span>
           </nav>
@@ -1344,11 +1366,13 @@ export default function Watch() {
               poster={anime?.cover_image || undefined}
               bannerImage={episode.thumbnail || anime?.cover_image || null}
               isMovie={isMovie}
-              activeServer={activeServer}
+              activeServer={getPlaybackEngine(activeServer)}
+              serverLabel={SERVER_CONFIGS[activeServer]?.name}
               isLoading={false}
               audioLanguage={episode.audio_language || undefined}
-              isSubOnly={anime?.is_sub_only ?? false}
-              isHindiDub={!anime?.is_sub_only && !anime?.is_eng_dub}
+              isSubOnly={(anime?.is_sub_only ?? false) || activeServer === 'SUB'}
+              audioLocked={activeServer === 'SUB'}
+              isHindiDub={activeServer !== 'SUB' && !anime?.is_sub_only && !anime?.is_eng_dub}
               captionsUrl={episode.captions_url}
               isEncoding={isVideoEncoding}
               onTimeUpdate={updateWatchProgress}
@@ -1397,44 +1421,6 @@ export default function Watch() {
             )}
           </div>
 
-          {/* Player Strip — anime thumbnail + name (non-fullscreen) */}
-          {anime && (
-            <Link
-              to={`/anime/${anime.id}`}
-              className="watch-v3-strip xl:hidden group flex items-center gap-3 px-4 py-2 border-t border-border hover:bg-muted/30 transition-colors w-full max-w-full overflow-hidden"
-            >
-              <div className="relative rounded-md overflow-hidden shrink-0 ring-1 ring-border/60 group-hover:ring-primary/50 transition-all" style={{ width: 34, height: 48, minWidth: 34 }}>
-                {anime.cover_image ? (
-                  <img
-                    src={anime.cover_image}
-                    alt={anime.title}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-muted" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-primary/80 leading-none mb-0.5">
-                  Now Watching
-                </p>
-                <p
-                  className="font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 [overflow-wrap:anywhere]"
-                  style={{ fontSize: 'clamp(11px, 2.6vw, 14px)', lineHeight: 1.25, wordBreak: 'break-word' }}
-                >
-                  {anime.title}
-                </p>
-                <p
-                  className="text-muted-foreground truncate [overflow-wrap:anywhere]"
-                  style={{ fontSize: 'clamp(9px, 2.2vw, 11px)', lineHeight: 1.2 }}
-                >
-                  S{currentSeason?.season_number || 1} · E{episode.episode_number}
-                </p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
-            </Link>
-          )}
           </div>
 
           <p className="watch-reanime-notice flex items-center gap-2 mx-3 lg:mx-0 mt-2 px-3 py-2 text-[11px] md:text-xs">
@@ -1457,53 +1443,46 @@ export default function Watch() {
         <div className="watch-v3-controls py-3 md:py-4 border-b border-border">
 
           <div className="relative flex flex-col md:flex-row md:items-center gap-3 md:gap-5">
-            {/* Server Selection */}
-            <div className="flex flex-col gap-2 flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center justify-center w-6 h-6 md:w-7 md:h-7 rounded-md bg-primary/15 border border-primary/30">
-                  <Server className="h-3 w-3 md:h-3.5 md:w-3.5 text-primary" />
-                </div>
-                <span className="text-[11px] md:text-xs font-bold uppercase tracking-wider text-foreground/80">Streaming Server</span>
-                <ServerStatusIndicator
-                  activeServer={activeServer}
-                  failedServers={failedServers}
-                  isServerLoading={serverLoading}
-                  fallbackOccurred={fallbackOccurred}
-                  fallbackFrom={fallbackFrom}
-                />
+            {/* Server Selection — DUB (H.Savi, AS+) then SUB (4K+); SUB-only anime get SUB only */}
+            <div className="watch-servers flex-1 min-w-0">
+              <div className="watch-servers-head">
+                <p className="watch-servers-title">You are watching <span>{isMovie ? 'the Movie' : `Episode ${episode.episode_number}`}</span></p>
+                <p className="watch-servers-hint">If the current server is not working, please try switching to other servers.</p>
               </div>
-              <div className="flex gap-1.5 md:gap-2 flex-wrap">
-                {availableServers.map((server) => {
-                  const config = SERVER_CONFIGS[server];
-                  const isFailed = failedServers.has(server);
-                  const isActive = activeServer === server;
-                  return (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      key={server}
-                      onClick={() => handleServerChange(server)}
-                      disabled={serverLoading}
-                      title={config.description}
-                      className={`group relative px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg border text-[11px] md:text-xs font-semibold transition-all duration-300 backdrop-blur-xl ${
-                        isActive
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : 'bg-muted/30 text-foreground/80 border-border hover:border-primary/50 hover:bg-primary/10 hover:text-foreground'
-                      } ${isFailed ? 'opacity-50 line-through' : ''} ${serverLoading ? 'cursor-wait' : ''}`}
-                    >
-                      <span className="flex items-center gap-1.5">
-                        {isActive && (
-                          <span className="relative flex h-1.5 w-1.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-foreground opacity-75" />
-                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary-foreground" />
-                          </span>
-                        )}
-                        {config.name}
-                      </span>
-                    </Button>
-                  );
-                })}
-              </div>
+              {(() => {
+                const embedOnly = !episode.video_url && isEmbedLikeUrl(episode.external_url);
+                const groups = getServerGroups(!!anime?.is_sub_only);
+                const rows: { key: string; label: string; Icon: typeof Mic; servers: typeof availableServers }[] = embedOnly
+                  ? [{ key: 'embed', label: 'EMBED', Icon: Server, servers: ['EMBED'] }]
+                  : [
+                      ...(groups.dub.length ? [{ key: 'dub', label: 'DUB', Icon: Mic, servers: groups.dub }] : []),
+                      { key: 'sub', label: 'SUB', Icon: Captions, servers: groups.sub },
+                    ];
+                return rows.map(row => (
+                  <div key={row.key} className="watch-servers-row">
+                    <span className="watch-servers-label"><row.Icon aria-hidden />{row.label}:</span>
+                    <div className="watch-servers-options" style={{ gridTemplateColumns: `repeat(${row.servers.length}, minmax(0, 1fr))` }}>
+                      {row.servers.map(server => {
+                        const isActive = activeServer === server;
+                        const isFailed = failedServers.has(server);
+                        return (
+                          <button
+                            type="button"
+                            key={server}
+                            onClick={() => handleServerChange(server)}
+                            disabled={serverLoading}
+                            aria-pressed={isActive}
+                            title={SERVER_CONFIGS[server].description}
+                            className={`watch-server-btn ${isFailed ? 'is-failed' : ''}`}
+                          >
+                            {SERVER_CONFIGS[server].name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
 
             {/* Season Switcher */}

@@ -1,3 +1,4 @@
+import { StreamServersPicker, type StreamKind } from '@/components/upload/StreamServersPicker';
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,6 +45,7 @@ import {
   Youtube,
   Info,
   Mic,
+  Server,
 } from 'lucide-react';
 import { UpcomingCountdownDialog } from '@/components/home/UpcomingCountdownDialog';
 
@@ -93,6 +95,7 @@ function UploadInner() {
   const [isCrunchyroll, setIsCrunchyroll] = useState(false);
   const [isMuse, setIsMuse] = useState(false);
   const [isEngDub, setIsEngDub] = useState(false);
+  const [streamKind, setStreamKind] = useState<StreamKind>('dub');
   const [studio, setStudio] = useState('');
   const [totalEpisodes, setTotalEpisodes] = useState('');
   const [sourceMaterial, setSourceMaterial] = useState('');
@@ -292,6 +295,7 @@ function UploadInner() {
         is_crunchyroll: isCrunchyroll,
         is_muse: isMuse,
         is_eng_dub: isEngDub,
+        is_sub_only: streamKind === 'sub',
         studio: studio.trim() || null,
         total_episodes: totalEpisodes ? parseInt(totalEpisodes) : null,
         source_material: sourceMaterial || null,
@@ -320,6 +324,7 @@ function UploadInner() {
       setTotalEpisodes('');
       setSourceMaterial('');
       setContentRating('');
+      setStreamKind('dub');
       // Refresh list
       fetchAnimeData();
       // Navigate to add episodes
@@ -1004,6 +1009,21 @@ function UploadInner() {
                   </div>
                 </section>
 
+                {/* Streaming servers — DUB (H.Savi, AS+ and SUB 4K+) or SUB only (4K+) */}
+                <section className="space-y-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center">
+                      <Server className="h-3.5 w-3.5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold tracking-tight">Streaming servers</h3>
+                      <p className="text-[10px] text-muted-foreground">Choose which player servers viewers get</p>
+                    </div>
+                    <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
+                  </div>
+                  <StreamServersPicker value={streamKind} onChange={setStreamKind} />
+                </section>
+
                 {/* SECTION 5 — DISTRIBUTION */}
                 <section className="space-y-3">
                   <div className="flex items-center gap-2.5">
@@ -1273,6 +1293,21 @@ function UploadInner() {
                     })}
                   </div>
                 </section>
+
+                {/* Streaming servers — DUB (H.Savi, AS+ and SUB 4K+) or SUB only (4K+) */}
+                <section className="space-y-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center">
+                      <Server className="h-3.5 w-3.5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold tracking-tight">Streaming servers</h3>
+                      <p className="text-[10px] text-muted-foreground">Choose which player servers viewers get</p>
+                    </div>
+                    <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent ml-2" />
+                  </div>
+                  <StreamServersPicker value={streamKind} onChange={setStreamKind} />
+                </section>
               </form>
             </CardContent>
           </div>
@@ -1322,6 +1357,7 @@ function UploadInner() {
                         type: 'movie',
                         status: 'completed',
                         uploader_id: user?.id,
+                        is_sub_only: streamKind === 'sub',
                       })
                       .select()
                       .single();

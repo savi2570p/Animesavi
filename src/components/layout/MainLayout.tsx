@@ -6,18 +6,11 @@ import { SideRail } from './SideRail';
 import { ContinueWatchingNotification } from '@/components/home/ContinueWatchingNotification';
 import { AnimatedPage } from './AnimatedPage';
 
-const RAIL_KEY = 'side_rail_hidden';
-
 export function MainLayout() {
   const location = useLocation();
-  const [railHidden, setRailHidden] = useState(() => {
-    try { return localStorage.getItem(RAIL_KEY) === '1'; } catch { return false; }
-  });
-  const toggleRail = () => setRailHidden(prev => {
-    const next = !prev;
-    try { localStorage.setItem(RAIL_KEY, next ? '1' : '0'); } catch { /* storage unavailable */ }
-    return next;
-  });
+  // The PC side rail always starts hidden; the arrow tab shows it for this visit.
+  const [railHidden, setRailHidden] = useState(true);
+  const toggleRail = () => setRailHidden(prev => !prev);
 
   // Animate home page "/" only the first time it is visited; afterwards render instantly.
   const isHome = location.pathname === '/';

@@ -25,11 +25,25 @@ interface Notification {
   source: 'queue' | 'episode';
 }
 
-export function NotificationBell() {
+interface NotificationBellProps {
+  /** Controlled open state, used when another menu opens the panel (phones). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Render an invisible anchor instead of the bell button. */
+  hideTrigger?: boolean;
+  onUnreadChange?: (count: number) => void;
+}
+
+export function NotificationBell({ open, onOpenChange, hideTrigger = false, onUnreadChange }: NotificationBellProps = {}) {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = open ?? internalOpen;
+  const setIsOpen = useCallback((next: boolean) => {
+    if (open === undefined) setInternalOpen(next);
+    onOpenChange?.(next);
+  }, [open, onOpenChange]);
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
@@ -55,6 +69,17 @@ export function NotificationBell() {
         is_read: q.is_read,
         source: 'queue',
       }));
+
+      // Older queued alerts stored the episode banner; always show the anime poster instead.
+      const queueAnimeIds = [...new Set(queueItems.map((q) => q.anime_id).filter(Boolean))] as string[];
+      if (queueAnimeIds.length > 0) {
+        const { data: posters } = await supabase.from('anime').select('id, cover_image').in('id', queueAnimeIds);
+        const posterById = new Map((posters || []).map((a: any) => [a.id, a.cover_image as string | null]));
+        queueItems.forEach((q) => {
+          const poster = q.anime_id ? posterById.get(q.anime_id) : null;
+          if (poster) q.cover_image = poster;
+        });
+      }
 
       // 2. Recent favorited episodes (legacy fallback)
       const { data: favorites } = await supabase
@@ -134,13 +159,16 @@ export function NotificationBell() {
     return `${days} days ago`;
   };
 
-  const handleOpen = async (open: boolean) => {
-    setIsOpen(open);
-    if (open && user && unreadCount > 0) {
-      await supabase.from('notification_queue').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
-      setUnreadCount(0);
-    }
-  };
+  useEffect(() => { onUnreadChange?.(unreadCount); }, [unreadCount, onUnreadChange]);
+
+  // Opening the panel (from the bell or another menu) marks queued alerts as read.
+  useEffect(() => {
+    if (!isOpen || !user || unreadCount === 0) return;
+    setUnreadCount(0);
+    supabase.from('notification_queue').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false).then(() => {});
+  }, [isOpen, user, unreadCount]);
+
+  const handleOpen = (next: boolean) => setIsOpen(next);
 
   const clearNotifications = async () => {
     if (!user) return;
@@ -161,6 +189,9 @@ export function NotificationBell() {
   return (
     <DropdownMenu open={isOpen} onOpenChange={handleOpen}>
       <DropdownMenuTrigger asChild>
+        {hideTrigger ? (
+          <span aria-hidden className="pointer-events-none absolute right-0 top-full h-0 w-0" />
+        ) : (
         <Button variant="glass" size="icon" className="notification-bell-v8 relative rounded-lg" aria-label="Notifications" title="Notifications">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
@@ -169,6 +200,7 @@ export function NotificationBell() {
             </span>
           )}
         </Button>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={10} className="notification-panel-v8 utility-glass-v6 w-80 max-w-[calc(100vw-2rem)] max-h-[min(480px,70svh)] overflow-y-auto p-0">
         <div className="utility-header-v6 px-4 py-4 border-b border-border flex items-center justify-between">

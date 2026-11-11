@@ -35,6 +35,7 @@ import {
   X,
   AlertCircle,
   RefreshCw,
+  Lock,
 } from 'lucide-react';
 import { 
   getAudioTrackLabel, 
@@ -121,6 +122,10 @@ interface VideoPlayerProps {
   audioLanguage?: string;
   isSubOnly?: boolean;
   isHindiDub?: boolean;
+  /** SUB server: audio stays on the Japanese track and can't be switched. */
+  audioLocked?: boolean;
+  /** Display name of the selected server (e.g. "4K+"), shown in fullscreen. */
+  serverLabel?: string;
   captionsUrl?: string | null;
   isEncoding?: boolean;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
@@ -154,7 +159,13 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
     playerStyle: 'advanced'
   },
   XPLUS: {
-    name: 'X-PLUS',
+    name: 'AS+',
+    features: ['watch', 'quality', 'download', 'cc'],
+    playerStyle: 'xplus'
+  },
+  // Watch passes the AS+ engine for SUB; this entry only satisfies the shared type.
+  SUB: {
+    name: '4K+',
     features: ['watch', 'quality', 'download', 'cc'],
     playerStyle: 'xplus'
   },
@@ -257,6 +268,8 @@ export function VideoPlayer({
   audioLanguage = 'original',
   isSubOnly = false,
   isHindiDub = false,
+  audioLocked = false,
+  serverLabel,
   captionsUrl,
   isEncoding = false,
   onTimeUpdate,
@@ -1097,7 +1110,7 @@ export function VideoPlayer({
   //     the page never reloads.
   const switchAudioTrack = useCallback((trackId: number) => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || audioLocked) return;
 
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
@@ -1216,7 +1229,7 @@ export function VideoPlayer({
     console.warn('No audio tracks available via HLS.js or native API');
     toast.info('Audio track not available');
     setSettingsOpen(false);
-  }, []);
+  }, [audioLocked]);
 
   // Switch subtitle track - works with both HLS.js and native
   const switchSubtitleTrack = useCallback((trackId: number) => {
@@ -2064,7 +2077,7 @@ export function VideoPlayer({
 
   const getCurrentAudioLabel = () => {
     const track = audioTracks.find(t => t.id === currentAudioTrack);
-    return track?.label || getContentAudioLabel(isSubOnly, audioLanguage, isHindiDub);
+    return track?.label || (audioLocked ? 'Japanese' : getContentAudioLabel(isSubOnly, audioLanguage, isHindiDub));
   };
 
   const getCurrentSubtitleLabel = () => {
@@ -2459,10 +2472,12 @@ export function VideoPlayer({
               </div>
             </Button>
             
-            {/* Audio option */}
+            {/* Audio option — locked to Japanese on the SUB server */}
             <Button variant="ghost"
               type="button"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSettingsMenu('audio'); }}
+              aria-disabled={audioLocked || undefined}
+              title={audioLocked ? 'SUB server keeps the Japanese audio' : undefined}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!audioLocked) setSettingsMenu('audio'); }}
               className="flex items-center justify-between gap-4 cursor-pointer w-full px-2 py-2 hover:bg-accent rounded-sm"
             >
               <div className="flex items-center gap-2">
@@ -2471,7 +2486,7 @@ export function VideoPlayer({
               </div>
               <div className="flex items-center gap-1 text-muted-foreground">
                 <span className="text-xs truncate max-w-[80px]">{getCurrentAudioLabel()}</span>
-                <ChevronRight className="w-4 h-4" />
+                {audioLocked ? <Lock className="w-3.5 h-3.5" aria-label="Locked" /> : <ChevronRight className="w-4 h-4" />}
               </div>
             </Button>
             
@@ -3008,7 +3023,7 @@ export function VideoPlayer({
                 <span className="w-px h-3 bg-white/20" />
                 <span className="text-[11px] md:text-sm font-semibold text-white truncate">{animeTitle}</span>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-emerald-200 bg-emerald-500/15 border border-emerald-400/30 shrink-0">{activeServer === 'XPLUS' ? 'X-PLUS' : activeServer === 'PLAY' ? 'H.Savi' : activeServer === 'Zex' ? 'Multi.Savi' : activeServer}</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-emerald-200 bg-emerald-500/15 border border-emerald-400/30 shrink-0">{serverLabel || (activeServer === 'XPLUS' ? 'AS+' : activeServer === 'PLAY' ? 'H.Savi' : activeServer === 'Zex' ? 'Multi.Savi' : activeServer)}</span>
             </div>
           </div>
 
@@ -3329,7 +3344,7 @@ export function VideoPlayer({
                 <span className="w-px h-3 bg-white/20" />
                 <span className="text-[11px] md:text-sm font-semibold text-white truncate">{animeTitle}</span>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-emerald-200 bg-emerald-500/15 border border-emerald-400/30 shrink-0">{activeServer === 'XPLUS' ? 'X-PLUS' : activeServer === 'PLAY' ? 'H.Savi' : activeServer === 'Zex' ? 'Multi.Savi' : activeServer}</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-emerald-200 bg-emerald-500/15 border border-emerald-400/30 shrink-0">{serverLabel || (activeServer === 'XPLUS' ? 'AS+' : activeServer === 'PLAY' ? 'H.Savi' : activeServer === 'Zex' ? 'Multi.Savi' : activeServer)}</span>
             </div>
           </div>
 

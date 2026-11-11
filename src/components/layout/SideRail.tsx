@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  Home, Search, Film, Tv, TrendingUp, CalendarDays, Users, Heart, History,
-  Upload, Shield, Settings, ChevronLeft, ChevronRight, type LucideIcon,
+  Home, Search, Tv, CalendarDays, Users,
+  Upload, Shield, ChevronLeft, ChevronRight, type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ViewPartyDialog } from '@/components/WatchParty';
@@ -18,26 +18,19 @@ const isActive = (to: string, pathname: string, search: string) => {
 
 /** PC-only floating icon rail on the left; the user can hide or show it. */
 export function SideRail({ hidden, onToggle }: { hidden: boolean; onToggle: () => void }) {
-  const { user, isAdmin, isUploader } = useAuth();
+  const { isAdmin, isUploader } = useAuth();
   const { pathname, search } = useLocation();
   const [partiesOpen, setPartiesOpen] = useState(false);
 
   const main: RailLink[] = [
     { to: '/', label: 'Home', icon: Home },
     { to: '/browse', label: 'Search & Browse', icon: Search },
-    { to: '/browse?type=movie', label: 'Movies', icon: Film },
     { to: '/browse?type=series', label: 'TV Series', icon: Tv },
-    { to: '/browse?sort=popular', label: 'Most Popular', icon: TrendingUp },
     { to: '/schedule', label: 'Schedule', icon: CalendarDays },
   ];
-  const library: RailLink[] = user ? [
-    { to: '/favorites', label: 'Favorites', icon: Heart },
-    { to: '/history', label: 'History', icon: History },
-  ] : [];
   const tools: RailLink[] = [
     ...(isUploader || isAdmin ? [{ to: '/upload', label: 'Upload', icon: Upload }] : []),
     ...(isAdmin ? [{ to: '/admin', label: 'Admin Panel', icon: Shield }] : []),
-    { to: '/settings', label: 'Settings', icon: Settings },
   ];
 
   const renderLink = (item: RailLink) => (
@@ -61,9 +54,7 @@ export function SideRail({ hidden, onToggle }: { hidden: boolean; onToggle: () =
             <Users aria-hidden />
             <span className="side-rail-tip">Watch Parties</span>
           </button>
-          {library.length > 0 && <span className="side-rail-sep" aria-hidden />}
-          {library.map(renderLink)}
-          <span className="side-rail-sep" aria-hidden />
+          {tools.length > 0 && <span className="side-rail-sep" aria-hidden />}
           {tools.map(renderLink)}
           <button type="button" className="side-rail-link" onClick={onToggle} aria-label="Hide side menu">
             <ChevronLeft aria-hidden />

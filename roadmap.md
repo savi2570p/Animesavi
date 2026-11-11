@@ -16,3 +16,11 @@
 
 ## Open
 - [ ] Second-password login protection: blocked on choosing a genuine supported second factor or a separately designed server-enforced authentication system.
+
+## Nov 11 pass
+- [x] Mobile header: hamburger on right, bell moved into profile menu as "Notifications", search icon only
+- [x] PC side rail: remove Favorites, History, Movies, Most Popular, Settings; hidden by default, arrow to show
+- [x] New-episode notifications for favorites use poster image
+- [x] Mobile watch layout like reference; servers grouped DUB (H.Savi, AS+) and SUB (4K+)
+- [x] SUB server locks audio to Japanese; SUB-only anime shows only SUB
+- [x] Upload: choose DUB/SUB servers when adding
