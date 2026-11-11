@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { getServerGroups, getPlaybackEngine, getDefaultServer, SERVER_CONFIGS } from './useServerAutoSelect';
+import { getServerGroups, getPlaybackEngine, getDefaultServer, getServerVideoUrl, SERVER_CONFIGS } from './useServerAutoSelect';
 
 const names = (ids: string[]) => ids.map(id => SERVER_CONFIGS[id as keyof typeof SERVER_CONFIGS].name);
 
@@ -31,5 +31,19 @@ describe('saved server default', () => {
     expect(getDefaultServer()).toBe('XPLUS');
     localStorage.setItem('preferred_video_server', 'PLAY');
     expect(getDefaultServer()).toBe('PLAY');
+  });
+});
+
+describe('SUB episode file', () => {
+  it('4K+ plays the added SUB file', () => {
+    expect(getServerVideoUrl('SUB', 'dub.mp4', 'sub.mp4')).toBe('sub.mp4');
+  });
+  it('4K+ falls back to the main file when no SUB file was added', () => {
+    expect(getServerVideoUrl('SUB', 'dub.mp4', null)).toBe('dub.mp4');
+    expect(getServerVideoUrl('SUB', 'dub.mp4', '  ')).toBe('dub.mp4');
+  });
+  it('DUB servers never play the SUB file', () => {
+    expect(getServerVideoUrl('PLAY', 'dub.mp4', 'sub.mp4')).toBe('dub.mp4');
+    expect(getServerVideoUrl('XPLUS', 'dub.mp4', 'sub.mp4')).toBe('dub.mp4');
   });
 });
