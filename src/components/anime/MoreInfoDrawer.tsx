@@ -14,7 +14,7 @@ import {
   Tv,
 } from 'lucide-react';
 import { getViewCount, formatViews, getLikeCount, formatLikes } from '@/lib/viewCount';
-import { DubBadge } from '@/components/anime/DubBadge';
+import { isAdultGenres } from '@/components/anime/DubBadge';
 
 interface MoreInfoAnime {
   id: string;
@@ -142,7 +142,7 @@ export function MoreInfoDrawer({
                       {anime.status}
                     </span>
                   )}
-                  <DubBadge size="md" isEngDub={anime.is_eng_dub} isSubOnly={anime.is_sub_only} genres={(anime as any).genres} />
+                  {isAdultGenres((anime as any).genres) && <span className="rounded font-bold bg-destructive text-destructive-foreground shadow px-2 py-0.5 text-[10px]">18+</span>}
                 </div>
               </div>
             </div>
