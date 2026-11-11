@@ -159,7 +159,13 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
     playerStyle: 'advanced'
   },
   XPLUS: {
-    name: 'X-PLUS',
+    name: 'AS+',
+    features: ['watch', 'quality', 'download', 'cc'],
+    playerStyle: 'xplus'
+  },
+  // Watch passes the AS+ engine for SUB; this entry only satisfies the shared type.
+  SUB: {
+    name: '4K+',
     features: ['watch', 'quality', 'download', 'cc'],
     playerStyle: 'xplus'
   },
