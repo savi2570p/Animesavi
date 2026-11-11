@@ -24,10 +24,10 @@ export function useServerPreference() {
     try {
       const savedServer = localStorage.getItem(SERVER_PREFERENCE_KEY) as ServerType | null;
       // SAVI.IN (SHORT) was removed — migrate any legacy saved preference to XPLUS.
-      if (savedServer === 'SHORT') {
+      if (savedServer === 'SHORT' || savedServer === 'Zex') {
         localStorage.setItem(SERVER_PREFERENCE_KEY, 'XPLUS');
         setPreferredServer('XPLUS');
-      } else if (savedServer && ['PLAY', 'Zex', 'XPLUS', 'EMBED'].includes(savedServer)) {
+      } else if (savedServer && ['PLAY', 'XPLUS', 'EMBED'].includes(savedServer)) {
         setPreferredServer(savedServer);
       }
 

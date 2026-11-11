@@ -1,7 +1,21 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 
 
-export type ServerType = 'PLAY' | 'SHORT' | 'Zex' | 'XPLUS' | 'EMBED';
+export type ServerType = 'PLAY' | 'SHORT' | 'Zex' | 'XPLUS' | 'SUB' | 'EMBED';
+
+/** Server groups shown under the player: DUB servers keep the dubbed audio, SUB locks Japanese. */
+export const DUB_SERVERS: ServerType[] = ['PLAY', 'XPLUS'];
+export const SUB_SERVERS: ServerType[] = ['SUB'];
+
+/** Which server groups an anime offers: SUB-only titles get only the SUB server. */
+export function getServerGroups(isSubOnly: boolean): { dub: ServerType[]; sub: ServerType[] } {
+  return { dub: isSubOnly ? [] : DUB_SERVERS, sub: SUB_SERVERS };
+}
+
+/** The SUB server plays through the X-PLUS engine with the audio locked to Japanese. */
+export function getPlaybackEngine(server: ServerType): ServerType {
+  return server === 'SUB' ? 'XPLUS' : server;
+}
 
 interface ServerConfig {
   id: ServerType;
@@ -35,9 +49,16 @@ export const SERVER_CONFIGS: Record<ServerType, ServerConfig> = {
   },
   XPLUS: {
     id: 'XPLUS',
-    name: 'X-PLUS',
+    name: 'AS+',
     description: 'Best Quality 🔥 (Recommended)',
     features: ['Flat controls', 'Download support', 'Subtitle support'],
+    supportedPlatforms: ['ios', 'android', 'desktop'],
+  },
+  SUB: {
+    id: 'SUB',
+    name: '4K+',
+    description: 'Japanese audio with subtitles',
+    features: ['Japanese audio', 'Download support', 'Subtitle support'],
     supportedPlatforms: ['ios', 'android', 'desktop'],
   },
   EMBED: {
@@ -56,7 +77,7 @@ const SERVER_PREF_KEY = 'preferred_video_server';
  * SAVI.IN (SHORT) was removed — all platforms now share the same server list.
  */
 export function getAvailableServers(): ServerType[] {
-  return ['PLAY', 'Zex', 'XPLUS', 'EMBED'];
+  return ['PLAY', 'XPLUS', 'SUB', 'EMBED'];
 }
 
 /**
@@ -66,8 +87,9 @@ export function getAvailableServers(): ServerType[] {
 export function getDefaultServer(): ServerType {
   const saved = localStorage.getItem(SERVER_PREF_KEY) as ServerType | null;
   if (saved) {
-    if (saved === 'SHORT') return 'XPLUS'; // legacy SAVI.IN preference → upgrade
-    if (['PLAY', 'Zex', 'XPLUS', 'EMBED'].includes(saved)) return saved;
+    // Legacy SAVI.IN / Multi.Savi preferences → AS+. SUB is never a saved default.
+    if (saved === 'SHORT' || saved === 'Zex') return 'XPLUS';
+    if (['PLAY', 'XPLUS', 'EMBED'].includes(saved)) return saved;
   }
   return 'XPLUS';
 }
@@ -131,7 +153,8 @@ export function useServerAutoSelect(options?: UseServerAutoSelectOptions) {
       next.delete(server);
       return next;
     });
-    localStorage.setItem(SERVER_PREF_KEY, server);
+    // SUB is chosen per title, so it never becomes the saved default for DUB anime.
+    if (server !== 'SUB') localStorage.setItem(SERVER_PREF_KEY, server);
 
     if (server === activeServer) {
       setReloadToken((prev) => prev + 1);
