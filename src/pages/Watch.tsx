@@ -55,6 +55,8 @@ import {
   Flag,
   Bell,
   BellDot,
+  Mic,
+  Captions,
 } from 'lucide-react';
 
 // Comment validation schema
