@@ -603,3 +603,11 @@ html.perf-low .home-search-hero-art { display: none; }
   .watch-servers-head { justify-items: start; text-align: left; }
   .watch-servers-row { grid-template-columns: 88px minmax(0, 420px); }
 }
+
+/* Nov 11 — compact phone player bar: both control pills fit inside the frame */
+@media (max-width: 767px) {
+  .player-shell .vp-pill { gap: 2px !important; padding: 1px 4px; }
+  .player-shell .vp-pill button { min-width: 0 !important; min-height: 0 !important; width: 26px !important; height: 26px !important; }
+  .player-shell .vp-pill svg { width: 15px !important; height: 15px !important; }
+  .player-shell .vp-pill span { font-size: 10px; }
+}
