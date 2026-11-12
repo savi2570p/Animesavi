@@ -49,7 +49,6 @@
 - One Watch Party menu entry; admin/upload in PC rail; Notifications is a page (shared useNotifications cache).
 - Phone Watch sections (MobileWatchSections) reuse page season/episode handlers.
 - getServerGroups (is_sub_only) groups DUB/SUB servers; SUB = AS+ engine, audioLocked, getServerVideoUrl.
-- Season pickers: SeasonCards; player loaders: PlayerSpinner.
-- Watch comments sort in memory (sortComments).
-- Embed players share EmbedChrome UI and useEmbedHotkeys shortcuts; playback/access per player.
+- Season pickers: SeasonCards; player loaders: PlayerSpinner; Watch comments sort in memory.
+- Embed players: shared EmbedChrome UI + useEmbedHotkeys; playback/access per player.
 - Schedule sch2 UI is presentation-only over existing timezone/rollover math.
