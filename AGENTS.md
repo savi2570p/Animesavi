@@ -51,4 +51,4 @@
 - getServerGroups (is_sub_only) groups DUB/SUB servers; SUB = AS+ engine, audioLocked, getServerVideoUrl.
 - Season pickers use shared SeasonCards; player loaders share PlayerSpinner.
 - Watch comments sort in memory (sortComments), never reloading the player.
-- Embed players share EmbedChrome UI; playback/access logic stays per player.
+- Embed players share EmbedChrome UI; playback/access stays per player.
