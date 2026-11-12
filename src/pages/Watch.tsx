@@ -1528,6 +1528,7 @@ export default function Watch() {
             onEpisodeSelect={goToEpisode}
             animeTitle={anime?.title}
             seasonNumber={currentSeason?.season_number}
+            fallbackImage={anime?.banner_image || anime?.cover_image}
           />
         </aside>
       </div>
@@ -1547,106 +1548,81 @@ export default function Watch() {
 
       {/* Episode Info & Navigation */}
       <div className="container py-3 md:py-8">
-        <div className="watch-v3-info py-3 md:py-5">
-          {/* Decorative glows — desktop only */}
-
-          <div className="relative flex flex-col gap-2.5 md:gap-6">
-            {/* Breadcrumb with Format Indicator */}
-            <div className="flex items-center justify-between flex-wrap gap-1.5">
-              <div className="flex items-center gap-1 md:gap-1.5 text-[11px] md:text-sm min-w-0">
-                <Link to={`/anime/${anime?.id}`} className="text-muted-foreground hover:text-primary transition-colors font-medium truncate max-w-[140px] md:max-w-none">
-                  {anime?.title}
-                </Link>
-                <ChevronRight className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground/60 shrink-0" />
-                <span className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 rounded-md bg-primary/10 border border-primary/30 text-primary font-bold text-[10px] md:text-xs shrink-0">
-                  S{currentSeason?.season_number || 1} · E{episode.episode_number}
-                </span>
-              </div>
-              {(isAdmin || isUploader) && (
-                <VideoFormatIndicator
-                  servedFormat={deviceOptimizedVideo.servedFormat}
-                  device={deviceOptimizedVideo.device}
-                  conversionStatus={deviceOptimizedVideo.conversionStatus}
-                  isHLS={deviceOptimizedVideo.videoUrl?.includes('.m3u8') || false}
-                />
-              )}
-            </div>
-
-            {/* Episode Title */}
-            <div className="space-y-1.5 md:space-y-2">
-              <span className="inline-flex items-center gap-1 md:gap-1.5 px-1.5 md:px-2 py-0.5 rounded-full bg-accent/15 border border-accent/30 text-[9px] md:text-xs font-bold uppercase tracking-wider text-accent-foreground">
-                <span className="w-1 h-1 rounded-full bg-accent animate-pulse" />
-                Now Playing
-              </span>
-              <h1 className="text-base md:text-3xl font-heading font-bold leading-snug md:leading-tight text-foreground">
-                {episode.title}
-              </h1>
-            </div>
-
-            {/* Description */}
-            {episode.description && (
-              <p className="text-[11px] md:text-sm leading-relaxed text-muted-foreground border-l-2 border-primary/40 pl-2.5 md:pl-4 py-0.5 md:py-1">
-                {episode.description}
-              </p>
+        <section className="watch-v6-info" aria-label="Now playing">
+          <div className="watch-v6-head">
+            {anime?.cover_image && (
+              <Link to={`/anime/${anime.id}`} className="watch-v6-poster" aria-label={`Open ${anime.title}`}>
+                <img src={anime.cover_image} alt="" loading="lazy" decoding="async" />
+              </Link>
             )}
-
-            {/* Quick actions row: Edit + Watch Party */}
-            {((isAdmin || isUploader) || anime) && (
-              <div className="flex items-center gap-2 md:gap-3 flex-wrap">
-                {(isAdmin || isUploader) && anime && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(`/upload/anime/${anime.id}/episode/${episode.id}/edit`)}
-                    className="h-8 md:h-9 text-xs"
-                  >
-                    <Edit className="h-3.5 w-3.5 mr-1.5" />
-                    Edit
-                  </Button>
-                )}
-                {anime && (
-                  <WatchParty
-                    episodeId={episode.id}
-                    videoRef={{ current: document.querySelector('video') } as React.RefObject<HTMLVideoElement>}
-                    animeTitle={anime.title || ''}
-                    episodeNumber={episode.episode_number}
-                    seasonNumber={currentSeason?.season_number || 1}
-                    animeId={anime.id}
+            <div className="watch-v6-heading">
+              <div className="watch-v6-crumbs">
+                <span className="watch-v6-live"><span aria-hidden />Now playing</span>
+                <span className="watch-v6-ep">{isMovie ? 'Movie' : `S${currentSeason?.season_number || 1} · E${episode.episode_number}`}</span>
+                {(isAdmin || isUploader) && (
+                  <VideoFormatIndicator
+                    servedFormat={deviceOptimizedVideo.servedFormat}
+                    device={deviceOptimizedVideo.device}
+                    conversionStatus={deviceOptimizedVideo.conversionStatus}
+                    isHLS={deviceOptimizedVideo.videoUrl?.includes('.m3u8') || false}
                   />
                 )}
               </div>
+              <h1 className="watch-v6-title">{episode.title}</h1>
+              {anime && (
+                <Link to={`/anime/${anime.id}`} className="watch-v6-series">
+                  {anime.title}
+                  <ChevronRight aria-hidden />
+                </Link>
+              )}
+              {episode.description && <p className="watch-v6-desc">{episode.description}</p>}
+            </div>
+          </div>
+
+          <div className="watch-v6-actions">
+            {(prevEpisode || nextEpisode) && (
+              <div className="watch-v6-nav" role="group" aria-label="Episode navigation">
+                <Button
+                  variant="outline"
+                  onClick={() => prevEpisode && goToEpisode(prevEpisode.id)}
+                  disabled={guestLocked || !prevEpisode}
+                  className="watch-v6-nav-btn"
+                >
+                  <ChevronLeft aria-hidden />
+                  Previous
+                </Button>
+                <Button
+                  onClick={() => nextEpisode && goToEpisode(nextEpisode.id)}
+                  disabled={guestLocked || !nextEpisode}
+                  className="watch-v6-nav-btn is-next"
+                >
+                  Next episode
+                  <ChevronRight aria-hidden />
+                </Button>
+              </div>
             )}
 
-            {/* Divider */}
-            <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-
-            {/* Episode Navigation */}
-            <div className="flex flex-wrap items-center gap-2 md:gap-3">
-              {prevEpisode && (
+            <div className="watch-v6-tools">
+              {(isAdmin || isUploader) && anime && (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => goToEpisode(prevEpisode.id)}
-                  disabled={guestLocked}
-                  className="h-9 md:h-10 text-xs md:text-sm border-border/60 hover:border-primary/60 hover:bg-primary/5"
+                  onClick={() => navigate(`/upload/anime/${anime.id}/episode/${episode.id}/edit`)}
                 >
-                  <ChevronLeft className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5" />
-                  Previous
+                  <Edit className="h-3.5 w-3.5 mr-1.5" />
+                  Edit
                 </Button>
               )}
-              {nextEpisode && (
-                <Button
-                  size="sm"
-                  className="anime-button h-9 md:h-10 text-xs md:text-sm shadow-lg shadow-primary/20"
-                  onClick={() => goToEpisode(nextEpisode.id)}
-                  disabled={guestLocked}
-                >
-                  Next Episode
-                  <ChevronRight className="h-3.5 w-3.5 md:h-4 md:w-4 ml-1.5" />
-                </Button>
+              {anime && (
+                <WatchParty
+                  episodeId={episode.id}
+                  videoRef={{ current: document.querySelector('video') } as React.RefObject<HTMLVideoElement>}
+                  animeTitle={anime.title || ''}
+                  episodeNumber={episode.episode_number}
+                  seasonNumber={currentSeason?.season_number || 1}
+                  animeId={anime.id}
+                />
               )}
-
-              {/* Offline Download Button */}
               <OfflineDownloadButton
                 videoUrl={episode.video_url}
                 iosVideoUrl={deviceOptimizedVideo.device === 'iOS' ? deviceOptimizedVideo.videoUrl : null}
@@ -1656,7 +1632,6 @@ export default function Watch() {
                 thumbnail={episode.thumbnail}
                 isIOSDevice={deviceOptimizedVideo.device === 'iOS'}
               />
-            
             {(() => {
               const animeSlug = anime?.title
                 ? anime.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -1680,8 +1655,7 @@ export default function Watch() {
             <Button
               size="sm"
               variant="outline"
-              className="h-9 md:h-10 text-xs md:text-sm"
-              onClick={async () => {
+                            onClick={async () => {
                 const url = `${window.location.origin}/s2/${episode.id}`;
                 try {
                   if (navigator.clipboard?.writeText) {
@@ -1711,21 +1685,22 @@ export default function Watch() {
               </span>
             </Button>
             )}
-          </div>
             </div>
           </div>
+        </section>
 
           <div className="xl:hidden mt-6">
             <MobileAboutAnime anime={anime as any} episodeCount={allEpisodes.length} />
           </div>
 
           {/* Comments */}
-          <div className="space-y-6 mt-6 md:mt-8">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-4">
-                <h2 className="text-xl font-heading font-bold flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
-                  Comments ({comments.length})
+          <section className="watch-v6-comments space-y-5 mt-6 md:mt-8" aria-label="Comments">
+            <div className="watch-v6-comments-head">
+              <div className="flex items-center gap-2">
+                <h2 className="watch-v6-comments-title">
+                  <MessageSquare aria-hidden />
+                  Comments
+                  <span className="watch-v6-count">{comments.length}</span>
                 </h2>
                 
                 {/* Notification Bell */}
@@ -1796,11 +1771,12 @@ export default function Watch() {
               
               {/* Sort Options */}
               <div className="flex items-center gap-2">
-                <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                <div className="flex gap-1">
+                <ArrowUpDown className="h-4 w-4 text-muted-foreground hidden sm:block" aria-hidden />
+                <div className="watch-v6-sort" role="group" aria-label="Sort comments">
                   <Button
                     size="sm"
                     variant={commentSort === 'newest' ? 'default' : 'ghost'}
+                    aria-pressed={commentSort === 'newest'}
                     onClick={() => setCommentSort('newest')}
                     className="text-xs"
                   >
@@ -1810,6 +1786,7 @@ export default function Watch() {
                   <Button
                     size="sm"
                     variant={commentSort === 'oldest' ? 'default' : 'ghost'}
+                    aria-pressed={commentSort === 'oldest'}
                     onClick={() => setCommentSort('oldest')}
                     className="text-xs"
                   >
@@ -1818,6 +1795,7 @@ export default function Watch() {
                   <Button
                     size="sm"
                     variant={commentSort === 'most_liked' ? 'default' : 'ghost'}
+                    aria-pressed={commentSort === 'most_liked'}
                     onClick={() => setCommentSort('most_liked')}
                     className="text-xs"
                   >
@@ -1830,8 +1808,8 @@ export default function Watch() {
 
             {/* Add Comment */}
             {user ? (
-              <div className="flex gap-4">
-                <Avatar>
+              <div className="watch-v6-composer flex gap-3 md:gap-4">
+                <Avatar className="h-9 w-9 md:h-10 md:w-10 shrink-0">
                   <AvatarImage src={userProfile?.avatar_url || undefined} alt="Your avatar" />
                   <AvatarFallback className="bg-gradient-primary text-white">
                     {user.email?.charAt(0).toUpperCase()}
@@ -1842,17 +1820,17 @@ export default function Watch() {
                     placeholder="Add a comment..."
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    className="bg-muted/50"
+                    className="watch-v6-textarea"
                   />
-                  <Button onClick={() => handleAddComment()} className="anime-button">
+                  <Button onClick={() => handleAddComment()} size="sm" className="watch-v6-post">
                     <Send className="h-4 w-4 mr-2" />
                     Post Comment
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="bg-muted/50 rounded-lg p-4 text-center">
-                <p className="text-muted-foreground mb-2">Sign in to leave a comment</p>
+              <div className="watch-v6-composer text-center">
+                <p className="text-muted-foreground mb-2 text-sm">Sign in to leave a comment</p>
                 <Button asChild variant="outline">
                   <Link to="/auth">Sign In</Link>
                 </Button>
@@ -2016,7 +1994,7 @@ export default function Watch() {
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
       </div>
     </div>

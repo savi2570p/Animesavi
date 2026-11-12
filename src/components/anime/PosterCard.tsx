@@ -44,8 +44,7 @@ export const PosterCard = memo(function PosterCard({
   return (
     <Link to={to} onClick={onClick} className={cn('poster-card group', fluid ? 'w-full' : 'poster-card-fixed shrink-0', className)}>
       <div className="poster-card-art">
-        <img src={img} alt="" aria-hidden className="catalogue-fill perf-blur-fill absolute inset-0 h-full w-full object-cover" loading="lazy" />
-        <img src={img} alt={title} className="relative h-full w-full object-contain" loading="lazy" decoding="async" />
+        <img src={img} alt={title} className="poster-card-img" loading="lazy" decoding="async" />
         <div className="poster-card-top">
           {tag && <span className="poster-card-chip poster-card-chip-accent">{tag}</span>}
           <DubBadge isEngDub={isEngDub} isSubOnly={isSubOnly} genres={genres} />

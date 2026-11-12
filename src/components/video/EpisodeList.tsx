@@ -23,6 +23,7 @@ interface Episode {
   title: string;
   audio_language?: string | null;
   sub_video_url?: string | null;
+  thumbnail?: string | null;
 }
 
 interface EpisodeListProps {
@@ -32,9 +33,12 @@ interface EpisodeListProps {
   onEpisodeSelect?: (episodeId: string) => void;
   animeTitle?: string;
   seasonNumber?: number;
+  /** 16:9 artwork used when an episode has no thumbnail of its own. */
+  fallbackImage?: string | null;
 }
 
-export function EpisodeList({ episodes, currentEpisodeId, className, onEpisodeSelect, animeTitle, seasonNumber = 1 }: EpisodeListProps) {
+export function EpisodeList({ episodes, currentEpisodeId, className, onEpisodeSelect, animeTitle, seasonNumber = 1, fallbackImage }: EpisodeListProps) {
+  const fallback = fallbackImage || '/placeholder.svg';
   const [searchQuery, setSearchQuery] = useState('');
   const [sortAsc, setSortAsc] = useState(true);
   const { user } = useAuth();
@@ -121,7 +125,7 @@ export function EpisodeList({ episodes, currentEpisodeId, className, onEpisodeSe
   return (
     <div
       className={cn(
-        "flex flex-col bg-gradient-to-b from-card/95 to-card/80 backdrop-blur-xl border border-border/50 rounded-xl overflow-hidden shadow-lg shadow-black/20",
+        "episode-list flex flex-col overflow-hidden",
         className
       )}
     >
@@ -186,7 +190,7 @@ export function EpisodeList({ episodes, currentEpisodeId, className, onEpisodeSe
 
       {/* Episode list */}
       <ScrollArea className="flex-1 max-h-[42vh] md:max-h-[calc(100vh-280px)] overflow-y-auto touch-pan-y">
-        <div className="p-1.5 space-y-0.5">
+        <div className="p-1.5 space-y-1">
           {filteredEpisodes.map((episode) => {
             const isActive = episode.id === currentEpisodeId;
             return (
@@ -194,57 +198,36 @@ export function EpisodeList({ episodes, currentEpisodeId, className, onEpisodeSe
                 <ContextMenuTrigger asChild>
                   <div
                     ref={isActive ? activeRef : undefined}
-                    className={cn(
-                      "relative flex items-center gap-2 pl-2 pr-1.5 py-2 rounded-lg transition-all duration-200 text-xs group cursor-pointer",
-                      isActive
-                        ? "bg-gradient-to-r from-primary/25 via-primary/10 to-transparent text-primary ring-1 ring-primary/40 shadow-sm shadow-primary/10"
-                        : "hover:bg-muted/40 text-foreground/85 hover:text-foreground"
-                    )}
+                    className="episode-row group"
+                    data-active={isActive || undefined}
                   >
-                    {/* Active indicator bar */}
-                    {isActive && (
-                      <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r-full bg-primary" />
-                    )}
-
                     <Link
                       to={`/watch/${episode.id}`}
                       onClick={(e) => handleEpisodeClick(e, episode.id)}
-                      className="flex items-center gap-2.5 flex-1 min-w-0"
+                      className="episode-row-link"
+                      aria-current={isActive ? 'true' : undefined}
                     >
-                      {/* Episode number badge */}
-                      <div
-                        className={cn(
-                          "h-7 w-7 rounded-md flex items-center justify-center text-[11px] font-bold shrink-0 transition-colors",
-                          isActive
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-secondary/70 text-foreground/70 group-hover:bg-secondary"
-                        )}
-                      >
-                        {isActive ? (
-                          <Play className="h-3 w-3 fill-primary-foreground" />
-                        ) : (
-                          episode.episode_number
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className={cn(
-                            "truncate leading-tight",
-                            isActive ? "font-semibold" : "font-medium"
-                          )}
-                        >
-                          {!isActive && (
-                            <span className="text-muted-foreground/80 mr-1">EP {episode.episode_number} ·</span>
-                          )}
-                          {episode.title}
-                        </p>
+                      <span className="episode-row-thumb">
+                        <img
+                          src={episode.thumbnail || fallback}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          onError={(e) => { if (e.currentTarget.src !== new URL(fallback, window.location.href).href) e.currentTarget.src = fallback; }}
+                        />
+                        <span className="episode-row-num">EP {episode.episode_number}</span>
                         {isActive && (
-                          <p className="text-[9.5px] text-primary/80 mt-0.5 uppercase tracking-wider font-medium">
-                            ● Now Playing
-                          </p>
+                          <span className="episode-row-playing" aria-hidden>
+                            <Play className="fill-current" />
+                          </span>
                         )}
-                      </div>
+                      </span>
+                      <span className="episode-row-text">
+                        <span className="episode-row-title">{episode.title}</span>
+                        <span className="episode-row-sub">
+                          {isActive ? 'Now playing' : `Episode ${episode.episode_number}`}
+                        </span>
+                      </span>
                     </Link>
 
                     {/* Watch Later button */}
@@ -252,7 +235,7 @@ export function EpisodeList({ episodes, currentEpisodeId, className, onEpisodeSe
                       variant="ghost"
                       size="icon"
                       className={cn(
-                        "h-7 w-7 shrink-0 transition-opacity",
+                        "h-7 w-7 shrink-0 self-center transition-opacity",
                         "md:opacity-0 md:group-hover:opacity-100",
                         "text-muted-foreground hover:text-primary hover:bg-primary/10"
                       )}

@@ -527,7 +527,6 @@ export default function AnimeDetail() {
               {isAdultGenres(anime.genres) && <div className="flex items-center gap-2 flex-wrap mb-2"><span className="rounded font-bold bg-destructive text-destructive-foreground shadow px-2 py-0.5 text-[10px]">18+</span></div>}
               <h1 className="font-heading font-bold text-2xl md:text-3xl leading-tight break-words">{anime.title}</h1>
               {anime.description && <p className="mt-3 text-sm text-foreground/80 leading-relaxed max-w-5xl whitespace-pre-line">{anime.description}</p>}
-              {anime.genres?.length > 0 && <div className="flex flex-wrap gap-1.5 mt-4">{anime.genres.map(g => <Link key={g} to={`/browse?genre=${encodeURIComponent(g.toLowerCase())}`} className="detail-ra-genre">{g}</Link>)}</div>}
 
               <div className="detail-v3-actions flex flex-wrap items-center gap-2 mt-4">
                 {nextEpisode && <Button asChild size="sm" className="gap-1.5"><Link to={`/watch/${nextEpisode.id}`}><Play className="h-3.5 w-3.5 fill-current" />{watchProgress.size > 0 ? `Continue Ep ${nextEpisode.episode_number}` : anime.type === 'movie' ? 'Watch Now' : `Watch Ep ${nextEpisode.episode_number}`}</Link></Button>}
