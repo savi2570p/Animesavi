@@ -19,7 +19,7 @@
 - Settings uses a single unframed vertical section flow; catalogue listing pages share lightweight optical-edge tokens and SeeAllHeader so page refreshes preserve existing links, badges and queries.
 - Welcome renders catalogue banner artwork behind its title and actions with visibility-gated rotation rather than animated ambient backdrops, keeping its first screen lightweight.
 - Utility popups, navigation and footer share bounded optical-glass tokens with performance fallbacks; presentation changes retain popup queues, route exclusions, contact destinations and update state transitions.
-- Login, notification and resume presentation reuse utility glass without changing authentication or watch-history handlers; clone floating utility exclusions key off the resolved clone shell/body mode to preserve normal anime-slug pages.
+- Login, notification and resume reuse utility glass without changing auth or history handlers; clone utility exclusions key off the resolved clone shell mode so anime-slug pages stay normal.
 - Token expiry and verification surfaces reuse utility glass and TokenPerks with bounded blur and unframed sections; keep access checks, popup frequency and token action handlers independent of presentation.
 - Homepage sharing uses native sharing with a copy-link fallback and direct social links, keeping the primary action independent of poster generation.
 - Download confirmation pauses playback and does not automatically resume it on dismissal, so users control playback explicitly.
@@ -42,11 +42,11 @@
 - Platform collections share presentation-only catalogue headers and cards with fixed portrait artwork, shared badges and native snap rows; preserve page-owned filters, queries and pending-title handlers.
 - Watch party create/join/view dialogs share scoped party glass presentation; header menu party dialogs are controlled outside the hamburger sheet so closing the menu never unmounts them.
 - The coarse-pointer 44px tap-target rule excludes switch, checkbox and radio roles so toggles keep their size.
-- Watch party membership is published through the shared watchPartySession store: only the host writes shared playback (database UPDATE is host-only), guests get a player cover and reverted media events, and every party session skips Continue Watching writes.
+- Watch party state lives in the shared watchPartySession store: only the host writes playback (host-only UPDATE), guests get a cover and reverted media events, and party sessions skip Continue Watching.
 - Clone sites forbidding framing get a header-only backend check and an open-directly card; never proxy or strip frame protections.
 - Progress writes use watchProgressThrottle, polls skip hidden tabs, conversion scans run daily at most, so idle tabs don't wake the database.
 - Site-wide flat styling lives in src/styles/flat-design.css (loaded after index.css) as token overrides; restyle there, not per component, for consistency.
 - One Watch Party menu entry; admin/upload in PC rail; Notifications is a page (shared useNotifications cache).
 - Phone Watch sections (MobileWatchSections) reuse the page's season/episode handlers.
 - getServerGroups (is_sub_only) groups DUB/SUB servers; SUB = AS+ engine, audioLocked, getServerVideoUrl.
-- Detail and Watch season pickers use shared SeasonCards; player loaders share PlayerSpinner, keeping pages' season handlers.
+- Detail/Watch season pickers use shared SeasonCards (pages keep their handlers); player loaders share PlayerSpinner.
