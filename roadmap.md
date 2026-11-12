@@ -28,3 +28,7 @@
 ## Nov 12 pass
 - [x] All embed players resume where the viewer left off (embed id/short, slug, minimal, Shadow v2, token)
 - [x] Schedule page redesign (PC + phone)
+
+## Nov 12 pass 2
+- [x] Shadow link players: numbered tile episode picker (lime active tile) like reference
+- [x] Keyboard shortcuts on every embed player (shared useEmbedHotkeys)

@@ -239,7 +239,10 @@ export function EmbedEpisodeDrawer({
   onSeasonChange,
   onSelect,
   onClose,
+  layout = 'list',
 }: {
+  /** grid = compact numbered tiles (Shadow link players), list = rows with titles. */
+  layout?: 'list' | 'grid';
   heading: string;
   subheading?: string;
   items: EmbedEpisodeItem[];
@@ -277,6 +280,25 @@ export function EmbedEpisodeDrawer({
             ))}
           </div>
         )}
+        {layout === 'grid' ? (
+          <div className="ep3-ep-grid" role="list">
+            {items.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                role="listitem"
+                className="ep3-ep-tile"
+                data-active={item.active ? 'true' : undefined}
+                aria-current={item.active ? 'true' : undefined}
+                aria-label={`Episode ${item.number}${item.title ? ` · ${item.title}` : ''}${item.active ? ' (now playing)' : ''}`}
+                title={item.title || `Episode ${item.number}`}
+                onClick={() => onSelect(item)}
+              >
+                {item.number}
+              </button>
+            ))}
+          </div>
+        ) : (
         <div className="ep3-ep-list">
           {items.map((item) => (
             <button
@@ -299,7 +321,18 @@ export function EmbedEpisodeDrawer({
             </button>
           ))}
         </div>
+        )}
       </aside>
+    </div>
+  );
+}
+
+/** Small centred badge confirming a keyboard shortcut (e.g. "+10s", "Volume 60%"). */
+export function EmbedKeyHint({ hint }: { hint: { id: number; text: string } | null }) {
+  if (!hint) return null;
+  return (
+    <div key={hint.id} className="ep3-keyhint" role="status" aria-live="polite">
+      {hint.text}
     </div>
   );
 }

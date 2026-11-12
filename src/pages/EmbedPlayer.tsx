@@ -6,13 +6,14 @@ import {
   RefreshCw, Settings, Download, List,
 } from 'lucide-react';
 import {
-  EmbedBrand, EmbedBtn, EmbedCenterPlay, EmbedDoubleTap, EmbedEpisodeDrawer, EmbedLoading,
+  EmbedBrand, EmbedBtn, EmbedCenterPlay, EmbedKeyHint, EmbedDoubleTap, EmbedEpisodeDrawer, EmbedLoading,
   EmbedMenu, EmbedMenuItem, EmbedMenuLabel, EmbedSeek, EmbedStatus, EmbedTime,
 } from '@/components/embed/EmbedChrome';
 import { extractEmbedSrc, isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 import Hls from 'hls.js';
 import { useEmbedPlayerBridge } from '@/hooks/useEmbedPlayerBridge';
 import { useEmbedResume } from '@/hooks/useEmbedResume';
+import { useEmbedHotkeys } from '@/hooks/useEmbedHotkeys';
 import { getNetworkInfo } from '@/lib/videoUtils';
 import { isHlsUrl as isHls, isDashUrl, selectCompatibleSources, detectDeviceKind } from '@/lib/streamSource';
 import { isUuid, isSelfEmbedUrl } from '@/lib/embedLink';
@@ -678,6 +679,19 @@ export default function EmbedPlayer() {
     if (idx >= 0) setCurrentEpisodeIndex(idx);
   }, [allEpisodes]);
 
+  // Shared keyboard shortcuts (Space/K, ←/→, J/L, ↑/↓, M, F, C, E, Shift+N/P, 0-9, < >).
+  const keyHint = useEmbedHotkeys(videoRef, {
+    togglePlay,
+    toggleMute,
+    toggleFullscreen: () => void toggleFullscreen(),
+    toggleCaptions: () => setCcEnabled((v) => !v),
+    toggleEpisodes: allEpisodes.length > 1 ? () => setShowEpisodePanel((v) => !v) : undefined,
+    nextEpisode: allEpisodes[currentEpisodeIndex + 1] ? () => void switchToEpisode(allEpisodes[currentEpisodeIndex + 1]) : undefined,
+    prevEpisode: currentEpisodeIndex > 0 && allEpisodes[currentEpisodeIndex - 1] ? () => void switchToEpisode(allEpisodes[currentEpisodeIndex - 1]) : undefined,
+    onEscape: closeAllMenus,
+    onActivity: handleMouseMove,
+  });
+
   // Blocked domain
   if (domainAllowed === false) {
     return (
@@ -823,6 +837,7 @@ export default function EmbedPlayer() {
       >
         {topBar}
 
+        <EmbedKeyHint hint={keyHint} />
         {!isPlaying && !isLoading && <EmbedCenterPlay onClick={() => play()} />}
 
         <div className="ep3-bottom">

@@ -174,6 +174,32 @@
 .ep3-ep-text span { font-size: 10.5px; color: var(--ep3-muted); }
 .ep3-ep[data-active="true"] .ep3-ep-text span { color: var(--ep3-accent); font-weight: 700; }
 
+/* Compact numbered episode tiles (Shadow link players) */
+.ep3-ep-grid {
+  flex: 1; overflow-y: auto; overscroll-behavior: contain; align-content: start;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); gap: 6px; padding: 12px;
+}
+.ep3-ep-tile {
+  --ep3-cut: 7px;
+  position: relative; height: 34px; display: grid; place-items: center;
+  border: 0; background: hsl(0 0% 100% / .045); color: var(--ep3-ink); cursor: pointer;
+  font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
+  clip-path: polygon(var(--ep3-cut) 0, 100% 0, 100% calc(100% - var(--ep3-cut)), calc(100% - var(--ep3-cut)) 100%, 0 100%, 0 var(--ep3-cut));
+  box-shadow: inset 0 0 0 1px hsl(0 0% 100% / .1);
+  transition: background .12s ease, color .12s ease;
+}
+.ep3-ep-tile:hover { background: hsl(0 0% 100% / .1); }
+.ep3-ep-tile:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--ep3-accent); }
+.ep3-ep-tile[data-active="true"] { background: var(--ep3-accent); color: var(--ep3-accent-ink); font-weight: 800; box-shadow: none; }
+
+/* Keyboard shortcut confirmation */
+.ep3-keyhint {
+  position: absolute; top: 18%; left: 50%; z-index: 45; transform: translateX(-50%); pointer-events: none;
+  padding: 7px 14px; border-radius: 9999px; background: hsl(0 0% 0% / .7); border: 1px solid var(--ep3-line);
+  color: var(--ep3-ink); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap;
+  animation: ep3-fade .2s ease-out both;
+}
+
 /* ── Full-screen states ───────────────────────────────────── */
 .ep3-status { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom)); background: hsl(0 0% 2%); text-align: center; }
 .ep3-status.is-overlay { position: absolute; background: hsl(0 0% 0% / .82); }

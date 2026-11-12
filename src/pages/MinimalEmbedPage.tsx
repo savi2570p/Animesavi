@@ -4,10 +4,11 @@ import { ShadowMinimalPlayer } from '@/components/video/ShadowMinimalPlayer';
 import Hls from 'hls.js';
 import { getHLSConfig } from '@/lib/videoUtils';
 import { Play, Pause, Maximize, Minimize } from 'lucide-react';
-import { EmbedBrand, EmbedBtn, EmbedCenterPlay, EmbedLoading, EmbedSeek, EmbedStatus, EmbedTime } from '@/components/embed/EmbedChrome';
+import { EmbedBrand, EmbedBtn, EmbedCenterPlay, EmbedKeyHint, EmbedLoading, EmbedSeek, EmbedStatus, EmbedTime } from '@/components/embed/EmbedChrome';
 import { supabase } from '@/integrations/supabase/client';
 import { extractEmbedSrc, isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 import { useEmbedResume } from '@/hooks/useEmbedResume';
+import { useEmbedHotkeys } from '@/hooks/useEmbedHotkeys';
 
 const QUALITY_TIERS: Array<{ label: string; tag: string }> = [
   { label: '480p', tag: 'SD' },
@@ -378,29 +379,6 @@ export default function MinimalEmbedPage() {
     }
   }, []);
 
-  // Keyboard shortcuts: ←/→ to skip ±10s
-  useEffect(() => {
-    if (useIframe) return;
-    const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement | null)?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-      const v = videoRef.current;
-      if (!v) return;
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        v.currentTime = Math.max(0, v.currentTime - 10);
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        v.currentTime = Math.min(v.duration || v.currentTime, v.currentTime + 10);
-      } else if (e.key === ' ' || e.key === 'k') {
-        e.preventDefault();
-        if (v.paused) v.play().catch(() => {}); else v.pause();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [useIframe]);
-
   const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const v = videoRef.current;
     if (!v || !duration) return;
@@ -436,6 +414,22 @@ export default function MinimalEmbedPage() {
   }, []);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  // Shared keyboard shortcuts (the Shadow theme's player registers its own).
+  const goToEpisode = (delta: number) => {
+    const idx = episodeList.findIndex((e) => e.episode_number === currentEpisodeNum);
+    const target = idx >= 0 ? episodeList[idx + delta] : undefined;
+    if (!target) return;
+    navigate(`/embed/${animeSlug}/${seasonSlug}/episode-${target.episode_number}${window.location.search}`, { replace: true });
+  };
+  const keyHint = useEmbedHotkeys(videoRef, {
+    togglePlay,
+    toggleFullscreen,
+    toggleCaptions: captionsUrl ? () => setCcEnabled((v) => !v) : undefined,
+    nextEpisode: episodeList.length > 1 ? () => goToEpisode(1) : undefined,
+    prevEpisode: episodeList.length > 1 ? () => goToEpisode(-1) : undefined,
+    onActivity: bumpControls,
+  }, !isShadowTheme);
 
   if (!accessAllowed) {
     return (
@@ -522,6 +516,7 @@ export default function MinimalEmbedPage() {
       <style>{`html,body,#root{margin:0;padding:0;width:100%;height:100%;min-height:100dvh;background:#000;overflow:hidden;}`}</style>
       <div style={{ position: 'relative', width: '100%', height: '100%', background: '#000', overflow: 'hidden' }}>
         {loading && !error && <EmbedLoading />}
+        <EmbedKeyHint hint={keyHint} />
 
         {error && (
           <EmbedStatus tone="error" variant="overlay" title="Can't play this video" message="Video cannot be played on this device" />

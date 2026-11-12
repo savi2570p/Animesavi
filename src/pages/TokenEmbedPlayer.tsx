@@ -5,10 +5,11 @@ import {
   Download, Maximize, Minimize, Pause, Play, RefreshCw, Settings, Volume2, VolumeX,
 } from 'lucide-react';
 import {
-  EmbedBrand, EmbedBtn, EmbedCenterPlay, EmbedLoading, EmbedMenu, EmbedMenuItem, EmbedMenuLabel,
+  EmbedBrand, EmbedBtn, EmbedCenterPlay, EmbedKeyHint, EmbedLoading, EmbedMenu, EmbedMenuItem, EmbedMenuLabel,
   EmbedSeek, EmbedStatus, EmbedTime,
 } from '@/components/embed/EmbedChrome';
 import { useEmbedResume } from '@/hooks/useEmbedResume';
+import { useEmbedHotkeys } from '@/hooks/useEmbedHotkeys';
 import { resolveEmbedToken, type EmbedResolution, type EmbedSource } from '@/lib/embedTokens';
 
 /**
@@ -249,6 +250,14 @@ export default function TokenEmbedPlayer() {
     if (hlsRef.current) hlsRef.current.audioTrack = id;
   };
 
+  const keyHint = useEmbedHotkeys(videoRef, {
+    togglePlay,
+    toggleFullscreen: () => void toggleFullscreen(),
+    setSpeed: setSpeed,
+    onEscape: () => setShowSettings(false),
+    onActivity: () => setShowControls(true),
+  });
+
   /* --------------------------------------------------------------- states */
   if (loading && !resolution) {
     return <EmbedStatus tone="loading" />;
@@ -335,6 +344,7 @@ export default function TokenEmbedPlayer() {
           </div>
         </div>
 
+        <EmbedKeyHint hint={keyHint} />
         {!isPlaying && !buffering && !playbackError && <EmbedCenterPlay onClick={togglePlay} />}
 
         <div className="ep3-bottom">

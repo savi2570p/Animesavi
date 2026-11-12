@@ -51,5 +51,5 @@
 - getServerGroups (is_sub_only) groups DUB/SUB servers; SUB = AS+ engine, audioLocked, getServerVideoUrl.
 - Season pickers: SeasonCards; player loaders: PlayerSpinner.
 - Watch comments sort in memory (sortComments).
-- Embed players share EmbedChrome UI; playback/access per player.
+- Embed players share EmbedChrome UI and useEmbedHotkeys shortcuts; playback/access per player.
 - Schedule sch2 UI is presentation-only over existing timezone/rollover math.

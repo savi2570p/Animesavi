@@ -6,12 +6,13 @@ import {
   Loader2, RefreshCw, Settings, Download, List, Gauge,
 } from 'lucide-react';
 import {
-  EmbedBrand, EmbedBtn, EmbedCenterPlay, EmbedEpisodeDrawer, EmbedLoading,
+  EmbedBrand, EmbedBtn, EmbedCenterPlay, EmbedKeyHint, EmbedEpisodeDrawer, EmbedLoading,
   EmbedMenu, EmbedMenuItem, EmbedMenuLabel, EmbedSeek, EmbedStatus, EmbedTime,
 } from '@/components/embed/EmbedChrome';
 import Hls from 'hls.js';
 import { useEmbedPlayerBridge } from '@/hooks/useEmbedPlayerBridge';
 import { useEmbedResume } from '@/hooks/useEmbedResume';
+import { useEmbedHotkeys } from '@/hooks/useEmbedHotkeys';
 import { getNetworkInfo } from '@/lib/videoUtils';
 
 function getLowBandwidthHlsConfig() {
@@ -307,6 +308,7 @@ export default function EmbedSlugPlayer() {
     if (idx >= 0) setCurrentEpisodeIndex(idx);
   }, [allEpisodes]);
 
+
   // 📝 Save watch history from slug embed player → main "/" Continue Watching
   const currentEpisodeId = allEpisodes[currentEpisodeIndex]?.id;
   useEffect(() => {
@@ -337,48 +339,6 @@ export default function EmbedSlugPlayer() {
     return () => { cancelled = true; if (intervalId) clearInterval(intervalId); };
   }, [currentEpisodeId, resolvedAnimeId]);
 
-  // Keyboard shortcuts (Space, F, M)
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement).tagName === 'INPUT') return;
-      switch (e.key.toLowerCase()) {
-        case ' ':
-          e.preventDefault();
-          if (videoRef.current) isPlaying ? videoRef.current.pause() : videoRef.current.play();
-          break;
-        case 'f':
-          e.preventDefault();
-          toggleFullscreen();
-          break;
-        case 'm':
-          e.preventDefault();
-          toggleMute();
-          break;
-        case 'k':
-          e.preventDefault();
-          if (videoRef.current) isPlaying ? videoRef.current.pause() : videoRef.current.play();
-          break;
-        case ',':
-          e.preventDefault();
-          setPlaybackSpeed((s) => Math.max(0.5, +(s - 0.25).toFixed(2)));
-          break;
-        case '.':
-          e.preventDefault();
-          setPlaybackSpeed((s) => Math.min(2, +(s + 0.25).toFixed(2)));
-          break;
-        case 'arrowright':
-          e.preventDefault();
-          if (videoRef.current) videoRef.current.currentTime = Math.min(videoRef.current.currentTime + 10, duration);
-          break;
-        case 'arrowleft':
-          e.preventDefault();
-          if (videoRef.current) videoRef.current.currentTime = Math.max(videoRef.current.currentTime - 10, 0);
-          break;
-      }
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [isPlaying, duration]);
 
   useEffect(() => {
     if (videoRef.current) videoRef.current.playbackRate = playbackSpeed;
@@ -648,6 +608,20 @@ export default function EmbedSlugPlayer() {
     }, 3000);
   }, [isPlaying]);
 
+  // Shared keyboard shortcuts (Space/K, ←/→, J/L, ↑/↓, M, F, C, E, Shift+N/P, 0-9, < >).
+  const keyHint = useEmbedHotkeys(videoRef, {
+    togglePlay,
+    toggleMute,
+    toggleFullscreen: () => void toggleFullscreen(),
+    toggleCaptions: () => setCcEnabled((v) => !v),
+    toggleEpisodes: allEpisodes.length > 1 ? () => setShowEpisodePanel((v) => !v) : undefined,
+    nextEpisode: allEpisodes[currentEpisodeIndex + 1] ? () => void switchToEpisode(allEpisodes[currentEpisodeIndex + 1]) : undefined,
+    prevEpisode: currentEpisodeIndex > 0 && allEpisodes[currentEpisodeIndex - 1] ? () => void switchToEpisode(allEpisodes[currentEpisodeIndex - 1]) : undefined,
+    setSpeed: setPlaybackSpeed,
+    onEscape: closeAllMenus,
+    onActivity: handleMouseMove,
+  });
+
   const formatTime = (s: number) => {
     if (isNaN(s) || !isFinite(s)) return '0:00';
     const hrs = Math.floor(s / 3600);
@@ -771,6 +745,7 @@ export default function EmbedSlugPlayer() {
           )}
         </div>
 
+        <EmbedKeyHint hint={keyHint} />
         {!isPlaying && !isLoading && !isBuffering && <EmbedCenterPlay onClick={togglePlay} />}
 
         <div className="ep3-bottom">

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Play, Pause, Maximize, List, Captions } from 'lucide-react';
-import { EmbedBtn, EmbedCenterPlay, EmbedDoubleTap, EmbedEpisodeDrawer, EmbedLoading, EmbedSeek, EmbedStatus, EmbedTime } from '@/components/embed/EmbedChrome';
+import { EmbedBtn, EmbedCenterPlay, EmbedDoubleTap, EmbedEpisodeDrawer, EmbedKeyHint, EmbedLoading, EmbedSeek, EmbedStatus, EmbedTime } from '@/components/embed/EmbedChrome';
 import { isHlsUrl, detectDeviceKind } from '@/lib/streamSource';
 import { getHLSConfig } from '@/lib/videoUtils';
 import { useEmbedResume } from '@/hooks/useEmbedResume';
+import { useEmbedHotkeys } from '@/hooks/useEmbedHotkeys';
 
 /**
  * Shadow link v2 minimal player — ONLY: timeline, play/pause, fullscreen,
@@ -211,6 +212,22 @@ export function ShadowMinimalPlayer({
     setCurrentTime(value);
   }, []);
 
+  const activeIdx = (episodes || []).findIndex((e) => e.active);
+  const goRelative = (delta: number) => {
+    const target = activeIdx >= 0 ? episodes?.[activeIdx + delta] : undefined;
+    if (target && onSelectEpisode) onSelectEpisode(target.key);
+  };
+  const keyHint = useEmbedHotkeys(videoRef, {
+    togglePlay,
+    toggleFullscreen,
+    toggleCaptions: ccSrc ? () => setCcOn((v) => !v) : undefined,
+    toggleEpisodes: hasEpisodes ? toggleEps : undefined,
+    nextEpisode: hasEpisodes ? () => goRelative(1) : undefined,
+    prevEpisode: hasEpisodes ? () => goRelative(-1) : undefined,
+    onEscape: () => setShowEps(false),
+    onActivity: pokeControls,
+  });
+
   // Double-tap the left/right side of the video to seek ±10s (no skip buttons).
   const lastTapRef = useRef<{ time: number; x: number }>({ time: 0, x: 0 });
   const [tapSide, setTapSide] = useState<'left' | 'right' | null>(null);
@@ -243,6 +260,7 @@ export function ShadowMinimalPlayer({
       items={panelEpisodes.map((e) => ({ key: e.key, number: e.number, title: e.title, active: e.active }))}
       onSelect={(item) => { onSelectEpisode?.(item.key); setShowEps(false); }}
       onClose={() => setShowEps(false)}
+      layout="grid"
     />
   ) : null;
 
@@ -308,6 +326,7 @@ export function ShadowMinimalPlayer({
 
       {buffering && !failed && <EmbedLoading />}
       {tapSide && <EmbedDoubleTap side={tapSide} />}
+      <EmbedKeyHint hint={keyHint} />
       {failed && (
         <EmbedStatus tone="error" brand={false} variant="overlay" title="This source can't play here." />
       )}
