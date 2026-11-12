@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ShadowMinimalPlayer } from '@/components/video/ShadowMinimalPlayer';
 import Hls from 'hls.js';
 import { getHLSConfig } from '@/lib/videoUtils';
-import { Play, Pause, Maximize, Minimize, Download, X, List, RotateCcw, RotateCw, Subtitles, Headphones, Check } from 'lucide-react';
+import { Play, Pause, Maximize, Minimize } from 'lucide-react';
+import { EmbedBrand, EmbedBtn, EmbedCenterPlay, EmbedLoading, EmbedSeek, EmbedStatus, EmbedTime } from '@/components/embed/EmbedChrome';
 import { supabase } from '@/integrations/supabase/client';
 import { extractEmbedSrc, isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 import { useEmbedResume } from '@/hooks/useEmbedResume';
@@ -20,8 +21,8 @@ const QUALITY_TIERS: Array<{ label: string; tag: string }> = [
  *
  * Route: /embed/:animeSlug/:seasonSlug/:episodeSlug
  *
- * - Direct files / HLS → native <video> element with custom flat purple controls
- *   (play/pause, timeline, fullscreen, download). No circular backgrounds.
+ * - Direct files / HLS → native <video> element with the shared Embed Player v3
+ *   controls (play/pause, timeline, fullscreen).
  * - External provider links → single top-level iframe, no overlays
  *   (cross-origin makes custom controls impossible — provider's controls are used).
  *
@@ -438,34 +439,31 @@ export default function MinimalEmbedPage() {
 
   if (!accessAllowed) {
     return (
-      <div style={{
-        position: 'fixed', inset: 0, background: '#000',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: 'rgba(255,255,255,0.85)', fontFamily: 'system-ui, -apple-system, sans-serif',
-        fontSize: 14, padding: 24, textAlign: 'center',
-      }}>
-        This embed is not authorized for this domain.
-      </div>
+      <EmbedStatus
+        tone="blocked"
+        title="Embed not authorised"
+        message="This embed is not authorised for this domain."
+      />
     );
   }
 
   // ── Shadow link: identical experience to Shadow link v2 + Episodes button ──
   if (isShadowTheme) {
     return (
-      <div className="min-h-screen bg-black text-white">
+      <div className="ep3-page">
         <style>{`html,body,#root{margin:0;padding:0;background:#000;}`}</style>
-        <div className="mx-auto w-full max-w-5xl px-3 py-3 sm:px-4 sm:py-5 space-y-3">
+        <div className="ep3-page-inner">
           {loading ? (
-            <div className="aspect-video w-full rounded-2xl bg-neutral-900 grid place-items-center">
-              <div className="h-6 w-6 rounded-full border-2 border-white/20 border-t-white/70 animate-spin" />
+            <div className="ep3-page-player">
+              <EmbedStatus tone="loading" brand={false} variant="inline" />
             </div>
           ) : error || !videoUrl ? (
-            <div className="aspect-video w-full rounded-2xl bg-neutral-900 grid place-items-center">
-              <p className="text-sm text-white/60">Episode not available.</p>
+            <div className="ep3-page-player">
+              <EmbedStatus tone="error" brand={false} variant="inline" title="Episode not available" />
             </div>
           ) : (
             <>
-              <div className="rounded-2xl overflow-hidden">
+              <div className="ep3-page-player">
                 <ShadowMinimalPlayer
                   key={`${seasonNum}-${currentEpisodeNum}`}
                   resumeEpisodeId={resolvedEpisodeId}
@@ -477,6 +475,7 @@ export default function MinimalEmbedPage() {
                   episodes={episodeList.map((e) => ({
                     key: String(e.episode_number),
                     number: e.episode_number,
+                    title: e.title,
                     seasonNumber: seasonNum,
                     active: e.episode_number === currentEpisodeNum,
                   }))}
@@ -492,13 +491,9 @@ export default function MinimalEmbedPage() {
               </div>
 
               {/* Title row — episode switching lives inside the player */}
-              <div className="min-w-0">
-                <h1 className="text-base sm:text-lg font-semibold truncate">
-                  {animeTitle || title}
-                </h1>
-                <p className="text-xs text-white/50">
-                  Season {seasonNum} · Episode {currentEpisodeNum}
-                </p>
+              <div className="ep3-page-title">
+                <h1>{animeTitle || title}</h1>
+                <span>S{seasonNum} · E{currentEpisodeNum}</span>
               </div>
             </>
           )}
@@ -507,9 +502,12 @@ export default function MinimalEmbedPage() {
     );
   }
 
+  const controlsOn = showControls || !isPlaying;
+
   return (
     <div
       ref={containerRef}
+      className="ep3"
       onMouseMove={bumpControls}
       onTouchStart={bumpControls}
       style={{
@@ -522,107 +520,43 @@ export default function MinimalEmbedPage() {
     >
       {/* Force html/body to fill viewport so iOS Safari renders the embed reliably. */}
       <style>{`html,body,#root{margin:0;padding:0;width:100%;height:100%;min-height:100dvh;background:#000;overflow:hidden;}`}</style>
-      <div style={{
-        position: 'relative', width: '100%', height: '100%',
-        background: '#000', overflow: 'hidden',
-      }}>
-        {/* Top-right Episodes button (Shadow Link only) */}
-        {isShadowTheme && episodeList.length > 1 && (
-           <button
-            onClick={() => setShowEpisodes((v) => !v)}
-            aria-label="Episodes"
-            aria-expanded={showEpisodes}
-            title="Episodes"
-            style={{
-              position: 'absolute',
-              top: 'max(10px, env(safe-area-inset-top))',
-              right: 'max(10px, env(safe-area-inset-right))',
-              zIndex: 30,
-              display: 'inline-flex', alignItems: 'center', gap: 4,
-              padding: '5px 9px',
-              background: showEpisodes ? 'hsl(var(--primary) / 0.85)' : 'rgba(0,0,0,0.55)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
-              border: '1px solid hsl(var(--primary) / 0.5)',
-              borderRadius: 9999,
-              color: '#fff',
-              fontSize: 10.5,
-              fontWeight: 600,
-              cursor: 'pointer',
-              opacity: 1,
-              pointerEvents: 'auto',
-              transition: 'all 200ms ease',
-            }}
-          >
-            <List size={12} />
-            <span>{showEpisodes ? 'Close' : 'Episodes'}</span>
-          </button>
-        )}
-        {loading && !error && (
-          <div style={{
-            position: 'absolute', inset: 0, display: 'flex',
-            alignItems: 'center', justifyContent: 'center', zIndex: 1,
-          }}>
-            <div style={{
-              width: 36, height: 36,
-              border: '2px solid rgba(255,255,255,0.2)',
-              borderTopColor: 'hsl(var(--primary))',
-              borderRadius: '50%',
-              animation: 'embed-spin 0.8s linear infinite',
-            }} />
-            <style>{`@keyframes embed-spin { to { transform: rotate(360deg); } }`}</style>
-          </div>
-        )}
+      <div style={{ position: 'relative', width: '100%', height: '100%', background: '#000', overflow: 'hidden' }}>
+        {loading && !error && <EmbedLoading />}
 
         {error && (
-          <div style={{
-            position: 'absolute', inset: 0, display: 'flex',
-            alignItems: 'center', justifyContent: 'center',
-            color: 'rgba(255,255,255,0.85)',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: 14, padding: 24, textAlign: 'center',
-          }}>
-            Video cannot be played on this device
-          </div>
+          <EmbedStatus tone="error" variant="overlay" title="Can't play this video" message="Video cannot be played on this device" />
         )}
 
         {!error && videoUrl && useIframe && (
           <>
-          <iframe
-            src={iframeSrc}
-            title={title || 'Embedded video'}
-            className="embed-frame"
-            allow="autoplay; fullscreen; picture-in-picture; encrypted-media; accelerometer; gyroscope"
-            allowFullScreen
-            referrerPolicy="no-referrer-when-downgrade"
-            onContextMenu={(e) => e.preventDefault()}
-            style={{
-              position: 'absolute', inset: 0,
-              width: '100%', height: '100%',
-              border: 0, background: '#000',
-              WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
-            } as React.CSSProperties}
-          />
-          <div className="embed-frame-shield" aria-hidden="true" onContextMenu={(e) => e.preventDefault()} />
+            <iframe
+              src={iframeSrc}
+              title={title || 'Embedded video'}
+              className="ep3-frame embed-frame"
+              allow="autoplay; fullscreen; picture-in-picture; encrypted-media; accelerometer; gyroscope"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+              onContextMenu={(e) => e.preventDefault()}
+              style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' } as React.CSSProperties}
+            />
+            <div className="embed-frame-shield" aria-hidden="true" onContextMenu={(e) => e.preventDefault()} />
           </>
         )}
 
         {!error && videoUrl && !useIframe && (
           <>
             <video
- disablePictureInPicture
- disableRemotePlayback
- {...({ 'x-webkit-airplay': 'deny' } as any)}
+              disablePictureInPicture
+              disableRemotePlayback
+              {...({ 'x-webkit-airplay': 'deny' } as any)}
               ref={videoRef}
               playsInline
               autoPlay
               preload="auto"
               crossOrigin={captionsUrl ? 'anonymous' : undefined}
               onClick={togglePlay}
+              className="ep3-video"
               style={{
-                position: 'absolute', inset: 0,
-                width: '100%', height: '100%',
-                background: '#000', objectFit: 'contain',
                 // Avoid transforms — they break touch hit-test in landscape on iOS/Android.
                 transform: 'translateZ(0)',
                 touchAction: 'manipulation',
@@ -649,449 +583,49 @@ export default function MinimalEmbedPage() {
               )}
             </video>
 
-            {/* Flat custom controls — purple themed, no circular backgrounds. */}
-            <div
-              style={{
-                position: 'absolute', left: 0, right: 0, bottom: 0,
-                padding: 'max(40px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(14px, env(safe-area-inset-bottom, 14px)) max(16px, env(safe-area-inset-left, 0px))',
-                background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)',
-                opacity: showControls || !isPlaying ? 1 : 0,
-                transition: 'opacity 200ms ease',
-                pointerEvents: showControls || !isPlaying ? 'auto' : 'none',
-                touchAction: 'manipulation',
-                zIndex: 5,
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Timeline — wrapper enlarged to 22px for hit-test, visual bar stays 4px */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 11, fontFamily: 'ui-monospace, monospace', minWidth: 42 }}>
-                  {formatTime(currentTime)}
-                </span>
-                <div style={{ position: 'relative', flex: 1, height: 22, display: 'flex', alignItems: 'center', touchAction: 'pan-x' }}>
-                  <div style={{
-                    position: 'absolute', left: 0, right: 0, top: '50%', height: 4, transform: 'translateY(-50%)',
-                    background: 'rgba(255,255,255,0.25)', borderRadius: 9999,
-                  }} />
-                  <div style={{
-                    position: 'absolute', top: '50%', left: 0, height: 4,
-                    width: `${progress}%`, transform: 'translateY(-50%)',
-                    background: 'hsl(var(--primary))',
-                    borderRadius: 9999,
-                    boxShadow: '0 0 8px hsl(var(--primary) / 0.6)',
-                  }} />
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    step="any"
-                    value={isNaN(progress) ? 0 : progress}
-                    onChange={handleSeek}
-                    className="embed-range"
-                    style={{
-                      position: 'absolute', inset: 0,
-                      width: '100%', height: '100%',
-                      background: 'transparent',
-                      WebkitAppearance: 'none',
-                      appearance: 'none',
-                      cursor: 'pointer',
-                      margin: 0,
-                    }}
-                  />
-                </div>
-                <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 11, fontFamily: 'ui-monospace, monospace', minWidth: 42, textAlign: 'right' }}>
-                  {formatTime(duration)}
-                </span>
-              </div>
-
-              {/* Buttons row — flat icons, purple hover, no circle bg. */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div className="embed-pill" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <button
-                    onClick={() => {
-                      const v = videoRef.current;
-                      if (!v) return;
-                      v.currentTime = Math.max(0, v.currentTime - 10);
-                    }}
-                    aria-label="Back 10 seconds"
-                    title="Back 10s"
-                    className="embed-ctrl-btn"
-                  >
-                    <RotateCcw size={17} />
-                  </button>
-                  <button
-                    onClick={togglePlay}
-                    aria-label={isPlaying ? 'Pause' : 'Play'}
-                    className="embed-ctrl-btn"
-                  >
-                    {isPlaying ? <Pause size={19} /> : <Play size={19} fill="currentColor" />}
-                  </button>
-                  <button
-                    onClick={() => {
-                      const v = videoRef.current;
-                      if (!v) return;
-                      v.currentTime = Math.min(v.duration || v.currentTime, v.currentTime + 10);
-                    }}
-                    aria-label="Forward 10 seconds"
-                    title="Forward 10s"
-                    className="embed-ctrl-btn"
-                  >
-                    <RotateCw size={17} />
-                  </button>
-                </div>
-                <div className="embed-pill" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  {/* Audio track switcher — always visible (works for HLS + native multi-audio) */}
-                  <div style={{ position: 'relative', display: 'none' }}>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setShowAudioMenu((v) => !v); }}
-                      aria-label="Audio track"
-                      title="Audio Track"
-                      className="embed-ctrl-btn"
-                    >
-                      <Headphones size={20} />
-                    </button>
-                    {showAudioMenu && (
-                      <div
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          position: 'absolute', bottom: 'calc(100% + 8px)', right: 0,
-                          background: 'rgba(15,8,25,0.96)',
-                          border: '1px solid hsl(var(--primary) / 0.4)',
-                          borderRadius: 10, padding: 4, minWidth: 160, zIndex: 40,
-                          boxShadow: '0 8px 28px rgba(0,0,0,0.6)',
-                        }}
-                      >
-                        {(() => {
-                          const langLabel = (() => {
-                            const l = (audioLanguage || '').toLowerCase();
-                            if (l.includes('hindi')) return 'Hindi Dub';
-                            if (l.includes('japanese') || l === 'jp' || l === 'ja') return 'Japanese (Original)';
-                            if (l.includes('english') || l === 'en') return 'English Dub';
-                            if (l && l !== 'original' && l !== 'unknown') {
-                              return l.charAt(0).toUpperCase() + l.slice(1) + ' Audio';
-                            }
-                            return 'Original Audio';
-                          })();
-                          const tracksToShow = audioTracks.length > 0
-                            ? audioTracks
-                            : [{ id: 0, name: langLabel, lang: audioLanguage || '' }];
-                          return tracksToShow.map((t) => {
-                            const active = currentAudioTrack === t.id;
-                            return (
-                              <button
-                                key={t.id}
-                                onClick={() => switchAudioTrack(t.id)}
-                                style={{
-                                  display: 'flex', alignItems: 'center', gap: 8,
-                                  width: '100%', textAlign: 'left',
-                                  padding: '8px 10px', borderRadius: 6,
-                                  background: active ? 'hsl(var(--primary) / 0.2)' : 'transparent',
-                                  color: active ? 'hsl(var(--primary))' : 'rgba(255,255,255,0.85)',
-                                  border: 0, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                                }}
-                              >
-                                {active && <Check size={12} />}
-                                <span>{t.name || t.lang || `Audio ${t.id + 1}`}</span>
-                              </button>
-                            );
-                          });
-                        })()}
-                        {/* Debug-style mapping line — shows why this label appears.
-                            Helps verify the audioLanguage → menu-label transform. */}
-                        <div
-                          style={{
-                            marginTop: 4,
-                            padding: '6px 10px 4px',
-                            borderTop: '1px solid rgba(255,255,255,0.08)',
-                            fontSize: 10,
-                            lineHeight: 1.4,
-                            color: 'rgba(255,255,255,0.55)',
-                            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                          }}
-                        >
-                          <div style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, marginBottom: 2 }}>
-                            track map
-                          </div>
-                          <div>
-                            audioLanguage:&nbsp;
-                            <span style={{ color: 'hsl(var(--primary))' }}>
-                              "{audioLanguage || 'original'}"
-                            </span>
-                          </div>
-                          <div>
-                            detected:&nbsp;
-                            <span style={{ color: 'rgba(255,255,255,0.85)' }}>
-                              {audioTracks.length > 0
-                                ? `${audioTracks.length} HLS/native track${audioTracks.length === 1 ? '' : 's'}`
-                                : 'none — using synthesized label'}
-                            </span>
-                          </div>
-                          {audioTracks.length === 0 && (
-                            <div>
-                              menu&nbsp;→&nbsp;
-                              <span style={{ color: 'rgba(255,255,255,0.85)' }}>
-                                "{(() => {
-                                  const l = (audioLanguage || '').toLowerCase();
-                                  if (l.includes('hindi')) return 'Hindi Dub';
-                                  if (l.includes('japanese') || l === 'jp' || l === 'ja') return 'Japanese (Original)';
-                                  if (l.includes('english') || l === 'en') return 'English Dub';
-                                  if (l && l !== 'original' && l !== 'unknown') return l.charAt(0).toUpperCase() + l.slice(1) + ' Audio';
-                                  return 'Original Audio';
-                                })()}"
-                              </span>
-                            </div>
-                          )}
-                        </div>
+            <div className="ep3-layer is-pass" data-visible={controlsOn ? 'true' : 'false'}>
+              <div className="ep3-top" onClick={(e) => e.stopPropagation()}>
+                <div className="ep3-top-info">
+                  <EmbedBrand compact />
+                  {(animeTitle || title) && (
+                    <>
+                      <span className="ep3-divider" aria-hidden />
+                      <div className="ep3-top-text">
+                        <p className="ep3-title">{animeTitle || title}</p>
+                        <p className="ep3-sub"><b>S{seasonNum} · E{currentEpisodeNum}</b></p>
                       </div>
-                    )}
-                  </div>
-                  {false && captionsUrl && (
-                    <button
-                      onClick={() => {
-                        setCcEnabled((v) => {
-                          const next = !v;
-                          const tracks = videoRef.current?.textTracks;
-                          if (tracks) for (let i = 0; i < tracks.length; i++) tracks[i].mode = next ? 'showing' : 'disabled';
-                          return next;
-                        });
-                      }}
-                      aria-label={ccEnabled ? 'Hide captions' : 'Show captions'}
-                      title={ccEnabled ? 'Subtitles On' : 'Subtitles Off'}
-                      className="embed-ctrl-btn"
-                      style={{ opacity: ccEnabled ? 1 : 0.55 }}
-                    >
-                      <Subtitles size={20} />
-                    </button>
+                    </>
                   )}
-                  <button
-                    onClick={toggleFullscreen}
-                    aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-                    className="embed-ctrl-btn"
-                  >
-                    {isFullscreen ? <Minimize size={17} /> : <Maximize size={17} />}
-                  </button>
+                </div>
+              </div>
+
+              {!isPlaying && !loading && <EmbedCenterPlay onClick={togglePlay} />}
+
+              <div className="ep3-bottom" onClick={(e) => e.stopPropagation()} style={{ touchAction: 'manipulation' }}>
+                <EmbedSeek
+                  value={isNaN(progress) ? 0 : progress}
+                  onChange={(pct) => {
+                    const v = videoRef.current;
+                    if (!v || !duration) return;
+                    v.currentTime = (pct / 100) * duration;
+                  }}
+                />
+                <div className="ep3-bar">
+                  <div className="ep3-group">
+                    <EmbedBtn label={isPlaying ? 'Pause' : 'Play'} primary onClick={togglePlay}>
+                      {isPlaying ? <Pause /> : <Play />}
+                    </EmbedBtn>
+                    <EmbedTime current={currentTime} duration={duration} />
+                  </div>
+                  <div className="ep3-group">
+                    <EmbedBtn label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} onClick={toggleFullscreen}>
+                      {isFullscreen ? <Minimize /> : <Maximize />}
+                    </EmbedBtn>
+                  </div>
                 </div>
               </div>
             </div>
-
-            <style>{`
-              .embed-ctrl-btn {
-                background: transparent;
-                border: 0;
-                border-radius: 0;
-                min-width: 30px;
-                min-height: 30px;
-                padding: 2px;
-                color: rgba(255,255,255,0.92);
-                cursor: pointer;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                transition: color 150ms ease, transform 150ms ease;
-                filter: none;
-                -webkit-tap-highlight-color: transparent;
-                touch-action: manipulation;
-              }
-              .embed-ctrl-btn:hover { color: hsl(var(--primary)); background: transparent; }
-              .embed-ctrl-btn:active { transform: scale(0.92); }
-              @media (max-width: 768px) {
-                .embed-ctrl-btn { min-width: 20px !important; min-height: 20px !important; width: 20px !important; height: 20px !important; padding: 0 !important; }
-                .embed-ctrl-btn svg { width: 12px !important; height: 12px !important; }
-              }
-              .embed-range::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 14px; height: 14px;
-                border-radius: 50%;
-                background: hsl(var(--primary));
-                box-shadow: 0 0 8px hsl(var(--primary) / 0.7);
-                cursor: pointer;
-                border: 0;
-              }
-              .embed-range::-moz-range-thumb {
-                width: 14px; height: 14px;
-                border-radius: 50%;
-                background: hsl(var(--primary));
-                box-shadow: 0 0 8px hsl(var(--primary) / 0.7);
-                cursor: pointer;
-                border: 0;
-              }
-              .embed-range::-webkit-slider-runnable-track { background: transparent; }
-              .embed-range::-moz-range-track { background: transparent; }
-            `}</style>
           </>
-        )}
-
-        {/* Quality picker overlay — shown when user clicks Download */}
-        {showQualityPicker && videoUrl && (
-          <div
-            onClick={() => setShowQualityPicker(false)}
-            style={{
-              position: 'absolute', inset: 0, zIndex: 20,
-              background: 'rgba(0,0,0,0.85)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              padding: 16,
-            }}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                background: 'rgba(15, 8, 25, 0.95)',
-                border: '1px solid hsl(var(--primary) / 0.4)',
-                borderRadius: 16,
-                padding: '20px 18px',
-                width: '100%', maxWidth: 360,
-                boxShadow: '0 0 40px hsl(var(--primary) / 0.25)',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                color: '#fff',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Download size={16} style={{ color: 'hsl(var(--primary))' }} />
-                  <span style={{ fontSize: 14, fontWeight: 700 }}>Select Quality</span>
-                </div>
-                <button
-                  onClick={() => setShowQualityPicker(false)}
-                  aria-label="Close"
-                  style={{ background: 'transparent', border: 0, color: 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: 4 }}
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                {QUALITY_TIERS.map((q) => (
-                  <button
-                    key={q.label}
-                    onClick={() => handleQualitySelect(q.label)}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '10px 12px',
-                      borderRadius: 10,
-                      border: '1px solid rgba(255,255,255,0.12)',
-                      background: 'rgba(255,255,255,0.04)',
-                      color: '#fff',
-                      fontSize: 13, fontWeight: 600,
-                      cursor: 'pointer',
-                      transition: 'all 150ms ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = 'hsl(var(--primary))';
-                      e.currentTarget.style.background = 'hsl(var(--primary) / 0.12)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
-                      e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                    }}
-                  >
-                    <span>{q.label}</span>
-                    <span style={{
-                      fontSize: 9, fontWeight: 800,
-                      padding: '2px 6px', borderRadius: 4,
-                      background: 'hsl(var(--primary) / 0.2)',
-                      color: 'hsl(var(--primary))',
-                    }}>{q.tag}</span>
-                  </button>
-                ))}
-              </div>
-              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 12, textAlign: 'center' }}>
-                Opens secure download page
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Shadow Link Episodes drawer */}
-        {isShadowTheme && showEpisodes && (
-          <div
-            onClick={() => setShowEpisodes(false)}
-            style={{
-              position: 'absolute', inset: 0, zIndex: 25,
-              background: 'rgba(0,0,0,0.7)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              display: 'flex', justifyContent: 'flex-end',
-            }}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                width: '100%', maxWidth: 360, height: '100%',
-                background: 'rgba(15, 8, 25, 0.96)',
-                borderLeft: '1px solid hsl(var(--primary) / 0.3)',
-                display: 'flex', flexDirection: 'column',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                color: '#fff',
-                animation: 'embed-slide-in 220ms ease-out',
-              }}
-            >
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)',
-              }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {animeTitle}
-                  </div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
-                    Season {seasonNum} • {episodeList.length} episodes
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowEpisodes(false)}
-                  aria-label="Close"
-                  style={{ background: 'transparent', border: 0, color: 'rgba(255,255,255,0.7)', cursor: 'pointer', padding: 4 }}
-                >
-                  <X size={18} />
-                </button>
-              </div>
-              <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-                {episodeList.map((e) => {
-                  const active = e.episode_number === currentEpisodeNum;
-                  return (
-                    <button
-                      key={e.episode_number}
-                      onClick={() => {
-                        const epSlug = `episode-${e.episode_number}`;
-                        const seasonSlugCurrent = `season-${seasonNum}`;
-                        const search = window.location.search;
-                        window.location.href = `/embed/${animeSlug}/${seasonSlugCurrent}/${epSlug}${search}`;
-                      }}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 12,
-                        width: '100%', textAlign: 'left',
-                        padding: '10px 12px', marginBottom: 4,
-                        borderRadius: 8,
-                        border: active ? '1px solid hsl(var(--primary))' : '1px solid rgba(255,255,255,0.08)',
-                        background: active ? 'hsl(var(--primary) / 0.18)' : 'rgba(255,255,255,0.03)',
-                        color: '#fff', cursor: 'pointer',
-                      }}
-                    >
-                      <span style={{
-                        flexShrink: 0,
-                        width: 32, height: 32, borderRadius: 6,
-                        background: active ? 'hsl(var(--primary))' : 'rgba(255,255,255,0.06)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 12, fontWeight: 800,
-                      }}>
-                        {e.episode_number}
-                      </span>
-                      <span style={{
-                        fontSize: 12, fontWeight: 600,
-                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                        flex: 1,
-                      }}>
-                        {e.title || `Episode ${e.episode_number}`}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-              <style>{`@keyframes embed-slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } }`}</style>
-            </div>
-          </div>
         )}
       </div>
     </div>

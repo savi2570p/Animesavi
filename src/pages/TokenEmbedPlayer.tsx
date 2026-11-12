@@ -2,8 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type Hls from 'hls.js';
 import {
-  AlertTriangle, Download, Loader2, Maximize, Minimize, Pause, Play, RefreshCw, Settings, Volume2, VolumeX,
+  Download, Maximize, Minimize, Pause, Play, RefreshCw, Settings, Volume2, VolumeX,
 } from 'lucide-react';
+import {
+  EmbedBrand, EmbedBtn, EmbedCenterPlay, EmbedLoading, EmbedMenu, EmbedMenuItem, EmbedMenuLabel,
+  EmbedSeek, EmbedStatus, EmbedTime,
+} from '@/components/embed/EmbedChrome';
 import { resolveEmbedToken, type EmbedResolution, type EmbedSource } from '@/lib/embedTokens';
 
 /**
@@ -242,14 +246,8 @@ export default function TokenEmbedPlayer() {
   };
 
   /* --------------------------------------------------------------- states */
-  const shellClass = 'fixed inset-0 bg-black text-white flex items-center justify-center';
-
   if (loading && !resolution) {
-    return (
-      <div className={shellClass}>
-        <Loader2 className="h-8 w-8 animate-spin text-white/70" aria-label="Loading video" />
-      </div>
-    );
+    return <EmbedStatus tone="loading" />;
   }
 
   const status = resolution?.status ?? 'FAILED';
@@ -262,26 +260,16 @@ export default function TokenEmbedPlayer() {
       NOT_FOUND: 'This embed link is invalid or expired.',
     };
     return (
-      <div className={`${shellClass} px-6`} style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        <div className="text-center max-w-sm">
-          {status === 'PROCESSING'
-            ? <Loader2 className="h-9 w-9 mx-auto mb-4 animate-spin text-white/70" />
-            : <AlertTriangle className="h-9 w-9 mx-auto mb-4 text-amber-400" />}
-          <p className="text-base font-semibold">{messages[status] ?? messages.FAILED}</p>
-          {resolution?.reason && <p className="text-sm text-white/50 mt-1">{resolution.reason}</p>}
-          {status === 'PROCESSING' && typeof resolution?.progress === 'number' && (
-            <div className="mt-4 h-1 w-full rounded-full bg-white/15 overflow-hidden">
-              <div className="h-full bg-white/70 transition-all" style={{ width: `${resolution.progress}%` }} />
-            </div>
-          )}
-          <button
-            onClick={() => void load()}
-            className="mt-5 inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/20 transition-colors"
-          >
-            <RefreshCw className="h-4 w-4" /> Retry
-          </button>
-        </div>
-      </div>
+      <EmbedStatus
+        tone={status === 'PROCESSING' ? 'loading' : 'error'}
+        title={messages[status] ?? messages.FAILED}
+        message={resolution?.reason}
+        progress={status === 'PROCESSING' && typeof resolution?.progress === 'number' ? resolution.progress : undefined}
+      >
+        <button type="button" onClick={() => void load()} className="ep3-ghost">
+          <RefreshCw /> Retry
+        </button>
+      </EmbedStatus>
     );
   }
 
@@ -289,13 +277,13 @@ export default function TokenEmbedPlayer() {
   return (
     <div
       ref={shellRef}
-      className="fixed inset-0 bg-black overflow-hidden select-none"
+      className="ep3 ep3-root"
       onMouseMove={() => setShowControls(true)}
       onTouchStart={() => setShowControls(true)}
     >
       <video
         ref={videoRef}
-        className="absolute inset-0 w-full h-full object-contain bg-black"
+        className="ep3-video"
         poster={resolution?.poster ?? undefined}
         playsInline
         controls={false}
@@ -307,145 +295,117 @@ export default function TokenEmbedPlayer() {
         )}
       </video>
 
-      {buffering && !playbackError && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <Loader2 className="h-9 w-9 animate-spin text-white/80" />
-        </div>
-      )}
+      {buffering && !playbackError && <EmbedLoading />}
 
       {playbackError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 px-6 text-center">
-          <div>
-            <AlertTriangle className="h-8 w-8 mx-auto mb-3 text-amber-400" />
-            <p className="text-white font-semibold">{playbackError}</p>
-            <div className="mt-4 flex items-center justify-center gap-2">
-              <button
-                onClick={() => { setPlaybackError(null); void load(); }}
-                className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20"
-              >
-                <RefreshCw className="h-4 w-4" /> Retry
-              </button>
-              {activeSource && (
-                <a
-                  href={activeSource.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20"
-                >
-                  Open directly
-                </a>
-              )}
-              {sources.length > 1 && (
-                <button
-                  onClick={() => { setPlaybackError(null); setSourceIndex((i) => (i + 1) % sources.length); }}
-                  className="rounded-lg bg-white/90 px-4 py-2 text-sm font-medium text-black hover:bg-white"
-                >
-                  Switch source
-                </button>
-              )}
+        <EmbedStatus tone="error" variant="overlay" title={playbackError}>
+          <button type="button" onClick={() => { setPlaybackError(null); void load(); }} className="ep3-cta">
+            <RefreshCw /> Retry
+          </button>
+          {activeSource && (
+            <a href={activeSource.url} target="_blank" rel="noreferrer" className="ep3-ghost">
+              Open directly
+            </a>
+          )}
+          {sources.length > 1 && (
+            <button
+              type="button"
+              onClick={() => { setPlaybackError(null); setSourceIndex((i) => (i + 1) % sources.length); }}
+              className="ep3-ghost"
+            >
+              Switch source
+            </button>
+          )}
+        </EmbedStatus>
+      )}
+
+      <div className="ep3-layer is-pass" data-visible={showControls ? 'true' : 'false'}>
+        <div className="ep3-top">
+          <div className="ep3-top-info">
+            <EmbedBrand compact />
+            <span className="ep3-divider" aria-hidden />
+            <div className="ep3-top-text">
+              <p className="ep3-title">{displayTitle}</p>
+              {activeSource?.label && sources.length > 1 && <p className="ep3-sub">{activeSource.label}</p>}
             </div>
           </div>
         </div>
-      )}
 
-      {/* Controls */}
-      <div
-        className={`absolute inset-x-0 bottom-0 transition-opacity duration-200 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}
-      >
-        <div className="bg-gradient-to-t from-black/85 via-black/45 to-transparent px-3 pt-10 pb-2">
-          <input
-            type="range"
-            min={0}
-            max={duration || 0}
-            step={0.1}
-            value={Math.min(currentTime, duration || 0)}
-            onChange={(e) => seekTo(Number(e.target.value))}
-            aria-label="Seek"
-            className="embed-seek w-full"
-          />
-          <div className="mt-1 flex items-center gap-3 text-white">
-            <button onClick={togglePlay} aria-label={isPlaying ? 'Pause' : 'Play'} className="p-1">
-              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-            </button>
-            <button
-              onClick={() => { if (videoRef.current) videoRef.current.muted = !videoRef.current.muted; }}
-              aria-label={isMuted ? 'Unmute' : 'Mute'}
-              className="p-1"
-            >
-              {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-            </button>
-            <span className="text-xs tabular-nums text-white/80">
-              {formatTime(currentTime)} / {formatTime(duration)}
-            </span>
-            <span className="flex-1 truncate text-xs text-white/60 hidden sm:block">{displayTitle}</span>
-            <div className="relative">
-              <button onClick={() => setShowSettings((v) => !v)} aria-label="Settings" className="p-1">
-                <Settings className="h-5 w-5" />
-              </button>
-              {showSettings && (
-                <div className="absolute bottom-9 right-0 w-48 max-h-64 overflow-y-auto rounded-xl border border-white/10 bg-black/90 p-2 text-xs backdrop-blur-md">
-                  <p className="px-2 py-1 font-semibold text-white/50">Speed</p>
-                  <div className="flex flex-wrap gap-1 px-1 pb-2">
-                    {SPEEDS.map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => applySpeed(s)}
-                        className={`rounded-md px-2 py-1 ${speed === s ? 'bg-white text-black' : 'bg-white/10 text-white'}`}
-                      >{s}x</button>
-                    ))}
-                  </div>
-                  {levels.length > 0 && (
-                    <>
-                      <p className="px-2 py-1 font-semibold text-white/50">Quality</p>
-                      <button
-                        onClick={() => applyLevel(-1)}
-                        className={`block w-full rounded-md px-2 py-1 text-left ${currentLevel === -1 ? 'bg-white text-black' : 'text-white hover:bg-white/10'}`}
-                      >Auto</button>
-                      {levels.map((l) => (
-                        <button
-                          key={l.id}
-                          onClick={() => applyLevel(l.id)}
-                          className={`block w-full rounded-md px-2 py-1 text-left ${currentLevel === l.id ? 'bg-white text-black' : 'text-white hover:bg-white/10'}`}
-                        >{l.label}</button>
-                      ))}
-                    </>
-                  )}
-                  {audioTracks.length > 1 && (
-                    <>
-                      <p className="px-2 py-1 font-semibold text-white/50">Audio</p>
-                      {audioTracks.map((t) => (
-                        <button
-                          key={t.id}
-                          onClick={() => applyAudio(t.id)}
-                          className={`block w-full rounded-md px-2 py-1 text-left ${currentAudio === t.id ? 'bg-white text-black' : 'text-white hover:bg-white/10'}`}
-                        >{t.label}</button>
-                      ))}
-                    </>
-                  )}
-                  {sources.length > 1 && (
-                    <>
-                      <p className="px-2 py-1 font-semibold text-white/50">Source</p>
-                      {sources.map((s, i) => (
-                        <button
-                          key={s.url}
-                          onClick={() => setSourceIndex(i)}
-                          className={`block w-full truncate rounded-md px-2 py-1 text-left ${sourceIndex === i ? 'bg-white text-black' : 'text-white hover:bg-white/10'}`}
-                        >{s.label}</button>
-                      ))}
-                    </>
-                  )}
-                </div>
-              )}
+        {!isPlaying && !buffering && !playbackError && <EmbedCenterPlay onClick={togglePlay} />}
+
+        <div className="ep3-bottom">
+          <EmbedSeek value={Math.min(currentTime, duration || 0)} max={duration || 0} step={0.1} onChange={seekTo} />
+          <div className="ep3-bar">
+            <div className="ep3-group">
+              <EmbedBtn label={isPlaying ? 'Pause' : 'Play'} primary onClick={togglePlay}>
+                {isPlaying ? <Pause /> : <Play />}
+              </EmbedBtn>
+              <EmbedBtn
+                label={isMuted ? 'Unmute' : 'Mute'}
+                onClick={() => { if (videoRef.current) videoRef.current.muted = !videoRef.current.muted; }}
+              >
+                {isMuted ? <VolumeX /> : <Volume2 />}
+              </EmbedBtn>
+              <EmbedTime current={currentTime} duration={duration} />
             </div>
-            {activeSource?.type === 'mp4' && (
-              <a href={activeSource.url} download aria-label="Download" className="p-1 text-white">
-                <Download className="h-5 w-5" />
-              </a>
-            )}
-            <button onClick={() => void toggleFullscreen()} aria-label="Fullscreen" className="p-1">
-              {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
-            </button>
+            <div className="ep3-group">
+              <div className="ep3-anchor">
+                <EmbedBtn label="Settings" active={showSettings} onClick={() => setShowSettings((v) => !v)}>
+                  <Settings />
+                </EmbedBtn>
+                {showSettings && (
+                  <EmbedMenu label="Settings">
+                    <EmbedMenuLabel>Speed</EmbedMenuLabel>
+                    <div className="ep3-menu-chips">
+                      {SPEEDS.map((s) => (
+                        <button key={s} type="button" data-active={speed === s ? 'true' : undefined} onClick={() => applySpeed(s)}>
+                          {s}x
+                        </button>
+                      ))}
+                    </div>
+                    {levels.length > 0 && (
+                      <>
+                        <EmbedMenuLabel>Quality</EmbedMenuLabel>
+                        <EmbedMenuItem active={currentLevel === -1} onClick={() => applyLevel(-1)}>Auto</EmbedMenuItem>
+                        {levels.map((l) => (
+                          <EmbedMenuItem key={l.id} active={currentLevel === l.id} onClick={() => applyLevel(l.id)}>
+                            {l.label}
+                          </EmbedMenuItem>
+                        ))}
+                      </>
+                    )}
+                    {audioTracks.length > 1 && (
+                      <>
+                        <EmbedMenuLabel>Audio</EmbedMenuLabel>
+                        {audioTracks.map((t) => (
+                          <EmbedMenuItem key={t.id} active={currentAudio === t.id} onClick={() => applyAudio(t.id)}>
+                            {t.label}
+                          </EmbedMenuItem>
+                        ))}
+                      </>
+                    )}
+                    {sources.length > 1 && (
+                      <>
+                        <EmbedMenuLabel>Source</EmbedMenuLabel>
+                        {sources.map((s, i) => (
+                          <EmbedMenuItem key={s.url} active={sourceIndex === i} onClick={() => setSourceIndex(i)}>
+                            {s.label}
+                          </EmbedMenuItem>
+                        ))}
+                      </>
+                    )}
+                  </EmbedMenu>
+                )}
+              </div>
+              {activeSource?.type === 'mp4' && (
+                <a href={activeSource.url} download aria-label="Download" title="Download" className="ep3-btn">
+                  <Download />
+                </a>
+              )}
+              <EmbedBtn label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} onClick={() => void toggleFullscreen()}>
+                {isFullscreen ? <Minimize /> : <Maximize />}
+              </EmbedBtn>
+            </div>
           </div>
         </div>
       </div>

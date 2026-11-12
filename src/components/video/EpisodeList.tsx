@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { buildEmbedUrl } from '@/lib/embedLink';
 
 import {
   ContextMenu,
@@ -114,10 +115,8 @@ export function EpisodeList({ episodes, currentEpisodeId, className, onEpisodeSe
   };
 
   const copyEmbedLink = (episode: Episode) => {
-    const slug = animeTitle
-      ? animeTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-      : 'anime';
-    const embedUrl = `${window.location.origin}/embed/${slug}/season-${seasonNumber}/episode-${episode.episode_number}`;
+    // Short form: /embed/<6-char code> instead of /embed/<anime>/season-N/episode-N.
+    const embedUrl = buildEmbedUrl(episode.id);
     navigator.clipboard.writeText(embedUrl);
     toast.success('Embed link copied!');
   };

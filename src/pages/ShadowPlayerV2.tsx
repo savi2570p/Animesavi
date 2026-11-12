@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react';
 import { isHlsUrl, isDashUrl, isMp4LikeUrl, isMkvUrl } from '@/lib/streamSource';
 
 /**
- * Shadow link v2 (BETA 2) — a standalone, branding-free watch page.
+ * Shadow link v2 (BETA 3) — a standalone, branding-free watch page.
  *
  * Minimal player (timeline, play/pause, ±10s, fullscreen only). No server
  * switcher — episodes are picked from inside the player itself.

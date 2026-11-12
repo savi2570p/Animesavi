@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Play, Pause, Volume2, VolumeX, Maximize, 
-  SkipForward, SkipBack, Loader2, AlertTriangle,
-  RefreshCw, Settings, Check, Download, Headphones, ShieldAlert,
-  List, X
+import {
+  Play, Pause, Volume2, VolumeX, Maximize, Minimize,
+  RefreshCw, Settings, Download, List,
 } from 'lucide-react';
-import { Captions, CaptionsOff } from 'lucide-react';
+import {
+  EmbedBrand, EmbedBtn, EmbedCenterPlay, EmbedDoubleTap, EmbedEpisodeDrawer, EmbedLoading,
+  EmbedMenu, EmbedMenuItem, EmbedMenuLabel, EmbedSeek, EmbedStatus, EmbedTime,
+} from '@/components/embed/EmbedChrome';
+import { extractEmbedSrc, isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 import Hls from 'hls.js';
 import { useEmbedPlayerBridge } from '@/hooks/useEmbedPlayerBridge';
 import { useEmbedResume } from '@/hooks/useEmbedResume';
@@ -63,6 +65,11 @@ function detectDeviceInfo() {
   return { isMobile, isIOS, isAndroid, isSafari };
 }
 
+/** Episodes with no direct file but an external provider link play in an iframe. */
+function isEmbedOnly(videoUrl: string | null | undefined, externalUrl: string | null | undefined): boolean {
+  return !videoUrl && !!externalUrl && !isSelfEmbedUrl(externalUrl) && isEmbedLikeUrl(externalUrl);
+}
+
 function isHlsUrl(url: string | null): boolean {
   return isHls(url);
 }
@@ -114,6 +121,8 @@ export default function EmbedPlayer() {
   const [hlsLevels, setHlsLevels] = useState<{ id: number; height: number; label: string }[]>([]);
   const [currentLevel, setCurrentLevel] = useState(-1);
   const [isHlsActive, setIsHlsActive] = useState(false);
+  // Provider iframe for episodes that only have an external embed link.
+  const [iframeSrc, setIframeSrc] = useState<string | null>(null);
   
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
   const lastTapRef = useRef<{ time: number; x: number }>({ time: 0, x: 0 });
@@ -204,6 +213,10 @@ export default function EmbedPlayer() {
         // "Playback Error" on an unplayable format.
         // Self-referencing embed links (our own /embed/... page stored in
         // external_url) are NOT video sources — playing them fails.
+        if (isEmbedOnly(data.video_url, data.external_url)) {
+          setIframeSrc(extractEmbedSrc(data.external_url!));
+          setEpisodeData({ title: data.title, videoUrl: null });
+        } else {
         const rawSources = [data.video_url, data.external_url].filter(
           (u) => !!u && !isSelfEmbedUrl(u),
         );
@@ -216,9 +229,11 @@ export default function EmbedPlayer() {
           );
           return;
         }
+        setIframeSrc(null);
         setCandidateUrls(candidates);
         setCandidateIndex(0);
         setEpisodeData({ title: data.title, videoUrl: candidates[0] });
+        }
 
         setCaptionsUrl(data.captions_url || null);
 
@@ -641,6 +656,15 @@ export default function EmbedPlayer() {
     setError(null);
     const { data } = await supabase.from('episodes').select('video_url, external_url, title').eq('id', ep.id).single();
     if (!data) { setError('Episode failed to load'); return; }
+    const idxEmbed = allEpisodes.findIndex(e => e.id === ep.id);
+    if (isEmbedOnly(data.video_url, data.external_url)) {
+      setIframeSrc(extractEmbedSrc(data.external_url!));
+      setEpisodeData({ title: data.title, videoUrl: null });
+      setIsLoading(false);
+      if (idxEmbed >= 0) setCurrentEpisodeIndex(idxEmbed);
+      return;
+    }
+    setIframeSrc(null);
     const candidates = selectCompatibleSources(
       [data.video_url, data.external_url].filter((u) => !!u && !isSelfEmbedUrl(u)),
     );
@@ -655,88 +679,129 @@ export default function EmbedPlayer() {
   // Blocked domain
   if (domainAllowed === false) {
     return (
-      <div className="player-shell fixed inset-0 bg-black flex flex-col items-center justify-center gap-6 p-6 text-center select-none" style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}>
-        <ShieldAlert className="w-16 h-16 text-destructive" />
-        <h2 className="text-white text-xl font-bold">Playback Restricted</h2>
-        <p className="text-white/70 max-w-md">These links are restricted only for authorized websites. For more visit</p>
-        <a href="https://animesavi.lovable.app" target="_blank" rel="noopener noreferrer"
-          className="px-8 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold text-lg">
-          AnimeSavi
+      <EmbedStatus
+        tone="blocked"
+        title="Playback restricted"
+        message="This player only works on authorised websites. Watch the episode on AnimeSavi+ instead."
+      >
+        <a href="https://animesavi.lovable.app" target="_blank" rel="noopener noreferrer" className="ep3-cta">
+          Open AnimeSavi+
         </a>
-      </div>
+      </EmbedStatus>
     );
   }
 
-  if (domainAllowed === null) {
-    return <div className="fixed inset-0 bg-black flex items-center justify-center"><Loader2 className="w-6 h-6 text-primary animate-spin" /></div>;
+  if (domainAllowed === null || (!episodeData && !fetchError)) {
+    return <EmbedStatus tone="loading" />;
   }
 
   if (fetchError) {
-    return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 p-4">
-        <AlertTriangle className="w-12 h-12 text-destructive" />
-        <p className="text-white text-lg text-center">{fetchError}</p>
-      </div>
-    );
-  }
-
-  if (!episodeData) {
-    return <div className="fixed inset-0 bg-black flex items-center justify-center"><Loader2 className="w-6 h-6 text-primary animate-spin" /></div>;
+    return <EmbedStatus tone="error" title="Episode unavailable" message={fetchError} />;
   }
 
   if (error) {
     return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 p-6 text-center">
-        <AlertTriangle className="w-16 h-16 text-destructive" />
-        <h2 className="text-white text-xl font-bold">Playback Error</h2>
-        <p className="text-white/80 max-w-md">{error}</p>
-        <button onClick={retry} className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
-          <RefreshCw className="w-5 h-5" /> Retry
+      <EmbedStatus tone="error" title="Playback error" message={error}>
+        <button type="button" onClick={retry} className="ep3-cta">
+          <RefreshCw /> Retry
         </button>
+      </EmbedStatus>
+    );
+  }
+
+  const currentEp = allEpisodes[currentEpisodeIndex];
+  const epLabel = currentEp ? `S${currentEp.season_number} · E${currentEp.episode_number}` : null;
+  const seasons = Array.from(new Set(allEpisodes.map((e) => e.season_number))).sort((a, b) => a - b);
+
+  const topBar = (
+    <div className="ep3-top">
+      <div className="ep3-top-info">
+        <EmbedBrand compact />
+        <span className="ep3-divider" aria-hidden />
+        <div className="ep3-top-text">
+          <p className="ep3-title">{episodeData.title}</p>
+          {epLabel && <p className="ep3-sub"><b>{epLabel}</b></p>}
+        </div>
+      </div>
+      {allEpisodes.length > 1 && (
+        <button
+          type="button"
+          className="ep3-chip-btn"
+          data-active={showEpisodePanel ? 'true' : undefined}
+          aria-expanded={showEpisodePanel}
+          onClick={(e) => { e.stopPropagation(); setShowEpisodePanel(!showEpisodePanel); }}
+        >
+          <List /> Episodes
+        </button>
+      )}
+    </div>
+  );
+
+  const episodeDrawer = showEpisodePanel ? (
+    <EmbedEpisodeDrawer
+      heading="Episodes"
+      subheading={`${allEpisodes.length} episodes${seasons.length > 1 ? ` · ${seasons.length} seasons` : ''}`}
+      items={allEpisodes.map((ep, idx) => ({
+        key: ep.id,
+        number: ep.episode_number,
+        title: ep.title,
+        seasonNumber: ep.season_number,
+        active: idx === currentEpisodeIndex,
+      }))}
+      onSelect={(item) => {
+        const ep = allEpisodes.find((e) => e.id === item.key);
+        if (ep) void switchToEpisode(ep);
+      }}
+      onClose={() => setShowEpisodePanel(false)}
+    />
+  ) : null;
+
+  // Embed-only episodes (no direct file) play inside the provider's iframe.
+  if (iframeSrc) {
+    return (
+      <div ref={containerRef} className="ep3 ep3-root embed-player">
+        <iframe
+          key={iframeSrc}
+          src={iframeSrc}
+          title={episodeData.title || 'Embedded video'}
+          className="ep3-frame embed-frame"
+          allow="autoplay; fullscreen; picture-in-picture; encrypted-media; accelerometer; gyroscope"
+          allowFullScreen
+          referrerPolicy="no-referrer-when-downgrade"
+          onContextMenu={(e) => e.preventDefault()}
+        />
+        <div className="embed-frame-shield" aria-hidden="true" onContextMenu={(e) => e.preventDefault()} />
+        {allEpisodes.length > 1 && (
+          <div style={{ position: 'absolute', top: 'max(10px, env(safe-area-inset-top))', right: 'max(10px, env(safe-area-inset-right))', zIndex: 20 }}>
+            <button
+              type="button"
+              className="ep3-chip-btn"
+              data-active={showEpisodePanel ? 'true' : undefined}
+              onClick={() => setShowEpisodePanel(!showEpisodePanel)}
+            >
+              <List /> Episodes
+            </button>
+          </div>
+        )}
+        {episodeDrawer}
       </div>
     );
   }
 
   return (
-    <div 
+    <div
       ref={containerRef}
-      className="fixed inset-0 bg-black"
+      className="ep3 ep3-root"
       onMouseMove={handleMouseMove}
       onTouchStart={(e) => { setShowControls(true); handleDoubleTap(e); }}
       onClick={(e) => { if (!(e.target as HTMLElement).closest('.controls-area')) { togglePlay(); closeAllMenus(); } }}
     >
-      {(isLoading || isBuffering) && (
-        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-          <div className="flex flex-col items-center gap-2">
-            <Loader2 className="w-6 h-6 text-primary animate-spin" />
-            {isBuffering && <span className="text-white/70 text-sm">Buffering...</span>}
-          </div>
-        </div>
-      )}
-
-      {doubleTapSide === 'left' && (
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 z-30 pointer-events-none animate-fade-in">
-          <div className="bg-black/60 backdrop-blur-sm rounded-full p-4 flex items-center gap-2">
-            <SkipBack className="w-8 h-8 text-white" />
-            <span className="text-white font-bold text-lg">10s</span>
-          </div>
-        </div>
-      )}
-      {doubleTapSide === 'right' && (
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 z-30 pointer-events-none animate-fade-in">
-          <div className="bg-black/60 backdrop-blur-sm rounded-full p-4 flex items-center gap-2">
-            <span className="text-white font-bold text-lg">10s</span>
-            <SkipForward className="w-8 h-8 text-white" />
-          </div>
-        </div>
-      )}
-
       <video
- disablePictureInPicture
- disableRemotePlayback
- {...({ 'x-webkit-airplay': 'deny' } as any)}
+        disablePictureInPicture
+        disableRemotePlayback
+        {...({ 'x-webkit-airplay': 'deny' } as any)}
         ref={videoRef}
-        className="w-full h-full object-contain"
+        className="ep3-video"
         autoPlay playsInline muted preload="auto"
         controlsList="nodownload noremoteplayback"
         crossOrigin={captionsUrl ? 'anonymous' : undefined}
@@ -746,242 +811,109 @@ export default function EmbedPlayer() {
         )}
       </video>
 
-      {/* Controls overlay */}
-      <div 
-        className={`controls-area absolute inset-0 flex flex-col justify-end transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+      {(isLoading || isBuffering) && <EmbedLoading label={isBuffering && !isLoading ? 'Buffering' : undefined} />}
+      {doubleTapSide && <EmbedDoubleTap side={doubleTapSide} />}
+
+      <div
+        className="controls-area ep3-layer"
+        data-visible={showControls ? 'true' : 'false'}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Title bar + Episodes button */}
-        <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black/80 to-transparent flex items-center justify-between">
-          <h1 className="text-white font-medium truncate min-w-0 flex-1">{episodeData.title}</h1>
-          {allEpisodes.length > 1 && (
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowEpisodePanel(!showEpisodePanel); }}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-medium transition-colors ml-2 shrink-0"
-            >
-              <List className="w-3 h-3" /> Episodes
-            </button>
-          )}
-        </div>
+        {topBar}
 
-        {/* Episode panel - slides from right */}
-        {showEpisodePanel && (
-          <>
-            <div className="absolute inset-0 z-40 bg-black/60" onClick={(e) => { e.stopPropagation(); setShowEpisodePanel(false); }} />
-            <div
-              className="absolute top-0 right-0 bottom-0 z-50 w-[280px] sm:w-[320px] bg-black/95 backdrop-blur-md border-l border-white/10 flex flex-col"
-              style={{ animation: 'slideInRight 0.25s ease-out' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between p-3 border-b border-white/10">
-                <h3 className="text-white text-sm font-semibold truncate">Episodes</h3>
-                <button onClick={() => setShowEpisodePanel(false)} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 shrink-0">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-2.5 scrollbar-none" style={{ maxHeight: '250px' }}>
-                <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))' }}>
-                  {allEpisodes.map((ep, idx) => (
-                    <button
-                      key={ep.id}
-                      onClick={() => switchToEpisode(ep)}
-                      className="flex items-center justify-center rounded-[10px] text-[10px] font-semibold transition-all duration-200 hover:scale-105"
-                      style={{
-                        aspectRatio: '1 / 1',
-                        maxWidth: '60px',
-                        maxHeight: '60px',
-                        background: idx === currentEpisodeIndex ? 'hsl(var(--primary))' : 'rgba(255,255,255,0.05)',
-                        color: idx === currentEpisodeIndex ? 'white' : 'rgba(255,255,255,0.7)',
-                        boxShadow: idx === currentEpisodeIndex ? '0 0 12px hsl(var(--primary) / 0.5)' : 'none',
-                      }}
-                    >
-                      S{ep.season_number} EP{ep.episode_number}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <style>{`
-              @keyframes slideInRight {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
+        {!isPlaying && !isLoading && <EmbedCenterPlay onClick={() => play()} />}
+
+        <div className="ep3-bottom">
+          <EmbedSeek
+            value={isNaN(progress) ? 0 : progress}
+            buffered={bufferedProgress}
+            onChange={(val) => {
+              if (videoRef.current && duration) {
+                const time = (val / 100) * duration;
+                videoRef.current.currentTime = time;
+                setProgress(val);
+                setCurrentTime(time);
               }
-            `}</style>
-          </>
-        )}
-
-        {/* Center play button */}
-        {!isPlaying && showControls && !isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <button className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center cursor-pointer pointer-events-auto shadow-xl hover:bg-primary transition-colors"
-              onClick={() => play()}>
-              <Play className="w-10 h-10 text-primary-foreground fill-current ml-1" />
-            </button>
-          </div>
-        )}
-
-        {/* Bottom controls */}
-        <div className={`bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 ${deviceInfo.isMobile ? 'pb-2 px-3' : 'pb-4 px-4'}`}>
-          {/* Progress bar */}
-          <div className="mb-2 md:mb-3">
-            <div className="flex items-center gap-2 md:gap-3">
-              <span className="text-white/90 text-[10px] md:text-xs font-mono min-w-[36px] md:min-w-[40px]">{formatTime(currentTime)}</span>
-              <div className="flex-1 relative h-1 md:h-1.5">
-                {/* Buffer track (background) */}
-                <div className="absolute inset-0 bg-white/20 rounded-full pointer-events-none" />
-                <div
-                  className="absolute top-0 left-0 h-full bg-white/40 rounded-full pointer-events-none"
-                  style={{ width: `${bufferedProgress}%` }}
-                />
-                {/* Played fill */}
-                <div
-                  className="absolute top-0 left-0 h-full bg-primary rounded-full pointer-events-none"
-                  style={{ width: `${progress}%`, transform: 'translate3d(0,0,0)', willChange: 'width' }}
-                />
-                {/* YouTube-style smooth seek slider */}
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="any"
-                  value={isNaN(progress) ? 0 : progress}
-                  onChange={handleSeek}
-                  className="smooth-seekbar absolute left-0 right-0 top-1/2 -translate-y-1/2"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-              <span className="text-white/90 text-[10px] md:text-xs font-mono min-w-[36px] md:min-w-[40px]">{formatTime(duration)}</span>
-            </div>
-          </div>
-
-          {/* Control buttons - flat */}
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <div className={`embed-pill flex items-center ${gapSize} shrink-0`}>
-              <button className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`} onClick={skipBackward}>
-                <SkipBack className={iconSize} />
-              </button>
-              <button className={`${deviceInfo.isMobile ? 'w-7 h-7' : 'w-9 h-9'} flex items-center justify-center text-white hover:text-white transition-colors`} onClick={togglePlay}>
-                {isPlaying ? <Pause className={deviceInfo.isMobile ? 'w-4 h-4' : 'w-5 h-5'} /> : <Play className={`${deviceInfo.isMobile ? 'w-4 h-4' : 'w-5 h-5'} fill-current`} />}
-              </button>
-              <button className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`} onClick={skipForward}>
-                <SkipForward className={iconSize} />
-              </button>
-              <button className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`} onClick={toggleMute}>
-                {isMuted ? <VolumeX className={iconSize} /> : <Volume2 className={iconSize} />}
-              </button>
+            }}
+          />
+          <div className="ep3-bar">
+            <div className="ep3-group">
+              <EmbedBtn label={isPlaying ? 'Pause' : 'Play'} primary onClick={togglePlay}>
+                {isPlaying ? <Pause /> : <Play />}
+              </EmbedBtn>
+              <EmbedBtn label={isMuted ? 'Unmute' : 'Mute'} onClick={toggleMute}>
+                {isMuted ? <VolumeX /> : <Volume2 />}
+              </EmbedBtn>
+              <EmbedTime current={currentTime} duration={duration} />
             </div>
 
-            <div className={`embed-pill flex items-center ${gapSize} flex-wrap justify-end`}>
-              {/* CC subtitles */}
-              {false && (captionsUrl || subtitleTracks.length > 0) && (
-                <div className="relative">
-                  <button onClick={(e) => {
-                    e.stopPropagation();
-                    if (subtitleTracks.length > 1) { closeAllMenus(); setShowCcMenu(!showCcMenu); }
-                    else { setCcEnabled(v => !v); }
-                  }}
-                    className={`${btnSize} ${ccEnabled ? 'text-primary' : 'text-white/90 hover:text-white'} flex items-center justify-center transition-colors`} title="Captions">
-                    {ccEnabled ? <Captions className={iconSize} /> : <CaptionsOff className={iconSize} />}
-                  </button>
-                  {showCcMenu && subtitleTracks.length > 1 && (
-                    <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-sm rounded-lg py-2 min-w-[140px] shadow-xl z-50">
-                      <button onClick={() => { setCcEnabled(false); setShowCcMenu(false); }}
-                        className={`w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2 ${!ccEnabled ? 'text-primary' : 'text-white'}`}>
-                        {!ccEnabled && <Check className="w-3 h-3" />} Off
-                      </button>
-                      {subtitleTracks.map(t => (
-                        <button key={t.id} onClick={() => { setCurrentSubtitleTrack(t.id); setCcEnabled(true); setShowCcMenu(false); }}
-                          className={`w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2 ${ccEnabled && currentSubtitleTrack === t.id ? 'text-primary' : 'text-white'}`}>
-                          {ccEnabled && currentSubtitleTrack === t.id && <Check className="w-3 h-3" />}
-                          {t.name || t.lang || `Subtitle ${t.id + 1}`}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Audio switch hidden on embeds */}
-              <div className="relative hidden">
-                <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowAudioMenu(!showAudioMenu); }}
-                  className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`} title="Audio Track">
-                  <Headphones className={iconSize} />
-                </button>
-                {showAudioMenu && (
-                  <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-sm rounded-lg py-2 min-w-[150px] shadow-xl z-50">
-                    {(() => {
-                      const tracksToShow = audioTracks.length > 0
-                        ? audioTracks
-                        : [{ id: 0, name: 'Original Audio', lang: '' }];
-                      return tracksToShow.map(t => (
-                        <button key={t.id} onClick={() => switchAudioTrack(t.id)}
-                          className={`w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2 ${currentAudioTrack === t.id ? 'text-primary' : 'text-white'}`}>
-                          {currentAudioTrack === t.id && <Check className="w-3 h-3" />}
-                          {t.name || t.lang || `Audio ${t.id + 1}`}
-                        </button>
-                      ));
-                    })()}
-                  </div>
-                )}
-              </div>
-
-              {/* Quality selector */}
+            <div className="ep3-group">
               {isHlsActive && hlsLevels.length > 1 && (
-                <div className="relative">
-                  <button className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`}
-                    onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowQualityMenu(!showQualityMenu); }}>
-                    <Settings className={iconSize} />
-                  </button>
+                <div className="ep3-anchor">
+                  <EmbedBtn
+                    label="Quality"
+                    active={showQualityMenu}
+                    onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowQualityMenu(!showQualityMenu); }}
+                  >
+                    <Settings />
+                  </EmbedBtn>
                   {showQualityMenu && (
-                    <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-sm rounded-lg py-2 min-w-[120px] shadow-xl z-50">
-                      <button className={`w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center justify-between ${currentLevel === -1 ? 'text-primary' : 'text-white'}`}
-                        onClick={() => { setQualityLevel(-1); setShowQualityMenu(false); }}>
-                        Auto {currentLevel === -1 && <Check className="w-4 h-4" />}
-                      </button>
-                      {hlsLevels.map(level => (
-                        <button key={level.id}
-                          className={`w-full px-4 py-2 text-left text-sm hover:bg-white/10 flex items-center justify-between ${currentLevel === level.id ? 'text-primary' : 'text-white'}`}
-                          onClick={() => { setQualityLevel(level.id); setShowQualityMenu(false); }}>
-                          {level.label} {currentLevel === level.id && <Check className="w-4 h-4" />}
-                        </button>
+                    <EmbedMenu label="Quality">
+                      <EmbedMenuLabel>Quality</EmbedMenuLabel>
+                      <EmbedMenuItem active={currentLevel === -1} onClick={() => { setQualityLevel(-1); setShowQualityMenu(false); }}>
+                        Auto
+                      </EmbedMenuItem>
+                      {hlsLevels.map((level) => (
+                        <EmbedMenuItem
+                          key={level.id}
+                          active={currentLevel === level.id}
+                          onClick={() => { setQualityLevel(level.id); setShowQualityMenu(false); }}
+                        >
+                          {level.label}
+                        </EmbedMenuItem>
                       ))}
-                    </div>
+                    </EmbedMenu>
                   )}
                 </div>
               )}
 
               {/* Download 720p / 1080p → Shadow-Arise */}
-              <div className="relative">
-                <button className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`}
-                  onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowDownloadMenu(!showDownloadMenu); }} title="Download">
-                  <Download className={iconSize} />
-                </button>
+              <div className="ep3-anchor">
+                <EmbedBtn
+                  label="Download"
+                  active={showDownloadMenu}
+                  onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowDownloadMenu(!showDownloadMenu); }}
+                >
+                  <Download />
+                </EmbedBtn>
                 {showDownloadMenu && (
-                  <div className="absolute bottom-full right-0 mb-2 bg-black/90 backdrop-blur-sm rounded-lg py-2 min-w-[140px] shadow-xl z-50">
-                    {[{ q: '720p', label: '720p HD' }, { q: '1080p', label: '1080p FHD' }].map(({ q, label }) => {
+                  <EmbedMenu label="Download">
+                    <EmbedMenuLabel>Download</EmbedMenuLabel>
+                    {[{ q: '720p', tag: 'HD' }, { q: '1080p', tag: 'FHD' }].map(({ q, tag }) => {
                       const epInfo = allEpisodes[currentEpisodeIndex];
                       const epNum = epInfo ? String(epInfo.episode_number).padStart(2, '0') : '01';
                       const animeTitleClean = episodeData?.title?.split(' - ')[0]?.replace(/[^a-zA-Z0-9 ]/g, '')?.trim() || 'Anime';
                       const shadowUrl = `/Shadow-Arise?quality=${q}&anime=${encodeURIComponent(animeTitleClean)}&ep=${epNum}&url=${encodeURIComponent(episodeData?.videoUrl || '')}`;
                       return (
-                        <a key={q} href={shadowUrl} target="_blank" rel="noopener noreferrer"
-                          className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/10 text-white flex items-center gap-2 block">
-                          <Download className="w-4 h-4" /> {label}
+                        <a key={q} href={shadowUrl} target="_blank" rel="noopener noreferrer" className="ep3-menu-item">
+                          <span>{q}</span>
+                          <small>{tag}</small>
                         </a>
                       );
                     })}
-                  </div>
+                  </EmbedMenu>
                 )}
               </div>
 
-              <button className={`${btnSize} flex items-center justify-center text-white/90 hover:text-white transition-colors`} onClick={toggleFullscreen}>
-                <Maximize className={iconSize} />
-              </button>
+              <EmbedBtn label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} onClick={toggleFullscreen}>
+                {isFullscreen ? <Minimize /> : <Maximize />}
+              </EmbedBtn>
             </div>
           </div>
         </div>
       </div>
+
+      {episodeDrawer}
     </div>
   );
 }
-

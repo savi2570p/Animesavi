@@ -1640,7 +1640,7 @@ export default function Watch() {
               );
             })()}
 
-            {/* Shadow link v2 (BETA 2) — visible only for allowlisted emails */}
+            {/* Shadow link v2 (BETA 3) — visible only for allowlisted emails */}
             {canSeeShadowLinks(user?.email) && (
             <Button
               size="sm"
@@ -1671,7 +1671,7 @@ export default function Watch() {
               <Link2 className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5" />
               Shadow link v2
               <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-primary/15 text-primary text-[9px] font-bold uppercase tracking-wider">
-                BETA 2
+                BETA 3
               </span>
             </Button>
             )}

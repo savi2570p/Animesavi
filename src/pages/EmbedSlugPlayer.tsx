@@ -2,12 +2,13 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  Play, Pause, Volume2, VolumeX, Maximize,
-  SkipForward, Loader2, AlertTriangle, RefreshCw,
-  Settings, Check, ShieldAlert, Download, Headphones,
-  List, ChevronRight, X, Gauge
+  Play, Pause, Volume2, VolumeX, Maximize, Minimize,
+  Loader2, RefreshCw, Settings, Download, List, Gauge,
 } from 'lucide-react';
-import { Captions, CaptionsOff } from 'lucide-react';
+import {
+  EmbedBrand, EmbedBtn, EmbedCenterPlay, EmbedEpisodeDrawer, EmbedLoading,
+  EmbedMenu, EmbedMenuItem, EmbedMenuLabel, EmbedSeek, EmbedStatus, EmbedTime,
+} from '@/components/embed/EmbedChrome';
 import Hls from 'hls.js';
 import { useEmbedPlayerBridge } from '@/hooks/useEmbedPlayerBridge';
 import { useEmbedResume } from '@/hooks/useEmbedResume';
@@ -661,82 +662,46 @@ export default function EmbedSlugPlayer() {
   // Blocked domain
   if (domainAllowed === false) {
     return (
-      <div className="player-shell fixed inset-0 bg-black flex flex-col items-center justify-center gap-6 p-6 text-center select-none" style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}>
-        <ShieldAlert className="w-16 h-16 text-destructive" />
-        <h2 className="text-white text-xl font-bold">Playback Restricted</h2>
-        <p className="text-white/70 max-w-md">These links are restricted only for authorized websites. For more visit</p>
-        <a href="https://animesavi.lovable.app" target="_blank" rel="noopener noreferrer"
-          className="px-8 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold text-lg">
-          AnimeSavi
+      <EmbedStatus
+        tone="blocked"
+        title="Playback restricted"
+        message="This player only works on authorised websites. Watch the episode on AnimeSavi+ instead."
+      >
+        <a href="https://animesavi.lovable.app" target="_blank" rel="noopener noreferrer" className="ep3-cta">
+          Open AnimeSavi+
         </a>
-      </div>
+      </EmbedStatus>
     );
   }
 
-  if (domainAllowed === null) {
-    return <div className="fixed inset-0 bg-black flex items-center justify-center"><Loader2 className="w-12 h-12 text-primary animate-spin" /></div>;
+  if (domainAllowed === null || (!episodeData && !fetchError)) {
+    return <EmbedStatus tone="loading" />;
   }
 
   if (fetchError) {
-    return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 p-4">
-        <AlertTriangle className="w-12 h-12 text-destructive" />
-        <p className="text-white text-lg text-center">{fetchError}</p>
-      </div>
-    );
-  }
-
-  if (!episodeData) {
-    return <div className="fixed inset-0 bg-black flex items-center justify-center"><Loader2 className="w-12 h-12 text-primary animate-spin" /></div>;
+    return <EmbedStatus tone="error" title="Episode unavailable" message={fetchError} />;
   }
 
   if (error) {
     return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 p-6 text-center">
-        <AlertTriangle className="w-16 h-16 text-destructive" />
-        <h2 className="text-white text-xl font-bold">Playback Error</h2>
-        <p className="text-white/80 max-w-md">{error}</p>
-        <button onClick={() => { setError(null); setIsLoading(true); videoRef.current?.load(); }}
-          className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
-          <RefreshCw className="w-5 h-5" /> Retry
+      <EmbedStatus tone="error" title="Playback error" message={error}>
+        <button type="button" className="ep3-cta" onClick={() => { setError(null); setIsLoading(true); videoRef.current?.load(); }}>
+          <RefreshCw /> Retry
         </button>
-      </div>
+      </EmbedStatus>
     );
   }
+
+  const seasonCount = new Set(allEpisodes.map((e) => e.season_number)).size;
 
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 bg-black"
+      className="ep3 ep3-root"
       onMouseMove={handleMouseMove}
       onTouchStart={() => setShowControls(true)}
       onClick={(e) => { if (!(e.target as HTMLElement).closest('.controls-area')) { togglePlay(); closeAllMenus(); } }}
     >
-      {(isLoading || isBuffering) && (
-        <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
-          {/* Shimmer skeleton */}
-          <div className="absolute inset-0 bg-gradient-to-br from-black via-zinc-900 to-black" />
-          <div
-            className="absolute inset-0 opacity-30"
-            style={{
-              background: 'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%)',
-              backgroundSize: '200% 100%',
-              animation: 'embedShimmer 1.6s linear infinite',
-            }}
-          />
-          <style>{`@keyframes embedShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-10 h-10 text-primary animate-spin" />
-            {episodeData?.title && (
-              <div className="text-center px-4">
-                <div className="text-white/90 text-sm font-medium line-clamp-1">{episodeData.title}</div>
-                <div className="text-white/50 text-xs mt-0.5">S{currentSeasonNumber} • E{currentEpisodeNumber} • Loading…</div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Prefetch next episode's video + captions so the next switch is near-instant */}
       {(() => {
         const next = allEpisodes[currentEpisodeIndex + 1];
@@ -751,11 +716,11 @@ export default function EmbedSlugPlayer() {
       })()}
 
       <video
- disablePictureInPicture
- disableRemotePlayback
- {...({ 'x-webkit-airplay': 'deny' } as any)}
+        disablePictureInPicture
+        disableRemotePlayback
+        {...({ 'x-webkit-airplay': 'deny' } as any)}
         ref={videoRef}
-        className="w-full h-full object-contain"
+        className="ep3-video"
         autoPlay playsInline muted preload="auto"
         controlsList="nodownload noremoteplayback"
         crossOrigin={captionsUrl ? 'anonymous' : undefined}
@@ -765,244 +730,171 @@ export default function EmbedSlugPlayer() {
         )}
       </video>
 
-      {/* Controls */}
+      {(isLoading || isBuffering) && (
+        <EmbedLoading
+          title={isLoading ? episodeData.title : undefined}
+          label={isLoading ? `S${currentSeasonNumber} · E${currentEpisodeNumber} · Loading` : 'Buffering'}
+        />
+      )}
+
       <div
-        className={`controls-area absolute inset-0 flex flex-col justify-end transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className="controls-area ep3-layer"
+        data-visible={showControls ? 'true' : 'false'}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Title + Episode selector button */}
-        <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black/80 to-transparent flex items-center justify-between">
-          <div className="min-w-0 flex-1">
-            <p className="text-white text-xs font-medium truncate">
-              <span className="text-primary">S{currentSeasonNumber} E{currentEpisodeNumber}</span>
-              <span className="mx-1.5 text-white/40">•</span>
-              {episodeData.title}
-            </p>
+        <div className="ep3-top">
+          <div className="ep3-top-info">
+            <EmbedBrand compact />
+            <span className="ep3-divider" aria-hidden />
+            <div className="ep3-top-text">
+              <p className="ep3-title">{episodeData.animeTitle || episodeData.title}</p>
+              <p className="ep3-sub">
+                <b>S{currentSeasonNumber} · E{currentEpisodeNumber}</b>
+                {episodeData.animeTitle && episodeData.title ? ` · ${episodeData.title}` : ''}
+              </p>
+            </div>
           </div>
           {allEpisodes.length > 1 && (
             <button
-              onClick={(e) => { e.stopPropagation(); setShowEpisodePanel(!showEpisodePanel); closeAllMenus(); }}
-              className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white text-[10px] font-medium transition-colors ml-2 shrink-0"
+              type="button"
+              className="ep3-chip-btn"
+              data-active={showEpisodePanel ? 'true' : undefined}
+              aria-expanded={showEpisodePanel}
+              onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowEpisodePanel(!showEpisodePanel); }}
             >
-              <List className="w-3 h-3" /> Episodes
+              <List /> Episodes
             </button>
           )}
         </div>
 
-        {/* Episode panel - slides from right */}
-        {showEpisodePanel && (
-          <>
-            <div className="absolute inset-0 z-40 bg-black/60" onClick={(e) => { e.stopPropagation(); setShowEpisodePanel(false); }} />
-            <div
-              className="absolute top-0 right-0 bottom-0 z-50 w-[280px] sm:w-[320px] bg-black/95 backdrop-blur-md border-l border-white/10 flex flex-col"
-              style={{ animation: 'slideInRight 0.25s ease-out' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between p-3 border-b border-white/10">
-                <h3 className="text-white text-sm font-semibold truncate">{episodeData.animeTitle} — Episodes</h3>
-                <button onClick={() => setShowEpisodePanel(false)} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 shrink-0">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-2.5 scrollbar-none" style={{ maxHeight: '250px' }}>
-                <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))' }}>
-                  {allEpisodes.map((ep, idx) => (
-                    <button
-                      key={ep.id}
-                      onClick={() => switchToEpisode(ep)}
-                      className="flex items-center justify-center rounded-[10px] text-[10px] font-semibold transition-all duration-200 hover:scale-105"
-                      style={{
-                        aspectRatio: '1 / 1',
-                        maxWidth: '60px',
-                        maxHeight: '60px',
-                        background: idx === currentEpisodeIndex ? 'hsl(var(--primary))' : 'rgba(255,255,255,0.05)',
-                        color: idx === currentEpisodeIndex ? 'white' : 'rgba(255,255,255,0.7)',
-                        boxShadow: idx === currentEpisodeIndex ? '0 0 12px hsl(var(--primary) / 0.5)' : 'none',
-                      }}
-                    >
-                      S{ep.season_number} EP{ep.episode_number}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <style>{`
-              @keyframes slideInRight {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-              }
-            `}</style>
-          </>
-        )}
+        {!isPlaying && !isLoading && !isBuffering && <EmbedCenterPlay onClick={togglePlay} />}
 
-        <div className={`bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-16 ${deviceInfo.isMobile ? 'pb-2 px-3' : 'pb-3 px-4'}`}>
-          {/* Progress bar */}
-          <div className={`relative w-full ${deviceInfo.isMobile ? 'h-1' : 'h-1.5'} mb-2`}>
-            <div className="absolute inset-0 bg-white/20 rounded-full pointer-events-none" />
-            <div className="absolute top-0 left-0 h-full bg-white/40 rounded-full pointer-events-none" style={{ width: `${bufferedProgress}%` }} />
-            <div
-              className="absolute top-0 left-0 h-full bg-primary rounded-full pointer-events-none"
-              style={{ width: `${progress}%`, transform: 'translate3d(0,0,0)', willChange: 'width' }}
-            />
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="any"
-              value={isNaN(progress) ? 0 : progress}
-              onChange={(e) => {
-                const val = Number(e.target.value);
-                if (videoRef.current && duration) videoRef.current.currentTime = (val / 100) * duration;
-              }}
-              className="smooth-seekbar absolute left-0 right-0 top-1/2 -translate-y-1/2"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
-
-          {/* Time + Controls */}
-          <div className={`flex items-center justify-between gap-2 flex-wrap`}>
-            <div className={`embed-pill flex items-center ${gapSize} shrink-0`}>
-              <button onClick={togglePlay} className={controlButtonClass}>
-                {isPlaying ? <Pause className={iconSize} /> : <Play className={`${iconSize} ml-0.5`} />}
-              </button>
-              <button onClick={skipForward} className={controlButtonClass}>
-                <SkipForward className={iconSize} />
-              </button>
-              <button onClick={toggleMute} className={controlButtonClass}>
-                {isMuted ? <VolumeX className={iconSize} /> : <Volume2 className={iconSize} />}
-              </button>
-              <span className="text-white/80 text-[10px] sm:text-xs ml-1">{formatTime(currentTime)} / {formatTime(duration)}</span>
+        <div className="ep3-bottom">
+          <EmbedSeek
+            value={isNaN(progress) ? 0 : progress}
+            buffered={bufferedProgress}
+            onChange={(val) => {
+              if (videoRef.current && duration) videoRef.current.currentTime = (val / 100) * duration;
+            }}
+          />
+          <div className="ep3-bar">
+            <div className="ep3-group">
+              <EmbedBtn label={isPlaying ? 'Pause' : 'Play'} primary onClick={togglePlay}>
+                {isPlaying ? <Pause /> : <Play />}
+              </EmbedBtn>
+              <EmbedBtn label={isMuted ? 'Unmute' : 'Mute'} onClick={toggleMute}>
+                {isMuted ? <VolumeX /> : <Volume2 />}
+              </EmbedBtn>
+              <EmbedTime current={currentTime} duration={duration} />
             </div>
 
-            <div className={`embed-pill flex items-center ${gapSize} flex-wrap justify-end`}>
-              {/* CC subtitles */}
-              {false && (captionsUrl || subtitleTracks.length > 0) && (
-                <div className="relative">
-                  <button onClick={(e) => {
-                    e.stopPropagation();
-                    if (subtitleTracks.length > 1) { closeAllMenus(); setShowCcMenu(!showCcMenu); }
-                    else { setCcEnabled(v => !v); }
-                  }}
-                    className={`${controlButtonClass} ${ccEnabled ? '!bg-primary/80 !text-primary-foreground' : ''}`} title="Captions">
-                    {ccEnabled ? <Captions className={iconSize} /> : <CaptionsOff className={iconSize} />}
-                  </button>
-                  {showCcMenu && subtitleTracks.length > 1 && (
-                    <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[140px] z-50">
-                      <button onClick={() => { setCcEnabled(false); setShowCcMenu(false); }}
-                        className={`w-full text-left px-3 py-1.5 text-xs rounded ${!ccEnabled ? 'text-primary' : 'text-white/80'} hover:bg-white/10 flex items-center gap-2`}>
-                        {!ccEnabled && <Check className="w-3 h-3" />} Off
-                      </button>
-                      {subtitleTracks.map(t => (
-                        <button key={t.id} onClick={() => { setCurrentSubtitleTrack(t.id); setCcEnabled(true); setShowCcMenu(false); }}
-                          className={`w-full text-left px-3 py-1.5 text-xs rounded ${ccEnabled && currentSubtitleTrack === t.id ? 'text-primary' : 'text-white/80'} hover:bg-white/10 flex items-center gap-2`}>
-                          {ccEnabled && currentSubtitleTrack === t.id && <Check className="w-3 h-3" />}
-                          {t.name || t.lang || `Subtitle ${t.id + 1}`}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Audio switch hidden on embeds */}
-              <div className="relative hidden">
-                <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowAudioMenu(!showAudioMenu); }}
-                  className={controlButtonClass} title="Audio Track">
-                  <Headphones className={iconSize} />
-                </button>
-                {showAudioMenu && (
-                  <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[150px] z-50">
-                    {(() => {
-                      const tracksToShow = audioTracks.length > 0
-                        ? audioTracks
-                        : [{ id: 0, name: 'Original Audio', lang: '' }];
-                      return tracksToShow.map(t => (
-                        <button key={t.id} onClick={() => switchAudioTrack(t.id)}
-                          className={`w-full text-left px-3 py-1.5 text-xs rounded flex items-center gap-2 ${currentAudioTrack === t.id ? 'text-primary' : 'text-white/80'} hover:bg-white/10`}>
-                          {currentAudioTrack === t.id && <Check className="w-3 h-3" />}
-                          {t.name || t.lang || `Audio ${t.id + 1}`}
-                        </button>
-                      ));
-                    })()}
-                  </div>
-                )}
-              </div>
-
-              {/* Quality */}
+            <div className="ep3-group">
               {hlsLevels.length > 0 && (
-                <div className="relative">
-                  <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowQualityMenu(!showQualityMenu); }}
-                    className={controlButtonClass}>
-                    <Settings className={iconSize} />
-                  </button>
+                <div className="ep3-anchor">
+                  <EmbedBtn
+                    label="Quality"
+                    active={showQualityMenu}
+                    onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowQualityMenu(!showQualityMenu); }}
+                  >
+                    <Settings />
+                  </EmbedBtn>
                   {showQualityMenu && (
-                    <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[120px] z-50">
-                      <button onClick={() => { if (hlsRef.current) hlsRef.current.currentLevel = -1; setCurrentLevel(-1); setShowQualityMenu(false); }}
-                        className={`w-full text-left px-3 py-1.5 text-xs rounded ${currentLevel === -1 ? 'text-primary' : 'text-white/80'} hover:bg-white/10 flex items-center gap-2`}>
-                        {currentLevel === -1 && <Check className="w-3 h-3" />} Auto
-                      </button>
-                      {hlsLevels.map(l => (
-                        <button key={l.id} onClick={() => { if (hlsRef.current) hlsRef.current.currentLevel = l.id; setCurrentLevel(l.id); setShowQualityMenu(false); }}
-                          className={`w-full text-left px-3 py-1.5 text-xs rounded ${currentLevel === l.id ? 'text-primary' : 'text-white/80'} hover:bg-white/10 flex items-center gap-2`}>
-                          {currentLevel === l.id && <Check className="w-3 h-3" />} {l.label}
-                        </button>
+                    <EmbedMenu label="Quality">
+                      <EmbedMenuLabel>Quality</EmbedMenuLabel>
+                      <EmbedMenuItem
+                        active={currentLevel === -1}
+                        onClick={() => { if (hlsRef.current) hlsRef.current.currentLevel = -1; setCurrentLevel(-1); setShowQualityMenu(false); }}
+                      >
+                        Auto
+                      </EmbedMenuItem>
+                      {hlsLevels.map((l) => (
+                        <EmbedMenuItem
+                          key={l.id}
+                          active={currentLevel === l.id}
+                          onClick={() => { if (hlsRef.current) hlsRef.current.currentLevel = l.id; setCurrentLevel(l.id); setShowQualityMenu(false); }}
+                        >
+                          {l.label}
+                        </EmbedMenuItem>
                       ))}
-                    </div>
+                    </EmbedMenu>
                   )}
                 </div>
               )}
 
-              {/* Download with 480p/720p/1080p */}
-              <div className="relative">
-                <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowDownloadMenu(!showDownloadMenu); }}
-                  className={controlButtonClass} title="Download">
-                  {isDownloading ? <Loader2 className={`${iconSize} animate-spin`} /> : <Download className={iconSize} />}
-                </button>
+              <div className="ep3-anchor">
+                <EmbedBtn
+                  label="Download"
+                  active={showDownloadMenu}
+                  onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowDownloadMenu(!showDownloadMenu); }}
+                >
+                  {isDownloading ? <Loader2 className="animate-spin" /> : <Download />}
+                </EmbedBtn>
                 {showDownloadMenu && (
-                  <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-white/10 rounded-lg p-1 min-w-[130px] z-50">
+                  <EmbedMenu label="Download">
+                    <EmbedMenuLabel>Download</EmbedMenuLabel>
                     {['480p', '720p', '1080p', '2160p (4K)'].map((q) => (
-                      <button key={q} onClick={(e) => { e.stopPropagation(); handleDirectDownload(q); }}
-                        className={`w-full text-left px-3 py-1.5 text-xs rounded text-white/80 hover:bg-white/10 flex items-center gap-2 ${isDownloading === q ? 'opacity-50' : ''}`}
-                        disabled={!!isDownloading}>
-                        <Download className="w-3 h-3" /> {q}
-                        {isDownloading === q && <Loader2 className="w-3 h-3 animate-spin" />}
-                      </button>
+                      <EmbedMenuItem
+                        key={q}
+                        disabled={!!isDownloading}
+                        onClick={(e) => { e.stopPropagation(); handleDirectDownload(q); }}
+                        hint={isDownloading === q ? 'Saving' : undefined}
+                      >
+                        {q}
+                      </EmbedMenuItem>
                     ))}
-                  </div>
+                  </EmbedMenu>
                 )}
               </div>
 
-              <div className="relative">
-                <button onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowSpeedMenu(!showSpeedMenu); }} className={controlButtonClass} title="Speed">
-                  <Gauge className={iconSize} />
-                </button>
+              <div className="ep3-anchor">
+                <EmbedBtn
+                  label="Playback speed"
+                  active={showSpeedMenu}
+                  onClick={(e) => { e.stopPropagation(); closeAllMenus(); setShowSpeedMenu(!showSpeedMenu); }}
+                >
+                  <Gauge />
+                </EmbedBtn>
                 {showSpeedMenu && (
-                  <div className="absolute bottom-full right-0 mb-2 bg-black/95 border border-primary/30 rounded-lg p-1 min-w-[110px] z-50">
+                  <EmbedMenu label="Playback speed">
+                    <EmbedMenuLabel>Speed</EmbedMenuLabel>
                     {[0.5, 0.75, 1, 1.25, 1.5, 2].map((speed) => (
-                      <button key={speed} onClick={(e) => { e.stopPropagation(); changePlaybackSpeed(speed); }}
-                        className={`w-full text-left px-3 py-1.5 text-xs rounded hover:bg-primary/15 flex items-center gap-2 ${playbackSpeed === speed ? 'text-primary' : 'text-white/80'}`}>
-                        {playbackSpeed === speed && <Check className="w-3 h-3" />} {speed}x
-                      </button>
+                      <EmbedMenuItem
+                        key={speed}
+                        active={playbackSpeed === speed}
+                        onClick={(e) => { e.stopPropagation(); changePlaybackSpeed(speed); }}
+                      >
+                        {speed === 1 ? 'Normal' : `${speed}x`}
+                      </EmbedMenuItem>
                     ))}
-                  </div>
+                  </EmbedMenu>
                 )}
               </div>
 
-              <button onClick={toggleFullscreen} className={controlButtonClass}>
-                <Maximize className={iconSize} />
-              </button>
+              <EmbedBtn label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'} onClick={toggleFullscreen}>
+                {isFullscreen ? <Minimize /> : <Maximize />}
+              </EmbedBtn>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Center play button when paused */}
-      {!isPlaying && !isLoading && !isBuffering && (
-        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-          <div className="w-16 h-16 rounded-full bg-primary/70 shadow-2xl shadow-primary/30 flex items-center justify-center">
-            <Play className="w-8 h-8 text-white fill-white" />
-          </div>
-        </div>
+      {showEpisodePanel && (
+        <EmbedEpisodeDrawer
+          heading={episodeData.animeTitle || 'Episodes'}
+          subheading={`${allEpisodes.length} episodes${seasonCount > 1 ? ` · ${seasonCount} seasons` : ''}`}
+          items={allEpisodes.map((ep, idx) => ({
+            key: ep.id,
+            number: ep.episode_number,
+            title: ep.title,
+            seasonNumber: ep.season_number,
+            active: idx === currentEpisodeIndex,
+          }))}
+          onSelect={(item) => {
+            const ep = allEpisodes.find((e) => e.id === item.key);
+            if (ep) void switchToEpisode(ep);
+          }}
+          onClose={() => setShowEpisodePanel(false)}
+        />
       )}
     </div>
   );

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Play, Pause, RotateCcw, RotateCw, Maximize, Loader2, List, Captions } from 'lucide-react';
+import { Play, Pause, Maximize, List, Captions } from 'lucide-react';
+import { EmbedBtn, EmbedCenterPlay, EmbedDoubleTap, EmbedEpisodeDrawer, EmbedLoading, EmbedSeek, EmbedStatus, EmbedTime } from '@/components/embed/EmbedChrome';
 import { isHlsUrl, detectDeviceKind } from '@/lib/streamSource';
 import { getHLSConfig } from '@/lib/videoUtils';
 import { useEmbedResume } from '@/hooks/useEmbedResume';
 
 /**
- * Shadow link v2 minimal player — ONLY: timeline, play/pause, ±10s skip,
- * fullscreen. No branding, no settings menus, no extra overlays.
+ * Shadow link v2 minimal player — ONLY: timeline, play/pause, fullscreen,
+ * optional CC/episodes. Double-tap seeks ±10s. No branding, no settings menus.
  */
 
 interface ShadowMinimalPlayerProps {
@@ -19,7 +20,7 @@ interface ShadowMinimalPlayerProps {
   overlaySeason?: number;
   overlayEpisode?: number;
   /** In-player episode picker (rendered inside the player, never outside). */
-  episodes?: Array<{ key: string; number: number; seasonNumber?: number; active?: boolean }>;
+  episodes?: Array<{ key: string; number: number; title?: string | null; seasonNumber?: number; active?: boolean }>;
   onSelectEpisode?: (key: string) => void;
   /** Optional subtitle file (VTT or SRT). Shows a CC button when set. */
   captionsUrl?: string | null;
@@ -210,58 +211,59 @@ export function ShadowMinimalPlayer({
     setCurrentTime(value);
   }, []);
 
+  // Double-tap the left/right side of the video to seek ±10s (no skip buttons).
+  const lastTapRef = useRef<{ time: number; x: number }>({ time: 0, x: 0 });
+  const [tapSide, setTapSide] = useState<'left' | 'right' | null>(null);
+  const onVideoTouchEnd = useCallback((e: React.TouchEvent<HTMLVideoElement>) => {
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+    const now = Date.now();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const last = lastTapRef.current;
+    if (now - last.time < 300 && Math.abs(x - last.x) < 60) {
+      e.preventDefault();
+      const side = x < rect.width / 2 ? 'left' : 'right';
+      skip(side === 'left' ? -10 : 10);
+      setTapSide(side);
+      window.setTimeout(() => setTapSide(null), 500);
+      lastTapRef.current = { time: 0, x: 0 };
+    } else {
+      lastTapRef.current = { time: now, x };
+    }
+  }, [skip]);
+
   const episodePanel = hasEpisodes && showEps ? (
-    <div className="absolute right-2 bottom-12 z-30 w-52 sm:w-60 max-h-[75%] flex flex-col rounded-xl border border-white/10 bg-black/85 backdrop-blur-xl overflow-hidden shadow-2xl">
-      {epSeasons.length > 1 && (
-        <div className="flex items-center gap-1 px-2 pt-2 pb-1.5 overflow-x-auto">
-          {epSeasons.map((sn) => (
-            <button
-              key={sn}
-              onClick={() => setEpsSeason(sn)}
-              data-active={sn === epsSeason}
-              className="shrink-0 px-2 py-1 rounded-md text-[10px] font-semibold text-white/60 hover:text-white data-[active=true]:bg-white data-[active=true]:text-black transition-colors"
-            >
-              S{sn}
-            </button>
-          ))}
-        </div>
-      )}
-      <div className="overflow-y-auto p-2 grid grid-cols-5 gap-1.5">
-        {panelEpisodes.map((e) => (
-          <button
-            key={e.key}
-            onClick={() => { onSelectEpisode?.(e.key); setShowEps(false); }}
-            data-active={!!e.active}
-            className="py-1.5 rounded-md text-[11px] font-semibold bg-white/5 text-white/70 border border-white/10 hover:text-white data-[active=true]:bg-white data-[active=true]:text-black data-[active=true]:border-white transition-colors"
-          >
-            {e.number}
-          </button>
-        ))}
-      </div>
-    </div>
+    <EmbedEpisodeDrawer
+      heading={overlayTitle || 'Episodes'}
+      subheading={`Season ${epsSeason} · ${panelEpisodes.length} episodes`}
+      seasons={epSeasons}
+      activeSeason={epsSeason}
+      onSeasonChange={setEpsSeason}
+      items={panelEpisodes.map((e) => ({ key: e.key, number: e.number, title: e.title, active: e.active }))}
+      onSelect={(item) => { onSelectEpisode?.(item.key); setShowEps(false); }}
+      onClose={() => setShowEps(false)}
+    />
   ) : null;
 
   const useEmbed = (!videoUrl && embedUrl) || (failed && fallbackEmbedUrl);
   const activeEmbed = (!videoUrl && embedUrl) ? embedUrl : fallbackEmbedUrl;
   if (useEmbed && activeEmbed) {
     return (
-      <div className="relative w-full aspect-video bg-black">
+      <div className="ep3 ep3-inline">
         <iframe
           src={activeEmbed}
-          className="absolute inset-0 w-full h-full"
+          className="ep3-frame"
           allowFullScreen
           allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
           title="Video player"
         />
         {hasEpisodes && (
-          <button
-            onClick={toggleEps}
-            aria-label="Episodes"
-            className="absolute top-2 right-2 z-30 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-black/60 border border-white/15 text-[10px] text-white/85 hover:text-white backdrop-blur-md"
-          >
-            <List className="h-3 w-3" />
-            Episodes
-          </button>
+          <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 30 }}>
+            <button type="button" onClick={toggleEps} aria-label="Episodes" className="ep3-chip-btn" data-active={showEps ? 'true' : undefined}>
+              <List /> Episodes
+            </button>
+          </div>
         )}
         {episodePanel}
       </div>
@@ -269,32 +271,28 @@ export function ShadowMinimalPlayer({
   }
 
   if (!videoUrl) {
-    return (
-      <div className="w-full aspect-video bg-black grid place-items-center">
-        <p className="text-sm text-white/50">No source available on this server.</p>
-      </div>
-    );
+    return <EmbedStatus tone="error" brand={false} variant="inline" title="No source available on this server." />;
   }
 
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const showOverlay = Boolean(overlayTitle) && overlaySeason != null && overlayEpisode != null;
 
   return (
     <div
       ref={containerRef}
-      className="player-shell relative w-full aspect-video bg-black select-none overflow-hidden"
+      className="ep3 ep3-inline"
       onMouseMove={pokeControls}
       onTouchStart={pokeControls}
     >
       <video
         ref={videoRef}
         poster={poster}
-        className="absolute inset-0 w-full h-full object-contain"
+        className="ep3-video"
         playsInline
         preload="auto"
         disablePictureInPicture
         disableRemotePlayback
         onClick={togglePlay}
+        onTouchEnd={onVideoTouchEnd}
         onPlay={() => { setIsPlaying(true); pokeControls(); }}
         onPause={() => { setIsPlaying(false); setControlsVisible(true); }}
         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
@@ -308,105 +306,50 @@ export function ShadowMinimalPlayer({
         {ccSrc && <track kind="subtitles" src={ccSrc} srcLang="en" label="CC" default />}
       </video>
 
-      {/* Title + S/E — top-left, follows control visibility */}
-      {showOverlay && (
-        <div
-          className={`absolute top-0 inset-x-0 z-20 px-3 pt-3 pb-6 bg-gradient-to-b from-black/70 to-transparent pointer-events-none transition-opacity duration-200 ${
-            controlsVisible ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          <p className="text-[11px] sm:text-xs font-semibold text-white truncate">{overlayTitle}</p>
-          <p className="text-[10px] text-white/60">S{overlaySeason} · E{overlayEpisode}</p>
-        </div>
-      )}
-
-      {/* Center buffering spinner */}
-      {buffering && !failed && (
-        <div className="absolute inset-0 grid place-items-center pointer-events-none">
-          <Loader2 className="h-6 w-6 animate-spin text-white/70" />
-        </div>
-      )}
-
-      {/* Failure state */}
+      {buffering && !failed && <EmbedLoading />}
+      {tapSide && <EmbedDoubleTap side={tapSide} />}
       {failed && (
-        <div className="absolute inset-0 grid place-items-center bg-black/80">
-          <p className="text-sm text-white/70">This source can't play here.</p>
-        </div>
+        <EmbedStatus tone="error" brand={false} variant="overlay" title="This source can't play here." />
       )}
 
-      {/* Center tap play button when paused */}
-      {!isPlaying && !buffering && !failed && (
-        <button
-          onClick={togglePlay}
-          aria-label="Play"
-          className="absolute inset-0 grid place-items-center"
-        >
-          <span className="h-12 w-12 rounded-full bg-black/60 border border-white/20 grid place-items-center">
-            <Play className="h-5 w-5 text-white ml-0.5" fill="currentColor" />
-          </span>
-        </button>
-      )}
-
-      {/* Control bar: timeline + play/pause + ±10s + fullscreen only */}
-      <div
-        className={`absolute inset-x-0 bottom-0 px-2.5 pb-1.5 pt-6 bg-gradient-to-t from-black/85 to-transparent transition-opacity duration-200 ${
-          controlsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-      >
-        <input
-          type="range"
-          min={0}
-          max={duration || 0}
-          step={0.1}
-          value={currentTime}
-          onChange={(e) => onSeek(Number(e.target.value))}
-          aria-label="Seek"
-          className="shadow-timeline w-full"
-          style={{
-            background: `linear-gradient(to right, #fff ${progress}%, rgba(255,255,255,0.25) ${progress}%)`,
-          }}
-        />
-
-        <div className="mt-0.5 flex items-center gap-2">
-          <div className="embed-pill flex items-center gap-1">
-          <button onClick={togglePlay} aria-label={isPlaying ? 'Pause' : 'Play'} className="p-1 text-white">
-            {isPlaying ? <Pause className="h-4 w-4" fill="currentColor" /> : <Play className="h-4 w-4" fill="currentColor" />}
-          </button>
-          <button onClick={() => skip(-10)} aria-label="Back 10 seconds" className="p-1 text-white/85">
-            <RotateCcw className="h-3.5 w-3.5" />
-          </button>
-          <button onClick={() => skip(10)} aria-label="Forward 10 seconds" className="p-1 text-white/85">
-            <RotateCw className="h-3.5 w-3.5" />
-          </button>
-          <span className="text-[10px] text-white/70 tabular-nums">
-            {formatTime(currentTime)} / {formatTime(duration)}
-          </span>
+      <div className="ep3-layer is-pass" data-visible={controlsVisible ? 'true' : 'false'}>
+        {/* Title + S/E — top-left, follows control visibility */}
+        {showOverlay ? (
+          <div className="ep3-top" style={{ pointerEvents: 'none' }}>
+            <div className="ep3-top-text">
+              <p className="ep3-title">{overlayTitle}</p>
+              <p className="ep3-sub"><b>S{overlaySeason} · E{overlayEpisode}</b></p>
+            </div>
           </div>
-          <div className="flex-1" />
-          <div className="embed-pill flex items-center gap-1">
-          {ccSrc && (
-            <button
-              onClick={() => setCcOn((v) => !v)}
-              aria-label="Subtitles"
-              aria-pressed={ccOn}
-              className={`p-1 transition-colors ${ccOn ? 'text-white' : 'text-white/45 hover:text-white'}`}
-            >
-              <Captions className="h-3.5 w-3.5" />
-            </button>
-          )}
-          {hasEpisodes && (
-            <button
-              onClick={toggleEps}
-              aria-label="Episodes"
-              aria-expanded={showEps}
-              className={`p-1 transition-colors ${showEps ? 'text-white' : 'text-white/85 hover:text-white'}`}
-            >
-              <List className="h-3.5 w-3.5" />
-            </button>
-          )}
-          <button onClick={toggleFullscreen} aria-label="Fullscreen" className="p-1 text-white">
-            <Maximize className="h-3.5 w-3.5" />
-          </button>
+        ) : <div />}
+
+        {!isPlaying && !buffering && !failed && <EmbedCenterPlay onClick={togglePlay} />}
+
+        {/* Control bar: timeline + play/pause + time + CC/episodes/fullscreen */}
+        <div className="ep3-bottom">
+          <EmbedSeek value={currentTime} max={duration || 0} step={0.1} onChange={onSeek} />
+          <div className="ep3-bar">
+            <div className="ep3-group">
+              <EmbedBtn label={isPlaying ? 'Pause' : 'Play'} primary onClick={togglePlay}>
+                {isPlaying ? <Pause /> : <Play />}
+              </EmbedBtn>
+              <EmbedTime current={currentTime} duration={duration} />
+            </div>
+            <div className="ep3-group">
+              {ccSrc && (
+                <EmbedBtn label="Subtitles" active={ccOn} onClick={() => setCcOn((v) => !v)}>
+                  <Captions />
+                </EmbedBtn>
+              )}
+              {hasEpisodes && (
+                <EmbedBtn label="Episodes" active={showEps} onClick={toggleEps}>
+                  <List />
+                </EmbedBtn>
+              )}
+              <EmbedBtn label="Fullscreen" onClick={toggleFullscreen}>
+                <Maximize />
+              </EmbedBtn>
+            </div>
           </div>
         </div>
       </div>

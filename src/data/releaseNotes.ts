@@ -19,7 +19,7 @@ export const RELEASE_DATE = 'November 10, 2026';
 export const DOWNLOAD_SIZE_MB = 25;
 
 export const BETA_NOTE =
-  'Shadow link v2 is now running BETA 2 — a minimal, branding-free standalone player with in-player episode switching and an auto-hiding title overlay.';
+  'Shadow link v2 is now running BETA 3 — a minimal, branding-free standalone player with in-player episode switching and an auto-hiding title overlay.';
 
 export const VERSION_GROUPS: VersionGroup[] = [
   {

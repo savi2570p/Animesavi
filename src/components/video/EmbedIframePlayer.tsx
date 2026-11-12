@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, Bug, CheckCircle2, ExternalLink, Pause, Play, RefreshCw, Timer, WifiOff } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import '@/styles/embed-player.css';
 import {
   buildEmbedIframeUrl,
   getEmbedUrlMeta,
@@ -602,68 +601,60 @@ export function EmbedIframePlayer({
 
   return (
     <div className={containerClassName}>
-      <div className="absolute left-3 right-3 top-3 z-20 flex flex-wrap items-start justify-between gap-2">
+      <div className="ep3 absolute left-3 right-3 top-3 z-20 flex flex-wrap items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-background/80 px-3 py-1 text-xs text-foreground backdrop-blur-sm">
+          <div className="ep3-chip">
             {handshakeState === 'ready' ? (
               <>
-                <span className="h-2 w-2 rounded-full bg-primary" />
+                <span className="ep3-dot" />
                 Player connected
               </>
             ) : handshakeState === 'limited' ? (
               <>
-                <span className="h-2 w-2 rounded-full bg-accent" />
+                <span className="ep3-dot is-warn" />
                 {isTrustedBridge ? 'Player loaded • limited remote controls' : 'Third-party player loaded'}
               </>
             ) : handshakeState === 'failed' ? (
               <>
-                <WifiOff className="h-3.5 w-3.5" />
+                <WifiOff />
                 Embed failed
               </>
             ) : (
               <>
-                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                <RefreshCw className="animate-spin" />
                 Connecting player…
               </>
             )}
           </div>
 
           {handshakeState === 'ready' && (
-            <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-background/80 px-3 py-1 text-xs text-foreground backdrop-blur-sm">
-              <Timer className="h-3.5 w-3.5" />
+            <div className="ep3-chip" style={{ fontVariantNumeric: 'tabular-nums' }}>
+              <Timer />
               {Math.floor(remoteState.currentTime)}s / {Math.floor(remoteState.duration || 0)}s
             </div>
           )}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="h-8 border-border/80 bg-background/80 text-xs backdrop-blur-sm"
-            onClick={runEmbedTest}
-            disabled={isTestRunning}
-          >
-            {isTestRunning ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+          <button type="button" className="ep3-chip-btn" onClick={runEmbedTest} disabled={isTestRunning}>
+            {isTestRunning ? <RefreshCw className="animate-spin" /> : <CheckCircle2 />}
             Embed Test
-          </Button>
-          <Button
+          </button>
+          <button
             type="button"
-            size="sm"
-            variant="outline"
-            className="h-8 border-border/80 bg-background/80 text-xs backdrop-blur-sm"
+            className="ep3-chip-btn"
+            data-active={showDebugPanel ? 'true' : undefined}
             onClick={() => setDebugOpen((value) => !value)}
           >
-            <Bug className="h-3.5 w-3.5" />
+            <Bug />
             {showDebugPanel ? 'Hide debug' : 'Debug panel'}
-          </Button>
+          </button>
         </div>
       </div>
 
       {showDebugPanel && (
-        <div className="absolute inset-x-4 top-14 z-20 max-h-[44vh] overflow-hidden rounded-md border border-border/80 bg-background/90 shadow-lg backdrop-blur-sm">
-          <div className="flex items-center justify-between gap-3 border-b border-border/70 px-3 py-2">
+        <div className="ep3 ep3-debug absolute inset-x-4 top-14 z-20 max-h-[44vh] overflow-hidden">
+          <div className="flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2">
             <div>
               <p className="text-sm font-semibold text-foreground">Embed diagnostics</p>
               <p className="text-[11px] text-muted-foreground">{deviceLabel} • trusted origin {iframeMeta.origin}</p>
@@ -760,17 +751,19 @@ export function EmbedIframePlayer({
       <div className="embed-frame-shield" aria-hidden="true" onContextMenu={(e) => e.preventDefault()} />
 
       {handshakeState === 'ready' && (
-        <div className="absolute bottom-1.5 right-1.5 md:bottom-2.5 md:right-2.5 z-20 flex items-center gap-0.5 md:gap-1 bg-black/55 backdrop-blur-[2px] px-1 py-0.5 md:px-1.5 md:py-1">
+        <div className="ep3 ep3-mini-bar">
           <button
             type="button"
-            className="h-6 w-6 md:h-7 md:w-7 inline-flex items-center justify-center text-white/90 hover:text-white transition-colors"
+            className="ep3-btn"
+            aria-label={remoteState.isPlaying ? 'Pause' : 'Play'}
             onClick={() => sendCommand(remoteState.isPlaying ? 'pause' : 'play', {}, remoteState.isPlaying ? 'Pause requested from parent controls.' : 'Play requested from parent controls.')}
           >
-            {remoteState.isPlaying ? <Pause className="h-3 w-3 md:h-3.5 md:w-3.5" /> : <Play className="h-3 w-3 md:h-3.5 md:w-3.5" />}
+            {remoteState.isPlaying ? <Pause /> : <Play />}
           </button>
           <button
             type="button"
-            className="h-6 w-6 md:h-7 md:w-7 inline-flex items-center justify-center text-white/90 hover:text-white transition-colors"
+            className="ep3-btn"
+            aria-label="Fullscreen"
             onClick={() => {
               const ua = navigator.userAgent;
               const isIOS = /iPad|iPhone|iPod/.test(ua) || (ua.includes('Mac') && 'ontouchend' in document);
@@ -787,44 +780,39 @@ export function EmbedIframePlayer({
               sendCommand('fullscreen', {}, 'Fullscreen requested from parent controls.');
             }}
           >
-            <ExternalLink className="h-3 w-3 md:h-3.5 md:w-3.5" />
+            <ExternalLink />
           </button>
         </div>
       )}
 
       {(friendlyError || handshakeState === 'failed') && (
-        <div className="absolute inset-x-4 bottom-4 z-30">
-          <Alert variant="destructive" className="border-destructive/60 bg-background/95 backdrop-blur-sm">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Embed player needs attention</AlertTitle>
-            <AlertDescription className="space-y-3">
-              <p>{friendlyError?.reason ?? 'The embedded player could not be controlled from this page.'}</p>
-              <p className="text-sm text-muted-foreground">
-                {fallbackMessage ?? 'Retry this source, or switch to another source/server from the player picker if the embed still fails.'}
-              </p>
-              <div className="space-y-1 text-xs text-muted-foreground">
-                <p><strong className="text-foreground">Iframe URL:</strong> {iframeMeta.href}</p>
-                <p><strong className="text-foreground">Allow:</strong> {IFRAME_ALLOW}</p>
-                <p><strong className="text-foreground">Sandbox:</strong> removed</p>
-                {friendlyError?.browserReason && (
-                  <p><strong className="text-foreground">Browser reason:</strong> {friendlyError.browserReason}</p>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button type="button" size="sm" variant="outline" onClick={() => setReloadToken((value) => value + 1)}>
-                  <RefreshCw className="h-4 w-4" /> Retry
-                </Button>
-                <Button type="button" size="sm" variant="outline" onClick={() => window.open(iframeMeta.href, '_blank', 'noopener,noreferrer')}>
-                  <ExternalLink className="h-4 w-4" /> Open player directly
-                </Button>
-                {onRequestNativeFullscreen && (
-                  <Button type="button" size="sm" onClick={onRequestNativeFullscreen}>
-                    Fullscreen
-                  </Button>
-                )}
-              </div>
-            </AlertDescription>
-          </Alert>
+        <div className="ep3 absolute inset-x-4 bottom-4 z-30">
+          <div className="ep3-alert" role="alert">
+            <h4><AlertCircle /> Embed player needs attention</h4>
+            <p>{friendlyError?.reason ?? 'The embedded player could not be controlled from this page.'}</p>
+            <p>{fallbackMessage ?? 'Retry this source, or switch to another source/server from the player picker if the embed still fails.'}</p>
+            <dl>
+              <div><dt>Iframe URL:</dt><dd>{iframeMeta.href}</dd></div>
+              <div><dt>Allow:</dt><dd>{IFRAME_ALLOW}</dd></div>
+              <div><dt>Sandbox:</dt><dd>removed</dd></div>
+              {friendlyError?.browserReason && (
+                <div><dt>Browser reason:</dt><dd>{friendlyError.browserReason}</dd></div>
+              )}
+            </dl>
+            <div className="ep3-actions" style={{ justifyContent: 'flex-start', marginTop: 12 }}>
+              <button type="button" className="ep3-cta" onClick={() => setReloadToken((value) => value + 1)}>
+                <RefreshCw /> Retry
+              </button>
+              <button type="button" className="ep3-ghost" onClick={() => window.open(iframeMeta.href, '_blank', 'noopener,noreferrer')}>
+                <ExternalLink /> Open player directly
+              </button>
+              {onRequestNativeFullscreen && (
+                <button type="button" className="ep3-ghost" onClick={onRequestNativeFullscreen}>
+                  Fullscreen
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

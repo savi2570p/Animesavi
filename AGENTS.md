@@ -49,5 +49,6 @@
 - One Watch Party menu entry; admin/upload in PC rail; Notifications is a page (shared useNotifications cache).
 - Phone Watch sections (MobileWatchSections) reuse page season/episode handlers.
 - getServerGroups (is_sub_only) groups DUB/SUB servers; SUB = AS+ engine, audioLocked, getServerVideoUrl.
-- Detail/Watch season pickers use shared SeasonCards (pages keep their handlers); player loaders share PlayerSpinner.
-- Watch comments load once per episode and sort in memory (sortComments) so sorting never reloads the player.
+- Season pickers use shared SeasonCards; player loaders share PlayerSpinner.
+- Watch comments sort in memory (sortComments), never reloading the player.
+- Embed players share EmbedChrome UI; playback/access logic stays per player.
