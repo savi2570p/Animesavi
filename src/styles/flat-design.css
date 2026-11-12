@@ -1149,3 +1149,10 @@ html.perf-low .dl5-art { filter: none; }
 .sch2-empty p { font-size: .875rem; }
 
 @media (prefers-reduced-motion: reduce) { .sch2-pill.is-soon .sch2-pill-dot { animation: none; } }
+
+/* Main player timeline dot: drawn as its own element centred on the bar, because
+   Chrome pins a restyled native range thumb to the top of a tall touch track. */
+.smooth-seekbar--ghost::-webkit-slider-thumb { background: transparent !important; box-shadow: none !important; }
+.smooth-seekbar--ghost::-moz-range-thumb { background: transparent !important; box-shadow: none !important; }
+.vp-seek-thumb { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 999px; background: hsl(var(--primary)); box-shadow: 0 1px 4px hsl(0 0% 0% / .45); transform: translate(-50%, -50%); pointer-events: none; z-index: 1; transition: width .12s ease, height .12s ease; }
+.relative:has(> .smooth-seekbar--ghost:active) > .vp-seek-thumb { width: 20px; height: 20px; }

@@ -3098,6 +3098,12 @@ export function VideoPlayer({
                     className="absolute top-0 left-0 h-full bg-primary rounded-full pointer-events-none"
                     style={{ width: `${progress}%`, transform: 'translate3d(0,0,0)', willChange: 'width' }}
                   />
+                  {/* Visible dot, centred on the bar in every browser (the native thumb is invisible). */}
+                  <span
+                    className="vp-seek-thumb"
+                    aria-hidden
+                    style={{ left: `${isNaN(progress) ? 0 : Math.min(100, Math.max(0, progress))}%` }}
+                  />
                   {/* YouTube-style smooth seek slider */}
                   <input
                     type="range"
@@ -3106,7 +3112,7 @@ export function VideoPlayer({
                     step="any"
                     value={isNaN(progress) ? 0 : progress}
                     onChange={handleSeek}
-                    className="smooth-seekbar absolute left-0 right-0 top-1/2 -translate-y-1/2"
+                    className="smooth-seekbar smooth-seekbar--ghost absolute left-0 right-0 top-1/2 -translate-y-1/2"
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
@@ -3400,6 +3406,12 @@ export function VideoPlayer({
                   className="absolute top-0 left-0 h-full bg-primary rounded-full pointer-events-none"
                   style={{ width: `${progress}%`, transform: 'translate3d(0,0,0)', willChange: 'width' }}
                 />
+                {/* Visible dot, centred on the bar in every browser (the native thumb is invisible). */}
+                <span
+                  className="vp-seek-thumb"
+                  aria-hidden
+                  style={{ left: `${isNaN(progress) ? 0 : Math.min(100, Math.max(0, progress))}%` }}
+                />
                 {/* YouTube-style smooth seek slider */}
                 <input
                   type="range"
@@ -3408,7 +3420,7 @@ export function VideoPlayer({
                   step="any"
                   value={isNaN(progress) ? 0 : progress}
                   onChange={handleSeek}
-                  className="smooth-seekbar absolute left-0 right-0 top-1/2 -translate-y-1/2"
+                  className="smooth-seekbar smooth-seekbar--ghost absolute left-0 right-0 top-1/2 -translate-y-1/2"
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
