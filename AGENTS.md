@@ -33,7 +33,7 @@
 - Homepage Latest Series and Latest Episodes share one security-invoker catalogue RPC and a short-lived query cache to reduce duplicated requests without bypassing row permissions.
 - The header hamburger is an anchored Popover built from one menuSections list and the profile dropdown renders on every device; both keep role guards and existing handlers so menu restyles never change access.
 
-- Admin uses unframed tools with a single utility-glass navigation layer; upload editors share authenticated server-role access checks, never session-storage codes, so admins without uploader roles can edit safely.
+- Admin uses unframed tools with one utility-glass nav layer; upload editors share authenticated server-role checks (never session-storage codes) so admins without uploader roles can edit.
 - Upload no longer uses the legacy password gate; retain server-role and database permission checks as the access authority.
 - Pending preparation popups use the shared portaled Dialog so transformed sections can't trap them; homepage recommendations stay separate from Watch playback.
 - Upload creation/series editing use plain unframed sections (no Card wrappers, avoiding inherited glass), one vertical form flow and scoped studio tokens; preserve upload handlers and access guards.
