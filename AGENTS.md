@@ -6,7 +6,7 @@
 - Both Shadow link sharing controls use one shared visibility predicate to prevent account allowlists from drifting; it does not grant administrator or playback bypass privileges.
 - Download audio discovery uses a lazy, bounded MP4 metadata reader only when native track metadata is unavailable; never fetch the entire video to populate the selector.
 - Download metadata probes have bounded deadlines and never gate confirmation indefinitely, because CDN metadata can hang or be unavailable.
-- Every native-media embed player (including token and Shadow v2 links) stores exact checkpoints keyed by the episode actually loaded through the shared resume hook; do not fabricate third-party iframe positions.
+- Native-media embed players save resume checkpoints via useEmbedResume, keyed by the loaded episode; never fake iframe positions.
 - Anime poster cards render through the shared PosterCard so badges, artwork sizing and fallbacks stay consistent across rows, grids and platform pages.
 - Discovery, platform and continue-watching rows reuse catalogue glass tokens and native snap scrolling to avoid animation-loop and per-card blur overhead.
 - Main hero: phones show uncropped 16:9 art with copy below, larger screens full-bleed with overlaid copy, visibility-gated autoplay; resume cards keep edge-to-edge aspect-ratio art separate from text.
@@ -49,7 +49,7 @@
 - One Watch Party menu entry; admin/upload in PC rail; Notifications is a page (shared useNotifications cache).
 - Phone Watch sections (MobileWatchSections) reuse page season/episode handlers.
 - getServerGroups (is_sub_only) groups DUB/SUB servers; SUB = AS+ engine, audioLocked, getServerVideoUrl.
-- Season pickers use shared SeasonCards; player loaders share PlayerSpinner.
-- Watch comments sort in memory (sortComments), never reloading the player.
-- Embed players share EmbedChrome UI; playback/access stays per player.
-- Schedule renders presentation-only sch2 sections (week strip, next-to-air spotlight, day groups, upcoming PosterCards) over the existing timezone/rollover calculations, so restyles never change release timing.
+- Season pickers: SeasonCards; player loaders: PlayerSpinner.
+- Watch comments sort in memory (sortComments).
+- Embed players share EmbedChrome UI; playback/access per player.
+- Schedule sch2 UI is presentation-only over existing timezone/rollover math.
