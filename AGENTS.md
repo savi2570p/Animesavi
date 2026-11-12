@@ -47,7 +47,7 @@
 - Progress writes use watchProgressThrottle, polls skip hidden tabs, conversion scans run daily at most, so idle tabs don't wake the database.
 - Site-wide flat styling lives in src/styles/flat-design.css (loaded after index.css) as token overrides; restyle there, not per component, for consistency.
 - One Watch Party menu entry; admin/upload in PC rail; Notifications is a page (shared useNotifications cache).
-- Phone Watch sections (MobileWatchSections) reuse the page's season/episode handlers.
+- Phone Watch sections (MobileWatchSections) reuse page season/episode handlers.
 - getServerGroups (is_sub_only) groups DUB/SUB servers; SUB = AS+ engine, audioLocked, getServerVideoUrl.
 - Detail/Watch season pickers use shared SeasonCards (pages keep their handlers); player loaders share PlayerSpinner.
 - Watch comments load once per episode and sort in memory (sortComments) so sorting never reloads the player.
