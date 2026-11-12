@@ -50,3 +50,4 @@
 - Phone Watch sections (MobileWatchSections) reuse the page's season/episode handlers.
 - getServerGroups (is_sub_only) groups DUB/SUB servers; SUB = AS+ engine, audioLocked, getServerVideoUrl.
 - Detail/Watch season pickers use shared SeasonCards (pages keep their handlers); player loaders share PlayerSpinner.
+- Watch comments are fetched once per episode and sorted in memory (sortComments), so sort changes never rerun episode loading or remount the player.

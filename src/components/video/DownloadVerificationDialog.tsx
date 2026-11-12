@@ -125,92 +125,78 @@ export function DownloadVerificationDialog({
     navigate(`/Shadow-Arise?${params.toString()}`);
   };
 
+  const qualityHint: Record<string, string> = { '480p': 'Smallest file', '720p': 'Balanced', '1080p': 'Full HD', '2160p': 'Largest file' };
+
   return (
     <AlertDialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) setSelectedQuality(null); }}>
-      <AlertDialogContent
-        className="download-glass max-w-[calc(100vw-2rem)] sm:max-w-xs rounded-xl p-3 sm:p-4 gap-3"
-      >
-        <AlertDialogHeader className="space-y-1">
-          <AlertDialogTitle className="flex items-center gap-1.5 text-sm sm:text-base">
-            <Download className="w-4 h-4 text-foreground" />
-            Download
-          </AlertDialogTitle>
-          <AlertDialogDescription asChild>
-            <div className="space-y-2.5 pt-1">
-              <div className="rounded-lg bg-muted/40 border border-border/60 px-2.5 py-2 space-y-0.5">
-                {animeTitle && (
-                  <p className="text-xs sm:text-sm font-semibold text-foreground leading-tight">{animeTitle}</p>
-                )}
-                {episodeLabel && (
-                  <p className="text-[11px] sm:text-xs text-muted-foreground">{episodeLabel}</p>
-                )}
+      <AlertDialogContent className="dl-v2 max-w-[calc(100vw-1.5rem)] sm:max-w-sm p-0 gap-0">
+        <AlertDialogHeader className="dl-v2-head space-y-0 text-left">
+          <span className="dl-v2-icon" aria-hidden><Download className="w-4 h-4" /></span>
+          <div className="min-w-0 flex-1">
+            <AlertDialogTitle className="dl-v2-title">Download</AlertDialogTitle>
+            <p className="dl-v2-sub">Choose audio and quality</p>
+          </div>
+        </AlertDialogHeader>
+        <AlertDialogDescription asChild>
+          <div className="dl-v2-body">
+            {(animeTitle || episodeLabel) && (
+              <div className="dl-v2-episode">
+                {animeTitle && <p className="dl-v2-anime">{animeTitle}</p>}
+                {episodeLabel && <p className="dl-v2-ep">{episodeLabel}</p>}
               </div>
+            )}
 
-              {/* Audio Language Selection */}
-              {(
-                <div className="space-y-1.5">
-                  <p className="text-[11px] sm:text-xs font-medium text-foreground flex items-center gap-1">
-                    <Volume2 className="w-3 h-3" /> Audio Language
-                  </p>
-                  {detectingAudio && <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />Reading audio tracks…</p>}
-                  {!detectingAudio && !availableTracks.length && <p className="text-xs text-muted-foreground">Audio languages unavailable for this source.</p>}
-                  <div className="flex flex-wrap gap-1.5">
-                    {availableTracks.map((t, i) => (
-                      <Button type="button" variant="outline"
-                        key={i}
-                        onClick={() => setSelectedAudio(i)}
-                        className={`flex items-center gap-1 px-2.5 py-1.5 h-auto rounded-md border text-[11px] sm:text-xs font-medium transition-all ${
-                          selectedAudio === i
-                            ? 'download-choice-selected'
-                            : 'border-border/60 bg-muted/30 text-foreground/80 hover:bg-accent'
-                        }`}
-                      >
-                        {selectedAudio === i && <Check className="w-3 h-3" />}
-                        {audioLabel(t, i)}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Quality Selection */}
-              <div className="space-y-1.5">
-                <p className="text-[11px] sm:text-xs font-medium text-foreground">Quality</p>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {QUALITY_OPTIONS.map((q) => (
-                    <Button type="button" variant="outline"
-                      key={q.label}
-                      onClick={() => setSelectedQuality(q.label)}
-                      className={`h-auto relative flex flex-col items-center px-1 py-1.5 rounded-lg border text-[11px] sm:text-xs font-medium transition-all ${
-                        selectedQuality === q.label
-                          ? 'download-choice-selected'
-                          : 'border-border/60 bg-muted/30 text-foreground/80 hover:bg-accent'
-                      }`}
+            <section className="dl-v2-section" aria-label="Audio language">
+              <p className="dl-v2-label"><Volume2 className="w-3.5 h-3.5" aria-hidden /> Audio language</p>
+              {detectingAudio && <p className="dl-v2-note"><Loader2 className="h-3 w-3 animate-spin" />Reading audio tracks…</p>}
+              {!detectingAudio && !availableTracks.length && <p className="dl-v2-note">Audio languages unavailable for this source.</p>}
+              {availableTracks.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {availableTracks.map((t, i) => (
+                    <button
+                      type="button"
+                      key={i}
+                      aria-pressed={selectedAudio === i}
+                      onClick={() => setSelectedAudio(i)}
+                      className="dl-v2-chip"
                     >
-                      <span>{q.label}</span>
-                      <span className={`text-[8px] font-bold ${selectedQuality === q.label ? 'text-foreground' : 'text-muted-foreground'}`}>{q.tag}</span>
-                    </Button>
+                      {selectedAudio === i && <Check className="w-3 h-3" aria-hidden />}
+                      {audioLabel(t, i)}
+                    </button>
                   ))}
                 </div>
+              )}
+            </section>
+
+            <section className="dl-v2-section" aria-label="Quality">
+              <p className="dl-v2-label">Quality</p>
+              <div className="dl-v2-grid">
+                {QUALITY_OPTIONS.map((q) => (
+                  <button
+                    type="button"
+                    key={q.label}
+                    aria-pressed={selectedQuality === q.label}
+                    onClick={() => setSelectedQuality(q.label)}
+                    className="dl-v2-quality"
+                  >
+                    <span className="dl-v2-q">{q.label}</span>{' '}
+                    <span className="dl-v2-tag">{q.tag}</span>
+                    <span className="dl-v2-hint" aria-hidden>{qualityHint[q.label]}</span>
+                  </button>
+                ))}
               </div>
-            </div>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter className="flex-row gap-2 sm:gap-2">
-          <AlertDialogCancel className="flex-1 h-8 text-xs border-border/60 bg-muted/30 text-foreground/80 hover:bg-accent hover:text-foreground mt-0">
-            Cancel
-          </AlertDialogCancel>
+            </section>
+          </div>
+        </AlertDialogDescription>
+        <AlertDialogFooter className="dl-v2-foot flex-row gap-2 sm:gap-2 sm:space-x-0">
+          <AlertDialogCancel className="dl-v2-cancel mt-0">Cancel</AlertDialogCancel>
           <Button
             onClick={handlePrepare}
             disabled={isPreparing || !selectedQuality}
-            className="flex-1 h-8 text-xs download-confirm-action gap-1.5"
+            className="dl-v2-go gap-1.5"
           >
-            {isPreparing ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Download className="w-3.5 h-3.5" />
-            )}
-            {isPreparing ? 'Preparing…' : selectedQuality ? `Download ${selectedQuality}` : 'Select Quality'}
+            {isPreparing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            {isPreparing ? 'Preparing…' : selectedQuality ? `Download ${selectedQuality}` : 'Select quality'}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

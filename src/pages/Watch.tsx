@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client';
 import { bestEffort, withRetry } from '@/lib/backendClient';
 import { historyResetSinceLoad } from '@/lib/watchHistoryReset';
+import { sortComments } from '@/lib/commentSort';
 import { useWatchPartySession, getWatchPartySession, isGuestLocked, shouldSkipWatchHistory, partyEpisodePath } from '@/lib/watchPartySession';
 import { PartyGuestLock } from '@/components/watch-party/PartyGuestLock';
 import { PlayerReportDialog } from '@/components/ReportButton';
@@ -475,7 +476,7 @@ export default function Watch() {
       fetchComments();
       startFallbackTimer();
     }
-  }, [episodeId, commentSort]);
+  }, [episodeId]);
 
   // Fetch current user's profile for avatar
   useEffect(() => {
@@ -912,12 +913,14 @@ export default function Watch() {
     setIsLoading(false);
   };
 
+  const sortedComments = useMemo(() => sortComments(comments, commentSort), [comments, commentSort]);
+
   const fetchComments = async () => {
     const { data } = await supabase
       .from('comments')
       .select('*')
       .eq('episode_id', episodeId)
-      .order('created_at', { ascending: commentSort === 'oldest' });
+      .order('created_at', { ascending: false });
 
     if (data) {
       // Fetch profiles for comments
@@ -984,23 +987,10 @@ export default function Watch() {
       );
 
       // Organize comments into threads (parent comments with replies)
-      let parentComments = updatedComments.filter(c => !c.parent_id);
+      const parentComments = updatedComments.filter(c => !c.parent_id);
       const replies = updatedComments.filter(c => c.parent_id);
       
-      // Sort based on selected option
-      if (commentSort === 'most_liked') {
-        parentComments = parentComments.sort((a, b) => (b.likes - b.dislikes) - (a.likes - a.dislikes));
-      } else if (commentSort === 'oldest') {
-        parentComments = parentComments.sort((a, b) => 
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        );
-      } else {
-        // newest first (default)
-        parentComments = parentComments.sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-      }
-      
+      // Sorting happens locally (sortedComments) so switching Newest/Oldest/Top never refetches or reloads the player.
       const commentsWithReplies = parentComments.map(parent => ({
         ...parent,
         replies: replies.filter(r => r.parent_id === parent.id).sort((a, b) => 
@@ -1777,6 +1767,7 @@ export default function Watch() {
                     size="sm"
                     variant={commentSort === 'newest' ? 'default' : 'ghost'}
                     aria-pressed={commentSort === 'newest'}
+                    type="button"
                     onClick={() => setCommentSort('newest')}
                     className="text-xs"
                   >
@@ -1787,6 +1778,7 @@ export default function Watch() {
                     size="sm"
                     variant={commentSort === 'oldest' ? 'default' : 'ghost'}
                     aria-pressed={commentSort === 'oldest'}
+                    type="button"
                     onClick={() => setCommentSort('oldest')}
                     className="text-xs"
                   >
@@ -1796,6 +1788,7 @@ export default function Watch() {
                     size="sm"
                     variant={commentSort === 'most_liked' ? 'default' : 'ghost'}
                     aria-pressed={commentSort === 'most_liked'}
+                    type="button"
                     onClick={() => setCommentSort('most_liked')}
                     className="text-xs"
                   >
@@ -1839,7 +1832,7 @@ export default function Watch() {
 
             {/* Comments List */}
             <div className="space-y-6">
-              {comments.map((comment) => (
+              {sortedComments.map((comment) => (
                 <div key={comment.id} className="space-y-3">
                   {/* Parent Comment */}
                   <div className="flex gap-4">
