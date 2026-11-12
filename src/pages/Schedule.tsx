@@ -14,7 +14,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SEO } from '@/components/SEO';
-import { CalendarDays, Clock, Flame, Globe, Search, Sparkles, Tv } from 'lucide-react';
+import { PosterCard } from '@/components/anime/PosterCard';
+import { CalendarDays, Flame, Globe, Search, Sparkles, Tv } from 'lucide-react';
 import { parseISO } from 'date-fns';
 import {
   getStoredTimeZone,
@@ -53,6 +54,9 @@ interface UpcomingRow {
   anime_id: string;
   title: string;
   cover_image: string | null;
+  genres: string[] | null;
+  is_eng_dub: boolean | null;
+  is_sub_only: boolean | null;
   languages: string[];
   season_number: number;
   release_date: string | null;
@@ -121,39 +125,62 @@ function getNextDailyRelease(hour: number, minute: number, timeZone: string) {
   return nextZonedSlot(now, 1, hour, minute, timeZone);
 }
 
-function Countdown({ target, now, label = 'Next Episode' }: { target: Date; now: number; label?: string }) {
-  const diff = Math.max(0, target.getTime() - now);
-  const parts = [
-    { v: Math.floor(diff / 86400000), l: 'Days' },
-    { v: Math.floor((diff % 86400000) / 3600000), l: 'Hrs' },
-    { v: Math.floor((diff % 3600000) / 60000), l: 'Min' },
-    { v: Math.floor((diff % 60000) / 1000), l: 'Sec' },
-  ];
+function splitDiff(diff: number) {
+  const d = Math.max(0, diff);
+  return {
+    days: Math.floor(d / 86400000),
+    hours: Math.floor((d % 86400000) / 3600000),
+    minutes: Math.floor((d % 3600000) / 60000),
+    seconds: Math.floor((d % 60000) / 1000),
+  };
+}
+const pad = (n: number) => String(n).padStart(2, '0');
 
+/** Compact live countdown pill: "2d 04h 13m" (seconds once under a day). */
+function CountdownPill({ target, now }: { target: Date; now: number }) {
+  const diff = target.getTime() - now;
+  const { days, hours, minutes, seconds } = splitDiff(diff);
+  const soon = diff < 3600000;
+  const text = days > 0
+    ? `${days}d ${pad(hours)}h ${pad(minutes)}m`
+    : hours > 0
+      ? `${hours}h ${pad(minutes)}m ${pad(seconds)}s`
+      : `${pad(minutes)}m ${pad(seconds)}s`;
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-3 md:p-4 w-full md:w-[340px] shrink-0">
-      <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2.5">
-        {label}
-      </p>
-      <div className="grid grid-cols-4 gap-1.5 md:gap-2">
-        {parts.map((p) => (
-          <div
-            key={p.l}
-            className="rounded-xl border border-white/5 bg-gradient-to-b from-white/[0.06] to-transparent py-2 text-center"
-          >
-            <div className="font-heading text-lg md:text-2xl font-black leading-none tabular-nums">
-              {String(p.v).padStart(2, '0')}
-            </div>
-            <div className="mt-1 text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
-              {p.l}
-            </div>
-          </div>
-        ))}
-      </div>
+    <span className={`sch2-pill${soon ? ' is-soon' : ''}`}>
+      <span className="sch2-pill-dot" aria-hidden />
+      <span className="sr-only">Airs in </span>
+      {text}
+    </span>
+  );
+}
+
+/** Large segmented countdown for the "Next to air" spotlight. */
+function CountdownBlocks({ target, now }: { target: Date; now: number }) {
+  const { days, hours, minutes, seconds } = splitDiff(target.getTime() - now);
+  const parts = [
+    { v: days, l: 'Days' },
+    { v: hours, l: 'Hours' },
+    { v: minutes, l: 'Min' },
+    { v: seconds, l: 'Sec' },
+  ];
+  return (
+    <div className="sch2-blocks" role="timer">
+      {parts.map((p) => (
+        <div key={p.l} className="sch2-block">
+          <span className="sch2-block-v">{pad(p.v)}</span>
+          <span className="sch2-block-l">{p.l}</span>
+        </div>
+      ))}
     </div>
   );
 }
 
+/** YYYY-MM-DD key of a date in the viewer's time zone. */
+function dayKey(date: Date, timeZone: string) {
+  const p = getZonedParts(date, timeZone);
+  return `${p.year}-${pad(p.month)}-${pad(p.day)}`;
+}
 
 export default function Schedule() {
   const [animeList, setAnimeList] = useState<ScheduleAnime[]>([]);
@@ -269,7 +296,7 @@ export default function Schedule() {
       try {
         const { data } = await supabase
           .from('seasons')
-          .select('id, season_number, release_date, anime:anime_id (id, title, cover_image, genres)')
+          .select('id, season_number, release_date, anime:anime_id (id, title, cover_image, genres, is_eng_dub, is_sub_only)')
           .eq('is_upcoming', true)
           .order('release_date', { ascending: true, nullsFirst: false });
 
@@ -280,6 +307,9 @@ export default function Schedule() {
             anime_id: s.anime.id,
             title: s.anime.title || 'Unknown',
             cover_image: s.anime.cover_image,
+            genres: s.anime.genres ?? null,
+            is_eng_dub: s.anime.is_eng_dub ?? null,
+            is_sub_only: s.anime.is_sub_only ?? null,
             languages: getLanguages(s.anime.genres),
             season_number: s.season_number ?? 1,
             release_date: s.release_date ?? null,
@@ -339,17 +369,23 @@ export default function Schedule() {
     });
   }, [now, baseRows, timeZone]);
 
-  const rows = useMemo<ScheduleRow[]>(() => {
+  /** Every ongoing slot with rollovers applied, soonest first (no filters). */
+  const allRows = useMemo<ScheduleRow[]>(() => {
     return baseRows
       .map((r) => {
         const next = new Date(rollovers[r.id] ?? r.next.getTime());
         // The weekday label always matches the actual next airing in the viewer's timezone.
         return { ...r, next, release_day: getZonedParts(next, timeZone).weekday };
       })
-      .filter((a) => (dayFilter === 'all' || a.is_daily ? true : a.release_day === dayFilter))
-      .filter((a) => (search ? a.title.toLowerCase().includes(search.toLowerCase()) : true))
       .sort((a, b) => a.next.getTime() - b.next.getTime());
-  }, [baseRows, rollovers, dayFilter, search, timeZone]);
+  }, [baseRows, rollovers, timeZone]);
+
+  const rows = useMemo<ScheduleRow[]>(() => {
+    const q = search.toLowerCase();
+    return allRows
+      .filter((a) => (dayFilter === 'all' || a.is_daily ? true : a.release_day === dayFilter))
+      .filter((a) => (q ? a.title.toLowerCase().includes(q) : true));
+  }, [allRows, dayFilter, search]);
 
   const upcomingRows = useMemo(() => {
     return upcoming
@@ -371,11 +407,46 @@ export default function Schedule() {
 
 
   const todayIdx = getZonedParts(new Date(now), timeZone).weekday;
+  const todayKey = dayKey(new Date(now), timeZone);
+  const tomorrowKey = dayKey(new Date(now + 86400000), timeZone);
 
+  /** Next seven days starting today, in the viewer's time zone. */
+  const weekTabs = useMemo(() => {
+    const start = Date.now();
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(start + i * 86400000);
+      const parts = getZonedParts(date, timeZone);
+      const count = allRows.filter((r) => r.is_daily || r.release_day === parts.weekday).length;
+      return { weekday: parts.weekday, date: parts.day, count, isToday: i === 0 };
+    });
+    // Recompute when the viewer's day changes, not every tick.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allRows, timeZone, todayKey]);
 
+  const spotlight = !search && dayFilter === 'all' ? allRows[0] : undefined;
+
+  const groups = useMemo(() => {
+    const map = new Map<string, { key: string; date: Date; items: ScheduleRow[] }>();
+    rows.forEach((r) => {
+      const key = dayFilter === 'all' ? dayKey(r.next, timeZone) : 'filtered';
+      if (!map.has(key)) map.set(key, { key, date: r.next, items: [] });
+      map.get(key)!.items.push(r);
+    });
+    return Array.from(map.values());
+  }, [rows, dayFilter, timeZone]);
+
+  const groupLabel = (g: { key: string; date: Date }) => {
+    if (g.key === 'filtered') return { title: DAYS_FULL[dayFilter as number], sub: dayFilter === todayIdx ? 'Today' : '' };
+    const sub = g.date.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone });
+    if (g.key === todayKey) return { title: 'Today', sub };
+    if (g.key === tomorrowKey) return { title: 'Tomorrow', sub };
+    return { title: DAYS_FULL[getZonedParts(g.date, timeZone).weekday], sub };
+  };
+
+  const airingToday = allRows.filter((r) => dayKey(r.next, timeZone) === todayKey).length;
 
   return (
-    <div className="container py-6 md:py-10">
+    <div className="sch2 container py-6 md:py-10">
       <SEO
         title="Anime Release Schedule - AnimeSavi"
         description="Live weekly anime release schedule with countdowns to the next episode of every ongoing series in Hindi dub."
@@ -383,280 +454,214 @@ export default function Schedule() {
       />
 
       {/* Header */}
-      <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-black/80 via-card/60 to-black/80 backdrop-blur-xl p-5 md:p-7 mb-5">
-        <div className="absolute -top-20 -right-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-        <div className="relative flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div className="flex items-stretch gap-3.5 min-w-0">
-            <div className="w-[3px] rounded-full bg-gradient-to-b from-primary via-primary/80 to-transparent shadow-[0_0_14px_hsl(var(--primary))]" />
-            <div className="min-w-0">
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
-                <CalendarDays className="h-3 w-3" />
-                Weekly Schedule
-              </span>
-              <h1 className="text-2xl md:text-3xl font-heading font-bold leading-tight tracking-tight mt-1.5">
-                Anime <span className="anime-gradient-text">Schedule</span>
-              </h1>
-              <p className="text-xs md:text-sm text-muted-foreground mt-1">
-                Live countdowns to the next episode of every ongoing series.
-              </p>
-            </div>
+      <header className="sch2-head">
+        <div className="min-w-0">
+          <p className="sch2-eyebrow"><CalendarDays aria-hidden /> Release schedule</p>
+          <h1 className="sch2-h1">Schedule</h1>
+          <p className="sch2-lead">Live countdowns to the next episode of every ongoing series.</p>
+          <div className="sch2-stats">
+            <span><b>{allRows.length}</b> airing</span>
+            <span><b>{airingToday}</b> today</span>
+            <span><b>{upcomingRows.length}</b> upcoming</span>
           </div>
-          <div className="flex flex-col sm:flex-row md:flex-col gap-2 w-full md:w-72">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search ongoing anime..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-10 rounded-xl bg-black/40 border-white/10"
-              />
-            </div>
-            <Select value={timeZone} onValueChange={handleTimeZoneChange}>
-              <SelectTrigger
-                aria-label="Time zone"
-                className="h-10 rounded-xl bg-black/40 border-white/10 text-xs flex-1"
-              >
-                <Globe className="h-4 w-4 text-primary shrink-0" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="max-h-[320px]">
+        </div>
+        <div className="sch2-tools">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Search ongoing anime..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="sch2-input pl-9"
+              aria-label="Search schedule"
+            />
+          </div>
+          <Select value={timeZone} onValueChange={handleTimeZoneChange}>
+            <SelectTrigger aria-label="Time zone" className="sch2-input text-xs">
+              <Globe className="h-4 w-4 text-primary shrink-0" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="max-h-[320px]">
+              <SelectGroup>
+                <SelectLabel>Common</SelectLabel>
+                {commonZones.map((tz) => (
+                  <SelectItem key={tz} value={tz} className="text-xs">{formatTimeZoneName(tz)}</SelectItem>
+                ))}
+              </SelectGroup>
+              {allZones.length > 0 && (
                 <SelectGroup>
-                  <SelectLabel>Common</SelectLabel>
-                  {commonZones.map((tz) => (
-                    <SelectItem key={tz} value={tz} className="text-xs">
-                      {formatTimeZoneName(tz)}
-                    </SelectItem>
+                  <SelectLabel>All time zones</SelectLabel>
+                  {allZones.map((tz) => (
+                    <SelectItem key={tz} value={tz} className="text-xs">{formatTimeZoneName(tz)}</SelectItem>
                   ))}
                 </SelectGroup>
-                {allZones.length > 0 && (
-                  <SelectGroup>
-                    <SelectLabel>All time zones</SelectLabel>
-                    {allZones.map((tz) => (
-                      <SelectItem key={tz} value={tz} className="text-xs">
-                        {formatTimeZoneName(tz)}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
+              )}
+            </SelectContent>
+          </Select>
+          <p className="sch2-tz">
+            Times in <b>{formatTimeZoneName(timeZone)}</b>{tzLabel ? ` (${tzLabel})` : ''}
+          </p>
         </div>
+      </header>
 
-        {/* Day filter */}
-        <div className="relative mt-4 flex items-center gap-1 p-1 rounded-2xl bg-black/40 border border-white/5 overflow-x-auto scrollbar-none">
-          {[{ id: 'all' as const, label: 'All' }, ...DAYS_FULL.map((d, i) => ({ id: i, label: d.slice(0, 3) }))].map(
-            (f) => {
-              const active = dayFilter === f.id;
-              return (
-                <button
-                  key={String(f.id)}
-                  onClick={() => setDayFilter(f.id as 'all' | number)}
-                  className={`shrink-0 px-3 py-1.5 rounded-xl text-[11.5px] font-semibold transition-all ${
-                    active
-                      ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_6px_20px_-6px_hsl(var(--primary)/0.8)]'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
-                  }`}
-                  aria-pressed={active}
-                >
-                  {f.label}
-                  {f.id === todayIdx && <span className="ml-1 text-[9px] opacity-70">•</span>}
-                </button>
-              );
-            },
-          )}
-        </div>
-
-        <p className="relative mt-2.5 text-[11px] text-muted-foreground">
-          Days, times and countdowns shown in{' '}
-          <span className="font-semibold text-foreground">{formatTimeZoneName(timeZone)}</span>
-          {tzLabel ? ` (${tzLabel})` : ''}
-        </p>
-      </div>
-
-
-      {/* Section title */}
-      <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl px-4 py-3 mb-4 border-l-[3px] border-l-primary">
-        <Flame className="h-4 w-4 text-primary" />
-        <h2 className="text-base md:text-lg font-bold">Ongoing Releases</h2>
-        <span className="ml-auto text-xs text-muted-foreground">{rows.length} series</span>
-      </div>
-
-      {/* Rows */}
-      {isLoading ? (
-        <div className="space-y-3">
-          {Array(5).fill(0).map((_, i) => (
-            <Skeleton key={i} className="h-[150px] w-full rounded-2xl" />
-          ))}
-        </div>
-      ) : rows.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border/60 py-16 text-center">
-          <Tv className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-          <h3 className="font-semibold mb-1">No releases scheduled</h3>
-          <p className="text-sm text-muted-foreground">Try a different day or clear your search.</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {rows.map((anime) => (
-            <div
-              key={anime.id}
-              className="group relative rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl p-3 md:p-4 transition-all hover:border-primary/40 hover:bg-card/60"
+      {/* Week strip */}
+      <nav className="sch2-week snap-row" aria-label="Filter by day">
+        <button
+          type="button"
+          className={`sch2-day sch2-day-all${dayFilter === 'all' ? ' is-active' : ''}`}
+          aria-pressed={dayFilter === 'all'}
+          onClick={() => setDayFilter('all')}
+        >
+          <span className="sch2-day-name">All</span>
+          <span className="sch2-day-num">{allRows.length}</span>
+          <span className="sch2-day-count">titles</span>
+        </button>
+        {weekTabs.map((t) => {
+          const active = dayFilter === t.weekday;
+          return (
+            <button
+              key={t.weekday}
+              type="button"
+              className={`sch2-day${active ? ' is-active' : ''}${t.isToday ? ' is-today' : ''}`}
+              aria-pressed={active}
+              onClick={() => setDayFilter(t.weekday)}
             >
-              <div className="flex flex-col md:flex-row md:items-center gap-4">
-                <Link to={`/anime/${anime.id}`} className="flex gap-3 md:gap-4 flex-1 min-w-0">
-                  <img
-                    src={anime.cover_image || '/placeholder.svg'}
-                    alt={`${anime.title} poster`}
-                    loading="lazy"
-                    className="w-[92px] h-[138px] md:w-[120px] md:h-[180px] object-cover rounded-xl shrink-0 shadow-lg"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-base md:text-xl font-bold leading-tight line-clamp-2 group-hover:text-primary transition-colors">
-                      {anime.title}
-                    </h3>
+              <span className="sch2-day-name">{t.isToday ? 'Today' : DAYS_FULL[t.weekday].slice(0, 3)}</span>
+              <span className="sch2-day-num">{t.date}</span>
+              <span className="sch2-day-count">{t.count} {t.count === 1 ? 'show' : 'shows'}</span>
+            </button>
+          );
+        })}
+      </nav>
 
-                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                      <span className="px-2 py-0.5 rounded-md bg-primary/15 border border-primary/30 text-primary text-[10px] font-bold">
-                        Season {anime.season_number}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-md bg-primary/15 border border-primary/30 text-primary text-[10px] font-bold">
-                        EP {anime.next_episode}
-                      </span>
-                    </div>
-
-                    {anime.languages.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                        {anime.languages.map((lang, i) => (
-                          <span
-                            key={lang}
-                            className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
-                              i === 0
-                                ? 'bg-amber-500/10 border-amber-500/40 text-amber-300'
-                                : 'bg-white/5 border-white/10 text-muted-foreground'
-                            }`}
-                          >
-                            {lang}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-
-                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-semibold">
-                        <CalendarDays className="h-3 w-3 text-primary" />
-                        {anime.is_daily ? 'Daily' : DAYS_FULL[anime.release_day]}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-semibold">
-                        <Clock className="h-3 w-3 text-primary" />
-                        {formatTime(anime.release_hour, anime.release_minute)}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-
-                <Countdown
-                  target={anime.next}
-                  now={now}
-                  label={anime.is_daily ? 'Next Episode (Daily)' : 'Next Episode'}
-                />
+      {/* Next up spotlight */}
+      {!isLoading && spotlight && (
+        <Link to={`/anime/${spotlight.id}`} className="sch2-spot">
+          <img src={spotlight.cover_image || '/placeholder.svg'} alt="" aria-hidden className="sch2-spot-bg" />
+          <img src={spotlight.cover_image || '/placeholder.svg'} alt={`${spotlight.title} poster`} className="sch2-spot-poster" />
+          <div className="sch2-spot-body">
+            <p className="sch2-eyebrow"><Flame aria-hidden /> Next to air</p>
+            <h2 className="sch2-spot-title">{spotlight.title}</h2>
+            <p className="sch2-spot-meta">
+              Season {spotlight.season_number} · Episode {spotlight.next_episode}
+              <span aria-hidden> · </span>
+              {spotlight.is_daily ? 'Daily' : DAYS_FULL[spotlight.release_day]} at {formatTime(spotlight.release_hour, spotlight.release_minute)}
+            </p>
+            {spotlight.languages.length > 0 && (
+              <div className="sch2-langs">
+                {spotlight.languages.map((l) => <span key={l}>{l}</span>)}
               </div>
-            </div>
-          ))}
-        </div>
+            )}
+          </div>
+          <CountdownBlocks target={spotlight.next} now={now} />
+        </Link>
       )}
+
+      {/* Ongoing releases */}
+      <section aria-labelledby="sch2-ongoing" className="sch2-section">
+        <div className="sch2-section-head">
+          <h2 id="sch2-ongoing"><Tv aria-hidden /> Ongoing releases</h2>
+          <span>{rows.length} series</span>
+        </div>
+
+        {isLoading ? (
+          <div className="space-y-2">
+            {Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-[92px] w-full rounded-xl" />)}
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="sch2-empty">
+            <Tv aria-hidden />
+            <h3>No releases scheduled</h3>
+            <p>Try a different day or clear your search.</p>
+          </div>
+        ) : (
+          groups.map((g) => {
+            const label = groupLabel(g);
+            return (
+              <div key={g.key} className="sch2-group">
+                <div className="sch2-group-head">
+                  <h3>{label.title}</h3>
+                  {label.sub && <span>{label.sub}</span>}
+                  <i aria-hidden />
+                  <em>{g.items.length}</em>
+                </div>
+                <ul className="sch2-list">
+                  {g.items.map((anime) => {
+                    const [clock, ampm] = formatTime(anime.release_hour, anime.release_minute).split(' ');
+                    return (
+                      <li key={anime.id}>
+                        <Link to={`/anime/${anime.id}`} className="sch2-row">
+                          <div className="sch2-time">
+                            <span className="sch2-time-v">{clock}</span>
+                            <span className="sch2-time-ap">{ampm}</span>
+                          </div>
+                          <img
+                            src={anime.cover_image || '/placeholder.svg'}
+                            alt={`${anime.title} poster`}
+                            loading="lazy"
+                            decoding="async"
+                            className="sch2-thumb"
+                          />
+                          <div className="sch2-info">
+                            <h4 className="sch2-title">{anime.title}</h4>
+                            <div className="sch2-meta">
+                              <span className="sch2-time-inline">{clock} {ampm}</span>
+                              <span className="sch2-ep">S{anime.season_number} · EP {anime.next_episode}</span>
+                              {anime.is_daily && <span className="sch2-tag">Daily</span>}
+                              {anime.languages.length > 0 && <span className="sch2-lang">{anime.languages.join(' · ')}</span>}
+                            </div>
+                          </div>
+                          <CountdownPill target={anime.next} now={now} />
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })
+        )}
+      </section>
 
       {/* Upcoming */}
       {upcomingRows.length > 0 && (
-        <>
-          <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl px-4 py-3 mt-8 mb-4 border-l-[3px] border-l-primary">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <h2 className="text-base md:text-lg font-bold">Upcoming</h2>
-            <span className="ml-auto text-xs text-muted-foreground">{upcomingRows.length} titles</span>
+        <section aria-labelledby="sch2-upcoming" className="sch2-section">
+          <div className="sch2-section-head">
+            <h2 id="sch2-upcoming"><Sparkles aria-hidden /> Upcoming seasons</h2>
+            <span>{upcomingRows.length} {upcomingRows.length === 1 ? 'title' : 'titles'}</span>
           </div>
-
-          <div className="space-y-3">
+          <div className="sch2-up-grid">
             {upcomingRows.map((u) => (
-              <div
-                key={u.id}
-                className="group relative rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl p-3 md:p-4 transition-all hover:border-primary/40 hover:bg-card/60"
-              >
-                <div className="flex flex-col md:flex-row md:items-center gap-4">
-                  <Link to={`/anime/${u.anime_id}`} className="flex gap-3 md:gap-4 flex-1 min-w-0">
-                    <img
-                      src={u.cover_image || '/placeholder.svg'}
-                      alt={`${u.title} poster`}
-                      loading="lazy"
-                      className="w-[92px] h-[138px] md:w-[120px] md:h-[180px] object-cover rounded-xl shrink-0 shadow-lg"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/30 text-primary text-[10px] font-bold uppercase tracking-[0.14em]">
-                        Upcoming
-                      </span>
-                      <h3 className="text-base md:text-xl font-bold leading-tight line-clamp-2 mt-1.5 group-hover:text-primary transition-colors">
-                        {u.title}
-                      </h3>
-
-                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                        <span className="px-2 py-0.5 rounded-md bg-primary/15 border border-primary/30 text-primary text-[10px] font-bold">
-                          Season {u.season_number}
-                        </span>
-                      </div>
-
-                      {u.languages.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                          {u.languages.map((lang, i) => (
-                            <span
-                              key={lang}
-                              className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
-                                i === 0
-                                  ? 'bg-amber-500/10 border-amber-500/40 text-amber-300'
-                                  : 'bg-white/5 border-white/10 text-muted-foreground'
-                              }`}
-                            >
-                              {lang}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[10px] font-semibold ${u.target ? 'bg-white/5 border-white/10' : 'bg-amber-500/10 border-amber-500/30 text-amber-300'}`}>
-                          <CalendarDays className={`h-3 w-3 ${u.target ? 'text-primary' : 'text-amber-300'}`} />
-                          {u.target
-                            ? u.target.toLocaleDateString(undefined, {
-                                weekday: 'long',
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric',
-                                timeZone,
-                              })
-                            : 'Release date not announced'}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-
+              <div key={u.id} className="sch2-up">
+                <PosterCard
+                  to={`/anime/${u.anime_id}`}
+                  title={u.title}
+                  cover={u.cover_image}
+                  genres={u.genres}
+                  isEngDub={u.is_eng_dub}
+                  isSubOnly={u.is_sub_only}
+                  tag={`S${u.season_number}`}
+                  fluid
+                />
+                <div className="sch2-up-when">
                   {u.target ? (
-                    <Countdown target={u.target} now={now} label="Premieres In" />
+                    <>
+                      <span className="sch2-up-date">
+                        {u.target.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', timeZone })}
+                      </span>
+                      <CountdownPill target={u.target} now={now} />
+                    </>
                   ) : (
-                    <div className="shrink-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center">
-                      <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Premieres In</p>
-                      <p className="text-sm font-bold text-amber-300 mt-1">TBA</p>
-                    </div>
+                    <span className="sch2-up-date is-tba">Date not announced</span>
                   )}
-
                 </div>
               </div>
             ))}
           </div>
-        </>
+        </section>
       )}
 
-
-      <div className="mt-8 text-center">
+      <div className="mt-10 text-center">
         <Button asChild variant="outline" className="rounded-xl">
           <Link to="/browse">Browse all anime</Link>
         </Button>

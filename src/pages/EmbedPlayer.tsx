@@ -657,6 +657,8 @@ export default function EmbedPlayer() {
     const { data } = await supabase.from('episodes').select('video_url, external_url, title').eq('id', ep.id).single();
     if (!data) { setError('Episode failed to load'); return; }
     const idxEmbed = allEpisodes.findIndex(e => e.id === ep.id);
+    // Resume checkpoints and watch tracking follow the episode actually playing.
+    setRealEpisodeId(ep.id);
     if (isEmbedOnly(data.video_url, data.external_url)) {
       setIframeSrc(extractEmbedSrc(data.external_url!));
       setEpisodeData({ title: data.title, videoUrl: null });

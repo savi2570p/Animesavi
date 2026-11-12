@@ -6,7 +6,7 @@
 - Both Shadow link sharing controls use one shared visibility predicate to prevent account allowlists from drifting; it does not grant administrator or playback bypass privileges.
 - Download audio discovery uses a lazy, bounded MP4 metadata reader only when native track metadata is unavailable; never fetch the entire video to populate the selector.
 - Download metadata probes have bounded deadlines and never gate confirmation indefinitely, because CDN metadata can hang or be unavailable.
-- Copied embed players store exact native-media checkpoints by resolved episode ID through a shared resume hook; do not fabricate third-party iframe positions.
+- Every native-media embed player (including token and Shadow v2 links) stores exact checkpoints keyed by the episode actually loaded through the shared resume hook; do not fabricate third-party iframe positions.
 - Anime poster cards render through the shared PosterCard so badges, artwork sizing and fallbacks stay consistent across rows, grids and platform pages.
 - Discovery, platform and continue-watching rows reuse catalogue glass tokens and native snap scrolling to avoid animation-loop and per-card blur overhead.
 - Main hero: phones show uncropped 16:9 art with copy below, larger screens full-bleed with overlaid copy, visibility-gated autoplay; resume cards keep edge-to-edge aspect-ratio art separate from text.
@@ -52,3 +52,4 @@
 - Season pickers use shared SeasonCards; player loaders share PlayerSpinner.
 - Watch comments sort in memory (sortComments), never reloading the player.
 - Embed players share EmbedChrome UI; playback/access stays per player.
+- Schedule renders presentation-only sch2 sections (week strip, next-to-air spotlight, day groups, upcoming PosterCards) over the existing timezone/rollover calculations, so restyles never change release timing.

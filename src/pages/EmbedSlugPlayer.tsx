@@ -107,6 +107,8 @@ export default function EmbedSlugPlayer() {
   // Episode selection state
   const [allEpisodes, setAllEpisodes] = useState<{ id: string; title: string; episode_number: number; season_number: number; season_id: string; video_url?: string | null; external_url?: string | null; captions_url?: string | null }[]>([]);
   const [currentEpisodeIndex, setCurrentEpisodeIndex] = useState(0);
+  // Exact episode currently loaded in the <video>, used as the resume key.
+  const [playingEpisodeId, setPlayingEpisodeId] = useState<string | null>(null);
   const [showEpisodePanel, setShowEpisodePanel] = useState(false);
   const [currentSeasonNumber, setCurrentSeasonNumber] = useState(1);
   const [currentEpisodeNumber, setCurrentEpisodeNumber] = useState(1);
@@ -229,6 +231,7 @@ export default function EmbedSlugPlayer() {
       if (!url) { setFetchError('No video available'); return; }
 
       setEpisodeData({ title: ep.title, videoUrl: url, animeTitle: anime.title || '' });
+      setPlayingEpisodeId(ep.id);
       setCaptionsUrl(ep.captions_url || null);
       setResolvedAnimeId(anime.id || null);
       setCurrentSeasonNumber(seasonNumber);
@@ -296,6 +299,7 @@ export default function EmbedSlugPlayer() {
     if (!url) { setError('No video available'); return; }
 
     setEpisodeData(prev => ({ title, videoUrl: url!, animeTitle: prev?.animeTitle || '' }));
+    setPlayingEpisodeId(ep.id);
     setCaptionsUrl(captions);
     setCurrentSeasonNumber(ep.season_number);
     setCurrentEpisodeNumber(ep.episode_number);
@@ -493,7 +497,7 @@ export default function EmbedSlugPlayer() {
     };
   }, [episodeData?.videoUrl]);
 
-  useEmbedResume(videoRef, currentEpisodeId, episodeData?.videoUrl);
+  useEmbedResume(videoRef, playingEpisodeId, episodeData?.videoUrl);
 
   // Apply CC enable state
   useEffect(() => {

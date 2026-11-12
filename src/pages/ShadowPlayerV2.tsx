@@ -163,6 +163,7 @@ export default function ShadowPlayerV2() {
             <div className="rounded-2xl overflow-hidden">
               <ShadowMinimalPlayer
                 key={episode.id}
+                resumeEpisodeId={episode.id}
                 videoUrl={playerVideoUrl}
                 embedUrl={playerEmbedUrl}
                 poster={episode.thumbnail || season?.anime?.cover_image || undefined}

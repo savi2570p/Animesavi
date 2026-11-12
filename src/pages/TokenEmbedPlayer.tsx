@@ -8,6 +8,7 @@ import {
   EmbedBrand, EmbedBtn, EmbedCenterPlay, EmbedLoading, EmbedMenu, EmbedMenuItem, EmbedMenuLabel,
   EmbedSeek, EmbedStatus, EmbedTime,
 } from '@/components/embed/EmbedChrome';
+import { useEmbedResume } from '@/hooks/useEmbedResume';
 import { resolveEmbedToken, type EmbedResolution, type EmbedSource } from '@/lib/embedTokens';
 
 /**
@@ -148,6 +149,9 @@ export default function TokenEmbedPlayer() {
       hlsRef.current = null;
     };
   }, [activeSource]);
+
+  // Token links map to one episode, so the token is a stable resume key.
+  useEmbedResume(videoRef, token ? `token:${token}` : null, activeSource?.url);
 
   /* -------------------------------------------------------- media listeners */
   useEffect(() => {

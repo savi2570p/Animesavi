@@ -25,6 +25,10 @@ export function useEmbedResume(videoRef: RefObject<HTMLVideoElement>, episodeId:
       save();
     };
     const hidden = () => { if (document.hidden) save(); };
+    // A new source is loading: stop saving until it is restored, so the old
+    // episode's position is never written under the next episode's key.
+    const reset = () => { restored = false; };
+    video.addEventListener('emptied', reset);
     video.addEventListener('loadedmetadata', restore);
     video.addEventListener('canplay', restore);
     video.addEventListener('timeupdate', tick);
@@ -36,6 +40,7 @@ export function useEmbedResume(videoRef: RefObject<HTMLVideoElement>, episodeId:
     if (video.readyState >= 1) restore();
     return () => {
       save();
+      video.removeEventListener('emptied', reset);
       video.removeEventListener('loadedmetadata', restore);
       video.removeEventListener('canplay', restore);
       video.removeEventListener('timeupdate', tick);

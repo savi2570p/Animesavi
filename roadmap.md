@@ -24,3 +24,7 @@
 - [x] Mobile watch layout like reference; servers grouped DUB (H.Savi, AS+) and SUB (4K+)
 - [x] SUB server locks audio to Japanese; SUB-only anime shows only SUB
 - [x] Upload: choose DUB/SUB servers when adding
+
+## Nov 12 pass
+- [x] All embed players resume where the viewer left off (embed id/short, slug, minimal, Shadow v2, token)
+- [x] Schedule page redesign (PC + phone)
