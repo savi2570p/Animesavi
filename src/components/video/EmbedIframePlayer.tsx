@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, Bug, CheckCircle2, ExternalLink, Pause, Play, RefreshCw, RotateCcw, RotateCw, Timer, WifiOff } from 'lucide-react';
+import { AlertCircle, Bug, CheckCircle2, ExternalLink, Pause, Play, RefreshCw, Timer, WifiOff } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -764,35 +764,9 @@ export function EmbedIframePlayer({
           <button
             type="button"
             className="h-6 w-6 md:h-7 md:w-7 inline-flex items-center justify-center text-white/90 hover:text-white transition-colors"
-            aria-label="Back 10 seconds"
-            title="Back 10s"
-            onClick={() => {
-              const next = Math.max(0, (remoteState.currentTime || 0) - 10);
-              sendCommand('seek', { time: next, offset: -10 }, 'Skip back 10s requested from parent controls.');
-            }}
-          >
-            <RotateCcw className="h-3 w-3 md:h-3.5 md:w-3.5" />
-          </button>
-          <button
-            type="button"
-            className="h-6 w-6 md:h-7 md:w-7 inline-flex items-center justify-center text-white/90 hover:text-white transition-colors"
             onClick={() => sendCommand(remoteState.isPlaying ? 'pause' : 'play', {}, remoteState.isPlaying ? 'Pause requested from parent controls.' : 'Play requested from parent controls.')}
           >
             {remoteState.isPlaying ? <Pause className="h-3 w-3 md:h-3.5 md:w-3.5" /> : <Play className="h-3 w-3 md:h-3.5 md:w-3.5" />}
-          </button>
-          <button
-            type="button"
-            className="h-6 w-6 md:h-7 md:w-7 inline-flex items-center justify-center text-white/90 hover:text-white transition-colors"
-            aria-label="Forward 10 seconds"
-            title="Forward 10s"
-            onClick={() => {
-              const dur = remoteState.duration || 0;
-              const cur = remoteState.currentTime || 0;
-              const next = dur > 0 ? Math.min(dur, cur + 10) : cur + 10;
-              sendCommand('seek', { time: next, offset: 10 }, 'Skip forward 10s requested from parent controls.');
-            }}
-          >
-            <RotateCw className="h-3 w-3 md:h-3.5 md:w-3.5" />
           </button>
           <button
             type="button"

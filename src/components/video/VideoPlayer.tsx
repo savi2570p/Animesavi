@@ -63,6 +63,7 @@ import { GestureIndicator } from './GestureIndicator';
 import { MobileMuteIndicator } from './MobileMuteIndicator';
 import { VideoPlayerInfoOverlay } from './VideoPlayerInfoOverlay';
 import { PremiumLoader } from './PremiumLoader';
+import { PlayerSpinner } from './PlayerSpinner';
 import { EncodingOverlay } from './EncodingOverlay';
 import { buildEmbedUrl } from '@/lib/embedLink';
 import { buildLocalEmbedUrl, lookupEmbedTokenForEpisode } from '@/lib/embedTokens';
@@ -2094,9 +2095,9 @@ export function VideoPlayer({
         className="relative bg-black w-full rounded-2xl overflow-hidden player-shell"
         style={{ aspectRatio: '16/9', maxHeight: isFullscreen ? '100vh' : '70vh' }}
       >
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          <p className="text-white text-lg">Loading {serverConfigs[activeServer]?.name || activeServer} server...</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+          <PlayerSpinner />
+          <p className="text-white/70 text-xs md:text-sm font-medium">Loading {serverConfigs[activeServer]?.name || activeServer}…</p>
         </div>
       </div>
     );
@@ -3121,12 +3122,6 @@ export function VideoPlayer({
                     <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); togglePlay(); }} title={isPlaying ? 'Pause' : 'Play'}>
                       {isPlaying ? <Pause className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} /> : <Play className={isIOS ? "w-5 h-5 fill-current" : "w-5 h-5 md:w-6 md:h-6 fill-current"} />}
                     </button>
-                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); skipBackward(); }} title="Skip back 10s">
-                      <SkipBack className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />
-                    </button>
-                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); skipForward(); }} title="Skip forward 10s">
-                      <SkipForward className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />
-                    </button>
                     <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); toggleMute(); }} title={isMuted ? 'Unmute' : 'Mute'}>
                       {isMuted ? <VolumeX className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} /> : <Volume2 className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />}
                     </button>
@@ -3168,12 +3163,6 @@ export function VideoPlayer({
                   <div className={`flex items-center ${isIOS ? "gap-2" : "gap-3 md:gap-3.5"}`}>
                     <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
                       {isPlaying ? <Pause className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-7 md:h-7"} /> : <Play className={isIOS ? "w-5 h-5 fill-current" : "w-5 h-5 md:w-7 md:h-7 fill-current"} />}
-                    </button>
-                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); skipBackward(); }} title="Skip back 10s">
-                      <SkipBack className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} />
-                    </button>
-                    <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); skipForward(); }} title="Skip forward 10s">
-                      <SkipForward className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
                     <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); toggleMute(); }}>
                       {isMuted ? <VolumeX className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} /> : <Volume2 className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} />}
@@ -3237,13 +3226,6 @@ export function VideoPlayer({
                     <SkipForward className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
                   </button>
                 )}
-                <button 
-                  className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`} 
-                  onClick={(e) => { e.stopPropagation(); skipForward(); }} 
-                  title="Skip forward 10s"
-                >
-                  <FastForward className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
-                </button>
                 <div className="hidden md:block" onClick={(e) => e.stopPropagation()}>
                   <VolumeSlider volume={volume} isMuted={isMuted} onVolumeChange={handleVolumeChange} onMuteToggle={toggleMute} />
                 </div>
@@ -3442,12 +3424,6 @@ export function VideoPlayer({
                   <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); togglePlay(); }} title={isPlaying ? 'Pause' : 'Play'}>
                     {isPlaying ? <Pause className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} /> : <Play className={isIOS ? "w-5 h-5 fill-current" : "w-5 h-5 md:w-6 md:h-6 fill-current"} />}
                   </button>
-                  <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); skipBackward(); }} title="Skip back 10s">
-                    <SkipBack className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />
-                  </button>
-                  <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); skipForward(); }} title="Skip forward 10s">
-                    <SkipForward className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />
-                  </button>
                   <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); toggleMute(); }} title={isMuted ? 'Unmute' : 'Mute'}>
                     {isMuted ? <VolumeX className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} /> : <Volume2 className={isIOS ? "w-4 h-4" : "w-4 h-4 md:w-5 md:h-5"} />}
                   </button>
@@ -3493,20 +3469,6 @@ export function VideoPlayer({
                     title={isPlaying ? 'Pause' : 'Play'}
                   >
                     {isPlaying ? <Pause className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} /> : <Play className={isIOS ? "w-5 h-5 fill-current" : "w-5 h-5 md:w-6 md:h-6 fill-current"} />}
-                  </button>
-                  <button 
-                    className={flatPlayerControlButtonClass} 
-                    onClick={(e) => { e.stopPropagation(); skipBackward(); }}
-                    title="Skip back 10s"
-                  >
-                    <SkipBack className={isIOS ? "w-4 h-4" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
-                  </button>
-                  <button 
-                    className={flatPlayerControlButtonClass} 
-                    onClick={(e) => { e.stopPropagation(); skipForward(); }}
-                    title="Skip forward 10s"
-                  >
-                    <SkipForward className={isIOS ? "w-4 h-4" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
                   </button>
                   <button 
                     className={flatPlayerControlButtonClass} 
@@ -3602,14 +3564,6 @@ export function VideoPlayer({
                 </button>
               )}
 
-              {/* Skip forward 10s */}
-              <button 
-                className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`} 
-                onClick={(e) => { e.stopPropagation(); skipForward(); }} 
-                title="Skip forward 10s"
-              >
-                <FastForward className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
-              </button>
 
               {/* Volume Slider - Desktop */}
               <div className="hidden md:block" onClick={(e) => e.stopPropagation()}>

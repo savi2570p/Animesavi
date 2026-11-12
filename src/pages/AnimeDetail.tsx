@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SeasonCards } from '@/components/anime/SeasonCards';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -565,8 +565,8 @@ export default function AnimeDetail() {
                     </section>
                     <section className="detail-ra-section" aria-label="Episode library">
                       <div className="flex items-center justify-between flex-wrap gap-3 mb-3"><h2 className="!mb-0">Episodes <span className="text-xs font-normal text-muted-foreground">{episodes.length} available</span></h2>
-                        {seasons.length > 0 && <Select value={selectedSeason || undefined} onValueChange={setSelectedSeason}><SelectTrigger className="w-[200px] max-w-full h-9"><SelectValue placeholder="Season" /></SelectTrigger><SelectContent>{seasons.map(season => <SelectItem key={season.id} value={season.id}>{season.title || `Season ${season.season_number}`}</SelectItem>)}</SelectContent></Select>}
                       </div>
+                      {seasons.length > 0 && <SeasonCards className="mb-4" seasons={seasons} activeId={selectedSeason} onSelect={setSelectedSeason} animeTitle={anime.title} artwork={anime.banner_image || anime.cover_image} type={anime.type} year={anime.release_year} />}
                       {seasonLoading ? <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{Array.from({length:8},(_,i)=><Skeleton key={i} className="aspect-video rounded-md" />)}</div> : episodes.length === 0 ? <div className="py-10 text-center"><Clock className="h-6 w-6 text-muted-foreground mx-auto mb-2" /><p className="text-sm text-muted-foreground">No episodes available yet.</p></div> : <div className="detail-v3-episodes"><EpisodeGrid episodes={episodes} fallbackImage={anime.banner_image || anime.cover_image} getProgress={getEpisodeProgress} isCompleted={isEpisodeCompleted} onToggleWatched={(episodeId,e) => markAsWatched(episodeId,e)} /></div>}
                     </section>
                     <section className="detail-ra-section"><AnimeReviews animeId={anime.id} /></section>

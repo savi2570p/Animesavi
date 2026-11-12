@@ -24,6 +24,7 @@ import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { EpisodeList } from '@/components/video/EpisodeList';
 import { WatchInfoPanel } from '@/components/video/WatchInfoPanel';
 import { MobileWatchEpisodes, MobileAboutAnime } from '@/components/video/MobileWatchSections';
+import { SeasonCards } from '@/components/anime/SeasonCards';
 import { WatchParty } from '@/components/WatchParty';
 import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton';
 import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
@@ -95,6 +96,7 @@ interface Anime {
   id: string;
   title: string;
   cover_image: string | null;
+  banner_image?: string | null;
   type: string | null;
   uploader_id: string | null;
   is_crunchyroll?: boolean;
@@ -1500,27 +1502,19 @@ export default function Watch() {
               })()}
             </div>
 
-            {/* Season Switcher */}
-            {allSeasons.length > 0 && (
-              <div className={`${allSeasons.length > 1 ? 'hidden lg:flex' : 'flex'} items-center gap-2 md:gap-3 lg:border-l lg:border-border lg:pl-5 min-w-0 lg:ml-auto`}>
-                <span className="text-[11px] md:text-xs font-bold uppercase tracking-wider text-foreground/80 shrink-0">Season</span>
-                <div className="relative flex-1 md:flex-initial">
-                  <select
-                    value={currentSeason?.id || ''}
-                    onChange={(e) => handleSeasonChange(e.target.value)}
-                    className="w-full appearance-none bg-muted/30 border border-border rounded-lg pl-3 pr-9 py-1.5 md:py-2 text-xs md:text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 hover:border-primary/40 transition-colors cursor-pointer backdrop-blur-xl"
-                  >
-                    {allSeasons.map((season) => (
-                      <option key={season.id} value={season.id}>
-                        Season {season.season_number} {season.episode_count !== undefined ? `· ${season.episode_count} eps` : ''}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronRight className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 rotate-90 text-muted-foreground pointer-events-none" />
-                </div>
-              </div>
-            )}
           </div>
+          {allSeasons.length > 0 && (
+            <SeasonCards
+              className="hidden lg:block mt-5"
+              seasons={allSeasons}
+              activeId={currentSeason?.id}
+              onSelect={handleSeasonChange}
+              animeTitle={anime?.title}
+              artwork={anime?.banner_image || anime?.cover_image}
+              type={anime?.type}
+              year={anime?.release_year}
+            />
+          )}
         </div>
       </div>
 

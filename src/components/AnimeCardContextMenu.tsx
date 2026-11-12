@@ -10,7 +10,10 @@ import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogTitle,
 } from '@/components/ui/dialog';
+import { Link as RouterLink } from 'react-router-dom';
 
 interface AnimeCardContextMenuProps {
   children: ReactNode;
@@ -203,42 +206,43 @@ export function AnimeCardContextMenu({
 
   return (
     <>
-      {/* iOS-style Preview Dialog */}
+      {/* Preview card */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-sm p-0 overflow-hidden rounded-2xl">
-          <div className="relative">
-            {coverImage && (
-              <img
-                src={coverImage}
-                alt={animeTitle}
-                className="w-full aspect-[3/4] object-cover"
-              />
+        <DialogContent className="preview-v5 w-[calc(100vw-2rem)] max-w-[340px] p-0 gap-0 overflow-hidden rounded-2xl">
+          <div className="preview-v5-art">
+            {coverImage ? (
+              <>
+                <img src={coverImage} alt="" aria-hidden="true" className="preview-v5-fill" />
+                <img src={coverImage} alt={animeTitle} className="preview-v5-poster" />
+              </>
+            ) : (
+              <div className="preview-v5-empty"><Image className="h-8 w-8" /></div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
-              <h3 className="text-white font-bold text-lg line-clamp-2">{animeTitle}</h3>
-              {description && (
-                <p className="text-white/70 text-sm line-clamp-3">{description}</p>
-              )}
-              <div className="flex gap-2 pt-2">
-                <a
-                  href={animeUrl}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 px-4 bg-primary text-primary-foreground rounded-lg text-sm font-medium"
-                  onClick={() => setShowPreview(false)}
-                >
-                  <Eye className="h-4 w-4" />
-                  View Details
-                </a>
-                <button
-                  onClick={() => {
-                    handleShare();
-                    setShowPreview(false);
-                  }}
-                  className="flex items-center justify-center gap-2 py-2 px-4 bg-white/20 text-white rounded-lg text-sm font-medium"
-                >
-                  <Share2 className="h-4 w-4" />
+          </div>
+          <div className="preview-v5-body">
+            <span className="preview-v5-eyebrow">Quick preview</span>
+            <DialogTitle className="preview-v5-title">{animeTitle}</DialogTitle>
+            {description ? (
+              <DialogDescription className="preview-v5-desc">{description}</DialogDescription>
+            ) : (
+              <DialogDescription className="sr-only">Preview of {animeTitle}</DialogDescription>
+            )}
+            <RouterLink to={animeUrl} className="preview-v5-primary" onClick={() => setShowPreview(false)}>
+              <Eye className="h-4 w-4" />
+              View Details
+            </RouterLink>
+            <div className="preview-v5-actions">
+              <button type="button" onClick={handleCopyLink} className="preview-v5-action">
+                <Link className="h-4 w-4" /><span>Copy link</span>
+              </button>
+              <button type="button" onClick={() => { handleShare(); setShowPreview(false); }} className="preview-v5-action">
+                <Share2 className="h-4 w-4" /><span>Share</span>
+              </button>
+              {coverImage && (
+                <button type="button" onClick={isMobile ? handleSaveToGallery : handleDownload} className="preview-v5-action">
+                  <Download className="h-4 w-4" /><span>Save</span>
                 </button>
-              </div>
+              )}
             </div>
           </div>
         </DialogContent>

@@ -2,6 +2,7 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Play, LayoutGrid, List, X, ChevronRight, ListVideo } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SeasonCards } from '@/components/anime/SeasonCards';
 
 interface WmEpisode {
   id: string;
@@ -75,26 +76,15 @@ export const MobileWatchEpisodes = memo(function MobileWatchEpisodes({
 
   return (
     <div className="wm-sections">
-      {seasons.length > 1 && (
-        <section aria-label="Seasons">
-          <h2 className="wm-eyebrow">Watch more seasons of this anime</h2>
-          <div className="snap-row wm-season-row">
-            {seasons.map((s) => {
-              const active = s.id === currentSeasonId;
-              return (
-                <button key={s.id} type="button" onClick={() => onSeasonChange(s.id)} aria-pressed={active} className="wm-season-card">
-                  <img src={fallback} alt="" loading="lazy" decoding="async" />
-                  <span className="wm-season-copy">
-                    <span className="wm-season-label">Season {s.season_number}</span>
-                    <span className="wm-season-title">{s.title || anime?.title}</span>
-                    {s.episode_count != null && <span className="wm-season-meta">{s.episode_count} episodes</span>}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      <SeasonCards
+        seasons={seasons}
+        activeId={currentSeasonId}
+        onSelect={onSeasonChange}
+        animeTitle={anime?.title}
+        artwork={anime?.banner_image || anime?.cover_image}
+        type={anime?.type}
+        year={anime?.release_year}
+      />
 
       <section aria-label="Episodes">
         <div className="flex items-center justify-between gap-2 mb-3">

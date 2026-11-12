@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { PlayerSpinner } from './PlayerSpinner';
 
 interface BufferingIndicatorProps {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -8,13 +9,12 @@ interface BufferingIndicatorProps {
 }
 
 /**
- * Liquid-glass buffering indicator.
- * A single compact glass orb with an aurora halo and a live buffer-health arc.
- * No boxy panel, no percentage spam — it reads as part of the player, not on top of it.
+ * Transparent buffering indicator: the shared slim spinner with no panel
+ * or scrim, plus a short note only when the network is slow.
  */
 export function BufferingIndicator({ videoRef, isVisible, className }: BufferingIndicatorProps) {
   const [isBuffering, setIsBuffering] = useState(false);
-  const [bufferProgress, setBufferProgress] = useState(0);
+  const [, setBufferProgress] = useState(0);
   const [isSlowNetwork, setIsSlowNetwork] = useState(false);
   const [isLongStall, setIsLongStall] = useState(false);
   const [showIndicator, setShowIndicator] = useState(false);
@@ -147,9 +147,6 @@ export function BufferingIndicator({ videoRef, isVisible, className }: Buffering
   if (!isVisible && !showIndicator) return null;
 
   const active = showIndicator && isBuffering;
-  const R = 26;
-  const CIRC = 2 * Math.PI * R;
-
   return (
     <div
       role="status"
@@ -162,97 +159,20 @@ export function BufferingIndicator({ videoRef, isVisible, className }: Buffering
       )}
       style={{ contain: 'layout paint' }}
     >
-      <div className="relative flex flex-col items-center gap-2.5" style={{ transform: 'translateZ(0)' }}>
-        <div className="relative">
-          {/* aurora halo */}
-          <div
-            className="absolute inset-0 -m-4 rounded-full blur-xl opacity-70"
-            style={{
-              background:
-                'conic-gradient(from 0deg, hsl(var(--primary) / 0.6), hsl(280 90% 65% / 0.45), hsl(200 90% 62% / 0.4), hsl(var(--primary) / 0.6))',
-              animation: 'bi-spin 5.5s linear infinite',
-            }}
-          />
-
-          {/* glass orb */}
-          <div
-            className="relative w-14 h-14 rounded-full flex items-center justify-center"
-            style={{
-              background:
-                'radial-gradient(circle at 32% 26%, hsl(0 0% 100% / 0.5), hsl(0 0% 100% / 0.05) 58%, hsl(var(--primary) / 0.24))',
-              border: '1px solid hsl(0 0% 100% / 0.22)',
-              backdropFilter: 'blur(14px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(14px) saturate(180%)',
-              boxShadow:
-                'inset 0 1px 6px hsl(0 0% 100% / 0.45), inset 0 -10px 20px hsl(var(--primary) / 0.28), 0 10px 30px hsl(0 0% 0% / 0.45)',
-            }}
-          >
-            {/* buffer health ring */}
-            <svg viewBox="0 0 64 64" className="absolute inset-0 w-full h-full -rotate-90">
-              <circle cx="32" cy="32" r={R} fill="none" stroke="hsl(0 0% 100% / 0.1)" strokeWidth="2.5" />
-              <circle
-                cx="32"
-                cy="32"
-                r={R}
-                fill="none"
-                stroke={isSlowNetwork ? 'hsl(38 95% 60%)' : 'hsl(var(--primary))'}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeDasharray={CIRC}
-                strokeDashoffset={CIRC - (bufferProgress / 100) * CIRC}
-                style={{
-                  transition: 'stroke-dashoffset 400ms ease-out',
-                  filter: 'drop-shadow(0 0 6px hsl(var(--primary) / 0.7))',
-                }}
-              />
-            </svg>
-
-            {/* sweeping arc */}
-            <svg
-              viewBox="0 0 64 64"
-              className="absolute inset-0 w-full h-full"
-              style={{ animation: 'bi-spin 1.05s linear infinite' }}
-            >
-              <circle
-                cx="32"
-                cy="32"
-                r="19"
-                fill="none"
-                stroke="hsl(0 0% 100% / 0.85)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeDasharray="26 94"
-              />
-            </svg>
-
-            {/* pulsing core */}
-            <span
-              className="block w-1.5 h-1.5 rounded-full bg-white/90"
-              style={{ animation: 'bi-pulse 1.4s ease-in-out infinite' }}
-            />
-          </div>
-        </div>
-
+      <div className="relative flex flex-col items-center gap-2" style={{ transform: 'translateZ(0)' }}>
+        <PlayerSpinner tone={isSlowNetwork ? 'warn' : 'primary'} />
         {(isLongStall || isSlowNetwork) && (
           <span
             className={cn(
-              'text-[10px] font-medium tracking-[0.16em] uppercase drop-shadow transition-opacity duration-300',
-              isLongStall ? 'text-amber-300/95' : 'text-white/70'
+              'text-[10px] font-semibold tracking-[0.14em] uppercase transition-opacity duration-300',
+              isLongStall ? 'text-amber-300/95' : 'text-white/75'
             )}
+            style={{ textShadow: '0 1px 3px hsl(0 0% 0% / .8)' }}
           >
             {isLongStall ? 'Still loading — weak connection' : 'Slow network'}
           </span>
         )}
-
       </div>
-
-      <style>{`
-        @keyframes bi-spin { to { transform: rotate(360deg); } }
-        @keyframes bi-pulse {
-          0%, 100% { opacity: .35; transform: scale(.8); }
-          50% { opacity: 1; transform: scale(1.25); }
-        }
-      `}</style>
     </div>
   );
 }

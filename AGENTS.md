@@ -49,3 +49,4 @@
 - One Watch Party menu entry; admin/upload in PC rail; Notifications is a page (shared useNotifications cache).
 - Phone Watch sections (MobileWatchSections) reuse the page's season/episode handlers.
 - getServerGroups (is_sub_only) groups DUB/SUB servers; SUB = AS+ engine, audioLocked, getServerVideoUrl.
+- Detail and Watch season pickers use shared SeasonCards; player loaders share PlayerSpinner, keeping pages' season handlers.
