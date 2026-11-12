@@ -36,10 +36,10 @@
 - Admin uses unframed tools with one utility-glass nav layer; upload editors share authenticated server-role checks (never session-storage codes) so admins without uploader roles can edit.
 - Upload no longer uses the legacy password gate; retain server-role and database permission checks as the access authority.
 - Pending preparation popups use the shared portaled Dialog so transformed sections can't trap them; homepage recommendations stay separate from Watch playback.
-- Upload creation/series editing use plain unframed sections (no Card wrappers, avoiding inherited glass), one vertical form flow and scoped studio tokens; preserve upload handlers and access guards.
+- Upload creation/series editing use unframed sections (no Card wrappers), one vertical form flow and scoped studio tokens; keep upload handlers and guards.
 - Episode editing scopes the studio presentation to its page and embedded tools without altering shared subtitle or timestamp handlers, so other upload surfaces keep their existing behavior.
 - Crunchy/MuseIN share a portaled loader whose lifetime follows real catalogue requests (no fake progress or delays).
-- Platform collections share presentation-only catalogue headers and cards with fixed portrait artwork, shared badges and native snap rows; preserve page-owned filters, queries and pending-title handlers.
+- Platform collections share presentation-only catalogue headers/cards (portrait art, shared badges, snap rows); keep page-owned filters, queries and handlers.
 - Watch party create/join/view dialogs share scoped party glass presentation; header menu party dialogs are controlled outside the hamburger sheet so closing the menu never unmounts them.
 - The coarse-pointer 44px tap-target rule excludes switch, checkbox and radio roles so toggles keep their size.
 - Watch party state lives in the shared watchPartySession store: only the host writes playback (host-only UPDATE), guests get a cover and reverted media events, and party sessions skip Continue Watching.
@@ -50,4 +50,4 @@
 - Phone Watch sections (MobileWatchSections) reuse the page's season/episode handlers.
 - getServerGroups (is_sub_only) groups DUB/SUB servers; SUB = AS+ engine, audioLocked, getServerVideoUrl.
 - Detail/Watch season pickers use shared SeasonCards (pages keep their handlers); player loaders share PlayerSpinner.
-- Watch comments are fetched once per episode and sorted in memory (sortComments), so sort changes never rerun episode loading or remount the player.
+- Watch comments load once per episode and sort in memory (sortComments) so sorting never reloads the player.
