@@ -31,6 +31,10 @@
   --input: 0 0% 16%;
   --ring: 79 86% 59%;
   --radius: 0.625rem;
+  --premium-surface: 0 0% 7%;
+  --premium-foreground: var(--primary);
+  --premium-edge: 79 52% 37%;
+  --premium-shadow: 0 2px 6px hsl(var(--background) / .55);
 
   --cr-orange: 79 86% 59%;
   --cr-orange-light: 79 86% 68%;
@@ -70,6 +74,44 @@
   --lg-blur: 0px;
   --lg-blur-strong: 0px;
 }
+
+.premium-emblem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  color: hsl(var(--premium-foreground));
+  background: hsl(var(--premium-surface));
+  border: 1px solid hsl(var(--premium-edge));
+  box-shadow: var(--premium-shadow);
+  border-radius: 6px 6px 10px 6px;
+  width: 28px;
+  height: 28px;
+  pointer-events: none;
+}
+.premium-emblem svg { width: 17px; height: 17px; flex-shrink: 0; }
+.premium-emblem--avatar {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  z-index: 2;
+  width: 17px;
+  height: 17px;
+  border-radius: 4px 4px 6px 4px;
+}
+.premium-emblem--avatar svg { width: 11px; height: 11px; }
+.premium-emblem--label {
+  width: auto;
+  height: 27px;
+  gap: 6px;
+  padding: 0 9px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.premium-emblem--label svg { width: 14px; height: 14px; }
 
 /* Scoped glass tokens are redefined on many components; force them flat. */
 *,

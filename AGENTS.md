@@ -7,7 +7,7 @@
 - Download audio discovery uses a lazy, bounded MP4 metadata reader only when native track metadata is unavailable; never fetch the entire video to populate the selector.
 - Download metadata probes have bounded deadlines and never gate confirmation indefinitely, because CDN metadata can hang or be unavailable.
 - Native-media embed players save resume checkpoints via useEmbedResume, keyed by the loaded episode; never fake iframe positions.
-- Anime poster cards render through the shared PosterCard so badges, artwork sizing and fallbacks stay consistent across rows, grids and platform pages.
+- PosterCard shares art/badges across catalogues; PremiumBadge shares card/avatar emblems, independent of access checks.
 - Discovery, platform and continue-watching rows reuse catalogue glass tokens and native snap scrolling to avoid animation-loop and per-card blur overhead.
 - Main hero: phones show uncropped 16:9 art with copy below, larger screens full-bleed with overlaid copy, visibility-gated autoplay; resume cards keep edge-to-edge aspect-ratio art separate from text.
 - Anime details retain shared EpisodeGrid, MoreInfoDrawer, download, share and review components in an unframed layout so visual refreshes preserve their existing behavior.

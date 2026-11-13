@@ -51,6 +51,7 @@ import { hasValidTokenAccess } from '@/components/AccessBanner';
 import { VerifyTokenDialog } from '@/components/VerifyTokenDialog';
 import { usePopupQueue } from '@/contexts/PopupQueueContext';
 import { SearchSuggestions } from '@/components/SearchSuggestions';
+import { PremiumBadge } from '@/components/TokenCrownBadge';
 
 export function Header() {
   const { user, isUploader, isAdmin, signOut } = useAuth();
@@ -450,7 +451,7 @@ export function Header() {
                   </Avatar>
                   {isMobileOS && unreadNotifs > 0 && <span className="account-trigger-dot" aria-label={`${unreadNotifs} unread notifications`} />}
                   {(isAdmin || hasValidTokenAccess(user?.email)) && (
-                    <Crown className="absolute -top-1 -right-1 h-3 w-3 sm:h-3.5 sm:w-3.5 text-yellow-500 animate-crown-shimmer" />
+                    <PremiumBadge variant="avatar" />
                   )}
                 </Button>
               </DropdownMenuTrigger>

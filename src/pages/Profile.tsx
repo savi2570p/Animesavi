@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { User, Mail, Lock, Palette, Camera, Upload, Link as LinkIcon, Crown, ShieldAlert } from 'lucide-react';
 import { hasValidTokenAccess } from '@/components/AccessBanner';
+import { PremiumBadge } from '@/components/TokenCrownBadge';
 import { z } from 'zod';
 
 // Input validation schemas
@@ -296,13 +297,14 @@ export default function Profile() {
               <AvatarImage src={avatarUrl} alt="Profile photo" className="object-cover" />
               <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-bold">{initial}</AvatarFallback>
             </Avatar>
+            {isPremium && <PremiumBadge variant="avatar" />}
             <Button variant="glass" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isUploadingAvatar} title="Change photo" aria-label="Change photo" className="absolute -bottom-2 -right-2 h-8 w-8 rounded-lg"><Camera /></Button>
           </div>
           <div className="flex-1 min-w-0 space-y-2">
             <p className="text-xs text-muted-foreground">My account · Member since {memberSince}</p>
             <h1 className="text-2xl md:text-4xl font-bold break-words">{username || user.email?.split('@')[0] || 'My Profile'}</h1>
             <p className="text-sm text-muted-foreground break-all">{email}</p>
-            {isPremium && <span className="catalogue-chip inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs"><Crown className="h-3.5 w-3.5 text-primary animate-crown-shimmer" />Premium</span>}
+            {isPremium && <PremiumBadge variant="label" />}
           </div>
         </div>
       </header>

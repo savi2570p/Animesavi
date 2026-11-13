@@ -3,10 +3,19 @@ import { useAuth } from '@/contexts/AuthContext';
 import { hasValidTokenAccess } from '@/components/AccessBanner';
 
 /**
- * Shows a golden crown badge on anime thumbnails when the user
+ * Shows a premium crown badge on anime thumbnails when the user
  * does NOT have active token access. Hidden for premium users.
  * Place inside a `position: relative` thumbnail container.
  */
+export function PremiumBadge({ variant = 'card' }: { variant?: 'card' | 'avatar' | 'label' }) {
+  return (
+    <span className={`premium-emblem premium-emblem--${variant}`} role="img" aria-label="Premium" title="Premium">
+      <Crown aria-hidden="true" strokeWidth={1.8} />
+      {variant === 'label' && <span>Premium</span>}
+    </span>
+  );
+}
+
 export function TokenCrownBadge() {
   const { user } = useAuth();
   const hasAccess = hasValidTokenAccess(user?.email);
@@ -14,8 +23,8 @@ export function TokenCrownBadge() {
   if (hasAccess) return null;
 
   return (
-    <div className="absolute bottom-2 right-2 z-30 p-1.5 rounded-full bg-yellow-500/90 shadow-lg shadow-yellow-500/30 animate-pulse">
-      <Crown className="h-3.5 w-3.5 text-black" />
+    <div className="absolute bottom-2 right-2 z-30 pointer-events-none">
+      <PremiumBadge />
     </div>
   );
 }

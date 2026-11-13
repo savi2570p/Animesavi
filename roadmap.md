@@ -1,3 +1,6 @@
+## Nov 13 Premium badges
+- [x] Redesign shared card crowns and profile-photo Premium badges without changing access rules
+
 ## Nov 10 pass 3
 - [x] Mobile/iOS hero banner shows full 16:9 artwork
 - [x] Poster cards everywhere (Favorites, Watch List, Upcoming, Coming Soon, Recommended, Episode Progress, Share)
