@@ -593,7 +593,7 @@ html.perf-low .home-search-hero-art { display: none; }
 .footer-v7-links a:hover, .footer-v7-links button:hover { color: hsl(var(--primary)); }
 /* Remove action layered on a shared poster card (Favorites, Watch List). */
 .poster-card-shell { min-width: 0; }
-.poster-card-remove.poster-card-remove { position: absolute; top: .4rem; right: .4rem; z-index: 3; width: 1.9rem; height: 1.9rem; min-width: 0; min-height: 0; border-radius: 6px; background: hsl(var(--background) / .8); color: hsl(var(--foreground)); opacity: 0; transition: opacity .2s, background .2s; }
+.poster-card-remove.poster-card-remove { position: absolute; top: .4rem; right: .4rem; z-index: 12; width: 1.9rem; height: 1.9rem; min-width: 0; min-height: 0; border-radius: 6px; background: hsl(var(--background) / .8); color: hsl(var(--foreground)); opacity: 0; transition: opacity .2s, background .2s; }
 .poster-card-shell:hover .poster-card-remove, .poster-card-remove:focus-visible { opacity: 1; }
 .poster-card-remove.poster-card-remove:hover { background: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); }
 @media (hover: none) { .poster-card-remove.poster-card-remove { opacity: 1; } }
@@ -1198,3 +1198,14 @@ html.perf-low .dl5-art { filter: none; }
 .smooth-seekbar--ghost::-moz-range-thumb { background: transparent !important; box-shadow: none !important; }
 .vp-seek-thumb { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 999px; background: hsl(var(--primary)); box-shadow: 0 1px 4px hsl(0 0% 0% / .45); transform: translate(-50%, -50%); pointer-events: none; z-index: 1; transition: width .12s ease, height .12s ease; }
 .relative:has(> .smooth-seekbar--ghost:active) > .vp-seek-thumb { width: 20px; height: 20px; }
+
+/* Opening notice: downloads removed */
+.download-notice { overflow: hidden; border-radius: 10px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); box-shadow: var(--shadow-float, 0 20px 50px hsl(var(--background) / .6)); }
+.download-notice-body { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 1.5rem 1.25rem 1rem; }
+.download-notice-icon { display: inline-flex; width: 2.75rem; height: 2.75rem; align-items: center; justify-content: center; border-radius: 8px; color: hsl(var(--primary)); background: hsl(var(--primary) / .12); border: 1px solid hsl(var(--primary) / .3); }
+.download-notice-icon svg { width: 1.25rem; height: 1.25rem; }
+.download-notice-kicker { display: inline-flex; align-items: center; gap: .3rem; margin-top: .85rem; font-size: 10px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: hsl(var(--primary)); }
+.download-notice-kicker svg { width: .75rem; height: .75rem; }
+.download-notice-title.download-notice-title { margin-top: .35rem; font-size: 1.05rem; font-weight: 800; line-height: 1.25; color: hsl(var(--foreground)); }
+.download-notice-text.download-notice-text { margin-top: .45rem; font-size: .8rem; line-height: 1.5; color: hsl(var(--muted-foreground)); }
+.download-notice-actions { padding: 0 1.25rem 1.25rem; }

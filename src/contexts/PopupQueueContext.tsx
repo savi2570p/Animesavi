@@ -4,7 +4,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { fetchTokenAccessFromDB, fetchTokenSystemStatus, isSuperAdmin } from '@/components/AccessBanner';
 import { APP_VERSION } from '@/data/releaseNotes';
 
-type PopupType = 'expired' | 'whatsNew' | 'welcome';
+type PopupType = 'expired' | 'downloadNotice' | 'whatsNew' | 'welcome';
+
+// Shown once per browser session when the site is opened.
+export const DOWNLOAD_NOTICE_KEY = 'download_removed_notice_shown';
 
 // Tied to the app version so every new release re-shows What's New to returning users.
 const NOTICE_VERSION = APP_VERSION;
@@ -73,7 +76,12 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
 
       if (cancelled) return;
 
-      // 2. What's New
+      // 2. Notice: downloads / save offline removed (once per session)
+      let noticeShown = false;
+      try { noticeShown = sessionStorage.getItem(DOWNLOAD_NOTICE_KEY) === 'true'; } catch { /* ignore */ }
+      if (!noticeShown) popups.push('downloadNotice');
+
+      // 3. What's New
       const hasSeenWelcome = localStorage.getItem('has_seen_welcome');
       const seenNoticeVersion = localStorage.getItem('notice_popup_seen_version');
 
@@ -109,6 +117,8 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
       const current = prev[0];
       if (current === 'expired') {
         sessionStorage.setItem('token_expired_popup_shown', 'true');
+      } else if (current === 'downloadNotice') {
+        try { sessionStorage.setItem(DOWNLOAD_NOTICE_KEY, 'true'); } catch { /* ignore */ }
       } else if (current === 'whatsNew') {
         localStorage.setItem('notice_popup_seen_version', NOTICE_VERSION);
       } else if (current === 'welcome') {

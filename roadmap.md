@@ -1,3 +1,9 @@
+## Nov 19 downloads removal
+- [x] Watchlist and Favorites delete buttons remove the title instead of opening it
+- [x] PC: notifications moved into the profile menu
+- [x] Hamburger: remove Downloads; player page: remove Save Offline; SUB server: no Download button
+- [x] Opening notice pop-up: downloads / save offline removed due to restrictions
+
 ## Nov 13 Premium badges
 - [x] Redesign shared card crowns and profile-photo Premium badges without changing access rules
 

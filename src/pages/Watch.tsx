@@ -27,7 +27,6 @@ import { WatchInfoPanel } from '@/components/video/WatchInfoPanel';
 import { MobileWatchEpisodes, MobileAboutAnime } from '@/components/video/MobileWatchSections';
 import { SeasonCards } from '@/components/anime/SeasonCards';
 import { WatchParty } from '@/components/WatchParty';
-import { OfflineDownloadButton } from '@/components/video/OfflineDownloadButton';
 import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
 
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
@@ -1377,6 +1376,7 @@ export default function Watch() {
               audioLanguage={episode.audio_language || undefined}
               isSubOnly={(anime?.is_sub_only ?? false) || activeServer === 'SUB'}
               audioLocked={activeServer === 'SUB'}
+              hideDownload={activeServer === 'SUB'}
               isHindiDub={activeServer !== 'SUB' && !anime?.is_sub_only && !anime?.is_eng_dub}
               captionsUrl={episode.captions_url}
               isEncoding={isVideoEncoding}
@@ -1613,15 +1613,6 @@ export default function Watch() {
                   animeId={anime.id}
                 />
               )}
-              <OfflineDownloadButton
-                videoUrl={episode.video_url}
-                iosVideoUrl={deviceOptimizedVideo.device === 'iOS' ? deviceOptimizedVideo.videoUrl : null}
-                episodeId={episode.id}
-                episodeTitle={episode.title}
-                animeTitle={anime?.title || 'Unknown'}
-                thumbnail={episode.thumbnail}
-                isIOSDevice={deviceOptimizedVideo.device === 'iOS'}
-              />
             {(() => {
               const animeSlug = anime?.title
                 ? anime.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')

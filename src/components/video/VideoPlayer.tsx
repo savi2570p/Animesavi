@@ -125,6 +125,8 @@ interface VideoPlayerProps {
   isHindiDub?: boolean;
   /** SUB server: audio stays on the Japanese track and can't be switched. */
   audioLocked?: boolean;
+  /** Hide every download control (e.g. on the SUB server). */
+  hideDownload?: boolean;
   /** Display name of the selected server (e.g. "4K+"), shown in fullscreen. */
   serverLabel?: string;
   captionsUrl?: string | null;
@@ -270,6 +272,7 @@ export function VideoPlayer({
   isSubOnly = false,
   isHindiDub = false,
   audioLocked = false,
+  hideDownload = false,
   serverLabel,
   captionsUrl,
   isEncoding = false,
@@ -1955,6 +1958,7 @@ export function VideoPlayer({
   }, [togglePlay, toggleFullscreen, togglePiP, skipForward, skipBackward, isFullscreen, toggleMute, handleVolumeChange, volume]);
 
   const handleDownload = () => {
+    if (hideDownload) return;
     if (!effectiveVideoUrl) {
       toast.error('No video available for download');
       return;
@@ -3177,9 +3181,11 @@ export function VideoPlayer({
                   </div>
                   <div className={`flex items-center ${isIOS ? "gap-2" : "gap-3 md:gap-3.5"}`}>
 
+                    {!hideDownload && (
                     <button className={flatPlayerControlButtonClass} onClick={(e) => { e.stopPropagation(); handleDownload(); }} title="Download">
                       <Download className={isIOS ? "w-4 h-4" : "w-5 h-5 md:w-6 md:h-6"} />
                     </button>
+                    )}
                     {/* CC button removed from X-PLUS server per design request */}
                     <DropdownMenu modal={false} open={settingsOpen} onOpenChange={(open) => { setSettingsOpen(open); if (!open) setSettingsMenu('main'); }}>
                       <DropdownMenuTrigger asChild>
@@ -3253,7 +3259,7 @@ export function VideoPlayer({
                   <Subtitles className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
                 </button>
               )}
-              {features.includes('download') && (
+              {!hideDownload && features.includes('download') && (
                   <button 
                     className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`} 
                     onClick={(e) => { e.stopPropagation(); handleDownload(); }} 
@@ -3493,6 +3499,7 @@ export function VideoPlayer({
                 </div>
                 <div className="vp-pill flex items-center gap-3 md:gap-3.5">
 
+                  {!hideDownload && (
                   <button 
                     className={flatPlayerControlButtonClass} 
                     onClick={(e) => { e.stopPropagation(); handleDownload(); }}
@@ -3500,6 +3507,7 @@ export function VideoPlayer({
                   >
                     <Download className={isIOS ? "w-4 h-4" : "w-4.5 h-4.5 md:w-5 md:h-5"} />
                   </button>
+                  )}
                   {/* CC button removed from X-PLUS server per design request */}
                   <DropdownMenu 
                     modal={false} 
@@ -3607,7 +3615,7 @@ export function VideoPlayer({
                   <Subtitles className={isIOS ? iosControlIconClass : "w-3 h-3 md:w-[18px] md:h-[18px]"} />
                 </button>
               )}
-              {features.includes('download') && (
+              {!hideDownload && features.includes('download') && (
                 <button 
                   className={`w-[20px] h-[20px] md:w-9 md:h-9 ${playerControlButtonClass}`} 
                   onClick={(e) => { e.stopPropagation(); handleDownload(); }} 

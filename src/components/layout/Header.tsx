@@ -29,7 +29,6 @@ import {
   BadgeCheck,
   Sparkles,
   Home,
-  Download,
   RefreshCw,
   Clock,
   CalendarDays,
@@ -44,7 +43,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { toast } from 'sonner';
 import logo from '@/assets/logo.png';
 import { ViewPartyDialog } from '@/components/WatchParty';
-import { NotificationBell } from '@/components/NotificationBell';
 import { useNotifications } from '@/hooks/useNotifications';
 import { rememberAccount } from '@/components/AccountSwitcher';
 import { hasValidTokenAccess } from '@/components/AccessBanner';
@@ -262,7 +260,6 @@ export function Header() {
       items: [
         { to: '/favorites', label: 'Favorites', icon: Heart },
         { to: '/history', label: 'History', icon: History },
-        { to: '/downloads', label: 'Downloads', icon: Download },
         { to: '/watchlist', label: 'Watch Later', icon: Clock },
       ],
     }] : []),
@@ -437,7 +434,6 @@ export function Header() {
               <Search className="h-4 w-4" />
             </Button>
           )}
-          {user && !isMobileOS && <div className="[&_button]:h-7 [&_button]:w-7 sm:[&_button]:h-9 sm:[&_button]:w-9 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_svg]:h-4 sm:[&_svg]:w-4"><NotificationBell /></div>}
           
           {user ? (
             <DropdownMenu>
@@ -449,7 +445,7 @@ export function Header() {
                       {user.email?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
-                  {isMobileOS && unreadNotifs > 0 && <span className="account-trigger-dot" aria-label={`${unreadNotifs} unread notifications`} />}
+                  {unreadNotifs > 0 && <span className="account-trigger-dot" aria-label={`${unreadNotifs} unread notifications`} />}
                   {(isAdmin || hasValidTokenAccess(user?.email)) && (
                     <PremiumBadge variant="avatar" />
                   )}
@@ -485,14 +481,12 @@ export function Header() {
                       <Link to={item.to}><item.icon /><span>{item.label}</span></Link>
                     </DropdownMenuItem>
                   ))}
-                  {isMobileOS && (
-                    <DropdownMenuItem asChild className="account-menu-v10-item">
-                      <Link to="/notifications">
-                        <Bell /><span>Notifications</span>
-                        {unreadNotifs > 0 && <span className="account-menu-v10-badge">{unreadNotifs > 9 ? '9+' : unreadNotifs}</span>}
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
+                  <DropdownMenuItem asChild className="account-menu-v10-item">
+                    <Link to="/notifications">
+                      <Bell /><span>Notifications</span>
+                      {unreadNotifs > 0 && <span className="account-menu-v10-badge">{unreadNotifs > 9 ? '9+' : unreadNotifs}</span>}
+                    </Link>
+                  </DropdownMenuItem>
                 </div>
                 <DropdownMenuSeparator className="account-menu-v10-sep" />
                 <div className="account-menu-v10-list">

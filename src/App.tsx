@@ -15,6 +15,7 @@ import { beginHistorySession } from '@/lib/watchHistoryReset';
 
 installGlobalErrorHandlers();
 import { WelcomePopup } from "@/components/WelcomePopup";
+import { DownloadRemovedNotice } from "@/components/notices/DownloadRemovedNotice";
 import { FloatingTelegramButton } from "@/components/FloatingTelegramButton";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { MiniPlayer } from "@/components/video/MiniPlayer";
@@ -234,6 +235,7 @@ const App = () => (
                   <AdminTrialPopup />
                   <OfflineIndicator />
                   <WelcomePopup />
+                  <DownloadRemovedNotice />
                   <FloatingTelegramButton />
                   <MiniPlayer />
                   <PWAInstallPrompt />
