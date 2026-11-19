@@ -36,6 +36,7 @@ import {
   X,
   LogIn,
   Bell,
+  Megaphone,
   type LucideIcon,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
@@ -62,7 +63,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const { unreadCount: unreadNotifs } = useNotifications();
-  const { showWhatsNewManually } = usePopupQueue();
+  const { showWhatsNewManually, showDownloadNoticeManually } = usePopupQueue();
   const hasPremium = !!user && (isAdmin || hasValidTokenAccess(user?.email));
   const desktopSearchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
@@ -486,6 +487,9 @@ export function Header() {
                       <Bell /><span>Notifications</span>
                       {unreadNotifs > 0 && <span className="account-menu-v10-badge">{unreadNotifs > 9 ? '9+' : unreadNotifs}</span>}
                     </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={showDownloadNoticeManually} className="account-menu-v10-item">
+                    <Megaphone /><span>Notice</span>
                   </DropdownMenuItem>
                 </div>
                 <DropdownMenuSeparator className="account-menu-v10-sep" />

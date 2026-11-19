@@ -15,6 +15,7 @@ interface PopupQueueContextType {
   dismissPopup: () => void;
   showWhatsNewManually: () => void;
   isManualWhatsNew: boolean;
+  showDownloadNoticeManually: () => void;
 }
 
 const PopupQueueContext = createContext<PopupQueueContextType>({
@@ -22,6 +23,7 @@ const PopupQueueContext = createContext<PopupQueueContextType>({
   dismissPopup: () => {},
   showWhatsNewManually: () => {},
   isManualWhatsNew: false,
+  showDownloadNoticeManually: () => {},
 });
 
 export const usePopupQueue = () => useContext(PopupQueueContext);
@@ -32,6 +34,7 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
   const [queue, setQueue] = useState<PopupType[]>([]);
   const [ready, setReady] = useState(false);
   const [manualWhatsNew, setManualWhatsNew] = useState(false);
+  const [manualDownloadNotice, setManualDownloadNotice] = useState(false);
 
   const isEmbedRoute = typeof window !== 'undefined' && (
     window.location.pathname.startsWith('/embed/') ||
@@ -47,6 +50,7 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
       // never follow the user onto /auth, /watch, /anime/:id etc.
       setQueue([]);
       setManualWhatsNew(false);
+      setManualDownloadNotice(false);
       setReady(true);
       return;
     }
@@ -109,6 +113,13 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Opening the notice from the profile menu must not consume the
+    // automatic once-every-48-hours showing.
+    if (manualDownloadNotice) {
+      setManualDownloadNotice(false);
+      return;
+    }
+
     setQueue((prev) => {
       const current = prev[0];
       if (current === 'expired') {
@@ -130,10 +141,14 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
       }
       return next;
     });
-  }, [manualWhatsNew]);
+  }, [manualWhatsNew, manualDownloadNotice]);
 
   const showWhatsNewManually = useCallback(() => {
     setManualWhatsNew(true);
+  }, []);
+
+  const showDownloadNoticeManually = useCallback(() => {
+    setManualDownloadNotice(true);
   }, []);
 
   // Determine active popup: manual whatsNew takes precedence if no queue popup
@@ -142,6 +157,8 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
     activePopup = queue[0];
   } else if (manualWhatsNew) {
     activePopup = 'whatsNew';
+  } else if (manualDownloadNotice) {
+    activePopup = 'downloadNotice';
   }
 
   // Lock scroll only when popup is active
@@ -169,7 +186,7 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
   }, [activePopup]);
 
   return (
-    <PopupQueueContext.Provider value={{ activePopup, dismissPopup, showWhatsNewManually, isManualWhatsNew: manualWhatsNew }}>
+    <PopupQueueContext.Provider value={{ activePopup, dismissPopup, showWhatsNewManually, isManualWhatsNew: manualWhatsNew, showDownloadNoticeManually }}>
       {children}
     </PopupQueueContext.Provider>
   );

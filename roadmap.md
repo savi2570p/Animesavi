@@ -3,6 +3,7 @@
 - [x] PC: notifications moved into the profile menu
 - [x] Hamburger: remove Downloads; player page: remove Save Offline; SUB server: no Download button
 - [x] Opening notice pop-up: downloads / save offline removed due to restrictions
+- [x] Profile menu: "Notice" row re-opens the downloads notice on any page
 
 ## Nov 13 Premium badges
 - [x] Redesign shared card crowns and profile-photo Premium badges without changing access rules
