@@ -1200,12 +1200,22 @@ html.perf-low .dl5-art { filter: none; }
 .relative:has(> .smooth-seekbar--ghost:active) > .vp-seek-thumb { width: 20px; height: 20px; }
 
 /* Opening notice: downloads removed */
-.download-notice { overflow: hidden; border-radius: 10px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); box-shadow: var(--shadow-float, 0 20px 50px hsl(var(--background) / .6)); }
-.download-notice-body { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 1.5rem 1.25rem 1rem; }
-.download-notice-icon { display: inline-flex; width: 2.75rem; height: 2.75rem; align-items: center; justify-content: center; border-radius: 8px; color: hsl(var(--primary)); background: hsl(var(--primary) / .12); border: 1px solid hsl(var(--primary) / .3); }
-.download-notice-icon svg { width: 1.25rem; height: 1.25rem; }
-.download-notice-kicker { display: inline-flex; align-items: center; gap: .3rem; margin-top: .85rem; font-size: 10px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: hsl(var(--primary)); }
+.download-notice { overflow: hidden; border-radius: 10px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); box-shadow: var(--shadow-float, 0 20px 50px hsl(var(--background) / .6)); max-height: calc(100dvh - 2rem); display: flex; flex-direction: column; }
+.download-notice-body { display: flex; flex-direction: column; gap: .85rem; padding: 1.25rem 1.25rem .9rem; overflow-y: auto; overscroll-behavior: contain; }
+.download-notice-head { display: flex; align-items: center; gap: .75rem; padding-right: 1.5rem; }
+.download-notice-icon { display: inline-flex; flex: none; width: 2.5rem; height: 2.5rem; align-items: center; justify-content: center; border-radius: 8px; color: hsl(var(--primary)); background: hsl(var(--primary) / .12); border: 1px solid hsl(var(--primary) / .3); }
+.download-notice-icon svg { width: 1.2rem; height: 1.2rem; }
+.download-notice-kicker { display: inline-flex; align-items: center; gap: .3rem; font-size: 10px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: hsl(var(--primary)); }
 .download-notice-kicker svg { width: .75rem; height: .75rem; }
-.download-notice-title.download-notice-title { margin-top: .35rem; font-size: 1.05rem; font-weight: 800; line-height: 1.25; color: hsl(var(--foreground)); }
-.download-notice-text.download-notice-text { margin-top: .45rem; font-size: .8rem; line-height: 1.5; color: hsl(var(--muted-foreground)); }
-.download-notice-actions { padding: 0 1.25rem 1.25rem; }
+.download-notice-title.download-notice-title { margin-top: .2rem; font-size: 1.05rem; font-weight: 800; line-height: 1.25; color: hsl(var(--foreground)); }
+.download-notice-text.download-notice-text { font-size: .8rem; line-height: 1.55; color: hsl(var(--muted-foreground)); }
+.download-notice-section { border-top: 1px solid hsl(var(--border)); padding-top: .75rem; }
+.download-notice-section-title { font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: hsl(var(--muted-foreground)); margin-bottom: .45rem; }
+.download-notice-list { display: flex; flex-direction: column; gap: .4rem; }
+.download-notice-list li { display: flex; align-items: flex-start; gap: .5rem; font-size: .8rem; line-height: 1.4; color: hsl(var(--foreground)); }
+.download-notice-bullet { flex: none; width: .95rem; height: .95rem; margin-top: .1rem; }
+.download-notice-bullet.is-removed { color: hsl(var(--destructive)); }
+.download-notice-bullet.is-kept { color: hsl(var(--primary)); }
+.download-notice-tip { display: flex; align-items: flex-start; gap: .5rem; border-radius: 8px; border: 1px solid hsl(var(--border)); background: hsl(var(--muted) / .45); padding: .6rem .7rem; font-size: .75rem; line-height: 1.45; color: hsl(var(--muted-foreground)); }
+.download-notice-tip svg { flex: none; width: .9rem; height: .9rem; margin-top: .1rem; color: hsl(var(--primary)); }
+.download-notice-actions { display: flex; flex-direction: column; gap: .35rem; padding: .25rem 1.25rem 1.1rem; border-top: 1px solid hsl(var(--border)); padding-top: .85rem; }
