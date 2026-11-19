@@ -65,13 +65,43 @@ async function authenticateUser(req: Request) {
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
   );
-  const { data: roleData } = await serviceClient
+  const { data: roleData } = await withDbRetry(() => serviceClient
     .from('user_roles')
     .select('role')
-    .eq('user_id', userId);
+    .eq('user_id', userId));
 
   const roles = (roleData || []).map((r: { role: string }) => r.role);
   return { user: { id: userId }, roles };
+}
+
+// ── Transient database error handling ─────────────────────────────────────
+// PostgREST reports PGRST002/PGRST001 (and 503s) while the database is
+// briefly unavailable or reloading its schema cache. These are temporary, so
+// retry a few times before surfacing a retryable 503 instead of a vague 500.
+const TRANSIENT_DB_CODES = new Set(['PGRST000', 'PGRST001', 'PGRST002', '57P01', '57P03']);
+
+function isTransientDbError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const code = String((error as { code?: unknown }).code ?? '');
+  const message = String((error as { message?: unknown }).message ?? '');
+  return TRANSIENT_DB_CODES.has(code) || /schema cache|connection|timeout|temporarily/i.test(message);
+}
+
+function describeError(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return 'Unknown error';
+}
+
+async function withDbRetry<T extends { error: unknown }>(run: () => PromiseLike<T>, attempts = 3): Promise<T> {
+  let result = await run();
+  for (let i = 1; i < attempts && result.error && isTransientDbError(result.error); i++) {
+    await new Promise((resolve) => setTimeout(resolve, 400 * i));
+    result = await run();
+  }
+  return result;
 }
 
 function unauthorizedResponse() {
@@ -277,12 +307,12 @@ Deno.serve(async (req) => {
         const offset = Math.max(0, Number(body?.offset) || 0);
 
         // Fetch a single page of episodes
-        const { data: episodes, error: fetchError } = await supabaseClient
+        const { data: episodes, error: fetchError } = await withDbRetry(() => supabaseClient
           .from('episodes')
           .select('id, video_url')
           .not('video_url', 'is', null)
           .order('created_at', { ascending: false })
-          .range(offset, offset + batchSize - 1);
+          .range(offset, offset + batchSize - 1));
         if (fetchError) throw fetchError;
 
         const epList = episodes || [];
@@ -291,10 +321,13 @@ Deno.serve(async (req) => {
         if (epList.length > 0) {
           // Bulk-fetch existing conversions for these episodes (1 query)
           const ids = epList.map((e) => e.id);
-          const { data: existingRows } = await supabaseClient
+          const { data: existingRows, error: existingError } = await withDbRetry(() => supabaseClient
             .from('video_conversions')
             .select('id, episode_id, status')
-            .in('episode_id', ids);
+            .in('episode_id', ids));
+          // Without the existing rows every episode would look new, so stop
+          // this batch rather than guessing.
+          if (existingError) throw existingError;
           const existingMap = new Map<string, { id: string; status: string }>();
           for (const row of existingRows || []) {
             existingMap.set(row.episode_id, { id: row.id, status: row.status });
@@ -603,8 +636,15 @@ Deno.serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
     );
   } catch (error: unknown) {
+    const msg = describeError(error);
+    if (isTransientDbError(error)) {
+      console.warn('Video conversion: database temporarily unavailable:', msg);
+      return new Response(
+        JSON.stringify({ error: 'Database temporarily unavailable, please retry shortly', retryable: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '30' }, status: 503 }
+      );
+    }
     console.error('Video conversion error:', error);
-    const msg = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ error: msg }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }

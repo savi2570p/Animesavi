@@ -57,6 +57,7 @@ export function useAutoVideoScan() {
     if (scanAttemptedRef.current) return;
 
     scanAttemptedRef.current = true;
+    const SCAN_KEY = 'autoVideoScan:lastFullScanAt';
     
     const runBackgroundScan = async () => {
       setIsScanning(true);
@@ -92,9 +93,17 @@ export function useAutoVideoScan() {
             return;
           }
 
-          const result = await response.json();
-          if (result.error) {
-            console.error('[AutoVideoScan] Scan error:', result.error);
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || result.error) {
+            // A brief backend outage (503 / retryable) is not a real failure:
+            // allow the safety-net scan to run again on the next page load
+            // instead of waiting a full day, and keep the console quiet.
+            if (response.status === 503 || result.retryable) {
+              try { localStorage.removeItem(SCAN_KEY); } catch {}
+              console.warn('[AutoVideoScan] Backend busy, scan will retry later');
+            } else {
+              console.warn('[AutoVideoScan] Scan stopped:', result.error || response.status);
+            }
             return;
           }
 
@@ -129,7 +138,6 @@ export function useAutoVideoScan() {
     // New and edited episodes already get a conversion record from a database
     // trigger, so the full catalogue scan is only a safety net: run it at most
     // once a day per browser instead of on every page load.
-    const SCAN_KEY = 'autoVideoScan:lastFullScanAt';
     const lastScan = Number(localStorage.getItem(SCAN_KEY) || 0);
     const scanDue = !Number.isFinite(lastScan) || Date.now() - lastScan > 24 * 60 * 60 * 1000;
     const timeoutId = setTimeout(() => {
