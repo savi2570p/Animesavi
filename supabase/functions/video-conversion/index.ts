@@ -84,15 +84,26 @@ function isTransientDbError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
   const code = String((error as { code?: unknown }).code ?? '');
   const message = String((error as { message?: unknown }).message ?? '');
-  return TRANSIENT_DB_CODES.has(code) || /schema cache|connection|timeout|temporarily/i.test(message);
+  return TRANSIENT_DB_CODES.has(code) || /schema cache|connection|timeout|temporarily|error sending request/i.test(message);
+}
+
+// Keep filters well under gateway URL limits (~100 UUIDs ≈ 3.7 KB).
+const ID_CHUNK_SIZE = 100;
+function chunkIds<T>(ids: T[], size = ID_CHUNK_SIZE): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < ids.length; i += size) chunks.push(ids.slice(i, i + size));
+  return chunks;
 }
 
 function describeError(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  if (error && typeof error === 'object' && 'message' in error) {
-    return String((error as { message: unknown }).message);
+  let msg = 'Unknown error';
+  if (error instanceof Error) msg = error.message;
+  else if (error && typeof error === 'object' && 'message' in error) {
+    msg = String((error as { message: unknown }).message);
   }
-  return 'Unknown error';
+  // Never echo full request URLs (they can carry thousands of IDs).
+  msg = msg.replace(/https?:\/\/\S+/g, '[request]');
+  return msg.length > 300 ? `${msg.slice(0, 300)}…` : msg;
 }
 
 async function withDbRetry<T extends { error: unknown }>(run: () => PromiseLike<T>, attempts = 3): Promise<T> {
@@ -321,16 +332,20 @@ Deno.serve(async (req) => {
         if (epList.length > 0) {
           // Bulk-fetch existing conversions for these episodes (1 query)
           const ids = epList.map((e) => e.id);
-          const { data: existingRows, error: existingError } = await withDbRetry(() => supabaseClient
-            .from('video_conversions')
-            .select('id, episode_id, status')
-            .in('episode_id', ids));
-          // Without the existing rows every episode would look new, so stop
-          // this batch rather than guessing.
-          if (existingError) throw existingError;
+          // IDs travel in the request URL, so look them up in small chunks:
+          // hundreds of UUIDs in one `in.(...)` filter exceed URL limits.
           const existingMap = new Map<string, { id: string; status: string }>();
-          for (const row of existingRows || []) {
-            existingMap.set(row.episode_id, { id: row.id, status: row.status });
+          for (const idChunk of chunkIds(ids)) {
+            const { data: existingRows, error: existingError } = await withDbRetry(() => supabaseClient
+              .from('video_conversions')
+              .select('id, episode_id, status')
+              .in('episode_id', idChunk));
+            // Without the existing rows every episode would look new, so stop
+            // this batch rather than guessing.
+            if (existingError) throw existingError;
+            for (const row of existingRows || []) {
+              existingMap.set(row.episode_id, { id: row.id, status: row.status });
+            }
           }
 
           const toInsert: any[] = [];
@@ -375,7 +390,7 @@ Deno.serve(async (req) => {
           }
 
           // Bulk requeue
-          if (toRequeue.length > 0) {
+          for (const idChunk of chunkIds(toRequeue)) {
             const { error: updateError, count } = await supabaseClient
               .from('video_conversions')
               .update({
@@ -386,8 +401,8 @@ Deno.serve(async (req) => {
                 conversion_completed_at: null,
                 conversion_stage: 'queued',
               }, { count: 'exact' })
-              .in('id', toRequeue);
-            if (!updateError) requeued = count ?? toRequeue.length;
+              .in('id', idChunk);
+            if (!updateError) requeued += count ?? idChunk.length;
             else console.error('Bulk requeue error:', updateError);
           }
         }
@@ -644,7 +659,7 @@ Deno.serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '30' }, status: 503 }
       );
     }
-    console.error('Video conversion error:', error);
+    console.error('Video conversion error:', msg);
     return new Response(
       JSON.stringify({ error: msg }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
