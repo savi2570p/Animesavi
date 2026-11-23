@@ -31,6 +31,7 @@
 - [x] Admin: Top Trending list — Bleach added showed as #1 on home, removed, fallback returned
 
 ## Open
+- [x] Admin "API Access" tab to copy the public API address and setup prompt
 - [ ] Second-password login protection: blocked on choosing a genuine supported second factor or a separately designed server-enforced authentication system.
 
 ## Nov 11 pass

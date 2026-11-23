@@ -41,6 +41,7 @@ import { EmbedAllowlistManager } from '@/components/admin/EmbedAllowlistManager'
 import { EmbedAudioDebugPanel } from '@/components/admin/EmbedAudioDebugPanel';
 import { RecapAnalyticsDashboard } from '@/components/admin/RecapAnalyticsDashboard';
 import { ClonePlatformsPanel } from '@/components/admin/ClonePlatformsPanel';
+import { ApiAccessPanel } from '@/components/admin/ApiAccessPanel';
 
 interface Application {
   id: string;
@@ -213,6 +214,7 @@ export default function Admin() {
     { value: 'users', icon: Users, label: 'Users', accent: 'text-primary' },
     { value: 'recaps', icon: Sparkles, label: 'AI Recaps', accent: 'text-primary' },
     { value: 'clone-page', icon: Copy, label: 'Clone', accent: 'text-primary' },
+    { value: 'api-access', icon: Key, label: 'API Access', accent: 'text-primary' },
   ];
 
   return (
@@ -369,6 +371,7 @@ export default function Admin() {
           <TabsContent value="users" className="admin-v10-tab-content"><div className="admin-v10-tool"><UserManagement /></div></TabsContent>
           <TabsContent value="recaps" className="admin-v10-tab-content"><div className="admin-v10-tool"><RecapAnalyticsDashboard /></div></TabsContent>
           <TabsContent value="clone-page" className="admin-v10-tab-content"><div className="admin-v10-tool"><ClonePlatformsPanel /></div></TabsContent>
+          <TabsContent value="api-access" className="admin-v10-tab-content"><div className="admin-v10-tool"><ApiAccessPanel /></div></TabsContent>
           </div>
         </Tabs>
         <section className="admin-v10-debug"><EmbedAudioDebugPanel /></section>
