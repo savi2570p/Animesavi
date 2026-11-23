@@ -87,6 +87,7 @@ export type Database = {
         Row: {
           banner_image: string | null
           content_rating: string | null
+          content_revision: number
           cover_image: string | null
           created_at: string
           description: string | null
@@ -114,6 +115,7 @@ export type Database = {
         Insert: {
           banner_image?: string | null
           content_rating?: string | null
+          content_revision?: number
           cover_image?: string | null
           created_at?: string
           description?: string | null
@@ -141,6 +143,7 @@ export type Database = {
         Update: {
           banner_image?: string | null
           content_rating?: string | null
+          content_revision?: number
           cover_image?: string | null
           created_at?: string
           description?: string | null
@@ -208,6 +211,13 @@ export type Database = {
             columns: ["anime_id"]
             isOneToOne: false
             referencedRelation: "anime_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anime_reviews_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_anime"
             referencedColumns: ["id"]
           },
         ]
@@ -333,6 +343,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "comment_notifications_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_episodes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "comment_notifications_reply_id_fkey"
             columns: ["reply_id"]
             isOneToOne: false
@@ -416,6 +433,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "comments_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_episodes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "comments_parent_id_fkey"
             columns: ["parent_id"]
             isOneToOne: false
@@ -430,6 +454,7 @@ export type Database = {
           ai_recap_generated_at: string | null
           audio_language: string | null
           captions_url: string | null
+          content_revision: number
           created_at: string
           description: string | null
           duration: number | null
@@ -452,6 +477,7 @@ export type Database = {
           ai_recap_generated_at?: string | null
           audio_language?: string | null
           captions_url?: string | null
+          content_revision?: number
           created_at?: string
           description?: string | null
           duration?: number | null
@@ -474,6 +500,7 @@ export type Database = {
           ai_recap_generated_at?: string | null
           audio_language?: string | null
           captions_url?: string | null
+          content_revision?: number
           created_at?: string
           description?: string | null
           duration?: number | null
@@ -492,6 +519,13 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "episodes_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_seasons"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "episodes_season_id_fkey"
             columns: ["season_id"]
@@ -548,6 +582,13 @@ export type Database = {
             columns: ["anime_id"]
             isOneToOne: true
             referencedRelation: "anime_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "featured_hero_lineup_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: true
+            referencedRelation: "hub_public_anime"
             referencedColumns: ["id"]
           },
         ]
@@ -609,6 +650,183 @@ export type Database = {
           title?: string
           updated_at?: string
           uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      hub_connections: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          delivered_seq: number
+          delivered_tx: unknown
+          delivery_state: string
+          disconnected_at: string | null
+          events_delivered: number
+          id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          last_success_at: string | null
+          lease_until: string | null
+          next_attempt_at: string
+          previous_secret_ciphertext: string | null
+          previous_secret_expires_at: string | null
+          secret_ciphertext: string | null
+          site_name: string
+          site_origin: string
+          status: string
+          updated_at: string
+          webhook_url: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          delivered_seq?: number
+          delivered_tx: unknown
+          delivery_state?: string
+          disconnected_at?: string | null
+          events_delivered?: number
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          last_success_at?: string | null
+          lease_until?: string | null
+          next_attempt_at?: string
+          previous_secret_ciphertext?: string | null
+          previous_secret_expires_at?: string | null
+          secret_ciphertext?: string | null
+          site_name: string
+          site_origin: string
+          status?: string
+          updated_at?: string
+          webhook_url: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          delivered_seq?: number
+          delivered_tx?: unknown
+          delivery_state?: string
+          disconnected_at?: string | null
+          events_delivered?: number
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          last_success_at?: string | null
+          lease_until?: string | null
+          next_attempt_at?: string
+          previous_secret_ciphertext?: string | null
+          previous_secret_expires_at?: string | null
+          secret_ciphertext?: string | null
+          site_name?: string
+          site_origin?: string
+          status?: string
+          updated_at?: string
+          webhook_url?: string
+        }
+        Relationships: []
+      }
+      hub_content_events: {
+        Row: {
+          action: string
+          anime_id: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          event_id: string
+          revision: number
+          season_id: string | null
+          seq: number
+          tx_id: unknown
+        }
+        Insert: {
+          action: string
+          anime_id?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          event_id?: string
+          revision: number
+          season_id?: string | null
+          seq?: number
+          tx_id?: unknown
+        }
+        Update: {
+          action?: string
+          anime_id?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          event_id?: string
+          revision?: number
+          season_id?: string | null
+          seq?: number
+          tx_id?: unknown
+        }
+        Relationships: []
+      }
+      hub_rate_events: {
+        Row: {
+          bucket: string
+          created_at: string
+          id: number
+        }
+        Insert: {
+          bucket: string
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          bucket?: string
+          created_at?: string
+          id?: number
+        }
+        Relationships: []
+      }
+      hub_runtime: {
+        Row: {
+          dispatch_url: string
+          id: number
+          kick_secret: string
+          last_kick_at: string | null
+          last_pruned_at: string | null
+          pruned_seq: number | null
+          pruned_tx: unknown
+        }
+        Insert: {
+          dispatch_url: string
+          id: number
+          kick_secret: string
+          last_kick_at?: string | null
+          last_pruned_at?: string | null
+          pruned_seq?: number | null
+          pruned_tx?: unknown
+        }
+        Update: {
+          dispatch_url?: string
+          id?: number
+          kick_secret?: string
+          last_kick_at?: string | null
+          last_pruned_at?: string | null
+          pruned_seq?: number | null
+          pruned_tx?: unknown
+        }
+        Relationships: []
+      }
+      hub_used_nonces: {
+        Row: {
+          connection_id: string
+          created_at: string
+          nonce: string
+        }
+        Insert: {
+          connection_id: string
+          created_at?: string
+          nonce: string
+        }
+        Update: {
+          connection_id?: string
+          created_at?: string
+          nonce?: string
         }
         Relationships: []
       }
@@ -728,6 +946,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "partner_fetch_log_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_anime"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "partner_fetch_log_partner_key_id_fkey"
             columns: ["partner_key_id"]
             isOneToOne: false
@@ -771,6 +996,13 @@ export type Database = {
             columns: ["anime_id"]
             isOneToOne: false
             referencedRelation: "anime_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_resubmissions_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_anime"
             referencedColumns: ["id"]
           },
           {
@@ -882,6 +1114,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "recap_analytics_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_episodes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "recap_analytics_watch_party_id_fkey"
             columns: ["watch_party_id"]
             isOneToOne: false
@@ -893,6 +1132,7 @@ export type Database = {
       seasons: {
         Row: {
           anime_id: string
+          content_revision: number
           created_at: string
           id: string
           is_upcoming: boolean
@@ -902,6 +1142,7 @@ export type Database = {
         }
         Insert: {
           anime_id: string
+          content_revision?: number
           created_at?: string
           id?: string
           is_upcoming?: boolean
@@ -911,6 +1152,7 @@ export type Database = {
         }
         Update: {
           anime_id?: string
+          content_revision?: number
           created_at?: string
           id?: string
           is_upcoming?: boolean
@@ -931,6 +1173,13 @@ export type Database = {
             columns: ["anime_id"]
             isOneToOne: false
             referencedRelation: "anime_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seasons_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_anime"
             referencedColumns: ["id"]
           },
         ]
@@ -1200,6 +1449,13 @@ export type Database = {
             referencedRelation: "episodes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "shorts_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_episodes"
+            referencedColumns: ["id"]
+          },
         ]
       }
       shorts_comments: {
@@ -1371,6 +1627,13 @@ export type Database = {
             referencedRelation: "anime_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "top_trending_lineup_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: true
+            referencedRelation: "hub_public_anime"
+            referencedColumns: ["id"]
+          },
         ]
       }
       trending_banner_lineup: {
@@ -1420,6 +1683,13 @@ export type Database = {
             columns: ["anime_id"]
             isOneToOne: true
             referencedRelation: "anime_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trending_banner_lineup_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: true
+            referencedRelation: "hub_public_anime"
             referencedColumns: ["id"]
           },
         ]
@@ -1590,6 +1860,13 @@ export type Database = {
             referencedRelation: "anime_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_favorites_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_anime"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_genre_preferences: {
@@ -1757,6 +2034,13 @@ export type Database = {
             referencedRelation: "episodes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "video_conversions_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: true
+            referencedRelation: "hub_public_episodes"
+            referencedColumns: ["id"]
+          },
         ]
       }
       video_embeds: {
@@ -1808,6 +2092,13 @@ export type Database = {
             columns: ["episode_id"]
             isOneToOne: false
             referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_embeds_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_episodes"
             referencedColumns: ["id"]
           },
         ]
@@ -1865,10 +2156,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "watch_history_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_anime"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "watch_history_episode_id_fkey"
             columns: ["episode_id"]
             isOneToOne: false
             referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "watch_history_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_episodes"
             referencedColumns: ["id"]
           },
         ]
@@ -1898,6 +2203,13 @@ export type Database = {
             columns: ["episode_id"]
             isOneToOne: false
             referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "watch_later_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_episodes"
             referencedColumns: ["id"]
           },
         ]
@@ -1973,10 +2285,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "watch_parties_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_anime"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "watch_parties_episode_id_fkey"
             columns: ["episode_id"]
             isOneToOne: false
             referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "watch_parties_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_episodes"
             referencedColumns: ["id"]
           },
         ]
@@ -2110,6 +2436,191 @@ export type Database = {
         }
         Relationships: []
       }
+      hub_public_anime: {
+        Row: {
+          banner_image: string | null
+          content_rating: string | null
+          content_revision: number | null
+          cover_image: string | null
+          created_at: string | null
+          description: string | null
+          genres: string[] | null
+          id: string | null
+          is_crunchyroll: boolean | null
+          is_eng_dub: boolean | null
+          is_featured: boolean | null
+          is_muse: boolean | null
+          is_sub_only: boolean | null
+          like_count: number | null
+          release_year: number | null
+          schedule_day: number | null
+          source_material: string | null
+          status: string | null
+          studio: string | null
+          title: string | null
+          total_episodes: number | null
+          trailer_url: string | null
+          type: string | null
+          updated_at: string | null
+          uploader_id: string | null
+          view_count: number | null
+        }
+        Insert: {
+          banner_image?: string | null
+          content_rating?: string | null
+          content_revision?: number | null
+          cover_image?: string | null
+          created_at?: string | null
+          description?: string | null
+          genres?: string[] | null
+          id?: string | null
+          is_crunchyroll?: boolean | null
+          is_eng_dub?: boolean | null
+          is_featured?: boolean | null
+          is_muse?: boolean | null
+          is_sub_only?: boolean | null
+          like_count?: number | null
+          release_year?: number | null
+          schedule_day?: number | null
+          source_material?: string | null
+          status?: string | null
+          studio?: string | null
+          title?: string | null
+          total_episodes?: number | null
+          trailer_url?: string | null
+          type?: string | null
+          updated_at?: string | null
+          uploader_id?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          banner_image?: string | null
+          content_rating?: string | null
+          content_revision?: number | null
+          cover_image?: string | null
+          created_at?: string | null
+          description?: string | null
+          genres?: string[] | null
+          id?: string | null
+          is_crunchyroll?: boolean | null
+          is_eng_dub?: boolean | null
+          is_featured?: boolean | null
+          is_muse?: boolean | null
+          is_sub_only?: boolean | null
+          like_count?: number | null
+          release_year?: number | null
+          schedule_day?: number | null
+          source_material?: string | null
+          status?: string | null
+          studio?: string | null
+          title?: string | null
+          total_episodes?: number | null
+          trailer_url?: string | null
+          type?: string | null
+          updated_at?: string | null
+          uploader_id?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      hub_public_episodes: {
+        Row: {
+          ai_recap: string | null
+          ai_recap_generated_at: string | null
+          anime_id: string | null
+          audio_language: string | null
+          captions_url: string | null
+          content_revision: number | null
+          created_at: string | null
+          description: string | null
+          duration: number | null
+          episode_number: number | null
+          external_url: string | null
+          id: string | null
+          intro_end_time: number | null
+          intro_start_time: number | null
+          outro_end_time: number | null
+          outro_start_time: number | null
+          season_id: string | null
+          short_id: string | null
+          sub_video_url: string | null
+          thumbnail: string | null
+          title: string | null
+          video_url: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "episodes_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "episodes_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seasons_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "anime"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seasons_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "anime_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seasons_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_anime"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_public_seasons: {
+        Row: {
+          anime_id: string | null
+          content_revision: number | null
+          created_at: string | null
+          id: string | null
+          is_upcoming: boolean | null
+          release_date: string | null
+          season_number: number | null
+          title: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seasons_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "anime"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seasons_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "anime_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seasons_anime_id_fkey"
+            columns: ["anime_id"]
+            isOneToOne: false
+            referencedRelation: "hub_public_anime"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       claim_conversion_jobs: {
@@ -2179,6 +2690,97 @@ export type Database = {
         Returns: boolean
       }
       home_latest_catalogue: { Args: never; Returns: Json }
+      hub_claim_connections: {
+        Args: { _lease_seconds?: number; _limit?: number }
+        Returns: {
+          attempt_count: number
+          created_at: string
+          delivered_seq: number
+          delivered_tx: unknown
+          delivery_state: string
+          disconnected_at: string | null
+          events_delivered: number
+          id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          last_success_at: string | null
+          lease_until: string | null
+          next_attempt_at: string
+          previous_secret_ciphertext: string | null
+          previous_secret_expires_at: string | null
+          secret_ciphertext: string | null
+          site_name: string
+          site_origin: string
+          status: string
+          updated_at: string
+          webhook_url: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "hub_connections"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      hub_create_connection: {
+        Args: {
+          _ciphertext: string
+          _site_name: string
+          _site_origin: string
+          _webhook_url: string
+        }
+        Returns: {
+          delivered_seq: number
+          delivered_tx: string
+          id: string
+        }[]
+      }
+      hub_events_after: {
+        Args: { _limit?: number; _seq: number; _tx: string }
+        Returns: {
+          action: string
+          anime_id: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          event_id: string
+          revision: number
+          season_id: string
+          seq: number
+          tx_id: string
+        }[]
+      }
+      hub_head: {
+        Args: never
+        Returns: {
+          oldest_seq: number
+          oldest_tx: string
+          seq: number
+          tx_id: string
+        }[]
+      }
+      hub_prune: { Args: { _retention_days?: number }; Returns: number }
+      hub_rate_check: {
+        Args: { _bucket: string; _max: number; _window_seconds: number }
+        Returns: boolean
+      }
+      hub_record_delivery_failure: {
+        Args: { _error: string; _id: string; _max_attempts?: number }
+        Returns: undefined
+      }
+      hub_record_delivery_success: {
+        Args: { _count: number; _id: string; _seq: number; _tx: string }
+        Returns: undefined
+      }
+      hub_release_connection: { Args: { _id: string }; Returns: undefined }
+      hub_set_connection_cursor: {
+        Args: { _id: string; _seq: number; _tx: string }
+        Returns: undefined
+      }
+      hub_use_nonce: {
+        Args: { _connection_id: string; _nonce: string }
+        Returns: boolean
+      }
       is_allowed_short_uploader: {
         Args: { _user_id: string }
         Returns: boolean

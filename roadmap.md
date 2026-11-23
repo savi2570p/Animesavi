@@ -1,3 +1,9 @@
+## Nov 23 API Hub
+- [x] Public keyless catalogue API (/v1) with cursor pages, ETags and OpenAPI
+- [x] Change tracking on anime/seasons/episodes + change feed with 30-day history
+- [x] One-click pairing with endpoint verification, signed webhooks, retries, rotation, disconnect
+- [x] Developers page with live tester and Universal Integration Prompt
+
 ## Nov 19 downloads removal
 - [x] Watchlist and Favorites delete buttons remove the title instead of opening it
 - [x] PC: notifications moved into the profile menu

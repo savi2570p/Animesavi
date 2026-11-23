@@ -43,6 +43,7 @@ import Auth from "./pages/Auth";
 const TokenVerify = lazy(() => import("./pages/TokenVerify"));
 const UnlockAccess = lazy(() => import("./pages/UnlockAccess"));
 const Browse = lazy(() => import("./pages/Browse"));
+const Developers = lazy(() => import("./pages/Developers"));
 const AnimeDetail = lazy(() => import("./pages/AnimeDetail"));
 const Watch = lazy(() => import("./pages/Watch"));
 const Favorites = lazy(() => import("./pages/Favorites"));
@@ -280,6 +281,7 @@ const App = () => (
                     <Route path="/schedule" element={<Schedule />} />
                     <Route path="/upcoming" element={<UpcomingPage />} />
                     <Route path="/release-notes" element={<ReleaseNotes />} />
+                    <Route path="/developers" element={<Developers />} />
                     <Route path="/anime/:id" element={<AnimeDetail />} />
                     <Route path="/watch/:episodeId" element={<Watch />} />
                     <Route path="/favorites" element={<Favorites />} />

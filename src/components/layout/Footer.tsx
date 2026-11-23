@@ -279,6 +279,7 @@ export function Footer() {
           <TermsOfServiceButton plain />
           <a href="https://t.me/Lv_Savi" target="_blank" rel="noopener noreferrer">Contact</a>
           <Link to="/schedule">Schedule</Link>
+          <Link to="/developers">Developers</Link>
         </nav>
       </div>
     </div>

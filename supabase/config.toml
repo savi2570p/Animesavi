@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.clone-frame-check]
 verify_jwt = false
+
+[functions.api-hub]
+verify_jwt = false
