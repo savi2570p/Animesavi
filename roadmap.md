@@ -57,3 +57,8 @@
 ## Nov 12 pass 2
 - [x] Shadow link players: numbered tile episode picker (lime active tile) like reference
 - [x] Keyboard shortcuts on every embed player (shared useEmbedHotkeys)
+
+## Nov 28 notices
+- [ ] Remove Developers from footer
+- [ ] Dedicated Notice page with security update and newest/oldest ordering
+- [ ] Persist Don't show again for the notice popup; verify page remains available

@@ -63,7 +63,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const { unreadCount: unreadNotifs } = useNotifications();
-  const { showWhatsNewManually, showDownloadNoticeManually } = usePopupQueue();
+  const { showWhatsNewManually } = usePopupQueue();
   const hasPremium = !!user && (isAdmin || hasValidTokenAccess(user?.email));
   const desktopSearchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
@@ -488,8 +488,8 @@ export function Header() {
                       {unreadNotifs > 0 && <span className="account-menu-v10-badge">{unreadNotifs > 9 ? '9+' : unreadNotifs}</span>}
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={showDownloadNoticeManually} className="account-menu-v10-item">
-                    <Megaphone /><span>Notice</span>
+                  <DropdownMenuItem asChild className="account-menu-v10-item">
+                    <Link to="/notices"><Megaphone /><span>Notice</span></Link>
                   </DropdownMenuItem>
                 </div>
                 <DropdownMenuSeparator className="account-menu-v10-sep" />

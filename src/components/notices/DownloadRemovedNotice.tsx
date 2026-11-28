@@ -1,5 +1,8 @@
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { Checkbox } from '@/components/ui/checkbox';
+import { disableDownloadNotice } from '@/lib/downloadNotice';
 import { usePopupQueue } from '@/contexts/PopupQueueContext';
 import { CheckCircle2, DownloadCloud, HardDrive, Info, MinusCircle, Send } from 'lucide-react';
 
@@ -62,7 +65,14 @@ export function DownloadRemovedNotice() {
         </div>
 
         <div className="download-notice-actions">
+          <label className="flex items-center gap-3 text-sm text-muted-foreground py-2 cursor-pointer">
+            <Checkbox onCheckedChange={(checked) => { if (checked === true) { disableDownloadNotice(); dismissPopup(); } }} />
+            Don't show again
+          </label>
           <Button className="w-full" onClick={dismissPopup}>Got it</Button>
+          <Button variant="outline" className="w-full" asChild>
+            <Link to="/notices" onClick={dismissPopup}>View all notices</Link>
+          </Button>
           <Button variant="ghost" className="w-full" asChild>
             <a href="https://t.me/AnimeSaviInhindiDUB" target="_blank" rel="noopener noreferrer">
               <Send className="h-4 w-4" aria-hidden="true" /> Get updates on Telegram
