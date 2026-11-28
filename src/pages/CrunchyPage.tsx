@@ -166,7 +166,7 @@ export default function CrunchyPage() {
           <section className="platform-collection-section" aria-label="Crunchy library">
             <div className="platform-collection-section-heading"><div className="flex items-center gap-2.5"><Layers className="platform-collection-tone h-5 w-5" /><h2>{filter === 'all' ? 'Full Library' : filter === 'new' ? 'Fresh Releases' : 'Most Watched'}</h2></div><span className="text-xs text-muted-foreground">{filteredList.length} titles</span></div>
             {isLoading ? <div className="platform-collection-grid">{Array.from({ length: 10 }, (_, i) => <Skeleton key={i} className="h-[258px] rounded-lg" />)}</div> : filteredList.length === 0 ? <div className="platform-collection-empty"><img src={crunchyrollLogo} alt="" className="h-12 w-12 object-contain mx-auto mb-4" /><h3 className="font-semibold">Nothing here yet</h3><p className="text-sm text-muted-foreground mt-2">Check back soon for more titles.</p></div> : <div className="platform-collection-grid">
-              {filteredList.map((anime) => <PlatformCatalogueCard key={anime.id} anime={anime} fresh={isNew(anime.latest_episode_at)} views={formatViewCount(anime.view_count || 0)} onClick={(event) => handleAnimeClick(event, anime)} />)}
+              {filteredList.map((anime) => <PlatformCatalogueCard fluid key={anime.id} anime={anime} fresh={isNew(anime.latest_episode_at)} views={formatViewCount(anime.view_count || 0)} onClick={(event) => handleAnimeClick(event, anime)} />)}
             </div>}
           </section>
         </div>

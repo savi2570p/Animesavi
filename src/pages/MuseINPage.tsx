@@ -317,7 +317,7 @@ function LiveListingView() {
           <section className="platform-collection-section" aria-label="MuseIN library">
             <div className="platform-collection-section-heading"><div className="flex items-center gap-2.5"><Layers className="platform-collection-tone h-5 w-5" /><h2>Full MuseIN Library</h2></div><span className="text-xs text-muted-foreground">{animeList.length} titles</span></div>
             {isLoading ? <div className="platform-collection-grid">{Array.from({ length: 10 }, (_, i) => <Skeleton key={i} className="h-[258px] rounded-lg" />)}</div> : animeList.length === 0 ? <div className="platform-collection-empty"><img src={museinLogo} alt="" className="h-12 w-12 object-contain mx-auto mb-4" /><h3 className="font-semibold">Nothing here yet</h3><p className="text-sm text-muted-foreground mt-2">Check back soon for more titles.</p></div> : <div className="platform-collection-grid">
-              {animeList.map((anime) => <PlatformCatalogueCard key={anime.id} anime={anime} views={formatViewCount(anime.view_count || 0)} onClick={(event) => handleAnimeClick(event, anime)} />)}
+              {animeList.map((anime) => <PlatformCatalogueCard fluid key={anime.id} anime={anime} views={formatViewCount(anime.view_count || 0)} onClick={(event) => handleAnimeClick(event, anime)} />)}
             </div>}
           </section>
         </div>

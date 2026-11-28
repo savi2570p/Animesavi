@@ -4472,3 +4472,11 @@ html.perf-low .party-guest-lock-pill, html.perf-low .party-guest-lock-actions bu
 .sub-eps-pill { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: .04em; color: hsl(var(--muted-foreground)); border: 1px solid hsl(var(--border)); }
 .sub-eps-pill.is-on { color: hsl(var(--primary)); border-color: hsl(var(--primary) / .45); background: hsl(var(--primary) / .1); }
 .sub-eps-editor { display: grid; gap: 10px; padding-top: 8px; border-top: 1px solid hsl(var(--border) / .5); }
+
+/* Phone/tablet platform grids: fluid columns so cards fill the row on iOS/Android */
+@media (max-width: 767px) {
+  .platform-collection-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); justify-content: stretch; gap: 14px 8px; }
+}
+@media (max-width: 359px) {
+  .platform-collection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

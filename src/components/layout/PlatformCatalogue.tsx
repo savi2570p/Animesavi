@@ -22,11 +22,11 @@ interface PlatformCatalogueItem {
   episode_count?: number; view_count: number | null;
 }
 
-export function PlatformCatalogueCard({ anime, rank, fresh = false, views, onClick }: {
-  anime: PlatformCatalogueItem; rank?: number; fresh?: boolean; views: string;
+export function PlatformCatalogueCard({ anime, rank, fresh = false, views, onClick, fluid = false }: {
+  anime: PlatformCatalogueItem; rank?: number; fresh?: boolean; views: string; fluid?: boolean;
   onClick: (event: React.MouseEvent<HTMLAnchorElement>) => void;
 }) {
   return <PosterCard to={`/anime/${anime.id}`} onClick={onClick} title={anime.title} cover={anime.cover_image}
     tag={rank ? String(rank).padStart(2, '0') : fresh ? 'NEW' : null} episodes={anime.episode_count ?? 0} views={views}
-    type={anime.type} pending={anime.episode_count === 0} className="scroll-snap-start" />;
+    type={anime.type} pending={anime.episode_count === 0} fluid={fluid} className="scroll-snap-start" />;
 }
