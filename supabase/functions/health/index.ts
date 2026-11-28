@@ -1,17 +1,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.89.0';
 import { corsHeaders, jsonOk, jsonError, log, requestId, withTimeout } from '../_shared/http.ts';
+import { enforceRateLimit } from '../_shared/rateLimit.ts';
 
-/**
- * Real dependency health checks — never a hardcoded "OK".
- *   GET /health            → database + storage + auth
- *   GET /health/database
- *   GET /health/storage
- * Also runs stuck-job recovery on demand: POST /health?action=recover-jobs
- */
-
+/** Real dependency health checks. Job recovery is admin-only. */
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-
 const admin = () => createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
 async function timed<T>(label: string, fn: () => Promise<T>, ms = 5000) {
@@ -20,36 +13,25 @@ async function timed<T>(label: string, fn: () => Promise<T>, ms = 5000) {
     await withTimeout(fn(), ms, label);
     return { name: label, status: 'up' as const, duration_ms: Date.now() - start };
   } catch (err) {
-    return {
-      name: label,
-      status: 'down' as const,
-      duration_ms: Date.now() - start,
-      error: (err as Error).message?.slice(0, 200),
-    };
+    return { name: label, status: 'down' as const, duration_ms: Date.now() - start, error: (err as Error).message?.slice(0, 200) };
   }
 }
 
-const checkDatabase = () =>
-  timed('database', async () => {
-    const { error } = await admin().from('anime').select('id', { head: true, count: 'exact' }).limit(1);
-    if (error) throw error;
-  });
-
-const checkStorage = () =>
-  timed('storage', async () => {
-    const { error } = await admin().storage.from('anime-videos').list('', { limit: 1 });
-    if (error) throw error;
-  });
-
-const checkAuth = () =>
-  timed('auth', async () => {
-    const res = await fetch(`${SUPABASE_URL}/auth/v1/health`, { headers: { apikey: SERVICE_KEY } });
-    if (!res.ok) throw new Error(`auth health ${res.status}`);
-  });
+const checkDatabase = () => timed('database', async () => {
+  const { error } = await admin().from('anime').select('id', { head: true, count: 'exact' }).limit(1);
+  if (error) throw error;
+});
+const checkStorage = () => timed('storage', async () => {
+  const { error } = await admin().storage.from('anime-videos').list('', { limit: 1 });
+  if (error) throw error;
+});
+const checkAuth = () => timed('auth', async () => {
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/health`, { headers: { apikey: SERVICE_KEY } });
+  if (!res.ok) throw new Error(`auth health ${res.status}`);
+});
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
-
   const reqId = requestId(req);
   const started = Date.now();
   const url = new URL(req.url);
@@ -57,9 +39,20 @@ Deno.serve(async (req) => {
 
   try {
     if (req.method === 'POST' && url.searchParams.get('action') === 'recover-jobs') {
+      const authHeader = req.headers.get('Authorization') ?? '';
+      if (!authHeader.startsWith('Bearer ')) return jsonError('AUTH_REQUIRED', 'Authentication required', reqId);
+      const { data: userData, error: authError } = await admin().auth.getUser(authHeader.slice(7));
+      if (authError || !userData.user) return jsonError('AUTH_REQUIRED', 'Invalid session', reqId);
+      const { data: roles } = await admin().from('user_roles').select('role').eq('user_id', userData.user.id).eq('role', 'admin');
+      if (!roles?.length) return jsonError('FORBIDDEN', 'Admin access required', reqId);
+      const limited = await enforceRateLimit({
+        req, action: 'health:recover', identity: userData.user.id, limit: 10, windowSeconds: 3600, corsHeaders,
+      });
+      if (limited) return limited;
+
       const staleMinutes = Number(url.searchParams.get('stale_minutes') ?? 30);
       const { data, error } = await admin().rpc('recover_stuck_conversions', {
-        _stale_minutes: Number.isFinite(staleMinutes) ? staleMinutes : 30,
+        _stale_minutes: Number.isFinite(staleMinutes) ? Math.min(1440, Math.max(1, staleMinutes)) : 30,
       });
       if (error) return jsonError('DATABASE_ERROR', 'Job recovery failed', reqId, error);
       log({ request_id: reqId, operation: 'recover-jobs', status: 'ok', result: data });
@@ -70,20 +63,12 @@ Deno.serve(async (req) => {
     if (scope === 'database') checks = [await checkDatabase()];
     else if (scope === 'storage') checks = [await checkStorage()];
     else checks = await Promise.all([checkDatabase(), checkStorage(), checkAuth()]);
-
-    const healthy = checks.every((c) => c.status === 'up');
-    log({
-      request_id: reqId,
-      operation: `health:${scope}`,
-      status: healthy ? 'healthy' : 'degraded',
-      duration_ms: Date.now() - started,
-    });
-
+    const healthy = checks.every((check) => check.status === 'up');
+    log({ request_id: reqId, operation: `health:${scope}`, status: healthy ? 'healthy' : 'degraded', duration_ms: Date.now() - started });
     if (!healthy) {
-      return new Response(
-        JSON.stringify({ success: false, request_id: reqId, data: { healthy, checks } }),
-        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
+      return new Response(JSON.stringify({ success: false, request_id: reqId, data: { healthy, checks } }), {
+        status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
     return jsonOk({ healthy, checks }, reqId);
   } catch (err) {

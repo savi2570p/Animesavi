@@ -2,6 +2,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { buildSources, isProcessing } from '../_shared/embedSource.ts';
 import { enforceRateLimit } from '../_shared/rateLimit.ts';
+import { probePublicHttpUrl } from '../_shared/safeNetwork.ts';
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -107,7 +108,7 @@ Deno.serve(async (req) => {
     const reachable = await Promise.all(
       allSources.map(async (s) => {
         try {
-          const probe = await fetch(s.url, { method: 'GET', headers: { Range: 'bytes=0-1' } });
+          const probe = await probePublicHttpUrl(s.url);
           try { await probe.body?.cancel(); } catch { /* ignore */ }
           return probe.ok || probe.status === 206 || probe.status === 405 ? s : null;
         } catch {

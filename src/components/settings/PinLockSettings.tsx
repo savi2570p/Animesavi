@@ -5,8 +5,7 @@ import { Lock, ShieldCheck, KeyRound, ShieldOff, Check } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  isPinEnabled,
-  getPinLength,
+  getPinStatus,
   setPin,
   disablePin,
   verifyPin,
@@ -96,17 +95,26 @@ export function PinLockSettings() {
   const [mode, setMode] = useState<Mode>("idle");
   const [step1, setStep1] = useState("");
   const [step2, setStep2] = useState("");
+  const [currentPin, setCurrentPin] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    setEnabled(isPinEnabled());
-    setLength(getPinLength());
+    let active = true;
+    void getPinStatus().then((status) => {
+      if (!active) return;
+      setEnabled(status.enabled);
+      setLength(status.length);
+    }).catch(() => {
+      if (active) setEnabled(false);
+    });
+    return () => { active = false; };
   }, []);
 
   const reset = () => {
     setMode("idle");
     setStep1("");
     setStep2("");
+    setCurrentPin("");
     setBusy(false);
   };
 
@@ -130,48 +138,63 @@ export function PinLockSettings() {
     if (step1.length !== length) return toast.error(`PIN must be ${length} digits`);
     if (step1 !== step2) return toast.error("PINs do not match");
     setBusy(true);
-    await setPin(step1, length);
-    setEnabled(true);
-    toast.success("PIN lock enabled");
-    reset();
+    try {
+      await setPin(step1, length);
+      setEnabled(true);
+      toast.success("PIN lock enabled");
+      reset();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not enable PIN lock");
+      setBusy(false);
+    }
   };
 
   const handleChangeVerify = async () => {
     setBusy(true);
-    const ok = await verifyPin(step1);
-    setBusy(false);
-    if (!ok) {
-      toast.error("Current PIN is incorrect");
+    try {
+      const result = await verifyPin(step1);
+      if (!result.ok) {
+        toast.error(result.lockedUntil ? "PIN is locked for 1 hour" : "Current PIN is incorrect");
+        setStep1("");
+        return;
+      }
+      setCurrentPin(step1);
       setStep1("");
-      return;
+      setStep2("");
+      setMode("change-new");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not verify PIN");
+    } finally {
+      setBusy(false);
     }
-    setStep1("");
-    setStep2("");
-    setMode("change-new");
   };
 
   const handleChangeNew = async () => {
     if (step1.length !== length) return toast.error(`PIN must be ${length} digits`);
     if (step1 !== step2) return toast.error("PINs do not match");
     setBusy(true);
-    await setPin(step1, length);
-    toast.success("PIN updated");
-    reset();
+    try {
+      await setPin(step1, length, currentPin);
+      toast.success("PIN updated");
+      reset();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update PIN");
+      setBusy(false);
+    }
   };
 
   const handleDisable = async () => {
     setBusy(true);
-    const ok = await verifyPin(step1);
-    if (!ok) {
-      toast.error("Incorrect PIN");
+    try {
+      await disablePin(step1);
+      setEnabled(false);
+      toast.success("PIN lock disabled");
+      reset();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Incorrect PIN");
       setStep1("");
       setBusy(false);
-      return;
     }
-    disablePin();
-    setEnabled(false);
-    toast.success("PIN lock disabled");
-    reset();
   };
 
   const confirmState = step2.length === length ? (step1 === step2 ? "match" : "mismatch") : undefined;

@@ -25,7 +25,6 @@ export function RecapSidebar({
 }: RecapSidebarProps) {
   const [recap, setRecap] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -60,21 +59,8 @@ export function RecapSidebar({
         return;
       }
 
-      // Lazy-generate when missing
-      setGenerating(true);
-      try {
-        const { data: gen } = await supabase.functions.invoke('generate-episode-recap', {
-          body: { episode_id: episodeId },
-        });
-        if (!cancelled && gen?.recap) {
-          setRecap(gen.recap);
-          if (!opened.current) {
-            opened.current = true;
-            trackOpen();
-          }
-        }
-      } catch { /* ignore */ }
-      setGenerating(false);
+      // Generation is restricted to the uploader/admin upload flow. Regular
+      // viewers never trigger paid AI work from a watch-party sidebar.
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -169,10 +155,10 @@ export function RecapSidebar({
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 text-sm leading-relaxed">
-        {loading || generating ? (
+        {loading ? (
           <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            {generating ? 'Generating recap with AI…' : 'Loading recap…'}
+            Loading recap…
           </div>
         ) : recap ? (
           <p className="whitespace-pre-wrap text-foreground/90">{recap}</p>

@@ -53,14 +53,9 @@ export async function fetchTokenAccessFromDB(): Promise<{ hasAccess: boolean; ex
       return { hasAccess: false, expiresAt: null };
     }
 
-    // Fetch from DB — single source of truth
-    const { data } = await supabase
-      .from('token_usage')
-      .select('expires_at, token_id')
-      .eq('user_id', userId)
-      .order('used_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    // Server-checked active grant: disabling a token revokes access immediately.
+    const { data: rows } = await supabase.rpc('get_my_active_token_access');
+    const data = Array.isArray(rows) ? rows[0] : null;
 
     if (data?.expires_at && Date.now() < Number(data.expires_at)) {
       // Sync to localStorage as cache (for offline / quick reads)

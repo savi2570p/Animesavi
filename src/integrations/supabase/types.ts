@@ -1014,6 +1014,60 @@ export type Database = {
           },
         ]
       }
+      pin_lock_credentials: {
+        Row: {
+          failed_attempts: number
+          iterations: number
+          locked_until: string | null
+          pin_hash: string
+          pin_length: number
+          pin_salt: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          failed_attempts?: number
+          iterations: number
+          locked_until?: string | null
+          pin_hash: string
+          pin_length: number
+          pin_salt: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          failed_attempts?: number
+          iterations?: number
+          locked_until?: string | null
+          pin_hash?: string
+          pin_length?: number
+          pin_salt?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pin_lock_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          token_hash: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          token_hash: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          token_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2731,6 +2785,13 @@ export type Database = {
         }[]
       }
       end_watch_party: { Args: { party_uuid: string }; Returns: boolean }
+      get_my_active_token_access: {
+        Args: never
+        Returns: {
+          expires_at: number
+          token_id: string
+        }[]
+      }
       get_token_duration: { Args: { _token_id: string }; Returns: number }
       get_token_metadata: {
         Args: never

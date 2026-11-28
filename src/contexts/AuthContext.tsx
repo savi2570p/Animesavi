@@ -8,34 +8,21 @@ import { rememberAccount } from '@/lib/accountUtils';
  * yet associated with their user_id in the DB, insert a record so
  * fetchTokenAccessFromDB will find it.
  */
-async function syncLocalTokenToUser(userId: string) {
+async function syncLocalTokenToUser() {
   try {
     const expiresStr = localStorage.getItem('unlock_token_expires');
     const tokenId = localStorage.getItem('unlock_token_id');
     if (!expiresStr || !tokenId) return;
 
     const expiresAt = parseInt(expiresStr, 10);
-    if (Date.now() >= expiresAt) return; // already expired
+    if (Date.now() >= expiresAt) return;
 
-    // Check if this user already has a valid record in DB
-    const { data: existing } = await supabase
-      .from('token_usage')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('token_id', tokenId)
-      .maybeSingle();
-
-    if (existing) return; // already synced
-
-    // Insert a new record linking this token to the user
-    await supabase.from('token_usage').insert({
-      token_id: tokenId,
-      user_id: userId,
-      expires_at: expiresAt,
-      user_agent: navigator.userAgent,
+    // The server claims only the exact anonymous redemption it issued earlier;
+    // the browser cannot create a premium row or choose its own expiry.
+    const { error } = await supabase.functions.invoke('token-redeem', {
+      body: { action: 'claim', token_id: tokenId, expires_at: expiresAt },
     });
-
-    localStorage.setItem('token_access_synced', 'true');
+    if (!error) localStorage.setItem('token_access_synced', 'true');
   } catch (e) {
     console.error('Failed to sync local token to user:', e);
   }
@@ -143,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const email = nextSession.user.email || '';
           const username = nextSession.user.user_metadata?.username || email.split('@')[0];
           rememberAccount(email, username, 5);
-          setTimeout(() => void syncLocalTokenToUser(nextSession.user.id), 0);
+          setTimeout(() => void syncLocalTokenToUser(), 0);
         }
         setTimeout(() => {
           void fetchUserRoles(nextSession.user.id);

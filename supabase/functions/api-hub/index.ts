@@ -442,7 +442,7 @@ async function pair(req: Request) {
 }
 
 // ---------- signed connection management ----------
-async function authConnection(req: Request, path: string, raw: string) {
+async function authConnection(req: Request, path: string, raw: string, allowPreviousSecret = true) {
   const id = req.headers.get('x-animesavi-connection') ?? ''
   const ts = req.headers.get('x-animesavi-timestamp') ?? ''
   const nonce = req.headers.get('x-animesavi-nonce') ?? ''
@@ -493,7 +493,7 @@ function publicConnection(c: any) {
 
 async function manage(req: Request, path: string, action: string) {
   const { raw, body } = await readJson(req)
-  const c = await authConnection(req, path, raw)
+  const c = await authConnection(req, path, raw, action !== 'disconnect')
   if (action === 'status') return json({ api_version: API_VERSION, ...publicConnection(c) })
   if (action === 'disconnect') {
     const { error } = await db().from('hub_connections').update({

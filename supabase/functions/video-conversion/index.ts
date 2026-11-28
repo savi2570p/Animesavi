@@ -145,9 +145,9 @@ Deno.serve(async (req) => {
     const userAgent = req.headers.get('user-agent') || '';
 
     // ── Determine required auth level per action ──────────────────────────
-    const adminOnlyActions = ['scan-existing', 'retry-all-failed', 'fix-all-ios', 'fix-all-old'];
-    const uploaderActions = ['auto-process', 'update-status', 'retry'];
-    const authenticatedActions = ['pending', 'processing', 'stats', 'ffmpeg-command', 'health-stats'];
+    const adminOnlyActions = ['scan-existing', 'retry-all-failed', 'fix-all-ios', 'fix-all-old', 'recover-jobs', 'ffmpeg-command'];
+    const uploaderActions = ['auto-process', 'update-status', 'retry', 'pending', 'processing', 'stats', 'health-stats'];
+    const authenticatedActions: string[] = [];
     // 'get-video-url' is public (needed for video playback)
 
     if (action && adminOnlyActions.includes(action)) {
@@ -186,13 +186,16 @@ Deno.serve(async (req) => {
         }
 
         const { data: conversion } = await supabaseClient
-          .from('video_conversions').select('*').eq('episode_id', episodeId).single();
+          .from('video_conversions')
+          .select('status, ios_compatible, ios_ready_url, hls_url')
+          .eq('episode_id', episodeId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
         const isIOS = isIOSDevice(userAgent);
         let videoUrl = episode.video_url || episode.external_url;
         let servedFormat = 'original';
-        let conversionStatus = conversion?.status || 'none';
-
         if (isIOS && conversion) {
           if (conversion.ios_compatible && conversion.ios_ready_url) {
             videoUrl = conversion.ios_ready_url;
@@ -211,15 +214,7 @@ Deno.serve(async (req) => {
             videoUrl,
             servedFormat,
             device: isIOS ? 'ios' : isAndroidDevice(userAgent) ? 'android' : isWindowsDevice(userAgent) ? 'windows' : 'other',
-            conversionStatus,
-            needsConversion: conversion?.needs_conversion || false,
             isHLS: videoUrl?.includes('.m3u8') || false,
-            iosCompatible: conversion?.ios_compatible || false,
-            videoCodec: conversion?.video_codec || null,
-            audioCodec: conversion?.audio_codec || null,
-            videoProfile: conversion?.video_profile || null,
-            pixelFormat: conversion?.pixel_format || null,
-            audioChannels: conversion?.audio_channels || null,
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
