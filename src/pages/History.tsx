@@ -1,3 +1,4 @@
+import { usePinLocked } from '@/components/security/PinLockGate';
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -64,6 +65,7 @@ interface WatchHistoryItem {
 
 export default function History() {
   const { user } = useAuth();
+  const pinLocked = usePinLocked();
   const navigate = useNavigate();
   const [history, setHistory] = useState<WatchHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,9 +76,10 @@ export default function History() {
       navigate('/auth');
       return;
     }
+    if (pinLocked) return;
     fetchHistory();
     fetchUserProfile();
-  }, [user]);
+  }, [user, pinLocked]);
 
   const fetchUserProfile = async () => {
     if (!user) return;

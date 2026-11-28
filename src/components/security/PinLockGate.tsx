@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Delete, LockOpen } from 'lucide-react';
@@ -9,6 +10,11 @@ import {
   verifyPin,
   PIN_MAX_ATTEMPTS,
 } from '@/lib/pinLock';
+
+// Fail closed until the server status check finishes.
+if (typeof window !== 'undefined') {
+  (window as unknown as { __pinLocked?: boolean }).__pinLocked = isPinEnabled();
+}
 
 function formatRemaining(ms: number) {
   const total = Math.max(0, Math.ceil(ms / 1000));
@@ -125,6 +131,17 @@ export function PinLockGate() {
     })();
   }, [entered, length, needsPin, isLockedOut]);
 
+  // Hide and disable the app behind the gate (not just overlay it) and tell
+  // data hooks the session is PIN-locked.
+  useEffect(() => {
+    const root = document.getElementById('root');
+    (window as unknown as { __pinLocked?: boolean }).__pinLocked = needsPin;
+    window.dispatchEvent(new Event('pinlock:state'));
+    if (!root) return;
+    if (needsPin) { root.setAttribute('inert', ''); root.style.visibility = 'hidden'; }
+    else { root.removeAttribute('inert'); root.style.visibility = ''; }
+  }, [needsPin]);
+
   useEffect(() => {
     if (!needsPin) return;
     const previous = document.body.style.overflow;
@@ -181,13 +198,13 @@ export function PinLockGate() {
               ? `${attemptsLeft} ${attemptsLeft === 1 ? 'try' : 'tries'} left before a 1-hour lock`
               : `Enter your ${length}-digit PIN`;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {needsPin && (
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           transition={{ duration: 0.22, ease: 'easeOut' }}
-          className="pin-v2-gate" role="dialog" aria-modal="true" aria-labelledby="pin-gate-title"
+          className="pin-v2-gate" data-pin-gate role="dialog" aria-modal="true" aria-labelledby="pin-gate-title"
         >
           <span className="pin-v2-orb pin-v2-orb-a" aria-hidden="true" />
           <span className="pin-v2-orb pin-v2-orb-b" aria-hidden="true" />
@@ -238,6 +255,19 @@ export function PinLockGate() {
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
+}
+
+/** True while the signed-in session still needs its PIN; data views wait. */
+export function usePinLocked() {
+  const read = () => Boolean((window as unknown as { __pinLocked?: boolean }).__pinLocked);
+  const [locked, setLocked] = useState(read);
+  useEffect(() => {
+    const on = () => setLocked(read());
+    window.addEventListener('pinlock:state', on);
+    return () => window.removeEventListener('pinlock:state', on);
+  }, []);
+  return locked;
 }

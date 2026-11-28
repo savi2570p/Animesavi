@@ -399,6 +399,19 @@ async function pair(req: Request) {
     throw new HttpError(400, 'unsafe_host', (e as Error).message)
   }
 
+  // Prove domain ownership via DNS before the Hub sends any request to the
+  // submitted host, so anonymous callers cannot make us POST to sites they
+  // do not control. TXT record: _animesavi-hub.<host> = sha256(challenge).
+  const expectedTxt = await sha256Hex(body.challenge)
+  let txt: string[] = []
+  try {
+    const recs = await Deno.resolveDns(`_animesavi-hub.${target.host}`, 'TXT')
+    txt = recs.map((r) => r.join('').trim())
+  } catch { /* no record */ }
+  if (!txt.some((v) => timingSafeEqualStr(v, expectedTxt))) {
+    throw new HttpError(422, 'ownership_unverified', `Publish a DNS TXT record _animesavi-hub.${target.host} containing the SHA-256 hex of your challenge, then retry.`.slice(0, 200))
+  }
+
   // Prove the requester controls the webhook endpoint: it must echo the challenge and our nonce.
   const hubNonce = randomToken(24)
   const verification = JSON.stringify({ type: 'animesavi.verification', api_version: API_VERSION, challenge: body.challenge, hub_nonce: hubNonce, sent_at: new Date().toISOString() })

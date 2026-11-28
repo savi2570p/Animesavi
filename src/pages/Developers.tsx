@@ -129,6 +129,7 @@ export default function Developers() {
             <ol className="list-decimal pl-5 space-y-1">
               <li>An admin of the receiving site clicks <b className="text-foreground">Connect AnimeSavi</b> in that site's own admin panel.</li>
               <li>Its server creates a single-use challenge (≥ 32 random URL-safe characters, 10-minute expiry).</li>
+              <li>The site publishes a DNS TXT record <code>_animesavi-hub.&lt;webhook host&gt;</code> whose value is the lowercase SHA-256 hex of the challenge. The Hub checks it before contacting the site.</li>
               <li>Its server calls <code>POST /v1/connections/pair</code> with <code>site_name</code>, <code>site_origin</code>, <code>webhook_url</code> and <code>challenge</code>.</li>
               <li>The Hub calls the webhook URL with <code>{'{"type":"animesavi.verification","challenge","hub_nonce"}'}</code>; the site must echo both values with HTTP 200.</li>
               <li>Approved automatically. The response returns <code>connection_id</code> and a unique <code>webhook_secret</code> (shown once — store it server-side only).</li>

@@ -162,6 +162,13 @@
       "when": 1795839053391,
       "tag": "0022_episode_optional_dub_video",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1795842588537,
+      "tag": "0023_restrict_featured_and_party_chat",
+      "breakpoints": true
     }
   ]
 }
