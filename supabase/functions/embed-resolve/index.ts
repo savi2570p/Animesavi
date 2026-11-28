@@ -1,6 +1,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { buildSources, isProcessing } from '../_shared/embedSource.ts';
+import { enforceRateLimit } from '../_shared/rateLimit.ts';
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -12,6 +13,11 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
+    const limited = await enforceRateLimit({
+      req, action: 'embed:resolve', limit: 300, windowSeconds: 900, corsHeaders,
+    });
+    if (limited) return limited;
+
     const url = new URL(req.url);
     const fromPath = url.pathname.split('/').filter(Boolean).pop() ?? '';
     const raw = url.searchParams.get('token') ?? (fromPath === 'embed-resolve' ? '' : fromPath);

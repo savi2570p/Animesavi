@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { enforceRateLimit } from '../_shared/rateLimit.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -51,10 +52,22 @@ serve(async (req) => {
       });
     }
 
+    const limited = await enforceRateLimit({
+      req, action: 'admin:password', identity: caller.id, limit: 20, windowSeconds: 3600, corsHeaders,
+    });
+    if (limited) return limited;
+
     const { user_id, new_password } = await req.json();
 
     if (!user_id || !new_password) {
       return new Response(JSON.stringify({ error: "user_id and new_password are required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (typeof user_id !== 'string' || !/^[0-9a-f-]{36}$/i.test(user_id) || typeof new_password !== 'string' || new_password.length > 1024) {
+      return new Response(JSON.stringify({ error: "A valid user and password are required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

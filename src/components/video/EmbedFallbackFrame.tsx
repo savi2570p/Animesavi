@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, AlertTriangle, ExternalLink } from 'lucide-react';
+import { escapeHtml } from '@/lib/htmlEscape';
 
 interface EmbedFallbackFrameProps {
   primaryUrl: string;
@@ -15,7 +16,7 @@ const AUTO_RETRY_TIMEOUT_MS = 6000;
 const MAX_AUTO_RETRIES = 3;
 
 function buildEmbedHtml(url: string): string {
-  const safeUrl = url.replace(/"/g, '&quot;');
+  const safeUrl = escapeHtml(url);
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -114,10 +115,11 @@ seek.addEventListener('touchstart',down,{passive:true});window.addEventListener(
 // Fullscreen
 fsBtn.addEventListener('click',function(e){e.stopPropagation();var el=wrap;var req=el.requestFullscreen||el.webkitRequestFullscreen||el.webkitEnterFullscreen;var exit=document.exitFullscreen||document.webkitExitFullscreen;if(document.fullscreenElement||document.webkitFullscreenElement){exit&&exit.call(document);}else if(v.webkitEnterFullscreen&&!req){v.webkitEnterFullscreen();}else{req&&req.call(el);}try{parent.postMessage({type:'embed-fallback-fullscreen'},'*');}catch(e){}});
 // Settings menu (quality via videoTracks unsupported for plain mp4 — offer playbackRate + audio tracks if available)
+function esc(value){return String(value).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function renderMenu(){var html='';var qualities=[{v:'auto',l:'Auto (source)'}];var rates=[0.5,0.75,1,1.25,1.5,2];html+='<h4>Playback Speed</h4>';rates.forEach(function(r){html+='<button data-rate="'+r+'"'+(v.playbackRate===r?' class="active"':'')+'>'+r+'x'+(v.playbackRate===r?'<span class="check">✓</span>':'')+'</button>';});// Audio tracks
-if(v.audioTracks&&v.audioTracks.length>1){html+='<h4>Audio</h4>';for(var i=0;i<v.audioTracks.length;i++){var t=v.audioTracks[i];html+='<button data-audio="'+i+'"'+(t.enabled?' class="active"':'')+'>'+(t.label||t.language||('Track '+(i+1)))+'</button>';}}
+if(v.audioTracks&&v.audioTracks.length>1){html+='<h4>Audio</h4>';for(var i=0;i<v.audioTracks.length;i++){var t=v.audioTracks[i];html+='<button data-audio="'+i+'"'+(t.enabled?' class="active"':'')+'>'+esc(t.label||t.language||('Track '+(i+1)))+'</button>';}}
 // Text tracks
-if(v.textTracks&&v.textTracks.length){html+='<h4>Subtitles</h4><button data-cc="-1"'+(![].some.call(v.textTracks,function(t){return t.mode==='showing';})?' class="active"':'')+'>Off</button>';for(var j=0;j<v.textTracks.length;j++){var tt=v.textTracks[j];html+='<button data-cc="'+j+'"'+(tt.mode==='showing'?' class="active"':'')+'>'+(tt.label||tt.language||('Sub '+(j+1)))+'</button>';}}
+if(v.textTracks&&v.textTracks.length){html+='<h4>Subtitles</h4><button data-cc="-1"'+(![].some.call(v.textTracks,function(t){return t.mode==='showing';})?' class="active"':'')+'>Off</button>';for(var j=0;j<v.textTracks.length;j++){var tt=v.textTracks[j];html+='<button data-cc="'+j+'"'+(tt.mode==='showing'?' class="active"':'')+'>'+esc(tt.label||tt.language||('Sub '+(j+1)))+'</button>';}}
 html+='<h4>Quality</h4>'+qualities.map(function(q){return '<button data-q="'+q.v+'" class="active">'+q.l+'<span class="check">✓</span></button>';}).join('');
 menu.innerHTML=html;}
 settingsBtn.addEventListener('click',function(e){e.stopPropagation();renderMenu();menu.classList.toggle('open');showOverlay();});
@@ -142,6 +144,7 @@ export function EmbedFallbackFrame({
   const [status, setStatus] = useState<'loading' | 'ready' | 'retrying' | 'failed'>('loading');
   const [lastReason, setLastReason] = useState<string | null>(null);
   const readyRef = useRef(false);
+  const frameRef = useRef<HTMLIFrameElement>(null);
   const timeoutRef = useRef<number | null>(null);
 
   const clearWatchdog = useCallback(() => {
@@ -200,6 +203,7 @@ export function EmbedFallbackFrame({
 
   useEffect(() => {
     const handler = (e: MessageEvent) => {
+      if (e.source !== frameRef.current?.contentWindow) return;
       const data = e.data as { type?: string; reason?: string } | undefined;
       if (!data || typeof data !== 'object') return;
       if (data.type === 'embed-fallback-ready') {
@@ -232,9 +236,12 @@ export function EmbedFallbackFrame({
     >
       {status !== 'failed' && (
         <iframe
+          ref={frameRef}
           key={`${currentUrl}-${reloadKey}`}
           srcDoc={embedDoc}
           title={title}
+          sandbox="allow-scripts allow-fullscreen"
+          referrerPolicy="no-referrer"
           className="absolute inset-0 w-full h-full border-0"
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
           allowFullScreen

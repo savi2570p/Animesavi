@@ -127,6 +127,20 @@
       "when": 1795414311864,
       "tag": "0017_api_hub_revision_defaults",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1795836093966,
+      "tag": "0018_security_rate_limits_and_vault_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1795836238133,
+      "tag": "0019_restrict_token_redemption_to_edge",
+      "breakpoints": true
     }
   ]
 }

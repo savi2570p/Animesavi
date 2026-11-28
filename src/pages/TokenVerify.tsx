@@ -24,16 +24,9 @@ export default function TokenVerify() {
 
   const verifyToken = async (token: string) => {
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id ?? null;
-
-      const { data: rows, error } = await supabase.rpc('redeem_unlock_token', {
-        _token: token,
-        _user_id: userId,
-        _user_agent: navigator.userAgent,
+      const { data, error } = await supabase.functions.invoke('token-redeem', {
+        body: { token, user_agent: navigator.userAgent },
       });
-
-      const data = Array.isArray(rows) ? rows[0] : null;
 
       if (error || !data) {
         setStatus('error');

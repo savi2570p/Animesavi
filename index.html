@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
-    <!-- Permissive CSP for embed playback: allow ANY external host to be framed
-         inside our iframes (UPNShare, RPMShare, Doodstream, Streamtape, etc.).
-         No X-Frame-Options is set anywhere in this project. -->
-    <meta http-equiv="Content-Security-Policy" content="frame-src *; child-src *; media-src * blob: data:; img-src * blob: data:;" />
+    <!-- Defence-in-depth CSP. External media/embed hosts remain supported, while
+         plugins, base-tag hijacking and unexpected script sources are blocked. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://challenges.cloudflare.com 'sha256-ko/7KW6XMJ19X4IuG23HuswTea3/gYUs30ujCJpzaps=' 'sha256-mNqNsnfrfjjXgfmg0yNZ4FLCR4xPo8jqtgmKqjpQQCY='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: wss:; img-src * blob: data:; media-src * blob: data:; frame-src * blob: data:; child-src * blob: data:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     
     <!-- Preconnect for faster resource loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

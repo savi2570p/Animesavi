@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.89.0';
 import { corsHeaders, jsonError, jsonOk, requestId, withTimeout } from '../_shared/http.ts';
 import { isFrameableBy } from '../_shared/framePolicy.ts';
+import { enforceRateLimit } from '../_shared/rateLimit.ts';
 
 /**
  * Reports whether a clone platform's site allows being shown inside
@@ -18,7 +19,12 @@ const UA =
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  if (req.method !== 'POST') return jsonError('VALIDATION_ERROR', 'POST required', requestId(req));
   const reqId = requestId(req);
+  const limited = await enforceRateLimit({
+    req, action: 'clone:frame-check', limit: 60, windowSeconds: 900, corsHeaders,
+  });
+  if (limited) return limited;
 
   let body: { slug?: unknown; origin?: unknown };
   try {

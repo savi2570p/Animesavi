@@ -18,8 +18,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import shadowFlixLogo from '@/assets/shadowflix-logo.jpg';
 import { buildEmbedUrl } from '@/lib/embedLink';
-
-const SHADOW_FLIX_PASSWORD = 'SHADOW X SAVI';
+import {
+  clearShadowFlixAccessToken,
+  getShadowFlixAccessToken,
+  saveShadowFlixAccessToken,
+  shadowFlixAccessRequest,
+  ShadowFlixAccessError,
+} from '@/lib/shadowFlixAccess';
 const GENRES = ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Slice of Life', 'Thriller', 'Mystery', 'Supernatural'];
 
 const PLAYER_THEMES = [{ name: 'Default', accent: 'hsl(var(--primary))', bg: 'hsl(var(--primary) / .1)' }];
@@ -963,7 +968,8 @@ export default function ShadowFlix() {
   }, []);
 
   useEffect(() => {
-    if (sessionStorage.getItem('shadowflix_unlocked') === 'true') setIsUnlocked(true);
+    if (getShadowFlixAccessToken()) setIsUnlocked(true);
+    else clearShadowFlixAccessToken();
   }, []);
 
   useEffect(() => { if (isUnlocked) fetchItems(); }, [isUnlocked]);
@@ -1009,40 +1015,72 @@ export default function ShadowFlix() {
     setFormGenres(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g]);
   };
 
-  const handleUnlock = () => {
+  const handleUnlock = async () => {
     if (!password.trim()) {
       setPasswordError('Please enter the access code.');
       return;
     }
     setUnlocking(true);
-    setTimeout(() => {
-      if (password.trim().toUpperCase() === SHADOW_FLIX_PASSWORD) {
-        setIsUnlocked(true);
-        sessionStorage.setItem('shadowflix_unlocked', 'true');
-        setPasswordError('');
-        setUnlockAttempts(0);
-        toast.success('Access granted — welcome to Shadow Flix');
+    try {
+      const result = await shadowFlixAccessRequest<{ access_token: string }>({
+        action: 'unlock',
+        password: password.trim(),
+      });
+      saveShadowFlixAccessToken(result.access_token);
+      setIsUnlocked(true);
+      setPassword('');
+      setPasswordError('');
+      setUnlockAttempts(0);
+      toast.success('Access granted — welcome to Shadow Flix');
+    } catch (error) {
+      const next = unlockAttempts + 1;
+      setUnlockAttempts(next);
+      if (error instanceof ShadowFlixAccessError && error.status === 429) {
+        setPasswordError('Too many attempts. Please wait 15 minutes and try again.');
       } else {
-        const next = unlockAttempts + 1;
-        setUnlockAttempts(next);
         setPasswordError(next >= 3 ? `Incorrect code. ${next} failed attempts — contact an admin if you've lost your code.` : 'Incorrect access code. Try again.');
       }
+    } finally {
       setUnlocking(false);
-    }, 350);
+    }
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem('shadowflix_unlocked');
+    const accessToken = getShadowFlixAccessToken();
+    clearShadowFlixAccessToken();
     setIsUnlocked(false);
+    setItems([]);
     setPassword('');
+    if (accessToken) {
+      void shadowFlixAccessRequest({ action: 'revoke', access_token: accessToken }).catch(() => undefined);
+    }
     toast.info('Shadow Flix locked');
   };
 
   const fetchItems = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from('shadow_flix_content').select('*').order('created_at', { ascending: false });
-    if (!error && data) setItems(data as ShadowFlixItem[]);
-    setLoading(false);
+    const accessToken = getShadowFlixAccessToken();
+    if (!accessToken) {
+      setIsUnlocked(false);
+      setLoading(false);
+      return;
+    }
+    try {
+      const result = await shadowFlixAccessRequest<{ items: ShadowFlixItem[] }>({
+        action: 'list',
+        access_token: accessToken,
+      });
+      setItems(result.items ?? []);
+    } catch (error) {
+      if (error instanceof ShadowFlixAccessError && error.status === 401) {
+        clearShadowFlixAccessToken();
+        setIsUnlocked(false);
+        setItems([]);
+      }
+      toast.error(error instanceof Error ? error.message : 'Could not load the private catalogue.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const resetForm = () => {

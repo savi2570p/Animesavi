@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { RequireAdmin } from "@/components/auth/RequireAdmin";
 import { MiniPlayerProvider } from "@/contexts/MiniPlayerContext";
 import { PopupQueueProvider } from "@/contexts/PopupQueueContext";
 import { MainLayout } from "@/components/layout";
@@ -291,10 +292,10 @@ const App = () => (
                     <Route path="/upload" element={<Upload />} />
                     <Route path="/upload/anime/:animeId" element={<UploadAnimeEdit />} />
                     <Route path="/upload/anime/:animeId/episode/:episodeId/edit" element={<EpisodeEdit />} />
-                    <Route path="/admin" element={<Admin />} />
-                    <Route path="/admin/site-health" element={<SiteHealth />} />
-                    <Route path="/admin/featured" element={<AdminFeaturedLineup />} />
-                    <Route path="/admin/partners" element={<AdminPartners />} />
+                    <Route path="/admin" element={<RequireAdmin><Admin /></RequireAdmin>} />
+                    <Route path="/admin/site-health" element={<RequireAdmin><SiteHealth /></RequireAdmin>} />
+                    <Route path="/admin/featured" element={<RequireAdmin><AdminFeaturedLineup /></RequireAdmin>} />
+                    <Route path="/admin/partners" element={<RequireAdmin><AdminPartners /></RequireAdmin>} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/stats" element={<UserStats />} />

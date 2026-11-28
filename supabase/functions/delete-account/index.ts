@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { enforceRateLimit } from '../_shared/rateLimit.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,6 +39,10 @@ serve(async (req) => {
 
     const admin = createClient(supabaseUrl, serviceRoleKey);
     const uid = user.id;
+    const limited = await enforceRateLimit({
+      req, action: 'account:delete', identity: uid, limit: 5, windowSeconds: 86400, corsHeaders,
+    });
+    if (limited) return limited;
 
     // Every table that references the user, in dependency-safe order.
     // Child rows (likes/replies/messages) are removed before their parents so

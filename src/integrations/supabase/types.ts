@@ -1129,6 +1129,30 @@ export type Database = {
           },
         ]
       }
+      request_rate_limits: {
+        Row: {
+          action: string
+          expires_at: string
+          key_hash: string
+          request_count: number
+          window_started_at: string
+        }
+        Insert: {
+          action: string
+          expires_at: string
+          key_hash: string
+          request_count?: number
+          window_started_at: string
+        }
+        Update: {
+          action?: string
+          expires_at?: string
+          key_hash?: string
+          request_count?: number
+          window_started_at?: string
+        }
+        Relationships: []
+      }
       seasons: {
         Row: {
           anime_id: string
@@ -1323,6 +1347,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      shadow_flix_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          last_used_at: string
+          token_hash: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          last_used_at?: string
+          token_hash: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_used_at?: string
+          token_hash?: string
+        }
+        Relationships: []
       }
       shared_collection_likes: {
         Row: {
@@ -2668,6 +2716,19 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      consume_rate_limit: {
+        Args: {
+          _action: string
+          _key_hash: string
+          _limit: number
+          _window_seconds: number
+        }
+        Returns: {
+          allowed: boolean
+          remaining: number
+          retry_after: number
+        }[]
       }
       end_watch_party: { Args: { party_uuid: string }; Returns: boolean }
       get_token_duration: { Args: { _token_id: string }; Returns: number }

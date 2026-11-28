@@ -225,7 +225,7 @@ export default function Profile() {
   };
 
   const handleUpdatePassword = async () => {
-    if (!newPassword || !confirmPassword) {
+    if (!currentPassword || !newPassword || !confirmPassword) {
       toast.error('Please fill in all password fields');
       return;
     }
@@ -243,7 +243,8 @@ export default function Profile() {
     setIsUpdatingPassword(true);
     
     const { error } = await supabase.auth.updateUser({
-      password: newPassword
+      password: newPassword,
+      current_password: currentPassword,
     });
     
     if (error) {
@@ -453,15 +454,30 @@ export default function Profile() {
               <CardDescription>Use 6+ characters with a mix of letters & numbers.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="profileCurrentPassword" className="text-xs text-muted-foreground">
+                  Current Password
+                </Label>
+                <Input
+                  id="profileCurrentPassword"
+                  type="password"
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="bg-muted/40 border-border/60 h-11"
+                />
+              </div>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="newPassword" className="text-xs text-muted-foreground">
                     New Password
                   </Label>
                   <Input
-                    id="newPassword"
-                    type="password"
-                    value={newPassword}
+                  id="newPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="••••••••"
                     className="bg-muted/40 border-border/60 h-11"
@@ -472,9 +488,10 @@ export default function Profile() {
                     Confirm Password
                   </Label>
                   <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
+                  id="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
                     className="bg-muted/40 border-border/60 h-11"
