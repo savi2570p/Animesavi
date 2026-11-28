@@ -318,12 +318,15 @@ html.perf-low .home-search-hero-art { display: none; }
 .home-hero-media { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: hsl(var(--background)); }
 .home-hero-image { transition: opacity .7s ease; object-fit: contain; }
 .home-hero-body { padding-top: 1rem; }
-.catalogue-outlined { border: 3px solid hsl(var(--primary)); }
+.catalogue-channel-tile { border: 3px solid hsl(var(--primary)); border-radius: 8px; }
+.catalogue-channel-tile > div:first-child { background: transparent; box-shadow: none; border-radius: 0; }
+.catalogue-channel-tile:hover > div:first-child { transform: none; box-shadow: none; }
+.app-shell-ra[data-home='true'][data-rail] > main { padding-left: 0; }
 @media (max-width: 767px) {
   .home-hero-scrim { display: none; }
 }
 @media (min-width: 768px) {
-  .home-hero { width: min(100%, calc(78svh * 16 / 9), 1600px); aspect-ratio: 16 / 9; margin-inline: auto; }
+  .home-hero { width: 100%; aspect-ratio: 16 / 9; }
   .home-hero-media { position: absolute; inset: 0; aspect-ratio: 16 / 9; height: 100%; }
   .home-hero-image { object-fit: contain; }
   .home-hero-fill { display: none; }

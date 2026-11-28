@@ -68,3 +68,7 @@
 - [x] Thick green Platforms and Clones borders
 - [x] Uncropped 16:9 desktop hero artwork
 - [x] Notice first on home, with Don't show again button
+
+## Nov 28 edge-to-edge correction
+- [x] Full-width uncropped hero banner
+- [x] Move green borders from sections to individual platform/clone tiles

@@ -23,7 +23,7 @@ export function MainLayout() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col app-shell-ra" data-rail={railHidden ? 'hidden' : 'shown'}>
+    <div className="min-h-screen flex flex-col app-shell-ra" data-home={isHome ? 'true' : undefined} data-rail={railHidden ? 'hidden' : 'shown'}>
       <Header />
       <SideRail hidden={railHidden} onToggle={toggleRail} />
       <main className="flex-1">
