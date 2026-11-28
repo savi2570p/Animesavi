@@ -31,7 +31,7 @@ export function CloneSection() {
   }, []);
 
   if (!cards.length) return null;
-  return <section className="catalogue-section catalogue-compact py-3 md:py-4" aria-label="Clones">
+  return <section className="catalogue-section catalogue-compact catalogue-outlined py-3 md:py-4" aria-label="Clones">
     <div className="container">
       <CatalogueHeading title="Clones" eyebrow="Explore collections" icon={Copy} rowRef={rowRef} />
       <div ref={rowRef} className="snap-row flex gap-3 overflow-x-auto pb-4 pt-1">

@@ -4,23 +4,27 @@ import { MemoryRouter } from 'react-router-dom';
 import { PopupQueueProvider, usePopupQueue } from '@/contexts/PopupQueueContext';
 import { DownloadRemovedNotice } from '@/components/notices/DownloadRemovedNotice';
 import { DOWNLOAD_NOTICE_KEY, DOWNLOAD_NOTICE_DISABLED_KEY } from '@/lib/downloadNotice';
+import { fetchTokenSystemStatus, fetchTokenAccessFromDB } from '@/components/AccessBanner';
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ user: null, isAdmin: false, isUploader: false, signOut: vi.fn() }),
 }));
 
 vi.mock('@/components/AccessBanner', () => ({
-  fetchTokenSystemStatus: async () => false,
-  fetchTokenAccessFromDB: async () => ({ hasAccess: true }),
+  fetchTokenSystemStatus: vi.fn(async () => false),
+  fetchTokenAccessFromDB: vi.fn(async () => ({ hasAccess: true, expiresAt: 0 })),
   isSuperAdmin: () => false,
 }));
 
 function NoticeTrigger() {
-  const { showDownloadNoticeManually } = usePopupQueue();
+  const { showDownloadNoticeManually, activePopup } = usePopupQueue();
   return (
+    <>
+    <output aria-label="Active popup">{activePopup}</output>
     <button type="button" onClick={showDownloadNoticeManually}>
       Show notice
     </button>
+    </>
   );
 }
 
@@ -38,6 +42,8 @@ function renderQueue(initialPath = '/') {
 const NOTICE_TITLE = 'Downloads have been removed';
 
 beforeEach(() => {
+  vi.mocked(fetchTokenSystemStatus).mockResolvedValue(false);
+  vi.mocked(fetchTokenAccessFromDB).mockResolvedValue({ hasAccess: true, expiresAt: 0 });
   localStorage.clear();
   sessionStorage.clear();
 });
@@ -49,10 +55,18 @@ afterEach(() => {
 });
 
 describe('opening the notice from the profile menu', () => {
+  it('shows the notice before expired access and keeps the access popup queued', async () => {
+    vi.mocked(fetchTokenSystemStatus).mockResolvedValue(true);
+    vi.mocked(fetchTokenAccessFromDB).mockResolvedValue({ hasAccess: false, expiresAt: 0 });
+    renderQueue();
+    await waitFor(() => expect(screen.getByLabelText('Active popup')).toHaveTextContent('downloadNotice'));
+    fireEvent.click(screen.getByRole('button', { name: 'Got it' }));
+    await waitFor(() => expect(screen.getByLabelText('Active popup')).toHaveTextContent('expired'));
+  });
   it('persists popup opt-out and suppresses it when the provider mounts again', async () => {
     const first = renderQueue();
     await screen.findByText(NOTICE_TITLE);
-    fireEvent.click(screen.getByRole('checkbox', { name: "Don't show again" }));
+    fireEvent.click(screen.getByRole('button', { name: "Don't show again" }));
     await waitFor(() => expect(screen.queryByText(NOTICE_TITLE)).toBeNull());
     expect(localStorage.getItem(DOWNLOAD_NOTICE_DISABLED_KEY)).toBe('true');
     first.unmount();

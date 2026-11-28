@@ -142,7 +142,7 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
 
   return (
     <section ref={sliderRef} className="home-hero relative isolate overflow-hidden" aria-label="Featured anime">
-      {/* Phones get an exact 16:9 frame so the whole banner is visible; larger screens stay full-bleed. */}
+      {/* Exact 16:9 artwork on every screen; desktop size leaves the next section visible. */}
       <div className="home-hero-media">
         <img src={current.banner || current.thumbnail || '/placeholder.svg'} alt="" aria-hidden
           className="home-hero-fill catalogue-fill perf-blur-fill absolute inset-0 w-full h-full object-cover" />

@@ -1,7 +1,6 @@
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Checkbox } from '@/components/ui/checkbox';
 import { disableDownloadNotice } from '@/lib/downloadNotice';
 import { usePopupQueue } from '@/contexts/PopupQueueContext';
 import { CheckCircle2, DownloadCloud, HardDrive, Info, MinusCircle, Send } from 'lucide-react';
@@ -65,11 +64,8 @@ export function DownloadRemovedNotice() {
         </div>
 
         <div className="download-notice-actions">
-          <label htmlFor="disable-notice-popup" className="flex items-center gap-3 text-sm text-muted-foreground py-2 cursor-pointer">
-            <Checkbox id="disable-notice-popup" aria-label="Don't show again" onCheckedChange={(checked) => { if (checked === true) { disableDownloadNotice(); dismissPopup(); } }} />
-            Don't show again
-          </label>
           <Button className="w-full" onClick={dismissPopup}>Got it</Button>
+          <Button variant="outline" className="w-full" onClick={() => { disableDownloadNotice(); dismissPopup(); }}>Don't show again</Button>
           <Button variant="outline" className="w-full" asChild>
             <Link to="/notices" onClick={dismissPopup}>View all notices</Link>
           </Button>

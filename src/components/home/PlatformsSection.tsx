@@ -7,7 +7,7 @@ import { CatalogueHeading } from './CatalogueHeading';
 
 export function PlatformsSection() {
   const rowRef = useRef<HTMLDivElement>(null);
-  return <section className="catalogue-section catalogue-compact py-3 md:py-4" aria-label="Platforms">
+  return <section className="catalogue-section catalogue-compact catalogue-outlined py-3 md:py-4" aria-label="Platforms">
     <div className="container">
       <CatalogueHeading title="Platforms" eyebrow="Curated channels" icon={Layers} rowRef={rowRef} />
       <div ref={rowRef} className="flex gap-3 overflow-x-auto snap-row pb-4 pt-1">

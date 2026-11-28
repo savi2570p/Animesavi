@@ -60,7 +60,10 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
     async function buildQueue() {
       const popups: PopupType[] = [];
 
-      // 1. Expired access (highest priority)
+      // 1. Informational notice first; existing opt-out and 48-hour cooldown apply.
+      if (shouldShowDownloadNotice(readDownloadNoticeLastShown())) popups.push('downloadNotice');
+
+      // 2. Expired access. Presentation order never changes access enforcement.
       const alreadyShownExpired = sessionStorage.getItem('token_expired_popup_shown');
       if (!alreadyShownExpired && !isSuperAdmin(user?.email)) {
         try {
@@ -77,9 +80,6 @@ export function PopupQueueProvider({ children }: { children: ReactNode }) {
       }
 
       if (cancelled) return;
-
-      // 2. Notice: downloads / save offline removed (at most once every 48 hours)
-      if (shouldShowDownloadNotice(readDownloadNoticeLastShown())) popups.push('downloadNotice');
 
       // 3. What's New
       const hasSeenWelcome = localStorage.getItem('has_seen_welcome');

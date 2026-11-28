@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import NotFound from './NotFound';
 
 // Utility to create slug from title
 const createSlug = (title: string): string => {
@@ -151,8 +152,7 @@ export default function AnimeSlugRedirect() {
   }, [animeSlug, episodeSlug, navigate]);
 
   if (notFound) {
-    navigate('/404', { replace: true });
-    return null;
+    return <NotFound />;
   }
 
   return (

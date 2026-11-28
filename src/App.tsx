@@ -263,6 +263,7 @@ const App = () => (
                   <Route path="/embed/:animeSlug/:seasonSlug/:episodeSlug" element={<MinimalEmbedPage />} />
                   <Route path="/embed/:animeSlug/:episodeSlug" element={<EmbedSlugPlayer />} />
                   <Route path="/welcome" element={<Welcome />} />
+                  <Route path="/404" element={<NotFound />} />
                   <Route path="/qa-check" element={<QaCheck />} />
                   <Route path="/Shadow-Arise" element={<ShadowArise />} />
                   <Route path="/e/:token" element={<TokenEmbedPlayer />} />

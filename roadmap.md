@@ -62,3 +62,9 @@
 - [x] Remove Developers from footer
 - [x] Dedicated Notice page with security update and newest/oldest ordering
 - [x] Persist Don't show again for the notice popup; verify page remains available
+
+## Nov 28 homepage fixes
+- [x] Custom 404 page
+- [x] Thick green Platforms and Clones borders
+- [x] Uncropped 16:9 desktop hero artwork
+- [x] Notice first on home, with Don't show again button
