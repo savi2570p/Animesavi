@@ -127,7 +127,7 @@ interface VideoPlayerProps {
   audioLocked?: boolean;
   /** Hide every download control (e.g. on the SUB server). */
   hideDownload?: boolean;
-  /** Display name of the selected server (e.g. "4K+"), shown in fullscreen. */
+  /** Display name of the selected server (e.g. "XCZ"), shown in fullscreen. */
   serverLabel?: string;
   captionsUrl?: string | null;
   isEncoding?: boolean;
@@ -162,13 +162,13 @@ const serverConfigs: Record<ServerType, { name: string; features: string[]; play
     playerStyle: 'advanced'
   },
   XPLUS: {
-    name: 'AS+',
+    name: 'LMX',
     features: ['watch', 'quality', 'download', 'cc'],
     playerStyle: 'xplus'
   },
-  // Watch passes the AS+ engine for SUB; this entry only satisfies the shared type.
+  // Watch passes the LMX engine for SUB; this entry only satisfies the shared type.
   SUB: {
-    name: '4K+',
+    name: 'XCZ',
     features: ['watch', 'quality', 'download', 'cc'],
     playerStyle: 'xplus'
   },
@@ -363,13 +363,15 @@ export function VideoPlayer({
     }
     hls.autoLevelCapping = dataSaver && target ? target.id : -1;
     if (target) {
-      hls.currentLevel = dataSaver ? -1 : target.id;
+      // Data Saver must discard higher-quality buffered media immediately.
+      if (dataSaver) hls.currentLevel = -1;
+      else hls.loadLevel = target.id;
       setCurrentQualityLevel(target.id);
       setIsAutoQuality(dataSaver);
     } else {
       const savedHeight = Number(localStorage.getItem('preferred_quality_level') ?? -1);
       const saved = qualityLevels.find(level => level.height === savedHeight);
-      hls.currentLevel = saved?.id ?? -1;
+      hls.loadLevel = saved?.id ?? -1;
       setCurrentQualityLevel(saved?.id ?? -1);
       setIsAutoQuality(!saved);
     }
@@ -827,7 +829,8 @@ export function VideoPlayer({
                 const highestLevel = dataSaverEnabled() ? selectDataSaverLevel(levels) : levels[0]; // Already sorted descending
                 if (highestLevel) {
                   hls.autoLevelCapping = dataSaverEnabled() ? highestLevel.id : -1;
-                  hls.currentLevel = dataSaverEnabled() ? -1 : highestLevel.id;
+                  hls.startLevel = dataSaverEnabled() ? -1 : highestLevel.id;
+                  hls.loadLevel = dataSaverEnabled() ? -1 : highestLevel.id;
                   setIsAutoQuality(dataSaverEnabled());
                   setCurrentQualityLevel(highestLevel.id);
                 }
@@ -841,7 +844,8 @@ export function VideoPlayer({
                   const targetHeight = animeQualityOverride[1];
                   const matchingLevel = levels.find(l => l.height === targetHeight);
                   if (matchingLevel) {
-                    hls.currentLevel = matchingLevel.id;
+                    hls.startLevel = matchingLevel.id;
+                    hls.loadLevel = matchingLevel.id;
                     setIsAutoQuality(false);
                     setCurrentQualityLevel(matchingLevel.id);
                   } else {
@@ -859,7 +863,8 @@ export function VideoPlayer({
                     } else {
                       const matchingLevel = levels.find(l => l.height === preferredLevel);
                       if (matchingLevel) {
-                        hls.currentLevel = matchingLevel.id;
+                        hls.startLevel = matchingLevel.id;
+                        hls.loadLevel = matchingLevel.id;
                         setIsAutoQuality(false);
                         setCurrentQualityLevel(matchingLevel.id);
                       } else {
@@ -1038,10 +1043,11 @@ export function VideoPlayer({
       }
     };
 
-    setupHls();
+    const cleanupMedia = setupHls();
 
     return () => {
       controller.abort();
+      cleanupMedia?.();
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
@@ -2866,7 +2872,7 @@ export function VideoPlayer({
         x5-video-player-fullscreen="true"
         x5-video-orientation="landscape"
         x5-playsinline={isCasting ? "false" : "true"}
-        preload="metadata"
+        preload={dataSaver ? "metadata" : "auto"}
         muted={isMobile && !isCasting}
         controlsList={isCasting ? "nodownload" : "nodownload noremoteplayback"}
         disablePictureInPicture={false}
@@ -3028,7 +3034,7 @@ export function VideoPlayer({
                 <span className="w-px h-3 bg-white/20" />
                 <span className="text-[11px] md:text-sm font-semibold text-white truncate">{animeTitle}</span>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-emerald-200 bg-emerald-500/15 border border-emerald-400/30 shrink-0">{serverLabel || (activeServer === 'XPLUS' ? 'AS+' : activeServer === 'PLAY' ? 'H.Savi' : activeServer === 'Zex' ? 'Multi.Savi' : activeServer)}</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-emerald-200 bg-emerald-500/15 border border-emerald-400/30 shrink-0">{serverLabel || (activeServer === 'XPLUS' ? 'LMX' : activeServer === 'PLAY' ? 'H.Savi' : activeServer === 'Zex' ? 'Multi.Savi' : activeServer)}</span>
             </div>
           </div>
 
@@ -3338,7 +3344,7 @@ export function VideoPlayer({
                 <span className="w-px h-3 bg-white/20" />
                 <span className="text-[11px] md:text-sm font-semibold text-white truncate">{animeTitle}</span>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-emerald-200 bg-emerald-500/15 border border-emerald-400/30 shrink-0">{serverLabel || (activeServer === 'XPLUS' ? 'AS+' : activeServer === 'PLAY' ? 'H.Savi' : activeServer === 'Zex' ? 'Multi.Savi' : activeServer)}</span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-emerald-200 bg-emerald-500/15 border border-emerald-400/30 shrink-0">{serverLabel || (activeServer === 'XPLUS' ? 'LMX' : activeServer === 'PLAY' ? 'H.Savi' : activeServer === 'Zex' ? 'Multi.Savi' : activeServer)}</span>
             </div>
           </div>
 

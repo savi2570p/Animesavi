@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { isIOSDevice, getDeviceType } from '@/lib/deviceUtils';
 
@@ -13,141 +14,49 @@ interface VideoUrlResult {
   error: string | null;
 }
 
-interface ConversionRecord {
-  id: string;
-  episode_id: string;
-  original_url: string;
-  ios_ready_url: string | null;
-  status: string;
-  needs_conversion: boolean;
-}
-
-/**
- * Hook to fetch the optimal video URL based on the user's device.
- * 
- * PLAYBACK PRIORITY:
- * 1. For iOS devices:
- *    - First try HLS (.m3u8) if available
- *    - Fallback to iOS-compatible MP4
- *    - Never block playback waiting for conversion
- * 2. For Android/Windows:
- *    - Serve original video file or MP4
- * 
- * CONVERSION RULES:
- * - MP4 uploads are not blocked
- * - If MP4 is already iOS-compatible, mark ios_ready = true
- * - HLS generation runs asynchronously in background
- * - Playback never depends on HLS readiness
- */
+/** Resolve only the requested file; cache lookups across manual server changes. */
 export function useDeviceOptimizedVideo(episodeId: string | undefined, originalVideoUrl: string | null) {
-  const [result, setResult] = useState<VideoUrlResult>({
-    videoUrl: originalVideoUrl,
-    hlsUrl: null,
-    servedFormat: 'original',
-    device: getDeviceType(),
-    conversionStatus: 'none',
-    needsConversion: false,
-    isLoading: false,
-    error: null,
-  });
-
-  const fetchOptimizedUrl = useCallback(async () => {
-    if (!episodeId || !originalVideoUrl) {
-      setResult(prev => ({
-        ...prev,
-        videoUrl: originalVideoUrl,
-        isLoading: false,
-      }));
-      return;
-    }
-
-    const isIOS = isIOSDevice();
-    const device = getDeviceType();
-
-    // For ALL devices: check for HLS URL (enables multi-audio switching on desktop)
-    setResult(prev => ({ ...prev, isLoading: true }));
-
-    try {
+  const device = getDeviceType();
+  const { data, isFetching, error } = useQuery({
+    queryKey: ['playback-source', episodeId, originalVideoUrl, device],
+    enabled: !!episodeId && !!originalVideoUrl,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+    queryFn: async ({ signal }): Promise<VideoUrlResult> => {
+      const fallback: VideoUrlResult = {
+        videoUrl: originalVideoUrl, hlsUrl: null, servedFormat: 'original', device,
+        conversionStatus: 'not_needed', needsConversion: false, isLoading: false, error: null,
+      };
+      if (!episodeId || !originalVideoUrl || /\.m3u8(?:[?#]|$)/i.test(originalVideoUrl)) return fallback;
       const { data: conversion, error } = await supabase
         .from('video_conversions')
-        .select('*')
+        .select('original_url, hls_url, ios_ready_url, status, needs_conversion')
         .eq('episode_id', episodeId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching conversion record:', error);
-      }
-
-      const conversionRecord = conversion as any;
-
-      let finalUrl = originalVideoUrl;
-      let hlsUrl: string | null = conversionRecord?.hls_url || null;
-      let servedFormat: 'original' | 'ios_ready' | 'hls' = 'original';
-
-      if (!isIOS) {
-        // Desktop/Android: prefer HLS for multi-audio support, fallback to original
-        if (hlsUrl) {
-          finalUrl = hlsUrl;
-          servedFormat = 'hls';
-        }
-        setResult({
-          videoUrl: finalUrl,
-          hlsUrl,
-          servedFormat,
-          device,
-          conversionStatus: conversionRecord?.status || 'not_needed',
-          needsConversion: false,
-          isLoading: false,
-          error: null,
-        });
-        return;
-      }
-
-      // iOS: Check for optimized versions but NEVER block playback
-      const isOriginalMp4 = originalVideoUrl.toLowerCase().includes('.mp4');
-
-      if (hlsUrl) {
-        finalUrl = hlsUrl;
-        servedFormat = 'hls';
-      } else if (conversionRecord?.status === 'completed' && conversionRecord.ios_ready_url) {
-        finalUrl = conversionRecord.ios_ready_url;
-        servedFormat = 'ios_ready';
-      } else if (isOriginalMp4) {
-        finalUrl = originalVideoUrl;
-        servedFormat = 'original';
-      }
-
-      setResult({
-        videoUrl: finalUrl,
+        .eq('original_url', originalVideoUrl)
+        .abortSignal(signal)
+        .maybeSingle();
+      if (error) throw error;
+      if (!conversion) return fallback;
+      const hlsUrl = conversion.hls_url;
+      const iosUrl = isIOSDevice() && conversion.status === 'completed' ? conversion.ios_ready_url : null;
+      return {
+        ...fallback,
+        videoUrl: hlsUrl || iosUrl || originalVideoUrl,
         hlsUrl,
-        servedFormat,
-        device: 'ios',
-        conversionStatus: conversionRecord?.status || (isOriginalMp4 ? 'not_needed' : 'none'),
-        needsConversion: conversionRecord?.needs_conversion || false,
-        isLoading: false,
-        error: null,
-      });
-    } catch (err) {
-      console.error('Error in useDeviceOptimizedVideo:', err);
-      // On error, still provide original URL - don't block playback
-      setResult({
-        videoUrl: originalVideoUrl,
-        hlsUrl: null,
-        servedFormat: 'original',
-        device: 'ios',
-        conversionStatus: 'error',
-        needsConversion: false,
-        isLoading: false,
-        error: err instanceof Error ? err.message : 'Unknown error',
-      });
-    }
-  }, [episodeId, originalVideoUrl]);
-
-  useEffect(() => {
-    fetchOptimizedUrl();
-  }, [fetchOptimizedUrl]);
-
-  return result;
+        servedFormat: hlsUrl ? 'hls' : iosUrl ? 'ios_ready' : 'original',
+        conversionStatus: conversion.status,
+        needsConversion: conversion.needs_conversion ?? false,
+      };
+    },
+  });
+  // Never leak the last episode's URL while the next lookup is pending.
+  return data ?? {
+    videoUrl: originalVideoUrl, hlsUrl: null, servedFormat: 'original' as const, device,
+    conversionStatus: 'none', needsConversion: false, isLoading: isFetching,
+    error: error instanceof Error ? error.message : null,
+  };
 }
 
 /**

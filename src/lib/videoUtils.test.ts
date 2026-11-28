@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getHLSConfig } from './videoUtils';
+import { getHLSConfig, getMobileVideoAttributes } from './videoUtils';
 
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 describe('shared server streaming budget', () => {
@@ -7,7 +7,7 @@ describe('shared server streaming budget', () => {
     const config = getHLSConfig();
     expect(config.capLevelToPlayerSize).toBe(false);
     expect(config.startFragPrefetch).toBe(false);
-    expect(config.progressive).toBe(false);
+    expect(config.progressive).toBe(true);
   });
   it('buffers a bounded cushion on Android instead of a whole episode', () => {
     vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Android');
@@ -25,5 +25,13 @@ describe('shared server streaming budget', () => {
     expect(config.maxBufferLength).toBe(8);
     expect(config.maxBufferSize).toBe(16_000_000);
     expect(config.capLevelToPlayerSize).toBe(false);
+  });
+  it('loads playable bytes immediately on phones without Data Saver', () => {
+    vi.stubGlobal('navigator', { userAgent: 'iPhone', connection: { saveData: false } });
+    expect(getMobileVideoAttributes().preload).toBe('auto');
+  });
+  it('preserves metadata-only native preloading for save-data connections', () => {
+    vi.stubGlobal('navigator', { userAgent: 'Android', connection: { saveData: true } });
+    expect(getMobileVideoAttributes().preload).toBe('metadata');
   });
 });

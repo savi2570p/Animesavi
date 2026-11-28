@@ -126,11 +126,11 @@ export const FeaturedSlider = memo(function FeaturedSlider() {
     const interval = setInterval(() => {
       setCurrentIndex(prev => (prev + 1) % featuredAnime.length);
       setAnimKey(k => k + 1);
-    }, 6000);
+    }, 3000);
     return () => clearInterval(interval);
   }, [currentIndex, featuredAnime.length, isActive]);
 
-  if (loading) return <section className="home-hero relative"><div className="home-hero-media"><Skeleton className="w-full h-full rounded-none" /></div></section>;
+  if (loading) return <section ref={sliderRef} className="home-hero relative"><div className="home-hero-media"><Skeleton className="w-full h-full rounded-none" /></div></section>;
   const current = featuredAnime[currentIndex];
   if (!current) return null;
 

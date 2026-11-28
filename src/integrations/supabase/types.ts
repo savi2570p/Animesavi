@@ -457,6 +457,7 @@ export type Database = {
           content_revision: number
           created_at: string
           description: string | null
+          dub_video_url: string | null
           duration: number | null
           episode_number: number
           external_url: string | null
@@ -480,6 +481,7 @@ export type Database = {
           content_revision?: number
           created_at?: string
           description?: string | null
+          dub_video_url?: string | null
           duration?: number | null
           episode_number: number
           external_url?: string | null
@@ -503,6 +505,7 @@ export type Database = {
           content_revision?: number
           created_at?: string
           description?: string | null
+          dub_video_url?: string | null
           duration?: number | null
           episode_number?: number
           external_url?: string | null

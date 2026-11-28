@@ -580,13 +580,14 @@ export default function UploadAnimeEdit() {
                       .update({ is_sub_only: val })
                       .eq('id', animeId);
                     if (error) { toast.error('Failed to update streaming servers'); setIsSubOnly(!val); }
-                    else { toast.success(val ? 'SUB only: viewers get the 4K+ server' : 'DUB: viewers get H.Savi, AS+ and 4K+'); }
+                    else { toast.success(val ? 'SUB: viewers get XCZ, plus DUB where added' : 'DUB: viewers get H.Savi and LMX, plus XCZ where SUB is added'); }
                     setIsSavingSubOnly(false);
                   }}
                 />
                 {animeId && (
                   <SubEpisodesManager
                     animeId={animeId}
+                    isSubOnly={isSubOnly}
                     seasons={seasons}
                     open={subEpisodesOpen}
                     onOpenChange={setSubEpisodesOpen}

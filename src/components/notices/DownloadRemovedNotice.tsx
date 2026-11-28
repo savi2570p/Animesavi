@@ -8,7 +8,7 @@ import { CheckCircle2, DownloadCloud, HardDrive, Info, MinusCircle, Send } from 
 const REMOVED = [
   'Download (Save Offline) button on the video page',
   'Downloads page in the menu',
-  'Download option on the SUB (4K+) server',
+  'Download option on the SUB (XCZ) server',
 ];
 
 const STILL_WORKS = [

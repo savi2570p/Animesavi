@@ -14,32 +14,10 @@ import Hls from 'hls.js';
 import { useEmbedPlayerBridge } from '@/hooks/useEmbedPlayerBridge';
 import { useEmbedResume } from '@/hooks/useEmbedResume';
 import { useEmbedHotkeys } from '@/hooks/useEmbedHotkeys';
-import { getNetworkInfo } from '@/lib/videoUtils';
+import { getHLSConfig } from '@/lib/videoUtils';
 import { isHlsUrl as isHls, isDashUrl, selectCompatibleSources, detectDeviceKind } from '@/lib/streamSource';
 import { isUuid, isSelfEmbedUrl } from '@/lib/embedLink';
 
-
-function getLowBandwidthHlsConfig() {
-  const { isSlowNetwork, isCellular, saveData } = getNetworkInfo();
-  const slow = isSlowNetwork || saveData;
-  return {
-    enableWorker: true,
-    lowLatencyMode: false,
-    startLevel: 0,                     // start at lowest rendition for instant play
-    autoStartLoad: true,
-    maxBufferLength: slow ? 6 : 12,
-    maxMaxBufferLength: slow ? 20 : 60,
-    maxBufferSize: slow ? 20 * 1000 * 1000 : 60 * 1000 * 1000,
-    backBufferLength: slow ? 8 : 20,
-    abrEwmaDefaultEstimate: slow ? 250000 : isCellular ? 1200000 : 2500000,
-    abrBandWidthFactor: slow ? 0.6 : 0.8,
-    abrBandWidthUpFactor: slow ? 0.4 : 0.6,
-    fragLoadingTimeOut: 30000,
-    fragLoadingMaxRetry: 8,
-    manifestLoadingTimeOut: 15000,
-    manifestLoadingMaxRetry: 6,
-  };
-}
 
 const ALLOWED_DOMAINS = [
   'shadow-arise.lovable.app',
@@ -323,7 +301,7 @@ export default function EmbedPlayer() {
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = videoUrl;
       } else if (Hls.isSupported()) {
-        const hls = new Hls(getLowBandwidthHlsConfig());
+        const hls = new Hls(getHLSConfig());
         hlsRef.current = hls;
         hls.loadSource(videoUrl);
         hls.attachMedia(video);

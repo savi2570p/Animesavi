@@ -192,8 +192,8 @@ export function getMobileVideoAttributes(): Record<string, string | boolean> {
     'x5-video-player-fullscreen': 'true',
     'x5-video-orientation': 'landscape',
     
-    // Preload strategy - metadata is best for mobile
-    preload: isMobile ? 'metadata' : 'auto',
+    // Fetch playable data immediately unless the connection requests data saving.
+    preload: getNetworkInfo().saveData ? 'metadata' : 'auto',
     
     // Disable controls initially (we use custom controls)
     controls: false,
@@ -282,7 +282,8 @@ export function getHLSConfig() {
     manifestLoadingMaxRetry: 3,
     manifestLoadingRetryDelay: 600,
 
-    progressive: false,
+    // Demux incoming bytes instead of waiting for a full large segment.
+    progressive: true,
     capLevelToPlayerSize: false,
     capLevelOnFPSDrop: true,
     ignoreDevicePixelRatio: true,

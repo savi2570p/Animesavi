@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type Hls from 'hls.js';
+import { getHLSConfig, getNetworkInfo } from '@/lib/videoUtils';
 import {
   Download, Maximize, Minimize, Pause, Play, RefreshCw, Settings, Volume2, VolumeX,
 } from 'lucide-react';
@@ -123,7 +124,7 @@ export default function TokenEmbedPlayer() {
           setPlaybackError('Your browser cannot play this stream.');
           return;
         }
-        const hls = new HlsCtor({ enableWorker: true, lowLatencyMode: false, backBufferLength: 60 });
+        const hls = new HlsCtor(getHLSConfig());
         hlsRef.current = hls;
         hls.loadSource(activeSource.url);
         hls.attachMedia(video);
@@ -300,7 +301,7 @@ export default function TokenEmbedPlayer() {
         poster={resolution?.poster ?? undefined}
         playsInline
         controls={false}
-        preload="metadata"
+        preload={getNetworkInfo().saveData ? "metadata" : "auto"}
         onClick={togglePlay}
       >
         {resolution?.captions && (

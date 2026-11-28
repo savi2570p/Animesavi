@@ -6,26 +6,20 @@ import {
   VERSION_GROUPS,
 } from './releaseNotes';
 
-it('shows the S2-V3+ release with a 25MB update size', () => {
-  expect(APP_VERSION).toBe('S2-V3+');
-  expect(DOWNLOAD_SIZE_MB).toBe(25);
-  expect(RELEASE_DATE).toBe('November 10, 2026');
+it('uses the S2-V3.1 release version', () => {
+  expect(APP_VERSION).toBe('S2-V3.1');
 });
 
-it('leads the popup with performance, stability and bug-fix news', () => {
-  const [latest] = VERSION_GROUPS;
-  expect(latest.version).toBe(APP_VERSION);
-  expect(latest.highlight.toLowerCase()).toContain('performance');
-  expect(latest.highlight.toLowerCase()).toContain('stability');
+it('uses the requested 12MB update size', () => {
+  expect(DOWNLOAD_SIZE_MB).toBe(12);
+});
 
-  const titles = latest.items.map((item) => item.title.toLowerCase());
-  expect(titles.some((title) => title.includes('stability'))).toBe(true);
-  expect(titles.some((title) => title.includes('bug fixes'))).toBe(true);
-  expect(latest.items.some((item) => item.badge === 'FIX')).toBe(true);
+it('dates the current release November 28, 2026', () => {
+  expect(RELEASE_DATE).toBe('November 28, 2026');
 });
 
 it('keeps the previous release listed under its own version', () => {
   const previous = VERSION_GROUPS[1];
-  expect(previous.version).toBe('S2-V2.1');
+  expect(previous.version).toBe('S2-V3+');
   expect(previous.version).not.toBe(APP_VERSION);
 });

@@ -33,7 +33,7 @@ export const SITE_NOTICES: SiteNotice[] = [
     title: 'Downloads have been removed',
     summary: 'Due to some restrictions, downloading and offline saving are no longer available on AnimeSavi+. Streaming is not affected.',
     details: [
-      'The Download (Save Offline) button, Downloads menu page and SUB (4K+) download option have been removed.',
+      'The Download (Save Offline) button, Downloads menu page and SUB download option have been removed.',
       'Online streaming, Favorites, Watchlist, Continue Watching, DUB and SUB servers, subtitles and Watch Party remain available.',
       'Episodes saved earlier stay on your device until you delete them or clear browser storage.',
     ],
@@ -50,6 +50,6 @@ export const SITE_NOTICES: SiteNotice[] = [
 
 export function sortNotices(notices: readonly SiteNotice[], order: 'newest' | 'oldest'): SiteNotice[] {
   return [...notices].sort((a, b) => order === 'newest'
-    ? b.date.localeCompare(a.date)
-    : a.date.localeCompare(b.date));
+    ? b.date.localeCompare(a.date) || b.id.localeCompare(a.id)
+    : a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
 }

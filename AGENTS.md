@@ -48,7 +48,7 @@
 - Site-wide flat styling lives in src/styles/flat-design.css (loaded after index.css) as token overrides; restyle there, not per component, for consistency.
 - One Watch Party menu entry; admin/upload in PC rail; Notifications is a page (shared useNotifications cache).
 - Phone Watch sections (MobileWatchSections) reuse page season/episode handlers.
-- getServerGroups (is_sub_only) groups DUB/SUB servers; SUB = AS+ engine, audioLocked, getServerVideoUrl.
+- getServerGroups/getServerVideoUrl use per-episode SUB/DUB files; SUB uses XPLUS, audioLocked.
 - Season pickers: SeasonCards; player loaders: PlayerSpinner; Watch comments sort in memory.
 - Embed players: shared EmbedChrome UI + useEmbedHotkeys; playback/access per player.
 - Schedule sch2 UI is presentation-only over existing timezone/rollover math.

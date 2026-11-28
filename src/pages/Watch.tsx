@@ -30,7 +30,7 @@ import { WatchParty } from '@/components/WatchParty';
 import { VideoFormatIndicator } from '@/components/video/VideoFormatIndicator';
 
 import { useDeviceOptimizedVideo } from '@/hooks/useDeviceOptimizedVideo';
-import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers, getServerGroups, getPlaybackEngine, getDefaultServer, getServerVideoUrl, episodeHasSub, filterEpisodesForServer } from '@/hooks/useServerAutoSelect';
+import { useServerAutoSelect, SERVER_CONFIGS, getAvailableServers, getServerGroups, getPlaybackEngine, getDefaultServer, getServerVideoUrl, episodeHasSub, episodeHasDub, filterEpisodesForServer } from '@/hooks/useServerAutoSelect';
 import { isEmbedLikeUrl } from '@/components/video/PureEmbedPlayer';
 import { useEmbedWatchTracker } from '@/hooks/useEmbedWatchTracker';
 import { z } from 'zod';
@@ -72,6 +72,7 @@ interface Episode {
   description: string | null;
   video_url: string | null;
   sub_video_url?: string | null;
+  dub_video_url?: string | null;
   external_url: string | null;
   duration: number | null;
   season_id: string;
@@ -241,12 +242,13 @@ export default function Watch() {
   
 
   // Device-optimized video URL for iOS compatibility
-  const deviceOptimizedVideo = useDeviceOptimizedVideo(episodeId, episode?.video_url || null);
+  const selectedVideoUrl = getServerVideoUrl(activeServer, episode?.video_url, episode?.sub_video_url, episode?.dub_video_url, !!anime?.is_sub_only);
+  const deviceOptimizedVideo = useDeviceOptimizedVideo(episodeId, selectedVideoUrl);
 
   // FAST CDN: preconnect + dns-prefetch to the streaming origin as soon as we know
   // the video URL. Saves a full DNS+TLS round-trip on first segment request.
   useEffect(() => {
-    const url = deviceOptimizedVideo.videoUrl || episode?.video_url;
+    const url = deviceOptimizedVideo.videoUrl || selectedVideoUrl;
     if (!url) return;
     let origin = '';
     try { origin = new URL(url).origin; } catch { return; }
@@ -264,7 +266,7 @@ export default function Watch() {
     add('dns-prefetch');
     add('preconnect', true);
     return () => { hints.forEach(l => l.parentNode?.removeChild(l)); };
-  }, [deviceOptimizedVideo.videoUrl, episode?.video_url]);
+  }, [deviceOptimizedVideo.videoUrl, selectedVideoUrl]);
 
 
 
@@ -363,8 +365,8 @@ export default function Watch() {
     const isEmbedOnlyEpisode = !hasDirectVideo && externalIsEmbed;
     const isFileOnlyEpisode = hasDirectVideo;
 
-    if (anime?.is_sub_only && server !== 'SUB' && server !== 'EMBED') {
-      setServerBlockMessage('This anime is SUB only. Please use the 4K+ server.');
+    if (anime?.is_sub_only && !episodeHasDub(episode) && server !== 'SUB' && server !== 'EMBED') {
+      setServerBlockMessage('This episode is SUB only. Please use the XCZ server.');
       return;
     }
 
@@ -445,12 +447,12 @@ export default function Watch() {
   useEffect(() => {
     if (!anime || !episode) return;
     const embedOnly = !episode.video_url && isEmbedLikeUrl(episode.external_url);
-    if (anime.is_sub_only) {
+    if (anime.is_sub_only && !episodeHasDub(episode)) {
       if (!embedOnly && activeServer !== 'SUB') {
         autoSubAnimeRef.current = anime.id;
         handleServerSwitch('SUB');
       }
-    } else if (activeServer === 'SUB' && (autoSubAnimeRef.current || !episodeHasSub(episode))) {
+    } else if (!anime.is_sub_only && activeServer === 'SUB' && (autoSubAnimeRef.current || !episodeHasSub(episode))) {
       // Leaving a SUB-only title, or a DUB episode with no SUB video: back to the saved DUB server.
       autoSubAnimeRef.current = null;
       handleServerSwitch(getDefaultServer());
@@ -778,7 +780,7 @@ export default function Watch() {
     try {
       episodeData = await withRetry(
         async () => {
-          const { data, error } = await supabase.from('episodes').select('*').eq('id', episodeId).single();
+          const { data, error } = await supabase.from('episodes').select('*, season:season_id(*, anime:anime_id(*))').eq('id', episodeId).single();
           if (error) throw error;
           return data;
         },
@@ -800,49 +802,28 @@ export default function Watch() {
     setEpisode(episodeData);
 
     // Fetch season and anime info
-    const { data: seasonData } = await supabase
-      .from('seasons')
-      .select('*, anime:anime_id(*)')
-      .eq('id', episodeData.season_id)
-      .single();
+    const seasonData = episodeData.season;
 
     if (seasonData) {
       setAnime(seasonData.anime as Anime);
       setCurrentSeason(seasonData as Season);
 
-      // Fetch all seasons for this anime with episode counts
-      const { data: seasonsData } = await supabase
-        .from('seasons')
-        .select('*')
-        .eq('anime_id', (seasonData.anime as Anime).id)
-        .order('season_number');
-
+      // Episode lists and seasons load together, not in a serial chain.
+      const [seasonsResult, episodesResult] = await Promise.all([
+        supabase.from('seasons').select('*').eq('anime_id', seasonData.anime.id).order('season_number'),
+        supabase.from('episodes').select('*').eq('season_id', episodeData.season_id).order('episode_number'),
+      ]);
+      const seasonsData = seasonsResult.data;
+      if (episodesResult.data) setAllEpisodes(episodesResult.data);
       if (seasonsData) {
-        // Single query for all episode ids across every season (was N+1: one
-        // COUNT request per season, which multiplied DB load on long series).
-        const { data: seasonEpisodeRows } = await supabase
-          .from('episodes')
-          .select('season_id')
-          .in('season_id', seasonsData.map((s) => s.id));
-
-        const counts = new Map<string, number>();
-        (seasonEpisodeRows ?? []).forEach((row: { season_id: string }) => {
-          counts.set(row.season_id, (counts.get(row.season_id) ?? 0) + 1);
-        });
-
-        setAllSeasons(seasonsData.map((season) => ({ ...season, episode_count: counts.get(season.id) ?? 0 })));
-      }
-
-
-      // Fetch all episodes in this season
-      const { data: episodesData } = await supabase
-        .from('episodes')
-        .select('*')
-        .eq('season_id', episodeData.season_id)
-        .order('episode_number');
-
-      if (episodesData) {
-        setAllEpisodes(episodesData);
+        setAllSeasons(seasonsData);
+        // Counts are not needed to start the selected video.
+        void supabase.from('episodes').select('season_id').in('season_id', seasonsData.map(s => s.id))
+          .then(({ data }) => {
+            const counts = new Map<string, number>();
+            for (const row of data ?? []) counts.set(row.season_id, (counts.get(row.season_id) ?? 0) + 1);
+            setAllSeasons(seasonsData.map(season => ({ ...season, episode_count: counts.get(season.id) ?? 0 })));
+          });
       }
 
       // Record watch history using UPSERT - ONE entry per anime per user
@@ -866,6 +847,8 @@ export default function Watch() {
         // newer skipped-to episode of the same anime doesn't dominate the row).
         const isRewatchingCompleted = !!existingHistory?.completed;
 
+        // Resume data is ready; history writes must not delay the first frame.
+        setIsLoading(false);
         const historyMutation = existingHistory?.id
           ? supabase
               .from('watch_history')
@@ -1360,7 +1343,7 @@ export default function Watch() {
             >
             <VideoPlayer
               key={`${episodeId}-${activeServer}-${reloadToken}`}
-              videoUrl={getServerVideoUrl(activeServer, deviceOptimizedVideo.videoUrl || episode.video_url, episode.sub_video_url)}
+              videoUrl={deviceOptimizedVideo.videoUrl || selectedVideoUrl}
               externalUrl={episode.external_url}
               title={episode.title}
               animeTitle={anime?.title || ''}
@@ -1374,10 +1357,10 @@ export default function Watch() {
               serverLabel={SERVER_CONFIGS[activeServer]?.name}
               isLoading={false}
               audioLanguage={episode.audio_language || undefined}
-              isSubOnly={(anime?.is_sub_only ?? false) || activeServer === 'SUB'}
+              isSubOnly={activeServer === 'SUB'}
               audioLocked={activeServer === 'SUB'}
               hideDownload={activeServer === 'SUB'}
-              isHindiDub={activeServer !== 'SUB' && !anime?.is_sub_only && !anime?.is_eng_dub}
+              isHindiDub={activeServer !== 'SUB' && !anime?.is_eng_dub}
               captionsUrl={episode.captions_url}
               isEncoding={isVideoEncoding}
               onTimeUpdate={updateWatchProgress}
@@ -1448,7 +1431,7 @@ export default function Watch() {
         <div className="watch-v3-controls py-3 md:py-4 border-b border-border">
 
           <div className="relative flex flex-col md:flex-row md:items-center gap-3 md:gap-5">
-            {/* Server Selection — DUB (H.Savi, AS+) then SUB (4K+); SUB-only anime get SUB only */}
+            {/* Server Selection — DUB (H.Savi, LMX) then SUB (XCZ); SUB-only anime get SUB only */}
             <div className="watch-servers flex-1 min-w-0">
               <div className="watch-servers-head">
                 <p className="watch-servers-title">You are watching <span>{isMovie ? 'the Movie' : `Episode ${episode.episode_number}`}</span></p>
@@ -1456,7 +1439,7 @@ export default function Watch() {
               </div>
               {(() => {
                 const embedOnly = !episode.video_url && isEmbedLikeUrl(episode.external_url);
-                const groups = getServerGroups(!!anime?.is_sub_only, episodeHasSub(episode));
+                const groups = getServerGroups(!!anime?.is_sub_only, episodeHasSub(episode), episodeHasDub(episode));
                 const rows: { key: string; label: string; Icon: typeof Mic; servers: typeof availableServers }[] = embedOnly
                   ? [{ key: 'embed', label: 'EMBED', Icon: Server, servers: ['EMBED'] }]
                   : [

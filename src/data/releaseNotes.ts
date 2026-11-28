@@ -14,9 +14,9 @@ export interface VersionGroup {
   items: ChangelogItem[];
 }
 
-export const APP_VERSION = 'S2-V3+';
-export const RELEASE_DATE = 'November 10, 2026';
-export const DOWNLOAD_SIZE_MB = 25;
+export const APP_VERSION = 'S2-V3.1';
+export const RELEASE_DATE = 'November 28, 2026';
+export const DOWNLOAD_SIZE_MB = 12;
 
 export const BETA_NOTE =
   'Shadow link v2 is now running BETA 3 — a minimal, branding-free standalone player with in-player episode switching and an auto-hiding title overlay.';
@@ -25,6 +25,18 @@ export const VERSION_GROUPS: VersionGroup[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    highlight: 'Performance, stability and security fixes, with faster player startup and improvements across AnimeSavi+.',
+    items: [
+      { icon: '🎬', badge: 'IMPROVED', title: 'Faster Playback Startup', desc: 'Lighter episode loading and shared streaming settings for movies and series on phones and computers. Playback speed still depends on your connection and video host.' },
+      { icon: '🔐', badge: 'FIX', title: 'Security Fixes', desc: 'Stronger server-checked account and admin permissions, current-password checks, server-backed PIN lockout, abuse limits and patched dependencies.' },
+      { icon: '📺', badge: 'IMPROVED', title: 'Updated Servers & Audio Uploads', desc: 'AS+ is now LMX and 4K+ is now XCZ. SUB titles can add a DUB video without replacing their original Japanese episode.' },
+      { icon: '🏠', badge: 'IMPROVED', title: 'Homepage & Site Improvements', desc: 'The visible homepage banner advances every three seconds. Full-width artwork, individual platform borders, a notice archive and a custom 404 page improve navigation.' },
+      { icon: '🐞', badge: 'FIX', title: 'Stability & Bug Fixes', desc: 'Improved episode selection, artwork, watchlist deletion, phone layouts and playback source handling.' },
+    ],
+  },
+  {
+    version: 'S2-V3+',
+    date: 'November 10, 2026',
     highlight:
       'A brand-new AnimeSavi+ look — a cleaner flat design across every page, plus performance, stability and bug fixes.',
     items: [

@@ -12,12 +12,23 @@ export function episodeHasSub(ep: { sub_video_url?: string | null } | null | und
   return !!ep?.sub_video_url?.trim();
 }
 
+export function episodeHasDub(ep: { dub_video_url?: string | null } | null | undefined): boolean {
+  return !!ep?.dub_video_url?.trim();
+}
+
+/** The alternate file never overwrites the original episode video. */
+export function getAlternateAudioUpload(isSubOnly: boolean) {
+  return isSubOnly
+    ? { kind: 'DUB' as const, field: 'dub_video_url' as const }
+    : { kind: 'SUB' as const, field: 'sub_video_url' as const };
+}
+
 /**
  * Which server groups an episode offers. SUB-only titles get only the SUB server;
  * DUB titles get the SUB server only on episodes that have a SUB video added.
  */
-export function getServerGroups(isSubOnly: boolean, hasSubEpisode: boolean): { dub: ServerType[]; sub: ServerType[] } {
-  if (isSubOnly) return { dub: [], sub: SUB_SERVERS };
+export function getServerGroups(isSubOnly: boolean, hasSubEpisode: boolean, hasDubEpisode = false): { dub: ServerType[]; sub: ServerType[] } {
+  if (isSubOnly) return { dub: hasDubEpisode ? DUB_SERVERS : [], sub: SUB_SERVERS };
   return { dub: DUB_SERVERS, sub: hasSubEpisode ? SUB_SERVERS : [] };
 }
 
@@ -32,9 +43,10 @@ export function getEpisodeAudioMarks(
 }
 
 /** On a DUB title, the SUB server lists only the episodes that have a SUB video. */
-export function filterEpisodesForServer<T extends { sub_video_url?: string | null }>(
+export function filterEpisodesForServer<T extends { sub_video_url?: string | null; dub_video_url?: string | null }>(
   episodes: T[], server: ServerType, isSubOnly: boolean,
 ): T[] {
+  if (isSubOnly && DUB_SERVERS.includes(server)) return episodes.filter(episodeHasDub);
   if (server !== 'SUB' || isSubOnly) return episodes;
   return episodes.filter(episodeHasSub);
 }
@@ -44,13 +56,16 @@ export function getPlaybackEngine(server: ServerType): ServerType {
   return server === 'SUB' ? 'XPLUS' : server;
 }
 
-/** Video file a server plays: 4K+ uses the episode's own SUB file when one was added, else the main file. */
+/** XCZ uses the SUB file; DUB servers use the optional DUB file on SUB titles. */
 export function getServerVideoUrl(
   server: ServerType,
   mainUrl: string | null | undefined,
   subUrl: string | null | undefined,
+  dubUrl?: string | null,
+  isSubOnly = false,
 ): string | null {
   if (server === 'SUB' && subUrl && subUrl.trim()) return subUrl.trim();
+  if (isSubOnly && DUB_SERVERS.includes(server)) return dubUrl?.trim() || null;
   return mainUrl || null;
 }
 
@@ -86,14 +101,14 @@ export const SERVER_CONFIGS: Record<ServerType, ServerConfig> = {
   },
   XPLUS: {
     id: 'XPLUS',
-    name: 'AS+',
+    name: 'LMX',
     description: 'Best Quality 🔥 (Recommended)',
     features: ['Flat controls', 'Download support', 'Subtitle support'],
     supportedPlatforms: ['ios', 'android', 'desktop'],
   },
   SUB: {
     id: 'SUB',
-    name: '4K+',
+    name: 'XCZ',
     description: 'Japanese audio with subtitles',
     features: ['Japanese audio', 'Download support', 'Subtitle support'],
     supportedPlatforms: ['ios', 'android', 'desktop'],

@@ -155,6 +155,13 @@
       "when": 1795836658774,
       "tag": "0021_server_backed_pin_lock",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1795839053391,
+      "tag": "0022_episode_optional_dub_video",
+      "breakpoints": true
     }
   ]
 }

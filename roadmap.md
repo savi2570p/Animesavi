@@ -72,3 +72,11 @@
 ## Nov 28 edge-to-edge correction
 - [x] Full-width uncropped hero banner
 - [x] Move green borders from sections to individual platform/clone tiles
+
+## Nov 28 playback and S2-V3.1
+- [x] Improve shared playback startup without changing manual server or quality preferences
+- [x] Rename AS+ to LMX and 4K+ to XCZ
+- [x] Rotate the visible homepage hero every 3 seconds
+- [x] Offer Add DUB for SUB-only uploads and preserve the original SUB video
+- [x] Update What's New to S2-V3.1 with fixes, security and improvements, 12MB
+- [x] Run regression tests and signed-in browser checks
