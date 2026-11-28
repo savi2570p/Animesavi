@@ -9,7 +9,7 @@
 - [x] PC: notifications moved into the profile menu
 - [x] Hamburger: remove Downloads; player page: remove Save Offline; SUB server: no Download button
 - [x] Opening notice pop-up: downloads / save offline removed due to restrictions
-- [x] Profile menu: "Notice" row re-opens the downloads notice on any page
+- [x] Profile menu: "Notice" row opens the dedicated notice archive
 
 ## Nov 13 Premium badges
 - [x] Redesign shared card crowns and profile-photo Premium badges without changing access rules
@@ -59,6 +59,6 @@
 - [x] Keyboard shortcuts on every embed player (shared useEmbedHotkeys)
 
 ## Nov 28 notices
-- [ ] Remove Developers from footer
-- [ ] Dedicated Notice page with security update and newest/oldest ordering
-- [ ] Persist Don't show again for the notice popup; verify page remains available
+- [x] Remove Developers from footer
+- [x] Dedicated Notice page with security update and newest/oldest ordering
+- [x] Persist Don't show again for the notice popup; verify page remains available

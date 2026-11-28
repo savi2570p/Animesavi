@@ -3,7 +3,7 @@ import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/re
 import { MemoryRouter } from 'react-router-dom';
 import { PopupQueueProvider, usePopupQueue } from '@/contexts/PopupQueueContext';
 import { DownloadRemovedNotice } from '@/components/notices/DownloadRemovedNotice';
-import { DOWNLOAD_NOTICE_KEY } from '@/lib/downloadNotice';
+import { DOWNLOAD_NOTICE_KEY, DOWNLOAD_NOTICE_DISABLED_KEY } from '@/lib/downloadNotice';
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ user: null, isAdmin: false, isUploader: false, signOut: vi.fn() }),
@@ -49,6 +49,18 @@ afterEach(() => {
 });
 
 describe('opening the notice from the profile menu', () => {
+  it('persists popup opt-out and suppresses it when the provider mounts again', async () => {
+    const first = renderQueue();
+    await screen.findByText(NOTICE_TITLE);
+    fireEvent.click(screen.getByRole('checkbox', { name: "Don't show again" }));
+    await waitFor(() => expect(screen.queryByText(NOTICE_TITLE)).toBeNull());
+    expect(localStorage.getItem(DOWNLOAD_NOTICE_DISABLED_KEY)).toBe('true');
+    first.unmount();
+    localStorage.removeItem(DOWNLOAD_NOTICE_KEY);
+    renderQueue();
+    await waitFor(() => expect(document.documentElement.classList.contains('scroll-locked')).toBe(false));
+    expect(screen.queryByText(NOTICE_TITLE)).toBeNull();
+  });
   it('shows the notice even though the automatic one is already spent', async () => {
     // Pretend the automatic notice was shown a moment ago: it will not auto-open.
     localStorage.setItem(DOWNLOAD_NOTICE_KEY, String(Date.now()));

@@ -52,3 +52,4 @@
 - Season pickers: SeasonCards; player loaders: PlayerSpinner; Watch comments sort in memory.
 - Embed players: shared EmbedChrome UI + useEmbedHotkeys; playback/access per player.
 - Schedule sch2 UI is presentation-only over existing timezone/rollover math.
+- Notices share an archive to avoid drift.

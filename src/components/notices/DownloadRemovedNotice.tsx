@@ -65,8 +65,8 @@ export function DownloadRemovedNotice() {
         </div>
 
         <div className="download-notice-actions">
-          <label className="flex items-center gap-3 text-sm text-muted-foreground py-2 cursor-pointer">
-            <Checkbox onCheckedChange={(checked) => { if (checked === true) { disableDownloadNotice(); dismissPopup(); } }} />
+          <label htmlFor="disable-notice-popup" className="flex items-center gap-3 text-sm text-muted-foreground py-2 cursor-pointer">
+            <Checkbox id="disable-notice-popup" aria-label="Don't show again" onCheckedChange={(checked) => { if (checked === true) { disableDownloadNotice(); dismissPopup(); } }} />
             Don't show again
           </label>
           <Button className="w-full" onClick={dismissPopup}>Got it</Button>
