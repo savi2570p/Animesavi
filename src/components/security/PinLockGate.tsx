@@ -192,7 +192,7 @@ export function PinLockGate() {
           <span className="pin-v2-orb pin-v2-orb-a" aria-hidden="true" />
           <span className="pin-v2-orb pin-v2-orb-b" aria-hidden="true" />
           <motion.div
-            initial={{ scale: 0.96, y: 10, opacity: 1 }}
+            initial={{ scale: 0.96, y: 10, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.97, y: -6, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 320, damping: 26, mass: 0.7 }}

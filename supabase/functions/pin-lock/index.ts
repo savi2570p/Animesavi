@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
       const pin = typeof body?.pin === 'string' ? body.pin : '';
       if (!credential || !new RegExp(`^\\d{${credential.pin_length}}$`).test(pin)) return json({ error: 'PIN is not set up.' }, 404);
       const result = await checkPin(pin);
-      if (!result.ok) return json(result, result.lockedUntil ? 429 : 401);
+      if (!result.ok) return json({ ok: false, attempts: result.attempts, locked_until: result.lockedUntil }, result.lockedUntil ? 429 : 401);
 
       await admin.from('pin_lock_sessions').delete().eq('user_id', userId);
       const accessToken = randomHex();
@@ -145,7 +145,7 @@ Deno.serve(async (req) => {
       if (credential) {
         const currentPin = typeof body?.current_pin === 'string' ? body.current_pin : '';
         const current = await checkPin(currentPin);
-        if (!current.ok) return json(current, current.lockedUntil ? 429 : 401);
+        if (!current.ok) return json({ ok: false, attempts: current.attempts, locked_until: current.lockedUntil }, current.lockedUntil ? 429 : 401);
       }
       const salt = randomHex(16);
       const hash = await derivePin(pin, salt, ITERATIONS);
