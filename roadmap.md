@@ -31,12 +31,12 @@
 - [x] Admin: Top Trending list — Bleach added showed as #1 on home, removed, fallback returned
 
 ## Nov 28 security audit
-- [ ] Review quick and deep security scan results; fix confirmed findings without changing intentional public catalogue access
-- [ ] Patch vulnerable production dependencies and rerun the dependency scanner
-- [ ] Audit environment variables and git history for exposed secrets without printing sensitive values
-- [ ] Verify admin authorization, user access rules, password handling, XSS protections, API authentication, CORS and debug settings
-- [ ] Add verified production security headers where the hosting configuration supports them
-- [ ] Add user-approved best-effort database-backed throttling to sensitive public requests; document that it is not DDoS protection
+- [x] Review quick and deep security scan results; fix confirmed findings without changing intentional public catalogue access
+- [x] Patch vulnerable production dependencies and rerun the dependency scanner
+- [x] Audit environment variables and git history for exposed secrets without printing sensitive values
+- [x] Verify admin authorization, user access rules, password handling, XSS protections, API authentication, CORS and debug settings
+- [x] Add verified production security headers where the hosting configuration supports them
+- [x] Add user-approved best-effort database-backed throttling to sensitive public requests; document that it is not DDoS protection
 
 ## Open
 - [x] Admin "API Access" tab to copy the public API address and setup prompt

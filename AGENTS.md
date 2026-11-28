@@ -26,7 +26,7 @@
 - Popular catalogue cards retain shared audio/content badges and native scroll snapping; animations must respect reduced motion and device performance tiers.
 - All HLS server players use getHLSConfig as the single buffering/network policy, preserving native Safari playback and manual quality/server choices to prevent tuning drift.
 - The page quality lock applies on every device when Data Saver is off; Data Saver caps adaptive levels and preserves saved quality choices, so the label matches actual playback.
-- PIN lock gate and settings share scoped pin glass tokens; the token banner keeps its fixed 25px strip geometry so restyles never shift page layout.
+- PIN lock uses server-verified sessions and backend lockout; PIN screens use scoped pin glass; the token banner stays a fixed 25px strip.
 - Header touch-target overrides are scoped to nav classes; PC nav links live in the hideable SideRail (lg+), keeping the header single-row on every device.
 - Trending Now and Top Trending each have an admin lineup table edited in separate hero-editor modes so lists never interact; empty Trending Now hides it.
 - Watch Stats uses scoped optical tokens and unframed account sections while retaining existing statistics calculations.
